@@ -1,3 +1,4 @@
+import printer.(println);
 main() {
     println(Type([]) == Tuple[]);
     println(Type([1]) == Tuple[Int]);

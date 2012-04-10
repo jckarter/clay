@@ -1,3 +1,4 @@
+import printer.(println);
 main() {
     var v = Vector(range(256));
     var p = begin(v);

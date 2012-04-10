@@ -1,3 +1,4 @@
+import printer.(print,println);
 
 //
 // Opaque

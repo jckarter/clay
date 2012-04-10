@@ -1,4 +1,5 @@
 import __operators__;
+import printer.(println);
 
 record LessThanThree (index:Int);
 

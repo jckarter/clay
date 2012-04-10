@@ -1,5 +1,6 @@
 import byteorder.*;
 import printer.formatter.*;
+import printer.(println);
 
 main() {
     println("0x", hex(networkToHost(Union[UInt16, Array[UInt8,2]](array(1_uss, 2_uss)).0)));

@@ -1,3 +1,4 @@
+import printer.(println,printBuffer,print);
 
 main() {
     var buf = Array[Char, 100]();

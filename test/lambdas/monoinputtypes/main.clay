@@ -1,4 +1,5 @@
 import printer.formatter.(repr);
+import printer.(println);
 
 mono1() {}
 mono2(x:Int) = x, x;

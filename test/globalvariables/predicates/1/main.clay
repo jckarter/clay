@@ -1,3 +1,5 @@
+import printer.(println);
+
 [T] var anyTwo[T] = T(2);
 
 [T when Integer?(T)]

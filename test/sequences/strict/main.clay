@@ -1,5 +1,6 @@
 
 import deques.*;
+import printer.(println);
 
 triple(x) = 3*x;
 even?(x) = (x % 2 == 0);

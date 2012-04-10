@@ -1,4 +1,5 @@
 import sha2.*;
+import printer.(println);
 
 main() {
     for (testString in array(

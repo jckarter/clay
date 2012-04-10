@@ -1,6 +1,7 @@
 import remote.messages.*;
 import commandline.dispatch.*;
 import libc;
+import printer.(printlnTo);
 
 main() = dispatchMain(client, server);
 

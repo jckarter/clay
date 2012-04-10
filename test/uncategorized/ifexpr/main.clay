@@ -1,3 +1,4 @@
+import printer.(println);
 
 oddOrEven(n) {
     println(if (n % 2 == 0) "even" else "odd");

@@ -1,5 +1,6 @@
 import test.memory.*;
-import uniquepointers.(UniqueValue,nullUniqueValue);
+import uniquepointers.*;
+import printer.(printTo,printReprTo,printReprValuesTo,println);
 
 record List(canary: Canary, value:Int, next:UniqueValue[List]);
 

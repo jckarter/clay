@@ -1,3 +1,4 @@
+import printer.(println);
 [T] record Foo[T] (x:T);
 
 [T when Integer?(T)] record Bar[T] (x:T);

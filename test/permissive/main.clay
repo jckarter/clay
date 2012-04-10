@@ -1,4 +1,4 @@
-
+import printer.(println);
 
 
 //
@@ -42,7 +42,6 @@ T(..args:A) --> returned:T {
         permissiveAssign(field, value);
     }
 }
-
 
 
 //

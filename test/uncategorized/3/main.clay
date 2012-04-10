@@ -1,3 +1,4 @@
+import printer.(println);
 
 testSignedInt() = [1, 1ss, 1s, 1i, 1l, -100_000];
 

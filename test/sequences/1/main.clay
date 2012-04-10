@@ -1,3 +1,4 @@
+import printer.(println);
 
 even?(x) = (x % 2 == 0);
 

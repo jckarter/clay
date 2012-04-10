@@ -1,3 +1,4 @@
+import printer.(println);
 main() {
     var x = array(1, 2, 3);
     var y = array(4_ul, 5_ul, 6_ul);

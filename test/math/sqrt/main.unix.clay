@@ -1,5 +1,6 @@
 import math.(sqrt);
 import printer.formatter.(repr);
+import printer.(println);
 
 main() {
     println(repr(sqrt(4.0f)));

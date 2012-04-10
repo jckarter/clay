@@ -1,5 +1,6 @@
 import test.*;
 import algorithms.permutations.*;
+import printer.(str);
 
 
 fact(n){

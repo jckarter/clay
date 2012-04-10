@@ -1,4 +1,5 @@
 import maybe.*;
+import printer.(printlnTo);
 
 private dispatchCommand() {
     var args = commandLine(); 

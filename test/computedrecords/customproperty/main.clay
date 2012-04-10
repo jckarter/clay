@@ -1,4 +1,4 @@
-
+import printer.(println);
 
 record Point1[T] = obj1(x:T, y:T);
 record Point2[T] = obj2(x:T, y:T);

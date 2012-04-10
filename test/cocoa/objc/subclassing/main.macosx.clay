@@ -1,3 +1,4 @@
+import printer.(println);
 import cocoa.objc.*;
 import cocoa.foundation.*;
 import cocoa.applicationservices.*;

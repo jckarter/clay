@@ -1,4 +1,5 @@
 import twohash;
+import printer.(println);
 
 record Color (
     r: UInt64,

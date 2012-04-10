@@ -1,3 +1,4 @@
+import printer.(println);
 
 record Multiplier[N] (
     factor:N

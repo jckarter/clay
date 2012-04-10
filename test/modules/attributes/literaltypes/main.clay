@@ -1,3 +1,4 @@
+import printer.(println);
 import printer.formatter.(repr);
 in __main__ (Float32, Int64);
 

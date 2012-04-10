@@ -1,4 +1,5 @@
 import printer.formatter.*;
+import printer.(println);
 
 main() {
     println(hex(bitrol(0x12345678u, 4)));

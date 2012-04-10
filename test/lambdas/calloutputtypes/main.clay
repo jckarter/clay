@@ -1,4 +1,5 @@
 import printer.formatter.(repr);
+import printer.(println);
 
 f(..x) = 1, ..x, true;
 

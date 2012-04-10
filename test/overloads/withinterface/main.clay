@@ -1,3 +1,4 @@
+import printer.(println);
 
 [T when T == Int or T == Double]
 define foo(x:T, y:T) : T;

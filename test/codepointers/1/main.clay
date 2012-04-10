@@ -1,4 +1,4 @@
-
+import printer.(println);
 
 showCPType(callable, ..argTypes) {
     var cp = makeCodePointer(callable, ..argTypes);

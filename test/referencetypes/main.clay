@@ -1,3 +1,6 @@
+import referencetypes.*;
+import printer.(println);
+
 record Node[T] = referenceType(
     value:T,
     next:Node[T],

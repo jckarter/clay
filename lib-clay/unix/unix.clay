@@ -6,6 +6,7 @@ public import unix.errno.*;
 
 import unix.generated as generated;
 import unix.errnonames.(errnoNames);
+import printer.(printTo);
 
 printErrorMessageTo(stream, errorCode) {
     printTo(stream, CStringRef(libc.strerror(errorCode)));

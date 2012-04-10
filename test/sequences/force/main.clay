@@ -1,4 +1,4 @@
-
+import printer.(println);
 import deques.*;
 
 triple(x) = 3*x;

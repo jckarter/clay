@@ -1,3 +1,4 @@
+import printer.(println);
 record Apple();
 record Orange();
 record Banana();

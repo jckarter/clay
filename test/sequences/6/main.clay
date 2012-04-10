@@ -1,4 +1,5 @@
 import algorithms.(sort);
+import printer.(println,print);
 
 printList(a) {
     for (i, x in enumerated(a)) {

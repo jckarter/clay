@@ -1,3 +1,4 @@
+import printer.(println);
 main() {
     println(valueSize(1) == TypeSize(Int));
 }

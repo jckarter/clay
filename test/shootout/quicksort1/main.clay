@@ -1,3 +1,4 @@
+import printer.(println);
 
 quickSort(a) {
     sortRange(a, SizeT(0), size(a));

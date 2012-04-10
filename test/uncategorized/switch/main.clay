@@ -1,3 +1,4 @@
+import printer.(println);
 
 f(n) {
     switch (n)

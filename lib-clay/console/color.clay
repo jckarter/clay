@@ -1,5 +1,6 @@
 import io.files.raw.*;
 import system.platform.*;
+import printer.(print);
 
 enum Color ( 
   Black,

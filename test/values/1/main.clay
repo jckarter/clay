@@ -1,3 +1,4 @@
+import printer.(println);
 even?(x) = x % 2 == 0;
 main() {
     eachValue(println, 1, 2.0, "three");

@@ -1,3 +1,4 @@
+import printer.(println);
 
 __llvm__ {
     declare i32 @llvm.bswap.i32(i32)

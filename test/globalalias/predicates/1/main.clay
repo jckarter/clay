@@ -1,3 +1,5 @@
+import printer.(println);
+
 [T] alias anyTwo[T] = T(2);
 
 [T when Integer?(T)]

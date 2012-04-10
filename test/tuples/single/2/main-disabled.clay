@@ -1,6 +1,7 @@
 // issue #36
 
 import printer.formatter.(repr);
+import printer.(println);
 
 record Thingy[XX] ();
 

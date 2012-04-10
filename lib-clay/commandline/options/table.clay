@@ -1,6 +1,7 @@
 public import commandline.options.spec.*;
 import commandline.options.parser.*;
 import system.(commandLine);
+import printer.(printTo);
 
 record NoSuchOption(name : String);
 

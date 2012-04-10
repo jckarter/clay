@@ -1,4 +1,5 @@
 import libc;
+import printer.(println);
 
 main() {
     // Do string objects get cstring()ed?

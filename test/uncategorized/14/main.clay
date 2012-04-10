@@ -1,3 +1,4 @@
+import printer.(println);
 
 foreach(f, a) {
     for (x in a)

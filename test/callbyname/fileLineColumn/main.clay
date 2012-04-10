@@ -1,8 +1,8 @@
+import printer.(println);
 
 alias sayMyLocation() {
     println("(", __LINE__, ",", __COLUMN__, ")");
 }
-
 main() {
     sayMyLocation();
      sayMyLocation();

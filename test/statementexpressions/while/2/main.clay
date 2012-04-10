@@ -1,4 +1,5 @@
 import test.memory.(Canary, checkCanariesDestroyed);
+import printer.(println);
 
 instance Exception (Int);
 

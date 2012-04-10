@@ -1,4 +1,5 @@
 import printer.formatter.(repr);
+import printer.(println);
 
 [..T] foo(x:Tuple[..T]) { println(repr(..T)); }
 

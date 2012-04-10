@@ -1,1 +1,3 @@
+import printer.(println);
+
 external ("a_foo") foo() { println("a.foo"); }

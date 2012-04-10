@@ -1,4 +1,5 @@
 import strings.encodings.utf8.*;
+import printer.(println);
 
 main() {
     println("All well-formed:");

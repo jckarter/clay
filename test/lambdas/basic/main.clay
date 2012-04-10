@@ -1,3 +1,4 @@
+import printer.(println);
 
 record Foo[F] ( fn : F );
 var z = Foo(x => { println(x); });

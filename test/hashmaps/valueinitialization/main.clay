@@ -1,4 +1,5 @@
 import hashmaps.(HashMap);
+import printer.(println);
 
 main() {
     var map = HashMap[Int,Int]();

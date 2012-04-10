@@ -1,4 +1,5 @@
 import os.errors.platform as platform;
+import printer.(printTo,printReprTo);
 
 record GenericOSError(code:Int);
 

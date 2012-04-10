@@ -1,5 +1,6 @@
 import numbers.floats.*;
 import printer.formatter.*;
+import printer.(println);
 
 main() {
     ..for (f in 0.0, -1.0, 1.0, infinity(Double), negativeInfinity(Double))

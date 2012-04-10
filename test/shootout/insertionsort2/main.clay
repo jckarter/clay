@@ -1,3 +1,4 @@
+import printer.(println);
 
 insertionSort(a) {
     var i = begin(a) + 1;

@@ -1,4 +1,5 @@
 import io.sockets.*;
+import printer.(println);
 
 main() {
     startSockets();

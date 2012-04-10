@@ -1,3 +1,4 @@
+import printer.(println);
 
 external qsort(base:RawPointer, n:SizeT, width:SizeT,
                compare:CCodePointer[[RawPointer, RawPointer], [Int]]);

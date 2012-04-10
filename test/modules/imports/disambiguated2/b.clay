@@ -1,1 +1,3 @@
+import printer.(println);
+
 foo() { println("b.foo"); }

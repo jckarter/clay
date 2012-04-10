@@ -1,4 +1,5 @@
 import keywordarguments.*;
+import printer.(println);
 
 foo(x: Int, zim: Int, zang: StringLiteralRef, zung: Double) {
     println();

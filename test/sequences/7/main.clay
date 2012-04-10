@@ -1,3 +1,4 @@
+import printer.(println,print);
 
 printList(a) {
     var first = true;

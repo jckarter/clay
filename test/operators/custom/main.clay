@@ -1,5 +1,6 @@
 import foo;
 import foo.((~~));
+import printer.(println);
 
 (**)(a, b) { println("**"); }
 

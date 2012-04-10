@@ -1,3 +1,5 @@
+import printer.(println);
+
 myadd(x:Int32, y:Int32) --> returned:Int32 __llvm__ {
     %1 = load i32* %x
     %2 = load i32* %y

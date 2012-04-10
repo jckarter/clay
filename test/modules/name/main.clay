@@ -1,7 +1,7 @@
-
+import printer.(println);
 import vectors.generic as vg;
 import hash;
-import hashmaps.(HashMap);
+import hashmaps.*;
 
 main() {
     disp(add);

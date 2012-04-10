@@ -1,4 +1,5 @@
 import defaultarguments.*;
+import printer.(println);
 
 foo(..args) {
     var name, number = ..defaultArguments(["John Doe", 42], ..args);

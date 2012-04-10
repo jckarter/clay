@@ -1,3 +1,5 @@
+import printer.(println);
+
 [T] define byval(x:T) : T;
 [T] define byref(ref x:T) : ByRef[T];
 
