@@ -2,6 +2,7 @@ import cocoa.objc.runtime;
 import cocoa.objc.*;
 import cocoa.nib.*;
 import cocoa.foundation.*;
+import hash.(hash);
 import maybe.*;
 
 public import cocoa.util.platform.*;

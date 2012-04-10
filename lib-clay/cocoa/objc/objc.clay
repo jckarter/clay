@@ -7,6 +7,7 @@ public import cocoa.objc.runtime.(
     SEL as SelectorHandle,
     BOOL, YES, NO, IMP
 );
+import algorithms.(log2);
 
 
 
