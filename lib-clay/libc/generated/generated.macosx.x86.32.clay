@@ -877,19 +877,6 @@ alias Union_wait = Union[
     /* w_S */ Struct_Unnamed2,
 ];
 
-record Struct_Unnamed1 (
-    w_Termsig : UInt,
-    w_Coredump : UInt,
-    w_Retcode : UInt,
-    w_Filler : UInt,
-);
-
-record Struct_Unnamed2 (
-    w_Stopval : UInt,
-    w_Stopsig : UInt,
-    w_Filler : UInt,
-);
-
 external (cdecl, "_wait\$UNIX2003") wait(arg0:Pointer[Int]) : pid_t;
 
 external (cdecl, "_waitpid\$UNIX2003") waitpid(arg0:pid_t, arg1:Pointer[Int], arg2:Int) : pid_t;
@@ -1965,4 +1952,17 @@ external (cdecl) timelocal(arg0:Pointer[Struct_tm]) : time_t;
 external (cdecl) timegm(arg0:Pointer[Struct_tm]) : time_t;
 
 external (cdecl, "_nanosleep\$UNIX2003") nanosleep(arg0:Pointer[Struct_timespec], arg1:Pointer[Struct_timespec]) : Int;
+
+record Struct_Unnamed2 (
+    w_Stopval : UInt,
+    w_Stopsig : UInt,
+    w_Filler : UInt,
+);
+
+record Struct_Unnamed1 (
+    w_Termsig : UInt,
+    w_Coredump : UInt,
+    w_Retcode : UInt,
+    w_Filler : UInt,
+);
 

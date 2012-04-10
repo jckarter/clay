@@ -342,24 +342,30 @@ symbolVisited(name:String) : Bool
 }
 
 structDefinition(cursor:CXCursor, name:String, data:CXClientData) : {
-    var unnamedFieldIndex = 0;
-    printlnTo(g_bindingsOut, "record ", name, " (");
-    clang_visitChildren(cursor, CXCursorVisitor(visitStruct),
-        CXClientData(@unnamedFieldIndex));
-    printlnTo(g_bindingsOut, ");\n");
+    if (not symbolVisited(name)) {
+        var unnamedFieldIndex = 0;
+        printlnTo(g_bindingsOut, "record ", name, " (");
+        clang_visitChildren(cursor, CXCursorVisitor(visitStruct),
+            CXClientData(@unnamedFieldIndex));
+        printlnTo(g_bindingsOut, ");\n");
+    }
 }
 
 unionDefinition(cursor:CXCursor, name:String, data:CXClientData) : {
-    printlnTo(g_bindingsOut, "alias ", name, " = Union[");
-    clang_visitChildren(cursor, CXCursorVisitor(visitUnion), data);
-    printlnTo(g_bindingsOut, "];\n");
+    if (not symbolVisited(name)) {
+        printlnTo(g_bindingsOut, "alias ", name, " = Union[");
+        clang_visitChildren(cursor, CXCursorVisitor(visitUnion), data);
+        printlnTo(g_bindingsOut, "];\n");
+    }
 }
 
 
 enumDefinition(cursor:CXCursor, name:String, data:CXClientData) : {
-    printlnTo(g_bindingsOut, "alias ", name, " = ",
-        convertType(clang_getEnumDeclIntegerType(cursor), cursor), ";");
-    clang_visitChildren(cursor, CXCursorVisitor(visitEnum), data);
+    if (not symbolVisited(name)) {
+        printlnTo(g_bindingsOut, "alias ", name, " = ",
+            convertType(clang_getEnumDeclIntegerType(cursor), cursor), ";");
+        clang_visitChildren(cursor, CXCursorVisitor(visitEnum), data);
+    }
 }
 
 visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
@@ -450,8 +456,6 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
     }
     case (CXCursor_TypedefDecl) {
         var name = str(clang_getCursorSpelling(cursor));
-        if (symbolVisited(name))
-            return CXChildVisit_Continue;
 
         var underlyingType = clang_getTypedefDeclUnderlyingType(cursor);
         if (underlyingType.kind == CXType_Unexposed)
@@ -480,6 +484,9 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
                 return CXChildVisit_Continue;
             }
         }
+
+        if (symbolVisited(name))
+            return CXChildVisit_Continue;
 
         printlnTo(g_bindingsOut, "alias ", typeId, " = ",
             convertType(underlyingType, cursor), ";\n");
