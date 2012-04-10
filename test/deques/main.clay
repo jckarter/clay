@@ -1,5 +1,5 @@
 import deques.*;
-import printer.(println);
+import printer.(print, println);
 
 main() {
     println("d1:");
