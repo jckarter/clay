@@ -1,6 +1,7 @@
 import cocoa.*;
 import cocoa.test.*;
 import hash.(hash);
+import printer.(str);
 import test.*;
 import test.memory.*;
 

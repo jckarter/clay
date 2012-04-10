@@ -2,6 +2,7 @@ import test.*;
 import test.memory.*;
 import cocoa.objc.*;
 import cocoa.objc.platform;
+import printer.(str);
 
 import foo.(FooClass);
 import zim.zang.(ZangClass);

@@ -8,7 +8,7 @@ public import cocoa.objc.runtime.(
     BOOL, YES, NO, IMP
 );
 import algorithms.(log2);
-
+import printer.(str);
 
 
 //

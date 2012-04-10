@@ -1,4 +1,5 @@
 import cocoa.objc.*;
+import printer.(println);
 
 
 overload selector("alloc") = Id;
