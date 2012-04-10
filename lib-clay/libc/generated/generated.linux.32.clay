@@ -2262,3 +2262,5 @@ external (cdecl) timer_gettime(arg0:timer_t, arg1:Pointer[Struct_itimerspec]) : 
 
 external (cdecl) timer_getoverrun(arg0:timer_t) : Int;
 
+// monkeypatch until proper regen
+external (cdecl) asprintf(arg0:Pointer[Pointer[CChar]], arg1:Pointer[CChar], ..) : Int;
