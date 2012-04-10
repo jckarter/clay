@@ -745,7 +745,6 @@ alias pthread_mutex_t = Union[
     /* __align */ CLong,
 ];
 
-
 alias pthread_mutexattr_t = Union[
     /* __size */ Array[CChar, 4],
     /* __align */ Int,
