@@ -77,8 +77,7 @@ overload FileMapping(f:File, mode:MappingMode) =
 
 overload destroy(x:InnerFileMapping) {
     var result = unix.munmap(x.address, x.length);
-    if (result == Type(result)(-1))
-        errorNoThrow(GenericIOError(unix.errno()));
+    assert(result != wrapCast(Type(result), -1));
 }
 
 

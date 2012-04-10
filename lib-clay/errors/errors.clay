@@ -1,25 +1,24 @@
-import libc.(abort);
+import libc.(abort, stderr, fprintf, asprintf, strlen);
 import errors.backtrace.(showBacktrace);
-import io.files.raw.(stderrRawFile);
-import printer.(printlnTo,printTo);
 
 
 //
 // error (exceptions disabled)
 //
 
-errorNoThrow(..e) {
-    var err = stderrRawFile();
-    printlnTo(err, "error: ", ..e);
+[fmt]
+errorWithPrintfNoThrow(#fmt, ..e) {
+    fprintf(stderr, cstring(strl("error: ", fmt, "\n")), ..e);
     showBacktrace();
     abort();
 }
 
-[ when not ExceptionsEnabled?]
-error(..e) {
-    errorNoThrow(..e);
-}
+define errorWithPrintf;
 
+[fmt when not ExceptionsEnabled?]
+overload errorWithPrintf(#fmt, ..e) {
+    errorWithPrintfNoThrow(fmt, ..e);
+}
 
 
 //
@@ -30,13 +29,14 @@ record Error (msg : String);
 
 instance Exception (Error);
 
-[ when ExceptionsEnabled?]
-overload error(..e) {
-    var buf = String();
-    printTo(buf, ..e);
-    throw Error(move(buf));
+[fmt when ExceptionsEnabled?]
+overload errorWithPrintf(#fmt, ..e) {
+    var bufp = Pointer[CChar]();
+    asprintf(@bufp, fmt, ..e);
+    var bufsize = SizeT(strlen(bufp));
+    var str = initializeRecord(String, bufsize, bufsize, Pointer[Char](bufp));
+    throw Error(move(str));
 }
-
 
 
 //
@@ -54,28 +54,22 @@ alias overload assert[..tags](..whatever) {}
 
 alias overload assert(..whatever) {}
 
-[when AllAssertionsEnabled?()]
-alias overload assert(cond:Bool, ..message) {
-    if (not cond)
-        errorNoThrow(StaticName(__FILE__), "(", __LINE__, ",", __COLUMN__, "): assertion ", __ARG__ cond, " failed: ", ..message);
-}
-
-[..tags when AllAssertionsEnabled?() and allValues?(AssertionEnabled?, ..tags)]
-alias overload assert[..tags](cond:Bool, ..message) {
-    if (not cond)
-        errorNoThrow(StaticName(__FILE__), "(", __LINE__, ",", __COLUMN__, "): assertion ", __ARG__ cond, " failed: ", ..message);
-}
+[file, line, column, cond]
+private assertStringLiteral(#file, #line, #column, #cond, ..etc)
+    = strl(#file, "(", #line, ",", #column, "): assertion ", #cond, "failed", ..etc);
 
 [when AllAssertionsEnabled?()]
 alias overload assert(cond:Bool) {
     if (not cond)
-        errorNoThrow(StaticName(__FILE__), "(", __LINE__, ",", __COLUMN__, "): assertion ", __ARG__ cond, " failed");
+        errorWithPrintfNoThrow(
+            assertStringLiteral(__FILE__, #__LINE__, #__COLUMN__, __ARG__ cond));
 }
 
 [..tags when AllAssertionsEnabled?() and allValues?(AssertionEnabled?, ..tags)]
 alias overload assert[..tags](cond:Bool) {
     if (not cond)
-        errorNoThrow(StaticName(__FILE__), "(", __LINE__, ",", __COLUMN__, "): assertion ", __ARG__ cond, " failed");
+        errorWithPrintfNoThrow(
+            assertStringLiteral(__FILE__, #__LINE__, #__COLUMN__, __ARG__ cond));
 }
 
 

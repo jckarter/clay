@@ -1,4 +1,4 @@
-import printer.(println);
+import printer.(error, println);
 
 var _countdown = 7;
 

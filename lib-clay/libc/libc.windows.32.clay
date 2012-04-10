@@ -35,3 +35,14 @@ inline tanhf(x:Float) : Float = Float(tanh(Double(x)));
 
 inline isnan(x:Double) : Int = Int(x != x);
 inline isnanf(x:Float) : Int = Int(x != x);
+
+// asprintf isn't standard and windows doesn't have it, but it's pretty useful so
+// let's fake it
+
+asprintf(out:Pointer[Pointer[CChar]], fmt, ..args) : Int {
+    var bufsz = _scprintf(fmt, ..args);
+    out^ = Pointer[CChar](malloc(bufsz+1));
+    var bufsz2 = _snprintf(out^, bufsz, fmt, ..args);
+    out[bufsz] = 0;
+    return bufsz2;
+}

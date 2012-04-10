@@ -1,4 +1,6 @@
-
+import errors.(private assertStringLiteral);
+import errors.backtrace.(showBacktrace);
+import io.files.raw.(stderrRawFile);
 import libc;
 import platform;
 import printer.platform.(
@@ -587,3 +589,47 @@ observeCallTo(stream, forward fn, forward ..args) {
 
 observeCall(forward fn, forward ..args)
     = forward ..observeCallTo(stderr, fn, ..args);
+
+
+//
+// error, errorNoThrow, assert with pretty-printed message
+//
+
+errorNoThrow(..e) {
+    var err = stderrRawFile();
+    printlnTo(err, "error: ", ..e);
+    showBacktrace();
+    libc.abort();
+}
+
+define error;
+
+[when not ExceptionsEnabled?]
+overload error(..e) {
+    errorNoThrow(..e);
+}
+
+[when ExceptionsEnabled?]
+overload error(..e) {
+    var buf = String();
+    printTo(buf, ..e);
+    throw Error(move(buf));
+}
+
+[when AllAssertionsEnabled?()]
+alias overload assert(cond:Bool, ..args) {
+    if (not cond)
+        errorWithPrintfNoThrow(
+            assertStringLiteral(__FILE__, #__LINE__, #__COLUMN__, __ARG__ cond, ": %s"),
+            cstring(str(..args)));
+}
+
+[..tags when AllAssertionsEnabled?() and allValues?(AssertionEnabled?, ..tags)]
+alias overload assert[..tags](cond:Bool, ..args) {
+    if (not cond)
+        errorWithPrintfNoThrow(
+            assertStringLiteral(__FILE__, #__LINE__, #__COLUMN__, __ARG__ cond, ": %s"),
+            cstring(str(..args)));
+}
+
+

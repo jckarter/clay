@@ -29,8 +29,9 @@ private exceptionObject(exp:RawPointer) = ref Pointer[Exception](exp)^;
 // throwValue, continueException
 //
 
-overload throwValue(x) {
-    errorNoThrow(x);
+[T]
+overload throwValue(x:T) {
+    errorWithPrintfNoThrow("exception of type " ++ StaticName(T) ++ " thrown with exceptions disabled");
 }
 
 [ when ExceptionsEnabled?]

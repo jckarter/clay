@@ -1,5 +1,3 @@
-import printer.formatter.*;
-
 record Float80Bits (mantissa:UInt64,exponent:UInt32);
 
 floatBits(f:ILongDouble) = bitcast(Float80Bits, f);

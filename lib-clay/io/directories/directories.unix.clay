@@ -37,8 +37,7 @@ overload DirentSequence(dir:T) --> returned: DirentSequence {
 overload destroy(s: DirentSequence) {
     if (not null?(s.dir)) {
         var result = closedir(s.dir);
-        if (result == Type(result)(-1))
-            errorNoThrow(errorMessage(errno()));
+        assert(result != wrapCast(Type(result), -1));
     }
 }
 overload resetUnsafe(s: DirentSequence) {

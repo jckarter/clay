@@ -1,4 +1,4 @@
-import printer.formatter.(repr);
+import platform.(OSFamily, Windows);
 import __operators__;
 
 __llvm__{
@@ -206,10 +206,54 @@ inline overload integerConvertWithOverflow(#A, b:B) : A, Bool
 
 // callbacks for integer*Checked primitives
 
-private inline checked(checkedFn, ..args) {
-    var out, overflow? = checkedFn(..args);
+private define PrintfFmt;
+[T] overload PrintfFmt(#T) = "%d";
+overload PrintfFmt(UInt32) = "%u";
+
+overload PrintfFmt(Int64) = "%lld";
+overload PrintfFmt(UInt64) = "%llu";
+
+[when OSFamily == Windows]
+overload PrintfFmt(Int64) = "%I64d";
+[when OSFamily == Windows]
+overload PrintfFmt(UInt64) = "%I64u";
+
+// XXX
+overload PrintfFmt(Int128) = "<Int128>";
+overload PrintfFmt(UInt128) = "<UInt128>";
+
+private define checked;
+
+[T]
+inline overload checked(checkedFn, arg:T) {
+    var out, overflow? = checkedFn(arg);
     if (overflow?)
-        errorNoThrow("invalid integer math: ", checkedFn, "(", repr(..args), ")");
+        errorWithPrintfNoThrow(
+            "invalid integer math: " ++ StaticName(checkedFn)
+            ++ "(" ++ PrintfFmt(T) ++ ")",
+            arg);
+    return out;
+}
+
+[T]
+inline overload checked(checkedFn, arg1:T, arg2:T) {
+    var out, overflow? = checkedFn(arg1, arg2);
+    if (overflow?)
+        errorWithPrintfNoThrow(
+            "invalid integer math: " ++ StaticName(checkedFn)
+            ++ "(" ++ PrintfFmt(T) ++ ", " ++ PrintfFmt(T) ++ ")",
+            arg1, arg2);
+    return out;
+}
+
+[T, U]
+inline overload checked(checkedFn, #T, arg2:U) {
+    var out, overflow? = checkedFn(T, arg2);
+    if (overflow?)
+        errorWithPrintfNoThrow(
+            "invalid integer math: " ++ StaticName(checkedFn)
+            ++ "(" ++ StaticName(T) ++ ", " ++ PrintfFmt(U) ++ ")",
+            arg2);
     return out;
 }
 

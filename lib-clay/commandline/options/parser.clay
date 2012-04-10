@@ -87,7 +87,7 @@ parseOptions(ops : OptionSpecs, args) : ParseResult {
 }
 
 private splitOption(token){
-  if(argument?(token)) error("Invalid argument: splitOption called on non-option");
+  if(argument?(token)) errorWithPrintf("Invalid argument: splitOption called on non-option");
 
   if(shortOption?(token)){
     if(size(token) == 2) return ..String(token[1]), nothing(String);

@@ -41,6 +41,10 @@ alias overload V(x:T) = initializeVariant(V, x);
 [V,T,..AA when Variant?(V) and VariantMember?(V, T) and CallDefined?(T, ..AA)]
 alias overload V(#T, ..args:AA) = V(T(..args));
 
+private abortInvalidTag(tag:Int) {
+    errorWithPrintfNoThrow("invalid variant, tag = %d", tag);
+}
+
 
 //
 //
@@ -64,8 +68,8 @@ overload V(src:V) --> returned:V {
             goto end;
         }
     }
-    errorNoThrow("invalid variant, tag = ", tag);
-    end :
+    abortInvalidTag(tag);
+    end:
 }
 
 [V when Variant?(V) and not (BitwiseMovedType?(V) and NotResetType?(V))]
@@ -94,8 +98,8 @@ overload moveUnsafe(src:V) --> returned:V {
             goto end;
         }
     }
-    errorNoThrow("invalid variant, tag = ", tag);
-    end :
+    abortInvalidTag(tag);
+    end:
 }
 
 [V when Variant?(V) and not NotResetType?(V)]
@@ -139,7 +143,7 @@ overload assign(ref dest:V, ref src:V) {
             goto end;
         }
     }
-    errorNoThrow("invalid variant, tag = ", tag);
+    abortInvalidTag(tag);
     end :
 }
 
@@ -162,7 +166,7 @@ overload destroy(x:V) {
             return;
         }
     }
-    errorNoThrow("invalid variant, tag = ", tag);
+    abortInvalidTag(tag);
 }
 
 
@@ -183,7 +187,7 @@ overload equals?(a:V, b:V) {
         if (tag == unwrapStatic(i))
             return staticIndex(aData, i) == staticIndex(bData, i);
     }
-    errorNoThrow("invalid variant, tag = ", tag);
+    abortInvalidTag(tag);
     return false;
 }
 
@@ -264,7 +268,9 @@ inline overload __operators__.dispatchIndex(x:V, #i) =
 
 [V]
 inline overload __operators__.invalidDispatch(x:V) {
-    errorNoThrow("invalid ", V, ", tag = ", __operators__.dispatchTag(x));
+    errorWithPrintfNoThrow(
+        "invalid " ++ StaticName(V) ++ ", tag = %d",
+        __operators__.dispatchTag(x));
 }
 
 

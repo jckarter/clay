@@ -94,11 +94,9 @@ overload FileMapping(f:File, mode:MappingMode) =
 
 overload destroy(x:InnerFileMapping) {
     var result = win32.UnmapViewOfFile(x.address);
-    if (result == 0)
-        errorNoThrow(GenericIOError(win32.GetLastError()));
+    assert(result != 0);
     result = win32.CloseHandle(x.mappingObject);
-    if (result == 0)
-        errorNoThrow(GenericIOError(win32.GetLastError()));
+    assert(result != 0);
 }
 
 

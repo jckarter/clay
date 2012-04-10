@@ -97,8 +97,7 @@ overload RawFile(path:S) = RawFile(path, READ);
 overload destroy(x:RawFile) {
     if (x.owned) {
         var result = win32.CloseHandle(x.handle);
-        if (result == 0)
-            errorNoThrow(GenericIOError(win32.GetLastError()));
+        assert(result != 0);
     }
 }
 

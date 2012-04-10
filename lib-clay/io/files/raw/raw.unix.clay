@@ -65,8 +65,7 @@ overload RawFile(path:S) = RawFile(path, READ);
 overload destroy(x:RawFile) {
     if (x.owned) {
         var result = unix.close(x.handle);
-        if (result == Type(result)(-1))
-            errorNoThrow(GenericIOError(unix.errno()));
+        assert(result != wrapCast(Type(result), -1));
     }
 }
 
