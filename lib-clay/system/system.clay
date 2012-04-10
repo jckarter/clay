@@ -1,4 +1,5 @@
 import __operators__;
+import printer.(printlnTo);
 
 private var argc = 0;
 private var argv = Pointer[Pointer[Int8]]();

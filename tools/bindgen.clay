@@ -1,8 +1,10 @@
 import llvm.libclang.*;
 import printer.formatter.(repr);
+import printer.(print,println,printTo,printlnTo,str);
 import maybe.*;
 import hashmaps.*;
 import algorithms.(in?);
+import io.files.*;
 
 var clayKeywords = array(
     "public", "private", "import", "as",

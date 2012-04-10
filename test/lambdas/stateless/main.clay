@@ -1,5 +1,6 @@
 
 import libc;
+import printer.(println);
 
 main() {
     var statelessLambda = () => { println("bye!"); };

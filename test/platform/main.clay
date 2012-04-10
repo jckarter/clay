@@ -2,6 +2,7 @@ import platform.(
     OS, OSFamily, CPU, CPUFamily,
     OSString, OSFamilyString, CPUString, CPUBits,
 );
+import printer.(println);
 
 main() {
     println("ok");

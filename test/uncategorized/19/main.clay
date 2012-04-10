@@ -1,3 +1,4 @@
+import printer.(println);
 
 define IsInt64;
 [T] overload IsInt64(#T) = false;

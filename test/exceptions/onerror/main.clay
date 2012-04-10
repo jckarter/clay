@@ -1,3 +1,5 @@
+import printer.(println);
+
 instance Exception (Int);
 
 foo(throw?) {

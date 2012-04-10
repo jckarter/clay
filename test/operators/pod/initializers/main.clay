@@ -1,4 +1,5 @@
 import printer.formatter.(repr);
+import printer.(println);
 
 enum SomeEnum (ZERO, A1, B2, C3, D4);
 

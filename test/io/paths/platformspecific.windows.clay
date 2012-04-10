@@ -1,6 +1,7 @@
 
 import test.*;
 import io.paths.*;
+import printer.(printTo);
 
 expectSplitPath(test, path, expected) {
     expectEqual(test,

@@ -1,3 +1,4 @@
+import printer.(println);
 
 variant Expr (BinaryOp, UnaryOp, Variable, Literal);
 

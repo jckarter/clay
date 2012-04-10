@@ -1,3 +1,5 @@
+import printer.(println,observe,observeCall);
+
 tellRvalue(ref x) = 0;
 overload tellRvalue(rvalue x) = 1;
 

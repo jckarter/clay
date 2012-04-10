@@ -1,5 +1,6 @@
 import numbers.floats.(infinity);
 import hash.*;
+import printer.(println);
 
 main() {
     // just make sure hash() works without crashing or raising spurious overflows

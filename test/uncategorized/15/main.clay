@@ -1,3 +1,4 @@
+import printer.(println);
 
 map(f, a) {
     alias ResultType = Type(f(a[0]));

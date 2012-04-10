@@ -1,3 +1,4 @@
+import printer.(println);
 
 var global_x = 0;
 var global_y = 0;

@@ -1,3 +1,4 @@
+import printer.(println);
 main() {
     println(strl("hello", " ", "world"));
     println(strl("use ", add, " to add numbers"));

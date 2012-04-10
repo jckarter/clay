@@ -1,3 +1,5 @@
+import printer.(println);
+
 external sayHello();
 
 external factorial(n:Int) Int;

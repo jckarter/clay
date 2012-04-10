@@ -1,4 +1,5 @@
 import printer.formatter.(repr);
+import printer.(println);
 
 main() {
     var x, y, z1, z2 = eval "123", eval ("456", "us"), ..eval "789, 1011";

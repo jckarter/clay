@@ -1,4 +1,4 @@
-
+import printer.(println);
 import test.memory2.*;
 
 main() {

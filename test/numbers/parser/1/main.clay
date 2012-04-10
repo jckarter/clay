@@ -1,3 +1,5 @@
+import printer.(println);
+
 main() {
     println(Int8("111"));
     println(Int16("222"));

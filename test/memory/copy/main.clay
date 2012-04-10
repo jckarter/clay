@@ -1,3 +1,5 @@
+import printer.(println);
+
 record NonPODInt (x: Int);
 overload RegularRecord?(#NonPODInt) = false;
 overload NonPODInt(x: NonPODInt) = NonPODInt(x.x);

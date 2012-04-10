@@ -1,5 +1,5 @@
 
-import io.errors.*;
+public import io.errors.*;
 import vectors.generic.*;
 
 //

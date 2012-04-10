@@ -1,3 +1,4 @@
+import printer.(println);
 test(a) {
     println(a);
     var b = stringLiteralByteSlice(a, #0, #3);

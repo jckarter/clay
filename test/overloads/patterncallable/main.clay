@@ -1,3 +1,5 @@
+import printer.(println);
+
 square(x:Double) : Double = x * x;
 cube(x:Double) : Double = x * x * x;
 

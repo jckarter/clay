@@ -1,3 +1,4 @@
+import printer.(println);
 
 [x]
 foo(#x) --> returned:Int32 __llvm__ {

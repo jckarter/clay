@@ -1,5 +1,6 @@
 import libc;
 import printer.formatter.(repr);
+import printer.(println);
 
 record Struct1 (
     a : UInt64,

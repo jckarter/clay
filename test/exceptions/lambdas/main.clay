@@ -1,3 +1,4 @@
+import printer.(println);
 
 instance Exception (Int);
 

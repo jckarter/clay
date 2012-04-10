@@ -318,6 +318,7 @@ overload printReprTo(stream, x:Float80) {
     printFloatWithSprintf(stream, "nan(Float80)", "%.16Lafl", x);
 }
 
+
 overload printReprTo(stream, x:Imag32) {
     printFloatWithSprintf(stream, "nan(Imag32)", "%.6afj", Imag64(x));
 }
@@ -351,6 +352,7 @@ overload printReprTo(stream, x:Complex64) {
 overload printReprTo(stream, x:Complex32) {
     printFloatWithSprintf(stream, "nan(Complex32)", "%.6af%+.6afj", ..mapValues(Double, ..rectValues(x)));
 }
+
 
 [T]
 overload printReprTo(stream, x:Pointer[T]) {

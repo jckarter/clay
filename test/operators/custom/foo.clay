@@ -1,1 +1,2 @@
+import printer.(println);
 (~~)(a, b) { println("~~"); }

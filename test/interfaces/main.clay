@@ -1,6 +1,7 @@
 import interfaces.*;
 import test.memory.*;
 import deques.*;
+import printer.(println,print);
 
 record TestInterface = interfaceType(
     [print, [],    []],

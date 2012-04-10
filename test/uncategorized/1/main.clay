@@ -1,3 +1,4 @@
+import printer.(println);
 
 factorial(n) {
     if (n == 0)

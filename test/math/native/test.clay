@@ -1,6 +1,7 @@
 // Test math functions
 
 import math.*;
+import printer.(println);
 
 itypes() = Int8, Int16, Int32, Int64;
 

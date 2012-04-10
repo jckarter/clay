@@ -1,3 +1,4 @@
+import printer.(println);
 main() {
     println([0,[10,11,[120,121]],2].1.0x2.0);
 }

@@ -1,4 +1,4 @@
-
+import printer.(println);
 
 computeFields(T) {
     return x:T, y:T;

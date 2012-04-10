@@ -1,3 +1,4 @@
+import printer.(println);
 [T] variant Foo[T] (Int, T);
 
 [T when Integer?(T)]

@@ -1,4 +1,5 @@
 import destructors.*;
+import printer.(println);
 
 var destroyed = false;
 

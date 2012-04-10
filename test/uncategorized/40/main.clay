@@ -1,3 +1,4 @@
+import printer.(println,printTo);
 
 main() {
     var a = Vector[Char]();

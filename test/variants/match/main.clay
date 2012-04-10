@@ -1,3 +1,4 @@
+import printer.(println);
 variant Foo (Int, Double, StringLiteralRef);
 
 foo(x) {

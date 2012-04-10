@@ -1,3 +1,4 @@
+import printer.(println);
 main() {
     var x = 100;
     switch (x +: 1; inc(x); var x = 200; x +: 1; inc(x); x)

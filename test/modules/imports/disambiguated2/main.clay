@@ -1,5 +1,6 @@
 import a.*;
 import b.*;
+import printer.(println);
 
 foo() { println("__main__.foo"); }
 

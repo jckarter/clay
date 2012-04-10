@@ -1,6 +1,7 @@
 import libc;
 import simd.*;
 import printer.formatter.(repr);
+import printer.(println);
 
 record Struct_x86_1 (
     a : Float80,

@@ -1,3 +1,5 @@
+import printer.(println);
+
 define foo;
 overload foo(x:Int) {
     println("Int", x);

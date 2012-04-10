@@ -1,3 +1,4 @@
+import printer.(println);
 
 [T when Sequence?(T)]
 sequenceInfo(x:T) {

@@ -1,5 +1,6 @@
 import commandline.dispatch.*;
 import algorithms.(reduce);
+import printer.(println,printlnTo);
 
 add(args) {
     println(

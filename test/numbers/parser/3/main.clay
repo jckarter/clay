@@ -1,3 +1,4 @@
+import printer.(println);
 main() {
     println(Int8("abc9\n"));
 }

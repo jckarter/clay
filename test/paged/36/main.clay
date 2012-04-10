@@ -1,4 +1,5 @@
 import paged.*;
+import printer.(println,printTo,print);
 
 record Address (
     name : String,

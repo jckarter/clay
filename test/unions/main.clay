@@ -1,3 +1,4 @@
+import printer.(println,printTo,print);
 
 record Point (
     x : Int,

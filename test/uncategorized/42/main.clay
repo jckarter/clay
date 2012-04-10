@@ -1,3 +1,4 @@
+import printer.(println);
 swap(a, b) { return b, a; }
 
 [T] foo(#T) = T, Pointer[T];

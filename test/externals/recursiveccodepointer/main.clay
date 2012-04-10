@@ -1,3 +1,5 @@
+import printer.(println);
+
 alias FooFn = CCodePointer[[Foo],[]];
 
 record Foo (x:FooFn);

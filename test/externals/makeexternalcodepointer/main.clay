@@ -1,4 +1,7 @@
+import printer.(println);
+
 foo(x:Int, y:Int) = x + y;
+
 main() {
     var s1 = StdCallCodePointer[[Int,Int],[Int]](foo);
     var t1 = ThisCallCodePointer[[Int,Int],[Int]](foo);

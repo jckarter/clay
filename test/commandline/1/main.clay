@@ -1,3 +1,5 @@
+import printer.(println);
+
 main() {
     for (i, x in enumerated(commandLine()))
         println(i, ") ", x);

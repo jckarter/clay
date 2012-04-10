@@ -1,3 +1,4 @@
+import printer.(println);
 
 define wrap;
 overload wrap(rvalue first, forward ..rest) = first, ..wrap(..rest);

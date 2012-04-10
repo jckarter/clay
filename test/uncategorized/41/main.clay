@@ -1,3 +1,4 @@
+import printer.(println,printTo);
 
 [T] testMinMaxParser(#T) {
     println("testing ", T);

@@ -1,3 +1,5 @@
+import printer.(println);
+
 mono1() {}
 mono2(x:Int) {}
 define mono3;

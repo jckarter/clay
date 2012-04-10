@@ -1,3 +1,4 @@
+import printer.(println);
 
 define PointerTypes;
 overload PointerTypes(a, ..b) = Pointer[a], ..PointerTypes(..b);

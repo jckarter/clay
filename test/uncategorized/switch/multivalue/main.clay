@@ -1,3 +1,4 @@
+import printer.(println);
 multi() = 1, 2;
 
 main() {

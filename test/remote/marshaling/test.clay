@@ -3,6 +3,8 @@ import test.memory.*;
 import remote.marshaling.*;
 import sharedpointers.(SharedPointer,nullShared,new);
 import uniquepointers.(UniquePointer,newUnique);
+import printer.(printTo);
+import referencetypes.(referenceType);
 
 expectMarshalingInvariants(test, name, value) {
     var marshaled = marshal(value);

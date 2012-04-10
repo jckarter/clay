@@ -1,3 +1,4 @@
+import printer.(println);
 
 define RValue?;
 alias overload RValue?(rvalue x) = 1;

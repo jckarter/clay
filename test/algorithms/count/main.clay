@@ -1,4 +1,5 @@
 import algorithms.(count);
+import printer.(println);
 
 main() {
     var v = Vector[Int](1, 2, 3, 4, 5);

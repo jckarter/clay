@@ -1,3 +1,4 @@
+import printer.(println,str);
 
 main() {
     println([1, true, 3.5]);

@@ -1,3 +1,4 @@
+import printer.(println);
 
 quickSort(a) {
     sortRange(begin(a), end(a));

@@ -1,4 +1,5 @@
 import printer.formatter.(repr);
+import printer.(println);
 
 probeFlags() = Flag?("FOO"), Flag?("BAR"), Flag?("BAS"),
     Flag("FOO"), Flag("BAR"), Flag("BAS");

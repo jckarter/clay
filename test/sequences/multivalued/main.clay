@@ -1,5 +1,6 @@
 
 import deques.*;
+import printer.(println);
 
 main() {
     var a = integerArray(#5);

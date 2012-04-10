@@ -1,3 +1,5 @@
+import printer.(println);
+
 main(args) {
     var x = Float("1000"); // optimization barrier
     println(x, ' ', ULong(0.009f*x), ' ', 0.009f*x);

@@ -1,4 +1,4 @@
-
+import printer.(println);
 
 record Point[T] = flexi(x:T, y:T);
 

@@ -1,3 +1,4 @@
+import printer.(println,print);
 
 record Square (
     side : Double

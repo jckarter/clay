@@ -1,6 +1,7 @@
 import test.*;
 import algorithms.(sort,sortBy);
 import comparators.(comparing,reversed);
+import printer.(str);
 
 record Unordered[T](value : T);
 

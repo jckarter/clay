@@ -1,4 +1,5 @@
 import externals.*;
+import printer.(println);
 
 impl_sq(x:Double) : Double = x*x;
 

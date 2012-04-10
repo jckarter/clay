@@ -1,4 +1,5 @@
 import maybe.*;
+import printer.(println);
 
 doIt(x) {
     println("done! x = ", x);

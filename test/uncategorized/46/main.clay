@@ -1,3 +1,4 @@
+import printer.(println);
 
 fields(I) = ["x", I], ["y", I];
 

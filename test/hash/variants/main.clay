@@ -1,5 +1,6 @@
 // Ensure hash() for variants works and doesn't trap on expected overflows
 import hash.*;
+import printer.(println);
 
 variant A (Int32, Float64);
 

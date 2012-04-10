@@ -1,5 +1,6 @@
 import test.*;
 import random.*;
+import printer.(str);
 
 // WARNING: This test suite may fail generately. Care is taken to assure that the probability of it doing so 
 // is relatively low in the case that there is a genuine failure (<= 2^-64 is the general goal).

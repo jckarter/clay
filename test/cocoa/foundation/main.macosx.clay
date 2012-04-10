@@ -1,5 +1,6 @@
 import cocoa.objc.*;
 import cocoa.foundation.*;
+import printer.(println);
 
 main() {
     var pool = NSAutoreleasePool.alloc().init();

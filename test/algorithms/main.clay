@@ -1,4 +1,5 @@
 import algorithms.(find,endsWith?,beginsWith?,split,join);
+import printer.(println);
 
 main() {
     var a = array("", "foo", "foobar", "afoobarfoo");

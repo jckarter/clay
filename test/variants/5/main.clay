@@ -1,3 +1,4 @@
+import printer.(println);
 variant Variant[..T] (..T);
 
 foo(x:Variant[Int,Float]) {

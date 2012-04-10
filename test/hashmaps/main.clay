@@ -1,5 +1,6 @@
 import hashmaps.(HashMap);
 import algorithms.(sort);
+import printer.(println,printTo);
 
 even?(x) = (x % 2 == 0);
 

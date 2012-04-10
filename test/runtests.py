@@ -77,6 +77,7 @@ def getClayCompiler(opt) :
 def getClayPlatform(opt):
     with tempfile.NamedTemporaryFile(suffix='.clay', delete=False) as platformclay:
         print >>platformclay, 'import platform.(OSString, OSFamilyString, CPUString, CPUBits);'
+        print >>platformclay, 'import printer.(println);'
         print >>platformclay, 'main() {'
         print >>platformclay, '    println("[Target]");'
         print >>platformclay, '    println("platform: ", OSString);'

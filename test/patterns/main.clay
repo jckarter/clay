@@ -1,3 +1,4 @@
+import printer.(println);
 
 [..In, ..Out]
 showType(#CodePointer[[..In], [..Out]]) {

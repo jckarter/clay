@@ -1,5 +1,6 @@
 import libc;
 import printer.formatter.(repr);
+import printer.(println);
 
 alias Union24 = Union[
     /* a */ UInt32,

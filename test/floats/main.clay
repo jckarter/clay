@@ -1,4 +1,5 @@
 import numbers.floats.*;
+import printer.(println);
 
 main() {
     var orderedComparisons = [

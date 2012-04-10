@@ -1,3 +1,4 @@
+import printer.(println);
 variant Number (Int, Double);
 alias NumberRef = VariantRef[Number];
 
