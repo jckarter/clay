@@ -1,7 +1,7 @@
 import algorithms.heaps as heaps;
 import algorithms.introsort as introsort;
-import comparators.*;
-import hashmaps.*;
+import comparators.(comparing,natural,Comparator?);
+import hashmaps.(HashMap);
 
 alias log2 = introsort.log2;
 

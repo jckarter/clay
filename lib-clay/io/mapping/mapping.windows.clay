@@ -1,6 +1,6 @@
 import win32;
 import io.errors.*;
-import sharedpointers.*;
+import sharedpointers.(SharedPointer,new);
 
 
 //

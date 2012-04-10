@@ -1,5 +1,5 @@
-import hashmaps.*;
-import algorithms.*;
+import hashmaps.(HashMap);
+import algorithms.(sort);
 
 even?(x) = (x % 2 == 0);
 

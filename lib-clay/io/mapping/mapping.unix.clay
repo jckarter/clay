@@ -1,6 +1,6 @@
 import unix;
 import io.errors.*;
-import sharedpointers.*;
+import sharedpointers.(SharedPointer,new);
 
 
 //

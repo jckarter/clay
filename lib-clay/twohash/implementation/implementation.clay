@@ -29,7 +29,7 @@
 // basic definitions
 //
 
-import hash.*;
+import hash.(hash);
 
 define EntryType;
 define keyMatch?;

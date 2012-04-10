@@ -1,6 +1,6 @@
 
 import io.files.raw.*;
-import sharedpointers.*;
+import sharedpointers.(SharedPointer,new);
 
 
 //

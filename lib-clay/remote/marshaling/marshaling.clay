@@ -1,4 +1,4 @@
-import hashmaps.*;
+import hashmaps.(HashMap);
 import algorithms.(reduce);
 import uniquepointers.(UniquePointer,nullUnique);
 import sharedpointers.(SharedPointer,nullShared,RefCounted);

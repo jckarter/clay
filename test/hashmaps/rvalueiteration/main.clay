@@ -1,4 +1,4 @@
-import hashmaps.*;
+import hashmaps.(HashMap);
 
 foo() {
     var x = HashMap[String, Int]();

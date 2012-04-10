@@ -1,7 +1,7 @@
 
 import win32;
 import io.errors.*;
-import algorithms.*;
+import algorithms.(findIf,reverseFindIf,reverseInPlace,beginsWith?);
 
 
 //

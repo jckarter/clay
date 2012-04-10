@@ -1,5 +1,5 @@
-public import hash.*;
-import uniquepointers.*;
+public import hash.(hash);
+import uniquepointers.(UniqueValue,nullUniqueValue);
 
 record HashMap[K,V] (
     buckets : Vector[NodePtr[K,V]],

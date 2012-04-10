@@ -2,7 +2,7 @@
 import unix;
 import libc;
 import io.errors.*;
-import algorithms.*;
+import algorithms.(reverseFind,reverseFindIf,reverseInPlace,beginsWith?,endsWith?);
 
 
 

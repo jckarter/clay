@@ -1,4 +1,4 @@
-import sharedpointers.*;
+import sharedpointers.(SharedPointer,new);
 
 record Foo ( x: SharedPointer[Bar], y: SharedPointer[Bar] );
 variant Bar (Int, Foo);

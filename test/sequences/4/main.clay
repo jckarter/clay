@@ -1,5 +1,5 @@
-import algorithms.*;
-import sharedpointers.*;
+import algorithms.(find,reduce,reduceBy,sum,product,binarySearch);
+import sharedpointers.(SharedPointer,new);
 
 printList(a) {
     var first = true;

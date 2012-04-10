@@ -1,7 +1,7 @@
 
 import vectors.generic as vg;
 import hash;
-import hashmaps.*;
+import hashmaps.(HashMap);
 
 main() {
     disp(add);
