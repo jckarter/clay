@@ -1,3 +1,5 @@
+import hashmaps.(HashMap);
+import algorithms.(sort);
 
 even?(x) = (x % 2 == 0);
 

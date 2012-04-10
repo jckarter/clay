@@ -1,3 +1,4 @@
+import algorithms.(reduce);
 
 scaledAdded(seqA, seqB, factor) {
     return mapped(

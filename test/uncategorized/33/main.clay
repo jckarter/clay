@@ -1,3 +1,5 @@
+import sharedpointers.(new);
+
 main() {
     var p = new([10, true]);
     println(Type(p)); // prints "SharedPointer[Tuple[Int32,Bool]]"

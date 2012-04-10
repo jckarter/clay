@@ -172,14 +172,6 @@ overload multiValued?(x) = false;
 
 
 //
-// hashing
-//
-
-define hash;
-
-
-
-//
 // mapping protocol
 //
 
@@ -801,3 +793,6 @@ inline MonoType?(F) = Mono?(typeToRValue(F));
 
 [F when MonoType?(F)]
 alias MonoOutputTypes(f:F) = ..CallOutputTypes(f, ..MonoInputTypes(f));
+
+public define Monad?;
+overload Monad?(T) = false;

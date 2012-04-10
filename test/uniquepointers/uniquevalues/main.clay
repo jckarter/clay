@@ -1,4 +1,5 @@
 import test.memory.*;
+import uniquepointers.(UniqueValue,nullUniqueValue);
 
 record List(canary: Canary, value:Int, next:UniqueValue[List]);
 

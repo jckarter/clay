@@ -1,5 +1,6 @@
 import printer.formatter.*;
 import byteorder.*;
+import hash.(hash);
 
 record SHA256 (digest: Array[UInt8, 32]);
 

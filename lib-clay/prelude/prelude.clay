@@ -13,8 +13,6 @@ public import enumerations.*;
 public import pointers.*;
 public import memory.*;
 public import operators.pod.*;
-public import sharedpointers.*;
-public import uniquepointers.*;
 public import values.*;
 public import variants.*;
 public import variants.nested.*;
@@ -34,12 +32,6 @@ public import strings.*;
 public import strings.cstringrefs.*;
 public import strings.literals.*;
 
-public import algorithms.*;
-public import algorithms.strings.*;
-
-public import hash.*;
-public import hashmaps.*;
-
 public import io.streams.*;
 public import io.files.*;
 
@@ -47,8 +39,6 @@ public import errors.*;
 public import exceptions.*;
 
 public import system.*;
-
-public import monads.*;
 
 // include self so that even if any symbol is shadowed
 // it can still be accessed as 'prelude.XXX'.

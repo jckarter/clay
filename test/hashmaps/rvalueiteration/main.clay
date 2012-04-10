@@ -1,3 +1,5 @@
+import hashmaps.(HashMap);
+
 foo() {
     var x = HashMap[String, Int]();
     x[String("un")] = 1;

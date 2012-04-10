@@ -1,6 +1,6 @@
 import test.*;
-import algorithms.*;
-import comparators.*;
+import algorithms.(sort,sortBy);
+import comparators.(comparing,reversed);
 
 record Unordered[T](value : T);
 

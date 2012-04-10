@@ -1,3 +1,5 @@
+import algorithms.(sort);
+
 printList(a) {
     for (i, x in enumerated(a)) {
         if (i != 0)

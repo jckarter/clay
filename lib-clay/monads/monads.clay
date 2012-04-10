@@ -1,2 +1,0 @@
-public define Monad?;
-overload Monad?(T) = false;

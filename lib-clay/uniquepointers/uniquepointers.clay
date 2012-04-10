@@ -117,3 +117,37 @@ inline overload null?(p: UniqueValue[T]) = null?(p.ptr);
 [T]
 inline nullUniqueValue(#T) = UniqueValue[T]();
 
+
+
+
+//
+// printTo - UniqueValue
+//
+
+[T]
+overload printTo(stream, v:UniqueValue[T]) {
+    if (null?(v))
+        printTo(stream, UniqueValue[T], "()");
+    else {
+        printTo(stream, UniqueValue[T], "(");
+        printTo(stream, v^);
+        printTo(stream, ")");
+    }
+}
+
+
+//
+// printReprTo - UniqueValue
+//
+
+[T]
+overload printReprTo(stream, v:UniqueValue[T]) {
+    if (null?(v))
+        printTo(stream, UniqueValue[T], "()");
+    else {
+        printTo(stream, UniqueValue[T], "(");
+        printReprTo(stream, v^);
+        printTo(stream, ")");
+    }
+}
+

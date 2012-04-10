@@ -1,4 +1,5 @@
 import test.memory.*;
+import uniquepointers.(UniquePointer,newUnique);
 
 test() {
     var p = newUnique(Canary(true));

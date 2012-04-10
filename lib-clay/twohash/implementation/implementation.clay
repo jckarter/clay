@@ -29,6 +29,8 @@
 // basic definitions
 //
 
+import hash.(hash);
+
 define EntryType;
 define keyMatch?;
 define entryHash;

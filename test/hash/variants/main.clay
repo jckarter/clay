@@ -1,4 +1,5 @@
 // Ensure hash() for variants works and doesn't trap on expected overflows
+import hash.*;
 
 variant A (Int32, Float64);
 

@@ -1,3 +1,4 @@
+import algorithms.(find,endsWith?,beginsWith?,split,join);
 
 main() {
     var a = array("", "foo", "foobar", "afoobarfoo");
