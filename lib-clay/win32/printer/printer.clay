@@ -1,0 +1,20 @@
+import win32.*;
+import printer.(printTo);
+
+printErrorMessageTo(stream, errorCode) {
+    var buf = Array[Byte, 1024]();
+    var result = FormatMessageA(
+        FORMAT_MESSAGE_FROM_SYSTEM,
+        RawPointer(0),
+        CULong(errorCode),
+        CULong(0),
+        LPSTR(begin(buf)),
+        CULong(size(buf)),
+        null(va_list),
+    );
+    if (result == 0)
+        printTo(stream, "unknown error");
+    else
+        printTo(stream, CStringRef(begin(buf)));
+}
+
