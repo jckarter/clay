@@ -1,5 +1,4 @@
-
-import math.*;
+import math.(scalbn,finite?,ldexp);
 
 [T,I when Float?(T) and Integer?(I)]
 overload ldexp(value:T, i:I)

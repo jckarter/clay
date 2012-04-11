@@ -1,4 +1,5 @@
 define sign;
+define copysign;
 
 define ceil;  
 define floor; 
@@ -8,6 +9,8 @@ define llround;
 define rint;
 define llrint;
 define nearbyint;
+define nextafter;
+define fpclassify;
 
 define frexp;
 define ldexp;
