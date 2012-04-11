@@ -315,9 +315,9 @@ static void loadDependents(ModulePtr m, vector<string> *sourceFiles) {
                     for (unsigned i = 0; i < parts.size(); ++i)
                         holder = installHolder(holder, parts[i]);
                 }
-                if (holder->import.ptr())
+                if (holder->module != NULL)
                     error(x, "module already imported");
-                holder->import = y;
+                holder->module = y->module.ptr();
             }
             if (y->visibility == PUBLIC) {
                 ModuleHolderPtr holder = m->publicRootHolder;
@@ -329,9 +329,9 @@ static void loadDependents(ModulePtr m, vector<string> *sourceFiles) {
                     for (unsigned i = 0; i < parts.size(); ++i)
                         holder = installHolder(holder, parts[i]);
                 }
-                if (holder->import.ptr())
+                if (holder->module != NULL)
                     error(x, "module already imported");
-                holder->import = y;
+                holder->module = y->module.ptr();
             }
             break;
         }
@@ -648,9 +648,7 @@ ModulePtr staticModule(ObjectPtr x) {
     }
     case MODULE_HOLDER : {
         ModuleHolder *mh = (ModuleHolder *)x.ptr();
-        if (mh->import.ptr())
-            return mh->import->module;
-        return NULL;
+        return mh->module;
     }
     case GLOBAL_VARIABLE :
     case GLOBAL_ALIAS :

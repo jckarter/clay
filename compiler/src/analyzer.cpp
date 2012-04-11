@@ -2362,7 +2362,7 @@ invokeEntryForCallableArguments(MultiPValuePtr args, size_t callableIndex, size_
 
 MultiPValuePtr analyzeStaticModule(ModulePtr module)
 {
-    return analyzeStaticObject(module->publicRootHolder.ptr());
+    return analyzeStaticObject(ModuleHolder::get(module).ptr());
 }
 
 MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)

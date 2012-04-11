@@ -910,13 +910,8 @@ void printName(ostream &out, ObjectPtr x)
     }
     case MODULE_HOLDER : {
         ModuleHolder *y = (ModuleHolder *)x.ptr();
-        if (y->import.ptr()) {
-            DottedNamePtr dname = y->import->dottedName;
-            for (unsigned i = 0; i < dname->parts.size(); ++i) {
-                if (i != 0)
-                    out << ".";
-                out << dname->parts[i]->str;
-            }
+        if (y->module != NULL) {
+            out << y->module->moduleName;
         }
         else {
             out << "ModuleHolder()";
