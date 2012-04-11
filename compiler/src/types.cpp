@@ -1319,8 +1319,8 @@ static void defineLLVMType(TypePtr t) {
                 size_t debugAlign = debugTypeAlignment(memberLLT);
                 size_t debugSize = debugTypeSize(memberLLT);
                 debugOffset = alignedUpTo(debugOffset, debugAlign);
-                string buf;
-                llvm::raw_string_ostream name(buf);
+                llvm::SmallString<128> buf;
+                llvm::raw_svector_ostream name(buf);
                 name << "element" << i - x->elementTypes.begin();
                 members.push_back(llvmDIBuilder->createMemberType(
                     placeholder,
@@ -1400,8 +1400,8 @@ static void defineLLVMType(TypePtr t) {
                 llvm::Type *memberLLT = llvmType(*i);
                 size_t debugAlign = debugTypeAlignment(memberLLT);
                 size_t debugSize = debugTypeSize(memberLLT);
-                string buf;
-                llvm::raw_string_ostream name(buf);
+                llvm::SmallString<128> buf;
+                llvm::raw_svector_ostream name(buf);
                 name << "element" << i - x->memberTypes.begin();
                 members.push_back(llvmDIBuilder->createMemberType(
                     placeholder,
@@ -1522,7 +1522,7 @@ static void defineLLVMType(TypePtr t) {
 
 
 //
-// typeSize, typePrint
+// typeSize
 //
 
 static void initTypeInfo(TypePtr t) {
@@ -1543,158 +1543,10 @@ size_t typeAlignment(TypePtr t) {
     initTypeInfo(t.ptr());
     return t->typeAlignment;
 }
-
-void typePrint(llvm::raw_ostream &out, TypePtr t) {
-    switch (t->typeKind) {
-    case BOOL_TYPE :
-        out << "Bool";
-        break;
-    case INTEGER_TYPE : {
-        IntegerType *x = (IntegerType *)t.ptr();
-        if (!x->isSigned)
-            out << "U";
-        out << "Int" << x->bits;
-        break;
-    }
-    case FLOAT_TYPE : {
-        FloatType *x = (FloatType *)t.ptr();
-        if(x->isImaginary) {
-            out << "Imag" << x->bits;
-        } else {
-            out << "Float" << x->bits;
-        }
-        break;
-    }
-    case COMPLEX_TYPE : {
-        ComplexType *x = (ComplexType *)t.ptr();
-        out << "Complex" << x->bits;
-        break;
-    }
-    case POINTER_TYPE : {
-        PointerType *x = (PointerType *)t.ptr();
-        out << "Pointer[" << x->pointeeType << "]";
-        break;
-    }
-    case CODE_POINTER_TYPE : {
-        CodePointerType *x = (CodePointerType *)t.ptr();
-        out << "CodePointer[[";
-        for (unsigned i = 0; i < x->argTypes.size(); ++i) {
-            if (i != 0)
-                out << ", ";
-            out << x->argTypes[i];
-        }
-        out << "], [";
-        for (unsigned i = 0; i < x->returnTypes.size(); ++i) {
-            if (i != 0)
-                out << ", ";
-            if (x->returnIsRef[i])
-                out << "ByRef[" << x->returnTypes[i] << "]";
-            else
-                out << x->returnTypes[i];
-        }
-        out << "]]";
-        break;
-    }
-    case CCODE_POINTER_TYPE : {
-        CCodePointerType *x = (CCodePointerType *)t.ptr();
-        out << "ExternalCodePointer[";
-
-        switch (x->callingConv) {
-        case CC_DEFAULT :
-            out << "AttributeCCall, ";
-            break;
-        case CC_STDCALL :
-            out << "AttributeStdCall, ";
-            break;
-        case CC_FASTCALL :
-            out << "AttributeFastCall, ";
-            break;
-        case CC_THISCALL :
-            out << "AttributeThisCall, ";
-            break;
-        case CC_LLVM :
-            out << "AttributeLLVMCall, ";
-            break;
-        default :
-            assert(false);
-        }
-        if (x->hasVarArgs)
-            out << "true, ";
-        else
-            out << "false, ";
-        out << "[";
-        for (unsigned i = 0; i < x->argTypes.size(); ++i) {
-            if (i != 0)
-                out << ", ";
-            out << x->argTypes[i];
-        }
-        out << "], [";
-        if (x->returnType.ptr())
-            out << x->returnType;
-        out << "]]";
-        break;
-    }
-    case ARRAY_TYPE : {
-        ArrayType *x = (ArrayType *)t.ptr();
-        out << "Array[" << x->elementType << ", " << x->size << "]";
-        break;
-    }
-    case VEC_TYPE : {
-        VecType *x = (VecType *)t.ptr();
-        out << "Vec[" << x->elementType << ", " << x->size << "]";
-        break;
-    }
-    case TUPLE_TYPE : {
-        TupleType *x = (TupleType *)t.ptr();
-        out << "Tuple" << x->elementTypes;
-        break;
-    }
-    case UNION_TYPE : {
-        UnionType *x = (UnionType *)t.ptr();
-        out << "Union" << x->memberTypes;
-        break;
-    }
-    case RECORD_TYPE : {
-        RecordType *x = (RecordType *)t.ptr();
-        out << x->record->name->str;
-        if (!x->params.empty()) {
-            out << "[";
-            printNameList(out, x->params);
-            out << "]";
-        }
-        break;
-    }
-    case VARIANT_TYPE : {
-        VariantType *x = (VariantType *)t.ptr();
-        out << x->variant->name->str;
-        if (!x->params.empty()) {
-            out << "[";
-            printNameList(out, x->params);
-            out << "]";
-        }
-        break;
-    }
-    case STATIC_TYPE : {
-        StaticType *x = (StaticType *)t.ptr();
-        out << "Static[";
-        printName(out, x->obj);
-        out << "]";
-        break;
-    }
-    case ENUM_TYPE : {
-        EnumType *x = (EnumType *)t.ptr();
-        out << x->enumeration->name->str;
-        break;
-    }
-    default :
-        assert(false);
-    }
-}
-
 string typeName(TypePtr type)
 {
-    string buf;
-    llvm::raw_string_ostream os(buf);
+    llvm::SmallString<128> buf;
+    llvm::raw_svector_ostream os(buf);
     typePrint(os, type);
     return os.str();
 }

@@ -1402,8 +1402,8 @@ void codegenGVarInstance(GVarInstancePtr x)
     llvm::Constant *initializer =
         llvm::Constant::getNullValue(llvmType(y->type));
 
-    string nameBuf;
-    llvm::raw_string_ostream nameStr(nameBuf);
+    llvm::SmallString<128> nameBuf;
+    llvm::raw_svector_ostream nameStr(nameBuf);
     printModuleQualification(nameStr, safeLookupModule(x->env));
     nameStr << x->gvar->name->str;
     if (!x->params.empty()) {
@@ -1412,8 +1412,8 @@ void codegenGVarInstance(GVarInstancePtr x)
         nameStr << ']';
     }
 
-    string symbolBuf;
-    llvm::raw_string_ostream symbolStr(symbolBuf);
+    llvm::SmallString<128> symbolBuf;
+    llvm::raw_svector_ostream symbolStr(symbolBuf);
     symbolStr << nameStr.str() << " " << y->type << " clay";
 
     x->staticGlobal = new ValueHolder(y->type);
@@ -2586,7 +2586,7 @@ static const char * parseBracketedExpr(const char * first,
 }
 
 static void interpolateExpr(SourcePtr source, unsigned offset, unsigned length,
-                            EnvPtr env, llvm::raw_string_ostream &outstream)
+                            EnvPtr env, llvm::raw_ostream &outstream)
 {
     ExprPtr expr = parseExpr(source, offset, length);
     ObjectPtr x = evaluateOneStatic(expr, env);
@@ -2604,10 +2604,7 @@ static void interpolateExpr(SourcePtr source, unsigned offset, unsigned length,
         else if ((vh->type->typeKind == INTEGER_TYPE)
                  ||(vh->type->typeKind == FLOAT_TYPE))
         {
-            string buf;
-            llvm::raw_string_ostream sout(buf);
-            printValue(sout, new EValue(vh->type, vh->buf));
-            outstream << sout.str();
+            printValue(outstream, new EValue(vh->type, vh->buf));
         }
         else {
             error("only booleans, integers, and float values are supported");
@@ -2618,10 +2615,7 @@ static void interpolateExpr(SourcePtr source, unsigned offset, unsigned length,
         outstream << y->str;
     }
     else {
-        string buf;
-        llvm::raw_string_ostream sout(buf);
-        printName(sout, x);
-        outstream << sout.str();
+        printName(outstream, x);
     }
 }
 
@@ -2666,7 +2660,7 @@ static bool interpolateLLVMCode(LLVMCodePtr llvmBody, string &out, EnvPtr env)
         outstream << *i;
         ++i;
     }
-    out = outstream.str();
+    outstream.flush();
     return true;
 }
 
@@ -2682,8 +2676,8 @@ void codegenLLVMBody(InvokeEntryPtr entry, llvm::StringRef callableName)
     llvm::raw_string_ostream out(llFunc);
     int argCount = 0;
     static int id = 1;
-    string functionNameBuf;
-    llvm::raw_string_ostream functionName(functionNameBuf);
+    llvm::SmallString<128> functionNameBuf;
+    llvm::raw_svector_ostream functionName(functionNameBuf);
 
     functionName << callableName << id;
     id++;
@@ -2751,8 +2745,8 @@ static string getCodeName(InvokeEntryPtr entry)
 {
     SafePrintNameEnabler enabler;
     ObjectPtr x = entry->callable;
-    string buf;
-    llvm::raw_string_ostream sout(buf);
+    llvm::SmallString<128> buf;
+    llvm::raw_svector_ostream sout(buf);
 
     printModuleQualification(sout, staticModule(x));
 
@@ -2974,8 +2968,8 @@ void codegenCodeBody(InvokeEntryPtr entry)
 
         for (unsigned i = 0; i < entry->varArgTypes.size(); ++i, ++ai, ++argNo) {
             llvm::Argument *llArgValue = &(*ai);
-            string buf;
-            llvm::raw_string_ostream sout(buf);
+            llvm::SmallString<128> buf;
+            llvm::raw_svector_ostream sout(buf);
             sout << entry->varArgName << ".." << i;
             llArgValue->setName(sout.str());
             CValuePtr cvalue = new CValue(entry->varArgTypes[i], llArgValue);
@@ -3029,8 +3023,8 @@ void codegenCodeBody(InvokeEntryPtr entry)
         unsigned i = 0;
         for (; i < returnSpecs.size(); ++i, ++argNo) {
             ReturnSpecPtr rspec = returnSpecs[i];
-            string buf;
-            llvm::raw_string_ostream sout(buf);
+            llvm::SmallString<128> buf;
+            llvm::raw_svector_ostream sout(buf);
             if (rspec->name != NULL) {
                 hasNamedReturn = true;
                 addLocal(env, rspec->name, returns[i].value.ptr());
@@ -4099,8 +4093,8 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
             cgPushStackValue(cv, ctx);
             addLocal(env2, x->names[i], cv.ptr());
 
-            string buf;
-            llvm::raw_string_ostream ostr(buf);
+            llvm::SmallString<128> buf;
+            llvm::raw_svector_ostream ostr(buf);
             ostr << x->names[i]->str << ":" << cv->type;
             cv->llValue->setName(ostr.str());
 
@@ -4151,8 +4145,8 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
             CValuePtr cv = derefValue(mcv->values[i], ctx);
             addLocal(env2, x->names[i], cv.ptr());
 
-            string buf;
-            llvm::raw_string_ostream ostr(buf);
+            llvm::SmallString<128> buf;
+            llvm::raw_svector_ostream ostr(buf);
             ostr << x->names[i]->str << ":" << cv->type;
             cv->llValue->setName(ostr.str());
         }
@@ -4217,8 +4211,8 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
             }
             addLocal(env2, x->names[i], cv.ptr());
 
-            string buf;
-            llvm::raw_string_ostream ostr(buf);
+            llvm::SmallString<128> buf;
+            llvm::raw_svector_ostream ostr(buf);
             ostr << x->names[i]->str << ":" << cv->type;
             cv->llValue->setName(ostr.str());
 
@@ -4819,8 +4813,8 @@ static llvm::Constant *codegenStringTableConstant(llvm::StringRef s)
                 structEntries,
                 false);
 
-    string buf;
-    llvm::raw_string_ostream symbolName(buf);
+    llvm::SmallString<128> buf;
+    llvm::raw_svector_ostream symbolName(buf);
     symbolName << "\"" << s << "\" clay";
 
     llvm::GlobalVariable *gvar = new llvm::GlobalVariable(

@@ -5,8 +5,8 @@ namespace clay {
 ExprPtr desugarCharLiteral(char c) {
     ExprPtr nameRef = operator_expr_charLiteral();
     CallPtr call = new Call(nameRef, new ExprList());
-    string buf;
-    llvm::raw_string_ostream out(buf);
+    llvm::SmallString<128> buf;
+    llvm::raw_svector_ostream out(buf);
     out << (int)c;
     call->parenArgs->add(new IntLiteral(out.str(), "ss"));
     return call.ptr();
@@ -291,15 +291,15 @@ StatementPtr desugarSwitchStatement(SwitchPtr x) {
 
 static SourcePtr evalToSource(LocationPtr location, ExprListPtr args, EnvPtr env)
 {
-    string sourceTextBuf;
-    llvm::raw_string_ostream sourceTextOut(sourceTextBuf);
+    llvm::SmallString<128> sourceTextBuf;
+    llvm::raw_svector_ostream sourceTextOut(sourceTextBuf);
     MultiStaticPtr values = evaluateMultiStatic(args, env);
     for (unsigned i = 0; i < values->size(); ++i) {
         printStaticName(sourceTextOut, values->values[i]);
     }
 
-    string sourceNameBuf;
-    llvm::raw_string_ostream sourceNameOut(sourceNameBuf);
+    llvm::SmallString<128> sourceNameBuf;
+    llvm::raw_svector_ostream sourceNameOut(sourceNameBuf);
     sourceNameOut << "<eval ";
     printFileLineCol(sourceNameOut, location);
     sourceNameOut << ">";

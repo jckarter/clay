@@ -1666,8 +1666,8 @@ static bool valueFormalArg(FormalArgPtr &x) {
 
 static FormalArgPtr makeStaticFormalArg(unsigned index, ExprPtr expr, LocationPtr location) {
     // desugar static args
-    string buf;
-    llvm::raw_string_ostream sout(buf);
+    llvm::SmallString<128> buf;
+    llvm::raw_svector_ostream sout(buf);
     sout << "%arg" << index;
     IdentifierPtr argName = Identifier::get(sout.str());
 

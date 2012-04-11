@@ -753,46 +753,4 @@ MultiPatternPtr evaluateMultiPattern(ExprListPtr exprs, EnvPtr env)
     return out.ptr();
 }
 
-
-
-//
-// patternPrint
-//
-
-void patternPrint(llvm::raw_ostream &out, PatternPtr x)
-{
-    switch (x->kind) {
-    case PATTERN_CELL : {
-        PatternCell *y = (PatternCell *)x.ptr();
-        out << "PatternCell(" << y->obj << ")";
-        break;
-    }
-    case PATTERN_STRUCT : {
-        PatternStruct *y = (PatternStruct *)x.ptr();
-        out << "PatternStruct(" << y->head << ", " << y->params << ")";
-        break;
-    }
-    default :
-        assert(false);
-    }
-}
-
-void patternPrint(llvm::raw_ostream &out, MultiPatternPtr x)
-{
-    switch (x->kind) {
-    case MULTI_PATTERN_CELL : {
-        MultiPatternCell *y = (MultiPatternCell *)x.ptr();
-        out << "MultiPatternCell(" << y->data << ")";
-        break;
-    }
-    case MULTI_PATTERN_LIST : {
-        MultiPatternList *y = (MultiPatternList *)x.ptr();
-        out << "MultiPatternList(" << y->items << ", " << y->tail << ")";
-        break;
-    }
-    default :
-        assert(false);
-    }
-}
-
 }

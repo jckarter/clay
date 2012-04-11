@@ -1,5 +1,5 @@
 import io.errors.*;
-import io.sockets.platform;
+import io.sockets.platform as platform;
 import byteorder.*;
 import printer.(printTo,printReprTo);
 import io.files.*;
@@ -20,9 +20,6 @@ public import io.sockets.platform.(
     SOL_SOCKET, SO_REUSEADDR
 );
 import libc.(memset);
-
-private alias platform = io.sockets.platform;
-
 
 
 //
