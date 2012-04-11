@@ -1,6 +1,10 @@
-import printer.(println);
+import printer.(println, printlnTo);
 
 main() {
-    println(Int8("128"));
+    try {
+        println(Int8("128"));
+    } catch (e) {
+        printlnTo(stderr, e);
+    }
 }
 
