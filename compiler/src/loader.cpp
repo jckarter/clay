@@ -904,11 +904,15 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(variantRepr);
 
     PRIMITIVE(Static);
-    PRIMITIVE(ModuleName);
     PRIMITIVE(StaticName);
     PRIMITIVE(staticIntegers);
     PRIMITIVE(integers);
     PRIMITIVE(staticFieldRef);
+
+    PRIMITIVE(MainModule);
+    PRIMITIVE(StaticModule);
+    PRIMITIVE(ModuleName);
+    PRIMITIVE(ModuleMemberNames);
 
     PRIMITIVE(EnumP);
     PRIMITIVE(EnumMemberCount);

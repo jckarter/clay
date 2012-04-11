@@ -5996,8 +5996,11 @@ void codegenPrimOp(PrimOpPtr x,
     case PRIM_Static :
         error("no Static primitive overload found");
 
-    case PRIM_ModuleName :
     case PRIM_StaticName :
+    case PRIM_MainModule :
+    case PRIM_StaticModule :
+    case PRIM_ModuleName :
+    case PRIM_ModuleMemberNames :
         break;
 
     case PRIM_staticIntegers :

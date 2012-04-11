@@ -4542,8 +4542,11 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
-    case PRIM_ModuleName :
     case PRIM_StaticName :
+    case PRIM_MainModule :
+    case PRIM_StaticModule :
+    case PRIM_ModuleName :
+    case PRIM_ModuleMemberNames :
         break;
 
     case PRIM_FlagP : {

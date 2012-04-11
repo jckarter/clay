@@ -2494,11 +2494,15 @@ enum PrimOpCode {
     PRIM_variantRepr,
 
     PRIM_Static,
-    PRIM_ModuleName,
     PRIM_StaticName,
     PRIM_staticIntegers,
     PRIM_integers,
     PRIM_staticFieldRef,
+
+    PRIM_MainModule,
+    PRIM_StaticModule,
+    PRIM_ModuleName,
+    PRIM_ModuleMemberNames,
 
     PRIM_EnumP,
     PRIM_EnumMemberCount,
