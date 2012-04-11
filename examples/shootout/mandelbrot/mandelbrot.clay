@@ -12,7 +12,7 @@ render(w:Int, h:Int) {
     var four = Vec(4.0, 4.0);
 
     for (y in range(h)) {
-        var data = &wholeData[((w+7) \ 8) * y];
+        var data = @wholeData[((w+7) \ 8) * y];
 
         var bitNum = 0;
         var byteAcc = UInt8(0);
@@ -72,7 +72,7 @@ main(args) {
 
     println("P4");
     println(w, " ", h);
-    write(stdout, &data[0], size(data));
+    write(stdout, @data[0], size(data));
 
     return 0;
 }
