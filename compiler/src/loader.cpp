@@ -150,9 +150,10 @@ static bool locateFile(llvm::StringRef relativePath, PathString &path) {
     return false;
 }
 
-static PathString toRelativePathUpto(DottedNamePtr name, IdentifierPtr *limit) {
+template<typename Iterator>
+static PathString toRelativePathUpto(DottedNamePtr name, Iterator limit) {
     PathString relativePath;
-    for (IdentifierPtr *i = name->parts.begin(); i < limit; ++i)
+    for (Iterator i = name->parts.begin(); i < limit; ++i)
         llvm::sys::path::append(relativePath, (*i)->str.str());
     llvm::sys::path::append(relativePath, name->parts.back()->str.str());
     // relative path has no suffix
@@ -302,9 +303,10 @@ static void loadDependents(ModulePtr m, vector<string> *sourceFiles) {
                     holder = installHolder(holder, y->alias);
                 }
                 else {
-                    llvm::SmallVector<IdentifierPtr,4> &parts = y->dottedName->parts;
-                    for (unsigned i = 0; i < parts.size(); ++i)
-                        holder = installHolder(holder, parts[i]);
+                    llvm::ArrayRef<IdentifierPtr> parts(y->dottedName->parts);
+                    for (IdentifierPtr const *i = parts.begin(); i < parts.end(); ++i) {
+                        holder = installHolder(holder, *i);
+                    }
                 }
                 if (holder->module != NULL)
                     error(x, "module already imported");
@@ -316,9 +318,10 @@ static void loadDependents(ModulePtr m, vector<string> *sourceFiles) {
                     holder = installHolder(holder, y->alias);
                 }
                 else {
-                    llvm::SmallVector<IdentifierPtr,4> &parts = y->dottedName->parts;
-                    for (unsigned i = 0; i < parts.size(); ++i)
-                        holder = installHolder(holder, parts[i]);
+                    llvm::ArrayRef<IdentifierPtr> parts(y->dottedName->parts);
+                    for (IdentifierPtr const *i = parts.begin(); i < parts.end(); ++i) {
+                        holder = installHolder(holder, *i);
+                    }
                 }
                 if (holder->module != NULL)
                     error(x, "module already imported");

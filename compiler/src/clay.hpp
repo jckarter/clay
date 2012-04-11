@@ -1012,7 +1012,7 @@ struct Identifier : public ANode {
 };
 
 struct DottedName : public ANode {
-    llvm::SmallVector<IdentifierPtr, 4> parts;
+    vector<IdentifierPtr> parts;
     DottedName()
         : ANode(DOTTED_NAME) {}
     DottedName(llvm::ArrayRef<IdentifierPtr> parts)
