@@ -10,7 +10,7 @@ render() {
 main() {
     var argc, argv = ..getArgcArgv();
 
-    glutInit(&argc, argv);
+    glutInit(@argc, argv);
     glutInitDisplayMode(GLUT_RGB + GLUT_DOUBLE);
     glutInitWindowSize(400, 300);
     glutCreateWindow(cstring("Hello World"));

@@ -256,7 +256,7 @@ void displayError(llvm::Twine const &msg, llvm::StringRef kind) {
         int line, column;
         displayLocation(location, line, column);
         llvm::errs() << location->source->fileName
-            << '(' << line+1 << ',' << column << ": " << kind << ": " << msg << '\n';
+            << '(' << line+1 << ',' << column << "): " << kind << ": " << msg << '\n';
         displayCompileContext();
         displayDebugStack();
     }

@@ -1,3 +1,5 @@
+import printer.(println);
+
 factorial1(n) {
     if (n == 0)
         return 1;
@@ -9,8 +11,8 @@ factorial2(n) {
     again :
     if (n == 0)
         return p;
-    p *= n;
-    n -= 1;
+    p *: n;
+    n -: 1;
     goto again;
 }
 
@@ -18,8 +20,8 @@ factorial3(n) {
     var p = 1;
     while (true) {
         if (n == 0) break;
-        p *= n;
-        n -= 1;
+        p *: n;
+        n -: 1;
     }
     return p;
 }
@@ -27,13 +29,13 @@ factorial3(n) {
 factorial4(n) {
     var p = 1;
     for (i in range(n))
-        p *= i+1;
+        p *: i+1;
     return p;
 }
 
 main() {
     var n = 7;
-    n -= 1;
+    n -: 1;
     var f = factorial4(n);
     println("factorial(", n, ") = ", f);
     return 0;

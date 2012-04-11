@@ -1,0 +1,26 @@
+import foo;
+import printer;
+import printer.(println);
+import __primitives__;
+
+main() {
+    println(MainModule());
+    println(StaticModule(main));
+    println(StaticModule(Int32));
+    println(StaticModule(println));
+
+    println(MainModule() == StaticModule(main));
+    println(StaticModule(__primitives__.Int32) == StaticModule(__primitives__.Int64));
+    println(StaticModule(__primitives__.Int32) == __primitives__);
+    println(StaticModule(printer.println) == StaticModule(printer.print));
+    println(StaticModule(printer.println) == printer);
+    println(foo.__primitives__ == __primitives__);
+    println(StaticModule(foo.println) == StaticModule(println));
+    println(StaticModule(foo.println) == printer);
+
+    println(StaticModule(Int32).Int64(1963));
+    StaticModule(println).print("yeah yeah yeah\n");
+
+    ..for (name in ModuleMemberNames(foo))
+        println(name);
+}

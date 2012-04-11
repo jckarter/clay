@@ -1,0 +1,13 @@
+public import __primitives__;
+public import printer.(println);
+
+define A;
+record B ();
+record C[T] ();
+enum D (E, F);
+variant G (B);
+variant H[T] (C[T]);
+alias I = 0;
+alias J[T] = 0;
+var K = 0;
+var L[T] = 0;

@@ -1,5 +1,6 @@
 import cocoa.*;
 import cocoa.qtkit.*;
+import printer.(println);
 import unix.(sleep);
 
 main(args) {
@@ -9,7 +10,7 @@ main(args) {
 
     withAutoreleasePool(): () -> {
         var err = nil(NSError);
-        var movie = QTMovie(QTMovie.movieWithFile_error(args[1], &err));
+        var movie = QTMovie(QTMovie.movieWithFile_error(args[1], @err));
         if (nil?(movie)) {
             error("Error opening movie ", args[1], ": ", err);
         }

@@ -1,0 +1,9 @@
+import foo.bar.bas;
+import printer.(println);
+
+private alias bas = foo.bar.bas;
+
+main() {
+    bas;
+    println("ok");
+}

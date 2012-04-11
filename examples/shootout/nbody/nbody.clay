@@ -1,4 +1,5 @@
-import simd;
+import printer.(println);
+import math.simd.*;
 import math.*;
 
 record Body (
@@ -24,7 +25,7 @@ energy() {
     for (i in range(size(bodies))) {
         var b = bodies[i];
         sq = b.mass * ((b.vxvy * b.vxvy) + (b.vz00 * b.vz00));
-        e += 0.5 * (sq[0] + sq[1]);
+        e +: 0.5 * (sq[0] + sq[1]);
 
         for (j in range(i+1, size(bodies))) {
 
@@ -35,7 +36,7 @@ energy() {
             distance = (dxdy * dxdy) + (dz00 * dz00);
             var d = sqrt(distance[0] + distance[1]);
 
-            e -= (b.mass[0] * b2.mass[0]) / d;
+            e -: (b.mass[0] * b2.mass[0]) / d;
         }
     }
     return e;
@@ -46,9 +47,9 @@ advance(q) {
 
     for (k in range(q)) {
         for (i in range(size(bodies))) {
-            var b = &bodies[i];
+            var b = @bodies[i];
             for (j in range(i+1, size(bodies))) {
-                var b2 = &bodies[j];
+                var b2 = @bodies[j];
 
                 var dxdy = b^.xy - b2^.xy;
                 var dz00 = b^.z0 - b2^.z0;
@@ -57,18 +58,18 @@ advance(q) {
                 var distance = sqrt(distance2) * distance2;
                 var magmag = dtdt / distance;
 
-                dxdy *= magmag;
-                dz00 *= magmag;
+                dxdy *: magmag;
+                dz00 *: magmag;
 
-                b^.vxvy -= dxdy * b2^.mass;
-                b^.vz00 -= dz00 * b2^.mass;
-                b2^.vxvy += dxdy * b^.mass;
-                b2^.vz00 += dz00 * b^.mass;
+                b^.vxvy -: dxdy * b2^.mass;
+                b^.vz00 -: dz00 * b2^.mass;
+                b2^.vxvy +: dxdy * b^.mass;
+                b2^.vz00 +: dz00 * b^.mass;
             }
         }
         for (i in range(size(bodies))) {
-            bodies[i].xy += dtdt * bodies[i].vxvy;
-            bodies[i].z0 += dtdt * bodies[i].vz00;
+            bodies[i].xy +: dtdt * bodies[i].vxvy;
+            bodies[i].z0 +: dtdt * bodies[i].vz00;
         }
     }
 }
@@ -118,8 +119,8 @@ init(){
     var solar_mass_inv = Vec(1.0/smass, 1.0/smass);
 
     for (i in range(size(bodies))) {
-        pxpy += bodies[i].vxvy * bodies[i].mass;
-        pz00 += bodies[i].vz00 * bodies[i].mass;
+        pxpy +: bodies[i].vxvy * bodies[i].mass;
+        pz00 +: bodies[i].vz00 * bodies[i].mass;
     }
 
     bodies[0].vxvy =  Vec(-1.0, -1.0) * pxpy * solar_mass_inv;
