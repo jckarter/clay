@@ -18,10 +18,10 @@ ios:
 	    generated_from_unix.h -o generated.macosx.arm.clay
 
 linux32 :
-	clay-bindgen -builtins -D_FILE_OFFSET_BITS=64 generated_from_unix.h -o generated.linux.32.clay
+	clay-bindgen -m32 -match mathcalls.h -match math.h -match complex.h -import libc -D_FILE_OFFSET_BITS=64 generated_from_unix.h -o generated.linux.32.clay
 
 linux64 :
-	clay-bindgen -builtins generated_from_unix.h -o generated.linux.64.clay
+	clay-bindgen -m64 -match mathcalls.h -match math.h -match complex.h -import libc generated_from_unix.h -o generated.linux.64.clay
 
 freebsd32 :
 	clay-bindgen -builtins -D_FILE_OFFSET_BITS=64 generated_from_unix.h -o generated.freebsd.32.clay
