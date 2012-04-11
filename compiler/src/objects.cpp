@@ -28,19 +28,22 @@ ValueHolder::~ValueHolder()
 // FIXME: this doesn't handle arbitrary values (need to call clay)
 bool objectEquals(ObjectPtr a, ObjectPtr b)
 {
-    switch (a->objKind) {
+    if (a == b)
+        return true;
+
+    int aKind = a->objKind, bKind = b->objKind;
+    if (aKind != bKind)
+        return false;
+
+    switch (aKind) {
 
     case IDENTIFIER : {
-        if (b->objKind != IDENTIFIER)
-            return false;
         Identifier *a1 = (Identifier *)a.ptr();
         Identifier *b1 = (Identifier *)b.ptr();
         return a1->str == b1->str;
     }
 
     case VALUE_HOLDER : {
-        if (b->objKind != VALUE_HOLDER)
-            return false;
         ValueHolder *a1 = (ValueHolder *)a.ptr();
         ValueHolder *b1 = (ValueHolder *)b.ptr();
         if (a1->type != b1->type)
@@ -50,15 +53,19 @@ bool objectEquals(ObjectPtr a, ObjectPtr b)
     }
 
     case PVALUE : {
-        if (b->objKind != PVALUE)
-            return false;
         PValue *a1 = (PValue *)a.ptr();
         PValue *b1 = (PValue *)b.ptr();
         return (a1->type == b1->type) && (a1->isTemp == b1->isTemp);
     }
 
+    case MODULE_HOLDER : {
+        ModuleHolder *a1 = (ModuleHolder*)a.ptr();
+        ModuleHolder *b1 = (ModuleHolder*)b.ptr();
+        return a1->module == b1->module;
+    }
+
     default :
-        return a == b;
+        return false;
     }
 }
 

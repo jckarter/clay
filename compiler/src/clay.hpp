@@ -2131,10 +2131,12 @@ struct ImportMembers : public Import {
 //
 
 struct ModuleHolder : public Object {
-    ImportModulePtr import;
+    Module *module;
     map<string, ModuleHolderPtr> children;
     ModuleHolder()
-        : Object(MODULE_HOLDER) {}
+        : Object(MODULE_HOLDER), module(NULL) {}
+
+    static ModuleHolderPtr get(ModulePtr module);
 };
 
 struct ModuleDeclaration : public ANode {
@@ -2159,6 +2161,8 @@ struct Module : public ANode {
 
     ModuleHolderPtr publicRootHolder;
     map<string, ObjectPtr> publicGlobals;
+
+    ModuleHolderPtr selfHolder;
 
     EnvPtr env;
     bool initialized;
@@ -2209,6 +2213,14 @@ struct Module : public ANode {
     llvm::DINameSpace getDebugInfo() { return llvm::DINameSpace(debugInfo); }
 };
 
+inline ModuleHolderPtr ModuleHolder::get(ModulePtr module)
+{
+    if (module->selfHolder == NULL) {
+        module->selfHolder = new ModuleHolder();
+        module->selfHolder->module = module.ptr();
+    }
+    return module->selfHolder;
+}
 
 
 //
@@ -2494,11 +2506,15 @@ enum PrimOpCode {
     PRIM_variantRepr,
 
     PRIM_Static,
-    PRIM_ModuleName,
     PRIM_StaticName,
     PRIM_staticIntegers,
     PRIM_integers,
     PRIM_staticFieldRef,
+
+    PRIM_MainModule,
+    PRIM_StaticModule,
+    PRIM_ModuleName,
+    PRIM_ModuleMemberNames,
 
     PRIM_EnumP,
     PRIM_EnumMemberCount,

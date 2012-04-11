@@ -2360,6 +2360,11 @@ invokeEntryForCallableArguments(MultiPValuePtr args, size_t callableIndex, size_
         analyzeCallable(callable, argsKey, argsTempness));
 }
 
+MultiPValuePtr analyzeStaticModule(ModulePtr module)
+{
+    return analyzeStaticObject(ModuleHolder::get(module).ptr());
+}
+
 MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 {
     switch (x->primOpCode) {
@@ -2956,6 +2961,33 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_stringTableConstant :
         return new MultiPValue(new PValue(pointerType(cSizeTType), true));;
 
+    case PRIM_StaticName : {
+        ensureArity(args, 1);
+        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
+        if (!obj)
+            argumentError(0, "expecting static object");
+        ostringstream sout;
+        printStaticName(sout, obj);
+        return analyzeStaticObject(new Identifier(sout.str()));
+    }
+
+    case PRIM_MainModule : {
+        ensureArity(args, 0);
+        assert(globalMainModule != NULL);
+        return analyzeStaticModule(globalMainModule);
+    }
+
+    case PRIM_StaticModule : {
+        ensureArity(args, 1);
+        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
+        if (!obj)
+            argumentError(0, "expecting static object");
+        ModulePtr m = staticModule(obj);
+        if (!m)
+            argumentError(0, "value has no associated module");
+        return analyzeStaticModule(m);
+    }
+
     case PRIM_ModuleName : {
         ensureArity(args, 1);
         ObjectPtr obj = unwrapStaticType(args->values[0]->type);
@@ -2967,14 +2999,24 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return analyzeStaticObject(new Identifier(m->moduleName));
     }
 
-    case PRIM_StaticName : {
+    case PRIM_ModuleMemberNames : {
         ensureArity(args, 1);
-        ObjectPtr obj = unwrapStaticType(args->values[0]->type);
-        if (!obj)
-            argumentError(0, "expecting static object");
-        ostringstream sout;
-        printStaticName(sout, obj);
-        return analyzeStaticObject(new Identifier(sout.str()));
+        ObjectPtr moduleObj = unwrapStaticType(args->values[0]->type);
+        if (!moduleObj || (moduleObj->objKind != MODULE_HOLDER))
+            argumentError(0, "expecting a module");
+        ModulePtr m = staticModule(moduleObj);
+        assert(m != NULL);
+
+        MultiPValuePtr result = new MultiPValue();
+
+        for (map<string, ObjectPtr>::const_iterator i = m->publicGlobals.begin(),
+                end = m->publicGlobals.end();
+            i != end;
+            ++i)
+        {
+            result->add(staticPValue(new Identifier(i->first)));
+        }
+        return result;
     }
 
     case PRIM_FlagP : {

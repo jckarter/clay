@@ -89,8 +89,8 @@ ObjectPtr lookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name) {
     map<string, ModuleHolderPtr>::iterator i = mh->children.find(name->str);
     if (i != mh->children.end())
         result1 = i->second.ptr();
-    if (mh->import.ptr())
-        result2 = lookupPublic(mh->import->module, name);
+    if (mh->module != NULL)
+        result2 = lookupPublic(mh->module, name);
     if (result1.ptr()) {
         if (result2.ptr() && (result1 != result2)) {
             std::cerr << "module holder ambiguity\n";

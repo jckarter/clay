@@ -30,23 +30,6 @@ external (WINAPI) SetFilePointerEx(
 
 alias FORMAT_MESSAGE_FROM_SYSTEM = CULong(0x1000);
 
-printErrorMessageTo(stream, errorCode) {
-    var buf = Array[Byte, 1024]();
-    var result = FormatMessageA(
-        FORMAT_MESSAGE_FROM_SYSTEM,
-        RawPointer(0),
-        CULong(errorCode),
-        CULong(0),
-        LPSTR(begin(buf)),
-        CULong(size(buf)),
-        null(va_list),
-    );
-    if (result == 0)
-        printTo(stream, "unknown error");
-    else
-        printTo(stream, CStringRef(begin(buf)));
-}
-
 errorCodeName(code:Int) {
     ref names = errorNames();
     var nameCodes = mapped(x => x.0, names);
