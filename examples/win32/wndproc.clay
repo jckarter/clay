@@ -22,7 +22,7 @@ external (WINAPI) WinMain(hInstance:HINSTANCE,
     wc.hInstance = hInstance;
     wc.lpszClassName = classname;
 
-    RegisterClassA(&wc);
+    RegisterClassA(@wc);
 
     var hwnd = CreateWindowExA(
         0u,
@@ -41,9 +41,9 @@ external (WINAPI) WinMain(hInstance:HINSTANCE,
     ShowWindow(hwnd, nCmdShow);
 
     var msg = MSG();
-    while (GetMessageA(&msg, HWND(), 0u, 0u) != 0) {
-        TranslateMessage(&msg);
-        DispatchMessageA(&msg);
+    while (GetMessageA(@msg, HWND(), 0u, 0u) != 0) {
+        TranslateMessage(@msg);
+        DispatchMessageA(@msg);
     }
 
     return 0;
@@ -60,9 +60,9 @@ windowProc(hwnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM) : LRESULT
     }
     case (WM_PAINT) {
         var ps = PAINTSTRUCT();
-        var hdc = BeginPaint(hwnd, &ps);
-        FillRect(hdc, &ps.rcPaint, HBRUSH(COLOR_HIGHLIGHT+1));
-        EndPaint(hwnd, &ps);
+        var hdc = BeginPaint(hwnd, @ps);
+        FillRect(hdc, @ps.rcPaint, HBRUSH(COLOR_HIGHLIGHT+1));
+        EndPaint(hwnd, @ps);
     }
     case (WM_LBUTTONUP) {
         MessageBoxA(hwnd,
