@@ -774,6 +774,7 @@ void X86_64_ExternalTarget::fixupClassification(TypePtr type, vector<WordClass> 
             || type->typeKind == VARIANT_TYPE || type->typeKind == UNION_TYPE
             || type->typeKind == TUPLE_TYPE || type->typeKind == RECORD_TYPE))
     {
+        assert(i != end);
         if (X86_64_ExternalTarget::isSSEClass(*i)) {
             ++i;
             for (; i != end; ++i) {
@@ -801,9 +802,9 @@ void X86_64_ExternalTarget::fixupClassification(TypePtr type, vector<WordClass> 
         if (*i == SSEUP) {
             *i = SSE_INT_VECTOR;
         } else if (X86_64_ExternalTarget::isSSEClass(*i)) {
-            do { ++i; } while (*i == SSEUP);
+            do { ++i; } while ((i != end) && (*i == SSEUP));
         } else if (*i == X87) {
-            do { ++i; } while (*i == X87UP);
+            do { ++i; } while ((i != end) && (*i == X87UP));
         } else
             ++i;
     }
