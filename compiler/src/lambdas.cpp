@@ -71,8 +71,8 @@ static string lambdaName(LambdaPtr x)
     if (fullName.size() <= 80)
         return "(" + fullName + ")";
     else {
-        string shortNameBuf;
-        llvm::raw_string_ostream shortName(shortNameBuf);
+        llvm::SmallString<128> shortNameBuf;
+        llvm::raw_svector_ostream shortName(shortNameBuf);
         shortName << "<lambda ";
         printFileLineCol(shortName, x->location);
         shortName << ">";
@@ -88,8 +88,8 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
 
     string lname = lambdaName(x);
 
-    string buf;
-    llvm::raw_string_ostream ostr(buf);
+    llvm::SmallString<128> buf;
+    llvm::raw_svector_ostream ostr(buf);
     ostr << "%closureData:" << lname;
     string closureDataName = ostr.str();
 

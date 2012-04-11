@@ -1319,8 +1319,8 @@ static void defineLLVMType(TypePtr t) {
                 size_t debugAlign = debugTypeAlignment(memberLLT);
                 size_t debugSize = debugTypeSize(memberLLT);
                 debugOffset = alignedUpTo(debugOffset, debugAlign);
-                string buf;
-                llvm::raw_string_ostream name(buf);
+                llvm::SmallString<128> buf;
+                llvm::raw_svector_ostream name(buf);
                 name << "element" << i - x->elementTypes.begin();
                 members.push_back(llvmDIBuilder->createMemberType(
                     placeholder,
@@ -1400,8 +1400,8 @@ static void defineLLVMType(TypePtr t) {
                 llvm::Type *memberLLT = llvmType(*i);
                 size_t debugAlign = debugTypeAlignment(memberLLT);
                 size_t debugSize = debugTypeSize(memberLLT);
-                string buf;
-                llvm::raw_string_ostream name(buf);
+                llvm::SmallString<128> buf;
+                llvm::raw_svector_ostream name(buf);
                 name << "element" << i - x->memberTypes.begin();
                 members.push_back(llvmDIBuilder->createMemberType(
                     placeholder,
@@ -1545,8 +1545,8 @@ size_t typeAlignment(TypePtr t) {
 }
 string typeName(TypePtr type)
 {
-    string buf;
-    llvm::raw_string_ostream os(buf);
+    llvm::SmallString<128> buf;
+    llvm::raw_svector_ostream os(buf);
     typePrint(os, type);
     return os.str();
 }

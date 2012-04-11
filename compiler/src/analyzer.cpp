@@ -2978,8 +2978,8 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         ObjectPtr obj = unwrapStaticType(args->values[0]->type);
         if (!obj)
             argumentError(0, "expecting static object");
-        string buf;
-        llvm::raw_string_ostream sout(buf);
+        llvm::SmallString<128> buf;
+        llvm::raw_svector_ostream sout(buf);
         printStaticName(sout, obj);
         return analyzeStaticObject(Identifier::get(sout.str()));
     }
@@ -3209,8 +3209,8 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         std::pair<vector<TypePtr>, InvokeEntryPtr> entry =
             invokeEntryForCallableArguments(args, 0, 1);
 
-        string buf;
-        llvm::raw_string_ostream nameout(buf);
+        llvm::SmallString<128> buf;
+        llvm::raw_svector_ostream nameout(buf);
         nameout << "GetOverload(";
         printStaticName(nameout, entry.second->callable);
         nameout << ", ";
