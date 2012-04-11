@@ -1,4 +1,6 @@
 import printer.(print);
+import io.files.(File,lines);
+import io.files;
 
 main() {
     {
@@ -8,7 +10,7 @@ main() {
     }
     {
         var lines = Vector[String]();
-        for (line in prelude.lines(File("test.txt")))
+        for (line in io.files.lines(File("test.txt")))
             push(lines, line);
         for (x in lines)
             print(x);

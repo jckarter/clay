@@ -1,4 +1,6 @@
 import printer.(println, printlnTo);
+import io.files.(stderr);
+
 main() {
     try {
         println(Float("abc1.2"));

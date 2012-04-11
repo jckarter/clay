@@ -1,4 +1,5 @@
 import printer.(println, printlnTo);
+import io.files.(stderr);
 
 main() {
     try {

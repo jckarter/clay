@@ -142,8 +142,8 @@ inline overload log2(x:LongDouble) = libc.log2l(x);
 inline overload sqrt(x:LongDouble) = libc.sqrtl(x);
 
 [when MathMode?(LIBM)] inline overload cbrt(x:Double) = libc.cbrt(x);
-inline overload cbrt(x:Float) = libc.cbrtf(x);
-inline overload cbrt(x:LongDouble) = libc.cbrtl(x);
+[when MathMode?(LIBM)] inline overload cbrt(x:Float) = libc.cbrtf(x);
+[when MathMode?(LIBM)] inline overload cbrt(x:LongDouble) = libc.cbrtl(x);
 
 [when MathMode?(LIBM)] inline overload floor(x:Double) = libc.floor(x);
 [when MathMode?(LIBM)] inline overload floor(x:Float) = libc.floorf(x);
