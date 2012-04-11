@@ -1,4 +1,6 @@
 import io.mapping.*;
+import io.files.*;
+import io.streams.*;
 
 main() {
     alias N = 500*1000;

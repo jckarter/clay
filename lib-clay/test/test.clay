@@ -1,6 +1,8 @@
 import commandline.options.*;
 import console.color.*;
 import printer.(println,print,str);
+import io.streams.*;
+import io.files.*;
 
 record TestStatus (
     passed: UInt,

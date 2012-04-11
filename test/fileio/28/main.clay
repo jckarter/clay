@@ -1,4 +1,5 @@
 import printer.(println);
+import io.files.*;
 
 main() {
     var name = "test.txt";

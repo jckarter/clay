@@ -1,5 +1,6 @@
 import maybe.*;
 import printer.(printlnTo);
+import io.files.*;
 
 private dispatchCommand() {
     var args = commandLine(); 

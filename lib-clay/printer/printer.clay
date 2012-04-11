@@ -1,6 +1,8 @@
 import errors.(private assertStringLiteral);
 import errors.backtrace.(showBacktrace);
 import io.files.raw.(stderrRawFile);
+import io.files.(stdout,stderr);
+import io.streams.*;
 import libc;
 import platform;
 import printer.platform.(

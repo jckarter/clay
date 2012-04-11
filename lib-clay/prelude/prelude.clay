@@ -29,9 +29,6 @@ public import strings.*;
 public import strings.cstringrefs.*;
 public import strings.literals.*;
 
-public import io.streams.*;
-public import io.files.*;
-
 public import errors.*;
 public import exceptions.*;
 
