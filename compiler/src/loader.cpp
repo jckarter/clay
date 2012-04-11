@@ -14,8 +14,8 @@ using namespace std;
 static vector<string> searchPath;
 static vector<string> moduleSuffixes;
 
-map<string, ModulePtr> globalModules;
-map<string, string> globalFlags;
+llvm::StringMap<ModulePtr> globalModules;
+llvm::StringMap<string> globalFlags;
 ModulePtr globalMainModule;
 
 
@@ -108,7 +108,7 @@ static string toKey(DottedNamePtr name) {
     for (unsigned i = 0; i < name->parts.size(); ++i) {
         if (i != 0)
             key.push_back('.');
-        key.append(name->parts[i]->str);
+        key.append(name->parts[i]->str.begin(), name->parts[i]->str.end());
     }
     return key;
 }
@@ -116,19 +116,21 @@ static string toKey(DottedNamePtr name) {
 
 
 //
-// addSearchPath, locateFile, toRelativePath1, toRelativePath2,
+// addSearchPath, locateFile, toRelativePath,
 // locateModule
 //
 
-void addSearchPath(const string &path) {
+void addSearchPath(llvm::StringRef path) {
     searchPath.push_back(path);
 }
 
-static bool locateFile(const string &relativePath, string &path) {
+static bool locateFile(llvm::StringRef relativePath, string &path) {
     // relativePath has no suffix
     if (moduleSuffixes.empty())
         initModuleSuffixes();
-    string tail = PATH_SEPARATOR + relativePath;
+    string tail;
+    tail.push_back(PATH_SEPARATOR);
+    tail.append(relativePath.begin(), relativePath.end());
     for (unsigned i = 0; i < searchPath.size(); ++i) {
         string pathWOSuffix = searchPath[i] + tail;
         for (unsigned j = 0; j < moduleSuffixes.size(); ++j) {
@@ -144,26 +146,25 @@ static bool locateFile(const string &relativePath, string &path) {
     return false;
 }
 
-static string toRelativePath1(DottedNamePtr name) {
+static string toRelativePathUpto(DottedNamePtr name, size_t limit) {
     string relativePath;
-    for (unsigned i = 0; i < name->parts.size(); ++i) {
-        relativePath.append(name->parts[i]->str);
+    for (unsigned i = 0; i < limit; ++i) {
+        relativePath.append(name->parts[i]->str.begin(), name->parts[i]->str.end());
         relativePath.push_back(PATH_SEPARATOR);
     }
-    relativePath.append(name->parts.back()->str);
+    relativePath.append(name->parts.back()->str.begin(), name->parts.back()->str.end());
     // relative path has no suffix
     return relativePath;
 }
 
+// foo.bar -> foo/bar/bar
+static string toRelativePath1(DottedNamePtr name) {
+    return toRelativePathUpto(name, name->parts.size());
+}
+
+// foo.bar -> foo/bar
 static string toRelativePath2(DottedNamePtr name) {
-    string relativePath;
-    for (unsigned i = 0; i+1 < name->parts.size(); ++i) {
-        relativePath.append(name->parts[i]->str);
-        relativePath.push_back(PATH_SEPARATOR);
-    }
-    relativePath.append(name->parts.back()->str);
-    // relative path has no suffix
-    return relativePath;
+    return toRelativePathUpto(name, name->parts.size() - 1);
 }
 
 static string locateModule(DottedNamePtr name) {
@@ -187,23 +188,11 @@ static string locateModule(DottedNamePtr name) {
 // loadFile
 //
 
-static SourcePtr loadFile(const string &fileName, vector<string> *sourceFiles) {
+static SourcePtr loadFile(llvm::StringRef fileName, vector<string> *sourceFiles) {
     if (sourceFiles != NULL)
         sourceFiles->push_back(fileName);
-    FILE *f = fopen(fileName.c_str(), "rb");
-    if (!f)
-        error("unable to open file: " + fileName);
-    fseek(f, 0, SEEK_END);
-    long size = ftell(f);
-    fseek(f, 0, SEEK_SET);
-    assert(size >= 0);
-    char *buf = new char [size + 1];
-    long n = fread(buf, 1, size, f);
-    fclose(f);
-    assert(n == size);
-    buf[size] = 0;
 
-    SourcePtr src = new Source(fileName, buf, size);
+    SourcePtr src = new Source(fileName);
     if (llvmDIBuilder != NULL) {
         llvm::SmallString<260> absFileName(fileName);
         llvm::sys::fs::make_absolute(absFileName);
@@ -262,7 +251,7 @@ static void installGlobals(ModulePtr m) {
 static ModulePtr loadModuleByName(DottedNamePtr name, vector<string> *sourceFiles) {
     string key = toKey(name);
 
-    map<string, ModulePtr>::iterator i = globalModules.find(key);
+    llvm::StringMap<ModulePtr>::iterator i = globalModules.find(key);
     if (i != globalModules.end())
         return i->second;
 
@@ -287,7 +276,7 @@ static ModulePtr loadModuleByName(DottedNamePtr name, vector<string> *sourceFile
 
 static ModuleHolderPtr installHolder(ModuleHolderPtr mh, IdentifierPtr name) {
     ModuleHolderPtr holder;
-    map<string, ModuleHolderPtr>::iterator i = mh->children.find(name->str);
+    llvm::StringMap<ModuleHolderPtr>::iterator i = mh->children.find(name->str);
     if (i != mh->children.end())
         return i->second;
     holder = new ModuleHolder();
@@ -359,11 +348,11 @@ static void loadDependents(ModulePtr m, vector<string> *sourceFiles) {
 
 static ModulePtr loadPrelude(vector<string> *sourceFiles) {
     DottedNamePtr dottedName = new DottedName();
-    dottedName->parts.push_back(new Identifier("prelude"));
+    dottedName->parts.push_back(Identifier::get("prelude"));
     return loadModuleByName(dottedName, sourceFiles);
 }
 
-ModulePtr loadProgram(const string &fileName, vector<string> *sourceFiles) {
+ModulePtr loadProgram(llvm::StringRef fileName, vector<string> *sourceFiles) {
     globalMainModule = parse("", loadFile(fileName, sourceFiles));
     ModulePtr prelude = loadPrelude(sourceFiles);
     loadDependents(globalMainModule, sourceFiles);
@@ -373,11 +362,9 @@ ModulePtr loadProgram(const string &fileName, vector<string> *sourceFiles) {
     return globalMainModule;
 }
 
-ModulePtr loadProgramSource(const string &name, const string &source) {
+ModulePtr loadProgramSource(llvm::StringRef name, llvm::StringRef source) {
     globalMainModule = parse("", new Source(name,
-        const_cast<char*>(source.c_str()),
-        source.size())
-    );
+        llvm::MemoryBuffer::getMemBufferCopy(source)));
     // Don't keep track of source files for -e script
     ModulePtr prelude = loadPrelude(NULL);
     loadDependents(globalMainModule, NULL);
@@ -387,7 +374,7 @@ ModulePtr loadProgramSource(const string &name, const string &source) {
     return globalMainModule;
 }
 
-ModulePtr loadedModule(const string &module) {
+ModulePtr loadedModule(llvm::StringRef module) {
     if (!globalModules.count(module))
         error("module not loaded: " + module);
     return globalModules[module];
@@ -695,7 +682,7 @@ EnvPtr ForeignStatement::getEnv() {
 
 static map<int, string> primOpNames;
 
-const string &primOpName(PrimOpPtr x) {
+llvm::StringRef primOpName(PrimOpPtr x) {
     map<int, string>::iterator i = primOpNames.find(x->primOpCode);
     assert(i != primOpNames.end());
     return i->second;
@@ -707,21 +694,21 @@ const string &primOpName(PrimOpPtr x) {
 // makePrimitivesModule
 //
 
-static string toPrimStr(const string &s) {
+static string toPrimStr(llvm::StringRef s) {
     string name = s;
     if (name[s.size() - 1] == 'P')
         name[s.size() - 1] = '?';
     return name;
 }
 
-static void addPrim(ModulePtr m, const string &name, ObjectPtr x) {
+static void addPrim(ModulePtr m, llvm::StringRef name, ObjectPtr x) {
     m->globals[name] = x;
     m->allSymbols[name].insert(x);
     m->publicGlobals[name] = x;
     m->publicSymbols[name].insert(x);
 }
 
-static void addPrimOp(ModulePtr m, const string &name, PrimOpPtr x) {
+static void addPrimOp(ModulePtr m, llvm::StringRef name, PrimOpPtr x) {
     primOpNames[x->primOpCode] = name;
     addPrim(m, name, x.ptr());
 }
@@ -751,7 +738,7 @@ static ModulePtr makePrimitivesModule() {
     addPrim(prims, "Complex80", complex80Type.ptr());
 
     GlobalAliasPtr v =
-        new GlobalAlias(new Identifier("ExceptionsEnabled?"),
+        new GlobalAlias(Identifier::get("ExceptionsEnabled?"),
                         PUBLIC,
                         vector<PatternVar>(),
                         NULL,
@@ -762,8 +749,8 @@ static ModulePtr makePrimitivesModule() {
 
     vector<IdentifierPtr> recordParams;
     RecordBodyPtr recordBody = new RecordBody(vector<RecordFieldPtr>());
-    recordParams.push_back(new Identifier("T"));
-    RecordPtr byRefRecord = new Record(new Identifier("ByRef"),
+    recordParams.push_back(Identifier::get("T"));
+    RecordPtr byRefRecord = new Record(Identifier::get("ByRef"),
         PUBLIC,
         vector<PatternVar>(),
         NULL,
@@ -774,9 +761,9 @@ static ModulePtr makePrimitivesModule() {
     addPrim(prims, "ByRef", byRefRecord.ptr());
 
     recordParams.clear();
-    recordParams.push_back(new Identifier("Properties"));
-    recordParams.push_back(new Identifier("Fields"));
-    RecordPtr rwpRecord = new Record(new Identifier("RecordWithProperties"),
+    recordParams.push_back(Identifier::get("Properties"));
+    recordParams.push_back(Identifier::get("Fields"));
+    RecordPtr rwpRecord = new Record(Identifier::get("RecordWithProperties"),
         PUBLIC,
         vector<PatternVar>(),
         NULL,
@@ -979,8 +966,8 @@ static ModulePtr makePrimitivesModule() {
     return prims;
 }
 
-static void addOperator(ModulePtr module, const string &name) {
-    IdentifierPtr ident = new Identifier(name);
+static void addOperator(ModulePtr module, llvm::StringRef name) {
+    IdentifierPtr ident = Identifier::get(name);
     ProcedurePtr opProc = new Procedure(ident, PUBLIC);
     opProc->env = new Env(module);
     addGlobal(module, ident, PUBLIC, opProc.ptr());
@@ -1080,11 +1067,11 @@ ModulePtr preludeModule() {
     return cached;
 }
 
-static IdentifierPtr fnameToIdent(const string &str) {
+static IdentifierPtr fnameToIdent(llvm::StringRef str) {
     string s = str;
     if ((s.size() > 0) && (s[s.size()-1] == 'P'))
         s[s.size()-1] = '?';
-    return new Identifier(s);
+    return Identifier::get(s);
 }
 
 static ObjectPtr convertObject(ObjectPtr x) {

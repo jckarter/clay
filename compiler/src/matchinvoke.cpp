@@ -161,7 +161,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
     return result.ptr();
 }
 
-void printMatchError(ostream &os, MatchResultPtr result)
+void printMatchError(llvm::raw_ostream &os, MatchResultPtr result)
 {
     switch (result->matchCode) {
     case MATCH_SUCCESS :

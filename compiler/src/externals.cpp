@@ -97,7 +97,7 @@ void ExternalTarget::allocReturnValue(CallingConv conv,
 
 CValuePtr ExternalTarget::allocArgumentValue(CallingConv conv,
                                              TypePtr type,
-                                             string const &name,
+                                             llvm::StringRef name,
                                              llvm::Function::arg_iterator &ai,
                                              CodegenContextPtr ctx)
 {

@@ -8,7 +8,7 @@ llvm::ExecutionEngine *llvmEngine;
 const llvm::TargetData *llvmTargetData;
 
 static vector<CValuePtr> initializedGlobals;
-static map<string, llvm::Constant*> stringTableConstants;
+static llvm::StringMap<llvm::Constant*> stringTableConstants;
 static CodegenContextPtr constructorsCtx;
 static CodegenContextPtr destructorsCtx;
 
@@ -255,7 +255,7 @@ void setExceptionsEnabled(bool enabled)
 //
 
 
-llvm::BasicBlock *newBasicBlock(const char *name, CodegenContextPtr ctx)
+llvm::BasicBlock *newBasicBlock(llvm::StringRef name, CodegenContextPtr ctx)
 {
     return llvm::BasicBlock::Create(llvm::getGlobalContext(),
                                     name,
@@ -1387,7 +1387,7 @@ void codegenStaticObject(ObjectPtr x,
 // codegenGVarInstance
 //
 
-static void printModuleQualification(ostream &os, ModulePtr mod)
+static void printModuleQualification(llvm::raw_ostream &os, ModulePtr mod)
 {
     if (mod != NULL)
         os << mod->moduleName << '.';
@@ -1402,7 +1402,8 @@ void codegenGVarInstance(GVarInstancePtr x)
     llvm::Constant *initializer =
         llvm::Constant::getNullValue(llvmType(y->type));
 
-    ostringstream nameStr;
+    string nameBuf;
+    llvm::raw_string_ostream nameStr(nameBuf);
     printModuleQualification(nameStr, safeLookupModule(x->env));
     nameStr << x->gvar->name->str;
     if (!x->params.empty()) {
@@ -1411,7 +1412,8 @@ void codegenGVarInstance(GVarInstancePtr x)
         nameStr << ']';
     }
 
-    ostringstream symbolStr;
+    string symbolBuf;
+    llvm::raw_string_ostream symbolStr(symbolBuf);
     symbolStr << nameStr.str() << " " << y->type << " clay";
 
     x->staticGlobal = new ValueHolder(y->type);
@@ -1480,7 +1482,7 @@ void codegenExternalVariable(ExternalVariablePtr x)
     x->llGlobal =
         new llvm::GlobalVariable(
             *llvmModule, llvmType(pv->type), false,
-            linkage, NULL, x->name->str);
+            linkage, NULL, x->name->str.str());
     if (llvmDIBuilder != NULL) {
         int line, column;
         llvm::DIFile file = getDebugLineCol(x->location, line, column);
@@ -1531,18 +1533,19 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
 
     string llvmFuncName;
     if (!x->attrAsmLabel.empty()) {
-        string llvmIntrinsicsPrefix = "llvm.";
-        string prefix = x->attrAsmLabel.substr(0, llvmIntrinsicsPrefix.size());
+        llvm::StringRef llvmIntrinsicsPrefix = "llvm.";
+        llvm::StringRef prefix(&x->attrAsmLabel[0], llvmIntrinsicsPrefix.size());
         if (prefix != llvmIntrinsicsPrefix) {
             // '\01' is the llvm marker to specify asm label
-            llvmFuncName = "\01" + x->attrAsmLabel;
+            llvmFuncName.push_back('\01');
+            llvmFuncName.append(x->attrAsmLabel.begin(), x->attrAsmLabel.end());
         }
         else {
-            llvmFuncName = x->attrAsmLabel;
+            llvmFuncName.append(x->attrAsmLabel.begin(), x->attrAsmLabel.end());
         }
     }
     else {
-        llvmFuncName = x->name->str;
+        llvmFuncName.append(x->name->str.begin(), x->name->str.end());
     }
 
     llvm::DIFile file(NULL);
@@ -1780,7 +1783,8 @@ void codegenCompileTimeValue(EValuePtr ev,
         break;
     }
     default : {
-        ostringstream sout;
+        string buf;
+        llvm::raw_string_ostream sout(buf);
         sout << "constants of type " << ev->type
              << " are not yet supported";
         error(sout.str());
@@ -2548,10 +2552,9 @@ static bool isIdentChar(char c) {
     return false;
 }
 
-static string::const_iterator parseIdentifier(string::const_iterator first,
-                                              string::const_iterator last)
+static const char * parseIdentifier(const char * first, const char * last)
 {
-    string::const_iterator i = first;
+    const char * i = first;
     if ((i == last) || !isFirstIdentChar(*i))
         return first;
     ++i;
@@ -2560,10 +2563,10 @@ static string::const_iterator parseIdentifier(string::const_iterator first,
     return i;
 }
 
-static string::const_iterator parseBracketedExpr(string::const_iterator first,
-                                                 string::const_iterator last)
+static const char * parseBracketedExpr(const char * first,
+                                       const char * last)
 {
-    string::const_iterator i = first;
+    const char * i = first;
     if ((i == last) || (*i != '{'))
         return first;
     ++i;
@@ -2601,7 +2604,8 @@ static void interpolateExpr(SourcePtr source, unsigned offset, unsigned length,
         else if ((vh->type->typeKind == INTEGER_TYPE)
                  ||(vh->type->typeKind == FLOAT_TYPE))
         {
-            ostringstream sout;
+            string buf;
+            llvm::raw_string_ostream sout(buf);
             printValue(sout, new EValue(vh->type, vh->buf));
             outstream << sout.str();
         }
@@ -2614,7 +2618,8 @@ static void interpolateExpr(SourcePtr source, unsigned offset, unsigned length,
         outstream << y->str;
     }
     else {
-        ostringstream sout;
+        string buf;
+        llvm::raw_string_ostream sout(buf);
         printName(sout, x);
         outstream << sout.str();
     }
@@ -2625,9 +2630,9 @@ static bool interpolateLLVMCode(LLVMCodePtr llvmBody, string &out, EnvPtr env)
     SourcePtr source = llvmBody->location->source;
     int startingOffset = llvmBody->location->offset;
 
-    const string &body = llvmBody->body;
+    llvm::StringRef body = llvmBody->body;
     llvm::raw_string_ostream outstream(out);
-    string::const_iterator i = body.begin();
+    const char *i = body.begin();
     while (i != body.end()) {
         if (*i != '$') {
             outstream << *i;
@@ -2635,7 +2640,7 @@ static bool interpolateLLVMCode(LLVMCodePtr llvmBody, string &out, EnvPtr env)
             continue;
         }
 
-        string::const_iterator first, last;
+        const char *first, *last;
         first = i + 1;
 
         last = parseIdentifier(first, body.end());
@@ -2671,13 +2676,14 @@ static bool interpolateLLVMCode(LLVMCodePtr llvmBody, string &out, EnvPtr env)
 // codegenLLVMBody
 //
 
-void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
+void codegenLLVMBody(InvokeEntryPtr entry, llvm::StringRef callableName)
 {
     string llFunc;
     llvm::raw_string_ostream out(llFunc);
     int argCount = 0;
     static int id = 1;
-    ostringstream functionName;
+    string functionNameBuf;
+    llvm::raw_string_ostream functionName(functionNameBuf);
 
     functionName << callableName << id;
     id++;
@@ -2725,8 +2731,9 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
 
     if(!llvm::ParseAssembly(buf, llvmModule, err,
                 llvm::getGlobalContext())) {
-        err.Print("\n", out);
-        std::cerr << out.str() << std::endl;
+        llvm::errs() << out.str();
+        err.Print("\n", llvm::errs());
+        llvm::errs() << "\n";
         error("llvm assembly parse error");
     }
 
@@ -2744,7 +2751,8 @@ static string getCodeName(InvokeEntryPtr entry)
 {
     SafePrintNameEnabler enabler;
     ObjectPtr x = entry->callable;
-    ostringstream sout;
+    string buf;
+    llvm::raw_string_ostream sout(buf);
 
     printModuleQualification(sout, staticModule(x));
 
@@ -2924,7 +2932,7 @@ void codegenCodeBody(InvokeEntryPtr entry)
     unsigned argNo = 1;
     for (unsigned i = 0; i < entry->fixedArgTypes.size(); ++i, ++ai, ++argNo) {
         llvm::Argument *llArgValue = &(*ai);
-        llArgValue->setName(entry->fixedArgNames[i]->str);
+        llArgValue->setName(entry->fixedArgNames[i]->str.str());
         CValuePtr cvalue = new CValue(entry->fixedArgTypes[i], llArgValue);
         cvalue->forwardedRValue = entry->forwardedRValueFlags[i];
         addLocal(env, entry->fixedArgNames[i], cvalue.ptr());
@@ -2966,7 +2974,8 @@ void codegenCodeBody(InvokeEntryPtr entry)
 
         for (unsigned i = 0; i < entry->varArgTypes.size(); ++i, ++ai, ++argNo) {
             llvm::Argument *llArgValue = &(*ai);
-            ostringstream sout;
+            string buf;
+            llvm::raw_string_ostream sout(buf);
             sout << entry->varArgName << ".." << i;
             llArgValue->setName(sout.str());
             CValuePtr cvalue = new CValue(entry->varArgTypes[i], llArgValue);
@@ -3020,7 +3029,8 @@ void codegenCodeBody(InvokeEntryPtr entry)
         unsigned i = 0;
         for (; i < returnSpecs.size(); ++i, ++argNo) {
             ReturnSpecPtr rspec = returnSpecs[i];
-            ostringstream sout;
+            string buf;
+            llvm::raw_string_ostream sout(buf);
             if (rspec->name != NULL) {
                 hasNamedReturn = true;
                 addLocal(env, rspec->name, returns[i].value.ptr());
@@ -3429,7 +3439,7 @@ static void codegenBlockStatement(BlockPtr block,
 {
     if (stmt->stmtKind == LABEL) {
         Label *label = (Label *)stmt.ptr();
-        map<string, JumpTarget>::iterator li =
+        llvm::StringMap<JumpTarget>::iterator li =
             ctx->labels.find(label->name->str);
         assert(li != ctx->labels.end());
         JumpTarget &jt = li->second;
@@ -3683,10 +3693,11 @@ bool codegenStatement(StatementPtr stmt,
 
     case GOTO : {
         Goto *x = (Goto *)stmt.ptr();
-        map<string, JumpTarget>::iterator li =
+        llvm::StringMap<JumpTarget>::iterator li =
             ctx->labels.find(x->labelName->str);
         if (li == ctx->labels.end()) {
-            ostringstream sout;
+            string buf;
+            llvm::raw_string_ostream sout(buf);
             sout << "goto label not found: " << x->labelName->str;
             error(sout.str());
         }
@@ -3967,7 +3978,8 @@ bool codegenStatement(StatementPtr stmt,
         bool terminated = false;
         for (unsigned i = 0; i < mcv->size(); ++i) {
             if (terminated) {
-                ostringstream ostr;
+                string buf;
+                llvm::raw_string_ostream ostr(buf);
                 ostr << "unreachable code in iteration " << (i+1);
                 error(ostr.str());
             }
@@ -4017,11 +4029,11 @@ void codegenCollectLabels(const vector<StatementPtr> &statements,
         switch (x->stmtKind) {
         case LABEL : {
             Label *y = (Label *)x.ptr();
-            map<string, JumpTarget>::iterator li =
+            llvm::StringMap<JumpTarget>::iterator li =
                 ctx->labels.find(y->name->str);
             if (li != ctx->labels.end())
                 error(x, "label redefined");
-            llvm::BasicBlock *bb = newBasicBlock(y->name->str.c_str(), ctx);
+            llvm::BasicBlock *bb = newBasicBlock(y->name->str, ctx);
             ctx->labels[y->name->str] = JumpTarget(bb, cgMarkStack(ctx));
             break;
         }
@@ -4087,7 +4099,8 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
             cgPushStackValue(cv, ctx);
             addLocal(env2, x->names[i], cv.ptr());
 
-            ostringstream ostr;
+            string buf;
+            llvm::raw_string_ostream ostr(buf);
             ostr << x->names[i]->str << ":" << cv->type;
             cv->llValue->setName(ostr.str());
 
@@ -4138,7 +4151,8 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
             CValuePtr cv = derefValue(mcv->values[i], ctx);
             addLocal(env2, x->names[i], cv.ptr());
 
-            ostringstream ostr;
+            string buf;
+            llvm::raw_string_ostream ostr(buf);
             ostr << x->names[i]->str << ":" << cv->type;
             cv->llValue->setName(ostr.str());
         }
@@ -4203,7 +4217,8 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
             }
             addLocal(env2, x->names[i], cv.ptr());
 
-            ostringstream ostr;
+            string buf;
+            llvm::raw_string_ostream ostr(buf);
             ostr << x->names[i]->str << ":" << cv->type;
             cv->llValue->setName(ostr.str());
 
@@ -4788,9 +4803,9 @@ llvm::AtomicRMWInst::BinOp atomicRMWOpValue(MultiCValuePtr args, unsigned index)
 // codegenPrimOp
 //
 
-static llvm::Constant *codegenStringTableConstant(std::string const &s)
+static llvm::Constant *codegenStringTableConstant(llvm::StringRef s)
 {
-    map<string, llvm::Constant*>::const_iterator oldConstant = stringTableConstants.find(s);
+    llvm::StringMap<llvm::Constant*>::const_iterator oldConstant = stringTableConstants.find(s);
     if (oldConstant != stringTableConstants.end())
         return oldConstant->second;
 
@@ -4804,7 +4819,8 @@ static llvm::Constant *codegenStringTableConstant(std::string const &s)
                 structEntries,
                 false);
 
-    ostringstream symbolName;
+    string buf;
+    llvm::raw_string_ostream symbolName(buf);
     symbolName << "\"" << s << "\" clay";
 
     llvm::GlobalVariable *gvar = new llvm::GlobalVariable(
@@ -4817,7 +4833,7 @@ static llvm::Constant *codegenStringTableConstant(std::string const &s)
     };
 
     llvm::Constant *theConstant = llvm::ConstantExpr::getGetElementPtr(gvar, idxs);
-    stringTableConstants.insert(make_pair(s, theConstant));
+    stringTableConstants[s] = theConstant;
     return theConstant;
 }
 
@@ -5871,7 +5887,7 @@ void codegenPrimOp(PrimOpPtr x,
             Type *t = (Type *)obj.ptr();
             if (t->typeKind == RECORD_TYPE) {
                 RecordType *rt = (RecordType *)t;
-                const map<string, size_t> &fieldIndexMap =
+                const llvm::StringMap<size_t> &fieldIndexMap =
                     recordFieldIndexMap(rt);
                 result = (fieldIndexMap.find(fname->str)
                           != fieldIndexMap.end());
@@ -5904,11 +5920,12 @@ void codegenPrimOp(PrimOpPtr x,
         RecordTypePtr rt;
         llvm::Value *vrec = recordValue(args, 0, rt);
         IdentifierPtr fname = valueToIdentifier(args, 1);
-        const map<string, size_t> &fieldIndexMap = recordFieldIndexMap(rt);
-        map<string,size_t>::const_iterator fi =
+        const llvm::StringMap<size_t> &fieldIndexMap = recordFieldIndexMap(rt);
+        llvm::StringMap<size_t>::const_iterator fi =
             fieldIndexMap.find(fname->str);
         if (fi == fieldIndexMap.end()) {
-            ostringstream sout;
+            string buf;
+            llvm::raw_string_ostream sout(buf);
             sout << "field not found: " << fname->str;
             argumentError(1, sout.str());
         }
@@ -6173,7 +6190,7 @@ void codegenPrimOp(PrimOpPtr x,
     case PRIM_FlagP : {
         ensureArity(args, 1);
         IdentifierPtr ident = valueToIdentifier(args, 0);
-        map<string, string>::const_iterator flag = globalFlags.find(ident->str);
+        llvm::StringMap<string>::const_iterator flag = globalFlags.find(ident->str);
         ValueHolderPtr vh = boolToValueHolder(flag != globalFlags.end());
         codegenStaticObject(vh.ptr(), ctx, out);
         break;
@@ -6470,9 +6487,9 @@ void codegenPrimOp(PrimOpPtr x,
 // codegenTopLevelLLVM
 //
 
-static string stripEnclosingBraces(const string &s) {
-    string::const_iterator i = s.begin();
-    string::const_iterator j = s.end();
+static string stripEnclosingBraces(llvm::StringRef s) {
+    const char * i = s.begin();
+    const char * j = s.end();
     assert(i != j);
     assert(*i == '{');
     assert(*(j-1) == '}');
@@ -6505,10 +6522,8 @@ static void codegenTopLevelLLVMRecursive(ModulePtr m)
 
     if (!llvm::ParseAssembly(buf, llvmModule, err,
                              llvm::getGlobalContext())) {
-        string errBuf;
-        llvm::raw_string_ostream errOut(errBuf);
-        err.Print("\n", errOut);
-        std::cerr << errOut.str() << std::endl;
+        err.Print("\n", llvm::errs());
+        llvm::errs() << "\n";
         error("llvm assembly parse error");
     }
 }
@@ -6689,9 +6704,9 @@ static void generateLLVMCtorsAndDtors() {
 
 void codegenMain(ModulePtr module)
 {
-    IdentifierPtr main = new Identifier("main");
-    IdentifierPtr argc = new Identifier("argc");
-    IdentifierPtr argv = new Identifier("argv");
+    IdentifierPtr main = Identifier::get("main");
+    IdentifierPtr argc = Identifier::get("argc");
+    IdentifierPtr argv = Identifier::get("argv");
 
     BlockPtr mainBody = new Block();
 
@@ -6713,7 +6728,7 @@ void codegenMain(ModulePtr module)
     mainArgs.push_back(new ExternalArg(argv, argvType));
 
     ExternalProcedurePtr entryProc =
-        new ExternalProcedure(new Identifier("main"),
+        new ExternalProcedure(main,
                               PUBLIC,
                               mainArgs,
                               false,
@@ -6754,7 +6769,7 @@ void codegenEntryPoints(ModulePtr module, bool importedExternals)
 
     codegenModuleEntryPoints(module, importedExternals);
 
-    ObjectPtr mainProc = lookupPublic(module, new Identifier("main"));
+    ObjectPtr mainProc = lookupPublic(module, Identifier::get("main"));
     if (mainProc != NULL)
         codegenMain(module);
 
@@ -6770,9 +6785,9 @@ void codegenEntryPoints(ModulePtr module, bool importedExternals)
 // initLLVM
 //
 
-llvm::TargetMachine *initLLVM(std::string const &targetTriple,
-    std::string const &name,
-    std::string const &flags,
+llvm::TargetMachine *initLLVM(llvm::StringRef targetTriple,
+    llvm::StringRef name,
+    llvm::StringRef flags,
     bool relocPic,
     bool debug,
     bool optimized)
@@ -6802,7 +6817,7 @@ llvm::TargetMachine *initLLVM(std::string const &targetTriple,
     string err;
     const llvm::Target *target = llvm::TargetRegistry::lookupTarget(targetTriple, err);
     if (target == NULL) {
-        std::cerr << "error: unable to find target: " << err << '\n';
+        llvm::errs() << "error: unable to find target: " << err << '\n';
         return NULL;
     }
     llvm::Reloc::Model reloc = relocPic

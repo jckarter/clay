@@ -141,17 +141,17 @@ static long double clay_strtold(char *ptr, char **end) {
     return strtold(ptr, end);
 }
 
-static bool typeSuffix(string const &suffix,
+static bool typeSuffix(llvm::StringRef suffix,
                        TypePtr defaultType,
-                       string const &testSuffix,
+                       llvm::StringRef testSuffix,
                        TypePtr testDefaultType)
 {
     return suffix == testSuffix || (suffix.empty() && defaultType == testDefaultType);
 }
 
-static bool imagTypeSuffix(string const &suffix,
+static bool imagTypeSuffix(llvm::StringRef suffix,
                               TypePtr defaultType,
-                              string const &testSuffix,
+                              llvm::StringRef testSuffix,
                               TypePtr testDefaultType)
 {
     return suffix == testSuffix || (suffix == "j" && defaultType == testDefaultType);

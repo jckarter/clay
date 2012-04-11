@@ -2,6 +2,8 @@
 
 namespace clay {
 
+map<llvm::StringRef, IdentifierPtr> Identifier::freeIdentifiers;
+
 static vector<TokenPtr> *tokens;
 static int position;
 static int maxPosition;
@@ -88,8 +90,7 @@ static bool identifier(IdentifierPtr &x) {
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_IDENTIFIER))
         return false;
-    x = new Identifier(t->str);
-    x->location = location;
+    x = Identifier::get(t->str, location);
     return true;
 }
 
@@ -165,7 +166,7 @@ static bool boolLiteral(ExprPtr &x) {
     return true;
 }
 
-static string cleanNumericSeparator(const string &op, const string &s) {
+static string cleanNumericSeparator(llvm::StringRef op, llvm::StringRef s) {
     string out;
     if (op == "-")
         out.push_back('-');
@@ -176,7 +177,7 @@ static string cleanNumericSeparator(const string &op, const string &s) {
     return out;
 }
 
-static bool intLiteral(const string &op, ExprPtr &x) {
+static bool intLiteral(llvm::StringRef op, ExprPtr &x) {
     LocationPtr location = currentLocation();
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_INT_LITERAL))
@@ -194,7 +195,7 @@ static bool intLiteral(const string &op, ExprPtr &x) {
     return true;
 }
 
-static bool floatLiteral(const string &op, ExprPtr &x) {
+static bool floatLiteral(llvm::StringRef op, ExprPtr &x) {
     LocationPtr location = currentLocation();
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_FLOAT_LITERAL))
@@ -228,7 +229,7 @@ static bool stringLiteral(ExprPtr &x) {
     TokenPtr t;
     if (!next(t) || (t->tokenKind != T_STRING_LITERAL))
         return false;
-    IdentifierPtr id = new Identifier(t->str);
+    IdentifierPtr id = Identifier::get(t->str, location);
     x = new StringLiteral(id);
     x->location = location;
     return true;
@@ -576,7 +577,7 @@ static bool plusOrMinus(string &op) {
         return false;
 }
 
-static bool signedLiteral(const string &op, ExprPtr &x) {
+static bool signedLiteral(llvm::StringRef op, ExprPtr &x) {
     int p = save();
     if (restore(p), intLiteral(op, x)) return true;
     if (restore(p), floatLiteral(op, x)) return true;
@@ -629,7 +630,7 @@ static bool preopExpr(ExprPtr &x) {
     if (!operatorOp(op)) return false;
     ExprPtr y;
     if (!prefixExpr(y)) return false;
-    ExprListPtr exprs = new ExprList(new NameRef(new Identifier(op)));
+    ExprListPtr exprs = new ExprList(new NameRef(Identifier::get(op)));
     exprs->add(y);
     x = new VariadicOp(PREFIX_OP, exprs);
     x->location = location;
@@ -660,7 +661,7 @@ static bool operatorTail(VariadicOpPtr &x) {
     int p = save();
     while (true) {
         if (!prefixExpr(b)) return false;
-        exprs->add(new NameRef(new Identifier(op)));
+        exprs->add(new NameRef(Identifier::get(op)));
         exprs->add(b);
         p = save();
         if (!operatorOp(op)) {
@@ -1202,7 +1203,7 @@ static bool prefixUpdate(StatementPtr &x) {
     if (!uopstring(op)) return false;
     if (!expression(z)) return false;
     if (!symbol(";")) return false;
-    ExprListPtr exprs = new ExprList(new NameRef(new Identifier(op)));
+    ExprListPtr exprs = new ExprList(new NameRef(Identifier::get(op)));
     if (z->exprKind == VARIADIC_OP) {
         VariadicOp *y = (VariadicOp *)z.ptr();
         exprs->add(y->exprs);
@@ -1222,7 +1223,7 @@ static bool updateAssignment(StatementPtr &x) {
     if (!uopstring(op)) return false;
     if (!expression(z)) return false;
     if (!symbol(";")) return false;
-    ExprListPtr exprs = new ExprList(new NameRef(new Identifier(op)));
+    ExprListPtr exprs = new ExprList(new NameRef(Identifier::get(op)));
     exprs->add(y);
     if (z->exprKind == VARIADIC_OP) {
         VariadicOp *y = (VariadicOp *)z.ptr();
@@ -1665,13 +1666,14 @@ static bool valueFormalArg(FormalArgPtr &x) {
 
 static FormalArgPtr makeStaticFormalArg(unsigned index, ExprPtr expr, LocationPtr location) {
     // desugar static args
-    ostringstream sout;
+    string buf;
+    llvm::raw_string_ostream sout(buf);
     sout << "%arg" << index;
-    IdentifierPtr argName = new Identifier(sout.str());
+    IdentifierPtr argName = Identifier::get(sout.str());
 
     ExprPtr staticName =
         new ForeignExpr("prelude",
-                        new NameRef(new Identifier("Static")));
+                        new NameRef(Identifier::get("Static")));
 
     IndexingPtr indexing = new Indexing(staticName, new ExprList(expr));
     indexing->startLocation = location;
@@ -2888,7 +2890,7 @@ static bool optTopLevelLLVM(LLVMCodePtr &x) {
     return true;
 }
 
-static bool module(const string &moduleName, ModulePtr &x) {
+static bool module(llvm::StringRef moduleName, ModulePtr &x) {
     LocationPtr location = currentLocation();
     ModulePtr y = new Module(moduleName);
     if (!imports(y->imports)) return false;
@@ -2918,7 +2920,7 @@ void applyParser(SourcePtr source, int offset, int length, Parser parser, Node &
     if (!parser(node) || (position < (int)t.size())) {
         LocationPtr location;
         if (maxPosition == (int)t.size())
-            location = new Location(source, source->size);
+            location = new Location(source, source->size());
         else
             location = t[maxPosition]->location;
         pushLocation(location);
@@ -2930,14 +2932,14 @@ void applyParser(SourcePtr source, int offset, int length, Parser parser, Node &
 }
 
 struct ModuleParser {
-    const string &moduleName;
+    llvm::StringRef moduleName;
     bool operator()(ModulePtr &m) { return module(moduleName, m); }
 };
 
-ModulePtr parse(const string &moduleName, SourcePtr source) {
+ModulePtr parse(llvm::StringRef moduleName, SourcePtr source) {
     ModulePtr m;
     ModuleParser p = { moduleName };
-    applyParser(source, 0, source->size, p, m);
+    applyParser(source, 0, source->size(), p, m);
     m->source = source;
     return m;
 }

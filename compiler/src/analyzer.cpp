@@ -668,7 +668,7 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
     case FILE_EXPR : {
         LocationPtr location = safeLookupCallByNameLocation(env);
         string filename = location->source->fileName;
-        return analyzeStaticObject(new Identifier(filename));
+        return analyzeStaticObject(Identifier::get(filename));
     }
 
     case LINE_EXPR : {
@@ -687,7 +687,7 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
             if (expr->exprKind == FOREIGN_EXPR) {
                 ForeignExpr *fexpr = (ForeignExpr*)expr;
                 string argString = fexpr->expr->asString();
-                return analyzeStaticObject(new Identifier(argString));
+                return analyzeStaticObject(Identifier::get(argString));
             }
         }
         error("__ARG__ may only be applied to an alias value or alias function argument");
@@ -1150,7 +1150,8 @@ void verifyAttributes(ExternalProcedurePtr x)
                 break;
             }
             default : {
-                ostringstream os;
+                string buf;
+                llvm::raw_string_ostream os(buf);
                 os << "invalid external function attribute: ";
                 printStaticName(os, obj);
                 error(x, os.str());
@@ -1164,7 +1165,8 @@ void verifyAttributes(ExternalProcedurePtr x)
             break;
         }
         default: {
-            ostringstream os;
+            string buf;
+            llvm::raw_string_ostream os(buf);
             os << "invalid external function attribute: ";
             printStaticName(os, obj);
             error(x, os.str());
@@ -1189,7 +1191,8 @@ void verifyAttributes(ExternalVariablePtr var)
         ObjectPtr obj = attrs->values[i];
 
         if (obj->objKind != PRIM_OP) {
-            ostringstream os;
+            string buf;
+            llvm::raw_string_ostream os(buf);
             os << "invalid external variable attribute: ";
             printStaticName(os, obj);
             error(var, os.str());
@@ -1210,7 +1213,8 @@ void verifyAttributes(ExternalVariablePtr var)
             break;
         }
         default : {
-            ostringstream os;
+            string buf;
+            llvm::raw_string_ostream os(buf);
             os << "invalid external variable attribute: ";
             printStaticName(os, obj);
             error(var, os.str());
@@ -1248,7 +1252,8 @@ void verifyAttributes(ModulePtr mod)
                 break;
             }
             default:
-                ostringstream os;
+                string buf;
+                llvm::raw_string_ostream os(buf);
                 os << "invalid module attribute: ";
                 printStaticName(os, obj);
                 error(mod->declaration, os.str());
@@ -1335,7 +1340,8 @@ bool unwrapByRef(TypePtr &t)
             assert(rt->params.size() == 1);
             ObjectPtr obj = rt->params[0];
             if (obj->objKind != TYPE) {
-                ostringstream ostr;
+                string buf;
+                llvm::raw_string_ostream ostr(buf);
                 ostr << "invalid return type: " << t;
                 error(ostr.str());
             }
@@ -1680,7 +1686,8 @@ MultiPValuePtr analyzeDispatch(ObjectPtr obj,
                 }
             }
             if (!ok) {
-                ostringstream ostr;
+                string buf;
+                llvm::raw_string_ostream ostr(buf);
                 ostr << "mismatching result types with dispatch";
                 ostr << "\n    expected ";
                 for (unsigned j = 0; j < result->size(); ++j) {
@@ -1924,7 +1931,8 @@ static void unifyInterfaceReturns(InvokeEntryPtr entry)
                         entry->interfaceEnv,
                         interfaceReturnIsRef, interfaceReturnTypes);
     if (entry->returnTypes.size() != interfaceReturnTypes.size()) {
-        ostringstream out;
+        string buf;
+        llvm::raw_string_ostream out(buf);
         out << "interface declares " << interfaceReturnTypes.size()
             << " arguments, but got " << entry->returnTypes.size() << "\n"
             << "    interface at ";
@@ -1933,7 +1941,8 @@ static void unifyInterfaceReturns(InvokeEntryPtr entry)
     }
     for (unsigned i = 0; i < interfaceReturnTypes.size(); ++i) {
         if (interfaceReturnTypes[i] != entry->returnTypes[i]) {
-            ostringstream out;
+            string buf;
+            llvm::raw_string_ostream out(buf);
             out << "return value " << i+1 << ": "
                 << "interface declares type " << interfaceReturnTypes[i]
                 << ", but got type " << entry->returnTypes[i] << "\n"
@@ -1942,7 +1951,8 @@ static void unifyInterfaceReturns(InvokeEntryPtr entry)
             error(entry->code, out.str());
         }
         if (interfaceReturnIsRef[i] && !entry->returnIsRef[i]) {
-            ostringstream out;
+            string buf;
+            llvm::raw_string_ostream out(buf);
             out << "return value " << i+1 << ": "
                 << "interface declares return by reference, but got return by value\n"
                 << "    interface at ";
@@ -2720,11 +2730,12 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         if (!obj || (obj->objKind != IDENTIFIER))
             argumentError(1, "expecting field name identifier");
         IdentifierPtr fname = (Identifier *)obj.ptr();
-        const map<string, size_t> &fieldIndexMap = recordFieldIndexMap(t);
-        map<string, size_t>::const_iterator fi =
+        const llvm::StringMap<size_t> &fieldIndexMap = recordFieldIndexMap(t);
+        llvm::StringMap<size_t>::const_iterator fi =
             fieldIndexMap.find(fname->str);
         if (fi == fieldIndexMap.end()) {
-            ostringstream sout;
+            string buf;
+            llvm::raw_string_ostream sout(buf);
             sout << "field not found: " << fname->str;
             argumentError(1, sout.str());
         }
@@ -2925,20 +2936,20 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         if (begin > end)
             argumentIndexRangeError(1, "starting index",
                                     begin, end);
-        string result = ident->str.substr(begin, end-begin);
-        return analyzeStaticObject(new Identifier(result));
+        llvm::StringRef result(&ident->str[begin], end - begin);
+        return analyzeStaticObject(Identifier::get(result));
     }
 
     case PRIM_stringLiteralConcat : {
-        std::string result;
+        llvm::SmallString<32> result;
         for (size_t i = 0, sz = args->size(); i < sz; ++i) {
             ObjectPtr obj = unwrapStaticType(args->values[i]->type);
             if (!obj || (obj->objKind != IDENTIFIER))
                 argumentError(i, "expecting a string literal value");
             Identifier *ident = (Identifier *)obj.ptr();
-            result.append(ident->str);
+            result.append(ident->str.begin(), ident->str.end());
         }
-        return analyzeStaticObject(new Identifier(result));
+        return analyzeStaticObject(Identifier::get(result));
     }
 
     case PRIM_stringLiteralFromBytes : {
@@ -2949,13 +2960,14 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             if (!obj || !staticToSizeTOrInt(obj, byte))
                 argumentError(i, "expecting a static SizeT or Int value");
             if (byte > 255) {
-                ostringstream os;
+                string buf;
+                llvm::raw_string_ostream os(buf);
                 os << byte << " is too large for a string literal byte";
                 argumentError(i, os.str());
             }
             result.push_back((char)byte);
         }
-        return analyzeStaticObject(new Identifier(result));
+        return analyzeStaticObject(Identifier::get(result));
     }
 
     case PRIM_stringTableConstant :
@@ -2966,9 +2978,10 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         ObjectPtr obj = unwrapStaticType(args->values[0]->type);
         if (!obj)
             argumentError(0, "expecting static object");
-        ostringstream sout;
+        string buf;
+        llvm::raw_string_ostream sout(buf);
         printStaticName(sout, obj);
-        return analyzeStaticObject(new Identifier(sout.str()));
+        return analyzeStaticObject(Identifier::get(sout.str()));
     }
 
     case PRIM_MainModule : {
@@ -2996,7 +3009,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         ModulePtr m = staticModule(obj);
         if (!m)
             argumentError(0, "value has no associated module");
-        return analyzeStaticObject(new Identifier(m->moduleName));
+        return analyzeStaticObject(Identifier::get(m->moduleName));
     }
 
     case PRIM_ModuleMemberNames : {
@@ -3009,12 +3022,12 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 
         MultiPValuePtr result = new MultiPValue();
 
-        for (map<string, ObjectPtr>::const_iterator i = m->publicGlobals.begin(),
+        for (llvm::StringMap<ObjectPtr>::const_iterator i = m->publicGlobals.begin(),
                 end = m->publicGlobals.end();
             i != end;
             ++i)
         {
-            result->add(staticPValue(new Identifier(i->first)));
+            result->add(staticPValue(Identifier::get(i->getKey())));
         }
         return result;
     }
@@ -3029,12 +3042,12 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         if (obj != NULL && obj->objKind == IDENTIFIER) {
             Identifier *ident = (Identifier*)obj.ptr();
 
-            map<string, string>::const_iterator flag = globalFlags.find(ident->str);
+            llvm::StringMap<string>::const_iterator flag = globalFlags.find(ident->str);
             string value;
             if (flag != globalFlags.end())
                 value = flag->second;
 
-            return analyzeStaticObject(new Identifier(value));
+            return analyzeStaticObject(Identifier::get(value));
         } else
             argumentTypeError(0, "identifier", args->values[0]->type);
         return NULL;
@@ -3196,14 +3209,15 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         std::pair<vector<TypePtr>, InvokeEntryPtr> entry =
             invokeEntryForCallableArguments(args, 0, 1);
 
-        ostringstream nameout;
+        string buf;
+        llvm::raw_string_ostream nameout(buf);
         nameout << "GetOverload(";
         printStaticName(nameout, entry.second->callable);
         nameout << ", ";
         nameout << ")";
 
         ProcedurePtr proc = new Procedure(
-            new Identifier(nameout.str()),
+            Identifier::get(nameout.str()),
             PRIVATE);
 
         proc->env = entry.second->env;

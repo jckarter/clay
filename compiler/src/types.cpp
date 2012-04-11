@@ -546,7 +546,7 @@ static void setProperty(TypePtr type,
 
     TypePtr typeType = staticType(type.ptr());
     ExprPtr argType = new ObjectExpr(typeType.ptr());
-    FormalArgPtr arg = new FormalArg(new Identifier("x"), argType);
+    FormalArgPtr arg = new FormalArg(Identifier::get("x"), argType);
     code->formalArgs.push_back(arg.ptr());
 
     ExprListPtr returnExprs = new ExprList();
@@ -694,7 +694,7 @@ const vector<TypePtr> &recordFieldTypes(RecordTypePtr t) {
     return t->fieldTypes;
 }
 
-const map<string, size_t> &recordFieldIndexMap(RecordTypePtr t) {
+const llvm::StringMap<size_t> &recordFieldIndexMap(RecordTypePtr t) {
     if (!t->fieldsInitialized)
         initializeRecordFields(t);
     return t->fieldIndexMap;
@@ -871,7 +871,8 @@ static void verifyRecursionCorrectness(TypePtr t,
     pair<set<TypePtr>::iterator, bool>
         result = visited.insert(t);
     if (!result.second) {
-        ostringstream sout;
+        string buf;
+        llvm::raw_string_ostream sout(buf);
         sout << "invalid recursion in type: " << t;
         error(sout.str());
     }
@@ -1318,7 +1319,8 @@ static void defineLLVMType(TypePtr t) {
                 size_t debugAlign = debugTypeAlignment(memberLLT);
                 size_t debugSize = debugTypeSize(memberLLT);
                 debugOffset = alignedUpTo(debugOffset, debugAlign);
-                ostringstream name;
+                string buf;
+                llvm::raw_string_ostream name(buf);
                 name << "element" << i - x->elementTypes.begin();
                 members.push_back(llvmDIBuilder->createMemberType(
                     placeholder,
@@ -1398,7 +1400,8 @@ static void defineLLVMType(TypePtr t) {
                 llvm::Type *memberLLT = llvmType(*i);
                 size_t debugAlign = debugTypeAlignment(memberLLT);
                 size_t debugSize = debugTypeSize(memberLLT);
-                ostringstream name;
+                string buf;
+                llvm::raw_string_ostream name(buf);
                 name << "element" << i - x->memberTypes.begin();
                 members.push_back(llvmDIBuilder->createMemberType(
                     placeholder,
@@ -1541,7 +1544,7 @@ size_t typeAlignment(TypePtr t) {
     return t->typeAlignment;
 }
 
-void typePrint(ostream &out, TypePtr t) {
+void typePrint(llvm::raw_ostream &out, TypePtr t) {
     switch (t->typeKind) {
     case BOOL_TYPE :
         out << "Bool";
@@ -1690,7 +1693,8 @@ void typePrint(ostream &out, TypePtr t) {
 
 string typeName(TypePtr type)
 {
-    ostringstream os;
+    string buf;
+    llvm::raw_string_ostream os(buf);
     typePrint(os, type);
     return os.str();
 }
