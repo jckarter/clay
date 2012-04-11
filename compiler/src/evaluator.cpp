@@ -60,7 +60,7 @@ void evalCallByName(InvokeEntryPtr entry,
                     EnvPtr env,
                     MultiEValuePtr out);
 
-static map<string, void*> staticStringTableConstants;
+static map<string, const void*> staticStringTableConstants;
 
 enum TerminationKind {
     TERMINATE_RETURN,
@@ -3488,9 +3488,9 @@ static void op_pointerToInt(EValuePtr dest, void *ptr)
 //
 // evalPrimOp
 //
-static void *evalStringTableConstant(const string &s)
+static const void *evalStringTableConstant(const string &s)
 {
-    map<string, void*>::const_iterator oldConstant = staticStringTableConstants.find(s);
+    map<string, const void*>::const_iterator oldConstant = staticStringTableConstants.find(s);
     if (oldConstant != staticStringTableConstants.end())
         return oldConstant->second;
     size_t bits = typeSize(cSizeTType);
@@ -3506,8 +3506,8 @@ static void *evalStringTableConstant(const string &s)
     default:
         error("unsupported pointer width");
     }
-    memcpy((void*)((char*)buf + bits), (void*)s.c_str(), s.size() + 1);
-    staticStringTableConstants.insert(make_pair(s, buf));
+    memcpy((void*)((char*)buf + bits), (const void*)s.c_str(), s.size() + 1);
+    staticStringTableConstants.insert(make_pair(s, (const void*)buf));
     return buf;
 }
 
@@ -4533,12 +4533,12 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
     case PRIM_stringTableConstant : {
         ensureArity(args, 1);
         IdentifierPtr ident = valueToIdentifier(args, 0);
-        void *value = evalStringTableConstant(ident->str);
+        const void *value = evalStringTableConstant(ident->str);
 
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == pointerType(cSizeTType));
-        out0->as<void*>() = value;
+        out0->as<const void*>() = value;
         break;
     }
 
