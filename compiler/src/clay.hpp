@@ -11,8 +11,6 @@
 #include <map>
 #include <set>
 #include <iomanip>
-#include <iostream>
-#include <sstream>
 #include <cassert>
 #include <cctype>
 #include <cstdio>
@@ -27,6 +25,9 @@
 #pragma warning(disable: 4146 4244 4267 4355 4146 4800 4996)
 #endif
 
+#include <llvm/ADT/SmallString.h>
+#include <llvm/ADT/StringMap.h>
+#include <llvm/ADT/StringRef.h>
 #include <llvm/ADT/Triple.h>
 #include <llvm/Analysis/DebugInfo.h>
 #include <llvm/Analysis/DIBuilder.h>
@@ -78,8 +79,6 @@ using std::pair;
 using std::make_pair;
 using std::map;
 using std::set;
-using std::ostream;
-using std::ostringstream;
 
 }
 
@@ -88,6 +87,7 @@ using std::ostringstream;
 #define strtoll _strtoi64
 #define strtoull _strtoui64
 #define strtold strtod
+#define snprintf _snprintf
 #define CLAY_ALIGN(n) __declspec(align(n))
 
 #include <complex>
@@ -97,6 +97,12 @@ namespace clay {
 typedef std::complex<float> clay_cfloat;
 typedef std::complex<double> clay_cdouble;
 typedef std::complex<long double> clay_cldouble;
+
+template<typename T>
+inline T clay_creal(std::complex<T> const &c) { return std::real(c); }
+
+template<typename T>
+inline T clay_cimag(std::complex<T> const &c) { return std::imag(c); }
 
 }
 
@@ -109,6 +115,14 @@ namespace clay {
 typedef _Complex float clay_cfloat;
 typedef _Complex double clay_cdouble;
 typedef _Complex long double clay_cldouble;
+
+inline float clay_creal(_Complex float c) { return __real__ c; }
+inline double clay_creal(_Complex double c) { return __real__ c; }
+inline long double clay_creal(_Complex long double c) { return __real__ c; }
+
+inline float clay_cimag(_Complex float c) { return __imag__ c; }
+inline double clay_cimag(_Complex double c) { return __imag__ c; }
+inline long double clay_cimag(_Complex long double c) { return __imag__ c; }
 
 }
 
@@ -253,10 +267,10 @@ typedef int128_holder clay_int128;
 typedef uint128_holder clay_uint128;
 #endif
 
-inline std::ostream &operator<<(std::ostream &os, const clay_int128 &x) {
+inline llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const clay_int128 &x) {
     return os << ptrdiff64_t(x);
 }
-inline std::ostream &operator<<(std::ostream &os, const clay_uint128 &x) {
+inline llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const clay_uint128 &x) {
     return os << size64_t(x);
 }
 
@@ -703,16 +717,26 @@ typedef Pointer<ObjectTable> ObjectTablePtr;
 // Source, Location
 //
 
+void error(llvm::Twine const &msg);
+
 struct Source : public Object {
     string fileName;
-    char *data;
-    int size;
+    llvm::OwningPtr<llvm::MemoryBuffer> buffer;
     llvm::TrackingVH<llvm::MDNode> debugInfo;
-    Source(const string &fileName, char *data, int size)
-        : Object(SOURCE), fileName(fileName), data(data), size(size), debugInfo(NULL) {}
-    ~Source() {
-        delete [] data;
+    Source(llvm::StringRef fileName)
+        : Object(SOURCE), fileName(fileName), debugInfo(NULL)
+    {
+        if (llvm::error_code ec = llvm::MemoryBuffer::getFileOrSTDIN(fileName, buffer))
+            error("unable to open file: " + fileName);
     }
+
+    Source(llvm::StringRef fileName, llvm::MemoryBuffer *buffer)
+        : Object(SOURCE), fileName(fileName), buffer(buffer), debugInfo(NULL)
+    { }
+
+    const char *data() { return buffer->getBufferStart(); }
+    const char *endData() { return buffer->getBufferEnd(); }
+    size_t size() { return buffer->getBufferSize(); }
 
     llvm::DIFile getDebugInfo() { return llvm::DIFile(debugInfo); }
 };
@@ -811,19 +835,19 @@ private :
 };
 
 void setAbortOnError(bool flag);
-void warning(const string &msg);
-void error(const string &msg);
+void warning(llvm::Twine const &msg);
+
 void fmtError(const char *fmt, ...);
 
 template <class T>
-void error(Pointer<T> context, const string &msg)
+void error(Pointer<T> context, llvm::Twine const &msg)
 {
     if (context->location.ptr())
         pushLocation(context->location);
     error(msg);
 }
 
-void argumentError(unsigned int index, const string &msg);
+void argumentError(unsigned int index, llvm::StringRef msg);
 
 void arityError(int expected, int received);
 void arityError2(int minExpected, int received);
@@ -867,22 +891,22 @@ void ensureArity2(const vector<T> &args, int size, bool hasVarArgs)
 
 void arityMismatchError(int leftArity, int rightArity);
 
-void typeError(const string &expected, TypePtr receivedType);
+void typeError(llvm::StringRef expected, TypePtr receivedType);
 void typeError(TypePtr expectedType, TypePtr receivedType);
 
 void argumentTypeError(unsigned int index,
-                       const string &expected,
+                       llvm::StringRef expected,
                        TypePtr receivedType);
 void argumentTypeError(unsigned int index,
                        TypePtr expectedType,
                        TypePtr receivedType);
 
-void indexRangeError(const string &kind,
+void indexRangeError(llvm::StringRef kind,
                      size_t value,
                      size_t maxValue);
 
 void argumentIndexRangeError(unsigned int index,
-                             const string &kind,
+                             llvm::StringRef kind,
                              size_t value,
                              size_t maxValue);
 
@@ -893,7 +917,7 @@ void getLineCol(LocationPtr location,
 
 llvm::DIFile getDebugLineCol(LocationPtr location, int &line, int &column);
 
-void printFileLineCol(ostream &out, LocationPtr location);
+void printFileLineCol(llvm::raw_ostream &out, LocationPtr location);
 
 void invalidStaticObjectError(ObjectPtr obj);
 void argumentInvalidStaticObjectError(unsigned int index, ObjectPtr obj);
@@ -935,7 +959,7 @@ struct Token : public Object {
     string str;
     Token(int tokenKind)
         : Object(TOKEN), tokenKind(tokenKind) {}
-    Token(int tokenKind, const string &str)
+    Token(int tokenKind, llvm::StringRef str)
         : Object(TOKEN), tokenKind(tokenKind), str(str) {}
 };
 
@@ -963,9 +987,27 @@ struct ANode : public Object {
 };
 
 struct Identifier : public ANode {
-    string str;
-    Identifier(const string &str)
+    const llvm::SmallString<16> str;
+    Identifier(llvm::StringRef str)
         : ANode(IDENTIFIER), str(str) {}
+
+    static map<llvm::StringRef, IdentifierPtr> freeIdentifiers; // in parser.cpp
+
+    static Identifier *get(llvm::StringRef str) {
+        map<llvm::StringRef, IdentifierPtr>::const_iterator iter = freeIdentifiers.find(str);
+        if (iter == freeIdentifiers.end()) {
+            Identifier *ident = new Identifier(str);
+            freeIdentifiers[ident->str] = ident;
+            return ident;
+        } else
+            return iter->second.ptr();
+    }
+
+    static Identifier *get(llvm::StringRef str, LocationPtr location) {
+        Identifier *ident = new Identifier(str);
+        ident->location = location;
+        return ident;
+    }
 };
 
 struct DottedName : public ANode {
@@ -1031,7 +1073,7 @@ struct Expr : public ANode {
         if (startLocation == NULL || endLocation == NULL)
             return "<generated expression>";
         assert(startLocation->source == endLocation->source);
-        char *data = startLocation->source->data;
+        const char *data = startLocation->source->data();
         return string(data + startLocation->offset, data + endLocation->offset);
     }
 };
@@ -1045,18 +1087,18 @@ struct BoolLiteral : public Expr {
 struct IntLiteral : public Expr {
     string value;
     string suffix;
-    IntLiteral(const string &value)
+    IntLiteral(llvm::StringRef value)
         : Expr(INT_LITERAL), value(value) {}
-    IntLiteral(const string &value, const string &suffix)
+    IntLiteral(llvm::StringRef value, llvm::StringRef suffix)
         : Expr(INT_LITERAL), value(value), suffix(suffix) {}
 };
 
 struct FloatLiteral : public Expr {
     string value;
     string suffix;
-    FloatLiteral(const string &value)
+    FloatLiteral(llvm::StringRef value)
         : Expr(FLOAT_LITERAL), value(value) {}
-    FloatLiteral(const string &value, const string &suffix)
+    FloatLiteral(llvm::StringRef value, llvm::StringRef suffix)
         : Expr(FLOAT_LITERAL), value(value), suffix(suffix) {}
 };
 
@@ -1247,12 +1289,12 @@ struct ForeignExpr : public Expr {
     EnvPtr foreignEnv;
     ExprPtr expr;
 
-    ForeignExpr(const string &moduleName, ExprPtr expr)
+    ForeignExpr(llvm::StringRef moduleName, ExprPtr expr)
         : Expr(FOREIGN_EXPR), moduleName(moduleName), expr(expr) {}
     ForeignExpr(EnvPtr foreignEnv, ExprPtr expr)
         : Expr(FOREIGN_EXPR), foreignEnv(foreignEnv), expr(expr) {}
 
-    ForeignExpr(const string &moduleName, EnvPtr foreignEnv, ExprPtr expr)
+    ForeignExpr(llvm::StringRef moduleName, EnvPtr foreignEnv, ExprPtr expr)
         : Expr(FOREIGN_EXPR), moduleName(moduleName),
           foreignEnv(foreignEnv), expr(expr) {}
 
@@ -1531,13 +1573,13 @@ struct ForeignStatement : public Statement {
     string moduleName;
     EnvPtr foreignEnv;
     StatementPtr statement;
-    ForeignStatement(const string &moduleName, StatementPtr statement)
+    ForeignStatement(llvm::StringRef moduleName, StatementPtr statement)
         : Statement(FOREIGN_STATEMENT), moduleName(moduleName),
           statement(statement) {}
     ForeignStatement(EnvPtr foreignEnv, StatementPtr statement)
         : Statement(FOREIGN_STATEMENT), foreignEnv(foreignEnv),
           statement(statement) {}
-    ForeignStatement(const string &moduleName, EnvPtr foreignEnv,
+    ForeignStatement(llvm::StringRef moduleName, EnvPtr foreignEnv,
                      StatementPtr statement)
         : Statement(FOREIGN_STATEMENT), moduleName(moduleName),
           foreignEnv(foreignEnv), statement(statement) {}
@@ -1667,7 +1709,7 @@ struct PatternVar {
 
 struct LLVMCode : ANode {
     string body;
-    LLVMCode(const string &body)
+    LLVMCode(llvm::StringRef body)
         : ANode(LLVM_CODE), body(body) {}
 };
 
@@ -1970,7 +2012,7 @@ struct ExternalProcedure : public TopLevelItem {
     bool attrDLLImport;
     bool attrDLLExport;
     CallingConv callingConv;
-    string attrAsmLabel;
+    llvm::SmallString<16> attrAsmLabel;
 
     bool analyzed;
     bool bodyCodegenned;
@@ -2120,7 +2162,7 @@ struct ImportedMember {
 
 struct ImportMembers : public Import {
     vector<ImportedMember> members;
-    map<string, IdentifierPtr> aliasMap;
+    llvm::StringMap<IdentifierPtr> aliasMap;
     ImportMembers(DottedNamePtr dottedName, Visibility visibility)
         : Import(IMPORT_MEMBERS, dottedName, visibility) {}
 };
@@ -2132,7 +2174,7 @@ struct ImportMembers : public Import {
 
 struct ModuleHolder : public Object {
     Module *module;
-    map<string, ModuleHolderPtr> children;
+    llvm::StringMap<ModuleHolderPtr> children;
     ModuleHolder()
         : Object(MODULE_HOLDER), module(NULL) {}
 
@@ -2157,10 +2199,10 @@ struct Module : public ANode {
     vector<TopLevelItemPtr> topLevelItems;
 
     ModuleHolderPtr rootHolder;
-    map<string, ObjectPtr> globals;
+    llvm::StringMap<ObjectPtr> globals;
 
     ModuleHolderPtr publicRootHolder;
-    map<string, ObjectPtr> publicGlobals;
+    llvm::StringMap<ObjectPtr> publicGlobals;
 
     ModuleHolderPtr selfHolder;
 
@@ -2168,15 +2210,15 @@ struct Module : public ANode {
     bool initialized;
 
     bool attributesVerified;
-    vector<string> attrBuildFlags;
+    vector<llvm::SmallString<16> > attrBuildFlags;
     IntegerTypePtr attrDefaultIntegerType;
     FloatTypePtr attrDefaultFloatType;
 
-    map<string, set<ObjectPtr> > publicSymbols;
+    llvm::StringMap<set<ObjectPtr> > publicSymbols;
     bool publicSymbolsLoaded;
     int publicSymbolsLoading;
 
-    map<string, set<ObjectPtr> > allSymbols;
+    llvm::StringMap<set<ObjectPtr> > allSymbols;
     bool allSymbolsLoaded;
     int allSymbolsLoading;
 
@@ -2185,7 +2227,7 @@ struct Module : public ANode {
 
     llvm::TrackingVH<llvm::MDNode> debugInfo;
 
-    Module(const string &moduleName)
+    Module(llvm::StringRef moduleName)
         : ANode(MODULE), moduleName(moduleName),
           initialized(false),
           attributesVerified(false),
@@ -2194,7 +2236,7 @@ struct Module : public ANode {
           topLevelLLVMGenerated(false),
           externalsGenerated(false),
           debugInfo(NULL) {}
-    Module(const string &moduleName,
+    Module(llvm::StringRef moduleName,
            const vector<ImportPtr> &imports,
            ModuleDeclarationPtr declaration,
            LLVMCodePtr topLevelLLVM,
@@ -2227,7 +2269,7 @@ inline ModuleHolderPtr ModuleHolder::get(ModulePtr module)
 // parser module
 //
 
-ModulePtr parse(const string &moduleName, SourcePtr source);
+ModulePtr parse(llvm::StringRef moduleName, SourcePtr source);
 ExprPtr parseExpr(SourcePtr source, int offset, int length);
 ExprListPtr parseExprList(SourcePtr source, int offset, int length);
 void parseStatements(SourcePtr source, int offset, int length,
@@ -2241,19 +2283,19 @@ void parseTopLevelItems(SourcePtr source, int offset, int length,
 // printer module
 //
 
-ostream &operator<<(ostream &out, const Object &obj);
+llvm::raw_ostream &operator<<(llvm::raw_ostream &out, const Object &obj);
 
-ostream &operator<<(ostream &out, const Object *obj);
+llvm::raw_ostream &operator<<(llvm::raw_ostream &out, const Object *obj);
 
 template <class T>
-ostream &operator<<(ostream &out, const Pointer<T> &p)
+llvm::raw_ostream &operator<<(llvm::raw_ostream &out, const Pointer<T> &p)
 {
     out << *p;
     return out;
 }
 
 template <class T>
-ostream &operator<<(ostream &out, const vector<T> &v)
+llvm::raw_ostream &operator<<(llvm::raw_ostream &out, const vector<T> &v)
 {
     out << "[";
     typename vector<T>::const_iterator i, end;
@@ -2268,7 +2310,7 @@ ostream &operator<<(ostream &out, const vector<T> &v)
     return out;
 }
 
-ostream &operator<<(ostream &out, const PatternVar &pvar);
+llvm::raw_ostream &operator<<(llvm::raw_ostream &out, const PatternVar &pvar);
 
 void enableSafePrintName();
 void disableSafePrintName();
@@ -2278,15 +2320,15 @@ struct SafePrintNameEnabler {
     ~SafePrintNameEnabler() { disableSafePrintName(); }
 };
 
-void printNameList(ostream &out, const vector<ObjectPtr> &x);
-void printNameList(ostream &out, const vector<ObjectPtr> &x, const vector<unsigned> &dispatchIndices);
-void printNameList(ostream &out, const vector<TypePtr> &x);
-void printStaticName(ostream &out, ObjectPtr x);
-void printName(ostream &out, ObjectPtr x);
-void printTypeAndValue(ostream &out, EValuePtr ev);
-void printValue(ostream &out, EValuePtr ev);
+void printNameList(llvm::raw_ostream &out, const vector<ObjectPtr> &x);
+void printNameList(llvm::raw_ostream &out, const vector<ObjectPtr> &x, const vector<unsigned> &dispatchIndices);
+void printNameList(llvm::raw_ostream &out, const vector<TypePtr> &x);
+void printStaticName(llvm::raw_ostream &out, ObjectPtr x);
+void printName(llvm::raw_ostream &out, ObjectPtr x);
+void printTypeAndValue(llvm::raw_ostream &out, EValuePtr ev);
+void printValue(llvm::raw_ostream &out, EValuePtr ev);
 
-string shortString(string const &in);
+string shortString(llvm::StringRef in);
 
 
 //
@@ -2322,7 +2364,7 @@ void clone(const vector<CatchPtr> &x, vector<CatchPtr> &out);
 struct Env : public Object {
     ObjectPtr parent;
     ExprPtr callByNameExprHead;
-    map<string, ObjectPtr> entries;
+    llvm::StringMap<ObjectPtr> entries;
     Env()
         : Object(ENV) {}
     Env(ModulePtr parent)
@@ -2368,19 +2410,19 @@ LocationPtr safeLookupCallByNameLocation(EnvPtr env);
 // loader module
 //
 
-extern map<string, ModulePtr> globalModules;
-extern map<string, string> globalFlags;
+extern llvm::StringMap<ModulePtr> globalModules;
+extern llvm::StringMap<string> globalFlags;
 extern ModulePtr globalMainModule;
 
 void addProcedureOverload(ProcedurePtr proc, EnvPtr Env, OverloadPtr x);
 void getProcedureMonoTypes(ProcedureMono &mono, EnvPtr env,
     vector<FormalArgPtr> const &formalArgs, FormalArgPtr formalVarArg);
 
-void addSearchPath(const string &path);
-ModulePtr loadProgram(const string &fileName, vector<string> *sourceFiles);
-ModulePtr loadProgramSource(const string &name, const string &source);
-ModulePtr loadedModule(const string &module);
-const string &primOpName(PrimOpPtr x);
+void addSearchPath(llvm::StringRef path);
+ModulePtr loadProgram(llvm::StringRef fileName, vector<string> *sourceFiles);
+ModulePtr loadProgramSource(llvm::StringRef name, llvm::StringRef source);
+ModulePtr loadedModule(llvm::StringRef module);
+llvm::StringRef primOpName(PrimOpPtr x);
 ModulePtr preludeModule();
 ModulePtr primitivesModule();
 ModulePtr operatorsModule();
@@ -2797,7 +2839,7 @@ struct RecordType : public Type {
     bool fieldsInitialized;
     vector<IdentifierPtr> fieldNames;
     vector<TypePtr> fieldTypes;
-    map<string, size_t> fieldIndexMap;
+    llvm::StringMap<size_t> fieldIndexMap;
 
     const llvm::StructLayout *layout;
 
@@ -2900,7 +2942,7 @@ bool isStaticOrTupleOfStatics(TypePtr t);
 void initializeRecordFields(RecordTypePtr t);
 const vector<IdentifierPtr> &recordFieldNames(RecordTypePtr t);
 const vector<TypePtr> &recordFieldTypes(RecordTypePtr t);
-const map<string, size_t> &recordFieldIndexMap(RecordTypePtr t);
+const llvm::StringMap<size_t> &recordFieldIndexMap(RecordTypePtr t);
 
 const vector<TypePtr> &variantMemberTypes(VariantTypePtr t);
 TypePtr variantReprType(VariantTypePtr t);
@@ -2926,7 +2968,7 @@ llvm::DIType llvmVoidTypeDebugInfo();
 
 size_t typeSize(TypePtr t);
 size_t typeAlignment(TypePtr t);
-void typePrint(ostream &out, TypePtr t);
+void typePrint(llvm::raw_ostream &out, TypePtr t);
 string typeName(TypePtr t);
 
 inline size_t alignedUpTo(size_t offset, size_t align) {
@@ -3070,8 +3112,8 @@ PatternPtr evaluateOnePattern(ExprPtr expr, EnvPtr env);
 PatternPtr evaluateAliasPattern(GlobalAliasPtr x, MultiPatternPtr params);
 MultiPatternPtr evaluateMultiPattern(ExprListPtr exprs, EnvPtr env);
 
-void patternPrint(ostream &out, PatternPtr x);
-void patternPrint(ostream &out, MultiPatternPtr x);
+void patternPrint(llvm::raw_ostream &out, PatternPtr x);
+void patternPrint(llvm::raw_ostream &out, MultiPatternPtr x);
 
 
 
@@ -3086,8 +3128,8 @@ void initializeLambda(LambdaPtr x, EnvPtr env);
 // main
 //
 
-string dirname(const string &fullname);
-string basename(const string &fullname, bool chopSuffix);
+string dirname(llvm::StringRef fullname);
+string basename(llvm::StringRef fullname, bool chopSuffix);
 
 
 //
@@ -3177,7 +3219,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
                            ObjectPtr callable,
                            const vector<TypePtr> &argsKey);
 
-void printMatchError(ostream &os, MatchResultPtr result);
+void printMatchError(llvm::raw_ostream &os, MatchResultPtr result);
 
 
 
@@ -3560,9 +3602,9 @@ extern const llvm::TargetData *llvmTargetData;
 llvm::PointerType *exceptionReturnType();
 llvm::Value *noExceptionReturnValue();
 
-llvm::TargetMachine *initLLVM(std::string const &targetTriple,
-    std::string const &name,
-    std::string const &flags,
+llvm::TargetMachine *initLLVM(llvm::StringRef targetTriple,
+    llvm::StringRef name,
+    llvm::StringRef flags,
     bool relocPic,
     bool debug,
     bool optimized);
@@ -3662,7 +3704,7 @@ struct CodegenContext : public Object {
 
     vector< vector<CReturn> > returnLists;
     vector<JumpTarget> returnTargets;
-    map<string, JumpTarget> labels;
+    llvm::StringMap<JumpTarget> labels;
     vector<JumpTarget> breaks;
     vector<JumpTarget> continues;
     vector<JumpTarget> exceptionTargets;
@@ -3781,7 +3823,7 @@ struct ExternalTarget : public Object {
                           CodegenContextPtr ctx);
     CValuePtr allocArgumentValue(CallingConv conv,
                                  TypePtr type,
-                                 string const &name,
+                                 llvm::StringRef name,
                                  llvm::Function::arg_iterator &ai,
                                  CodegenContextPtr ctx);
     void returnStatement(CallingConv conv,

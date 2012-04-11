@@ -10,16 +10,58 @@ using namespace std;
 // overload <<
 //
 
-static void print(ostream &out, const Object *x);
+static void print(llvm::raw_ostream &out, const Object *x);
 
-ostream &operator<<(ostream &out, const Object &obj) {
+llvm::raw_ostream &operator<<(llvm::raw_ostream &out, const Object &obj) {
     print(out, &obj);
     return out;
 }
 
-ostream &operator<<(ostream &out, const Object *obj) {
+llvm::raw_ostream &operator<<(llvm::raw_ostream &out, const Object *obj) {
     print(out, obj);
     return out;
+}
+
+static llvm::raw_ostream &writeFloat(llvm::raw_ostream &out, float x) {
+    char buf[64];
+    snprintf(buf, 63, "%.8g", x);
+    buf[63] = 0;
+    return out << buf;
+}
+
+static llvm::raw_ostream &writeFloat(llvm::raw_ostream &out, double x) {
+    char buf[64];
+    snprintf(buf, 63, "%.16g", x);
+    buf[63] = 0;
+    return out << buf;
+}
+
+static llvm::raw_ostream &writeFloat(llvm::raw_ostream &out, long double x) {
+    char buf[64];
+    snprintf(buf, 63, "%.19Lg", x);
+    buf[63] = 0;
+    return out << buf;
+}
+
+static llvm::raw_ostream &writeFloat(llvm::raw_ostream &out, clay_cfloat x) {
+    char buf[128];
+    snprintf(buf, 127, "%.8g%+.8gj", clay_creal(x), clay_cimag(x));
+    buf[127] = 0;
+    return out << buf;
+}
+
+static llvm::raw_ostream &writeFloat(llvm::raw_ostream &out, clay_cdouble x) {
+    char buf[128];
+    snprintf(buf, 127, "%.16g%+.16gj", clay_creal(x), clay_cimag(x));
+    buf[127] = 0;
+    return out << buf;
+}
+
+static llvm::raw_ostream &writeFloat(llvm::raw_ostream &out, clay_cldouble x) {
+    char buf[128];
+    snprintf(buf, 127, "%.19Lg%+.19Lgj", clay_creal(x), clay_cimag(x));
+    buf[127] = 0;
+    return out << buf;
 }
 
 
@@ -43,7 +85,7 @@ BigVec<T> bigVec(const vector<T> &v) {
 static int indent = 0;
 
 template <class T>
-ostream &operator<<(ostream &out, const BigVec<T> &v) {
+llvm::raw_ostream &operator<<(llvm::raw_ostream &out, const BigVec<T> &v) {
     ++indent;
     out << "[";
     typename vector<T>::const_iterator i, end;
@@ -68,7 +110,7 @@ ostream &operator<<(ostream &out, const BigVec<T> &v) {
 // print PatternVar
 //
 
-ostream &operator<<(ostream &out, const PatternVar &pvar)
+llvm::raw_ostream &operator<<(llvm::raw_ostream &out, const PatternVar &pvar)
 {
     out << "PatternVar(" << pvar.isMulti << ", " << pvar.name << ")";
     return out;
@@ -80,7 +122,7 @@ ostream &operator<<(ostream &out, const PatternVar &pvar)
 // print
 //
 
-static void printExpr(ostream &out, const Expr *x) {
+static void printExpr(llvm::raw_ostream &out, const Expr *x) {
     switch (x->exprKind) {
     case BOOL_LITERAL : {
         const BoolLiteral *y = (const BoolLiteral *)x;
@@ -244,7 +286,7 @@ static void printExpr(ostream &out, const Expr *x) {
     }
 }
 
-static void printStatement(ostream &out, const Statement *x) {
+static void printStatement(llvm::raw_ostream &out, const Statement *x) {
     switch (x->stmtKind) {
     case WITH : {
         const WithStatement *y = (const WithStatement *)y;
@@ -387,7 +429,7 @@ static void printStatement(ostream &out, const Statement *x) {
     }
 }
 
-static void print(ostream &out, const Object *x) {
+static void print(llvm::raw_ostream &out, const Object *x) {
     if (x == NULL) {
         out << "NULL";
         return;
@@ -750,7 +792,7 @@ void disableSafePrintName()
     assert(_safeNames >= 0);
 }
 
-void printNameList(ostream &out, const vector<ObjectPtr> &x)
+void printNameList(llvm::raw_ostream &out, const vector<ObjectPtr> &x)
 {
     for (unsigned i = 0; i < x.size(); ++i) {
         if (i != 0)
@@ -759,7 +801,7 @@ void printNameList(ostream &out, const vector<ObjectPtr> &x)
     }
 }
 
-void printNameList(ostream &out, const vector<ObjectPtr> &x, const vector<unsigned> &dispatchIndices)
+void printNameList(llvm::raw_ostream &out, const vector<ObjectPtr> &x, const vector<unsigned> &dispatchIndices)
 {
     for (unsigned i = 0; i < x.size(); ++i) {
         if (i != 0)
@@ -770,7 +812,7 @@ void printNameList(ostream &out, const vector<ObjectPtr> &x, const vector<unsign
     }
 }
 
-void printNameList(ostream &out, const vector<TypePtr> &x)
+void printNameList(llvm::raw_ostream &out, const vector<TypePtr> &x)
 {
     for (unsigned i = 0; i < x.size(); ++i) {
         if (i != 0)
@@ -779,7 +821,7 @@ void printNameList(ostream &out, const vector<TypePtr> &x)
     }
 }
 
-static void printStaticOrTupleOfStatics(ostream &out, TypePtr t) {
+static void printStaticOrTupleOfStatics(llvm::raw_ostream &out, TypePtr t) {
     switch (t->typeKind) {
     case STATIC_TYPE : {
         StaticType *st = (StaticType *)t.ptr();
@@ -798,7 +840,6 @@ static void printStaticOrTupleOfStatics(ostream &out, TypePtr t) {
         break;
     }
     default :
-        std::cout << "unexpected type: " << t << '\n';
         assert(false);
     }
 }
@@ -816,7 +857,7 @@ static bool isSafe(char ch)
     return false;
 }
 
-void printStaticName(ostream &out, ObjectPtr x)
+void printStaticName(llvm::raw_ostream &out, ObjectPtr x)
 {
     if (x->objKind == IDENTIFIER) {
         Identifier *y = (Identifier *)x.ptr();
@@ -827,7 +868,7 @@ void printStaticName(ostream &out, ObjectPtr x)
     }
 }
 
-void printName(ostream &out, ObjectPtr x)
+void printName(llvm::raw_ostream &out, ObjectPtr x)
 {
     switch (x->objKind) {
     case IDENTIFIER : {
@@ -874,8 +915,12 @@ void printName(ostream &out, ObjectPtr x)
                 default:
                     if (ch >= '\x20' && ch <= '\x7E')
                         out << ch;
-                    else
-                        out << "\\x" << std::hex << std::setw(2) << std::setfill('0') << (int)ch;
+                    else {
+                        out << "\\x";
+                        if (ch < 16)
+                            out << '0';
+                        out.write_hex(ch);
+                    }
                     break;
                 }
             }
@@ -955,7 +1000,7 @@ void printName(ostream &out, ObjectPtr x)
 // printTypeAndValue, printValue
 //
 
-void printTypeAndValue(ostream &out, EValuePtr ev)
+void printTypeAndValue(llvm::raw_ostream &out, EValuePtr ev)
 {
     printName(out, ev->type.ptr());
     out << "(";
@@ -963,11 +1008,11 @@ void printTypeAndValue(ostream &out, EValuePtr ev)
     out << ")";
 }
 
-void printValue(ostream &out, EValuePtr ev)
+void printValue(llvm::raw_ostream &out, EValuePtr ev)
 {
     switch (ev->type->typeKind) {
     case BOOL_TYPE : {
-        char v = *((char *)ev->addr);
+        bool v = ev->as<bool>();
         out << (v ? "true" : "false");
         break;
     }
@@ -976,16 +1021,16 @@ void printValue(ostream &out, EValuePtr ev)
         if (t->isSigned) {
             switch (t->bits) {
             case 8 :
-                out << int(*((char *)ev->addr));
+                out << int(ev->as<char>());
                 break;
             case 16 :
-                out << *((short *)ev->addr);
+                out << ev->as<short>();
                 break;
             case 32 :
-                out << *((int *)ev->addr);
+                out << ev->as<int>();
                 break;
             case 64 :
-                out << *((long long *)ev->addr);
+                out << ev->as<long long>();
                 break;
             default :
                 assert(false);
@@ -994,16 +1039,16 @@ void printValue(ostream &out, EValuePtr ev)
         else {
             switch (t->bits) {
             case 8 :
-                out << int(*((unsigned char *)ev->addr));
+                out << int(ev->as<unsigned char>());
                 break;
             case 16 :
-                out << *((unsigned short *)ev->addr);
+                out << ev->as<unsigned short>();
                 break;
             case 32 :
-                out << *((unsigned int *)ev->addr);
+                out << ev->as<unsigned int>();
                 break;
             case 64 :
-                out << *((unsigned long long *)ev->addr);
+                out << ev->as<unsigned long long>();
                 break;
             default :
                 assert(false);
@@ -1015,13 +1060,13 @@ void printValue(ostream &out, EValuePtr ev)
         FloatType *t = (FloatType *)ev->type.ptr();
         switch (t->bits) {
         case 32 :
-            out << *((float *)ev->addr);
+            writeFloat(out, ev->as<float>());
             break;
         case 64 :
-            out << *((double *)ev->addr);
+            writeFloat(out, ev->as<double>());
             break;
         case 80 :
-            out << *((long double *)ev->addr);
+            writeFloat(out, ev->as<long double>());
             break;
         default :
             assert(false);
@@ -1032,13 +1077,13 @@ void printValue(ostream &out, EValuePtr ev)
         ComplexType *t = (ComplexType *)ev->type.ptr();
         switch (t->bits) {
         case 32 :
-            out << *((clay_cfloat *)ev->addr);
+            writeFloat(out, ev->as<clay_cfloat>());
             break;
         case 64 :
-            out << *((clay_cdouble *)ev->addr);
+            writeFloat(out, ev->as<clay_cdouble>());
             break;
         case 80 :
-            out << *((clay_cldouble *)ev->addr);
+            writeFloat(out, ev->as<clay_cldouble>());
             break;
         default :
             assert(false);
@@ -1050,11 +1095,11 @@ void printValue(ostream &out, EValuePtr ev)
     }
 }
 
-string shortString(string const &in) {
+string shortString(llvm::StringRef in) {
     string out;
     bool wasSpace = false;
 
-    for (string::const_iterator i = in.begin(); i != in.end(); ++i) {
+    for (const char *i = in.begin(); i != in.end(); ++i) {
         if (isspace(*i)) {
             if (!wasSpace) {
                 out.push_back(' ');

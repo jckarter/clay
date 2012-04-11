@@ -759,7 +759,7 @@ MultiPatternPtr evaluateMultiPattern(ExprListPtr exprs, EnvPtr env)
 // patternPrint
 //
 
-void patternPrint(ostream &out, PatternPtr x)
+void patternPrint(llvm::raw_ostream &out, PatternPtr x)
 {
     switch (x->kind) {
     case PATTERN_CELL : {
@@ -777,7 +777,7 @@ void patternPrint(ostream &out, PatternPtr x)
     }
 }
 
-void patternPrint(ostream &out, MultiPatternPtr x)
+void patternPrint(llvm::raw_ostream &out, MultiPatternPtr x)
 {
     switch (x->kind) {
     case MULTI_PATTERN_CELL : {

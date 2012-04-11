@@ -7,7 +7,7 @@ static void cleanupLexer();
 static bool nextToken(TokenPtr &x);
 
 void tokenize(SourcePtr source, vector<TokenPtr> &tokens) {
-    tokenize(source, 0, source->size, tokens);
+    tokenize(source, 0, source->size(), tokens);
 }
 
 void tokenize(SourcePtr source, int offset, int length,
@@ -29,14 +29,14 @@ void tokenize(SourcePtr source, int offset, int length,
 
 static Source *lexerSource;
 static int beginOffset;
-static char *begin;
-static char *ptr;
-static char *end;
-static char *maxPtr;
+static const char *begin;
+static const char *ptr;
+static const char *end;
+static const char *maxPtr;
 
 static void initLexer(SourcePtr source, int offset, int length) {
     lexerSource = source.ptr();
-    begin = source->data + offset;
+    begin = source->data() + offset;
     end = begin + length;
     ptr = begin;
     maxPtr = begin;
@@ -48,13 +48,13 @@ static void cleanupLexer() {
     begin = ptr = end = maxPtr = NULL;
 }
 
-static LocationPtr locationFor(char *ptr) {
+static LocationPtr locationFor(const char *ptr) {
     ptrdiff_t offset = (ptr - begin) + beginOffset;
     return new Location(lexerSource, offset);
 }
 
-static char *save() { return ptr; }
-static void restore(char *p) { ptr = p; }
+static const char *save() { return ptr; }
+static void restore(const char *p) { ptr = p; }
 
 static bool next(char &x) {
     if (ptr == end) return false;
@@ -105,7 +105,7 @@ static bool identStr(string &x) {
     x.clear();
     x.push_back(c);
     while (true) {
-        char *p = save();
+        const char *p = save();
         if (!identChar2(c)) {
             restore(p);
             break;
@@ -162,7 +162,7 @@ static const char *symbols[] = {
 
 static bool symbol(TokenPtr &x) {
     const char **s = symbols;
-    char *p = save();
+    const char *p = save();
     while (*s) {
         restore(p);
         if (str(*s)) {
@@ -185,8 +185,8 @@ static const char *opchars[] = {
 
 static bool opstring(string &x) {
     const char **s = opchars;
-    char *p = save();
-    char *q = p;
+    const char *p = save();
+    const char *q = p;
     char y;
     while (*s && next(y)) {
         s = opchars;
@@ -208,7 +208,7 @@ static bool op(TokenPtr &x) {
     string s;
     if(!opstring(s)) return false;
     char c;
-    char *p = save();
+    const char *p = save();
     if(next(c) && c == ':') {
         x = new Token(T_UOPSTRING, s);
     } else {
@@ -300,7 +300,7 @@ static bool escapeChar(char &x) {
 }
 
 static bool oneChar(char &x) {
-    char *p = save();
+    const char *p = save();
     if (escapeChar(x)) return true;
     restore(p);
     if (!next(x)) return false;
@@ -311,7 +311,7 @@ static bool oneChar(char &x) {
 static bool charToken(TokenPtr &x) {
     char c;
     if (!next(c) || (c != '\'')) return false;
-    char *p = save();
+    const char *p = save();
     if (next(c) && (c == '\'')) return false;
     restore(p);
     char v;
@@ -326,7 +326,7 @@ static bool singleQuoteStringToken(TokenPtr &x) {
     if (!next(c) || (c != '"')) return false;
     string s;
     while (true) {
-        char *p = save();
+        const char *p = save();
         if (next(c) && (c == '"'))
             break;
         restore(p);
@@ -338,7 +338,7 @@ static bool singleQuoteStringToken(TokenPtr &x) {
 }
 
 static bool stringToken(TokenPtr &x) {
-    char *p = save();
+    const char *p = save();
     char c;
     if (!next(c) || (c != '"')) return false;
     if (!next(c) || (c != '"') || !next(c) || (c != '"')) {
@@ -352,7 +352,7 @@ static bool stringToken(TokenPtr &x) {
             && next(c) && (c == '"')
             && next(c) && (c == '"'))
         {
-            char *q = save();
+            const char *q = save();
             if (!next(c) || c != '"') {
                 restore(q);
                 break;
@@ -374,7 +374,7 @@ static bool stringToken(TokenPtr &x) {
 //
 
 static void optNumericSeparator() {
-    char *p = save();
+    const char *p = save();
     char c;
     if (!next(c) || (c != '_'))
         restore(p);
@@ -384,7 +384,7 @@ static bool decimalDigits() {
     int x;
     while (true) {
         optNumericSeparator();
-        char *p = save();
+        const char *p = save();
         if (!decimalDigit(x)) {
             restore(p);
             break;
@@ -397,7 +397,7 @@ static bool hexDigits() {
     int x;
     while (true) {
         optNumericSeparator();
-        char *p = save();
+        const char *p = save();
         if (!hexDigit(x)) {
             restore(p);
             break;
@@ -418,7 +418,7 @@ static bool decimalInt() {
     if (!decimalDigit(x)) return false;
     while (true) {
         optNumericSeparator();
-        char *p = save();
+        const char *p = save();
         if (!decimalDigit(x)) {
             restore(p);
             break;
@@ -434,15 +434,15 @@ static bool sign() {
 }
 
 static bool intToken(TokenPtr &x) {
-    char *begin = save();
+    const char *begin = save();
     if (!sign()) restore(begin);
-    char *p = save();
+    const char *p = save();
     if (hexInt()) goto success;
     restore(p);
     if (decimalInt()) goto success;
     return false;
 success :
-    char *end = save();
+    const char *end = save();
     x = new Token(T_INT_LITERAL, string(begin, end));
     return true;
 }
@@ -457,7 +457,7 @@ static bool exponentPart() {
     char c;
     if (!next(c)) return false;
     if ((c != 'e') && (c != 'E')) return false;
-    char *begin = save();
+    const char *begin = save();
     if (!sign()) restore(begin);
     return decimalInt();
 }
@@ -472,7 +472,7 @@ static bool hexExponentPart() {
     char c;
     if (!next(c)) return false;
     if ((c != 'p') && (c != 'P')) return false;
-    char *begin = save();
+    const char *begin = save();
     if (!sign()) restore(begin);
     return decimalInt();
 }
@@ -484,11 +484,11 @@ static bool hexFractionalPart() {
 }
 
 static bool floatToken(TokenPtr &x) {
-    char *begin = save();
+    const char *begin = save();
     if (!sign()) restore(begin);
-    char *afterSign = save();
+    const char *afterSign = save();
     if (hexInt()) {
-        char *p = save();
+        const char *p = save();
         if (hexFractionalPart()) {
             if (!hexExponentPart())
                 return false;
@@ -497,13 +497,13 @@ static bool floatToken(TokenPtr &x) {
             if (!hexExponentPart())
                 return false;
         }
-        char *end = save();
+        const char *end = save();
         x = new Token(T_FLOAT_LITERAL, string(begin, end));
         return true;
     } else {
         restore(afterSign);
         if (decimalInt()) {
-            char *p = save();
+            const char *p = save();
             if (fractionalPart()) {
                 p = save();
                 if (!exponentPart())
@@ -513,7 +513,7 @@ static bool floatToken(TokenPtr &x) {
                 if (!exponentPart())
                     return false;
             }
-            char *end = save();
+            const char *end = save();
             x = new Token(T_FLOAT_LITERAL, string(begin, end));
             return true;
         } else
@@ -536,7 +536,7 @@ static bool space(TokenPtr &x) {
     char c;
     if (!next(c) || !isSpace(c)) return false;
     while (true) {
-        char *p = save();
+        const char *p = save();
         if (!next(c) || !isSpace(c)) {
             restore(p);
             break;
@@ -557,7 +557,7 @@ static bool lineComment(TokenPtr &x) {
     if (!next(c) || (c != '/')) return false;
     if (!next(c) || (c != '/')) return false;
     while (true) {
-        char *p = save();
+        const char *p = save();
         if (!next(c)) break;
         if ((c == '\r') || (c == '\n')) {
             restore(p);
@@ -622,7 +622,7 @@ static bool llvmToken(TokenPtr &x) {
         if (c != *prefix) return false;
         ++prefix;
     }
-    char *p = save();
+    const char *p = save();
     while (true) {
         char c;
         if (!next(c)) return false;
@@ -631,9 +631,9 @@ static bool llvmToken(TokenPtr &x) {
         p = save();
     }
     restore(p);
-    char *begin = save();
+    const char *begin = save();
     if (!llvmBraces()) return false;
-    char *end = save();
+    const char *end = save();
     x = new Token(T_LLVM, string(begin, end));
     x->location = locationFor(begin);
     return true;
@@ -649,7 +649,7 @@ static bool llvmBraces() {
 
 static bool llvmBody() {
     while (true) {
-        char *p = save();
+        const char *p = save();
         if (!llvmBodyItem()) {
             restore(p);
             break;
@@ -659,7 +659,7 @@ static bool llvmBody() {
 }
 
 static bool llvmBodyItem() {
-    char *p = save();
+    const char *p = save();
     if (llvmComment()) return true;
     if (restore(p), llvmBraces()) return true;
     if (restore(p), llvmStringLiteral()) return true;
@@ -679,7 +679,7 @@ static bool llvmStringLiteral() {
     char c;
     if (!next(c) || (c != '"')) return false;
     while (true) {
-        char *p = save();
+        const char *p = save();
         if (!llvmStringChar()) {
             restore(p);
             break;
@@ -707,15 +707,15 @@ static bool staticIndex(TokenPtr &x) {
     if (!next(c)) return false;
     if (c != '.') return false;
 
-    char *begin = save();
+    const char *begin = save();
     if (hexInt()) {
-        char *end = save();
+        const char *end = save();
         x = new Token(T_STATIC_INDEX, string(begin, end));
         return true;
     } else {
         restore(begin);
         if (decimalInt()) {
-            char *end = save();
+            const char *end = save();
             x = new Token(T_STATIC_INDEX, string(begin, end));
             return true;
         } else
@@ -729,7 +729,7 @@ static bool staticIndex(TokenPtr &x) {
 //
 
 static bool nextToken(TokenPtr &x) {
-    char *p = save();
+    const char *p = save();
     if (space(x)) goto success;
     restore(p); if (lineComment(x)) goto success;
     restore(p); if (blockComment(x)) goto success;

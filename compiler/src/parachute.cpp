@@ -20,7 +20,7 @@ static int emergencyCompileContext(LPEXCEPTION_POINTERS exceptionInfo)
         fprintf(stderr, "exception code 0x%08X displaying compile context!\n", GetExceptionCode());
     }
     fflush(stderr);
-    std::cerr.flush();
+    llvm::errs().flush();
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
@@ -72,7 +72,7 @@ static void emergencyCompileContext(int sig) {
         fprintf(stderr, "signal %d displaying compile context!\n", sig);
     }
     fflush(stderr);
-    std::cerr.flush();
+    llvm::errs().flush();
     signal(sig, SIG_DFL);
     raise(sig);
 }

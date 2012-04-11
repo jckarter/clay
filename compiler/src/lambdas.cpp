@@ -5,18 +5,18 @@ namespace clay {
 struct LambdaContext {
     bool captureByRef;
     EnvPtr nonLocalEnv;
-    const string &closureDataName;
+    llvm::StringRef closureDataName;
     vector<string> &freeVars;
     LambdaContext(bool captureByRef,
                   EnvPtr nonLocalEnv,
-                  const string &closureDataName,
+                  llvm::StringRef closureDataName,
                   vector<string> &freeVars)
         : captureByRef(captureByRef), nonLocalEnv(nonLocalEnv),
           closureDataName(closureDataName), freeVars(freeVars) {}
 };
 
 void convertFreeVars(LambdaPtr x, EnvPtr env,
-                     const string &closureDataName,
+                     llvm::StringRef closureDataName,
                      vector<string> &freeVars);
 
 void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx);
@@ -60,9 +60,9 @@ static vector<TypePtr> typesOfValues(ObjectPtr obj) {
 }
 
 static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
-    string const &closureDataName, string const &lname);
+    llvm::StringRef closureDataName, llvm::StringRef lname);
 static void initializeLambdaWithoutFreeVars(LambdaPtr x, EnvPtr env,
-    string const &closureDataName, string const &lname);
+    llvm::StringRef closureDataName, llvm::StringRef lname);
 
 static string lambdaName(LambdaPtr x)
 {
@@ -71,7 +71,8 @@ static string lambdaName(LambdaPtr x)
     if (fullName.size() <= 80)
         return "(" + fullName + ")";
     else {
-        ostringstream shortName;
+        string shortNameBuf;
+        llvm::raw_string_ostream shortName(shortNameBuf);
         shortName << "<lambda ";
         printFileLineCol(shortName, x->location);
         shortName << ">";
@@ -87,7 +88,8 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
 
     string lname = lambdaName(x);
 
-    ostringstream ostr;
+    string buf;
+    llvm::raw_string_ostream ostr(buf);
     ostr << "%closureData:" << lname;
     string closureDataName = ostr.str();
 
@@ -102,11 +104,11 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
 }
 
 static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
-    string const &closureDataName, string const &lname)
+    llvm::StringRef closureDataName, llvm::StringRef lname)
 {
     RecordPtr r = new Record(PRIVATE);
     r->location = x->location;
-    r->name = new Identifier(lname);
+    r->name = Identifier::get(lname);
     r->env = env;
     x->lambdaRecord = r;
     r->lambda = x;
@@ -114,7 +116,7 @@ static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
 
     CallPtr converted = new Call(NULL, new ExprList());
     for (unsigned i = 0; i < x->freeVars.size(); ++i) {
-        IdentifierPtr ident = new Identifier(x->freeVars[i]);
+        IdentifierPtr ident = Identifier::get(x->freeVars[i]);
         NameRefPtr nameRef = new NameRef(ident);
 
         TypePtr type;
@@ -176,7 +178,7 @@ static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
 
     CodePtr code = new Code();
     code->location = x->location;
-    IdentifierPtr closureDataIdent = new Identifier(closureDataName);
+    IdentifierPtr closureDataIdent = Identifier::get(closureDataName);
     FormalArgPtr closureDataArg = new FormalArg(closureDataIdent, typeExpr);
     code->formalArgs.push_back(closureDataArg.ptr());
     for (unsigned i = 0; i < x->formalArgs.size(); ++i) {
@@ -200,10 +202,9 @@ static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
 }
 
 static void initializeLambdaWithoutFreeVars(LambdaPtr x, EnvPtr env,
-    string const &closureDataName, string const &lname)
+    llvm::StringRef closureDataName, llvm::StringRef lname)
 {
-    IdentifierPtr name = new Identifier(lname);
-    name->location = x->location;
+    IdentifierPtr name = Identifier::get(lname, x->location);
     x->lambdaProc = new Procedure(name, PRIVATE);
     x->lambdaProc->lambda = x;
 
@@ -233,7 +234,7 @@ static void initializeLambdaWithoutFreeVars(LambdaPtr x, EnvPtr env,
 // addFreeVar, typeOfValue, typesOfValues
 //
 
-static void addFreeVar(LambdaContext &ctx, const string &str)
+static void addFreeVar(LambdaContext &ctx, llvm::StringRef str)
 {
     vector<string>::iterator i;
     i = std::find(ctx.freeVars.begin(), ctx.freeVars.end(), str);
@@ -249,7 +250,7 @@ static void addFreeVar(LambdaContext &ctx, const string &str)
 //
 
 void convertFreeVars(LambdaPtr x, EnvPtr env,
-                     const string &closureDataName,
+                     llvm::StringRef closureDataName,
                      vector<string> &freeVars)
 {
     EnvPtr env2 = new Env(env);
@@ -501,8 +502,7 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
                 }
                 else {
                     addFreeVar(ctx, y->name->str);
-                    IdentifierPtr a = new Identifier(ctx.closureDataName);
-                    a->location = y->location;
+                    IdentifierPtr a = Identifier::get(ctx.closureDataName, y->location);
                     NameRefPtr b = new NameRef(a);
                     b->location = y->location;
                     FieldRefPtr c = new FieldRef(b.ptr(), y->name);
@@ -536,8 +536,7 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
                 }
                 else {
                     addFreeVar(ctx, y->name->str);
-                    IdentifierPtr a = new Identifier(ctx.closureDataName);
-                    a->location = y->location;
+                    IdentifierPtr a = Identifier::get(ctx.closureDataName, y->location);
                     NameRefPtr b = new NameRef(a);
                     b->location = y->location;
                     FieldRefPtr c = new FieldRef(b.ptr(), y->name);

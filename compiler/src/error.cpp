@@ -90,8 +90,8 @@ DebugPrinter::DebugPrinter(ObjectPtr obj)
     : obj(obj)
 {
     for (int i = 0; i < indent; ++i)
-        std::cout << ' ';
-    std::cout << "BEGIN - " << obj << '\n';
+        llvm::outs() << ' ';
+    llvm::outs() << "BEGIN - " << obj << '\n';
     ++indent;
     debugStack.push_back(obj);
 }
@@ -101,8 +101,8 @@ DebugPrinter::~DebugPrinter()
     debugStack.pop_back();
     --indent;
     for (int i = 0; i < indent; ++i)
-        std::cout << ' ';
-    std::cout << "DONE - " << obj << '\n';
+        llvm::outs() << ' ';
+    llvm::outs() << "DONE - " << obj << '\n';
 }
 
 
@@ -112,8 +112,8 @@ DebugPrinter::~DebugPrinter()
 //
 
 static void computeLineCol(LocationPtr location) {
-    char *p = location->source->data;
-    char *end = p + location->offset;
+    const char *p = location->source->data();
+    const char *end = p + location->offset;
     location->line = location->column = location->tabColumn = 0;
     for (; p != end; ++p) {
         ++location->column;
@@ -164,8 +164,8 @@ void getLineCol(LocationPtr location, int &line, int &column, int &tabColumn) {
 
 static void splitLines(SourcePtr source, vector<string> &lines) {
     lines.push_back(string());
-    char *p = source->data;
-    char *end = p + source->size;
+    const char *p = source->data();
+    const char *end = source->endData();
     for (; p != end; ++p) {
         lines.back().push_back(*p);
         if (*p == '\n')
@@ -173,7 +173,7 @@ static void splitLines(SourcePtr source, vector<string> &lines) {
     }
 }
 
-static bool endsWithNewline(const string& s) {
+static bool endsWithNewline(llvm::StringRef s) {
     if (s.size() == 0) return false;
     return s[s.size()-1] == '\n';
 }
@@ -183,68 +183,64 @@ static void displayLocation(LocationPtr location, int &line, int &column) {
     getLineCol(location, line, column, tabColumn);
     vector<string> lines;
     splitLines(location->source, lines);
-    fprintf(stderr, "###############################\n");
+    llvm::errs() << "###############################\n";
     for (int i = line-2; i <= line+2; ++i) {
         if ((i < 0) || (i >= (int)lines.size()))
             continue;
-        fprintf(stderr, "%s", lines[i].c_str());
+        llvm::errs() << lines[i];
         if (!endsWithNewline(lines[i]))
-            fprintf(stderr, "\n");
+            llvm::errs() << "\n";
         if (i == line) {
             for (int j = 0; j < tabColumn; ++j)
-                fprintf(stderr, "-");
-            fprintf(stderr, "^\n");
+                llvm::errs() << "-";
+            llvm::errs() << "^\n";
         }
     }
-    fprintf(stderr, "###############################\n");
+    llvm::errs() << "###############################\n";
 }
 
 extern "C" void displayCompileContext() {
     if (contextStack.empty())
         return;
-    fprintf(stderr, "\n");
-    fprintf(stderr, "compilation context: \n");
+    llvm::errs() << "\ncompilation context: \n";
     for (unsigned i = contextStack.size(); i > 0; --i) {
         ObjectPtr obj = contextStack[i-1].callable;
         const vector<ObjectPtr> &params = contextStack[i-1].params;
 
         if (i < contextStack.size() && contextStack[i-1].location != NULL) {
-            ostringstream locout;
-            printFileLineCol(locout, contextStack[i-1].location);
-            fprintf(stderr, "  %s:\n", locout.str().c_str());
+            llvm::errs() << "  ";
+            printFileLineCol(llvm::errs(), contextStack[i-1].location);
+            llvm::errs() << ":\n";
         }
 
-        ostringstream sout;
+        llvm::errs() << "    ";
         if (obj->objKind == GLOBAL_VARIABLE) {
-            sout << "global ";
-            printName(sout, obj);
+            llvm::errs() << "global ";
+            printName(llvm::errs(), obj);
             if (!params.empty()) {
-                sout << "[";
-                printNameList(sout, params);
-                sout << "]";
+                llvm::errs() << "[";
+                printNameList(llvm::errs(), params);
+                llvm::errs() << "]";
             }
         }
         else {
-            printName(sout, obj);
+            printName(llvm::errs(), obj);
             if (contextStack[i-1].hasParams) {
-                sout << "(";
-                printNameList(sout, params, contextStack[i-1].dispatchIndices);
-                sout << ")";
+                llvm::errs() << "(";
+                printNameList(llvm::errs(), params, contextStack[i-1].dispatchIndices);
+                llvm::errs() << ")";
             }
         }
-        fprintf(stderr, "    %s\n", sout.str().c_str());
+        llvm::errs() << "\n";
     }
 }
 
 static void displayDebugStack() {
     if (debugStack.empty())
         return;
-    fprintf(stderr, "\n");
-    fprintf(stderr, "debug stack: \n");
+    llvm::errs() << "\ndebug stack:\n";
     for (unsigned i = debugStack.size(); i > 0; --i) {
-        ostringstream sout;
-        sout << debugStack[i-1];
-        fprintf(stderr, "  %s\n", sout.str().c_str());
+        llvm::errs() << "  " << debugStack[i-1] << "\n";
     }
 }
 
@@ -254,27 +250,26 @@ void setAbortOnError(bool flag) {
     abortOnError = flag;
 }
 
-void displayError(const string &msg, const string &kind) {
+void displayError(llvm::Twine const &msg, llvm::StringRef kind) {
     LocationPtr location = topLocation();
     if (location.ptr()) {
         int line, column;
         displayLocation(location, line, column);
-        fprintf(stderr, "%s(%d,%d): %s: %s\n",
-                location->source->fileName.c_str(),
-                line+1, column, kind.c_str(), msg.c_str());
+        llvm::errs() << location->source->fileName
+            << '(' << line+1 << ',' << column << ": " << kind << ": " << msg << '\n';
         displayCompileContext();
         displayDebugStack();
     }
     else {
-        fprintf(stderr, "error: %s\n", msg.c_str());
+        llvm::errs() << "error: " << msg << '\n';
     }
 }
 
-void warning(const string &msg) {
+void warning(llvm::Twine const &msg) {
     displayError(msg, "warning");
 }
 
-void error(const string &msg) {
+void error(llvm::Twine const &msg) {
     displayError(msg, "error");
     if (abortOnError)
         abort();
@@ -291,8 +286,9 @@ void fmtError(const char *fmt, ...) {
     error(s);
 }
 
-void argumentError(unsigned int index, const string &msg) {
-    ostringstream sout;
+void argumentError(unsigned int index, llvm::StringRef msg) {
+    string buf;
+    llvm::raw_string_ostream sout(buf);
     sout << "argument " << (index+1) << ": " << msg;
     error(sout.str());
 }
@@ -305,14 +301,16 @@ static const char *valuesStr(int n) {
 }
 
 void arityError(int expected, int received) {
-    ostringstream sout;
+    string buf;
+    llvm::raw_string_ostream sout(buf);
     sout << "expected " << expected << " " << valuesStr(expected);
     sout << ", but received " << received << " " << valuesStr(received);
     error(sout.str());
 }
 
 void arityError2(int minExpected, int received) {
-    ostringstream sout;
+    string buf;
+    llvm::raw_string_ostream sout(buf);
     sout << "expected at least " << minExpected
          << " " << valuesStr(minExpected);
     sout << ", but received " << received << " " << valuesStr(received);
@@ -340,16 +338,18 @@ void ensureArity(MultiCValuePtr args, unsigned int size) {
 }
 
 void arityMismatchError(int leftArity, int rightArity) {
-    ostringstream sout;
+    string buf;
+    llvm::raw_string_ostream sout(buf);
     sout << "left side has " << leftArity << " " << valuesStr(leftArity);
     sout << ", but right side has " << rightArity
          << " " << valuesStr(rightArity);
     error(sout.str());
 }
 
-static string typeErrorMessage(const string &expected,
+static string typeErrorMessage(llvm::StringRef expected,
                                TypePtr receivedType) {
-    ostringstream sout;
+    string buf;
+    llvm::raw_string_ostream sout(buf);
     sout << "expected " << expected << ", "
          << "but received " << receivedType << " type";
     return sout.str();
@@ -357,12 +357,13 @@ static string typeErrorMessage(const string &expected,
 
 static string typeErrorMessage(TypePtr expectedType,
                                TypePtr receivedType) {
-    ostringstream sout;
+    string buf;
+    llvm::raw_string_ostream sout(buf);
     sout << expectedType << " type";
     return typeErrorMessage(sout.str(), receivedType);
 }
 
-void typeError(const string &expected, TypePtr receivedType) {
+void typeError(llvm::StringRef expected, TypePtr receivedType) {
     error(typeErrorMessage(expected, receivedType));
 }
 
@@ -371,7 +372,7 @@ void typeError(TypePtr expectedType, TypePtr receivedType) {
 }
 
 void argumentTypeError(unsigned int index,
-                       const string &expected,
+                       llvm::StringRef expected,
                        TypePtr receivedType) {
     argumentError(index, typeErrorMessage(expected, receivedType));
 }
@@ -382,22 +383,24 @@ void argumentTypeError(unsigned int index,
     argumentError(index, typeErrorMessage(expectedType, receivedType));
 }
 
-void indexRangeError(const string &kind,
+void indexRangeError(llvm::StringRef kind,
                      size_t value,
                      size_t maxValue)
 {
-    ostringstream sout;
+    string buf;
+    llvm::raw_string_ostream sout(buf);
     sout << kind << " " << value << " is out of range. ";
     sout << "it should be less than " << maxValue;
     error(sout.str());
 }
 
 void argumentIndexRangeError(unsigned int index,
-                             const string &kind,
+                             llvm::StringRef kind,
                              size_t value,
                              size_t maxValue)
 {
-    ostringstream sout;
+    string buf;
+    llvm::raw_string_ostream sout(buf);
     sout << kind << " " << value << " is out of range. ";
     sout << "it should be less than " << maxValue;
     argumentError(index, sout.str());
@@ -405,21 +408,24 @@ void argumentIndexRangeError(unsigned int index,
 
 void invalidStaticObjectError(ObjectPtr obj)
 {
-    ostringstream sout;
+    string buf;
+    llvm::raw_string_ostream sout(buf);
     sout << "invalid static object: " << obj;
     error(sout.str());
 }
 
 void argumentInvalidStaticObjectError(unsigned int index, ObjectPtr obj)
 {
-    ostringstream sout;
+    string buf;
+    llvm::raw_string_ostream sout(buf);
     sout << "invalid static object: " << obj;
     argumentError(index, sout.str());
 }
 
 void matchFailureError(MatchFailureError const &err)
 {
-    ostringstream sout;
+    string buf;
+    llvm::raw_string_ostream sout(buf);
     if (err.failedInterface)
         sout << "call does not conform to function interface";
     else
@@ -450,7 +456,7 @@ void matchFailureError(MatchFailureError const &err)
     error(sout.str());
 }
 
-void printFileLineCol(ostream &out, LocationPtr location)
+void printFileLineCol(llvm::raw_ostream &out, LocationPtr location)
 {
     int line, column, tabColumn;
     getLineCol(location, line, column, tabColumn);

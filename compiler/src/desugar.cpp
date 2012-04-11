@@ -5,7 +5,8 @@ namespace clay {
 ExprPtr desugarCharLiteral(char c) {
     ExprPtr nameRef = operator_expr_charLiteral();
     CallPtr call = new Call(nameRef, new ExprList());
-    ostringstream out;
+    string buf;
+    llvm::raw_string_ostream out(buf);
     out << (int)c;
     call->parenArgs->add(new IntLiteral(out.str(), "ss"));
     return call.ptr();
@@ -81,12 +82,9 @@ static vector<IdentifierPtr> identV(IdentifierPtr x) {
 //  }
 
 StatementPtr desugarForStatement(ForPtr x) {
-    IdentifierPtr exprVar = new Identifier("%expr");
-    exprVar->location = x->location;
-    IdentifierPtr iterVar = new Identifier("%iter");
-    iterVar->location = x->location;
-    IdentifierPtr valueVar = new Identifier("%value");
-    valueVar->location = x->location;
+    IdentifierPtr exprVar = Identifier::get("%expr", x->location);
+    IdentifierPtr iterVar = Identifier::get("%iter", x->location);
+    IdentifierPtr valueVar = Identifier::get("%value", x->location);
 
     BlockPtr block = new Block();
     block->location = x->body->location;
@@ -142,7 +140,7 @@ StatementPtr desugarForStatement(ForPtr x) {
 StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
     assert(!catchBlocks.empty());
     LocationPtr firstCatchLocation = catchBlocks.front()->location;
-    IdentifierPtr expVar = new Identifier("%exp");
+    IdentifierPtr expVar = Identifier::get("%exp", firstCatchLocation);
 
     CallPtr activeException = new Call(primitive_expr_activeException(), new ExprList());
     activeException->location = firstCatchLocation;
@@ -247,8 +245,7 @@ StatementPtr desugarSwitchStatement(SwitchPtr x) {
         x->exprStatements.begin(), x->exprStatements.end());
 
     // %thing is the value being switched on
-    IdentifierPtr thing = new Identifier("%case");
-    thing->location = x->expr->location;
+    IdentifierPtr thing = Identifier::get("%case", x->expr->location);
     NameRefPtr thingRef = new NameRef(thing);
     thingRef->location = x->expr->location;
 
@@ -294,22 +291,22 @@ StatementPtr desugarSwitchStatement(SwitchPtr x) {
 
 static SourcePtr evalToSource(LocationPtr location, ExprListPtr args, EnvPtr env)
 {
-    ostringstream sourceTextOut;
+    string sourceTextBuf;
+    llvm::raw_string_ostream sourceTextOut(sourceTextBuf);
     MultiStaticPtr values = evaluateMultiStatic(args, env);
     for (unsigned i = 0; i < values->size(); ++i) {
         printStaticName(sourceTextOut, values->values[i]);
     }
 
-    ostringstream sourceNameOut;
+    string sourceNameBuf;
+    llvm::raw_string_ostream sourceNameOut(sourceNameBuf);
     sourceNameOut << "<eval ";
     printFileLineCol(sourceNameOut, location);
     sourceNameOut << ">";
 
-    string sourceText = sourceTextOut.str();
-    char *sourceTextData = new char[sourceText.size() + 1];
-    strcpy(sourceTextData, sourceText.c_str());
-
-    return new Source(sourceNameOut.str(), sourceTextData, sourceText.size());
+    sourceTextOut.flush();
+    return new Source(sourceNameOut.str(),
+        llvm::MemoryBuffer::getMemBufferCopy(sourceTextBuf));
 }
 
 ExprListPtr desugarEvalExpr(EvalExprPtr eval, EnvPtr env)
@@ -318,7 +315,7 @@ ExprListPtr desugarEvalExpr(EvalExprPtr eval, EnvPtr env)
         return eval->value;
     else {
         SourcePtr source = evalToSource(eval->location, new ExprList(eval->args), env);
-        eval->value = parseExprList(source, 0, source->size);
+        eval->value = parseExprList(source, 0, source->size());
         eval->evaled = true;
         return eval->value;
     }
@@ -330,7 +327,7 @@ vector<StatementPtr> const &desugarEvalStatement(EvalStatementPtr eval, EnvPtr e
         return eval->value;
     else {
         SourcePtr source = evalToSource(eval->location, eval->args, env);
-        parseStatements(source, 0, source->size, eval->value);
+        parseStatements(source, 0, source->size(), eval->value);
         eval->evaled = true;
         return eval->value;
     }
@@ -342,7 +339,7 @@ vector<TopLevelItemPtr> const &desugarEvalTopLevel(EvalTopLevelPtr eval, EnvPtr 
         return eval->value;
     else {
         SourcePtr source = evalToSource(eval->location, eval->args, env);
-        parseTopLevelItems(source, 0, source->size, eval->value);
+        parseTopLevelItems(source, 0, source->size(), eval->value);
         eval->evaled = true;
         return eval->value;
     }

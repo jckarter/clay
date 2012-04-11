@@ -60,7 +60,7 @@ void evalCallByName(InvokeEntryPtr entry,
                     EnvPtr env,
                     MultiEValuePtr out);
 
-static map<string, const void*> staticStringTableConstants;
+static llvm::StringMap<const void*> staticStringTableConstants;
 
 enum TerminationKind {
     TERMINATE_RETURN,
@@ -131,7 +131,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
 void evalCollectLabels(const vector<StatementPtr> &statements,
                        unsigned startIndex,
                        EnvPtr env,
-                       map<string, LabelInfo> &labels);
+                       llvm::StringMap<LabelInfo> &labels);
 EnvPtr evalBinding(BindingPtr x, EnvPtr env);
 
 void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out);
@@ -286,7 +286,8 @@ TypePtr evaluateType(ExprPtr expr, EnvPtr env)
 {
     ObjectPtr v = evaluateOneStatic(expr, env);
     if (v->objKind != TYPE) {
-        ostringstream sout;
+        string buf;
+        llvm::raw_string_ostream sout(buf);
         sout << "expecting a type but got ";
         printStaticName(sout, v);
         error(expr, sout.str());
@@ -299,7 +300,8 @@ void evaluateMultiType(ExprListPtr exprs, EnvPtr env, vector<TypePtr> &out)
     MultiStaticPtr types = evaluateMultiStatic(exprs, env);
     for (unsigned i = 0; i < types->size(); ++i) {
         if (types->values[i]->objKind != TYPE) {
-            ostringstream sout;
+            string buf;
+            llvm::raw_string_ostream sout(buf);
             sout << "expecting a type but got ";
             printStaticName(sout, types->values[i]);
             error(sout.str());
@@ -1486,7 +1488,7 @@ static bool isMemoizable(ObjectPtr callable) {
     if (callable->objKind != PROCEDURE)
         return false;
     Procedure *x = (Procedure *)callable.ptr();
-    const string &s = x->name->str;
+    llvm::StringRef s = x->name->str;
     return s[s.size()-1] == '?';
 }
 
@@ -2025,7 +2027,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
     case BLOCK : {
         Block *x = (Block *)stmt.ptr();
         int blockMarker = evalMarkStack();
-        map<string,LabelInfo> labels;
+        llvm::StringMap<LabelInfo> labels;
         evalCollectLabels(x->statements, 0, env, labels);
         TerminationPtr termination;
         unsigned pos = 0;
@@ -2342,7 +2344,7 @@ whileContinue:
 void evalCollectLabels(const vector<StatementPtr> &statements,
                        unsigned startIndex,
                        EnvPtr env,
-                       map<string, LabelInfo> &labels)
+                       llvm::StringMap<LabelInfo> &labels)
 {
     for (unsigned i = startIndex; i < statements.size(); ++i) {
         StatementPtr x = statements[i];
@@ -2889,21 +2891,24 @@ static void binaryNumericOp(EValuePtr a, EValuePtr b, EValuePtr out)
 
 template<typename T>
 static void overflowError(const char *op, T a, T b) {
-    ostringstream sout;
+    string buf;
+    llvm::raw_string_ostream sout(buf);
     sout << "integer overflow: " << a << " " << op << " " << b;
     error(sout.str());
 }
 
 template<typename T>
 static void invalidShiftError(const char *op, T a, T b) {
-    ostringstream sout;
+    string buf;
+    llvm::raw_string_ostream sout(buf);
     sout << "invalid shift: " << a << " " << op << " " << b;
     error(sout.str());
 }
 
 template<typename T>
 static void overflowError(const char *op, T a) {
-    ostringstream sout;
+    string buf;
+    llvm::raw_string_ostream sout(buf);
     sout << "integer overflow: " << op << a;
     error(sout.str());
 }
@@ -3488,9 +3493,9 @@ static void op_pointerToInt(EValuePtr dest, void *ptr)
 //
 // evalPrimOp
 //
-static const void *evalStringTableConstant(const string &s)
+static const void *evalStringTableConstant(llvm::StringRef s)
 {
-    map<string, const void*>::const_iterator oldConstant = staticStringTableConstants.find(s);
+    llvm::StringMap<const void*>::const_iterator oldConstant = staticStringTableConstants.find(s);
     if (oldConstant != staticStringTableConstants.end())
         return oldConstant->second;
     size_t bits = typeSize(cSizeTType);
@@ -3506,8 +3511,9 @@ static const void *evalStringTableConstant(const string &s)
     default:
         error("unsupported pointer width");
     }
-    memcpy((void*)((char*)buf + bits), (const void*)s.c_str(), s.size() + 1);
-    staticStringTableConstants.insert(make_pair(s, (const void*)buf));
+    memcpy((void*)((char*)buf + bits), (const void*)s.begin(), s.size());
+    ((char*)buf)[s.size()] = 0;
+    staticStringTableConstants[s] = (const void*)buf;
     return buf;
 }
 
@@ -4244,7 +4250,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
             Type *t = (Type *)obj.ptr();
             if (t->typeKind == RECORD_TYPE) {
                 RecordType *rt = (RecordType *)t;
-                const map<string, size_t> &fieldIndexMap =
+                const llvm::StringMap<size_t> &fieldIndexMap =
                     recordFieldIndexMap(rt);
                 result = (fieldIndexMap.find(fname->str)
                           != fieldIndexMap.end());
@@ -4278,11 +4284,12 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         RecordTypePtr rt;
         EValuePtr erec = recordValue(args, 0, rt);
         IdentifierPtr fname = valueToIdentifier(args, 1);
-        const map<string, size_t> &fieldIndexMap = recordFieldIndexMap(rt);
-        map<string,size_t>::const_iterator fi =
+        const llvm::StringMap<size_t> &fieldIndexMap = recordFieldIndexMap(rt);
+        llvm::StringMap<size_t>::const_iterator fi =
             fieldIndexMap.find(fname->str);
         if (fi == fieldIndexMap.end()) {
-            ostringstream sout;
+            string buf;
+            llvm::raw_string_ostream sout(buf);
             sout << "field not found: " << fname->str;
             argumentError(1, sout.str());
         }
@@ -4552,7 +4559,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
     case PRIM_FlagP : {
         ensureArity(args, 1);
         IdentifierPtr ident = valueToIdentifier(args, 0);
-        map<string, string>::const_iterator flag = globalFlags.find(ident->str);
+        llvm::StringMap<string>::const_iterator flag = globalFlags.find(ident->str);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == boolType);

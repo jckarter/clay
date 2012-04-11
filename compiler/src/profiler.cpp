@@ -3,13 +3,14 @@
 
 namespace clay {
 
-static map<string, int> countsMap;
+static llvm::StringMap<int> countsMap;
 
 void incrementCount(ObjectPtr obj) {
-    ostringstream sout;
+    string buf;
+    llvm::raw_string_ostream sout(buf);
     sout << obj;
     string s = sout.str();
-    map<string, int>::iterator i = countsMap.find(s);
+    llvm::StringMap<int>::iterator i = countsMap.find(s);
     if (i == countsMap.end()) {
         countsMap[s] = 1;
     }
@@ -20,14 +21,14 @@ void incrementCount(ObjectPtr obj) {
 
 void displayCounts() {
     vector<pair<int, string> > counts;
-    map<string,int>::iterator cmi = countsMap.begin();
+    llvm::StringMap<int>::iterator cmi = countsMap.begin();
     while (cmi != countsMap.end()) {
-        counts.push_back(make_pair(cmi->second, cmi->first));
+        counts.push_back(make_pair(cmi->getValue(), cmi->getKey()));
         ++cmi;
     }
     sort(counts.begin(), counts.end());
     for (unsigned i = 0; i < counts.size(); ++i) {
-        std::cout << counts[i].second << " - " << counts[i].first << '\n';
+        llvm::outs() << counts[i].second << " - " << counts[i].first << '\n';
     }
 }
 
