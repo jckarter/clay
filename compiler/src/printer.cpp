@@ -64,6 +64,27 @@ static llvm::raw_ostream &writeFloat(llvm::raw_ostream &out, clay_cldouble x) {
     return out << buf;
 }
 
+template <class T>
+llvm::raw_ostream &operator<<(llvm::raw_ostream &out, llvm::ArrayRef<T> v)
+{
+    out << "[";
+    const T *i, *end;
+    bool first = true;
+    for (i = v.begin(), end = v.end(); i != end; ++i) {
+        if (!first)
+            out << ", ";
+        first = false;
+        out << *i;
+    }
+    out << "]";
+    return out;
+}
+
+template <class T>
+llvm::raw_ostream &operator<<(llvm::raw_ostream &out, const vector<T> &v)
+{
+    return out << llvm::makeArrayRef(v);
+}
 
 
 //
@@ -498,7 +519,7 @@ static void print(llvm::raw_ostream &out, const Object *x) {
     }
     case DOTTED_NAME : {
         const DottedName *y = (const DottedName *)x;
-        out << "DottedName(" << y->parts << ")";
+        out << "DottedName(" << llvm::makeArrayRef(y->parts) << ")";
         break;
     }
 
@@ -1111,6 +1132,197 @@ string shortString(llvm::StringRef in) {
         }
     }
     return out;
+}
+
+
+
+//
+// patternPrint
+//
+
+void patternPrint(llvm::raw_ostream &out, PatternPtr x)
+{
+    switch (x->kind) {
+    case PATTERN_CELL : {
+        PatternCell *y = (PatternCell *)x.ptr();
+        out << "PatternCell(" << y->obj << ")";
+        break;
+    }
+    case PATTERN_STRUCT : {
+        PatternStruct *y = (PatternStruct *)x.ptr();
+        out << "PatternStruct(" << y->head << ", " << y->params << ")";
+        break;
+    }
+    default :
+        assert(false);
+    }
+}
+
+void patternPrint(llvm::raw_ostream &out, MultiPatternPtr x)
+{
+    switch (x->kind) {
+    case MULTI_PATTERN_CELL : {
+        MultiPatternCell *y = (MultiPatternCell *)x.ptr();
+        out << "MultiPatternCell(" << y->data << ")";
+        break;
+    }
+    case MULTI_PATTERN_LIST : {
+        MultiPatternList *y = (MultiPatternList *)x.ptr();
+        out << "MultiPatternList(" << y->items << ", " << y->tail << ")";
+        break;
+    }
+    default :
+        assert(false);
+    }
+}
+
+// typePrint
+
+void typePrint(llvm::raw_ostream &out, TypePtr t) {
+    switch (t->typeKind) {
+    case BOOL_TYPE :
+        out << "Bool";
+        break;
+    case INTEGER_TYPE : {
+        IntegerType *x = (IntegerType *)t.ptr();
+        if (!x->isSigned)
+            out << "U";
+        out << "Int" << x->bits;
+        break;
+    }
+    case FLOAT_TYPE : {
+        FloatType *x = (FloatType *)t.ptr();
+        if(x->isImaginary) {
+            out << "Imag" << x->bits;
+        } else {
+            out << "Float" << x->bits;
+        }
+        break;
+    }
+    case COMPLEX_TYPE : {
+        ComplexType *x = (ComplexType *)t.ptr();
+        out << "Complex" << x->bits;
+        break;
+    }
+    case POINTER_TYPE : {
+        PointerType *x = (PointerType *)t.ptr();
+        out << "Pointer[" << x->pointeeType << "]";
+        break;
+    }
+    case CODE_POINTER_TYPE : {
+        CodePointerType *x = (CodePointerType *)t.ptr();
+        out << "CodePointer[[";
+        for (unsigned i = 0; i < x->argTypes.size(); ++i) {
+            if (i != 0)
+                out << ", ";
+            out << x->argTypes[i];
+        }
+        out << "], [";
+        for (unsigned i = 0; i < x->returnTypes.size(); ++i) {
+            if (i != 0)
+                out << ", ";
+            if (x->returnIsRef[i])
+                out << "ByRef[" << x->returnTypes[i] << "]";
+            else
+                out << x->returnTypes[i];
+        }
+        out << "]]";
+        break;
+    }
+    case CCODE_POINTER_TYPE : {
+        CCodePointerType *x = (CCodePointerType *)t.ptr();
+        out << "ExternalCodePointer[";
+
+        switch (x->callingConv) {
+        case CC_DEFAULT :
+            out << "AttributeCCall, ";
+            break;
+        case CC_STDCALL :
+            out << "AttributeStdCall, ";
+            break;
+        case CC_FASTCALL :
+            out << "AttributeFastCall, ";
+            break;
+        case CC_THISCALL :
+            out << "AttributeThisCall, ";
+            break;
+        case CC_LLVM :
+            out << "AttributeLLVMCall, ";
+            break;
+        default :
+            assert(false);
+        }
+        if (x->hasVarArgs)
+            out << "true, ";
+        else
+            out << "false, ";
+        out << "[";
+        for (unsigned i = 0; i < x->argTypes.size(); ++i) {
+            if (i != 0)
+                out << ", ";
+            out << x->argTypes[i];
+        }
+        out << "], [";
+        if (x->returnType.ptr())
+            out << x->returnType;
+        out << "]]";
+        break;
+    }
+    case ARRAY_TYPE : {
+        ArrayType *x = (ArrayType *)t.ptr();
+        out << "Array[" << x->elementType << ", " << x->size << "]";
+        break;
+    }
+    case VEC_TYPE : {
+        VecType *x = (VecType *)t.ptr();
+        out << "Vec[" << x->elementType << ", " << x->size << "]";
+        break;
+    }
+    case TUPLE_TYPE : {
+        TupleType *x = (TupleType *)t.ptr();
+        out << "Tuple" << x->elementTypes;
+        break;
+    }
+    case UNION_TYPE : {
+        UnionType *x = (UnionType *)t.ptr();
+        out << "Union" << x->memberTypes;
+        break;
+    }
+    case RECORD_TYPE : {
+        RecordType *x = (RecordType *)t.ptr();
+        out << x->record->name->str;
+        if (!x->params.empty()) {
+            out << "[";
+            printNameList(out, x->params);
+            out << "]";
+        }
+        break;
+    }
+    case VARIANT_TYPE : {
+        VariantType *x = (VariantType *)t.ptr();
+        out << x->variant->name->str;
+        if (!x->params.empty()) {
+            out << "[";
+            printNameList(out, x->params);
+            out << "]";
+        }
+        break;
+    }
+    case STATIC_TYPE : {
+        StaticType *x = (StaticType *)t.ptr();
+        out << "Static[";
+        printName(out, x->obj);
+        out << "]";
+        break;
+    }
+    case ENUM_TYPE : {
+        EnumType *x = (EnumType *)t.ptr();
+        out << x->enumeration->name->str;
+        break;
+    }
+    default :
+        assert(false);
+    }
 }
 
 }

@@ -4,15 +4,10 @@ namespace clay {
 
 using namespace std;
 
-#ifdef _WIN32
-#define PATH_SEPARATOR '\\'
-#else
-#define PATH_SEPARATOR '/'
-#endif
+typedef llvm::SmallString<260> PathString;
 
-
-static vector<string> searchPath;
-static vector<string> moduleSuffixes;
+static vector<PathString> searchPath;
+static vector<llvm::SmallString<32> > moduleSuffixes;
 
 llvm::StringMap<ModulePtr> globalModules;
 llvm::StringMap<string> globalFlags;
@@ -23,7 +18,7 @@ ModulePtr globalMainModule;
 // initModuleSuffixes
 //
 
-static std::string getOS(llvm::Triple const &triple) {
+static llvm::StringRef getOS(llvm::Triple const &triple) {
     switch (triple.getOS()) {
     case llvm::Triple::Darwin : return "macosx";
     case llvm::Triple::DragonFly : return "dragonfly";
@@ -37,11 +32,11 @@ static std::string getOS(llvm::Triple const &triple) {
     case llvm::Triple::Solaris : return "solaris";
     case llvm::Triple::Haiku : return "haiku";
     case llvm::Triple::Minix : return "minix";
-    default : return triple.getOSName().str();
+    default : return triple.getOSName();
     }
 }
 
-static std::string getOSGroup(llvm::Triple const &triple) {
+static llvm::StringRef getOSGroup(llvm::Triple const &triple) {
     switch (triple.getOS()) {
     case llvm::Triple::Darwin :
     case llvm::Triple::DragonFly :
@@ -56,7 +51,7 @@ static std::string getOSGroup(llvm::Triple const &triple) {
     }
 }
 
-static std::string getCPU(llvm::Triple const &triple) {
+static llvm::StringRef getCPU(llvm::Triple const &triple) {
     switch (triple.getArch()) {
     case llvm::Triple::arm :
     case llvm::Triple::thumb : return "arm";
@@ -66,12 +61,13 @@ static std::string getCPU(llvm::Triple const &triple) {
     case llvm::Triple::sparcv9 : return "sparc";
     case llvm::Triple::x86 :
     case llvm::Triple::x86_64 : return "x86";
-    default : return triple.getArchName().str();
+    default : return triple.getArchName();
     }
 }
 
-static std::string getPtrSize(const llvm::TargetData *targetData) {
+static llvm::StringRef getPtrSize(const llvm::TargetData *targetData) {
     switch (targetData->getPointerSizeInBits()) {
+    case 16 : return "16";
     case 32 : return "32";
     case 64 : return "64";
     default : assert(false); return "";
@@ -81,20 +77,33 @@ static std::string getPtrSize(const llvm::TargetData *targetData) {
 static void initModuleSuffixes() {
     llvm::Triple triple(llvmModule->getTargetTriple());
 
-    string os = getOS(triple);
-    string osgroup = getOSGroup(triple);
-    string cpu = getCPU(triple);
-    string bits = getPtrSize(llvmTargetData);
-    moduleSuffixes.push_back("." + os + "." + cpu + "." + bits + ".clay");
-    moduleSuffixes.push_back("." + os + "." + cpu + ".clay");
-    moduleSuffixes.push_back("." + os + "." + bits + ".clay");
-    moduleSuffixes.push_back("." + cpu + "." + bits + ".clay");
-    moduleSuffixes.push_back("." + os + ".clay");
-    moduleSuffixes.push_back("." + cpu + ".clay");
-    moduleSuffixes.push_back("." + bits + ".clay");
-    if (!osgroup.empty())
-        moduleSuffixes.push_back("." + osgroup + ".clay");
-    moduleSuffixes.push_back(".clay");
+    llvm::StringRef os = getOS(triple);
+    llvm::StringRef osgroup = getOSGroup(triple);
+    llvm::StringRef cpu = getCPU(triple);
+    llvm::StringRef bits = getPtrSize(llvmTargetData);
+
+    llvm::SmallString<128> buf;
+    llvm::raw_svector_ostream sout(buf);
+
+#define ADD_SUFFIX(fmt) \
+    sout << fmt; \
+    moduleSuffixes.push_back(sout.str()); \
+    buf.clear(); sout.resync();
+
+    ADD_SUFFIX("." << os << "." << cpu << "." << bits << ".clay")
+    ADD_SUFFIX("." << os << "." << cpu << ".clay")
+    ADD_SUFFIX("." << os << "." << bits << ".clay")
+    ADD_SUFFIX("." << cpu << "." << bits << ".clay")
+    ADD_SUFFIX("." << os << ".clay")
+    ADD_SUFFIX("." << cpu << ".clay")
+    ADD_SUFFIX("." << bits << ".clay")
+    if (!osgroup.empty()) {
+        ADD_SUFFIX("." << osgroup << ".clay")
+    }
+
+#undef ADD_SUFFIX
+
+    moduleSuffixes.push_back(llvm::StringRef(".clay"));
 }
 
 
@@ -124,51 +133,44 @@ void addSearchPath(llvm::StringRef path) {
     searchPath.push_back(path);
 }
 
-static bool locateFile(llvm::StringRef relativePath, string &path) {
+static bool locateFile(llvm::StringRef relativePath, PathString &path) {
     // relativePath has no suffix
     if (moduleSuffixes.empty())
         initModuleSuffixes();
-    string tail;
-    tail.push_back(PATH_SEPARATOR);
-    tail.append(relativePath.begin(), relativePath.end());
     for (unsigned i = 0; i < searchPath.size(); ++i) {
-        string pathWOSuffix = searchPath[i] + tail;
+        PathString pathWOSuffix(searchPath[i]);
+        llvm::sys::path::append(pathWOSuffix, relativePath);
         for (unsigned j = 0; j < moduleSuffixes.size(); ++j) {
-            string p = pathWOSuffix + moduleSuffixes[j];
-            FILE *f = fopen(p.c_str(), "rb");
-            if (f != NULL) {
-                fclose(f);
-                path = p;
+            path = pathWOSuffix;
+            path.append(moduleSuffixes[j].begin(), moduleSuffixes[j].end());
+            if (llvm::sys::fs::exists(path.str()))
                 return true;
-            }
         }
     }
     return false;
 }
 
-static string toRelativePathUpto(DottedNamePtr name, size_t limit) {
-    string relativePath;
-    for (unsigned i = 0; i < limit; ++i) {
-        relativePath.append(name->parts[i]->str.begin(), name->parts[i]->str.end());
-        relativePath.push_back(PATH_SEPARATOR);
-    }
-    relativePath.append(name->parts.back()->str.begin(), name->parts.back()->str.end());
+static PathString toRelativePathUpto(DottedNamePtr name, IdentifierPtr *limit) {
+    PathString relativePath;
+    for (IdentifierPtr *i = name->parts.begin(); i < limit; ++i)
+        llvm::sys::path::append(relativePath, (*i)->str.str());
+    llvm::sys::path::append(relativePath, name->parts.back()->str.str());
     // relative path has no suffix
     return relativePath;
 }
 
 // foo.bar -> foo/bar/bar
-static string toRelativePath1(DottedNamePtr name) {
-    return toRelativePathUpto(name, name->parts.size());
+static PathString toRelativePath1(DottedNamePtr name) {
+    return toRelativePathUpto(name, name->parts.end());
 }
 
 // foo.bar -> foo/bar
-static string toRelativePath2(DottedNamePtr name) {
-    return toRelativePathUpto(name, name->parts.size() - 1);
+static PathString toRelativePath2(DottedNamePtr name) {
+    return toRelativePathUpto(name, name->parts.end() - 1);
 }
 
-static string locateModule(DottedNamePtr name) {
-    string path, relativePath;
+static PathString locateModule(DottedNamePtr name) {
+    PathString path, relativePath;
 
     relativePath = toRelativePath1(name);
     if (locateFile(relativePath, path))
@@ -179,7 +181,7 @@ static string locateModule(DottedNamePtr name) {
         return path;
 
     error(name, "module not found: " + toKey(name));
-    return "";
+    assert(false);
 }
 
 
@@ -194,7 +196,7 @@ static SourcePtr loadFile(llvm::StringRef fileName, vector<string> *sourceFiles)
 
     SourcePtr src = new Source(fileName);
     if (llvmDIBuilder != NULL) {
-        llvm::SmallString<260> absFileName(fileName);
+        PathString absFileName(fileName);
         llvm::sys::fs::make_absolute(absFileName);
         src->debugInfo = (llvm::MDNode*)llvmDIBuilder->createFile(
             llvm::sys::path::filename(absFileName),
@@ -263,7 +265,7 @@ static ModulePtr loadModuleByName(DottedNamePtr name, vector<string> *sourceFile
         module = makeOperatorsModule();
     }
     else {
-        string path = locateModule(name);
+        PathString path = locateModule(name);
         module = parse(key, loadFile(path, sourceFiles));
     }
 
@@ -300,7 +302,7 @@ static void loadDependents(ModulePtr m, vector<string> *sourceFiles) {
                     holder = installHolder(holder, y->alias);
                 }
                 else {
-                    vector<IdentifierPtr> &parts = y->dottedName->parts;
+                    llvm::SmallVector<IdentifierPtr,4> &parts = y->dottedName->parts;
                     for (unsigned i = 0; i < parts.size(); ++i)
                         holder = installHolder(holder, parts[i]);
                 }
@@ -314,7 +316,7 @@ static void loadDependents(ModulePtr m, vector<string> *sourceFiles) {
                     holder = installHolder(holder, y->alias);
                 }
                 else {
-                    vector<IdentifierPtr> &parts = y->dottedName->parts;
+                    llvm::SmallVector<IdentifierPtr,4> &parts = y->dottedName->parts;
                     for (unsigned i = 0; i < parts.size(); ++i)
                         holder = installHolder(holder, parts[i]);
                 }

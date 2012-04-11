@@ -26,6 +26,7 @@
 #endif
 
 #include <llvm/ADT/SmallString.h>
+#include <llvm/ADT/SmallVector.h>
 #include <llvm/ADT/StringMap.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/ADT/Triple.h>
@@ -1011,11 +1012,11 @@ struct Identifier : public ANode {
 };
 
 struct DottedName : public ANode {
-    vector<IdentifierPtr> parts;
+    llvm::SmallVector<IdentifierPtr, 4> parts;
     DottedName()
         : ANode(DOTTED_NAME) {}
-    DottedName(const vector<IdentifierPtr> &parts)
-        : ANode(DOTTED_NAME), parts(parts) {}
+    DottedName(llvm::ArrayRef<IdentifierPtr> parts)
+        : ANode(DOTTED_NAME), parts(parts.begin(), parts.end()) {}
 };
 
 
@@ -2291,22 +2292,6 @@ template <class T>
 llvm::raw_ostream &operator<<(llvm::raw_ostream &out, const Pointer<T> &p)
 {
     out << *p;
-    return out;
-}
-
-template <class T>
-llvm::raw_ostream &operator<<(llvm::raw_ostream &out, const vector<T> &v)
-{
-    out << "[";
-    typename vector<T>::const_iterator i, end;
-    bool first = true;
-    for (i = v.begin(), end = v.end(); i != end; ++i) {
-        if (!first)
-            out << ", ";
-        first = false;
-        out << *i;
-    }
-    out << "]";
     return out;
 }
 
