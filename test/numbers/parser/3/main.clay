@@ -1,5 +1,9 @@
-import printer.(println);
+import printer.(println, printlnTo);
 main() {
-    println(Int8("abc9\n"));
+    try {
+        println(Int8("abc9\n"));
+    } catch (e) {
+        printlnTo(stderr, e);
+    }
 }
 

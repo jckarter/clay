@@ -1,1 +1,1 @@
-unhandled exception: Error(invalid Float32: "abc1.2")
+Error(invalid Float32: "abc1.2")

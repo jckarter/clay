@@ -1,5 +1,5 @@
 import __operators__;
-import printer.(printlnTo);
+import libc.(fprintf, stderr);
 
 private var argc = 0;
 private var argv = Pointer[Pointer[Int8]]();
@@ -26,41 +26,28 @@ private setArgcArgv(argc_, argv_) {
 
 getArgcArgv() = argc, argv;
 
-[Main]
-overload __operators__.callMain(#Main, argc_:Int, argv_:Pointer[Pointer[Int8]]) {
+private alias runMain(argc_, argv_, f, ..args) {
     setArgcArgv(argc_, argv_);
     try {
-        return getExitCode(..Main());
+        return getExitCode(..f(..args));
     }
     catch (e) {
-        printlnTo(stderr, "unhandled exception: ", e);
+        fprintf(stderr, cstring("unhandled " ++ StaticName(Type(e)) ++ " exception"));
         return -1;
     }
 }
+
+[Main]
+overload __operators__.callMain(#Main, argc_:Int, argv_:Pointer[Pointer[Int8]])
+    = runMain(argc_, argv_, Main);
 
 [Main when CallDefined?(Main, Type(commandLine()))]
-overload __operators__.callMain(#Main, argc_:Int, argv_:Pointer[Pointer[Int8]]) {
-    setArgcArgv(argc_, argv_);
-    try {
-        return getExitCode(..Main(commandLine()));
-    }
-    catch (e) {
-        printlnTo(stderr, "unhandled exception: ", e);
-        return -1;
-    }
-}
+overload __operators__.callMain(#Main, argc_:Int, argv_:Pointer[Pointer[Int8]])
+    = runMain(argc_, argv_, Main, commandLine());
 
 [Main when CallDefined?(Main, ..Type(argc, argv))]
-overload __operators__.callMain(#Main, argc_:Int, argv_:Pointer[Pointer[Int8]]) {
-    setArgcArgv(argc_, argv_);
-    try {
-        return getExitCode(..Main(argc_, argv_));
-    }
-    catch (e) {
-        printlnTo(stderr, "unhandled exception: ", e);
-        return -1;
-    }
-}
+overload __operators__.callMain(#Main, argc_:Int, argv_:Pointer[Pointer[Int8]])
+    = runMain(argc_, argv_, Main, argc_, argv_);
 
 private define getExitCode;
 overload getExitCode() = 0;

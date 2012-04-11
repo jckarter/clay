@@ -1,5 +1,9 @@
-import printer.(println);
+import printer.(println, printlnTo);
 main() {
-    println(Float("abc1.2"));
+    try {
+        println(Float("abc1.2"));
+    } catch (e) {
+        printlnTo(stderr, e);
+    }
 }
 
