@@ -1,3 +1,5 @@
+import printer.(println, print);
+
 var fac = 0.0;
 var n = 0;
 var shift = initShift(n);
@@ -38,12 +40,12 @@ compute(y){
             a = xsq - ysq + xcd;
             ysq = b * b;
             xsq = a * a;
-            i-=1; 
+            i -: 1; 
         }
  
-        bits *= 2ss;
+        bits *: 2ss;
         if (i == 0) 
-            bits += 1ss; // set the LSB to 1 if the pt is in the mandelbrot set
+            bits +: 1ss; // set the LSB to 1 if the pt is in the mandelbrot set
 
         if (x % 8 == 7){ 
             print( Char( bits));        
@@ -52,7 +54,7 @@ compute(y){
     }
    if (shift != 0) { //if shift is not 0 .. i.e the size is not an exact multiple of 8
        for( d in range(shift))
-           bits *= 2ss; 
+           bits *: 2ss; 
        print( Char( bits));
    }
 }
@@ -61,7 +63,7 @@ main(args){
     var np = args[1];
     n = Int(np);
 
-    fac = initFac(n);
+    fac = initFac(Double(n));
     mandelbrot(n);
     println();
 }
