@@ -177,3 +177,53 @@ parseImag80(s:S) = parseImag80(String(s));
 
 [S when CCompatibleString?(S)]
 overload parseImag80(s:S) = parseImagWith(s, Imag80, libc.strtold);
+
+
+
+
+//
+// parse numbers from strings
+//
+
+[S when String?(S)]
+inline overload Int8(s:S)  = parseInt8(s);
+
+[S when String?(S)]
+inline overload Int16(s:S) = parseInt16(s);
+
+[S when String?(S)]
+inline overload Int32(s:S) = parseInt32(s);
+
+[S when String?(S)]
+inline overload Int64(s:S) = parseInt64(s);
+
+[S when String?(S)]
+inline overload UInt8(s:S)  = parseUInt8(s);
+
+[S when String?(S)]
+inline overload UInt16(s:S) = parseUInt16(s);
+
+[S when String?(S)]
+inline overload UInt32(s:S) = parseUInt32(s);
+
+[S when String?(S)]
+inline overload UInt64(s:S) = parseUInt64(s);
+
+[S when String?(S)]
+inline overload Float32(s:S) = parseFloat32(s);
+
+[S when String?(S)]
+inline overload Float64(s:S) = parseFloat64(s);
+
+[S when String?(S)]
+inline overload Float80(s:S) = parseFloat80(s);
+
+[S when String?(S)]
+inline overload Imag32(s:S) = parseImag32(s);
+
+[S when String?(S)]
+inline overload Imag64(s:S) = parseImag64(s);
+
+[S when String?(S)]
+inline overload Imag80(s:S) = parseImag80(s);
+

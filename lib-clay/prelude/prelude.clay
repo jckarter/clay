@@ -16,6 +16,7 @@ public import operators.pod.*;
 public import values.*;
 public import variants.*;
 public import variants.nested.*;
+public import sharedpointers.*;
 public import lambdas.*;
 
 public import coordinates.*;
@@ -28,6 +29,8 @@ public import characters.*;
 public import strings.*;
 public import strings.cstringrefs.*;
 public import strings.literals.*;
+
+public import simd.*;
 
 public import errors.*;
 public import exceptions.*;

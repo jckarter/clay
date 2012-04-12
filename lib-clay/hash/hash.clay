@@ -1,7 +1,6 @@
 
 import vectors.generic.*;
 import numbers.floats.(floatBits);
-import sharedpointers.(SharedPointer);
 import referencetypes.(ReferenceType?);
 
 
