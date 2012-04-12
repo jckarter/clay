@@ -32,7 +32,7 @@ if(UNIX)
         OUTPUT_VARIABLE LLVM_CXXFLAGS
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-    set(LLVM_CXXFLAGS "${LLVM_CXXFLAGS} -fno-rtti")
+    set(LLVM_CXXFLAGS "${LLVM_CXXFLAGS}")
 
     execute_process(
         COMMAND ${LLVM_CONFIG} --ldflags
