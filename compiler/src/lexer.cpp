@@ -4,26 +4,27 @@ namespace clay {
 
 static void initLexer(SourcePtr s, int offset, int length);
 static void cleanupLexer();
-static bool nextToken(TokenPtr &x);
+static bool nextToken(Token &x);
 
-void tokenize(SourcePtr source, vector<TokenPtr> &tokens) {
+void tokenize(SourcePtr source, vector<Token> &tokens) {
     tokenize(source, 0, source->size(), tokens);
 }
 
 void tokenize(SourcePtr source, int offset, int length,
-              vector<TokenPtr> &tokens) {
+              vector<Token> &tokens) {
     initLexer(source, offset, length);
-    TokenPtr token;
-    while (nextToken(token)) {
-        switch (token->tokenKind) {
+    tokens.push_back(Token());
+    while (nextToken(tokens.back())) {
+        switch (tokens.back().tokenKind) {
         case T_SPACE :
         case T_LINE_COMMENT :
         case T_BLOCK_COMMENT :
             break;
         default :
-            tokens.push_back(token);
+            tokens.push_back(Token());
         }
     }
+    tokens.pop_back();
     cleanupLexer();
 }
 
@@ -99,7 +100,7 @@ static bool identChar2(char &x) {
 }
 
 
-static bool identStr(string &x) {
+static bool identStr(llvm::SmallString<16> &x) {
     char c;
     if (!identChar1(c)) return false;
     x.clear();
@@ -115,7 +116,7 @@ static bool identStr(string &x) {
     return true;
 }
 
-static std::set<string> *keywords = NULL;
+static std::set<llvm::StringRef> *keywords = NULL;
 
 static void initKeywords() {
     const char *s[] =
@@ -131,19 +132,19 @@ static void initKeywords() {
          "finally", "onerror",
          "eval", "with","when",
          "__FILE__", "__LINE__", "__COLUMN__", "__ARG__", NULL};
-    keywords = new std::set<string>();
+    keywords = new std::set<llvm::StringRef>();
     for (const char **p = s; *p; ++p)
         keywords->insert(*p);
 }
 
-static bool keywordIdentifier(TokenPtr &x) {
-    string s;
-    if (!identStr(s)) return false;
+static bool keywordIdentifier(Token &x) {
+    x.str.clear();
+    if (!identStr(x.str)) return false;
     if (!keywords) initKeywords();
-    if (keywords->find(s) != keywords->end())
-        x = new Token(T_KEYWORD, s);
+    if (keywords->find(x.str) != keywords->end())
+        x.tokenKind = T_KEYWORD;
     else
-        x = new Token(T_IDENTIFIER, s);
+        x.tokenKind = T_IDENTIFIER;
     return true;
 }
 
@@ -160,13 +161,13 @@ static const char *symbols[] = {
     NULL
 };
 
-static bool symbol(TokenPtr &x) {
+static bool symbol(Token &x) {
     const char **s = symbols;
     const char *p = save();
     while (*s) {
         restore(p);
         if (str(*s)) {
-            x = new Token(T_SYMBOL, *s);
+            x = Token(T_SYMBOL, *s);
             return true;
         }
         ++s;
@@ -179,54 +180,47 @@ static bool symbol(TokenPtr &x) {
 //
 
 
-static const char *opchars[] = {
-    "=", "!", "<", ">", "+", "-", "*", "/","\\","%", "~", "|",  "&", NULL
-};
+static llvm::StringRef opchars("=!<>+-*/\\%~|&");
 
-static bool opstring(string &x) {
-    const char **s = opchars;
+static bool opstring(llvm::SmallString<16> &x) {
     const char *p = save();
     const char *q = p;
     char y;
-    while (*s && next(y)) {
-        s = opchars;
-        while (*s) {
-            if (y == **s) {
-                q = save();            
-                break;
-            }
-            ++s;
-        }
+    while (next(y)) {
+        if (opchars.find(y) != llvm::StringRef::npos)
+            q = save();
+        else
+            break;
     }
     restore(q);
-    if (p == q) return false;        
-    x = string(p,q);
+    if (p == q) return false;
+    x = llvm::StringRef(p,q-p);
     return true;
 }
 
-static bool op(TokenPtr &x) {
-    string s;
-    if(!opstring(s)) return false;
+static bool op(Token &x) {
+    x.str.clear();
+    if(!opstring(x.str)) return false;
     char c;
     const char *p = save();
     if(next(c) && c == ':') {
-        x = new Token(T_UOPSTRING, s);
+        x.tokenKind = T_UOPSTRING;
     } else {
         restore(p);
-        x = new Token(T_OPSTRING, s);
+        x.tokenKind = T_OPSTRING;
     }
     return true;
 }
 
-static bool opIdentifier(TokenPtr &x) {
+static bool opIdentifier(Token &x) {
     char c;
     if (!next(c)) return false;
     if (c != '(') return false;
-    string op;
-    if(!opstring(op)) return false;
+    x.str.clear();
+    if(!opstring(x.str)) return false;
     if (!next(c)) return false;
     if (c != ')') return false;
-    x = new Token(T_IDENTIFIER, op);
+    x.tokenKind = T_IDENTIFIER;
     return true;
 }
 
@@ -308,7 +302,7 @@ static bool oneChar(char &x) {
     return true;
 }
 
-static bool charToken(TokenPtr &x) {
+static bool charToken(Token &x) {
     char c;
     if (!next(c) || (c != '\'')) return false;
     const char *p = save();
@@ -317,27 +311,27 @@ static bool charToken(TokenPtr &x) {
     char v;
     if (!oneChar(v)) return false;
     if (!next(c) || (c != '\'')) return false;
-    x = new Token(T_CHAR_LITERAL, string(1, v));
+    x = Token(T_CHAR_LITERAL, llvm::StringRef(&v,1));
     return true;
 }
 
-static bool singleQuoteStringToken(TokenPtr &x) {
+static bool singleQuoteStringToken(Token &x) {
     char c;
     if (!next(c) || (c != '"')) return false;
-    string s;
+    x.tokenKind = T_STRING_LITERAL;
+    x.str.clear();
     while (true) {
         const char *p = save();
         if (next(c) && (c == '"'))
             break;
         restore(p);
         if (!oneChar(c)) return false;
-        s.push_back(c);
+        x.str.push_back(c);
     }
-    x = new Token(T_STRING_LITERAL, s);
     return true;
 }
 
-static bool stringToken(TokenPtr &x) {
+static bool stringToken(Token &x) {
     const char *p = save();
     char c;
     if (!next(c) || (c != '"')) return false;
@@ -345,7 +339,8 @@ static bool stringToken(TokenPtr &x) {
         restore(p);
         return singleQuoteStringToken(x);
     }
-    string s;
+    x.tokenKind = T_STRING_LITERAL;
+    x.str.clear();
     while (true) {
         p = save();
         if (next(c) && (c == '"')
@@ -361,9 +356,8 @@ static bool stringToken(TokenPtr &x) {
 
         restore(p);
         if (!oneChar(c)) return false;
-        s.push_back(c);
+        x.str.push_back(c);
     }
-    x = new Token(T_STRING_LITERAL, s);
     return true;
 }
 
@@ -433,7 +427,7 @@ static bool sign() {
     return (c == '+') || (c == '-');
 }
 
-static bool intToken(TokenPtr &x) {
+static bool intToken(Token &x) {
     const char *begin = save();
     if (!sign()) restore(begin);
     const char *p = save();
@@ -443,7 +437,7 @@ static bool intToken(TokenPtr &x) {
     return false;
 success :
     const char *end = save();
-    x = new Token(T_INT_LITERAL, string(begin, end));
+    x = Token(T_INT_LITERAL, llvm::StringRef(begin, end-begin));
     return true;
 }
 
@@ -483,7 +477,7 @@ static bool hexFractionalPart() {
     return hexDigits();
 }
 
-static bool floatToken(TokenPtr &x) {
+static bool floatToken(Token &x) {
     const char *begin = save();
     if (!sign()) restore(begin);
     const char *afterSign = save();
@@ -498,7 +492,7 @@ static bool floatToken(TokenPtr &x) {
                 return false;
         }
         const char *end = save();
-        x = new Token(T_FLOAT_LITERAL, string(begin, end));
+        x = Token(T_FLOAT_LITERAL, llvm::StringRef(begin, end-begin));
         return true;
     } else {
         restore(afterSign);
@@ -514,7 +508,7 @@ static bool floatToken(TokenPtr &x) {
                     return false;
             }
             const char *end = save();
-            x = new Token(T_FLOAT_LITERAL, string(begin, end));
+            x = Token(T_FLOAT_LITERAL, llvm::StringRef(begin, end-begin));
             return true;
         } else
             return false;
@@ -532,7 +526,7 @@ static bool isSpace(char c) {
             (c == '\f') || (c == '\v'));
 }
 
-static bool space(TokenPtr &x) {
+static bool space(Token &x) {
     char c;
     if (!next(c) || !isSpace(c)) return false;
     while (true) {
@@ -542,7 +536,7 @@ static bool space(TokenPtr &x) {
             break;
         }
     }
-    x = new Token(T_SPACE);
+    x = Token(T_SPACE);
     return true;
 }
 
@@ -552,7 +546,7 @@ static bool space(TokenPtr &x) {
 // comments
 //
 
-static bool lineComment(TokenPtr &x) {
+static bool lineComment(Token &x) {
     char c;
     if (!next(c) || (c != '/')) return false;
     if (!next(c) || (c != '/')) return false;
@@ -564,11 +558,11 @@ static bool lineComment(TokenPtr &x) {
             break;
         }
     }
-    x = new Token(T_LINE_COMMENT);
+    x = Token(T_LINE_COMMENT);
     return true;
 }
 
-static bool blockComment(TokenPtr &x) {
+static bool blockComment(Token &x) {
     char c;
     if (!next(c) || (c != '/')) return false;
     if (!next(c) || (c != '*')) return false;
@@ -579,7 +573,7 @@ static bool blockComment(TokenPtr &x) {
             break;
         lastWasStar = (c == '*');
     }
-    x = new Token(T_BLOCK_COMMENT);
+    x = Token(T_BLOCK_COMMENT);
     return true;
 }
 
@@ -614,7 +608,7 @@ static bool llvmComment();
 static bool llvmStringLiteral();
 static bool llvmStringChar();
 
-static bool llvmToken(TokenPtr &x) {
+static bool llvmToken(Token &x) {
     const char *prefix = "__llvm__";
     while (*prefix) {
         char c;
@@ -634,8 +628,8 @@ static bool llvmToken(TokenPtr &x) {
     const char *begin = save();
     if (!llvmBraces()) return false;
     const char *end = save();
-    x = new Token(T_LLVM, string(begin, end));
-    x->location = locationFor(begin);
+    x = Token(T_LLVM, llvm::StringRef(begin, end-begin));
+    x.location = locationFor(begin);
     return true;
 }
 
@@ -702,7 +696,7 @@ static bool llvmStringChar() {
 // static index
 //
 
-static bool staticIndex(TokenPtr &x) {
+static bool staticIndex(Token &x) {
     char c;
     if (!next(c)) return false;
     if (c != '.') return false;
@@ -710,13 +704,13 @@ static bool staticIndex(TokenPtr &x) {
     const char *begin = save();
     if (hexInt()) {
         const char *end = save();
-        x = new Token(T_STATIC_INDEX, string(begin, end));
+        x = Token(T_STATIC_INDEX, llvm::StringRef(begin, end-begin));
         return true;
     } else {
         restore(begin);
         if (decimalInt()) {
             const char *end = save();
-            x = new Token(T_STATIC_INDEX, string(begin, end));
+            x = Token(T_STATIC_INDEX, llvm::StringRef(begin, end-begin));
             return true;
         } else
             return false;
@@ -728,7 +722,8 @@ static bool staticIndex(TokenPtr &x) {
 // nextToken
 //
 
-static bool nextToken(TokenPtr &x) {
+static bool nextToken(Token &x) {
+    x = Token();
     const char *p = save();
     if (space(x)) goto success;
     restore(p); if (lineComment(x)) goto success;
@@ -744,14 +739,14 @@ static bool nextToken(TokenPtr &x) {
     restore(p); if (floatToken(x)) goto success;
     restore(p); if (intToken(x)) goto success;
     if (p != end) {
-        pushLocation(locationFor(maxPtr));
+        pushLocation(locationFor(p));
         error("invalid token");
     }
     return false;
 success :
-    assert(x.ptr());
-    if (!x->location)
-        x->location = locationFor(p);
+    assert(x.tokenKind != T_NONE);
+    if (x.location == NULL)
+        x.location = locationFor(p);
     return true;
 }
 

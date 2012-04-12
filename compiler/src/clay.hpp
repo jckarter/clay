@@ -362,7 +362,6 @@ typedef Pointer<Object> ObjectPtr;
 enum ObjectKind {
     SOURCE,
     LOCATION,
-    TOKEN,
 
     IDENTIFIER,
     DOTTED_NAME,
@@ -432,8 +431,6 @@ enum ObjectKind {
 
 struct Source;
 struct Location;
-
-struct Token;
 
 struct ANode;
 struct Identifier;
@@ -581,8 +578,6 @@ struct ValueStackEntry;
 
 typedef Pointer<Source> SourcePtr;
 typedef Pointer<Location> LocationPtr;
-
-typedef Pointer<Token> TokenPtr;
 
 typedef Pointer<ANode> ANodePtr;
 typedef Pointer<Identifier> IdentifierPtr;
@@ -954,6 +949,7 @@ extern "C" void displayCompileContext();
 //
 
 enum TokenKind {
+    T_NONE,
     T_UOPSTRING,
     T_OPSTRING,
     T_SYMBOL,
@@ -970,14 +966,13 @@ enum TokenKind {
     T_LLVM
 };
 
-struct Token : public Object {
+struct Token {
     LocationPtr location;
+    llvm::SmallString<16> str;
     int tokenKind;
-    string str;
-    Token(int tokenKind)
-        : Object(TOKEN), tokenKind(tokenKind) {}
-    Token(int tokenKind, llvm::StringRef str)
-        : Object(TOKEN), tokenKind(tokenKind), str(str) {}
+    Token() : tokenKind(T_NONE) {}
+    explicit Token(int tokenKind) : tokenKind(tokenKind) {}
+    explicit Token(int tokenKind, llvm::StringRef str) : tokenKind(tokenKind), str(str) {}
 };
 
 
@@ -986,10 +981,10 @@ struct Token : public Object {
 // lexer module
 //
 
-void tokenize(SourcePtr source, vector<TokenPtr> &tokens);
+void tokenize(SourcePtr source, vector<Token> &tokens);
 
 void tokenize(SourcePtr source, int offset, int length,
-              vector<TokenPtr> &tokens);
+              vector<Token> &tokens);
 
 
 
