@@ -48,13 +48,13 @@ void evalCallValue(EValuePtr callable,
 void evalCallPointer(EValuePtr x,
                      MultiEValuePtr args,
                      MultiEValuePtr out);
-void evalCallCode(InvokeEntryPtr entry,
+void evalCallCode(InvokeEntry* entry,
                   MultiEValuePtr args,
                   MultiEValuePtr out);
-void evalCallCompiledCode(InvokeEntryPtr entry,
+void evalCallCompiledCode(InvokeEntry* entry,
                           MultiEValuePtr args,
                           MultiEValuePtr out);
-void evalCallByName(InvokeEntryPtr entry,
+void evalCallByName(InvokeEntry* entry,
                     ExprPtr callable,
                     ExprListPtr args,
                     EnvPtr env,
@@ -1543,7 +1543,7 @@ void evalCallExpr(ExprPtr callable,
         vector<ValueTempness> argsTempness;
         computeArgsKey(mpv, argsKey, argsTempness);
         CompileContextPusher pusher(obj, argsKey);
-        InvokeEntryPtr entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
+        InvokeEntry* entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
         if (entry->callByName) {
             evalCallByName(entry, callable, args, env, out);
         }
@@ -1724,7 +1724,7 @@ void evalCallValue(EValuePtr callable,
         vector<ValueTempness> argsTempness;
         computeArgsKey(pvArgs, argsKey, argsTempness);
         CompileContextPusher pusher(obj, argsKey);
-        InvokeEntryPtr entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
+        InvokeEntry* entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
         if (entry->callByName) {
             ExprListPtr objectExprs = new ExprList();
             for (vector<EValuePtr>::const_iterator i = args->values.begin();
@@ -1769,7 +1769,7 @@ void evalCallPointer(EValuePtr /*x*/,
 // evalCallCode
 //
 
-void evalCallCode(InvokeEntryPtr entry,
+void evalCallCode(InvokeEntry* entry,
                   MultiEValuePtr args,
                   MultiEValuePtr out)
 {
@@ -1857,7 +1857,7 @@ void evalCallCode(InvokeEntryPtr entry,
 // evalCallCompiledCode
 //
 
-void evalCallCompiledCode(InvokeEntryPtr entry,
+void evalCallCompiledCode(InvokeEntry* entry,
                           MultiEValuePtr args,
                           MultiEValuePtr out)
 {
@@ -1895,7 +1895,7 @@ void evalCallCompiledCode(InvokeEntryPtr entry,
 // evalCallByName
 //
 
-void evalCallByName(InvokeEntryPtr entry,
+void evalCallByName(InvokeEntry* entry,
                     ExprPtr callable,
                     ExprListPtr args,
                     EnvPtr env,

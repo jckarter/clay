@@ -5,7 +5,7 @@ namespace clay {
 static llvm::Value *promoteCVarArg(CallingConv conv,
                                    TypePtr t,
                                    llvm::Value *llv,
-                                   CodegenContextPtr ctx)
+                                   CodegenContext* ctx)
 {
     if (conv == CC_LLVM)
         return llv;
@@ -76,7 +76,7 @@ void ExternalTarget::allocReturnValue(CallingConv conv,
                                       TypePtr type,
                                       llvm::Function::arg_iterator &ai,
                                       vector<CReturn> &returns,
-                                      CodegenContextPtr ctx)
+                                      CodegenContext* ctx)
 {
     if (type == NULL)
         return;
@@ -99,7 +99,7 @@ CValuePtr ExternalTarget::allocArgumentValue(CallingConv conv,
                                              TypePtr type,
                                              llvm::StringRef name,
                                              llvm::Function::arg_iterator &ai,
-                                             CodegenContextPtr ctx)
+                                             CodegenContext* ctx)
 {
     if (typePassesByByvalPointer(conv, type, false)) {
         llvm::Argument *llArg = &(*ai);
@@ -139,7 +139,7 @@ CValuePtr ExternalTarget::allocArgumentValue(CallingConv conv,
 void ExternalTarget::returnStatement(CallingConv conv,
                                      TypePtr type,
                                      vector<CReturn> &returns,
-                                     CodegenContextPtr ctx)
+                                     CodegenContext* ctx)
 {
     if (type == NULL || typeReturnsBySretPointer(conv, type)) {
         ctx->builder->CreateRetVoid();
@@ -163,7 +163,7 @@ void ExternalTarget::loadStructRetArgument(CallingConv conv,
                                            TypePtr type,
                                            vector<llvm::Value *> &llArgs,
                                            vector< pair<unsigned, llvm::Attributes> > &llAttributes,
-                                           CodegenContextPtr ctx,
+                                           CodegenContext* ctx,
                                            MultiCValuePtr out)
 {
     if (type != NULL && typeReturnsBySretPointer(conv, type)) {
@@ -179,7 +179,7 @@ void ExternalTarget::loadArgument(CallingConv conv,
                                   CValuePtr cv,
                                   vector<llvm::Value *> &llArgs,
                                   vector< pair<unsigned, llvm::Attributes> > &llAttributes,
-                                  CodegenContextPtr ctx)
+                                  CodegenContext* ctx)
 {
     if (typePassesByByvalPointer(conv, cv->type, false)) {
         llArgs.push_back(cv->llValue);
@@ -202,7 +202,7 @@ void ExternalTarget::loadVarArgument(CallingConv conv,
                                      CValuePtr cv,
                                      vector<llvm::Value *> &llArgs,
                                      vector< pair<unsigned, llvm::Attributes> > &llAttributes,
-                                     CodegenContextPtr ctx)
+                                     CodegenContext* ctx)
 {
     if (typePassesByByvalPointer(conv, cv->type, true)) {
         llArgs.push_back(cv->llValue);
@@ -226,7 +226,7 @@ void ExternalTarget::loadVarArgument(CallingConv conv,
 void ExternalTarget::storeReturnValue(CallingConv conv,
                                       llvm::Value *callReturnValue,
                                       TypePtr returnType,
-                                      CodegenContextPtr ctx,
+                                      CodegenContext* ctx,
                                       MultiCValuePtr out)
 {
     if (returnType == NULL || typeReturnsBySretPointer(conv, returnType)) {

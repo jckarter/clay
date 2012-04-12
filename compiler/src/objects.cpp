@@ -26,10 +26,9 @@ ValueHolder::~ValueHolder()
 //
 
 // FIXME: this doesn't handle arbitrary values (need to call clay)
-bool objectEquals(ObjectPtr a, ObjectPtr b)
+bool _objectValueEquals(ObjectPtr a, ObjectPtr b)
 {
-    if (a == b)
-        return true;
+    // at this point pointer identity should already have been checked by objectEquals
 
     int aKind = a->objKind, bKind = b->objKind;
     if (aKind != bKind)
@@ -75,6 +74,12 @@ bool objectEquals(ObjectPtr a, ObjectPtr b)
 // objectHash
 //
 
+static int identityHash(Object *a)
+{
+    size_t v = (size_t)a;
+    return (int)v;
+}
+
 // FIXME: this doesn't handle arbitrary values (need to call clay)
 int objectHash(ObjectPtr a)
 {
@@ -95,20 +100,26 @@ int objectHash(ObjectPtr a)
         int n = typeSize(b->type);
         for (int i = 0; i < n; ++i)
             h += b->buf[i];
-        h = h*11 + objectHash(b->type.ptr());
+        h = h*11 + identityHash(b->type.ptr());
         return h;
     }
 
     case PVALUE : {
         PValue *b = (PValue *)a.ptr();
-        int h = objectHash(b->data.type.ptr());
+        int h = identityHash(b->data.type.ptr());
         h *= b->data.isTemp ? 11 : 23;
         return h;
     }
 
+/* XXX
+    case MODULE_HOLDER : {
+        ModuleHolder *b = (ModuleHolder*)a.ptr();
+        return identityHash(b->module);
+    }
+*/
+
     default : {
-        unsigned long long v = (unsigned long long)a.ptr();
-        return (int)v;
+        return identityHash(a.ptr());
     }
 
     }
