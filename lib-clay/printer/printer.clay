@@ -9,6 +9,7 @@ import printer.platform.(
     formatForPartialInt128,
 );
 import numbers.floats.(nan, nan?);
+import strings.*;
 
 
 //
@@ -85,30 +86,6 @@ overload printTo(stream, x:UInt128) {
         printTo(stream, hi);
         printWithSprintf(stream, formatForPartialInt128, lo);
     }
-}
-
-overload printTo(stream, x:Complex80) {
-    printFloatWithSprintf(stream, "nan", "%.19Lg%+.19Lgj", ..rectValues(x));
-}
-
-overload printTo(stream, x:Complex64) {
-    printFloatWithSprintf(stream, "nan", "%.16g%+.16gj", ..rectValues(x));
-}
-
-overload printTo(stream, x:Complex32) {
-    printFloatWithSprintf(stream, "nan", "%.16g%+.16gj", ..mapValues(Double, ..rectValues(x)));
-}
-
-overload printTo(stream, x:Imag80) {
-    printFloatWithSprintf(stream, "nan", "%.19Lgj", x);
-}
-
-overload printTo(stream, x:Imag64) {
-    printFloatWithSprintf(stream, "nan", "%.16gj", x);
-}
-
-overload printTo(stream, x:Imag32) {
-    printFloatWithSprintf(stream, "nan", "%.8gj", Imag64(x));
 }
 
 overload printTo(stream, x:LongDouble) {
@@ -321,41 +298,6 @@ overload printReprTo(stream, x:Float80) {
 }
 
 
-overload printReprTo(stream, x:Imag32) {
-    printFloatWithSprintf(stream, "nan(Imag32)", "%.6afj", Imag64(x));
-}
-
-overload printReprTo(stream, x:Imag64) {
-    printFloatWithSprintf(stream, "nan(Imag64)", "%.13aj", x);
-}
-
-overload printReprTo(stream, x:Imag80) {
-    printFloatWithSprintf(stream, "nan(Imag80)", "%.15Laflj", x);
-}
-
-[when platform.OS == platform.FreeBSD]
-overload printReprTo(stream, x:Imag80) {
-    printFloatWithSprintf(stream, "nan(Imag80)", "%.16Lafl", x);
-}
-
-overload printReprTo(stream, x:Complex80) {
-    printFloatWithSprintf(stream, "nan(Complex80)", "%.15Lafl%+.15Laflj", ..rectValues(x));
-}
-
-[when platform.OS == platform.FreeBSD]
-overload printReprTo(stream, x:Complex80) {
-    printFloatWithSprintf(stream, "nan(Complex80)", "%.16Lafl%+.16Laflj", ..rectValues(x));
-}
-
-overload printReprTo(stream, x:Complex64) {
-    printFloatWithSprintf(stream, "nan(Complex64)", "%.13a%+.13aj", ..rectValues(x));
-}
-
-overload printReprTo(stream, x:Complex32) {
-    printFloatWithSprintf(stream, "nan(Complex32)", "%.6af%+.6afj", ..mapValues(Double, ..rectValues(x)));
-}
-
-
 [T]
 overload printReprTo(stream, x:Pointer[T]) {
     printTo(stream, Pointer[T], "(");
@@ -462,25 +404,6 @@ overload printReprTo(stream, x:T) {
     printTo(stream, ")");
 }
 
-
-
-//
-// simd printing
-//
-
-[T,n]
-inline overload printTo(stream, a:Vec[T,n])
-{
-    printTo(stream, Type(a), "(", ..weaveValues(", ", ..unpackVec(a)), ")");
-}
-
-[T,n]
-inline overload printReprTo(stream, a:Vec[T,n])
-{
-    printTo(stream,Type(a),"(");
-    printReprValuesTo(stream, ..unpackVec(a));
-    printTo(stream,")");
-}
 
 
 //

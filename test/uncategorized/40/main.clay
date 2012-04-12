@@ -1,4 +1,5 @@
 import printer.(println,printTo);
+import strings.*;
 
 main() {
     var a = Vector[Char]();

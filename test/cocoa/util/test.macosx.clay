@@ -4,6 +4,7 @@ import hash.(hash);
 import printer.(str);
 import test.*;
 import test.memory.*;
+import strings.cstringrefs.*;
 
 record Foo (x: Int64, y: Double);
 [I when Integer?(I) and I != Int64]

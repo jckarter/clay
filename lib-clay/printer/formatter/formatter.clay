@@ -1,6 +1,6 @@
 import printer.*;
 import printer.platform.*;
-
+import strings.*;
 
 
 //

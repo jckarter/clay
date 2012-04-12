@@ -1,5 +1,6 @@
 import hashmaps.(HashMap);
 import printer.(println);
+import strings.*;
 
 foo() {
     var x = HashMap[String, Int]();

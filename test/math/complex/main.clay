@@ -1,6 +1,7 @@
 
 import math.*;
 import printer.(println);
+import complex.*;
 
 ftypes() = Complex64;
 

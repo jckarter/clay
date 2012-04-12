@@ -1,6 +1,7 @@
 import printer.formatter.(repr);
 import numbers.floats.(nan, nan?);
 import printer.(println);
+import complex.*;
 
 record Foo (x:Int, y:StringLiteralRef);
 

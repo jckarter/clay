@@ -25,7 +25,7 @@ overload errorWithPrintf(#fmt, ..e) {
 // error (exceptions enabled)
 //
 
-record Error (msg : String);
+record Error (msg : Vector[Char]);
 
 instance Exception (Error);
 
@@ -34,7 +34,7 @@ overload errorWithPrintf(#fmt, ..e) {
     var bufp = Pointer[CChar]();
     asprintf(@bufp, fmt, ..e);
     var bufsize = SizeT(strlen(bufp));
-    var str = initializeRecord(String, bufsize, bufsize, Pointer[Char](bufp));
+    var str = initializeRecord(Vector[Char], bufsize, bufsize, Pointer[Char](bufp));
     throw Error(move(str));
 }
 

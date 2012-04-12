@@ -1,4 +1,6 @@
 import printer.(print,println);
+import strings.*;
+
 test(s) {
     print(s, "... ");
     switch (s)

@@ -3,6 +3,7 @@
 import math.native.kernel.ieee754.*;
 import math.native.kernel.k_exp.*;
 import math.*;
+import complex.*;
 
 overload cosh(z:ComplexDouble) {
 	

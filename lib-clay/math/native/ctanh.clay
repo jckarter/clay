@@ -2,6 +2,7 @@
 
 import math.native.kernel.ieee754.*;
 import math.*;
+import complex.*;
 
 overload tanh(z:ComplexDouble) {
 	

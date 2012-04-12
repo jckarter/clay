@@ -1,4 +1,5 @@
 import printer.(println);
+import simd.*;
 
 main() {
     var v1 = Vec[Int,2](11, 21);

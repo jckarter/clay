@@ -1,5 +1,6 @@
 import paged.*;
 import strings;
+import strings.cstringrefs.*;
 
 
 

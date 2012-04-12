@@ -1,4 +1,5 @@
 
+import strings.cstringrefs.*;
 
 
 //
@@ -73,14 +74,3 @@ inline overload String(a:A) = String(mapped(Char, a));
 [T when ByteSizedInteger?(T)]
 inline overload String(cstr : Pointer[T]) = String(CStringRef(cstr));
 
-
-
-//
-// convert to c-compatible string
-//
-
-cstring(s:String) {
-    reserve(s, size(s)+1);
-    end(s)^ = Char(0);
-    return Pointer[Int8](s.data);
-}

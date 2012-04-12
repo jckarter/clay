@@ -4,14 +4,14 @@ import libc.(fprintf, stderr);
 private var argc = 0;
 private var argv = Pointer[Pointer[Int8]]();
 private var commandLineInitialized? = false;
-private var commandLineArgs = Vector[String]();
+private var commandLineArgs = Vector[Vector[Char]]();
 
 commandLine() {
     if (not commandLineInitialized?) {
         clear(commandLineArgs);
         for (i in range(argc)) {
             var cstr = (argv + i)^;
-            push(commandLineArgs, String(cstr));
+            push(commandLineArgs, Vector[Char](cstr));
         }
         commandLineInitialized? = true;
     }

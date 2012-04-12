@@ -3,6 +3,8 @@ import console.color.*;
 import printer.(println,print,str);
 import io.streams.*;
 import io.files.*;
+import strings.*;
+import lambdas.*;
 
 record TestStatus (
     passed: UInt,

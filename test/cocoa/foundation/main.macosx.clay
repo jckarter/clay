@@ -1,6 +1,7 @@
 import cocoa.objc.*;
 import cocoa.foundation.*;
 import printer.(println);
+import strings.cstringrefs.*;
 
 main() {
     var pool = NSAutoreleasePool.alloc().init();

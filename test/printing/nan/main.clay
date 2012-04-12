@@ -1,5 +1,6 @@
 import numbers.floats.(nan);
 import printer.(println);
+import complex.*;
 
 main() {
     println(nan(Float32));

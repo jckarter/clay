@@ -2,6 +2,8 @@ import maybe.*;
 import printer.(printlnTo);
 import io.files.*;
 import numbers.parser.*;
+import strings.*;
+import lambdas.*;
 
 private dispatchCommand() {
     var args = commandLine(); 

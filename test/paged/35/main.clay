@@ -1,5 +1,6 @@
 import paged;
 import printer.(println);
+import strings.*;
 
 main() {
     paged.initializePaging("temppaged.data", 100*1000);

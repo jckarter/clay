@@ -8,7 +8,6 @@ public import statics.*;
 public import booleans.*;
 public import numbers.*;
 public import numbers.overflow.*;
-public import complex.*;
 public import enumerations.*;
 public import pointers.*;
 public import memory.*;
@@ -24,11 +23,7 @@ public import arrays.*;
 public import vectors.*;
 public import vectors.buffer.*;
 public import characters.*;
-public import strings.*;
-public import strings.cstringrefs.*;
 public import strings.literals.*;
-
-public import simd.*;
 
 public import errors.*;
 public import exceptions.*;

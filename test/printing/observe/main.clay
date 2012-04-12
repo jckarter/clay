@@ -1,4 +1,5 @@
 import printer.(println,observe,observeCall);
+import strings.*;
 
 tellRvalue(ref x) = 0;
 overload tellRvalue(rvalue x) = 1;

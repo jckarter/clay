@@ -1,6 +1,8 @@
 import test.*;
 import uniquepointers.(UniquePointer);
-import sharedpointers.*
+import sharedpointers.*;
+import simd.*;
+import strings.*;
 
 record IrregularRecord ();
 overload RegularRecord?(#IrregularRecord) = false;

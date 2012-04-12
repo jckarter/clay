@@ -1,5 +1,6 @@
 import printer.formatter.(repr);
 import printer.(println);
+import complex.*;
 
 enum SomeEnum (ZERO, A1, B2, C3, D4);
 

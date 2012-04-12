@@ -247,7 +247,7 @@ overload CCastable?(#Pointer[F], #RawPointer) = true;
 [F, T when CCastable?(F, T)]
 private cCast(from:F, #T) = T(from);
 
-[S when String?(S)]
+[S when Sequence?(S) and (Char == SequenceElementType(S))]
 overload cCast(s:S, #Pointer[CChar]) = cstring(s);
 
 [F]

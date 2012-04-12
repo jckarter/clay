@@ -1,3 +1,5 @@
+import lambdas.*;
+
 keywordArguments(names, forward ..keywords)
     = forward ..mapValues(
         name -> forward getKeywordArgument(name, ..keywords),

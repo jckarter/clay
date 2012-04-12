@@ -1,5 +1,6 @@
 import win32;
 import io.errors.*;
+import strings.*;
 
 
 //

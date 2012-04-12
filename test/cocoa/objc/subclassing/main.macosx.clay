@@ -4,6 +4,7 @@ import cocoa.foundation.*;
 import cocoa.applicationservices.*;
 
 import cocoa.objc.runtime.(object_getClassName);
+import strings.cstringrefs.*;
 
 overload selector("ncStringWithInt:") = Id, Int;
 overload selector("ncStringWithNumber:") = Id, NSNumber;
