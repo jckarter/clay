@@ -1,6 +1,5 @@
 import printer.(println);
 import math.simd.*;
-import libc;
 
 A(i, j) = 1.0 / Float64(((i+j) * (i+j+1)\2) + i + 1);
 

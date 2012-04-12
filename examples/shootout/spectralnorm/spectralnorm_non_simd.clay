@@ -1,5 +1,4 @@
 import printer.(println);
-import libc;
 
 A(i, j) = 1.0 / Double(((i+j) * (i+j+1)\2) + i + 1);
 
