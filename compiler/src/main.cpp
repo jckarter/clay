@@ -1,5 +1,12 @@
 #include "clay.hpp"
 
+// for _exit
+#ifdef WIN32
+# include <process.h>
+#else
+# include <unistd.h>
+#endif
+
 namespace clay {
 
 #ifdef WIN32
