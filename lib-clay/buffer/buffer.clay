@@ -1,5 +1,7 @@
 
 import core.vectors.generic.*;
+import io.streams.(ByteBuffer?);
+import printer.(printTo);
 
 //
 // BufferVector[T]
@@ -91,4 +93,17 @@ overload vectorCapacity(a:BufferVector[T]) = SizeT(a.end - a.begin);
 [T]
 overload vectorRequestCapacity(a:BufferVector[T], capacity:SizeT) {
     assert(capacity <= a.end-a.begin, "BufferVector cannot be expanded");
+}
+
+
+
+//
+// printBuffer
+//
+
+[S when ByteBuffer?(S)]
+printBuffer(buf:S, ..args) {
+    var bv = BufferVector(begin(buf), end(buf));
+    printTo(bv, ..args);
+    return size(bv);
 }

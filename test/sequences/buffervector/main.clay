@@ -1,4 +1,4 @@
-import printer.(println,printBuffer,print);
+import printer.(println,print);
 import buffer.*;
 
 main() {

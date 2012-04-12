@@ -1,7 +1,7 @@
 import core.errors.(private assertStringLiteral);
 import core.errors.backtrace.(showBacktrace);
 import io.files.raw.(stderrRawFile,stdoutRawFile);
-import io.streams.(write,flush,ByteBuffer?);
+import io.streams.(write,flush);
 
 import platform;
 import printer.platform.(
@@ -10,7 +10,6 @@ import printer.platform.(
 );
 import numbers.floats.(nan, nan?);
 import strings.*;
-import buffer.*;
 
 
 //
@@ -479,59 +478,6 @@ str(forward ..x) {
     printTo(s, ..x);
     return move(s);
 }
-
-
-//
-// printBuffer
-//
-
-[S when ByteBuffer?(S)]
-printBuffer(buf:S, ..args) {
-    var bv = BufferVector(begin(buf), end(buf));
-    printTo(bv, ..args);
-    return size(bv);
-}
-
-
-
-//
-// observe, observeTo, observeCall -- log intermediate values and forward them
-//
-
-observeTo(stream, forward ..x) {
-    var captured = captureValues(..x);
-    printlnTo(stream, "[observed: ", ..weaveValues(", ", ..capturedRefs(captured)), "]");
-    flush(stream);
-    return forward ..forwardValues(captured);
-}
-[tag when StringLiteral?(tag)]
-overload observeTo(stream, #tag, forward ..x) {
-    var captured = captureValues(..x);
-    printlnTo(stream, "[observed ", tag, ": ", ..weaveValues(", ", ..capturedRefs(captured)), "]");
-    flush(stream);
-    return forward ..forwardValues(captured);
-}
-observe(forward ..x) = forward ..observeTo(stderrRawFile(), ..x);
-
-observeCallTo(stream, forward fn, forward ..args) {
-    var capturedFn = captureValue(fn);
-    var capturedArgs = captureValues(..args);
-    printlnTo(stream, "[observed call ", capturedRef(capturedFn), "(", ..weaveValues(", ", ..capturedRefs(capturedArgs)), ")..");
-    flush(stream);
-    try {
-        var capturedReturn = captureValues(..forwardValue(capturedFn)(..forwardValues(capturedArgs)));
-        printlnTo(stream, "  ..returned ", ..capturedRefs(capturedReturn), "]");
-        flush(stream);
-        return forward ..forwardValues(capturedReturn);
-    } catch (ex) {
-        printlnTo(stream, "  ..threw ", ex, "]");
-        flush(stream);
-        throw ex;
-    }
-}
-
-observeCall(forward fn, forward ..args)
-    = forward ..observeCallTo(stderrRawFile(), fn, ..args);
 
 
 //
