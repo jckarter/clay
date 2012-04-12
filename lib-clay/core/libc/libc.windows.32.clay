@@ -32,6 +32,9 @@ external (cdecl) free(arg0:OpaquePointer) : ;
 
 external (cdecl) realloc(arg0:OpaquePointer, arg1:size_t) : OpaquePointer;
 
+external (cdecl) _scprintf(arg0:Pointer[CChar], ..) : Int;
+
+external (cdecl) _snprintf(arg0:Pointer[CChar], arg1:size_t, arg2:Pointer[CChar], ..) : Int;
 
 // asprintf isn't standard and windows doesn't have it, but it's pretty useful so
 // let's fake it
