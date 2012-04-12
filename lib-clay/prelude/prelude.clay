@@ -16,8 +16,6 @@ public import operators.pod.*;
 public import values.*;
 public import variants.*;
 public import variants.nested.*;
-public import sharedpointers.*;
-public import lambdas.*;
 
 public import coordinates.*;
 public import sequences.*;

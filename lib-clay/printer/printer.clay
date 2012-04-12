@@ -452,34 +452,6 @@ overload printReprTo(stream, a:Vector[T]) {
 
 
 //
-// printTo - SharedPointer
-//
-
-[T]
-overload printTo(stream, x:SharedPointer[T]) {
-    printTo(stream, SharedPointer[T], "(");
-    if (not null?(x))
-        printTo(stream, x^);
-    printTo(stream, ")");
-}
-
-
-
-//
-// printReprTo - SharedPointer
-//
-
-[T]
-overload printReprTo(stream, x:SharedPointer[T]) {
-    // FIXME: handle cycles
-    printTo(stream, SharedPointer[T], "(");
-    if (not null?(x))
-        printReprTo(stream, x^);
-    printTo(stream, ")");
-}
-
-
-//
 // printReprTo - variants
 //
 

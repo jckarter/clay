@@ -1,4 +1,5 @@
 import printer.(println);
+import lambdas.*;
 
 main() {
     var f = allocateObject( Function[[Int],[Int]](x => x + 10) );

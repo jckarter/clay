@@ -1,6 +1,7 @@
 import win32;
 import io.errors.*;
 import io.files.*;
+import sharedpointers.*;
 
 
 //

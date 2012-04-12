@@ -5,6 +5,8 @@ import __operators__.(
     unpackMultiValuedFreeVarAndDereference,
 );
 
+import sharedpointers.*;
+
 
 //
 // Function - polymorphic callable object container

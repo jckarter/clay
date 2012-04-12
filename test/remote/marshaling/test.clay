@@ -4,6 +4,7 @@ import remote.marshaling.*;
 import uniquepointers.(UniquePointer,newUnique);
 import printer.(printTo);
 import referencetypes.(referenceType);
+import sharedpointers.*
 
 expectMarshalingInvariants(test, name, value) {
     var marshaled = marshal(value);

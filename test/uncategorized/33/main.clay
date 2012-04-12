@@ -1,4 +1,5 @@
 import printer.(println);
+import sharedpointers.*
 
 main() {
     var p = new([10, true]);

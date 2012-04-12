@@ -2,6 +2,7 @@
 import vectors.generic.*;
 import numbers.floats.(floatBits);
 import referencetypes.(ReferenceType?);
+import sharedpointers.*;
 
 
 //
