@@ -55,7 +55,7 @@ bool objectEquals(ObjectPtr a, ObjectPtr b)
     case PVALUE : {
         PValue *a1 = (PValue *)a.ptr();
         PValue *b1 = (PValue *)b.ptr();
-        return (a1->type == b1->type) && (a1->isTemp == b1->isTemp);
+        return a1->data == b1->data;
     }
 
     case MODULE_HOLDER : {
@@ -101,8 +101,8 @@ int objectHash(ObjectPtr a)
 
     case PVALUE : {
         PValue *b = (PValue *)a.ptr();
-        int h = objectHash(b->type.ptr());
-        h *= b->isTemp ? 11 : 23;
+        int h = objectHash(b->data.type.ptr());
+        h *= b->data.isTemp ? 11 : 23;
         return h;
     }
 

@@ -48,7 +48,7 @@ void cgPushStackStatement(ValueStackEntryType type,
     CodegenContextPtr ctx);
 CValuePtr codegenAllocValue(TypePtr t, CodegenContextPtr ctx);
 CValuePtr codegenAllocNewValue(TypePtr t, CodegenContextPtr ctx);
-CValuePtr codegenAllocValueForPValue(PValuePtr pv, CodegenContextPtr ctx);
+CValuePtr codegenAllocValueForPValue(PVData const &pv, CodegenContextPtr ctx);
 
 MultiCValuePtr codegenMultiArgsAsRef(ExprListPtr exprs,
                                      EnvPtr env,
@@ -204,7 +204,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx);
 
 void codegenExprAssign(ExprPtr left,
                        CValuePtr cvRight,
-                       PValuePtr pvRight,
+                       PVData const &pvRight,
                        EnvPtr env,
                        CodegenContextPtr ctx);
 
@@ -278,12 +278,12 @@ static CValuePtr derefValue(CValuePtr cvPtr, CodegenContextPtr ctx)
     return new CValue(pt->pointeeType, ptrValue);
 }
 
-static CValuePtr derefValueForPValue(CValuePtr cv, PValuePtr pv, CodegenContextPtr ctx)
+static CValuePtr derefValueForPValue(CValuePtr cv, PVData const &pv, CodegenContextPtr ctx)
 {
-    if (pv->isTemp) {
+    if (pv.isTemp) {
         return cv;
     } else {
-        assert(cv->type == pointerType(pv->type));
+        assert(cv->type == pointerType(pv.type));
         return derefValue(cv, ctx);
     }
 }
@@ -392,14 +392,14 @@ static void codegenValueForward(CValuePtr dest, CValuePtr src, CodegenContextPtr
 }
 
 static void codegenValueAssign(
-    PValuePtr pdest,
+    PVData const &pdest,
     CValuePtr dest,
-    PValuePtr psrc,
+    PVData const &psrc,
     CValuePtr src,
     CodegenContextPtr ctx)
 {
     if (isPrimitiveAggregateType(dest->type)
-        && !pdest->isTemp
+        && !pdest.isTemp
         && (dest->type == src->type)
         && (!isPrimitiveAggregateTooLarge(dest->type)))
     {
@@ -519,12 +519,12 @@ CValuePtr codegenAllocValue(TypePtr t, CodegenContextPtr ctx)
     return new CValue(t, llv);
 }
 
-CValuePtr codegenAllocValueForPValue(PValuePtr pv, CodegenContextPtr ctx)
+CValuePtr codegenAllocValueForPValue(PVData const &pv, CodegenContextPtr ctx)
 {
-    if (pv->isTemp)
-        return codegenAllocValue(pv->type, ctx);
+    if (pv.isTemp)
+        return codegenAllocValue(pv.type, ctx);
     else
-        return codegenAllocValue(pointerType(pv->type), ctx);
+        return codegenAllocValue(pointerType(pv.type), ctx);
 }
 
 CValuePtr codegenAllocNewValue(TypePtr t, CodegenContextPtr ctx)
@@ -621,7 +621,7 @@ MultiCValuePtr codegenForwardExprAsRef(ExprPtr expr,
     MultiCValuePtr out = new MultiCValue();
     for (unsigned i = 0; i < mcv->size(); ++i) {
         CValuePtr cv = mcv->values[i];
-        if (mpv->values[i]->isTemp) {
+        if (mpv->values[i].isTemp) {
             cv = new CValue(cv->type, cv->llValue);
             cv->forwardedRValue = true;
         }
@@ -677,13 +677,13 @@ static MultiCValuePtr codegenExprAsRef2(ExprPtr expr,
     MultiPValuePtr mpv = safeAnalyzeExpr(expr, env);
     MultiCValuePtr mcv = new MultiCValue();
     for (unsigned i = 0; i < mpv->size(); ++i) {
-        PValuePtr pv = mpv->values[i];
+        PVData const &pv = mpv->values[i];
         mcv->add(codegenAllocValueForPValue(pv, ctx));
     }
     codegenExpr(expr, env, ctx, mcv);
     MultiCValuePtr out = new MultiCValue();
     for (unsigned i = 0; i < mpv->size(); ++i) {
-        if (mpv->values[i]->isTemp) {
+        if (mpv->values[i].isTemp) {
             out->add(mcv->values[i]);
             cgPushStackValue(mcv->values[i], ctx);
         }
@@ -764,13 +764,13 @@ void codegenOneInto(ExprPtr expr,
                     CodegenContextPtr ctx,
                     CValuePtr out)
 {
-    PValuePtr pv = safeAnalyzeOne(expr, env);
+    PVData pv = safeAnalyzeOne(expr, env);
     int marker = cgMarkStack(ctx);
-    if (pv->isTemp) {
+    if (pv.isTemp) {
         codegenOne(expr, env, ctx, out);
     }
     else {
-        CValuePtr cvPtr = codegenAllocValue(pointerType(pv->type), ctx);
+        CValuePtr cvPtr = codegenAllocValue(pointerType(pv.type), ctx);
         codegenOne(expr, env, ctx, cvPtr);
         codegenValueCopy(out, derefValue(cvPtr, ctx), ctx);
     }
@@ -844,19 +844,19 @@ void codegenExprInto(ExprPtr expr,
     int marker = cgMarkStack(ctx);
     MultiCValuePtr mcv = new MultiCValue();
     for (unsigned i = 0; i < mpv->size(); ++i) {
-        PValuePtr pv = mpv->values[i];
-        if (pv->isTemp) {
+        PVData const &pv = mpv->values[i];
+        if (pv.isTemp) {
             mcv->add(out->values[i]);
         }
         else {
-            CValuePtr cvPtr = codegenAllocValue(pointerType(pv->type), ctx);
+            CValuePtr cvPtr = codegenAllocValue(pointerType(pv.type), ctx);
             mcv->add(cvPtr);
         }
     }
     codegenExpr(expr, env, ctx, mcv);
     int marker2 = cgMarkStack(ctx);
     for (unsigned i = 0; i < mpv->size(); ++i) {
-        if (!mpv->values[i]->isTemp) {
+        if (!mpv->values[i].isTemp) {
             CValuePtr cv = derefValue(mcv->values[i], ctx);
             codegenValueCopy(out->values[i], cv, ctx);
         }
@@ -1047,9 +1047,9 @@ void codegenExpr(ExprPtr expr,
 
     case FIELD_REF : {
         FieldRef *x = (FieldRef *)expr.ptr();
-        PValuePtr pv = safeAnalyzeOne(x->expr, env);
-        if (pv->type->typeKind == STATIC_TYPE) {
-            StaticType *st = (StaticType *)pv->type.ptr();
+        PVData pv = safeAnalyzeOne(x->expr, env);
+        if (pv.type->typeKind == STATIC_TYPE) {
+            StaticType *st = (StaticType *)pv.type.ptr();
             if (st->obj->objKind == MODULE_HOLDER) {
                 ModuleHolder *mh = (ModuleHolder *)st->obj.ptr();
                 ObjectPtr obj = safeLookupModuleHolder(mh, x->name);
@@ -1074,8 +1074,8 @@ void codegenExpr(ExprPtr expr,
     case VARIADIC_OP : {
         VariadicOp *x = (VariadicOp *)expr.ptr();
         if (x->op == ADDRESS_OF) {
-            PValuePtr pv = safeAnalyzeOne(x->exprs->exprs.front(), env);
-            if (pv->isTemp)
+            PVData pv = safeAnalyzeOne(x->exprs->exprs.front(), env);
+            if (pv.isTemp)
                 error("can't take address of a temporary");
         }
         if (!x->desugared)
@@ -1340,15 +1340,16 @@ void codegenStaticObject(ObjectPtr x,
 
     case PVALUE : {
         // allow values of static type
-        PValue *y = (PValue *)x.ptr();
-        if (y->type->typeKind != STATIC_TYPE)
+        PValue *yv = (PValue *)x.ptr();
+        PVData const &y = yv->data;
+        if (y.type->typeKind != STATIC_TYPE)
             invalidStaticObjectError(x);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        if (y->isTemp)
-            assert(out0->type == y->type);
+        if (y.isTemp)
+            assert(out0->type == y.type);
         else
-            assert(out0->type == pointerType(y->type));
+            assert(out0->type == pointerType(y.type));
         break;
     }
 
@@ -1357,14 +1358,14 @@ void codegenStaticObject(ObjectPtr x,
         MultiPValue *y = (MultiPValue *)x.ptr();
         assert(out->size() == y->size());
         for (unsigned i = 0; i < y->size(); ++i) {
-            PValuePtr pv = y->values[i];
-            if (pv->type->typeKind != STATIC_TYPE)
-                argumentInvalidStaticObjectError(i, pv.ptr());
+            PVData const &pv = y->values[i];
+            if (pv.type->typeKind != STATIC_TYPE)
+                argumentInvalidStaticObjectError(i, new PValue(pv));
             CValuePtr outi = out->values[i];
-            if (pv->isTemp)
-                assert(outi->type == pv->type);
+            if (pv.isTemp)
+                assert(outi->type == pv.type);
             else
-                assert(outi->type == pointerType(pv->type));
+                assert(outi->type == pointerType(pv.type));
         }
         break;
     }
@@ -1398,9 +1399,9 @@ void codegenGVarInstance(GVarInstancePtr x)
     assert(!x->llGlobal);
     MultiPValuePtr mpv = safeAnalyzeGVarInstance(x);
     assert(mpv->size() == 1);
-    PValuePtr y = mpv->values[0];
+    PVData const &y = mpv->values[0];
     llvm::Constant *initializer =
-        llvm::Constant::getNullValue(llvmType(y->type));
+        llvm::Constant::getNullValue(llvmType(y.type));
 
     llvm::SmallString<128> nameBuf;
     llvm::raw_svector_ostream nameStr(nameBuf);
@@ -1414,11 +1415,11 @@ void codegenGVarInstance(GVarInstancePtr x)
 
     llvm::SmallString<128> symbolBuf;
     llvm::raw_svector_ostream symbolStr(symbolBuf);
-    symbolStr << nameStr.str() << " " << y->type << " clay";
+    symbolStr << nameStr.str() << " " << y.type << " clay";
 
-    x->staticGlobal = new ValueHolder(y->type);
+    x->staticGlobal = new ValueHolder(y.type);
     x->llGlobal = new llvm::GlobalVariable(
-        *llvmModule, llvmType(y->type), false,
+        *llvmModule, llvmType(y.type), false,
         llvm::GlobalVariable::InternalLinkage,
         initializer, symbolStr.str());
     if (llvmDIBuilder != NULL) {
@@ -1428,7 +1429,7 @@ void codegenGVarInstance(GVarInstancePtr x)
             nameStr.str(),
             file,
             line,
-            llvmTypeDebugInfo(y->type),
+            llvmTypeDebugInfo(y.type),
             true, // isLocalToUnit
             x->llGlobal
         );
@@ -1454,10 +1455,10 @@ void codegenGVarInstance(GVarInstancePtr x)
     // generate destructor procedure body
     InvokeEntryPtr entry =
         codegenCallable(operator_destroy(),
-                        vector<TypePtr>(1, y->type),
+                        vector<TypePtr>(1, y.type),
                         vector<ValueTempness>(1, TEMPNESS_LVALUE));
 
-    initializedGlobals.push_back(new CValue(y->type, x->llGlobal));
+    initializedGlobals.push_back(new CValue(y.type, x->llGlobal));
 }
 
 
@@ -1471,7 +1472,7 @@ void codegenExternalVariable(ExternalVariablePtr x)
     assert(!x->llGlobal);
     if (!x->attributesVerified)
         verifyAttributes(x);
-    PValuePtr pv = analyzeExternalVariable(x);
+    PVData pv = analyzeExternalVariable(x);
     llvm::GlobalVariable::LinkageTypes linkage;
     if (x->attrDLLImport)
         linkage = llvm::GlobalVariable::DLLImportLinkage;
@@ -1481,7 +1482,7 @@ void codegenExternalVariable(ExternalVariablePtr x)
         linkage = llvm::GlobalVariable::ExternalLinkage;
     x->llGlobal =
         new llvm::GlobalVariable(
-            *llvmModule, llvmType(pv->type), false,
+            *llvmModule, llvmType(pv.type), false,
             linkage, NULL, x->name->str.str());
     if (llvmDIBuilder != NULL) {
         int line, column;
@@ -1919,12 +1920,12 @@ void codegenIndexingExpr(ExprPtr indexable,
     assert(mpv->size() == out->size());
     bool allTempStatics = true;
     for (unsigned i = 0; i < mpv->size(); ++i) {
-        PValuePtr pv = mpv->values[i];
-        if (pv->isTemp)
-            assert(out->values[i]->type == pv->type);
+        PVData const &pv = mpv->values[i];
+        if (pv.isTemp)
+            assert(out->values[i]->type == pv.type);
         else
-            assert(out->values[i]->type == pointerType(pv->type));
-        if ((pv->type->typeKind != STATIC_TYPE) || !pv->isTemp) {
+            assert(out->values[i]->type == pointerType(pv.type));
+        if ((pv.type->typeKind != STATIC_TYPE) || !pv.isTemp) {
             allTempStatics = false;
         }
     }
@@ -1932,9 +1933,9 @@ void codegenIndexingExpr(ExprPtr indexable,
         // takes care of type constructors
         return;
     }
-    PValuePtr pv = safeAnalyzeOne(indexable, env);
-    if (pv->type->typeKind == STATIC_TYPE) {
-        StaticType *st = (StaticType *)pv->type.ptr();
+    PVData pv = safeAnalyzeOne(indexable, env);
+    if (pv.type->typeKind == STATIC_TYPE) {
+        StaticType *st = (StaticType *)pv.type.ptr();
         ObjectPtr obj = st->obj;
         if (obj->objKind == GLOBAL_ALIAS) {
             GlobalAlias *x = (GlobalAlias *)obj.ptr();
@@ -2005,9 +2006,9 @@ void codegenCallExpr(ExprPtr callable,
                      CodegenContextPtr ctx,
                      MultiCValuePtr out)
 {
-    PValuePtr pv = safeAnalyzeOne(callable, env);
+    PVData pv = safeAnalyzeOne(callable, env);
 
-    switch (pv->type->typeKind) {
+    switch (pv.type->typeKind) {
     case CODE_POINTER_TYPE :
         CValuePtr cv = codegenOneAsRef(callable, env, ctx);
         MultiCValuePtr mcv = codegenMultiAsRef(args, env, ctx);
@@ -2015,10 +2016,10 @@ void codegenCallExpr(ExprPtr callable,
         return;
     }
 
-    if ((pv->type->typeKind == CCODE_POINTER_TYPE)
+    if ((pv.type->typeKind == CCODE_POINTER_TYPE)
         && (callable->exprKind == NAME_REF))
     {
-        CCodePointerType *t = (CCodePointerType *)pv->type.ptr();
+        CCodePointerType *t = (CCodePointerType *)pv.type.ptr();
         NameRef *x = (NameRef *)callable.ptr();
         ObjectPtr y = safeLookupEnv(env, x->name);
         if (y->objKind == EXTERNAL_PROCEDURE) {
@@ -2032,14 +2033,14 @@ void codegenCallExpr(ExprPtr callable,
         }
     }
 
-    if (pv->type->typeKind != STATIC_TYPE) {
+    if (pv.type->typeKind != STATIC_TYPE) {
         ExprListPtr args2 = new ExprList(callable);
         args2->add(args);
         codegenCallExpr(operator_expr_call(), args2, env, ctx, out);
         return;
     }
 
-    StaticType *st = (StaticType *)pv->type.ptr();
+    StaticType *st = (StaticType *)pv.type.ptr();
     ObjectPtr obj = st->obj;
 
     switch (obj->objKind) {
@@ -2104,7 +2105,7 @@ llvm::Value *codegenDispatchTag(CValuePtr cv, CodegenContextPtr ctx)
     return ctx->builder->CreateLoad(ctag->llValue);
 }
 
-CValuePtr codegenDispatchIndex(CValuePtr cv, PValuePtr pvOut, int tag, CodegenContextPtr ctx)
+CValuePtr codegenDispatchIndex(CValuePtr cv, PVData const &pvOut, int tag, CodegenContextPtr ctx)
 {
     MultiCValuePtr args = new MultiCValue();
     args->add(cv);
@@ -2155,9 +2156,9 @@ void codegenDispatch(ObjectPtr obj,
         pvSuffix->add(pvArgs->values[i]);
     }
     CValuePtr cvDispatch = args->values[index];
-    PValuePtr pvDispatch = pvArgs->values[index];
+    PVData const &pvDispatch = pvArgs->values[index];
 
-    int memberCount = dispatchTagCount(pvDispatch->type);
+    int memberCount = dispatchTagCount(pvDispatch.type);
     if (memberCount <= 0)
         argumentError(index, "DispatchMemberCount for type must be positive");
 
@@ -2181,7 +2182,7 @@ void codegenDispatch(ObjectPtr obj,
 
         MultiPValuePtr pvArgs2 = new MultiPValue();
         pvArgs2->add(pvPrefix);
-        PValuePtr pvDispatch2 = analyzeDispatchIndex(pvDispatch, i);
+        PVData pvDispatch2 = analyzeDispatchIndex(pvDispatch, i);
         pvArgs2->add(pvDispatch2);
         pvArgs2->add(pvSuffix);
         MultiCValuePtr args2 = new MultiCValue();
@@ -2218,7 +2219,7 @@ void codegenCallValue(CValuePtr callable,
 {
     MultiPValuePtr pvArgs = new MultiPValue();
     for (unsigned i = 0; i < args->size(); ++i)
-        pvArgs->add(new PValue(args->values[i]->type, false));
+        pvArgs->add(PVData(args->values[i]->type, false));
     codegenCallValue(callable, args, pvArgs, ctx, out);
 }
 
@@ -2239,7 +2240,7 @@ void codegenCallValue(CValuePtr callable,
         MultiCValuePtr args2 = new MultiCValue(callable);
         args2->add(args);
         MultiPValuePtr pvArgs2 =
-            new MultiPValue(new PValue(callable->type, false));
+            new MultiPValue(PVData(callable->type, false));
         pvArgs2->add(pvArgs);
         codegenCallValue(staticCValue(operator_call(), ctx),
                          args2,
@@ -2315,8 +2316,8 @@ bool codegenShortcut(ObjectPtr callable,
             return false;
         if (pvArgs->size() != 1)
             return false;
-        PValuePtr pv = pvArgs->values[0];
-        if ((pv->type == t) && (!isPrimitiveAggregateTooLarge(t))) {
+        PVData const &pv = pvArgs->values[0];
+        if ((pv.type == t) && (!isPrimitiveAggregateTooLarge(t))) {
             MultiCValuePtr cvArgs = codegenMultiAsRef(args, env, ctx);
             assert(cvArgs->size() == 1);
             CValuePtr cv = cvArgs->values[0];
@@ -2334,7 +2335,7 @@ bool codegenShortcut(ObjectPtr callable,
         if (callable == operator_destroy()) {
             if (pvArgs->size() != 1)
                 return false;
-            if (!isPrimitiveAggregateType(pvArgs->values[0]->type))
+            if (!isPrimitiveAggregateType(pvArgs->values[0].type))
                 return false;
             return true;
         }
@@ -3353,13 +3354,13 @@ void codegenCallByName(InvokeEntryPtr entry,
 
     vector<CReturn> returns;
     for (unsigned i = 0; i < mpv->size(); ++i) {
-        PValuePtr pv = mpv->values[i];
+        PVData const &pv = mpv->values[i];
         CValuePtr cv = out->values[i];
-        if (pv->isTemp)
-            assert(cv->type == pv->type);
+        if (pv.isTemp)
+            assert(cv->type == pv.type);
         else
-            assert(cv->type == pointerType(pv->type));
-        returns.push_back(CReturn(!pv->isTemp, pv->type, cv));
+            assert(cv->type == pointerType(pv.type));
+        returns.push_back(CReturn(!pv.isTemp, pv.type, cv));
     }
 
     bool hasNamedReturn = false;
@@ -3566,10 +3567,10 @@ bool codegenStatement(StatementPtr stmt,
             mpvRight2 = new MultiPValue();
             mcvRight = new MultiCValue();
             for (unsigned i = 0; i < mpvRight->size(); ++i) {
-                PValuePtr pv = mpvRight->values[i];
-                PValuePtr pv2 = new PValue(pv->type, true);
+                PVData const &pv = mpvRight->values[i];
+                PVData pv2(pv.type, true);
                 mpvRight2->add(pv2);
-                CValuePtr cv = codegenAllocValue(pv->type, ctx);
+                CValuePtr cv = codegenAllocValue(pv.type, ctx);
                 mcvRight->add(cv);
             }
             codegenMultiInto(x->right, env, ctx, mcvRight, mpvLeft->size());
@@ -3616,12 +3617,12 @@ bool codegenStatement(StatementPtr stmt,
         if (mpvLeft->size() != mpvRight->size())
             arityMismatchError(mpvLeft->size(), mpvRight->size());
         for (unsigned i = 0; i < mpvLeft->size(); ++i) {
-            if (mpvLeft->values[i]->isTemp)
+            if (mpvLeft->values[i].isTemp)
                 argumentError(i, "cannot assign to a temporary");
-            if (mpvLeft->values[i]->type != mpvRight->values[i]->type) {
+            if (mpvLeft->values[i].type != mpvRight->values[i].type) {
                 argumentTypeError(i,
-                                  mpvLeft->values[i]->type,
-                                  mpvRight->values[i]->type);
+                                  mpvLeft->values[i].type,
+                                  mpvRight->values[i].type);
             }
         }
         int tempMarker = markTemps(ctx);
@@ -3635,11 +3636,11 @@ bool codegenStatement(StatementPtr stmt,
 
     case VARIADIC_ASSIGNMENT : {
         VariadicAssignment *x = (VariadicAssignment *)stmt.ptr();
-        PValuePtr pvLeft = safeAnalyzeOne(x->exprs->exprs[1], env);
+        PVData pvLeft = safeAnalyzeOne(x->exprs->exprs[1], env);
         if (x->exprs->exprs[1]->exprKind == INDEXING) {
             Indexing *y = (Indexing *)x->exprs->exprs[1].ptr();
-            PValuePtr pvIndexable = safeAnalyzeOne(y->expr, env);
-            if (pvIndexable->type->typeKind != STATIC_TYPE) {
+            PVData pvIndexable = safeAnalyzeOne(y->expr, env);
+            if (pvIndexable.type->typeKind != STATIC_TYPE) {
                 CallPtr call = new Call(
                     operator_expr_indexUpdateAssign(), new ExprList()
                 );
@@ -3664,8 +3665,8 @@ bool codegenStatement(StatementPtr stmt,
         }
         else if (x->exprs->exprs[1]->exprKind == FIELD_REF) {
             FieldRef *y = (FieldRef *)x->exprs->exprs[1].ptr();
-            PValuePtr pvBase = safeAnalyzeOne(y->expr, env);
-            if (pvBase->type->typeKind != STATIC_TYPE) {
+            PVData pvBase = safeAnalyzeOne(y->expr, env);
+            if (pvBase.type->typeKind != STATIC_TYPE) {
                 CallPtr call = new Call(
                     operator_expr_fieldRefUpdateAssign(), new ExprList()
                 );
@@ -3709,14 +3710,14 @@ bool codegenStatement(StatementPtr stmt,
         const vector<CReturn> &returns = ctx->returnLists.back();
         ensureArity(mpv, returns.size());
         for (unsigned i = 0; i < mpv->size(); ++i) {
-            PValuePtr pv = mpv->values[i];
+            PVData const &pv = mpv->values[i];
             bool byRef = returnKindToByRef(x->returnKind, pv);
             const CReturn &y = returns[i];
-            if (y.type != pv->type)
-                argumentTypeError(i, y.type, pv->type);
+            if (y.type != pv.type)
+                argumentTypeError(i, y.type, pv.type);
             if (byRef != y.byRef)
                 argumentError(i, "mismatching by-ref and by-value returns");
-            if (byRef && pv->isTemp)
+            if (byRef && pv.isTemp)
                 argumentError(i, "cannot return a temporary by reference");
             mcv->add(y.value);
         }
@@ -4060,7 +4061,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
             arityMismatchError(x->names.size(), mpv->size());
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
-            CValuePtr cv = codegenAllocNewValue(mpv->values[i]->type, ctx);
+            CValuePtr cv = codegenAllocNewValue(mpv->values[i].type, ctx);
             mcv->add(cv);
             if (llvmDIBuilder != NULL) {
                 llvm::DILexicalBlock debugBlock = ctx->getDebugScope();
@@ -4108,10 +4109,10 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
             arityMismatchError(x->names.size(), mpv->size());
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
-            PValuePtr pv = mpv->values[i];
-            if (pv->isTemp)
+            PVData const &pv = mpv->values[i];
+            if (pv.isTemp)
                 argumentError(i, "ref can only bind to an lvalue");
-            TypePtr ptrType = pointerType(pv->type);
+            TypePtr ptrType = pointerType(pv.type);
             CValuePtr cvRef = codegenAllocNewValue(ptrType, ctx);
             mcv->add(cvRef);
             if (llvmDIBuilder != NULL) {
@@ -4123,7 +4124,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
                     file, // file
                     line, // line
                     llvmDIBuilder->createReferenceType(
-                        llvmTypeDebugInfo(pv->type)), // type
+                        llvmTypeDebugInfo(pv.type)), // type
                     true, // alwaysPreserve
                     0, // flags
                     0 // argNo
@@ -4159,13 +4160,13 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
             arityMismatchError(x->names.size(), mpv->size());
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < x->names.size(); ++i) {
-            PValuePtr pv = mpv->values[i];
+            PVData const &pv = mpv->values[i];
             CValuePtr cv;
-            if (pv->isTemp) {
-                cv = codegenAllocNewValue(pv->type, ctx);
+            if (pv.isTemp) {
+                cv = codegenAllocNewValue(pv.type, ctx);
             }
             else {
-                TypePtr ptrType = pointerType(pv->type);
+                TypePtr ptrType = pointerType(pv.type);
                 cv = codegenAllocNewValue(ptrType, ctx);
             }
             mcv->add(cv);
@@ -4178,10 +4179,10 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
                     x->names[i]->str, // name
                     file, // file
                     line, // line
-                    pv->isTemp
-                        ? llvmTypeDebugInfo(pv->type)
+                    pv.isTemp
+                        ? llvmTypeDebugInfo(pv.type)
                         : llvmDIBuilder->createReferenceType(
-                            llvmTypeDebugInfo(pv->type)), // type
+                            llvmTypeDebugInfo(pv.type)), // type
                     true, // alwaysPreserve
                     0, // flags
                     0 // argNo
@@ -4202,7 +4203,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
         for (unsigned i = 0; i < x->names.size(); ++i) {
             CValuePtr rcv, cv;
             rcv = mcv->values[i];
-            if (mpv->values[i]->isTemp) {
+            if (mpv->values[i].isTemp) {
                 cv = rcv;
                 cgPushStackValue(cv, ctx);
             }
@@ -4245,7 +4246,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
 
 void codegenExprAssign(ExprPtr left,
                        CValuePtr cvRight,
-                       PValuePtr pvRight,
+                       PVData const &pvRight,
                        EnvPtr env,
                        CodegenContextPtr ctx)
 {
@@ -4253,8 +4254,8 @@ void codegenExprAssign(ExprPtr left,
         Indexing *x = (Indexing *)left.ptr();
         ExprPtr indexable = x->expr;
         ExprListPtr args = x->args;
-        PValuePtr pvIndexable = safeAnalyzeOne(indexable, env);
-        if (pvIndexable->type->typeKind != STATIC_TYPE) {
+        PVData pvIndexable = safeAnalyzeOne(indexable, env);
+        if (pvIndexable.type->typeKind != STATIC_TYPE) {
             MultiPValuePtr pvArgs = new MultiPValue(pvIndexable);
             pvArgs->add(safeAnalyzeMulti(args, env, 0));
             pvArgs->add(pvRight);
@@ -4275,7 +4276,7 @@ void codegenExprAssign(ExprPtr left,
         ValueHolderPtr vh = sizeTToValueHolder(x->index);
         CValuePtr cvIndex = staticCValue(vh.ptr(), ctx);
         MultiPValuePtr pvArgs = new MultiPValue(safeAnalyzeOne(x->expr, env));
-        pvArgs->add(new PValue(cvIndex->type, true));
+        pvArgs->add(PVData(cvIndex->type, true));
         pvArgs->add(pvRight);
         MultiCValuePtr cvArgs = new MultiCValue(codegenOneAsRef(x->expr, env, ctx));
         cvArgs->add(cvIndex);
@@ -4290,11 +4291,11 @@ void codegenExprAssign(ExprPtr left,
     else if (left->exprKind == FIELD_REF) {
         FieldRef *x = (FieldRef *)left.ptr();
         ExprPtr base = x->expr;
-        PValuePtr pvBase = safeAnalyzeOne(base, env);
-        if (pvBase->type->typeKind != STATIC_TYPE) {
+        PVData pvBase = safeAnalyzeOne(base, env);
+        if (pvBase.type->typeKind != STATIC_TYPE) {
             CValuePtr cvName = staticCValue(x->name.ptr(), ctx);
             MultiPValuePtr pvArgs = new MultiPValue(pvBase);
-            pvArgs->add(new PValue(cvName->type, true));
+            pvArgs->add(PVData(cvName->type, true));
             pvArgs->add(pvRight);
             MultiCValuePtr cvArgs = new MultiCValue(codegenOneAsRef(base, env, ctx));
             cvArgs->add(cvName);
@@ -4307,7 +4308,7 @@ void codegenExprAssign(ExprPtr left,
             return;
         }
     }
-    PValuePtr pvLeft = safeAnalyzeOne(left, env);
+    PVData pvLeft = safeAnalyzeOne(left, env);
     CValuePtr cvLeft = codegenOneAsRef(left, env, ctx);
     codegenValueAssign(pvLeft, cvLeft, pvRight, cvRight, ctx);
 }
@@ -4322,9 +4323,9 @@ void codegenMultiExprAssign(ExprListPtr left,
     MultiCValuePtr mcvLeft = codegenMultiAsRef(left, env, ctx);
     assert(mpvLeft->size() == mcvLeft->size() && mcvLeft->size() == mcvRight->size());
     for (unsigned i = 0; i < mcvLeft->size(); ++i) {
-        PValuePtr pvLeft = mpvLeft->values[i];
+        PVData const &pvLeft = mpvLeft->values[i];
         CValuePtr cvLeft = mcvLeft->values[i];
-        PValuePtr pvRight = mpvRight->values[i];
+        PVData const &pvRight = mpvRight->values[i];
         CValuePtr cvRight = mcvRight->values[i];
         codegenValueAssign(pvLeft, cvLeft, pvRight, cvRight, ctx);
     }

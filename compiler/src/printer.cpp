@@ -86,6 +86,11 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &out, const vector<T> &v)
     return out << llvm::makeArrayRef(v);
 }
 
+llvm::raw_ostream &operator<<(llvm::raw_ostream &out, PVData const &pv)
+{
+    return out << "PVData(" << pv.type << ", " << pv.isTemp << ")";
+}
+
 
 //
 // big vec
@@ -754,13 +759,13 @@ static void print(llvm::raw_ostream &out, const Object *x) {
 
     case PVALUE : {
         const PValue *y = (const PValue *)x;
-        out << "PValue(" << y->type << ", " << y->isTemp << ")";
+        out << "PValue(" << y->data << ")";
         break;
     }
 
     case MULTI_PVALUE : {
         const MultiPValue *y = (const MultiPValue *)x;
-        out << "MultiPValue(" << y->values << ")";
+        out << "MultiPValue(" << llvm::makeArrayRef(y->values) << ")";
         break;
     }
 
