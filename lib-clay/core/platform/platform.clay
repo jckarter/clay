@@ -1,0 +1,3 @@
+public import core.platform.symbols.*;
+public import core.platform.os.(OS, OSFamily, OSString, OSFamilyString);
+public import core.platform.cpu.(CPU, CPUFamily, CPUString, CPUBits);
