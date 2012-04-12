@@ -1,4 +1,4 @@
-import math.libm.generated as lm;
+import libc as lm;
 public import math.native.defines.*;
 import numbers.floats.*;
 import math.(MathMode?,LIBM);

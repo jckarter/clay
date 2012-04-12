@@ -1130,6 +1130,1209 @@ external (cdecl) memfrob(arg0:OpaquePointer, arg1:size_t) : OpaquePointer;
 
 external (cdecl) basename(arg0:Pointer[CChar]) : Pointer[CChar];
 
+alias float_t = Float;
+
+alias double_t = Double;
+
+external (cdecl) acos(arg0:Double) : Double;
+
+external (cdecl) __acos(arg0:Double) : Double;
+
+external (cdecl) asin(arg0:Double) : Double;
+
+external (cdecl) __asin(arg0:Double) : Double;
+
+external (cdecl) atan(arg0:Double) : Double;
+
+external (cdecl) __atan(arg0:Double) : Double;
+
+external (cdecl) atan2(arg0:Double, arg1:Double) : Double;
+
+external (cdecl) __atan2(arg0:Double, arg1:Double) : Double;
+
+external (cdecl) cos(arg0:Double) : Double;
+
+external (cdecl) __cos(arg0:Double) : Double;
+
+external (cdecl) sin(arg0:Double) : Double;
+
+external (cdecl) __sin(arg0:Double) : Double;
+
+external (cdecl) tan(arg0:Double) : Double;
+
+external (cdecl) __tan(arg0:Double) : Double;
+
+external (cdecl) cosh(arg0:Double) : Double;
+
+external (cdecl) __cosh(arg0:Double) : Double;
+
+external (cdecl) sinh(arg0:Double) : Double;
+
+external (cdecl) __sinh(arg0:Double) : Double;
+
+external (cdecl) tanh(arg0:Double) : Double;
+
+external (cdecl) __tanh(arg0:Double) : Double;
+
+external (cdecl) sincos(arg0:Double, arg1:Pointer[Double], arg2:Pointer[Double]) : ;
+
+external (cdecl) __sincos(arg0:Double, arg1:Pointer[Double], arg2:Pointer[Double]) : ;
+
+external (cdecl) acosh(arg0:Double) : Double;
+
+external (cdecl) __acosh(arg0:Double) : Double;
+
+external (cdecl) asinh(arg0:Double) : Double;
+
+external (cdecl) __asinh(arg0:Double) : Double;
+
+external (cdecl) atanh(arg0:Double) : Double;
+
+external (cdecl) __atanh(arg0:Double) : Double;
+
+external (cdecl) exp(arg0:Double) : Double;
+
+external (cdecl) __exp(arg0:Double) : Double;
+
+external (cdecl) frexp(arg0:Double, arg1:Pointer[Int]) : Double;
+
+external (cdecl) __frexp(arg0:Double, arg1:Pointer[Int]) : Double;
+
+external (cdecl) ldexp(arg0:Double, arg1:Int) : Double;
+
+external (cdecl) __ldexp(arg0:Double, arg1:Int) : Double;
+
+external (cdecl) log(arg0:Double) : Double;
+
+external (cdecl) __log(arg0:Double) : Double;
+
+external (cdecl) log10(arg0:Double) : Double;
+
+external (cdecl) __log10(arg0:Double) : Double;
+
+external (cdecl) modf(arg0:Double, arg1:Pointer[Double]) : Double;
+
+external (cdecl) __modf(arg0:Double, arg1:Pointer[Double]) : Double;
+
+external (cdecl) exp10(arg0:Double) : Double;
+
+external (cdecl) __exp10(arg0:Double) : Double;
+
+external (cdecl) pow10(arg0:Double) : Double;
+
+external (cdecl) __pow10(arg0:Double) : Double;
+
+external (cdecl) expm1(arg0:Double) : Double;
+
+external (cdecl) __expm1(arg0:Double) : Double;
+
+external (cdecl) log1p(arg0:Double) : Double;
+
+external (cdecl) __log1p(arg0:Double) : Double;
+
+external (cdecl) logb(arg0:Double) : Double;
+
+external (cdecl) __logb(arg0:Double) : Double;
+
+external (cdecl) exp2(arg0:Double) : Double;
+
+external (cdecl) __exp2(arg0:Double) : Double;
+
+external (cdecl) log2(arg0:Double) : Double;
+
+external (cdecl) __log2(arg0:Double) : Double;
+
+external (cdecl) pow(arg0:Double, arg1:Double) : Double;
+
+external (cdecl) __pow(arg0:Double, arg1:Double) : Double;
+
+external (cdecl) sqrt(arg0:Double) : Double;
+
+external (cdecl) __sqrt(arg0:Double) : Double;
+
+external (cdecl) hypot(arg0:Double, arg1:Double) : Double;
+
+external (cdecl) __hypot(arg0:Double, arg1:Double) : Double;
+
+external (cdecl) cbrt(arg0:Double) : Double;
+
+external (cdecl) __cbrt(arg0:Double) : Double;
+
+external (cdecl) ceil(arg0:Double) : Double;
+
+external (cdecl) __ceil(arg0:Double) : Double;
+
+external (cdecl) fabs(arg0:Double) : Double;
+
+external (cdecl) __fabs(arg0:Double) : Double;
+
+external (cdecl) floor(arg0:Double) : Double;
+
+external (cdecl) __floor(arg0:Double) : Double;
+
+external (cdecl) fmod(arg0:Double, arg1:Double) : Double;
+
+external (cdecl) __fmod(arg0:Double, arg1:Double) : Double;
+
+external (cdecl) __isinf(arg0:Double) : Int;
+
+external (cdecl) __finite(arg0:Double) : Int;
+
+external (cdecl) isinf(arg0:Double) : Int;
+
+external (cdecl) finite(arg0:Double) : Int;
+
+external (cdecl) drem(arg0:Double, arg1:Double) : Double;
+
+external (cdecl) __drem(arg0:Double, arg1:Double) : Double;
+
+external (cdecl) significand(arg0:Double) : Double;
+
+external (cdecl) __significand(arg0:Double) : Double;
+
+external (cdecl) copysign(arg0:Double, arg1:Double) : Double;
+
+external (cdecl) __copysign(arg0:Double, arg1:Double) : Double;
+
+external (cdecl) nan(arg0:Pointer[CChar]) : Double;
+
+external (cdecl) __nan(arg0:Pointer[CChar]) : Double;
+
+external (cdecl) __isnan(arg0:Double) : Int;
+
+external (cdecl) isnan(arg0:Double) : Int;
+
+external (cdecl) j0(arg0:Double) : Double;
+
+external (cdecl) __j0(arg0:Double) : Double;
+
+external (cdecl) j1(arg0:Double) : Double;
+
+external (cdecl) __j1(arg0:Double) : Double;
+
+external (cdecl) jn(arg0:Int, arg1:Double) : Double;
+
+external (cdecl) __jn(arg0:Int, arg1:Double) : Double;
+
+external (cdecl) y0(arg0:Double) : Double;
+
+external (cdecl) __y0(arg0:Double) : Double;
+
+external (cdecl) y1(arg0:Double) : Double;
+
+external (cdecl) __y1(arg0:Double) : Double;
+
+external (cdecl) yn(arg0:Int, arg1:Double) : Double;
+
+external (cdecl) __yn(arg0:Int, arg1:Double) : Double;
+
+external (cdecl) erf(arg0:Double) : Double;
+
+external (cdecl) __erf(arg0:Double) : Double;
+
+external (cdecl) erfc(arg0:Double) : Double;
+
+external (cdecl) __erfc(arg0:Double) : Double;
+
+external (cdecl) lgamma(arg0:Double) : Double;
+
+external (cdecl) __lgamma(arg0:Double) : Double;
+
+external (cdecl) tgamma(arg0:Double) : Double;
+
+external (cdecl) __tgamma(arg0:Double) : Double;
+
+external (cdecl) gamma(arg0:Double) : Double;
+
+external (cdecl) __gamma(arg0:Double) : Double;
+
+external (cdecl) lgamma_r(arg0:Double, arg1:Pointer[Int]) : Double;
+
+external (cdecl) __lgamma_r(arg0:Double, arg1:Pointer[Int]) : Double;
+
+external (cdecl) rint(arg0:Double) : Double;
+
+external (cdecl) __rint(arg0:Double) : Double;
+
+external (cdecl) nextafter(arg0:Double, arg1:Double) : Double;
+
+external (cdecl) __nextafter(arg0:Double, arg1:Double) : Double;
+
+external (cdecl) nexttoward(arg0:Double, arg1:LongDouble) : Double;
+
+external (cdecl) __nexttoward(arg0:Double, arg1:LongDouble) : Double;
+
+external (cdecl) remainder(arg0:Double, arg1:Double) : Double;
+
+external (cdecl) __remainder(arg0:Double, arg1:Double) : Double;
+
+external (cdecl) scalbn(arg0:Double, arg1:Int) : Double;
+
+external (cdecl) __scalbn(arg0:Double, arg1:Int) : Double;
+
+external (cdecl) ilogb(arg0:Double) : Int;
+
+external (cdecl) __ilogb(arg0:Double) : Int;
+
+external (cdecl) scalbln(arg0:Double, arg1:CLong) : Double;
+
+external (cdecl) __scalbln(arg0:Double, arg1:CLong) : Double;
+
+external (cdecl) nearbyint(arg0:Double) : Double;
+
+external (cdecl) __nearbyint(arg0:Double) : Double;
+
+external (cdecl) round(arg0:Double) : Double;
+
+external (cdecl) __round(arg0:Double) : Double;
+
+external (cdecl) trunc(arg0:Double) : Double;
+
+external (cdecl) __trunc(arg0:Double) : Double;
+
+external (cdecl) remquo(arg0:Double, arg1:Double, arg2:Pointer[Int]) : Double;
+
+external (cdecl) __remquo(arg0:Double, arg1:Double, arg2:Pointer[Int]) : Double;
+
+external (cdecl) lrint(arg0:Double) : CLong;
+
+external (cdecl) __lrint(arg0:Double) : CLong;
+
+external (cdecl) llrint(arg0:Double) : Int64;
+
+external (cdecl) __llrint(arg0:Double) : Int64;
+
+external (cdecl) lround(arg0:Double) : CLong;
+
+external (cdecl) __lround(arg0:Double) : CLong;
+
+external (cdecl) llround(arg0:Double) : Int64;
+
+external (cdecl) __llround(arg0:Double) : Int64;
+
+external (cdecl) fdim(arg0:Double, arg1:Double) : Double;
+
+external (cdecl) __fdim(arg0:Double, arg1:Double) : Double;
+
+external (cdecl) fmax(arg0:Double, arg1:Double) : Double;
+
+external (cdecl) __fmax(arg0:Double, arg1:Double) : Double;
+
+external (cdecl) fmin(arg0:Double, arg1:Double) : Double;
+
+external (cdecl) __fmin(arg0:Double, arg1:Double) : Double;
+
+external (cdecl) __fpclassify(arg0:Double) : Int;
+
+external (cdecl) __signbit(arg0:Double) : Int;
+
+external (cdecl) fma(arg0:Double, arg1:Double, arg2:Double) : Double;
+
+external (cdecl) __fma(arg0:Double, arg1:Double, arg2:Double) : Double;
+
+external (cdecl) scalb(arg0:Double, arg1:Double) : Double;
+
+external (cdecl) __scalb(arg0:Double, arg1:Double) : Double;
+
+external (cdecl) acosf(arg0:Float) : Float;
+
+external (cdecl) __acosf(arg0:Float) : Float;
+
+external (cdecl) asinf(arg0:Float) : Float;
+
+external (cdecl) __asinf(arg0:Float) : Float;
+
+external (cdecl) atanf(arg0:Float) : Float;
+
+external (cdecl) __atanf(arg0:Float) : Float;
+
+external (cdecl) atan2f(arg0:Float, arg1:Float) : Float;
+
+external (cdecl) __atan2f(arg0:Float, arg1:Float) : Float;
+
+external (cdecl) cosf(arg0:Float) : Float;
+
+external (cdecl) __cosf(arg0:Float) : Float;
+
+external (cdecl) sinf(arg0:Float) : Float;
+
+external (cdecl) __sinf(arg0:Float) : Float;
+
+external (cdecl) tanf(arg0:Float) : Float;
+
+external (cdecl) __tanf(arg0:Float) : Float;
+
+external (cdecl) coshf(arg0:Float) : Float;
+
+external (cdecl) __coshf(arg0:Float) : Float;
+
+external (cdecl) sinhf(arg0:Float) : Float;
+
+external (cdecl) __sinhf(arg0:Float) : Float;
+
+external (cdecl) tanhf(arg0:Float) : Float;
+
+external (cdecl) __tanhf(arg0:Float) : Float;
+
+external (cdecl) sincosf(arg0:Float, arg1:Pointer[Float], arg2:Pointer[Float]) : ;
+
+external (cdecl) __sincosf(arg0:Float, arg1:Pointer[Float], arg2:Pointer[Float]) : ;
+
+external (cdecl) acoshf(arg0:Float) : Float;
+
+external (cdecl) __acoshf(arg0:Float) : Float;
+
+external (cdecl) asinhf(arg0:Float) : Float;
+
+external (cdecl) __asinhf(arg0:Float) : Float;
+
+external (cdecl) atanhf(arg0:Float) : Float;
+
+external (cdecl) __atanhf(arg0:Float) : Float;
+
+external (cdecl) expf(arg0:Float) : Float;
+
+external (cdecl) __expf(arg0:Float) : Float;
+
+external (cdecl) frexpf(arg0:Float, arg1:Pointer[Int]) : Float;
+
+external (cdecl) __frexpf(arg0:Float, arg1:Pointer[Int]) : Float;
+
+external (cdecl) ldexpf(arg0:Float, arg1:Int) : Float;
+
+external (cdecl) __ldexpf(arg0:Float, arg1:Int) : Float;
+
+external (cdecl) logf(arg0:Float) : Float;
+
+external (cdecl) __logf(arg0:Float) : Float;
+
+external (cdecl) log10f(arg0:Float) : Float;
+
+external (cdecl) __log10f(arg0:Float) : Float;
+
+external (cdecl) modff(arg0:Float, arg1:Pointer[Float]) : Float;
+
+external (cdecl) __modff(arg0:Float, arg1:Pointer[Float]) : Float;
+
+external (cdecl) exp10f(arg0:Float) : Float;
+
+external (cdecl) __exp10f(arg0:Float) : Float;
+
+external (cdecl) pow10f(arg0:Float) : Float;
+
+external (cdecl) __pow10f(arg0:Float) : Float;
+
+external (cdecl) expm1f(arg0:Float) : Float;
+
+external (cdecl) __expm1f(arg0:Float) : Float;
+
+external (cdecl) log1pf(arg0:Float) : Float;
+
+external (cdecl) __log1pf(arg0:Float) : Float;
+
+external (cdecl) logbf(arg0:Float) : Float;
+
+external (cdecl) __logbf(arg0:Float) : Float;
+
+external (cdecl) exp2f(arg0:Float) : Float;
+
+external (cdecl) __exp2f(arg0:Float) : Float;
+
+external (cdecl) log2f(arg0:Float) : Float;
+
+external (cdecl) __log2f(arg0:Float) : Float;
+
+external (cdecl) powf(arg0:Float, arg1:Float) : Float;
+
+external (cdecl) __powf(arg0:Float, arg1:Float) : Float;
+
+external (cdecl) sqrtf(arg0:Float) : Float;
+
+external (cdecl) __sqrtf(arg0:Float) : Float;
+
+external (cdecl) hypotf(arg0:Float, arg1:Float) : Float;
+
+external (cdecl) __hypotf(arg0:Float, arg1:Float) : Float;
+
+external (cdecl) cbrtf(arg0:Float) : Float;
+
+external (cdecl) __cbrtf(arg0:Float) : Float;
+
+external (cdecl) ceilf(arg0:Float) : Float;
+
+external (cdecl) __ceilf(arg0:Float) : Float;
+
+external (cdecl) fabsf(arg0:Float) : Float;
+
+external (cdecl) __fabsf(arg0:Float) : Float;
+
+external (cdecl) floorf(arg0:Float) : Float;
+
+external (cdecl) __floorf(arg0:Float) : Float;
+
+external (cdecl) fmodf(arg0:Float, arg1:Float) : Float;
+
+external (cdecl) __fmodf(arg0:Float, arg1:Float) : Float;
+
+external (cdecl) __isinff(arg0:Float) : Int;
+
+external (cdecl) __finitef(arg0:Float) : Int;
+
+external (cdecl) isinff(arg0:Float) : Int;
+
+external (cdecl) finitef(arg0:Float) : Int;
+
+external (cdecl) dremf(arg0:Float, arg1:Float) : Float;
+
+external (cdecl) __dremf(arg0:Float, arg1:Float) : Float;
+
+external (cdecl) significandf(arg0:Float) : Float;
+
+external (cdecl) __significandf(arg0:Float) : Float;
+
+external (cdecl) copysignf(arg0:Float, arg1:Float) : Float;
+
+external (cdecl) __copysignf(arg0:Float, arg1:Float) : Float;
+
+external (cdecl) nanf(arg0:Pointer[CChar]) : Float;
+
+external (cdecl) __nanf(arg0:Pointer[CChar]) : Float;
+
+external (cdecl) __isnanf(arg0:Float) : Int;
+
+external (cdecl) isnanf(arg0:Float) : Int;
+
+external (cdecl) j0f(arg0:Float) : Float;
+
+external (cdecl) __j0f(arg0:Float) : Float;
+
+external (cdecl) j1f(arg0:Float) : Float;
+
+external (cdecl) __j1f(arg0:Float) : Float;
+
+external (cdecl) jnf(arg0:Int, arg1:Float) : Float;
+
+external (cdecl) __jnf(arg0:Int, arg1:Float) : Float;
+
+external (cdecl) y0f(arg0:Float) : Float;
+
+external (cdecl) __y0f(arg0:Float) : Float;
+
+external (cdecl) y1f(arg0:Float) : Float;
+
+external (cdecl) __y1f(arg0:Float) : Float;
+
+external (cdecl) ynf(arg0:Int, arg1:Float) : Float;
+
+external (cdecl) __ynf(arg0:Int, arg1:Float) : Float;
+
+external (cdecl) erff(arg0:Float) : Float;
+
+external (cdecl) __erff(arg0:Float) : Float;
+
+external (cdecl) erfcf(arg0:Float) : Float;
+
+external (cdecl) __erfcf(arg0:Float) : Float;
+
+external (cdecl) lgammaf(arg0:Float) : Float;
+
+external (cdecl) __lgammaf(arg0:Float) : Float;
+
+external (cdecl) tgammaf(arg0:Float) : Float;
+
+external (cdecl) __tgammaf(arg0:Float) : Float;
+
+external (cdecl) gammaf(arg0:Float) : Float;
+
+external (cdecl) __gammaf(arg0:Float) : Float;
+
+external (cdecl) lgammaf_r(arg0:Float, arg1:Pointer[Int]) : Float;
+
+external (cdecl) __lgammaf_r(arg0:Float, arg1:Pointer[Int]) : Float;
+
+external (cdecl) rintf(arg0:Float) : Float;
+
+external (cdecl) __rintf(arg0:Float) : Float;
+
+external (cdecl) nextafterf(arg0:Float, arg1:Float) : Float;
+
+external (cdecl) __nextafterf(arg0:Float, arg1:Float) : Float;
+
+external (cdecl) nexttowardf(arg0:Float, arg1:LongDouble) : Float;
+
+external (cdecl) __nexttowardf(arg0:Float, arg1:LongDouble) : Float;
+
+external (cdecl) remainderf(arg0:Float, arg1:Float) : Float;
+
+external (cdecl) __remainderf(arg0:Float, arg1:Float) : Float;
+
+external (cdecl) scalbnf(arg0:Float, arg1:Int) : Float;
+
+external (cdecl) __scalbnf(arg0:Float, arg1:Int) : Float;
+
+external (cdecl) ilogbf(arg0:Float) : Int;
+
+external (cdecl) __ilogbf(arg0:Float) : Int;
+
+external (cdecl) scalblnf(arg0:Float, arg1:CLong) : Float;
+
+external (cdecl) __scalblnf(arg0:Float, arg1:CLong) : Float;
+
+external (cdecl) nearbyintf(arg0:Float) : Float;
+
+external (cdecl) __nearbyintf(arg0:Float) : Float;
+
+external (cdecl) roundf(arg0:Float) : Float;
+
+external (cdecl) __roundf(arg0:Float) : Float;
+
+external (cdecl) truncf(arg0:Float) : Float;
+
+external (cdecl) __truncf(arg0:Float) : Float;
+
+external (cdecl) remquof(arg0:Float, arg1:Float, arg2:Pointer[Int]) : Float;
+
+external (cdecl) __remquof(arg0:Float, arg1:Float, arg2:Pointer[Int]) : Float;
+
+external (cdecl) lrintf(arg0:Float) : CLong;
+
+external (cdecl) __lrintf(arg0:Float) : CLong;
+
+external (cdecl) llrintf(arg0:Float) : Int64;
+
+external (cdecl) __llrintf(arg0:Float) : Int64;
+
+external (cdecl) lroundf(arg0:Float) : CLong;
+
+external (cdecl) __lroundf(arg0:Float) : CLong;
+
+external (cdecl) llroundf(arg0:Float) : Int64;
+
+external (cdecl) __llroundf(arg0:Float) : Int64;
+
+external (cdecl) fdimf(arg0:Float, arg1:Float) : Float;
+
+external (cdecl) __fdimf(arg0:Float, arg1:Float) : Float;
+
+external (cdecl) fmaxf(arg0:Float, arg1:Float) : Float;
+
+external (cdecl) __fmaxf(arg0:Float, arg1:Float) : Float;
+
+external (cdecl) fminf(arg0:Float, arg1:Float) : Float;
+
+external (cdecl) __fminf(arg0:Float, arg1:Float) : Float;
+
+external (cdecl) __fpclassifyf(arg0:Float) : Int;
+
+external (cdecl) __signbitf(arg0:Float) : Int;
+
+external (cdecl) fmaf(arg0:Float, arg1:Float, arg2:Float) : Float;
+
+external (cdecl) __fmaf(arg0:Float, arg1:Float, arg2:Float) : Float;
+
+external (cdecl) scalbf(arg0:Float, arg1:Float) : Float;
+
+external (cdecl) __scalbf(arg0:Float, arg1:Float) : Float;
+
+external (cdecl) acosl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __acosl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) asinl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __asinl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) atanl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __atanl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) atan2l(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external (cdecl) __atan2l(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external (cdecl) cosl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __cosl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) sinl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __sinl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) tanl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __tanl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) coshl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __coshl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) sinhl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __sinhl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) tanhl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __tanhl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) sincosl(arg0:LongDouble, arg1:Pointer[LongDouble], arg2:Pointer[LongDouble]) : ;
+
+external (cdecl) __sincosl(arg0:LongDouble, arg1:Pointer[LongDouble], arg2:Pointer[LongDouble]) : ;
+
+external (cdecl) acoshl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __acoshl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) asinhl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __asinhl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) atanhl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __atanhl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) expl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __expl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) frexpl(arg0:LongDouble, arg1:Pointer[Int]) : LongDouble;
+
+external (cdecl) __frexpl(arg0:LongDouble, arg1:Pointer[Int]) : LongDouble;
+
+external (cdecl) ldexpl(arg0:LongDouble, arg1:Int) : LongDouble;
+
+external (cdecl) __ldexpl(arg0:LongDouble, arg1:Int) : LongDouble;
+
+external (cdecl) logl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __logl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) log10l(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __log10l(arg0:LongDouble) : LongDouble;
+
+external (cdecl) modfl(arg0:LongDouble, arg1:Pointer[LongDouble]) : LongDouble;
+
+external (cdecl) __modfl(arg0:LongDouble, arg1:Pointer[LongDouble]) : LongDouble;
+
+external (cdecl) exp10l(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __exp10l(arg0:LongDouble) : LongDouble;
+
+external (cdecl) pow10l(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __pow10l(arg0:LongDouble) : LongDouble;
+
+external (cdecl) expm1l(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __expm1l(arg0:LongDouble) : LongDouble;
+
+external (cdecl) log1pl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __log1pl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) logbl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __logbl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) exp2l(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __exp2l(arg0:LongDouble) : LongDouble;
+
+external (cdecl) log2l(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __log2l(arg0:LongDouble) : LongDouble;
+
+external (cdecl) powl(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external (cdecl) __powl(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external (cdecl) sqrtl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __sqrtl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) hypotl(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external (cdecl) __hypotl(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external (cdecl) cbrtl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __cbrtl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) ceill(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __ceill(arg0:LongDouble) : LongDouble;
+
+external (cdecl) fabsl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __fabsl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) floorl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __floorl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) fmodl(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external (cdecl) __fmodl(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external (cdecl) __isinfl(arg0:LongDouble) : Int;
+
+external (cdecl) __finitel(arg0:LongDouble) : Int;
+
+external (cdecl) isinfl(arg0:LongDouble) : Int;
+
+external (cdecl) finitel(arg0:LongDouble) : Int;
+
+external (cdecl) dreml(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external (cdecl) __dreml(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external (cdecl) significandl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __significandl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) copysignl(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external (cdecl) __copysignl(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external (cdecl) nanl(arg0:Pointer[CChar]) : LongDouble;
+
+external (cdecl) __nanl(arg0:Pointer[CChar]) : LongDouble;
+
+external (cdecl) __isnanl(arg0:LongDouble) : Int;
+
+external (cdecl) isnanl(arg0:LongDouble) : Int;
+
+external (cdecl) j0l(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __j0l(arg0:LongDouble) : LongDouble;
+
+external (cdecl) j1l(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __j1l(arg0:LongDouble) : LongDouble;
+
+external (cdecl) jnl(arg0:Int, arg1:LongDouble) : LongDouble;
+
+external (cdecl) __jnl(arg0:Int, arg1:LongDouble) : LongDouble;
+
+external (cdecl) y0l(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __y0l(arg0:LongDouble) : LongDouble;
+
+external (cdecl) y1l(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __y1l(arg0:LongDouble) : LongDouble;
+
+external (cdecl) ynl(arg0:Int, arg1:LongDouble) : LongDouble;
+
+external (cdecl) __ynl(arg0:Int, arg1:LongDouble) : LongDouble;
+
+external (cdecl) erfl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __erfl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) erfcl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __erfcl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) lgammal(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __lgammal(arg0:LongDouble) : LongDouble;
+
+external (cdecl) tgammal(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __tgammal(arg0:LongDouble) : LongDouble;
+
+external (cdecl) gammal(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __gammal(arg0:LongDouble) : LongDouble;
+
+external (cdecl) lgammal_r(arg0:LongDouble, arg1:Pointer[Int]) : LongDouble;
+
+external (cdecl) __lgammal_r(arg0:LongDouble, arg1:Pointer[Int]) : LongDouble;
+
+external (cdecl) rintl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __rintl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) nextafterl(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external (cdecl) __nextafterl(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external (cdecl) nexttowardl(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external (cdecl) __nexttowardl(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external (cdecl) remainderl(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external (cdecl) __remainderl(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external (cdecl) scalbnl(arg0:LongDouble, arg1:Int) : LongDouble;
+
+external (cdecl) __scalbnl(arg0:LongDouble, arg1:Int) : LongDouble;
+
+external (cdecl) ilogbl(arg0:LongDouble) : Int;
+
+external (cdecl) __ilogbl(arg0:LongDouble) : Int;
+
+external (cdecl) scalblnl(arg0:LongDouble, arg1:CLong) : LongDouble;
+
+external (cdecl) __scalblnl(arg0:LongDouble, arg1:CLong) : LongDouble;
+
+external (cdecl) nearbyintl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __nearbyintl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) roundl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __roundl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) truncl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) __truncl(arg0:LongDouble) : LongDouble;
+
+external (cdecl) remquol(arg0:LongDouble, arg1:LongDouble, arg2:Pointer[Int]) : LongDouble;
+
+external (cdecl) __remquol(arg0:LongDouble, arg1:LongDouble, arg2:Pointer[Int]) : LongDouble;
+
+external (cdecl) lrintl(arg0:LongDouble) : CLong;
+
+external (cdecl) __lrintl(arg0:LongDouble) : CLong;
+
+external (cdecl) llrintl(arg0:LongDouble) : Int64;
+
+external (cdecl) __llrintl(arg0:LongDouble) : Int64;
+
+external (cdecl) lroundl(arg0:LongDouble) : CLong;
+
+external (cdecl) __lroundl(arg0:LongDouble) : CLong;
+
+external (cdecl) llroundl(arg0:LongDouble) : Int64;
+
+external (cdecl) __llroundl(arg0:LongDouble) : Int64;
+
+external (cdecl) fdiml(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external (cdecl) __fdiml(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external (cdecl) fmaxl(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external (cdecl) __fmaxl(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external (cdecl) fminl(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external (cdecl) __fminl(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external (cdecl) __fpclassifyl(arg0:LongDouble) : Int;
+
+external (cdecl) __signbitl(arg0:LongDouble) : Int;
+
+external (cdecl) fmal(arg0:LongDouble, arg1:LongDouble, arg2:LongDouble) : LongDouble;
+
+external (cdecl) __fmal(arg0:LongDouble, arg1:LongDouble, arg2:LongDouble) : LongDouble;
+
+external (cdecl) scalbl(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external (cdecl) __scalbl(arg0:LongDouble, arg1:LongDouble) : LongDouble;
+
+external signgam : Int;
+
+
+
+alias _LIB_VERSION_TYPE = Int;
+alias _IEEE_ = Int(-1);
+alias _SVID_ = Int(0);
+alias _XOPEN_ = Int(1);
+alias _POSIX_ = Int(2);
+alias _ISOC_ = Int(3);
+
+external _LIB_VERSION : _LIB_VERSION_TYPE;
+
+record Struct_exception (
+    type : Int,
+    name : Pointer[CChar],
+    arg1 : Double,
+    arg2 : Double,
+    retval : Double,
+);
+
+external (cdecl) matherr(arg0:Pointer[Struct_exception]) : Int;
+
+external (cdecl) cacos(arg0:Complex64) : Complex64;
+
+external (cdecl) __cacos(arg0:Complex64) : Complex64;
+
+external (cdecl) casin(arg0:Complex64) : Complex64;
+
+external (cdecl) __casin(arg0:Complex64) : Complex64;
+
+external (cdecl) catan(arg0:Complex64) : Complex64;
+
+external (cdecl) __catan(arg0:Complex64) : Complex64;
+
+external (cdecl) ccos(arg0:Complex64) : Complex64;
+
+external (cdecl) __ccos(arg0:Complex64) : Complex64;
+
+external (cdecl) csin(arg0:Complex64) : Complex64;
+
+external (cdecl) __csin(arg0:Complex64) : Complex64;
+
+external (cdecl) ctan(arg0:Complex64) : Complex64;
+
+external (cdecl) __ctan(arg0:Complex64) : Complex64;
+
+external (cdecl) cacosh(arg0:Complex64) : Complex64;
+
+external (cdecl) __cacosh(arg0:Complex64) : Complex64;
+
+external (cdecl) casinh(arg0:Complex64) : Complex64;
+
+external (cdecl) __casinh(arg0:Complex64) : Complex64;
+
+external (cdecl) catanh(arg0:Complex64) : Complex64;
+
+external (cdecl) __catanh(arg0:Complex64) : Complex64;
+
+external (cdecl) ccosh(arg0:Complex64) : Complex64;
+
+external (cdecl) __ccosh(arg0:Complex64) : Complex64;
+
+external (cdecl) csinh(arg0:Complex64) : Complex64;
+
+external (cdecl) __csinh(arg0:Complex64) : Complex64;
+
+external (cdecl) ctanh(arg0:Complex64) : Complex64;
+
+external (cdecl) __ctanh(arg0:Complex64) : Complex64;
+
+external (cdecl) cexp(arg0:Complex64) : Complex64;
+
+external (cdecl) __cexp(arg0:Complex64) : Complex64;
+
+external (cdecl) clog(arg0:Complex64) : Complex64;
+
+external (cdecl) __clog(arg0:Complex64) : Complex64;
+
+external (cdecl) clog10(arg0:Complex64) : Complex64;
+
+external (cdecl) __clog10(arg0:Complex64) : Complex64;
+
+external (cdecl) cpow(arg0:Complex64, arg1:Complex64) : Complex64;
+
+external (cdecl) __cpow(arg0:Complex64, arg1:Complex64) : Complex64;
+
+external (cdecl) csqrt(arg0:Complex64) : Complex64;
+
+external (cdecl) __csqrt(arg0:Complex64) : Complex64;
+
+external (cdecl) cabs(arg0:Complex64) : Double;
+
+external (cdecl) __cabs(arg0:Complex64) : Double;
+
+external (cdecl) carg(arg0:Complex64) : Double;
+
+external (cdecl) __carg(arg0:Complex64) : Double;
+
+external (cdecl) conj(arg0:Complex64) : Complex64;
+
+external (cdecl) __conj(arg0:Complex64) : Complex64;
+
+external (cdecl) cproj(arg0:Complex64) : Complex64;
+
+external (cdecl) __cproj(arg0:Complex64) : Complex64;
+
+external (cdecl) cimag(arg0:Complex64) : Double;
+
+external (cdecl) __cimag(arg0:Complex64) : Double;
+
+external (cdecl) creal(arg0:Complex64) : Double;
+
+external (cdecl) __creal(arg0:Complex64) : Double;
+
+external (cdecl) cacosf(arg0:Complex32) : Complex32;
+
+external (cdecl) __cacosf(arg0:Complex32) : Complex32;
+
+external (cdecl) casinf(arg0:Complex32) : Complex32;
+
+external (cdecl) __casinf(arg0:Complex32) : Complex32;
+
+external (cdecl) catanf(arg0:Complex32) : Complex32;
+
+external (cdecl) __catanf(arg0:Complex32) : Complex32;
+
+external (cdecl) ccosf(arg0:Complex32) : Complex32;
+
+external (cdecl) __ccosf(arg0:Complex32) : Complex32;
+
+external (cdecl) csinf(arg0:Complex32) : Complex32;
+
+external (cdecl) __csinf(arg0:Complex32) : Complex32;
+
+external (cdecl) ctanf(arg0:Complex32) : Complex32;
+
+external (cdecl) __ctanf(arg0:Complex32) : Complex32;
+
+external (cdecl) cacoshf(arg0:Complex32) : Complex32;
+
+external (cdecl) __cacoshf(arg0:Complex32) : Complex32;
+
+external (cdecl) casinhf(arg0:Complex32) : Complex32;
+
+external (cdecl) __casinhf(arg0:Complex32) : Complex32;
+
+external (cdecl) catanhf(arg0:Complex32) : Complex32;
+
+external (cdecl) __catanhf(arg0:Complex32) : Complex32;
+
+external (cdecl) ccoshf(arg0:Complex32) : Complex32;
+
+external (cdecl) __ccoshf(arg0:Complex32) : Complex32;
+
+external (cdecl) csinhf(arg0:Complex32) : Complex32;
+
+external (cdecl) __csinhf(arg0:Complex32) : Complex32;
+
+external (cdecl) ctanhf(arg0:Complex32) : Complex32;
+
+external (cdecl) __ctanhf(arg0:Complex32) : Complex32;
+
+external (cdecl) cexpf(arg0:Complex32) : Complex32;
+
+external (cdecl) __cexpf(arg0:Complex32) : Complex32;
+
+external (cdecl) clogf(arg0:Complex32) : Complex32;
+
+external (cdecl) __clogf(arg0:Complex32) : Complex32;
+
+external (cdecl) clog10f(arg0:Complex32) : Complex32;
+
+external (cdecl) __clog10f(arg0:Complex32) : Complex32;
+
+external (cdecl) cpowf(arg0:Complex32, arg1:Complex32) : Complex32;
+
+external (cdecl) __cpowf(arg0:Complex32, arg1:Complex32) : Complex32;
+
+external (cdecl) csqrtf(arg0:Complex32) : Complex32;
+
+external (cdecl) __csqrtf(arg0:Complex32) : Complex32;
+
+external (cdecl) cabsf(arg0:Complex32) : Float;
+
+external (cdecl) __cabsf(arg0:Complex32) : Float;
+
+external (cdecl) cargf(arg0:Complex32) : Float;
+
+external (cdecl) __cargf(arg0:Complex32) : Float;
+
+external (cdecl) conjf(arg0:Complex32) : Complex32;
+
+external (cdecl) __conjf(arg0:Complex32) : Complex32;
+
+external (cdecl) cprojf(arg0:Complex32) : Complex32;
+
+external (cdecl) __cprojf(arg0:Complex32) : Complex32;
+
+external (cdecl) cimagf(arg0:Complex32) : Float;
+
+external (cdecl) __cimagf(arg0:Complex32) : Float;
+
+external (cdecl) crealf(arg0:Complex32) : Float;
+
+external (cdecl) __crealf(arg0:Complex32) : Float;
+
+external (cdecl) cacosl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __cacosl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) casinl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __casinl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) catanl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __catanl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) ccosl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __ccosl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) csinl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __csinl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) ctanl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __ctanl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) cacoshl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __cacoshl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) casinhl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __casinhl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) catanhl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __catanhl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) ccoshl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __ccoshl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) csinhl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __csinhl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) ctanhl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __ctanhl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) cexpl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __cexpl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) clogl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __clogl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) clog10l(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __clog10l(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) cpowl(arg0:ComplexLongDouble, arg1:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __cpowl(arg0:ComplexLongDouble, arg1:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) csqrtl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __csqrtl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) cabsl(arg0:ComplexLongDouble) : LongDouble;
+
+external (cdecl) __cabsl(arg0:ComplexLongDouble) : LongDouble;
+
+external (cdecl) cargl(arg0:ComplexLongDouble) : LongDouble;
+
+external (cdecl) __cargl(arg0:ComplexLongDouble) : LongDouble;
+
+external (cdecl) conjl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __conjl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) cprojl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __cprojl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) cimagl(arg0:ComplexLongDouble) : LongDouble;
+
+external (cdecl) __cimagl(arg0:ComplexLongDouble) : LongDouble;
+
+external (cdecl) creall(arg0:ComplexLongDouble) : LongDouble;
+
+external (cdecl) __creall(arg0:ComplexLongDouble) : LongDouble;
+
 alias __jmp_buf = Array[CLong, 8];
 
 record Struct___jmp_buf_tag (
@@ -1293,6 +2496,24 @@ external (cdecl) getdate(arg0:Pointer[CChar]) : Pointer[Struct_tm];
 
 external (cdecl) getdate_r(arg0:Pointer[CChar], arg1:Pointer[Struct_tm]) : Int;
 
+alias Union_Unnamed1 = Union[
+    /* __wch */ UInt,
+    /* __wchb */ Array[CChar, 4],
+];
+
+record Struct_Unnamed2 (
+    __w_termsig : UInt,
+    __w_coredump : UInt,
+    __w_retcode : UInt,
+    ?padding0 : UInt,
+);
+
+record Struct_Unnamed3 (
+    __w_stopval : UInt,
+    __w_stopsig : UInt,
+    ?padding0 : UInt,
+);
+
 record Struct_Unnamed4 (
     __lock : Int,
     __futex : UInt,
@@ -1318,21 +2539,10 @@ record Struct_Unnamed5 (
     __flags : UInt,
 );
 
-alias Union_Unnamed1 = Union[
-    /* __wch */ UInt,
-    /* __wchb */ Array[CChar, 4],
-];
-
-record Struct_Unnamed2 (
-    __w_termsig : UInt,
-    __w_coredump : UInt,
-    __w_retcode : UInt,
-    ?padding0 : UInt,
-);
-
-record Struct_Unnamed3 (
-    __w_stopval : UInt,
-    __w_stopsig : UInt,
-    ?padding0 : UInt,
-);
+alias Enum_Unnamed6 = UInt;
+alias FP_NAN = UInt(0);
+alias FP_INFINITE = UInt(1);
+alias FP_ZERO = UInt(2);
+alias FP_SUBNORMAL = UInt(3);
+alias FP_NORMAL = UInt(4);
 
