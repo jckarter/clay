@@ -1,7 +1,7 @@
 
 public import io.errors.*;
 import core.vectors.generic.*;
-import buffer.*;
+import buffervector.*;
 import strings.*;
 
 
