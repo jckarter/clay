@@ -1,4 +1,3 @@
-import libc.(malloc, free);
 
 InterfaceType?(X) = false;
 define InterfaceMembers;
@@ -58,14 +57,14 @@ BoxSize(T) = TypeSize(RawPointer) + TypeSize(T);
 
 [I, T when InterfaceType?(I)]
 alias allocateBox(#I, this: T) : Pointer[I] {
-    var ptr = Pointer[I](malloc(BoxSize(T)));
+    var ptr = Pointer[I](libc.malloc(BoxSize(T)));
     ptr^.vtbl = @interfaceVtbl[I, T];
 
     try {
         Pointer[T](@ptr^.this)^ <-- this;
     }
     catch (ex) {
-        free(RawPointer(ptr));
+        libc.free(RawPointer(ptr));
         throw ex;
     }
     return ptr;

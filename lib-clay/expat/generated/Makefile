@@ -1,2 +1,2 @@
 generated.clay: 
-	clay-bindgen -match expat -import unix -import libc -o generated.clay generated_from.h
+	clay-bindgen -match expat -import unix -import core.libc -o generated.clay generated_from.h

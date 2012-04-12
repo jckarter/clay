@@ -5,7 +5,7 @@ all: generated.macosx.x86.32.clay generated.macosx.x86.64.clay
 endif
 
 CLAY_BINDGEN_FLAGS = -x objective-c \
-    -import libc \
+    -import core.libc \
     -import cocoa.corefoundation \
     -import cocoa.applicationservices \
     -match /Foundation

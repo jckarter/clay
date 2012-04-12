@@ -1,4 +1,4 @@
-import libc;
+
 import printer.(println);
 
 main() {

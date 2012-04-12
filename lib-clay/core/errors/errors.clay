@@ -1,4 +1,3 @@
-import libc.(abort, stderr, fprintf, asprintf, strlen);
 import core.errors.backtrace.(showBacktrace);
 
 
@@ -8,9 +7,9 @@ import core.errors.backtrace.(showBacktrace);
 
 [fmt]
 errorWithPrintfNoThrow(#fmt, ..e) {
-    fprintf(stderr, cstring(strl("error: ", fmt, "\n")), ..e);
+    libc.fprintf(libc.stderr, cstring(strl("error: ", fmt, "\n")), ..e);
     showBacktrace();
-    abort();
+    libc.abort();
 }
 
 define errorWithPrintf;
@@ -32,8 +31,8 @@ instance Exception (Error);
 [fmt when ExceptionsEnabled?]
 overload errorWithPrintf(#fmt, ..e) {
     var bufp = Pointer[CChar]();
-    asprintf(@bufp, fmt, ..e);
-    var bufsize = SizeT(strlen(bufp));
+    libc.asprintf(@bufp, fmt, ..e);
+    var bufsize = SizeT(libc.strlen(bufp));
     var str = initializeRecord(Vector[Char], bufsize, bufsize, Pointer[Char](bufp));
     throw Error(move(str));
 }

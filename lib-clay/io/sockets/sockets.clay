@@ -20,7 +20,6 @@ public import io.sockets.platform.(
     SocklenT,
     SOL_SOCKET, SO_REUSEADDR
 );
-import libc.(memset);
 
 
 //
@@ -113,7 +112,7 @@ overload Inet(sockaddr: Sockaddr_storage, szsockaddr: SocklenT)
 }
 
 overload makeSockaddr(inet: Inet) --> sin: Sockaddr_in {
-    memset(RawPointer(@sin), 0, TypeSize(Sockaddr_in));
+    libc.memset(RawPointer(@sin), 0, TypeSize(Sockaddr_in));
     sin.sin_family = AF_INET;
     sin.sin_port <-- hostToNetwork(inet.port);
     sin.sin_addr <-- inet.host;

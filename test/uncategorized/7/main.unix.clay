@@ -1,4 +1,4 @@
-import libc;
+
 
 main() {
     var s = "Hello World!\n";

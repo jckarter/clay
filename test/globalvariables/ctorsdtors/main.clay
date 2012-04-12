@@ -1,4 +1,4 @@
-import libc.(printf, fprintf, stdout);
+import core.libc.(printf, fprintf, stdout);
 
 record Foo (value:Int);
 overload RegularRecord?(#Foo) = false;

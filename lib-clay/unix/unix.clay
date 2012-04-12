@@ -1,4 +1,4 @@
-import libc;
+
 
 public import unix.generated.*;
 public import unix.constants.*;

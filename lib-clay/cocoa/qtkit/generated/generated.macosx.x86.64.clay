@@ -3,7 +3,7 @@
 
 import cocoa.objc.*;
 
-import libc.*;
+import core.libc.*;
 import cocoa.foundation.*;
 import cocoa.appkit.*;
 import cocoa.applicationservices.*;

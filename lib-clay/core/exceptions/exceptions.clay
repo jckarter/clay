@@ -1,4 +1,4 @@
-import libc;
+
 import core.errors.backtrace.(showBacktrace);
 import __operators__.(
     throwValue,

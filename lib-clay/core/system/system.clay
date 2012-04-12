@@ -1,5 +1,4 @@
 import __operators__;
-import libc.(fprintf, stderr);
 
 private var argc = 0;
 private var argv = Pointer[Pointer[Int8]]();
@@ -32,7 +31,7 @@ private alias runMain(argc_, argv_, f, ..args) {
         return getExitCode(..f(..args));
     }
     catch (e) {
-        fprintf(stderr, cstring(stringLiteralConcat("unhandled ", StaticName(Type(e)), " exception")));
+        libc.fprintf(libc.stderr, cstring(stringLiteralConcat("unhandled ", StaticName(Type(e)), " exception")));
         return -1;
     }
 }

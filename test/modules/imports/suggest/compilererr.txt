@@ -1,4 +1,4 @@
 undefined name: puts
   maybe you need one of:
-    import libc.\(puts\);
-    import libc.generated.\(puts\);
+    import core.libc.\(puts\);
+    import core.libc.generated.\(puts\);

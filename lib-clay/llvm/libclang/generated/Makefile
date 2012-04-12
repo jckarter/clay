@@ -1,5 +1,5 @@
 generated.clay: generated_from.h
 	clay-bindgen -o generated.clay \
-	    -import libc \
+	    -import core.libc \
 	    -match  Index.h \
 	    generated_from.h

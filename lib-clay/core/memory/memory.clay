@@ -1,7 +1,4 @@
-
-import libc.(malloc, realloc, free);
 import core.memory.platform.(SystemMallocAlignment);
-
 
 
 //
@@ -53,7 +50,7 @@ freeArray(array:CoordinateRange[T]) {
 //
 
 alignedMalloc(numBytes:SizeT, alignment:SizeT) {
-    var ptr = malloc(numBytes + alignment + TypeSize(UInt8));
+    var ptr = libc.malloc(numBytes + alignment + TypeSize(UInt8));
     if (null?(ptr))
         return null(UInt8);
     var mask = bitnot(SizeT(alignment) - 1);
@@ -68,7 +65,7 @@ alignedFree(ptr:Pointer[UInt8]) {
         return;
     var offset = SizeT((ptr-1)^);
     var originalPtr = ptr - offset;
-    free(originalPtr);
+    libc.free(originalPtr);
 }
 
 
@@ -95,19 +92,19 @@ freeRawMemoryAligned(ptr:Pointer[T]) {
 
 [T,I when Integer?(I)]
 allocateRawMemory(#T, count:I) {
-    var ptr = malloc(TypeSize(T) * SizeT(count));
+    var ptr = libc.malloc(TypeSize(T) * SizeT(count));
     return Pointer[T](ptr);
 }
 
 [T,I when Integer?(I) and TypeAlignment(T) <= SystemMallocAlignment]
 reallocateRawMemory(ptr:Pointer[T], count:I) {
-    var newptr = realloc(RawPointer(ptr), TypeSize(T) * SizeT(count));
+    var newptr = libc.realloc(RawPointer(ptr), TypeSize(T) * SizeT(count));
     return Pointer[T](newptr);
 }
 
 [T]
 freeRawMemory(ptr:Pointer[T]) {
-    free(RawPointer(ptr));
+    libc.free(RawPointer(ptr));
 }
 
 [T,I when Integer?(I) and (TypeAlignment(T) > SystemMallocAlignment)]
