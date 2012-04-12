@@ -1,5 +1,6 @@
 
 import core.vectors.generic.*;
+public import core.vectors.generic.(Vector?);
 
 
 //
