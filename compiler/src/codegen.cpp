@@ -9,8 +9,8 @@ const llvm::TargetData *llvmTargetData;
 
 static vector<CValuePtr> initializedGlobals;
 static llvm::StringMap<llvm::Constant*> stringTableConstants;
-static CodegenContext constructorsCtx;
-static CodegenContext destructorsCtx;
+static CodegenContext *constructorsCtx = NULL;
+static CodegenContext *destructorsCtx = NULL;
 
 static bool isMsvcTarget() {
     llvm::Triple target(llvmModule->getTargetTriple());
@@ -1449,7 +1449,7 @@ void codegenGVarInstance(GVarInstancePtr x)
     lhs->location = x->gvar->name->location;
     StatementPtr init = new InitAssignment(lhs, x->expr);
     init->location = x->gvar->location;
-    bool result = codegenStatement(init, x->env, &constructorsCtx);
+    bool result = codegenStatement(init, x->env, constructorsCtx);
     assert(!result);
 
     // generate destructor procedure body
@@ -6591,12 +6591,12 @@ static void finalizeSimpleContext(CodegenContext* ctx,
 
 static void initializeCtorsDtors()
 {
-    setUpSimpleContext(&constructorsCtx, "clayglobals_init");
-    setUpSimpleContext(&destructorsCtx, "clayglobals_destroy");
+    setUpSimpleContext(constructorsCtx, "clayglobals_init");
+    setUpSimpleContext(destructorsCtx, "clayglobals_destroy");
 
     if (isMsvcTarget()) {
-        constructorsCtx.llvmFunc->setSection(".text$yc");
-        destructorsCtx.llvmFunc->setSection(".text$yd");
+        constructorsCtx->llvmFunc->setSection(".text$yc");
+        destructorsCtx->llvmFunc->setSection(".text$yd");
     }
 
     if (exceptionsEnabled()) {
@@ -6614,7 +6614,7 @@ static void codegenAtexitDestructors()
     llvm::Function *atexitFunc = llvmModule->getFunction("atexit");
     if (!atexitFunc) {
         vector<llvm::Type*> atexitArgTypes;
-        atexitArgTypes.push_back(destructorsCtx.llvmFunc->getType());
+        atexitArgTypes.push_back(destructorsCtx->llvmFunc->getType());
 
         llvm::FunctionType *atexitType =
             llvm::FunctionType::get(llvmIntType(32), atexitArgTypes, false);
@@ -6625,7 +6625,7 @@ static void codegenAtexitDestructors()
             llvmModule);
     }
 
-    constructorsCtx.builder->CreateCall(atexitFunc, destructorsCtx.llvmFunc);
+    constructorsCtx->builder->CreateCall(atexitFunc, destructorsCtx->llvmFunc);
 }
 
 static void finalizeCtorsDtors()
@@ -6633,13 +6633,13 @@ static void finalizeCtorsDtors()
     if (isMsvcTarget())
         codegenAtexitDestructors();
 
-    finalizeSimpleContext(&constructorsCtx, operator_exceptionInInitializer());
+    finalizeSimpleContext(constructorsCtx, operator_exceptionInInitializer());
 
     for (unsigned i = initializedGlobals.size(); i > 0; --i) {
         CValuePtr cv = initializedGlobals[i-1];
-        codegenValueDestroy(cv, &destructorsCtx);
+        codegenValueDestroy(cv, destructorsCtx);
     }
-    finalizeSimpleContext(&destructorsCtx, operator_exceptionInFinalizer());
+    finalizeSimpleContext(destructorsCtx, operator_exceptionInFinalizer());
 }
 
 static void generateLLVMCtorsAndDtors() {
@@ -6647,7 +6647,7 @@ static void generateLLVMCtorsAndDtors() {
     // make types for llvm.global_ctors, llvm.global_dtors
     vector<llvm::Type *> fieldTypes;
     fieldTypes.push_back(llvmIntType(32));
-    llvm::Type *funcType = constructorsCtx.llvmFunc->getFunctionType();
+    llvm::Type *funcType = constructorsCtx->llvmFunc->getFunctionType();
     llvm::Type *funcPtrType = llvm::PointerType::getUnqual(funcType);
     fieldTypes.push_back(funcPtrType);
     llvm::StructType *structType =
@@ -6660,7 +6660,7 @@ static void generateLLVMCtorsAndDtors() {
         llvm::ConstantInt::get(llvm::getGlobalContext(),
                                llvm::APInt(32, llvm::StringRef("65535"), 10));
     structElems1.push_back(prio1);
-    structElems1.push_back(constructorsCtx.llvmFunc);
+    structElems1.push_back(constructorsCtx->llvmFunc);
     llvm::Constant *structVal1 = llvm::ConstantStruct::get(structType,
                                                            structElems1);
     vector<llvm::Constant*> arrayElems1;
@@ -6682,7 +6682,7 @@ static void generateLLVMCtorsAndDtors() {
             llvm::ConstantInt::get(llvm::getGlobalContext(),
                                    llvm::APInt(32, llvm::StringRef("65535"), 10));
         structElems2.push_back(prio2);
-        structElems2.push_back(destructorsCtx.llvmFunc);
+        structElems2.push_back(destructorsCtx->llvmFunc);
         llvm::Constant *structVal2 = llvm::ConstantStruct::get(structType,
                                                                structElems2);
         vector<llvm::Constant*> arrayElems2;
@@ -6758,6 +6758,12 @@ static void codegenModuleEntryPoints(ModulePtr module, bool importedExternals)
 
 void codegenEntryPoints(ModulePtr module, bool importedExternals)
 {
+    CodegenContext theConstructorCtx;
+    CodegenContext theDestructorCtx;
+
+    constructorsCtx = &theConstructorCtx;
+    destructorsCtx = &theDestructorCtx;
+
     codegenTopLevelLLVM(module);
     initializeCtorsDtors();
     generateLLVMCtorsAndDtors();
@@ -6772,6 +6778,9 @@ void codegenEntryPoints(ModulePtr module, bool importedExternals)
 
     if (llvmDIBuilder != NULL)
         llvmDIBuilder->finalize();
+
+    constructorsCtx = NULL;
+    destructorsCtx = NULL;
 }
 
 
