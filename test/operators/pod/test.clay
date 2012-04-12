@@ -1,5 +1,4 @@
 import test.*;
-import sharedpointers.(SharedPointer);
 import uniquepointers.(UniquePointer);
 
 record IrregularRecord ();

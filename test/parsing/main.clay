@@ -2,6 +2,7 @@
 import parsing.combinators.strings.*;
 import maybe.*;
 import printer.(println,print);
+import numbers.parser.*;
 
 //
 // bracketed -> '(' expr ')'

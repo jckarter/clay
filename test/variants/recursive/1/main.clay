@@ -1,4 +1,3 @@
-import sharedpointers.(SharedPointer,new);
 import printer.(println);
 
 record Foo ( x: SharedPointer[Bar], y: SharedPointer[Bar] );

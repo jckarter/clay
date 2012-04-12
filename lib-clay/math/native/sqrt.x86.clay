@@ -1,5 +1,3 @@
-
-import simd.*;
 import math.*;
 
 private external ("llvm.x86.sse2.sqrt.sd", llvm)

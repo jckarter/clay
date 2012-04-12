@@ -1,5 +1,3 @@
-
-import simd.*;
 import math.*;
 import numbers.(toBiggerNumericType);
 

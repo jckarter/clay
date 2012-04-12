@@ -1,4 +1,3 @@
-import printer.formatter.(repr);
 import errors.(private assertStringLiteral);
 import errors.backtrace.(showBacktrace);
 import io.files.raw.(stderrRawFile,stdoutRawFile);
@@ -506,7 +505,9 @@ inline overload printTo(stream, a:Vec[T,n])
 [T,n]
 inline overload printReprTo(stream, a:Vec[T,n])
 {
-    printTo(stream, Type(a), "(", repr(..unpackVec(a)), ")");
+    printTo(stream,Type(a),"(");
+    printReprValuesTo(stream, ..unpackVec(a));
+    printTo(stream,")");
 }
 
 
