@@ -15,6 +15,7 @@ public import core.pointers.*;
 public import core.values.*;
 public import core.maybe.*;
 public import core.variants.*;
+public import core.variants.nested.*;
 
 public import core.arrays.*;
 public import core.coordinates.*;
