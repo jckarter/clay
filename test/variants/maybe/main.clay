@@ -1,4 +1,3 @@
-import maybe.*;
 import printer.(println);
 
 doIt(x) {

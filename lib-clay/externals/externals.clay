@@ -1,4 +1,3 @@
-import maybe.*;
 
 alias ExternalException = Pointer[Maybe[Exception]];
 

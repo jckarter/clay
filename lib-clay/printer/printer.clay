@@ -10,6 +10,7 @@ import printer.platform.(
 );
 import numbers.floats.(nan, nan?);
 import strings.*;
+import buffer.*;
 
 
 //

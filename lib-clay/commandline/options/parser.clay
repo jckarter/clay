@@ -1,6 +1,5 @@
 import commandline.options.spec.*;
 import commandline.options.util.*;
-import maybe.*;
 import strings.*;
 
 record OptionValue(

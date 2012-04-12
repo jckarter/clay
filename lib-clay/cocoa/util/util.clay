@@ -3,7 +3,6 @@ import cocoa.objc.*;
 import cocoa.nib.*;
 import cocoa.foundation.*;
 import hash.(hash);
-import maybe.*;
 import printer.(printTo, str);
 import strings.cstringrefs.*;
 
