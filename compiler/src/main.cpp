@@ -950,7 +950,7 @@ int main2(int argc, char **argv, char const* const* envp) {
         llvm::errs() << "codegen time = " << outputTimer.elapsedMillis() << " ms\n";
     }
 
-    return 0;
+    _exit(0);
 }
 
 }
