@@ -1130,6 +1130,282 @@ external (cdecl) memfrob(arg0:OpaquePointer, arg1:size_t) : OpaquePointer;
 
 external (cdecl) basename(arg0:Pointer[CChar]) : Pointer[CChar];
 
+external (cdecl) cacos(arg0:Complex64) : Complex64;
+
+external (cdecl) __cacos(arg0:Complex64) : Complex64;
+
+external (cdecl) casin(arg0:Complex64) : Complex64;
+
+external (cdecl) __casin(arg0:Complex64) : Complex64;
+
+external (cdecl) catan(arg0:Complex64) : Complex64;
+
+external (cdecl) __catan(arg0:Complex64) : Complex64;
+
+external (cdecl) ccos(arg0:Complex64) : Complex64;
+
+external (cdecl) __ccos(arg0:Complex64) : Complex64;
+
+external (cdecl) csin(arg0:Complex64) : Complex64;
+
+external (cdecl) __csin(arg0:Complex64) : Complex64;
+
+external (cdecl) ctan(arg0:Complex64) : Complex64;
+
+external (cdecl) __ctan(arg0:Complex64) : Complex64;
+
+external (cdecl) cacosh(arg0:Complex64) : Complex64;
+
+external (cdecl) __cacosh(arg0:Complex64) : Complex64;
+
+external (cdecl) casinh(arg0:Complex64) : Complex64;
+
+external (cdecl) __casinh(arg0:Complex64) : Complex64;
+
+external (cdecl) catanh(arg0:Complex64) : Complex64;
+
+external (cdecl) __catanh(arg0:Complex64) : Complex64;
+
+external (cdecl) ccosh(arg0:Complex64) : Complex64;
+
+external (cdecl) __ccosh(arg0:Complex64) : Complex64;
+
+external (cdecl) csinh(arg0:Complex64) : Complex64;
+
+external (cdecl) __csinh(arg0:Complex64) : Complex64;
+
+external (cdecl) ctanh(arg0:Complex64) : Complex64;
+
+external (cdecl) __ctanh(arg0:Complex64) : Complex64;
+
+external (cdecl) cexp(arg0:Complex64) : Complex64;
+
+external (cdecl) __cexp(arg0:Complex64) : Complex64;
+
+external (cdecl) clog(arg0:Complex64) : Complex64;
+
+external (cdecl) __clog(arg0:Complex64) : Complex64;
+
+external (cdecl) clog10(arg0:Complex64) : Complex64;
+
+external (cdecl) __clog10(arg0:Complex64) : Complex64;
+
+external (cdecl) cpow(arg0:Complex64, arg1:Complex64) : Complex64;
+
+external (cdecl) __cpow(arg0:Complex64, arg1:Complex64) : Complex64;
+
+external (cdecl) csqrt(arg0:Complex64) : Complex64;
+
+external (cdecl) __csqrt(arg0:Complex64) : Complex64;
+
+external (cdecl) cabs(arg0:Complex64) : Double;
+
+external (cdecl) __cabs(arg0:Complex64) : Double;
+
+external (cdecl) carg(arg0:Complex64) : Double;
+
+external (cdecl) __carg(arg0:Complex64) : Double;
+
+external (cdecl) conj(arg0:Complex64) : Complex64;
+
+external (cdecl) __conj(arg0:Complex64) : Complex64;
+
+external (cdecl) cproj(arg0:Complex64) : Complex64;
+
+external (cdecl) __cproj(arg0:Complex64) : Complex64;
+
+external (cdecl) cimag(arg0:Complex64) : Double;
+
+external (cdecl) __cimag(arg0:Complex64) : Double;
+
+external (cdecl) creal(arg0:Complex64) : Double;
+
+external (cdecl) __creal(arg0:Complex64) : Double;
+
+external (cdecl) cacosf(arg0:Complex32) : Complex32;
+
+external (cdecl) __cacosf(arg0:Complex32) : Complex32;
+
+external (cdecl) casinf(arg0:Complex32) : Complex32;
+
+external (cdecl) __casinf(arg0:Complex32) : Complex32;
+
+external (cdecl) catanf(arg0:Complex32) : Complex32;
+
+external (cdecl) __catanf(arg0:Complex32) : Complex32;
+
+external (cdecl) ccosf(arg0:Complex32) : Complex32;
+
+external (cdecl) __ccosf(arg0:Complex32) : Complex32;
+
+external (cdecl) csinf(arg0:Complex32) : Complex32;
+
+external (cdecl) __csinf(arg0:Complex32) : Complex32;
+
+external (cdecl) ctanf(arg0:Complex32) : Complex32;
+
+external (cdecl) __ctanf(arg0:Complex32) : Complex32;
+
+external (cdecl) cacoshf(arg0:Complex32) : Complex32;
+
+external (cdecl) __cacoshf(arg0:Complex32) : Complex32;
+
+external (cdecl) casinhf(arg0:Complex32) : Complex32;
+
+external (cdecl) __casinhf(arg0:Complex32) : Complex32;
+
+external (cdecl) catanhf(arg0:Complex32) : Complex32;
+
+external (cdecl) __catanhf(arg0:Complex32) : Complex32;
+
+external (cdecl) ccoshf(arg0:Complex32) : Complex32;
+
+external (cdecl) __ccoshf(arg0:Complex32) : Complex32;
+
+external (cdecl) csinhf(arg0:Complex32) : Complex32;
+
+external (cdecl) __csinhf(arg0:Complex32) : Complex32;
+
+external (cdecl) ctanhf(arg0:Complex32) : Complex32;
+
+external (cdecl) __ctanhf(arg0:Complex32) : Complex32;
+
+external (cdecl) cexpf(arg0:Complex32) : Complex32;
+
+external (cdecl) __cexpf(arg0:Complex32) : Complex32;
+
+external (cdecl) clogf(arg0:Complex32) : Complex32;
+
+external (cdecl) __clogf(arg0:Complex32) : Complex32;
+
+external (cdecl) clog10f(arg0:Complex32) : Complex32;
+
+external (cdecl) __clog10f(arg0:Complex32) : Complex32;
+
+external (cdecl) cpowf(arg0:Complex32, arg1:Complex32) : Complex32;
+
+external (cdecl) __cpowf(arg0:Complex32, arg1:Complex32) : Complex32;
+
+external (cdecl) csqrtf(arg0:Complex32) : Complex32;
+
+external (cdecl) __csqrtf(arg0:Complex32) : Complex32;
+
+external (cdecl) cabsf(arg0:Complex32) : Float;
+
+external (cdecl) __cabsf(arg0:Complex32) : Float;
+
+external (cdecl) cargf(arg0:Complex32) : Float;
+
+external (cdecl) __cargf(arg0:Complex32) : Float;
+
+external (cdecl) conjf(arg0:Complex32) : Complex32;
+
+external (cdecl) __conjf(arg0:Complex32) : Complex32;
+
+external (cdecl) cprojf(arg0:Complex32) : Complex32;
+
+external (cdecl) __cprojf(arg0:Complex32) : Complex32;
+
+external (cdecl) cimagf(arg0:Complex32) : Float;
+
+external (cdecl) __cimagf(arg0:Complex32) : Float;
+
+external (cdecl) crealf(arg0:Complex32) : Float;
+
+external (cdecl) __crealf(arg0:Complex32) : Float;
+
+external (cdecl) cacosl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __cacosl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) casinl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __casinl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) catanl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __catanl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) ccosl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __ccosl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) csinl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __csinl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) ctanl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __ctanl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) cacoshl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __cacoshl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) casinhl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __casinhl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) catanhl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __catanhl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) ccoshl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __ccoshl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) csinhl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __csinhl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) ctanhl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __ctanhl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) cexpl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __cexpl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) clogl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __clogl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) clog10l(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __clog10l(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) cpowl(arg0:ComplexLongDouble, arg1:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __cpowl(arg0:ComplexLongDouble, arg1:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) csqrtl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __csqrtl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) cabsl(arg0:ComplexLongDouble) : LongDouble;
+
+external (cdecl) __cabsl(arg0:ComplexLongDouble) : LongDouble;
+
+external (cdecl) cargl(arg0:ComplexLongDouble) : LongDouble;
+
+external (cdecl) __cargl(arg0:ComplexLongDouble) : LongDouble;
+
+external (cdecl) conjl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __conjl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) cprojl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) __cprojl(arg0:ComplexLongDouble) : ComplexLongDouble;
+
+external (cdecl) cimagl(arg0:ComplexLongDouble) : LongDouble;
+
+external (cdecl) __cimagl(arg0:ComplexLongDouble) : LongDouble;
+
+external (cdecl) creall(arg0:ComplexLongDouble) : LongDouble;
+
+external (cdecl) __creall(arg0:ComplexLongDouble) : LongDouble;
+
 alias float_t = Float;
 
 alias double_t = Double;
@@ -2056,282 +2332,6 @@ record Struct_exception (
 );
 
 external (cdecl) matherr(arg0:Pointer[Struct_exception]) : Int;
-
-external (cdecl) cacos(arg0:Complex64) : Complex64;
-
-external (cdecl) __cacos(arg0:Complex64) : Complex64;
-
-external (cdecl) casin(arg0:Complex64) : Complex64;
-
-external (cdecl) __casin(arg0:Complex64) : Complex64;
-
-external (cdecl) catan(arg0:Complex64) : Complex64;
-
-external (cdecl) __catan(arg0:Complex64) : Complex64;
-
-external (cdecl) ccos(arg0:Complex64) : Complex64;
-
-external (cdecl) __ccos(arg0:Complex64) : Complex64;
-
-external (cdecl) csin(arg0:Complex64) : Complex64;
-
-external (cdecl) __csin(arg0:Complex64) : Complex64;
-
-external (cdecl) ctan(arg0:Complex64) : Complex64;
-
-external (cdecl) __ctan(arg0:Complex64) : Complex64;
-
-external (cdecl) cacosh(arg0:Complex64) : Complex64;
-
-external (cdecl) __cacosh(arg0:Complex64) : Complex64;
-
-external (cdecl) casinh(arg0:Complex64) : Complex64;
-
-external (cdecl) __casinh(arg0:Complex64) : Complex64;
-
-external (cdecl) catanh(arg0:Complex64) : Complex64;
-
-external (cdecl) __catanh(arg0:Complex64) : Complex64;
-
-external (cdecl) ccosh(arg0:Complex64) : Complex64;
-
-external (cdecl) __ccosh(arg0:Complex64) : Complex64;
-
-external (cdecl) csinh(arg0:Complex64) : Complex64;
-
-external (cdecl) __csinh(arg0:Complex64) : Complex64;
-
-external (cdecl) ctanh(arg0:Complex64) : Complex64;
-
-external (cdecl) __ctanh(arg0:Complex64) : Complex64;
-
-external (cdecl) cexp(arg0:Complex64) : Complex64;
-
-external (cdecl) __cexp(arg0:Complex64) : Complex64;
-
-external (cdecl) clog(arg0:Complex64) : Complex64;
-
-external (cdecl) __clog(arg0:Complex64) : Complex64;
-
-external (cdecl) clog10(arg0:Complex64) : Complex64;
-
-external (cdecl) __clog10(arg0:Complex64) : Complex64;
-
-external (cdecl) cpow(arg0:Complex64, arg1:Complex64) : Complex64;
-
-external (cdecl) __cpow(arg0:Complex64, arg1:Complex64) : Complex64;
-
-external (cdecl) csqrt(arg0:Complex64) : Complex64;
-
-external (cdecl) __csqrt(arg0:Complex64) : Complex64;
-
-external (cdecl) cabs(arg0:Complex64) : Double;
-
-external (cdecl) __cabs(arg0:Complex64) : Double;
-
-external (cdecl) carg(arg0:Complex64) : Double;
-
-external (cdecl) __carg(arg0:Complex64) : Double;
-
-external (cdecl) conj(arg0:Complex64) : Complex64;
-
-external (cdecl) __conj(arg0:Complex64) : Complex64;
-
-external (cdecl) cproj(arg0:Complex64) : Complex64;
-
-external (cdecl) __cproj(arg0:Complex64) : Complex64;
-
-external (cdecl) cimag(arg0:Complex64) : Double;
-
-external (cdecl) __cimag(arg0:Complex64) : Double;
-
-external (cdecl) creal(arg0:Complex64) : Double;
-
-external (cdecl) __creal(arg0:Complex64) : Double;
-
-external (cdecl) cacosf(arg0:Complex32) : Complex32;
-
-external (cdecl) __cacosf(arg0:Complex32) : Complex32;
-
-external (cdecl) casinf(arg0:Complex32) : Complex32;
-
-external (cdecl) __casinf(arg0:Complex32) : Complex32;
-
-external (cdecl) catanf(arg0:Complex32) : Complex32;
-
-external (cdecl) __catanf(arg0:Complex32) : Complex32;
-
-external (cdecl) ccosf(arg0:Complex32) : Complex32;
-
-external (cdecl) __ccosf(arg0:Complex32) : Complex32;
-
-external (cdecl) csinf(arg0:Complex32) : Complex32;
-
-external (cdecl) __csinf(arg0:Complex32) : Complex32;
-
-external (cdecl) ctanf(arg0:Complex32) : Complex32;
-
-external (cdecl) __ctanf(arg0:Complex32) : Complex32;
-
-external (cdecl) cacoshf(arg0:Complex32) : Complex32;
-
-external (cdecl) __cacoshf(arg0:Complex32) : Complex32;
-
-external (cdecl) casinhf(arg0:Complex32) : Complex32;
-
-external (cdecl) __casinhf(arg0:Complex32) : Complex32;
-
-external (cdecl) catanhf(arg0:Complex32) : Complex32;
-
-external (cdecl) __catanhf(arg0:Complex32) : Complex32;
-
-external (cdecl) ccoshf(arg0:Complex32) : Complex32;
-
-external (cdecl) __ccoshf(arg0:Complex32) : Complex32;
-
-external (cdecl) csinhf(arg0:Complex32) : Complex32;
-
-external (cdecl) __csinhf(arg0:Complex32) : Complex32;
-
-external (cdecl) ctanhf(arg0:Complex32) : Complex32;
-
-external (cdecl) __ctanhf(arg0:Complex32) : Complex32;
-
-external (cdecl) cexpf(arg0:Complex32) : Complex32;
-
-external (cdecl) __cexpf(arg0:Complex32) : Complex32;
-
-external (cdecl) clogf(arg0:Complex32) : Complex32;
-
-external (cdecl) __clogf(arg0:Complex32) : Complex32;
-
-external (cdecl) clog10f(arg0:Complex32) : Complex32;
-
-external (cdecl) __clog10f(arg0:Complex32) : Complex32;
-
-external (cdecl) cpowf(arg0:Complex32, arg1:Complex32) : Complex32;
-
-external (cdecl) __cpowf(arg0:Complex32, arg1:Complex32) : Complex32;
-
-external (cdecl) csqrtf(arg0:Complex32) : Complex32;
-
-external (cdecl) __csqrtf(arg0:Complex32) : Complex32;
-
-external (cdecl) cabsf(arg0:Complex32) : Float;
-
-external (cdecl) __cabsf(arg0:Complex32) : Float;
-
-external (cdecl) cargf(arg0:Complex32) : Float;
-
-external (cdecl) __cargf(arg0:Complex32) : Float;
-
-external (cdecl) conjf(arg0:Complex32) : Complex32;
-
-external (cdecl) __conjf(arg0:Complex32) : Complex32;
-
-external (cdecl) cprojf(arg0:Complex32) : Complex32;
-
-external (cdecl) __cprojf(arg0:Complex32) : Complex32;
-
-external (cdecl) cimagf(arg0:Complex32) : Float;
-
-external (cdecl) __cimagf(arg0:Complex32) : Float;
-
-external (cdecl) crealf(arg0:Complex32) : Float;
-
-external (cdecl) __crealf(arg0:Complex32) : Float;
-
-external (cdecl) cacosl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) __cacosl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) casinl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) __casinl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) catanl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) __catanl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) ccosl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) __ccosl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) csinl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) __csinl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) ctanl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) __ctanl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) cacoshl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) __cacoshl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) casinhl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) __casinhl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) catanhl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) __catanhl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) ccoshl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) __ccoshl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) csinhl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) __csinhl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) ctanhl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) __ctanhl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) cexpl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) __cexpl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) clogl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) __clogl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) clog10l(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) __clog10l(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) cpowl(arg0:ComplexLongDouble, arg1:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) __cpowl(arg0:ComplexLongDouble, arg1:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) csqrtl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) __csqrtl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) cabsl(arg0:ComplexLongDouble) : LongDouble;
-
-external (cdecl) __cabsl(arg0:ComplexLongDouble) : LongDouble;
-
-external (cdecl) cargl(arg0:ComplexLongDouble) : LongDouble;
-
-external (cdecl) __cargl(arg0:ComplexLongDouble) : LongDouble;
-
-external (cdecl) conjl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) __conjl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) cprojl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) __cprojl(arg0:ComplexLongDouble) : ComplexLongDouble;
-
-external (cdecl) cimagl(arg0:ComplexLongDouble) : LongDouble;
-
-external (cdecl) __cimagl(arg0:ComplexLongDouble) : LongDouble;
-
-external (cdecl) creall(arg0:ComplexLongDouble) : LongDouble;
-
-external (cdecl) __creall(arg0:ComplexLongDouble) : LongDouble;
 
 alias __jmp_buf = Array[CLong, 8];
 
