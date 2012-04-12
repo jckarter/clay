@@ -3,6 +3,7 @@ import math.*;
 import numbers.parser.*;
 import io.files.(stdout);
 import io.streams.(write);
+import libc;
 
 A(i, j) = 1.0 / Float64(((i+j) * (i+j+1)\2) + i + 1);
 
