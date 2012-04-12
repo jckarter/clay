@@ -1,5 +1,6 @@
 import printer.(println);
-import vectors.generic as vg;
+import core.vectors.generic
+ as vg;
 import hash;
 import hashmaps.*;
 import strings.*;

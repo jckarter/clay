@@ -1,7 +1,7 @@
 
 public import sequences.force.*;
 public import sequences.lazy.*;
-import numbers.(private BiggerNumeric?);
+import core.numbers.(private BiggerNumeric?);
 
 
 //
@@ -133,7 +133,6 @@ inline overload reduceToScalar(forward i,forward a:S, forward ..args) = forward 
 [T when Numeric?(T)] 
 inline overload reduceToScalar(forward i, forward a:T,forward ..args) = forward a,..reduceToScalar(i,..args);
 inline overload reduceToScalar(forward i) = ;
-
 
 
 //

@@ -1,7 +1,7 @@
 import byteorder.constants.*;
 import byteorder.platform.*;
-import numbers.(wrapBitshl as shl);
-import operators.(bitshr as shr);
+import core.numbers.(wrapBitshl as shl);
+import core.operators.(bitshr as shr);
 
 alias BigEndian? = ByteOrder == BigEndian;
 alias LittleEndian? = ByteOrder == LittleEndian;

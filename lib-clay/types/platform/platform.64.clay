@@ -1,11 +1,0 @@
-
-
-//
-// type aliases for 64-bit platforms
-//
-
-alias PtrInt = Int64;
-alias UPtrInt = UInt64;
-
-alias CLong = Int64;
-alias CULong = UInt64;

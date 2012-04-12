@@ -1,5 +1,5 @@
-import errors.(private assertStringLiteral);
-import errors.backtrace.(showBacktrace);
+import core.errors.(private assertStringLiteral);
+import core.errors.backtrace.(showBacktrace);
 import io.files.raw.(stderrRawFile,stdoutRawFile);
 import io.streams.(write,flush,ByteBuffer?);
 import libc;

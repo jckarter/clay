@@ -2,7 +2,8 @@
 import paged.*;
 import paged.misc.*;
 import strings.(String?);
-import vectors.generic.*;
+import core.vectors.generic
+.*;
 import strings;
 import io.mapping.*;
 import io.paths.*;

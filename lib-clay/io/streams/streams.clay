@@ -1,6 +1,7 @@
 
 public import io.errors.*;
-import vectors.generic.*;
+import core.vectors.generic
+.*;
 import strings.*;
 
 

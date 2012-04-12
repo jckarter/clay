@@ -1,5 +1,6 @@
 
-import vectors.generic.*;
+import core.vectors.generic
+.*;
 import numbers.floats.(floatBits);
 import referencetypes.(ReferenceType?);
 import sharedpointers.*;

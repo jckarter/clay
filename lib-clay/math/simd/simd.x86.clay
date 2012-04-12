@@ -1,6 +1,5 @@
 import math.*;
 import simd.*;
-import numbers.(toBiggerNumericType);
 
 define hadd;
 define hsub;

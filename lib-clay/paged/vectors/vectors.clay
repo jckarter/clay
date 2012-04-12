@@ -1,6 +1,7 @@
 
 import paged.*;
-import vectors.generic.*;
+import core.vectors.generic
+.*;
 
 
 //
