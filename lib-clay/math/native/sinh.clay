@@ -4,6 +4,8 @@ import math.native.kernel.ieee754.*;
 import math.native.kernel.k_exp.*;
 import math.*;
 
+overload sinh(x:Float) = Float(sinh(Double(x)));
+
 overload sinh(x:Double) {
 	alias ONE = 1.;
 	alias HUGE = GreatestPositiveFinite(Double);

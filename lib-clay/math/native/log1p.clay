@@ -3,6 +3,8 @@
 import math.native.kernel.ieee754.*;
 import math.*;
 
+overload log1p(x:Float) = Float(log1p(Double(x)));
+
 overload log1p(x:Double) {
 	alias ZERO = 0.;
 	alias HALF = 0.5;

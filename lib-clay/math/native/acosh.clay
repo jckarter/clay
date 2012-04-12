@@ -3,6 +3,8 @@
 import math.native.kernel.ieee754.*;
 import math.*;
 
+overload acosh(x:Float) = Float(acosh(Double(x)));
+
 overload acosh(x:Double) {
 	alias ONE = 1.;
 	var xdb = MAKE_IEEE(x);

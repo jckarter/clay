@@ -11,11 +11,12 @@ alias Q3  =  -7.93650757867487942473e-05; /* BF14CE19 9EAADBB7 */
 alias Q4  =   4.00821782732936239552e-06; /* 3ED0CFCA 86E65239 */
 alias Q5  =  -2.01099218183624371326e-07; /* BE8AFDB7 6E09C32D */
 
-[T]
-overload expm1(a:T)  {
-	alias ONE = T(1);
-	alias HUGE = GreatestPositiveFinite(T);
-	alias TINY = LeastPositive(T);
+overload expm1(a:Float) = Float(expm1(Double(a)));
+
+overload expm1(a:Double)  {
+	alias ONE = 1.;
+	alias HUGE = GreatestPositiveFinite(Double);
+	alias TINY = LeastPositive(Double);
 
 	var x = a;
 	var xdb = MAKE_IEEE(x);

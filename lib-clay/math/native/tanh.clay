@@ -4,6 +4,7 @@ import math.native.kernel.ieee754.*;
 import math.native.kernel.k_exp.*;
 import math.*;
 
+overload tanh(x:Float) = Float(tanh(Double(x)));
 
 overload tanh(x:Double) {
 	alias ONE = 1.;

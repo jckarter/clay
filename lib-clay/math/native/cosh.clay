@@ -2,6 +2,8 @@
 import math.native.kernel.ieee754.*;
 import math.*;
 
+overload cosh(x:Float) = Float(cosh(Double(x)));
+
 overload cosh(x:Double) {
 	alias ONE = 1.;
 	alias HALF = 0.5;

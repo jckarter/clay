@@ -12,6 +12,8 @@ import math.native.kernel.k_log.*;
 import math.native.kernel.ieee754.*;
 import math.*;
 
+overload log2(x:Float) = Float(log2(Double(x)));
+
 overload log2(x:Double) {
 	alias ZERO = 0.;
 	var xdb = MAKE_IEEE(x);

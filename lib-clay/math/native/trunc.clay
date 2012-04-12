@@ -11,11 +11,11 @@
 import math.native.kernel.ieee754.*;
 import math.*;
 
+overload trunc(x:Float) = Float(trunc(Double(x)));
 
-[T when Float?(T)]
-overload trunc(x:T) {
-	alias HUGE = GreatestPositiveFinite(T);
-	alias ZERO = T(0);
+overload trunc(x:Double) {
+	alias HUGE = GreatestPositiveFinite(Double);
+	alias ZERO = Double(0);
 	var ix = MAKE_IEEE(x);
 	var j0 = bitand(bitshr(GET_IEEE_HIGH(ix),20),0x7ff)-0x3ff;
 	if(j0 < 20) {

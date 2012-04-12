@@ -11,6 +11,9 @@ alias two54   =  1.80143985094819840000e+16; /* 0x43500000, 0x00000000 */
 alias twom54  =  5.55111512312578270212e-17; /* 0x3C900000, 0x00000000 */
 
 [I when Integer?(I)]
+overload scalbn (x:Float, n:I) = Float(scalbn(Double(x), n));
+
+[I when Integer?(I)]
 overload scalbn (x:Double, n:I) {
     alias HUGE = GreatestPositiveFinite(Double);
     alias TINY = LeastPositive(Double);

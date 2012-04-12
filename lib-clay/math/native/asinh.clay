@@ -3,6 +3,8 @@
 import math.native.kernel.ieee754.*;
 import math.*;
 
+overload asinh(x:Float) = Float(asinh(Double(x)));
+
 overload asinh(x:Double) {
 	alias ONE = 1.;
 	alias HUGE = GreatestPositiveFinite(Double);
