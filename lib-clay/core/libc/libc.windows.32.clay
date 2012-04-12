@@ -1,0 +1,45 @@
+
+alias stdin = @__iob_func()[0];
+alias stdout = @__iob_func()[1];
+alias stderr = @__iob_func()[2];
+
+alias size_t = UInt;
+
+record Struct__iobuf (
+    _ptr : Pointer[CChar],
+    _cnt : Int,
+    _base : Pointer[CChar],
+    _flag : Int,
+    _file : Int,
+    _charbuf : Int,
+    _bufsiz : Int,
+    _tmpfname : Pointer[CChar],
+);
+
+alias FILE = Struct__iobuf;
+
+external (cdecl) __iob_func() : Pointer[FILE];
+
+external (cdecl) abort() : ;
+
+external (cdecl) fprintf(arg0:Pointer[FILE], arg1:Pointer[CChar], ..) : Int;
+
+external (cdecl) strlen(arg0:Pointer[CChar]) : size_t;
+
+external (cdecl) malloc(arg0:size_t) : OpaquePointer;
+
+external (cdecl) free(arg0:OpaquePointer) : ;
+
+external (cdecl) realloc(arg0:OpaquePointer, arg1:size_t) : OpaquePointer;
+
+
+// asprintf isn't standard and windows doesn't have it, but it's pretty useful so
+// let's fake it
+
+asprintf(out:Pointer[Pointer[CChar]], fmt, ..args) : Int {
+    var bufsz = _scprintf(fmt, ..args);
+    out^ = Pointer[CChar](malloc(bufsz+1));
+    var bufsz2 = _snprintf(out^, bufsz, fmt, ..args);
+    out[bufsz] = CChar(0);
+    return bufsz2;
+}

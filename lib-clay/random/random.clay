@@ -1,6 +1,7 @@
-import libc;
+
 import math.(sqrt,cos,log,M_PI);
 import printer.formatter.(hex, repr);
+import libc;
 
 // Implementation of XOR-shift RNGs by George Marsaglia
 record XORShiftRNG(

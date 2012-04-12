@@ -1,5 +1,5 @@
 import io.files.raw.*;
-import system.platform.*;
+import io.files.(terminal?);
 import printer.(print);
 
 enum Color ( 

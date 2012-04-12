@@ -1,5 +1,4 @@
 import algorithms.(sort);
-import maybe.*;
 
 eachPermutation(xs, f){
   sort(xs);

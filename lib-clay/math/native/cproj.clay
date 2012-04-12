@@ -1,5 +1,6 @@
 
 import math.*;
+import complex.*;
 
 [T when Complex?(T)]
 overload proj(z:T) {

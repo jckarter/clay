@@ -1,4 +1,6 @@
 import printer.(println);
+import simd.*;
+
 main() {
     var x = Vec[Char, 16]();
     println(x);

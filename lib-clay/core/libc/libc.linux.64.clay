@@ -1,0 +1,55 @@
+alias FILE = Struct__IO_FILE;
+
+external (cdecl) abort() : ;
+
+external (cdecl) asprintf(arg0:Pointer[Pointer[CChar]], arg1:Pointer[CChar], ..) : Int;
+
+external (cdecl) fprintf(arg0:Pointer[FILE], arg1:Pointer[CChar], ..) : Int;
+
+external stderr : Pointer[Struct__IO_FILE];
+
+external (cdecl) strlen(arg0:Pointer[CChar]) : CULong;
+
+external (cdecl) malloc(arg0:CULong) : OpaquePointer;
+
+external (cdecl) free(arg0:OpaquePointer) : ;
+
+external (cdecl) realloc(arg0:OpaquePointer, arg1:CULong) : OpaquePointer;
+
+record Struct__IO_marker (
+    _next : Pointer[Struct__IO_marker],
+    _sbuf : Pointer[Struct__IO_FILE],
+    _pos : Int,
+);
+
+record Struct__IO_FILE (
+    _flags : Int,
+    _IO_read_ptr : Pointer[CChar],
+    _IO_read_end : Pointer[CChar],
+    _IO_read_base : Pointer[CChar],
+    _IO_write_base : Pointer[CChar],
+    _IO_write_ptr : Pointer[CChar],
+    _IO_write_end : Pointer[CChar],
+    _IO_buf_base : Pointer[CChar],
+    _IO_buf_end : Pointer[CChar],
+    _IO_save_base : Pointer[CChar],
+    _IO_backup_base : Pointer[CChar],
+    _IO_save_end : Pointer[CChar],
+    _markers : Pointer[Struct__IO_marker],
+    _chain : Pointer[Struct__IO_FILE],
+    _fileno : Int,
+    _flags2 : Int,
+    _old_offset : CLong,
+    _cur_column : UShort,
+    _vtable_offset : CChar,
+    _shortbuf : Array[CChar, 1],
+    _lock : Pointer[CLong],
+    _offset : CLong,
+    __pad1 : OpaquePointer,
+    __pad2 : OpaquePointer,
+    __pad3 : OpaquePointer,
+    __pad4 : OpaquePointer,
+    __pad5 : CULong,
+    _mode : Int,
+    _unused2 : Array[CChar, 20],
+);

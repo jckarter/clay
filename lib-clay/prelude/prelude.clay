@@ -1,50 +1,8 @@
-public import __primitives__.*;
-public import types.*;
-public import operators.*;
-public import records.*;
-public import tuples.*;
-public import unions.*;
-public import statics.*;
-public import booleans.*;
-public import numbers.*;
-public import numbers.overflow.*;
-public import complex.*;
-public import enumerations.*;
-public import pointers.*;
-public import memory.*;
-public import operators.pod.*;
-public import values.*;
-public import variants.*;
-public import variants.nested.*;
-public import lambdas.*;
+public import core.*;
 
-public import coordinates.*;
-public import sequences.*;
 
-public import arrays.*;
-public import vectors.*;
-public import vectors.buffer.*;
-public import characters.*;
-public import strings.*;
-public import strings.cstringrefs.*;
-public import strings.literals.*;
-
-public import io.streams.*;
-public import io.files.*;
-
-public import errors.*;
-public import exceptions.*;
-
-public import system.*;
 
 // include self so that even if any symbol is shadowed
 // it can still be accessed as 'prelude.XXX'.
 public import prelude;
 
-alias stdcall = AttributeStdCall;
-alias fastcall = AttributeFastCall;
-alias thiscall = AttributeThisCall;
-alias cdecl = AttributeCCall;
-alias llvm = AttributeLLVMCall;
-alias dllimport = AttributeDLLImport;
-alias dllexport = AttributeDLLExport;

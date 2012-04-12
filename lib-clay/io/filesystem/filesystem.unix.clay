@@ -1,7 +1,8 @@
-import libc.(rename);
 import unix.*;
 import io.errors.*;
 public import io.filesystem.executable.*;
+import strings.*;
+import libc;
 
 readLink(x) {
     var path_max = pathconf(cstring(x), _PC_PATH_MAX);
@@ -20,7 +21,7 @@ readLink(x) {
 }
 
 moveFile(fromPath, toPath) {
-    var ok = rename(cstring(fromPath), cstring(toPath));
+    var ok = libc.rename(cstring(fromPath), cstring(toPath));
     if (ok != 0)
         throw GenericIOError(errno());
 }

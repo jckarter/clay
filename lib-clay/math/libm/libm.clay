@@ -1,4 +1,3 @@
-
 import libc;
 public import math.native.defines.*;
 import numbers.floats.*;
@@ -18,12 +17,6 @@ inline overload pow(x:LongDouble,y:Float) = libc.powl(x,LongDouble(y));
 [T when Integer?(T) and MathMode?(LIBM)] inline overload pow(x:Double,y:T) = libc.pow(x,Double(y));
 [T when Integer?(T)] inline overload pow(x:Float,y:T) = libc.powf(x,Float(y));
 [T when Integer?(T)] inline overload pow(x:LongDouble,y:T) = libc.powl(x,LongDouble(y));
-
-[when MathMode?(LIBM)] inline overload abs(x:Int32) = libc.abs(x);
-[when MathMode?(LIBM)] inline overload abs(x:Long) = libc.llabs(x);
-[when MathMode?(LIBM)] inline overload abs(x:Float) = libc.fabsf(x);
-[when MathMode?(LIBM)] inline overload abs(x:Double) = libc.fabs(x);
-[when MathMode?(LIBM)] inline overload abs(x:LongDouble) = libc.fabsl(x);
 
 [when MathMode?(LIBM)] inline overload exp(x:Double) = libc.exp(x);
 [when MathMode?(LIBM)] inline overload exp(x:Float) = libc.expf(x);
@@ -142,8 +135,8 @@ inline overload log2(x:LongDouble) = libc.log2l(x);
 inline overload sqrt(x:LongDouble) = libc.sqrtl(x);
 
 [when MathMode?(LIBM)] inline overload cbrt(x:Double) = libc.cbrt(x);
-inline overload cbrt(x:Float) = libc.cbrtf(x);
-inline overload cbrt(x:LongDouble) = libc.cbrtl(x);
+[when MathMode?(LIBM)] inline overload cbrt(x:Float) = libc.cbrtf(x);
+[when MathMode?(LIBM)] inline overload cbrt(x:LongDouble) = libc.cbrtl(x);
 
 [when MathMode?(LIBM)] inline overload floor(x:Double) = libc.floor(x);
 [when MathMode?(LIBM)] inline overload floor(x:Float) = libc.floorf(x);

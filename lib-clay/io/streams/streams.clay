@@ -1,6 +1,8 @@
 
 public import io.errors.*;
-import vectors.generic.*;
+import buffervector.*;
+import strings.*;
+
 
 //
 // read, write, flush - byte stream operations

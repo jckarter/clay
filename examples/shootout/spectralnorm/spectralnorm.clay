@@ -1,5 +1,8 @@
 import printer.(println);
-import math.simd.*;
+import math.*;
+import numbers.parser.*;
+import io.files.(stdout);
+import io.streams.(write);
 import libc;
 
 A(i, j) = 1.0 / Float64(((i+j) * (i+j+1)\2) + i + 1);
@@ -79,7 +82,7 @@ approximate(k) {
     }
     freeRawMemoryAligned(h);
     freeRawMemoryAligned(g);
-    return libc.sqrt(vbv / vv);
+    return sqrt(vbv / vv);
 }
 
 printFloat(stream, fmt, value) {

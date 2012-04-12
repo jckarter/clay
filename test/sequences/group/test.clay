@@ -1,6 +1,7 @@
 import test.*;
-import sequences.lazy.grouped.*;
+import core.sequences.lazy.grouped.*;
 import strings.encodings.utf8.*;
+import strings.*;
 
 main() = testMain(
     TestSuite("lazy grouped sequences", array(

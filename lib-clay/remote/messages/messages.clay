@@ -1,5 +1,6 @@
 import remote.marshaling.*;
-import maybe.*;
+import io.streams.*;
+import io.files.*;
 
 private readMarshalSize(stream) --> returned: MarshalSize {
     readN(stream, Pointer[Byte](@returned), TypeSize(MarshalSize));

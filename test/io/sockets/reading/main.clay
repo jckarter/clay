@@ -2,6 +2,8 @@ import io.sockets.*;
 import commandline.dispatch.*;
 import time;
 import printer.(println);
+import io.streams.*;
+import io.files.*;
 
 main() {
     startSockets();

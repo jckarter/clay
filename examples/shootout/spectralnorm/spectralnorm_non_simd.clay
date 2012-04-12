@@ -1,5 +1,6 @@
 import printer.(println);
 import libc;
+import math.(sqrt);
 
 A(i, j) = 1.0 / Double(((i+j) * (i+j+1)\2) + i + 1);
 
@@ -47,7 +48,7 @@ approximate(k) {
         vbv +: h[i] * g[i];
         vv +: g[i] * g[i];
     } 
-    return libc.sqrt(vbv / vv);
+    return sqrt(vbv / vv);
 }
 
 printFloat(stream, fmt, value) {

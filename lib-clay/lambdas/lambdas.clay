@@ -5,7 +5,7 @@ import __operators__.(
     unpackMultiValuedFreeVarAndDereference,
 );
 
-import sharedpointers.(SharedPointer,new);
+import sharedpointers.*;
 
 
 //

@@ -1,4 +1,6 @@
 import printer.(println,print,printlnTo);
+import io.files.*;
+import io.streams.(readLine);
 
 main() {
     { 

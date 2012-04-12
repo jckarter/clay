@@ -1,6 +1,9 @@
 import libc;
 import printer.formatter.(repr);
 import printer.(println);
+import io.streams.*;
+import io.files.*;
+import complex.*;
 
 alias Union24 = Union[
     /* a */ UInt32,

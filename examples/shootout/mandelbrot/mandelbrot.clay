@@ -1,7 +1,9 @@
 import printer.(println);
 import math.simd.*;
 import math.*;
-
+import numbers.parser.*;
+import io.streams.(write);
+import io.files.(stdout);
 
 render(w:Int, h:Int) {
     var wholeData = Vector[UInt8]();

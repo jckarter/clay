@@ -1,5 +1,8 @@
 
-import numbers.floats.*;
+// ieee754 number - utility representation
+alias ieee_db = Union[Array[Int32,2], Int64, Float64];
+alias db_one = ieee_db(1.0);
+alias db_zero = ieee_db(0.0);
 
 /* Get two 32 bit ints from a double.  */
 

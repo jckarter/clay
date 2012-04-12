@@ -1,5 +1,6 @@
 import win32.*;
 import printer.(printTo);
+import strings.cstringrefs.*;
 
 printErrorMessageTo(stream, errorCode) {
     var buf = Array[Byte, 1024]();

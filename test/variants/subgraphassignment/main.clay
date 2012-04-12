@@ -1,5 +1,5 @@
-import sharedpointers.(SharedPointer,new);
 import printer.(println);
+import sharedpointers.*;
 
 variant Tree (Branch, Leaf);
 

@@ -1,4 +1,3 @@
-import maybe.(Maybe, nothing);
 
 record UTF8Decoder[Iterator] (
     iter: Iterator

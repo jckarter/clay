@@ -1,6 +1,7 @@
 
 import libc;
 import printer.(println);
+import strings.*;
 
 sayHello(s) {
     var msg = "Hello, " ++ s;

@@ -1,4 +1,5 @@
 import printer.(println);
+import io.files.(lines,File);
 
 [T when Sequence?(T)]
 sequenceInfo(x:T) {

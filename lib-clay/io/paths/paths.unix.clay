@@ -3,6 +3,8 @@ import unix;
 import libc;
 import io.errors.*;
 import algorithms.(reverseFind,reverseFindIf,reverseInPlace,beginsWith?,endsWith?);
+import strings.*;
+import strings.cstringrefs.*;
 
 
 

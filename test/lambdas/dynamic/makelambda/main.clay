@@ -1,4 +1,5 @@
 import printer.(println);
+import lambdas.*;
 
 main() {
     var f = (..xs) -> (1, ..xs, true);

@@ -1,6 +1,9 @@
 
 import io.files.raw.*;
-import sharedpointers.(SharedPointer,new);
+import io.files.api.*;
+import io.streams.*;
+import sharedpointers.*;
+import strings.*;
 
 
 //

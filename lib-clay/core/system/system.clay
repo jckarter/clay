@@ -1,0 +1,54 @@
+import __operators__;
+import core.libc as libc;
+
+private var argc = 0;
+private var argv = Pointer[Pointer[Int8]]();
+private var commandLineInitialized? = false;
+private var commandLineArgs = Vector[Vector[Char]]();
+
+commandLine() {
+    if (not commandLineInitialized?) {
+        clear(commandLineArgs);
+        for (i in range(argc)) {
+            var cstr = (argv + i)^;
+            push(commandLineArgs, Vector[Char](cstr));
+        }
+        commandLineInitialized? = true;
+    }
+    return ref commandLineArgs;
+}
+
+private setArgcArgv(argc_, argv_) {
+    argc = argc_;
+    argv = argv_;
+    commandLineInitialized? = false;
+}
+
+getArgcArgv() = argc, argv;
+
+private alias runMain(argc_, argv_, f, ..args) {
+    setArgcArgv(argc_, argv_);
+    try {
+        return getExitCode(..f(..args));
+    }
+    catch (e) {
+        libc.fprintf(libc.stderr, cstring(stringLiteralConcat("unhandled ", StaticName(Type(e)), " exception")));
+        return -1;
+    }
+}
+
+[Main]
+overload __operators__.callMain(#Main, argc_:Int, argv_:Pointer[Pointer[Int8]])
+    = runMain(argc_, argv_, Main);
+
+[Main when CallDefined?(Main, Type(commandLine()))]
+overload __operators__.callMain(#Main, argc_:Int, argv_:Pointer[Pointer[Int8]])
+    = runMain(argc_, argv_, Main, commandLine());
+
+[Main when CallDefined?(Main, ..Type(argc, argv))]
+overload __operators__.callMain(#Main, argc_:Int, argv_:Pointer[Pointer[Int8]])
+    = runMain(argc_, argv_, Main, argc_, argv_);
+
+private define getExitCode;
+overload getExitCode() = 0;
+overload getExitCode(x) = Int(x);

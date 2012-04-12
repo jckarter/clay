@@ -1,4 +1,6 @@
 import printer.(println);
+import strings.*;
+
 record Foo (
     a: Int,
     b: String

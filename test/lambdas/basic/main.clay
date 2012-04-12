@@ -1,4 +1,6 @@
 import printer.(println);
+import strings.*;
+import lambdas.*;
 
 record Foo[F] ( fn : F );
 var z = Foo(x => { println(x); });

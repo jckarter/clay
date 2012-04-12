@@ -198,17 +198,6 @@ abs(x:T) = imagFromBits(floatBitsUnsigned(x));
 overload abs(x:T) = floatFromBits(floatBitsUnsigned(x));
 
 
-[T,U when Float?(T,U)]
-copysign(a:T,b:U) = floatFromBits(bitor(floatBitsUnsigned(a),
-    wrapBitshl(signbit(b),mantissaSize(T)+exponentSize(T))));
-
-[T when Float?(T)]
-overload copysign(a:LongDouble,b:T) {
-    var tmp = floatBitsUnsigned(a);
-    return floatFromBits(tmp.mantissa,bitor(tmp.exponent,
-        wrapBitshl(signbit(b),exponentSize(LongDouble))));
-}
-
 [T when Float?(T) or Imaginary?(T)] finite?(x:T) = floatExponent(x) < exponentMask(T);
 [T when Float?(T) or Imaginary?(T)] infinity?(x:T) = x == infinity(T);
 [T when Float?(T) or Imaginary?(T)] negativeInfinity?(x:T) = x == negativeInfinity(T);
@@ -224,90 +213,3 @@ overload copysign(a:LongDouble,b:T) {
 [T when Float?(T) or Imaginary?(T)] subnormal?(x:T) = floatExponent(x)==T(0) and x!=T(0);
 [T when Float?(T) or Imaginary?(T)] normalized?(x:T) = not subnormal?(x) and finite?(x);
 
-[T when Float?(T)] epsilon(#T) = nextafter(T(1),T(2))-T(1);
-
-
-// ieee754 number - utility representation
-alias ieee_db = Union[Array[Int32,2], Int64, Float64];
-alias db_one = ieee_db(1.0);
-alias db_zero = ieee_db(0.0);
-
-alias FP_NAN = 0;
-alias FP_INFINITE = 1;
-alias FP_ZERO = 2;
-alias FP_SUBNORMAL = 3;
-alias FP_NORMAL = 4;
-alias FP_SNAN = 5;
-alias FP_NAN_NEG = 6;
-alias FP_INFINITE_NEG = 7;
-alias FP_ZERO_NEG = 8;
-alias FP_SUBNORMAL_NEG = 9;
-alias FP_NORMAL_NEG = 10;
-alias FP_SNAN_NEG = 11;
-
-[T when Float?(T) or Imaginary?(T)]
-fpclassify(x:T) --> res:Int {
-    if(x==T(0)) res <-- FP_ZERO;
-    else if(subnormal?(x)) res <-- FP_SUBNORMAL;
-    else if(nan?(x))
-        res <-- if(snan?(x)) FP_SNAN else FP_NAN;
-    else if(infinity?(x)) res <-- FP_INFINITE;
-    else res <-- FP_NORMAL;
-    if(floatNegative?(x)) res +: 6;
-}
-
-// nextafter(x,y)
-// return the next machine floating-point number of x in the
-// direction toward y.
-
-nextafter(x:Double, y:Double){
-    alias MIN_SUB = LeastPositive(Double);
-    alias EXP_MASK = 0x7ff00000;
-    var xdb,ydb = ieee_db(x),ieee_db(y);
-	alias hx = xdb.0[1];
-    alias lx = xdb.0[0];
-    alias hy = ydb.0[1];
-    alias ly = ydb.0[0];
-
-	if(x == y) return x;
-    if(nan?(x) or nan?(y)) return nan(Double);
-	if(x == 0.) // x == 0 so return +-minsubnormal
-	    return if(signbit(y) == 1) -MIN_SUB else MIN_SUB;// raise underflow flag
-	if(hx >= 0)
-	    if(hx > hy or (hx == hy and lx > ly)) {	// x > y, x -: ulp
-            if(lx == 0) dec(hx);
-            dec(lx);
-	    } else {	// x < y, x +: ulp
-            inc(lx);
-            if(lx == 0) inc(hx);
-	    }
-	else
-	    if(hy>=0 or hx>hy or ((hx==hy)and(lx>ly))){// x < y, x -: ulp
-            if(lx == 0) dec(hx);
-            dec(lx);
-	    } else {		// x > y, x +: ulp
-            inc(lx);
-            if(lx == 0) inc(hx);
-	    }
-    hy = bitand(hx,EXP_MASK);
-	if(hy >= EXP_MASK)
-        return infinity(Double);	// overflow
-	if(hy < 0x00100000)		// underflow
-	    if(x*x != x)		// raise underflow flag
-            return xdb.2;
-	return xdb.2;
-}
-
-overload nextafter(x:Double,y:Float) = nextafter(x,Double(y));
-overload nextafter(x:Float,y:Double) = nextafter(Double(x),y);
-
-alias nexttoward = nextafter;
-
-alias normcoeff(#LongDouble) = floatFromBits(UInt128(0x4035ul));
-alias overload normcoeff(#Double) = floatFromBits(0x435ul);
-alias overload normcoeff(#Float) = floatFromBits(0x4Cu);
-
-[T when Float?(T)]
-normalize(x:T) 
-    = if(normalized?(x)) x else floatFromBits(floatExponent(x*normcoeff(T)) - 
-        (mantissaSize(T) + 2));

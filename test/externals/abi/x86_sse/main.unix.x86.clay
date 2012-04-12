@@ -1,7 +1,11 @@
-import libc;
-import simd.*;
+
 import printer.formatter.(repr);
 import printer.(println);
+import io.streams.*;
+import io.files.*;
+import simd.*;
+import complex.*;
+import libc;
 
 record Struct_x86_2 (
     a : Vec[Int64,2],
