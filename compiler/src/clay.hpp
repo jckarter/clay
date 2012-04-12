@@ -3343,7 +3343,7 @@ struct PVData {
 
     bool ok() const { return type != NULL; }
 
-    bool operator==(PVData const &x) { return type == x.type && isTemp == x.isTemp; }
+    bool operator==(PVData const &x) const { return type == x.type && isTemp == x.isTemp; }
 };
 
 struct PValue : public Object {
