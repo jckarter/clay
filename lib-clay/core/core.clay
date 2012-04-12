@@ -31,8 +31,6 @@ public import core.exceptions.*;
 public import core.system.*;
 public import core.system.platform.*;
 
-public import core.libc as libc;
-
 alias stdcall = AttributeStdCall;
 alias fastcall = AttributeFastCall;
 alias thiscall = AttributeThisCall;

@@ -2,7 +2,7 @@
 // language: c
 
 import unix.*;
-import core.libc.*;
+import libc.*;
 
 private alias OpaquePointer = RawPointer;
 private alias UnknownType = Int;

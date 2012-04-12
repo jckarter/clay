@@ -1,40 +1,37 @@
-public import core.libc.generated.*;
 
 alias stdin = @__iob_func()[0];
 alias stdout = @__iob_func()[1];
 alias stderr = @__iob_func()[2];
 
-alias setjmp = _setjmp;
-alias random = rand;
+alias size_t = UInt;
 
-alias strtoll = _strtoi64;
-alias strtoull = _strtoui64;
+record Struct__iobuf (
+    _ptr : Pointer[CChar],
+    _cnt : Int,
+    _base : Pointer[CChar],
+    _flag : Int,
+    _file : Int,
+    _charbuf : Int,
+    _bufsiz : Int,
+    _tmpfname : Pointer[CChar],
+);
 
-// The float variants of math functions are implemented as macros
+alias FILE = Struct__iobuf;
 
-inline acosf(x:Float) : Float = Float(acos(Double(x)));
-inline asinf(x:Float) : Float = Float(asin(Double(x)));
-inline atanf(x:Float) : Float = Float(atan(Double(x)));
-inline atan2f(x:Float, y:Float) : Float = Float(atan2(Double(x), Double(y)));
-inline cosf(x:Float) : Float = Float(cos(Double(x)));
-inline coshf(x:Float) : Float = Float(cosh(Double(x)));
-inline expf(x:Float) : Float = Float(exp(Double(x)));
-inline fabsf(x:Float) : Float = Float(fabs(Double(x)));
-inline floorf(x:Float) : Float = Float(floor(Double(x)));
-inline fmodf(x:Float, y:Float) : Float = Float(fmod(Double(x), Double(y)));
-inline logf(x:Float) : Float = Float(log(Double(x)));
-inline log10f(x:Float) : Float = Float(log10(Double(x)));
-inline powf(x:Float, y:Float) : Float = Float(pow(Double(x), Double(y)));
-inline sinf(x:Float) : Float = Float(sin(Double(x)));
-inline sinhf(x:Float) : Float = Float(sinh(Double(x)));
-inline sqrtf(x:Float) : Float = Float(sqrt(Double(x)));
-inline tanf(x:Float) : Float = Float(tan(Double(x)));
-inline tanhf(x:Float) : Float = Float(tanh(Double(x)));
+external (cdecl) __iob_func() : Pointer[FILE];
 
-// these are macros
+external (cdecl) abort() : ;
 
-inline isnan(x:Double) : Int = Int(x != x);
-inline isnanf(x:Float) : Int = Int(x != x);
+external (cdecl) fprintf(arg0:Pointer[FILE], arg1:Pointer[CChar], ..) : Int;
+
+external (cdecl) strlen(arg0:Pointer[CChar]) : size_t;
+
+external (cdecl) malloc(arg0:size_t) : OpaquePointer;
+
+external (cdecl) free(arg0:OpaquePointer) : ;
+
+external (cdecl) realloc(arg0:OpaquePointer, arg1:size_t) : OpaquePointer;
+
 
 // asprintf isn't standard and windows doesn't have it, but it's pretty useful so
 // let's fake it

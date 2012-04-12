@@ -1,5 +1,5 @@
 import printer.(println);
-
+import libc;
 
 main() {
     println(Type(libc.printf));

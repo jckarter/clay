@@ -1,0 +1,63 @@
+
+var stdin = __stdinp;
+var stdout = __stdoutp;
+var stderr = __stderrp;
+
+alias __darwin_size_t = CULong;
+
+alias __darwin_off_t = __int64_t;
+
+alias fpos_t = __darwin_off_t;
+
+record Struct___sbuf (
+    _base : Pointer[CUChar],
+    _size : Int,
+);
+
+alias Struct___sFILEX = Opaque;
+
+record Struct___sFILE (
+    _p : Pointer[CUChar],
+    _r : Int,
+    _w : Int,
+    _flags : Short,
+    _file : Short,
+    _bf : Struct___sbuf,
+    _lbfsize : Int,
+    _cookie : OpaquePointer,
+    _close : CCodePointer[[OpaquePointer],[Int]],
+    _read : CCodePointer[[OpaquePointer, Pointer[CChar], Int],[Int]],
+    _seek : CCodePointer[[OpaquePointer, fpos_t, Int],[fpos_t]],
+    _write : CCodePointer[[OpaquePointer, Pointer[CChar], Int],[Int]],
+    _ub : Struct___sbuf,
+    _extra : Pointer[Struct___sFILEX],
+    _ur : Int,
+    _ubuf : Array[CUChar, 3],
+    _nbuf : Array[CUChar, 1],
+    _lb : Struct___sbuf,
+    _blksize : Int,
+    _offset : fpos_t,
+);
+
+alias FILE = Struct___sFILE;
+
+
+external __stdinp : Pointer[FILE];
+
+external __stdoutp : Pointer[FILE];
+
+external __stderrp : Pointer[FILE];
+
+external (cdecl) abort() : ;
+
+external (cdecl) asprintf(arg0:Pointer[Pointer[CChar]], arg1:Pointer[CChar], ..) : Int;
+
+external (cdecl) fprintf(arg0:Pointer[FILE], arg1:Pointer[CChar], ..) : Int;
+
+external (cdecl) strlen(arg0:Pointer[CChar]) : CULong;
+
+external (cdecl) malloc(arg0:CULong) : OpaquePointer;
+
+external (cdecl) free(arg0:OpaquePointer) : ;
+
+external (cdecl) realloc(arg0:OpaquePointer, arg1:CULong) : OpaquePointer;

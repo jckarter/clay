@@ -2,6 +2,7 @@ import unix.*;
 import io.errors.*;
 public import io.filesystem.executable.*;
 import strings.*;
+import libc;
 
 readLink(x) {
     var path_max = pathconf(cstring(x), _PC_PATH_MAX);

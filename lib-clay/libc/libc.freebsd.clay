@@ -1,4 +1,4 @@
-public import core.libc.generated.*;
+public import libc.generated.*;
 
 var stdin = __stdinp;
 var stdout = __stdoutp;
