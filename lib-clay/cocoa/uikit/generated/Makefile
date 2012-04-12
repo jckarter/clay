@@ -1,7 +1,7 @@
 all: generated.macosx.arm.clay
 
 CLAY_BINDGEN_FLAGS = -x objective-c \
-    -import core.libc \
+    -import libc \
     -import cocoa.corefoundation \
     -import cocoa.applicationservices \
     -import cocoa.foundation \
