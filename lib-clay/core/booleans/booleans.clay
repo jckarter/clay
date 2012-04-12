@@ -1,0 +1,18 @@
+
+inline overload Bool() = false;
+
+[I when Integer?(I)]
+inline overload I(a:Bool) {
+    if (a) return I(1);
+    else return I(0);
+}
+
+[I when Integer?(I)]
+inline overload Bool(a:I) = (a != I(0));
+
+inline overload equals?(a:Bool, b:Bool) {
+    if (a) return b;
+    return not b;
+}
+
+inline overload lesser?(a:Bool, b:Bool) = ((not a) and b);

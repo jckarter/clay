@@ -1,0 +1,41 @@
+public import __primitives__.*;
+public import core.types.*;
+public import core.operators.*;
+public import core.records.*;
+public import core.tuples.*;
+public import core.unions.*;
+public import core.statics.*;
+public import core.booleans.*;
+public import core.memory.*;
+public import core.operators.pod.*;
+public import core.numbers.*;
+public import core.numbers.overflow.*;
+public import core.enumerations.*;
+public import core.pointers.*;
+public import core.values.*;
+public import core.maybe.*;
+public import core.variants.*;
+public import core.variants.nested.*;
+
+public import core.arrays.*;
+public import core.coordinates.*;
+public import core.vectors.*;
+public import core.sequences.*;
+
+public import core.characters.*;
+public import core.stringliterals.*;
+
+public import core.errors.*;
+public import core.exceptions.*;
+
+public import core.system.*;
+public import core.system.platform.*;
+
+
+alias stdcall = AttributeStdCall;
+alias fastcall = AttributeFastCall;
+alias thiscall = AttributeThisCall;
+alias cdecl = AttributeCCall;
+alias llvm = AttributeLLVMCall;
+alias dllimport = AttributeDLLImport;
+alias dllexport = AttributeDLLExport;

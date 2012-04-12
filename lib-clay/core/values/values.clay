@@ -1,0 +1,203 @@
+
+
+
+//
+// eachValue, mapValues, foldValues, weaveValues,
+//
+
+inline eachValue(fn, ..xs) {
+    ..for (x in xs) {
+        fn(x);
+    }
+}
+
+define mapValues;
+inline overload mapValues(fn, forward x, forward ..xs)
+    = forward ..fn(x), ..mapValues(fn, ..xs);
+inline overload mapValues(fn) = ;
+
+private define _mapIndexedValues;
+[n] inline overload _mapIndexedValues(fn, #n, forward x, forward ..xs)
+    = forward ..fn(x, n), .._mapIndexedValues(fn, #n+1, ..xs);
+[n] inline overload _mapIndexedValues(fn, #n) = ;
+
+mapIndexedValues(fn, forward ..values) = forward .._mapIndexedValues(fn, #0, ..values);
+
+define foldValues;
+inline overload foldValues(fn, forward x, forward ..xs)
+    = fn(x, foldValues(fn, ..xs));
+inline overload foldValues(fn, forward x) = forward x;
+
+define foldlValues;
+inline overload foldlValues(fn, forward x1, forward x2, forward ..xs)
+    = foldlValues(fn, fn(x1, x2), ..xs);
+inline overload foldlValues(fn, forward x) = forward x;
+
+define weaveValues;
+inline overload weaveValues(between, forward x, forward ..xs)
+    = forward x, between, ..weaveValues(between, ..xs);
+inline overload weaveValues(between, forward x, forward y)
+    = forward x, between, y;
+inline overload weaveValues(between, forward x) = forward x;
+inline overload weaveValues(between) = ;
+
+
+//
+// countOccurrences, firstValue
+//
+
+define countOccurrences;
+inline overload countOccurrences(value) = 0;
+[value1, value2]
+inline overload countOccurrences(#value1, #value2, forward ..xs)
+    = countOccurrences(#value1, ..xs);
+[value]
+inline overload countOccurrences(#value, #value, forward ..xs)
+    = 1 + countOccurrences(#value, ..xs);
+
+inline firstValue(forward a, ..rest) = forward a;
+
+inline restValues(a, forward ..rest) = forward ..rest;
+
+inline lastValue(a, forward ..rest) = forward lastValue(..rest);
+overload lastValue(forward a) = forward a;
+
+
+
+//
+// replicateValue, allValues?, anyValues?, equalValues?, inValues?
+//
+
+[n]
+inline replicateValue(a, #n) = a, ..replicateValue(a, #(n-1));
+inline overload replicateValue(a, #0) = ;
+
+inline allValues?(pred, ..rest) {
+    ..for (x in rest) {
+        if (not pred(x))
+            return false;
+    }
+    return true;
+}
+
+inline anyValues?(pred, ..rest) {
+    ..for (x in rest) {
+        if (pred(x))
+            return true;
+    }
+    return false;
+}
+
+inline equalValues?(a, ..rest) = allValues?(x => a == x, ..rest);
+
+inValues?(a, ..rest) = anyValues?(x => a == x, ..rest);
+
+
+
+//
+// capture/forward values
+// 
+
+// captureValue, forwardValue, capturedRef
+
+private record CapturedLValue[T] (
+    ptr : Pointer[T]
+);
+
+define captureValue;
+inline overload captureValue(rvalue x) = move(x);
+inline overload captureValue(ref x) = CapturedLValue(@x);
+
+define forwardValue;
+inline overload forwardValue(x) = move(x);
+[T] inline overload forwardValue(x:CapturedLValue[T]) = ref x.ptr^;
+
+define capturedRef;
+inline overload capturedRef(x) = ref x;
+[T] inline overload capturedRef(x:CapturedLValue[T]) = ref x.ptr^;
+
+// captureValues, forwardValues, capturedRefs
+
+inline captureValues(forward ..args) = Tuple(..mapValues(captureValue, ..args));
+
+[..T]
+inline forwardValues(x:Tuple[..T]) =
+    forward ..mapValues(forwardValue, ..unpackTupleRef(x));
+
+[..T]
+inline capturedRefs(x:Tuple[..T]) =
+    forward ..mapValues(capturedRef, ..unpackTupleRef(x));
+
+
+
+//
+// expand values from sequence or iterator 
+//
+[S, n when Sequence?(S)]
+sequenceValues(seq: S, #n) = forward ..iteratorValues(iterator(seq), #n);
+
+[I when Iterator?(I)]
+iteratorValues(iter: I, #0) = ;
+[I, n when Iterator?(I) and n > 0]
+overload iteratorValues(iter: I, #n) {
+    var v = nextValue(iter);
+    assert["boundsChecks"](hasValue?(v));
+    return forward ..getValue(v), ..iteratorValues(iter, #(n-1));
+}
+
+
+
+//
+// iterate over two sets of values in tandem
+//
+[n when n > 0] eachValue2(fn, #n, forward x, forward ..xs) {
+    fn(x, nthValue(#(n-1), ..xs));
+    return ..eachValue2(fn, #(n-1), ..withoutNthValue(#(n-1), ..xs));
+}
+overload eachValue2(fn, #0, forward ..xs) { }
+
+[n when n > 0] mapValues2(fn, #n, forward x, forward ..xs)
+    = forward fn(x, nthValue(#(n-1), ..xs)),
+      ..mapValues2(fn, #(n-1), ..withoutNthValue(#(n-1), ..xs));
+overload mapValues2(fn, #0, forward ..xs) = ;
+
+
+
+//
+// treat multiple #tuple values as key-values pairs
+//
+
+[key]
+assocValue(#key, kv, forward ..kvs) = forward ..assocValue(#key, ..kvs);
+
+[key, ..T]
+overload assocValue(#key, forward kv: Tuple[Static[key], ..T], ..kvs)
+    = forward ..restValues(..unpack(kv));
+
+[key]
+assocValue?(#key) = false;
+[key]
+overload assocValue?(#key, kv, ..kvs) = assocValue?(key, ..kvs);
+[key, ..T]
+overload assocValue?(#key, kv: Tuple[Static[key], ..T], ..kvs) = true;
+
+[key]
+assocCountValues(#key) = -1;
+[key]
+overload assocCountValues(#key, kv, ..kvs) = assocCountValues(key, ..kvs);
+[key, ..T]
+overload assocCountValues(#key, kv: Tuple[Static[key], ..T], ..kvs) = countValues(..T);
+
+
+
+//
+// find the index of a value within a value list
+//
+
+[n, value, other]
+private _valueIndex(#n, #value, #other, ..etc)
+    = _valueIndex(#(n+1), #value, ..etc);
+[n, value]
+overload _valueIndex(#n, #value, #value, ..etc) = n;
+[value]
+valueIndex(#value, ..etc) = _valueIndex(#0, #value, ..etc);

@@ -1,0 +1,274 @@
+
+//
+// predicates
+//
+
+[T,n]
+overload ContiguousSequence?(#Array[T,n]) = true;
+
+[T,n]
+overload SequenceContainer?(#Array[T,n]) = true;
+
+
+
+//
+// size, index, iterator, begin, end, front, back
+//
+
+[T,n]
+inline overload size(a:Array[T,n]) = SizeT(n);
+
+[T,n]
+inline overload StaticSize(#Array[T,n]) = SizeT(n);
+
+[T,n,I when Integer?(I)]
+inline overload index(a:Array[T,n], i:I) {
+    assert["boundsChecks"](i >= 0 and SizeT(i) < size(a), Array[T,n], " access out of bounds");
+    return ref arrayRef(a, SizeT(i));
+}
+
+[T,n]
+inline overload iterator(a:Array[T,n]) = coordinateRange(begin(a), end(a));
+
+[T,n]
+inline overload reverseIterator(a:Array[T,n]) =
+    reverseCoordinateRange(end(a), begin(a));
+
+[T,n]
+inline overload begin(a:Array[T,n]) = Pointer[T](@a);
+
+[T,n]
+inline overload end(a:Array[T,n]) = Pointer[T](@a + 1);
+
+[T,n]
+inline overload front(a:Array[T,n]) = ref a[0];
+
+[T,n]
+inline overload back(a:Array[T,n]) = ref a[n-1];
+
+
+
+//
+// basic constructor
+//
+
+[T,n,..A when (countValues(..A) == n) and equalValues?(T, ..A)]
+alias overload Array[T,n](..args:A) --> returned:Array[T,n] {
+    ..arrayElements(returned) <-- ..args;
+}
+
+
+
+//
+// constructor from sequences
+//
+
+[T, n, S when Sequence?(S)
+           and (SequenceElementType(S) == T)]
+overload Array[T,n](s:S) --> returned:Array[T,n] {
+    var first, last = begin(returned), end(returned);
+    var ptr = first;
+    try {
+        var srcIter = iterator(s);
+        while (ptr != last) {
+            var srcValue = nextValue(srcIter);
+            assert(hasValue?(srcValue), "insufficient elements for array");
+            ptr^ <-- getValue(srcValue);
+            inc(ptr);
+        }
+        assert(not hasValue?(nextValue(srcIter)), "too many elements for array");
+    }
+    catch (e) {
+        destroyMemory(first, ptr);
+        throw e;
+    }
+}
+
+[T, n, S when SequenceContainer?(S)
+           and (SequenceElementType(S) == T)]
+overload Array[T,n](rvalue s:S) --> returned:Array[T,n] {
+    var first, last = begin(returned), end(returned);
+    var ptr = first;
+    try {
+        var srcIter = iterator(s);
+        while (ptr != last) {
+            var srcValue = nextValue(srcIter);
+            assert(hasValue?(srcValue), "insufficient elements for array");
+            ptr^ <-- getValue(srcValue);
+            inc(ptr);
+        }
+        assert(not hasValue?(nextValue(srcIter)), "too many elements for array");
+    }
+    catch (e) {
+        destroyMemory(first, ptr);
+        throw e;
+    }
+}
+
+[T,n]
+overload Array[T,n](elt: T) --> returned:Array[T,n] {
+    var first, last = begin(returned), end(returned);
+    var ptr = first;
+    try {
+        while (ptr != last) {
+            ptr^ <-- elt;
+            inc(ptr);
+        }
+    }
+    catch (e) {
+        destroyMemory(first, ptr);
+        throw e;
+    }
+}
+
+[n, S when Sequence?(S)]
+overload Array(#n, forward s:S) {
+    alias T = SequenceElementType(S);
+    return Array[T,n](s);
+}
+
+[n, S when MultiValuedSequence?(S)]
+overload Array(#n, forward s:S) = Array(#n, mapped(Tuple, s));
+
+
+
+//
+// constructor from StaticSizedSequence
+//
+
+[T,n,S when StaticSizedSequence?(S)
+         and (SequenceElementType(S) == T)
+         and (n == StaticSize(S))]
+overload Array[T,n](s:S) --> returned:Array[T,n] {
+    var first, last = begin(returned), end(returned);
+    var ptr = first;
+    try {
+        for (x in s) {
+            ptr^ <-- x;
+            inc(ptr);
+        }
+    }
+    catch (e) {
+        destroyMemory(first, ptr);
+        throw e;
+    }
+}
+
+[T,n,S when StaticSizedSequence?(S)
+         and SequenceContainer?(S)
+         and (SequenceElementType(S) == T)
+         and (n == StaticSize(S))]
+overload Array[T,n](rvalue s:S) --> returned:Array[T,n] {
+    var first, last = begin(returned), end(returned);
+    var ptr = first;
+    try {
+        for (x in s) {
+            ptr^ <-- move(x);
+            inc(ptr);
+        }
+    }
+    catch (e) {
+        destroyMemory(first, ptr);
+        throw e;
+    }
+}
+
+[S when StaticSizedSequence?(S)]
+alias overload Array(s:S) {
+    alias T = SequenceElementType(S);
+    alias n = #Int(StaticSize(S));
+    return Array[T,n](s);
+}
+
+[S when StaticSizedSequence?(S) and MultiValuedSequence?(S)]
+alias overload Array(s:S) = Array(mapped(Tuple, s));
+
+
+
+//
+// other constructors, moveUnsafe, resetUnsafe,
+// destroy, equals?, lesser?
+//
+
+[T,n]
+overload Array[T,n]() --> returned:Array[T,n] {
+    initializeMemory(begin(returned), end(returned));
+}
+
+[T,n when not BitwiseCopiedType?(T)]
+overload Array[T,n](src:Array[T,n]) --> returned:Array[T,n] {
+    copyNonoverlappingMemory(begin(returned), begin(src), end(src));
+}
+
+[T,n when not BitwiseMovedType?(T)]
+overload moveUnsafe(src:Array[T,n]) --> returned:Array[T,n] {
+    moveNonoverlappingMemoryUnsafe(begin(returned), begin(src), end(src));
+}
+
+[T,n when not NotResetType?(T)]
+overload resetUnsafe(a:Array[T,n]) {
+    resetMemoryUnsafe(begin(a), end(a));
+}
+
+[T,n when not NotDestroyedType?(T)]
+overload destroy(a:Array[T,n]) {
+    destroyMemory(begin(a), end(a));
+}
+
+[T,n]
+overload equals?(a:Array[T,n], b:Array[T,n]) {
+    for (x, y in zipped(a, b)) {
+        if (x != y)
+            return false;
+    }
+    return true;
+}
+
+[T,n]
+overload lesser?(a:Array[T,n], b:Array[T,n]) {
+    for (x, y in zipped(a, b)) {
+        if (x != y)
+            return x < y;
+    }
+    return false;
+}
+
+
+
+//
+// array - type inferring constructor
+//
+
+[..A when countValues(..A) > 0 and equalValues?(..A)]
+alias array(..args:A) {
+    return Array[takeValues(#1, ..A), countValues(..A)](..args);
+}
+
+[..SS when countValues(..SS) > 0 and AllStringLiterals?(..SS)]
+alias overload array(..strings:SS) {
+    return array(..mapValues(StringLiteralRef, ..strings));
+}
+
+
+//
+// integerArray
+//
+
+[n]
+integerArray(#n) = array(..integers(#n));
+
+
+
+//
+// array assignment
+//
+
+[T,U,n when not (T == U and BitwiseAssignedType?(T)) and CallDefined?(assign, T, U)]
+overload assign(ref left: Array[T,n], right: Array[U, n]) {
+    assignNonoverlappingMemory(begin(left), begin(right), end(right));
+}
+
+[T,U,n when not (T == U and BitwiseMoveAssignedType?(T)) and CallDefined?(assign, T, U)]
+overload assign(ref left: Array[T,n], rvalue right: Array[U, n]) {
+    moveAssignNonoverlappingMemory(begin(left), begin(right), end(right));
+}

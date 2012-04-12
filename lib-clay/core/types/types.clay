@@ -1,0 +1,197 @@
+public import core.types.platform.*;
+public import __operators__.(typeToRValue, typesToRValues);
+
+
+//
+// types
+//
+
+alias Byte = UInt8;
+
+alias CChar = Int8;
+alias CUChar = UInt8;
+
+alias Short = Int16;
+alias UShort = UInt16;
+
+alias Int = Int32;
+alias UInt = UInt32;
+
+alias Long = Int64;
+alias ULong = UInt64;
+
+alias Float = Float32;
+alias Double = Float64;
+alias LongDouble = Float80;
+
+alias ComplexFloat = Complex32;
+alias ComplexDouble = Complex64;
+alias ComplexLongDouble = Complex80;
+
+alias IFloat = Imag32;
+alias IDouble = Imag64;
+alias ILongDouble = Imag80;
+
+alias RawPointer = Pointer[Byte];
+alias OpaquePointer = Pointer[Byte];
+
+alias SizeT = UPtrInt;
+alias SSizeT = PtrInt;
+
+alias Opaque = Byte;
+
+
+
+//
+// Type
+//
+
+[..T]
+alias Type(..x:T) = ..T;
+
+
+
+//
+// typeToLValue, typeToRValue, typesToLValues, typesToRValues
+//
+
+inline typeToLValue(a) = ref null(a)^;
+[T] inline overload typeToRValue(#T) --> returned:T {}
+
+inline typesToLValues(..a) = forward ..mapValues(typeToLValue, ..a);
+inline overload typesToRValues(..a) = ..mapValues(typeToRValue, ..a);
+
+
+
+//
+// ByRef[T] - return-by-reference type helper from __primitives__
+//
+
+[T] overload RegularRecord?(#ByRef[T]) = false;
+
+
+
+//
+// ReturnType
+//
+
+alias ReturnType(..x) = ..Type(..returnValues(..x));
+
+
+private define returnValues;
+
+[T] inline overload returnValues(ref first:T, forward ..rest) =
+    typeToLValue(ByRef[T]), ..returnValues(..rest);
+
+[T] inline overload returnValues(rvalue first:T, forward ..rest) =
+    typeToLValue(T), ..returnValues(..rest);
+
+inline overload returnValues() = ;
+
+
+
+//
+// returnTypeToValue, returnTypesToValues
+//
+
+define returnTypeToValue;
+[T] inline overload returnTypeToValue(#T) = typeToRValue(T);
+[T] inline overload returnTypeToValue(#ByRef[T]) = ref typeToLValue(T);
+
+inline returnTypesToValues(..a) = forward ..mapValues(returnTypeToValue, ..a);
+
+
+
+//
+// integer limits
+//
+
+define Least;
+define Greatest;
+
+inline overload Least(#Int8) : Int8 = -128_ss;
+inline overload Greatest(#Int8) : Int8 = 127_ss;
+
+inline overload Least(#UInt8) : UInt8 = 0_uss;
+inline overload Greatest(#UInt8) : UInt8 = 255_uss;
+
+inline overload Least(#Int16) : Int16 = -0x8000_s;
+inline overload Greatest(#Int16) : Int16 = 0x7FFF_s;
+
+inline overload Least(#UInt16) : UInt16 = 0_us;
+inline overload Greatest(#UInt16) : UInt16 = 0xFFFF_us;
+
+inline overload Least(#Int32) : Int32 = -0x8000_0000_i;
+inline overload Greatest(#Int32) : Int32 = 0x7FFF_FFFF_i;
+
+inline overload Least(#UInt32) : UInt32 = 0_u;
+inline overload Greatest(#UInt32) : UInt32 = 0xFFFF_FFFF_u;
+
+inline overload Least(#Int64) : Int64 = -0x8000_0000_0000_0000_l;
+inline overload Greatest(#Int64) : Int64 = 0x7FFF_FFFF_FFFF_FFFF_l;
+
+inline overload Least(#UInt64) : UInt64 = 0_ul;
+inline overload Greatest(#UInt64) : UInt64 = 0xFFFF_FFFF_FFFF_FFFF_ul;
+
+inline overload Least(#Int128) : Int128 = wrapBitshl(1_ll, 127);
+inline overload Greatest(#Int128) : Int128
+    = numericSubtract(Least(Int128), 1ll);
+
+inline overload Least(#UInt128) : UInt128 = 0_ull;
+inline overload Greatest(#UInt128) : UInt128 = numericSubtract(0_ull, 1_ull);
+
+
+//
+// float limits
+//
+
+define LeastPositive;
+define LeastPositiveNormalized;
+define GreatestPositiveFinite;
+
+inline overload LeastPositive(#Float32) : Float32 = 0x0.0000_02p-126f;
+inline overload LeastPositiveNormalized(#Float32) : Float32 = 0x1.0000_00p-126f;
+inline overload GreatestPositiveFinite(#Float32) : Float32 = 0x1.FFFF_FEp127f;
+
+inline overload LeastPositive(#Float64) : Float64
+    = 0x0.0000_0000_0000_1p-1022;
+inline overload LeastPositiveNormalized(#Float64) : Float64
+    = 0x1.0000_0000_0000_0p-1022;
+inline overload GreatestPositiveFinite(#Float64) : Float64
+    = 0x1.FFFF_FFFF_FFFF_Fp1023;
+
+inline overload LeastPositive(#Float80) : Float80
+    = 0x0.0000_0000_0000_0001p-16318l;
+inline overload LeastPositiveNormalized(#Float80) : Float80
+    = 0x1.0000_0000_0000_0000p-16382l;
+inline overload GreatestPositiveFinite(#Float80) : Float80
+    = 0x1.FFFF_FFFF_FFFF_FFFEp16383l;
+
+inline overload LeastPositive(#Imag32) : Imag32
+    = numericConvert(Imag32,LeastPositive(Float32));
+inline overload LeastPositiveNormalized(#Imag32) : Imag32
+    = numericConvert(Imag32,LeastPositiveNormalized(Float32));
+inline overload GreatestPositiveFinite(#Imag32) : Imag32
+    = numericConvert(Imag32,GreatestPositiveFinite(Float32));
+
+inline overload LeastPositive(#Imag64) : Imag64
+    = numericConvert(Imag64,LeastPositive(Float64));
+inline overload LeastPositiveNormalized(#Imag64) : Imag64
+    = numericConvert(Imag64,LeastPositiveNormalized(Float64));
+inline overload GreatestPositiveFinite(#Imag64) : Imag64
+    = numericConvert(Imag64,GreatestPositiveFinite(Float64));
+
+inline overload LeastPositive(#Imag80) : Imag80
+    = numericConvert(Imag80,LeastPositive(Float80));
+inline overload LeastPositiveNormalized(#Imag80) : Imag80
+    = numericConvert(Imag80,LeastPositiveNormalized(Float80));
+inline overload GreatestPositiveFinite(#Imag80) : Imag80
+    = numericConvert(Imag80,GreatestPositiveFinite(Float80));
+
+
+//
+// valueSize()
+//
+
+[T] alias valueSize(x:T) = TypeSize(T);
+

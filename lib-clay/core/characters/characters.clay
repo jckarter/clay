@@ -1,0 +1,58 @@
+import __operators__;
+
+record Char (code:Int8);
+
+inline overload __operators__.charLiteral(code) = Char(code);
+
+record UniChar (code:UInt32);
+
+Character?(x) = false;
+overload Character?(#Char) = true;
+overload Character?(#UniChar) = true;
+
+[I when Integer?(I)]
+inline overload Char(c:I) --> returned:Char {
+    returned.code = wrapCast(Int8, c);
+}
+
+[I when Integer?(I)]
+inline overload UniChar(c:I) --> returned:UniChar {
+    returned.code = wrapCast(UInt32, c);
+}
+
+inline overload UniChar(c:Char) = UniChar(c.code);
+inline overload Char(c:UniChar) = Char(c.code);
+
+[I when Integer?(I)]
+inline overload I(c:Char) = wrapCast(I, c.code);
+
+[I when Integer?(I)]
+inline overload I(c:UniChar) = I(c.code);
+
+[C, D when Character?(C) and Character?(D)]
+inline overload equals?(x:C, y:D) = equals?(x.code, y.code);
+
+[C, D when Character?(C) and Character?(D)]
+inline overload lesser?(x:C, y:D) = lesser?(x.code, y.code);
+
+
+//
+// asciiSpace?
+//
+
+asciiSpace?(c) {
+    switch (c) case (' ', '\r', '\n', '\t', '\f')
+        return true;
+    else
+        return false;
+}
+
+//
+// asciiUpper, asciiLower
+//
+
+[C when Character?(C)]
+asciiUpper(c:C) = if ('a' <= c <= 'z') C(Int(c) - 0x20) else c;
+
+[C when Character?(C)]
+asciiLower(c:C) = if ('A' <= c <= 'Z') C(Int(c) + 0x20) else c;

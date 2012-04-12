@@ -1,0 +1,200 @@
+
+public import core.sequences.force.*;
+public import core.sequences.lazy.*;
+import core.numbers.(private BiggerNumeric?);
+
+
+//
+// strict wrappers around lazy sequences
+//
+
+alias zip(..args) = force(zipped(..args));
+alias map(..args) = force(mapped(..args));
+alias filter(..args) = force(filtered(..args));
+alias enumerate(..args) = force(enumerated(..args));
+alias reverse(..args) = force(reversed(..args));
+alias slice(..args) = force(sliced(..args));
+alias sliceFrom(..args) = force(slicedFrom(..args));
+alias sliceUpto(..args) = force(slicedUpto(..args));
+alias group(..args) = force(grouped(..args));
+
+
+
+
+//
+// generic equals?, lesser?
+//
+
+[A,B when Sequence?(A) and Sequence?(B)]
+overload equals?(a:A, b:B) {
+    var i, j = iterator(a), iterator(b);
+    while (true) {
+        var iv, jv = nextValue(i), nextValue(j);
+        var iv?, jv? = hasValue?(iv), hasValue?(jv);
+        if (iv? != jv?)
+            return false;
+        if (not iv?)
+            return true;
+        if (getValue(i) != getValue(j))
+            return false;
+    }
+}
+
+[A,B when SizedSequence?(A) and SizedSequence?(B)]
+overload equals?(a:A, b:B) {
+    if (size(a) != size(b))
+        return false;
+    var i, j = iterator(a), iterator(b);
+    while (true) {
+        var iv, jv = nextValue(i), nextValue(j);
+        if (not hasValue?(iv))
+            return true;
+        if (getValue(iv) != getValue(jv))
+            return false;
+    }
+}
+
+
+[A,B when Sequence?(A) and Sequence?(B)]
+overload lesser?(a:A, b:B) {
+    var i, j = iterator(a), iterator(b);
+    while (true) {
+        var iv, jv = nextValue(i), nextValue(j);
+        var iv?, jv? = hasValue?(iv), hasValue?(jv);
+        if (not iv?)
+            return jv?;
+        if (not jv?)
+            return false;
+
+        forward x, y = getValue(iv), getValue(jv);
+        if (x != y)
+            return x < y;
+    }
+}
+
+
+//
+// prefixOperator, infixOperator, updateAssign
+//
+
+[S,F when Sequence?(S)]
+overload updateAssign(#F, ret:S, ..args) {
+    for (i,r in enumerated(ret))
+        updateAssign(F, r, ..reduceToScalar(i,..args));
+}
+
+[..S when anyValues?(s=>Sequence?(s) and Numeric?(SequenceElementType(s)),..S)]
+overload infixOperator(..args:S) {
+    var ret = Vector[seqType(Int8,..args)]();
+    resize(ret,seqSize(SizeT(0),..args));
+    for (i,r in enumerated(ret))
+        r = infixOperator(..reduceToScalar(i,..args));
+    return move(ret);
+}
+
+[S,U,F when Sequence?(S) and Sequence?(U) 
+    and CompareOpDefined?(F,SequenceElementType(S),SequenceElementType(U))]
+overload infixOperator(a:S, #F, b:U) = F(a,b);
+
+[..S when Sequence?(lastValue(..S)) and Numeric?(SequenceElementType(lastValue(..S)))]
+overload prefixOperator(..args:S) {
+    var ret = Vector[SequenceElementType(lastValue(..S))]();
+    resize(ret,size(lastValue(..args)));
+    for (i,r in enumerated(ret))
+        r =  prefixOperator(withoutNthValue(#(countValues(..S)-1),..args), 
+            lastValue(..args)[i]);
+    return move(ret);
+}
+
+private define seqType;
+[T when Numeric?(T)] 
+inline overload seqType(#T,a,..args) = ..seqType(T,..args);
+[T,U when Numeric?(T,U) and BiggerNumeric?(T,U)]
+inline overload seqType(#T,a:U,..args) = ..seqType(T,..args);
+[T,U when Numeric?(T,U) and BiggerNumeric?(U,T)]
+inline overload seqType(#T,a:U,..args) = ..seqType(U,..args);
+[T,S when Numeric?(T) and Sequence?(S) and BiggerNumeric?(T,SequenceElementType(S))] 
+inline overload seqType(#T,a:S,..args) = ..seqType(T,..args);
+[T,S when Numeric?(T) and Sequence?(S) and BiggerNumeric?(SequenceElementType(S),T)] 
+inline overload seqType(#T,a:S,..args) = ..seqType(SequenceElementType(S),..args);
+[T when Numeric?(T)] overload seqType(#T) = T;
+
+private define seqSize;
+inline overload seqSize(s,forward a,forward ..args) = forward ..seqSize(s,..args);
+[S when Sequence?(S)] 
+inline overload seqSize(s,forward a:S,forward ..args) = forward ..seqSize(max(s,size(a)),..args);
+inline overload seqSize(s) = s;
+
+private define reduceToScalar;
+[F] 
+inline overload reduceToScalar(forward i, #F, forward ..args) = forward F, ..reduceToScalar(i,..args);
+[S when Sequence?(S)] 
+inline overload reduceToScalar(forward i,forward a:S, forward ..args) = forward a[i],..reduceToScalar(i,..args);
+[T when Numeric?(T)] 
+inline overload reduceToScalar(forward i, forward a:T,forward ..args) = forward a,..reduceToScalar(i,..args);
+inline overload reduceToScalar(forward i) = ;
+
+
+//
+// concatenation
+//
+
+[A, ..B when Sequence?(A) and allValues?(Sequence?,..B)
+        and equalValues?(SequenceElementType(A),
+            ..mapValues(SequenceElementType,..B))]
+overload cat(forward a:A, forward ..b:B) {
+    var result = Vector(a);
+    push(result, ..b);
+    return move(result);
+}
+
+[A, ..T when Sequence?(A) and equalValues?(SequenceElementType(A),..T)]
+overload cat(forward a:A, forward ..x:T) {
+    var result = Vector(a);
+    push(result, ..x);
+    return move(result);
+}
+
+[A, T when Sequence?(A) and (SequenceElementType(A) == T)]
+overload cat(forward x:T, forward a:A) = Vector[T](x) ++ a;
+
+private define removeCatFromList;
+overload removeCatFromList(forward a, forward ..args) = forward a, ..removeCatFromList(..args);
+overload removeCatFromList(forward a, #cat, forward ..args) = forward a, ..removeCatFromList(..args);
+overload removeCatFromList(forward a) = forward a;
+
+[A, ..B when Sequence?(A)]
+overload updateAssign(#cat, forward a:A, forward ..b:B) {
+    push(a, ..removeCatFromList(..b));
+}
+
+[A, ..T when Sequence?(A)]
+overload updateAssign(#cat, forward a:A, forward ..x:T) {
+    push(a, ..removeCatFromList(..x));
+}
+
+[A, T when Sequence?(A) and (SequenceElementType(A) == T)]
+overload updateAssign(#cat, forward x:T, forward a:A) {
+    insert(a,0,x);
+}
+
+
+// 
+//
+// interleave
+//
+
+[S when Sequence?(S)]
+interleave(seq:S, betweenFn, fn) {
+    var i = iterator(seq);
+    if (var v = nextValue(i); hasValue?(v)) {
+        fn(..getValue(v));
+        while (v = nextValue(i); hasValue?(v)) {
+            betweenFn();
+            fn(..getValue(v));
+        }
+    }
+}
+
+
+

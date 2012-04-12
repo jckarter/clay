@@ -1,0 +1,83 @@
+import libc.(abort, stderr, fprintf, asprintf, strlen);
+import core.errors.backtrace.(showBacktrace);
+
+
+//
+// error (exceptions disabled)
+//
+
+[fmt]
+errorWithPrintfNoThrow(#fmt, ..e) {
+    fprintf(stderr, cstring(strl("error: ", fmt, "\n")), ..e);
+    showBacktrace();
+    abort();
+}
+
+define errorWithPrintf;
+
+[fmt when not ExceptionsEnabled?]
+overload errorWithPrintf(#fmt, ..e) {
+    errorWithPrintfNoThrow(fmt, ..e);
+}
+
+
+//
+// error (exceptions enabled)
+//
+
+record Error (msg : Vector[Char]);
+
+instance Exception (Error);
+
+[fmt when ExceptionsEnabled?]
+overload errorWithPrintf(#fmt, ..e) {
+    var bufp = Pointer[CChar]();
+    asprintf(@bufp, fmt, ..e);
+    var bufsize = SizeT(strlen(bufp));
+    var str = initializeRecord(Vector[Char], bufsize, bufsize, Pointer[Char](bufp));
+    throw Error(move(str));
+}
+
+
+//
+// assert
+//
+
+AllAssertionsEnabled?() = not Flag?("clay.DisableAssertions");
+AssertionEnabled?(tag) = not Flag?(stringLiteralConcat("clay.DisableAssertions.",tag));
+
+[..tags when allValues?(StringLiteral?, ..tags)]
+record assert[..tags] ();
+
+[..tags]
+alias overload assert[..tags](..whatever) {}
+
+alias overload assert(..whatever) {}
+
+[file, line, column, cond]
+private assertStringLiteral(#file, #line, #column, #cond, ..etc)
+    = strl(#file, "(", #line, ",", #column, "): assertion ", #cond, "failed", ..etc);
+
+[when AllAssertionsEnabled?()]
+alias overload assert(cond:Bool) {
+    if (not cond)
+        errorWithPrintfNoThrow(
+            assertStringLiteral(__FILE__, #__LINE__, #__COLUMN__, __ARG__ cond));
+}
+
+[..tags when AllAssertionsEnabled?() and allValues?(AssertionEnabled?, ..tags)]
+alias overload assert[..tags](cond:Bool) {
+    if (not cond)
+        errorWithPrintfNoThrow(
+            assertStringLiteral(__FILE__, #__LINE__, #__COLUMN__, __ARG__ cond));
+}
+
+
+//
+// sourceLocation(), argAndValue() helpers
+//
+
+alias sourceLocation() = StaticName(__FILE__), __LINE__, __COLUMN__;
+
+alias argAndValue(x) = __ARG__ x, x;
+

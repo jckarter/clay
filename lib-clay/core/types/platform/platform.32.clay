@@ -1,0 +1,11 @@
+
+
+//
+// type aliases for 32-bit platforms
+//
+
+alias PtrInt = Int32;
+alias UPtrInt = UInt32;
+
+alias CLong = Int32;
+alias CULong = UInt32;

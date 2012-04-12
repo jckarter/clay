@@ -1,0 +1,229 @@
+
+
+//
+// Range
+//
+
+record Range[T] (
+    begin:T,
+    end:T,
+);
+
+[T]
+overload LightweightSequence?(#Range[T]) = true;
+
+[T]
+inline overload size(a:Range[T]) = SizeT(a.end - a.begin);
+
+[T,I when Integer?(I)]
+inline overload index(a:Range[T], i:I) = T(a.begin + i);
+
+[T]
+inline overload iterator(a:Range[T]) = a;
+
+[T]
+inline overload reverseIterator(a:Range[T]) = ReverseRange(a.end, a.begin);
+
+[T]
+inline overload nextValue(a:Range[T]) {
+    if (a.begin < a.end) {
+        var temp = Maybe(a.begin);
+        inc(a.begin);
+        return move(temp);
+    } else {
+        return nothing(T);
+    }
+}
+
+[T]
+inline overload begin(a:Range[T]) = ValueCoordinate(a.begin);
+
+[T]
+inline overload end(a:Range[T]) = ValueCoordinate(a.end);
+
+
+
+//
+// ReverseRange
+//
+
+record ReverseRange[T] (
+    end : T,
+    begin : T,
+);
+
+[T]
+overload LightweightSequence?(#ReverseRange[T]) = true;
+
+[T]
+inline overload size(a:ReverseRange[T]) = SizeT(a.end - a.begin);
+
+[T,I when Integer?(I)]
+inline overload index(a:ReverseRange[T], i:I) = T(a.end - i - 1);
+
+[T]
+inline overload iterator(a:ReverseRange[T]) = a;
+
+[T]
+inline overload reverseIterator(a:ReverseRange[T]) = Range(a.begin, a.end);
+
+[T]
+inline overload nextValue(a:ReverseRange[T]) {
+    if (a.begin < a.end) {
+        dec(a.end);
+        return Maybe(a.end);
+    } else {
+        return nothing(T);
+    }
+}
+
+[T]
+inline overload begin(a:ReverseRange[T]) = ValueReverseCoordinate(a.end);
+
+[T]
+inline overload end(a:ReverseRange[T]) = ValueReverseCoordinate(a.begin);
+
+
+
+//
+// range, reverseRange
+//
+
+define range;
+
+inline overload range(begin, end) = Range(begin, end);
+
+[A,B when Integer?(A) and Integer?(B)]
+inline overload range(begin:A, end:B) =
+    Range(toBiggerNumericType(A, B, begin),
+          toBiggerNumericType(A, B, end));
+
+[I when Integer?(I)]
+inline overload range(begin:I, end:I) = Range(begin, end);
+
+[I when Integer?(I)]
+inline overload range(end:I) = Range(I(0), end);
+
+
+define reverseRange;
+
+inline overload reverseRange(end, begin) = ReverseRange(end, begin);
+
+[A,B when Integer?(A) and Integer?(B)]
+inline overload reverseRange(end:A, begin:B) =
+    ReverseRange(toBiggerNumericType(A, B, end),
+                 toBiggerNumericType(A, B, begin));
+
+[I when Integer?(I)]
+inline overload reverseRange(end:I, begin:I) =
+    ReverseRange(end, begin);
+
+[I when Integer?(I)]
+inline overload reverseRange(end:I) =
+    ReverseRange(end, I(0));
+
+
+
+//
+// CoordinateRange
+//
+
+record CoordinateRange[T] (
+    begin : T,
+    end : T,
+);
+
+[T when ContiguousCoordinate?(T)]
+overload ContiguousSequence?(#CoordinateRange[T]) = true;
+
+[T]
+overload LightweightSequence?(#CoordinateRange[T]) = true;
+
+[T]
+inline overload size(a:CoordinateRange[T]) = SizeT(a.end - a.begin);
+
+[T,I when Integer?(I)]
+inline overload index(a:CoordinateRange[T], i:I) {
+    assert["boundsChecks"](i >= 0 and i < size(a),
+        CoordinateRange[T], " index out of bounds");
+    return forward ..(a.begin + i)^;
+}
+
+[T]
+inline overload iterator(a:CoordinateRange[T]) = a;
+
+[T]
+inline overload reverseIterator(a:CoordinateRange[T]) =
+    ReverseCoordinateRange(a.end, a.begin);
+
+[T]
+inline overload nextValue(a:CoordinateRange[T]) {
+    if (a.begin < a.end) {
+        var p = a.begin;
+        inc(a.begin);
+        return move(p);
+    } else
+        return T();
+}
+
+[T]
+inline overload begin(a:CoordinateRange[T]) = a.begin;
+
+[T]
+inline overload end(a:CoordinateRange[T]) = a.end;
+
+
+//
+// ReverseCoordinateRange
+//
+
+record ReverseCoordinateRange[T] (
+    end : T,
+    begin : T,
+);
+
+[T]
+overload LightweightSequence?(#ReverseCoordinateRange[T]) = true;
+
+[T]
+inline overload size(a:ReverseCoordinateRange[T]) = SizeT(a.end - a.begin);
+
+[T,I when Integer?(I)]
+inline overload index(a:ReverseCoordinateRange[T], i:I) {
+    assert["boundsChecks"](i >= 0 and i < size(a),
+        ReverseCoordinateRange[T], " index out of bounds");
+    return forward ..(a.end - i - 1)^;
+}
+
+[T]
+inline overload iterator(a:ReverseCoordinateRange[T]) = a;
+
+[T]
+inline overload reverseIterator(a:ReverseCoordinateRange[T]) =
+    CoordinateRange(a.begin, a.end);
+
+// FIXME multiple-value and rvalue coordinates
+[T]
+inline overload nextValue(a:ReverseCoordinateRange[T]) {
+    if (a.begin < a.end) {
+        dec(a.end);
+        return a.end;
+    } else
+        return T();
+}
+
+[T]
+inline overload begin(a:ReverseCoordinateRange[T]) = ReverseCoordinate(a.end);
+
+[T]
+inline overload end(a:ReverseCoordinateRange[T]) = ReverseCoordinate(a.begin);
+
+
+
+//
+// coordinateRange, reverseCoordinateRange
+//
+
+inline coordinateRange(begin, end) = CoordinateRange(begin, end);
+
+inline reverseCoordinateRange(end, begin) = ReverseCoordinateRange(end, begin);

@@ -1,0 +1,58 @@
+
+import core.sequences.util.*;
+
+
+//
+// filtered
+//
+
+inline filtered(predicate, forward ..seqs) = Filtered(predicate, zipped(..seqs));
+
+inline overload filtered(predicate, forward seq) =
+    Filtered(predicate, wrapSequence(seq));
+
+
+private record Filtered[F, A] (
+    predicate : F,
+    seq : A,
+);
+
+[F, A when LightweightSequence?(A)]
+overload LightweightSequence?(#Filtered[F,A]) = true;
+
+[F,A when CallDefined?(UnderlyingContainerConstructor, Static[A])]
+overload UnderlyingContainerConstructor(#Filtered[F,A]) =
+    UnderlyingContainerConstructor(A);
+
+
+
+//
+// iterator, reverseIterator
+//
+
+[F, A]
+inline overload iterator(a:Filtered[F, A])
+    = FilteredIterator(a.predicate, iterator(a.seq));
+
+[F, A when CallDefined?(reverseIterator, A)]
+inline overload reverseIterator(a:Filtered[F, A])
+    = FilteredIterator(a.predicate, reverseIterator(a.seq));
+
+
+//
+// FilteredIterator
+//
+
+private record FilteredIterator[F, ITER] (
+    predicate : F,
+    iter : ITER,
+);
+
+[F, ITER]
+inline overload nextValue(iter:FilteredIterator[F, ITER]) {
+    var value = nextValue(iter.iter);
+    while (hasValue?(value) and not iter.predicate(..getValue(value)))
+        value = nextValue(iter.iter);
+    return move(value);
+}
+

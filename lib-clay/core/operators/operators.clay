@@ -1,0 +1,798 @@
+
+
+//
+// core operations
+//
+
+public import __operators__.(
+    destroy,
+    copy,
+    move,
+    assign,
+    updateAssign,
+    prefixUpdateAssign,
+
+    case?,
+
+    prefixOperator,
+    infixOperator,
+
+    dereference,
+    call,
+    fieldRef,
+    staticIndex,
+    index,
+
+    fieldRefAssign,
+    fieldRefUpdateAssign,
+    staticIndexAssign,
+    staticIndexUpdateAssign,
+    indexAssign,
+    indexUpdateAssign,
+
+    iterator,
+
+    nextValue,
+    hasValue?,
+    getValue,
+
+    ifExpression,
+);
+
+
+define inc;
+define dec;
+
+define moveUnsafe;
+define resetUnsafe;
+
+
+
+//
+// uninitialized stack allocation
+//
+
+[T] uninitializedUnsafe(#T) --> x:T {}
+
+
+//
+// coordinate type predicates
+//
+
+Coordinate?(T) = CallDefined?(dereference, T);
+CoordinateTargetType(T) = ..Type(..dereference(typeToLValue(T)));
+
+RandomAccessCoordinate?(T) =
+    Coordinate?(T) and
+    CallDefined?((+), T, Int) and
+    CallDefined?((-), T, Int) and
+    CallDefined?((-), T, T);
+
+LValueCoordinate?(T) =
+    Coordinate?(T) and
+    LValue?(dereference(typeToLValue(T)));
+
+// true if adjacent coordinates point to adjacent locations in memory
+ContiguousCoordinate?(T) = false;
+
+
+
+//
+// iterator type predicates
+//
+
+Iterator?(T) = CallDefined?(nextValue, T);
+IteratorTargetType(T) = ..Type(..getValue(nextValue(typeToLValue(T))));
+
+
+//
+// Default two-arg hasValue?
+//
+
+alias overload hasValue?(iter, coord) = hasValue?(coord);
+
+
+//
+// pointer as iterator value
+//
+
+[T] inline overload hasValue?(p:Pointer[T]) = not null?(p);
+[T] inline overload getValue(p:Pointer[T]) = ref p^;
+
+
+//
+// reverse iteration
+//
+
+define reverseIterator;
+
+
+
+//
+// sequence protocol
+//
+
+define size;
+
+define begin;
+define end;
+
+define front;
+define back;
+
+define push;
+define pop;
+define clear;
+define insert;
+define remove;
+define reserve;
+define resize;
+define resizeUnsafe;
+
+define pushFront;
+define popFront;
+
+// defined for statically sized sequences like Array[T,n]
+define StaticSize;
+
+
+
+//
+// sequence type predicates
+//
+
+Sequence?(T) = CallDefined?(iterator, T);
+SequenceElementType(T) = ..Type(..getValue(nextValue(iterator(typeToLValue(T)))));
+SizedSequence?(T) = Sequence?(T) and CallDefined?(size, T);
+StaticSizedSequence?(T) = Sequence?(T) and CallDefined?(StaticSize, Static[T]);
+RandomAccessSequence?(T) = Sequence?(T) and CallDefined?(index, T, Int);
+LValueSequence?(T) = Sequence?(T) and LValue?(getValue(nextValue(iterator(typeToLValue(T)))));
+
+CoordinateSequence?(T) = Sequence?(T) and CallDefined?(begin, T) and CallDefined?(end, T);
+SequenceCoordinateType(T) = Type(begin(typeToLValue(T)));
+
+SequenceIteratorType(T) = Type(iterator(typeToLValue(T)));
+
+// true if sequence elements are stored contiguously in memory
+ContiguousSequence?(T) = false;
+
+// true if copying the sequence is efficient
+LightweightSequence?(T) = false;
+
+// true for sequences which have value semantics.
+SequenceContainer?(T) = false;
+
+// true if sequence is not single-valued (0 valued sequences are included).
+MultiValuedSequence?(T) =
+    Sequence?(T) and multiValued?(..Type(..getValue(nextValue(iterator(typeToLValue(T))))));
+
+private multiValued?(..x) = true;
+overload multiValued?(x) = false;
+
+
+
+//
+// mapping protocol
+//
+
+// 'index' and 'size' are available for mappings
+// 'remove' is available
+
+define lookup; // get pointer to element, null if not available
+define put;
+define items; // iterate over all items
+
+inline contains?(map, key) = not null?(lookup(map, key));
+
+
+
+//
+// LValue?, RValue?
+//
+
+define LValue?;
+alias overload LValue?(ref a) = true;
+alias overload LValue?(rvalue a) = false;
+
+alias RValue?(x) = not LValue?(x);
+
+
+
+//
+// defaults
+//
+
+inline initialize(a) {
+    a <-- Type(a)();
+}
+
+[T]
+inline overload copy(a:T) = T(a);
+
+[T]
+inline overload move(src:T) --> returned:T {
+    returned <-- moveUnsafe(src);
+    resetUnsafe(src);
+}
+
+[T]
+inline overload assign(ref dest:T, rvalue src:T) {
+    swap(dest, src);
+}
+
+[F]
+inline overload updateAssign(#F, ref dest, forward ..src) {
+    dest = infixOperator(dest,F, ..src);
+}
+
+[F]
+inline overload prefixUpdateAssign(#F, ref dest, forward ..src) {
+    dest = prefixOperator(F, dest, ..src);
+}
+
+inline overload (!=)(a, b) = not (==)(a, b);
+
+inline ordered?(a, b) = (<=)(a, b) or (<=)(b, a);
+
+inline overload (<=)(a, b) = not (<)(b, a);
+
+inline overload (>)(a, b) = (<)(b, a);
+
+inline overload (>=)(a, b) = not (<)(a, b);
+
+inline overload (&)(a, b, c, ..rest) = (&)((&)(a, b), c, ..rest);
+
+inline overload (|)(a, b, c, ..rest) = (|)((|)(a, b), c, ..rest);
+
+inline overload (~)(a, b, c, ..rest) = (~)((~)(a, b), c, ..rest);
+
+[FIELD]
+inline overload fieldRefAssign(dest, #FIELD, forward src) {
+    assign(fieldRef(dest, #FIELD), src);
+}
+
+[F, FIELD]
+inline overload fieldRefUpdateAssign(#F, dest, #FIELD, forward ..src) {
+    updateAssign(#F, fieldRef(dest, #FIELD), ..src);
+}
+
+[F, FIELD, T when RValue?(fieldRef(typeToLValue(T), #FIELD))]
+inline overload fieldRefUpdateAssign(#F, dest:T, #FIELD, forward src) {
+    fieldRefAssign(dest, #FIELD, F(fieldRef(dest, #FIELD), src));
+}
+
+[i]
+inline overload staticIndexAssign(dest, #i, forward src) {
+    assign(staticIndex(dest, #i), src);
+}
+
+[F, i]
+inline overload staticIndexUpdateAssign(#F, dest, #i, forward ..src) {
+    updateAssign(#F, staticIndex(dest, #i), ..src);
+}
+
+[F, i, T when RValue?(staticIndex(typeToLValue(T), #i))]
+inline overload staticIndexUpdateAssign(#F, dest:T, #i, forward src) {
+    staticIndexAssign(dest, #i, F(staticIndex(dest, #i), src));
+}
+
+[..T when countValues(..T) >= 2]
+inline overload indexAssign(dest, forward ..indicesAndSrc:T) {
+    assign(
+        index(dest, ..withoutNthValue(
+            #(countValues(..T)-1),
+            ..indicesAndSrc
+        )),
+        lastValue(..indicesAndSrc),
+    );
+}
+
+[F, ..A when countValues(..A) >= 2]
+inline overload indexUpdateAssign(#F, dest, forward ..indicesAndSrc:A) {
+    updateAssign(
+        #F,
+        index(dest, ..takeValues(
+            #(countIndices(..A)),
+            ..indicesAndSrc
+        )),
+        ..dropValues(#countIndices(..A), ..indicesAndSrc),
+    );
+}
+
+[F, T, ..A when
+    (countValues(..A) >= 2) and
+    RValue?(
+        index(
+            typeToLValue(T),
+            ..mapValues(
+                typeToLValue,
+                ..takeValues(#(countIndices(..A)), ..A)
+            )
+        )
+    )
+]
+inline overload indexUpdateAssign(#F, dest:T, forward ..indicesAndSrc:A) {
+    indexAssign(
+        dest,
+        ..takeValues(#(countIndices(..A)), ..indicesAndSrc),
+        infixOperator(
+            index(
+                dest,
+                ..takeValues(#(countIndices(..A)), ..indicesAndSrc)
+            ),
+            F, ..dropValues(#countIndices(..A), ..indicesAndSrc)
+        )
+    );
+}
+
+
+//
+// first occurence of non-numeric
+//
+
+private countIndices(..A) = _countIndices(#-1, ..A);
+private define _countIndices;
+[n] inline overload _countIndices(#n, a, ..A) 
+    = if(not Numeric?(a)) n else _countIndices(#(n+1), ..A);
+[n] inline overload _countIndices(#n) = n;
+
+
+//
+//  operators 
+//
+
+private define staticEquals?;
+[A, B]
+inline overload staticEquals?(a:Static[A], b:Static[B]) = false;
+[A]
+inline overload staticEquals?(a:Static[A], b:Static[A]) = true;
+
+BinaryOpDefined?(OP,T,U) = Symbol?(OP) and not Variant?(OP) and not Record?(OP) 
+    and CallDefined?(OP,T,U) and staticEquals?(CallOutputTypes(OP,T,U),T); 
+CompareOpDefined?(OP,T,U) = Symbol?(OP) and not Variant?(OP) and not Record?(OP) 
+    and CallDefined?(OP,T,U) and staticEquals?(CallOutputTypes(OP,T,U),Bool); 
+
+[OP] inline overload prefixOperator(#OP, forward ..xs)
+    = forward OP(..prefixOperator(..xs));
+[OP] inline overload prefixOperator(#OP, forward x) 
+    = forward ..OP(x);
+
+alias LEFT = 0;
+alias RIGHT = 1;
+alias VARIADIC = 2;
+alias BOOLEAN = 3;
+
+define (==);
+define (!=);
+define (>=);
+define (<=);
+define (>);
+define (<);
+define (++);
+define (~);
+define (&);
+define (|);
+define (<<);
+define (>>);
+define (+);
+define (-);
+define (%);
+define (\);
+define (/);
+define (*);
+
+alias equals? = (==);
+alias notEquals? = (!=);
+alias lesser? = (<);
+alias lesserEquals? = (<=);
+alias greater? = (>);
+alias greaterEquals? = (>=);
+
+alias add = (+);
+alias subtract = (-);
+alias multiply = (*);
+alias divide = (/);
+alias quotient = (\);
+alias remainder = (%);
+alias cat = (++);
+
+alias bitshl = (<<);
+alias bitshr = (>>);
+alias bitand = (&);
+alias bitor = (|);
+alias bitxor = (~);
+alias bitnot = (~);
+
+
+define operatorPrecedence;
+define operatorAssociativity;
+
+[T] overload operatorPrecedence(#T) = 10000;
+[T] overload operatorAssociativity(#T) = LEFT;
+
+overload operatorPrecedence(#(*))   = 1000;
+overload operatorPrecedence(#(/))   = 1000;
+overload operatorPrecedence(#(\))   = 1000;
+overload operatorPrecedence(#(%))   = 1000;
+
+overload operatorPrecedence(#(-))   = 2000;
+overload operatorPrecedence(#(+))   = 2000;
+
+overload operatorPrecedence(#(<<))  = 4000;
+overload operatorPrecedence(#(>>))  = 4000;
+
+overload operatorPrecedence(#(&))   = 5000;
+overload operatorPrecedence(#(~))   = 5000;
+overload operatorPrecedence(#(|))   = 5000;
+
+overload operatorPrecedence(#(++))  = 50000;
+
+overload operatorPrecedence(#(==))  = 100000;
+overload operatorPrecedence(#(!=))  = 100000;
+overload operatorPrecedence(#(<))   = 100000;
+overload operatorPrecedence(#(>))   = 100000;
+overload operatorPrecedence(#(<=))  = 100000;
+overload operatorPrecedence(#(>=))  = 100000;
+
+
+overload operatorAssociativity(#(*))    = LEFT;
+overload operatorAssociativity(#(/))    = LEFT;
+overload operatorAssociativity(#(\))    = LEFT;
+overload operatorAssociativity(#(%))    = LEFT;
+overload operatorAssociativity(#(-))    = LEFT;
+overload operatorAssociativity(#(+))    = LEFT;
+
+overload operatorAssociativity(#(<<))   = LEFT;
+overload operatorAssociativity(#(>>))   = LEFT;
+overload operatorAssociativity(#(&))    = LEFT;
+overload operatorAssociativity(#(~))    = LEFT;
+overload operatorAssociativity(#(|))    = LEFT;
+
+overload operatorAssociativity(#(++))   = LEFT;
+
+overload operatorAssociativity(#(==))   = BOOLEAN;
+overload operatorAssociativity(#(!=))   = BOOLEAN;
+overload operatorAssociativity(#(<))    = BOOLEAN;
+overload operatorAssociativity(#(>))    = BOOLEAN;
+overload operatorAssociativity(#(<=))   = BOOLEAN;
+overload operatorAssociativity(#(>=))   = BOOLEAN;
+
+
+[OP] inline BoolAssoc?(#OP) = integerEquals?(operatorAssociativity(OP),BOOLEAN);
+[OP1,OP2] inline overload BoolAssoc?(#OP1,#OP2) = BoolAssoc?(OP1) and BoolAssoc?(OP2);
+
+[OP] inline LeftAssoc?(#OP) = integerEquals?(operatorAssociativity(OP),LEFT);
+[OP1,OP2] inline overload LeftAssoc?(#OP1,#OP2) = LeftAssoc?(OP1) and LeftAssoc?(OP2);
+
+[OP] inline RightAssoc?(#OP) = integerEquals?(operatorAssociativity(OP),RIGHT);
+[OP1,OP2] inline overload RightAssoc?(#OP1,#OP2) = RightAssoc?(OP1) and RightAssoc?(OP2);
+
+[OP1,OP2] inline GreaterPrec?(#OP1,#OP2) 
+    = integerLesser?(operatorPrecedence(OP1),operatorPrecedence(OP2));
+[OP1,OP2] inline LowerPrec?(#OP1,#OP2) = GreaterPrec?(OP2,OP1);
+
+
+private define binaryOp;
+
+inline overload binaryOp(forward ..args) = forward ..args;
+
+[OP,NX when RightAssoc?(OP)]
+inline overload binaryOp(forward a, #OP, forward b, #NX, forward ..args) 
+    = forward ..binaryOp(a, OP, ..binaryOp(b, NX, ..args));
+
+[OP,NX when LeftAssoc?(OP)]
+inline overload binaryOp(forward a, #OP, forward b, #NX, forward ..args) 
+    = forward ..binaryOp(OP(a,b), NX, ..args);
+
+[OP,NX when (LeftAssoc?(NX) or RightAssoc?(NX)) and LowerPrec?(OP,NX)]
+inline overload binaryOp(forward a, #OP, forward b, #NX, forward ..args) 
+    = forward ..binaryOp(a, OP, ..binaryOp(b, NX, ..args));
+
+[OP,NX when (LeftAssoc?(OP) or RightAssoc?(OP)) and GreaterPrec?(OP,NX)]
+inline overload binaryOp(forward a, #OP, forward b, #NX, forward ..args) 
+    = forward ..binaryOp(OP(a,b), NX, ..args);
+
+[OP when LeftAssoc?(OP) or RightAssoc?(OP)]
+inline overload binaryOp(forward a, #OP, forward b) = forward ..OP(a,b);
+
+
+private define boolOp;
+
+inline overload boolOp(forward ..args) = forward ..args;
+
+[OP,NX when BoolAssoc?(OP,NX)]
+inline overload boolOp(forward a, #OP, forward b, #NX, forward ..args) = forward OP(a,b) and boolOp(b,NX,..args);
+
+[OP when BoolAssoc?(OP)]
+inline overload boolOp(forward a, #OP, forward b) = forward ..OP(a,b);
+
+
+inline overload infixOperator(forward ..args) = forward boolOp(..binaryOp(..args));
+[OP]
+inline overload infixOperator(forward a, #OP, forward b) = forward ..OP(a,b);
+
+
+//
+// swap
+//
+
+inline swap(a, b) {
+    var temp = moveUnsafe(a);
+    a <-- moveUnsafe(b);
+    b <-- move(temp);
+}
+
+[T when BitwiseMovedType?(T)]
+inline overload swap(a:T, b:T) {
+    alias TBytes = Array[UInt8, Int(TypeSize(T))];
+    var temp = bitcast(TBytes, a);
+    bitcast(TBytes, a) <-- bitcast(TBytes, b);
+    bitcast(TBytes, b) <-- temp;
+}
+
+
+//
+// min, max
+//
+
+inline min(a, b) {
+    if (a <= b)
+        return a;
+    else
+        return b;
+}
+
+inline overload min(ref a, ref b) {
+    if (a <= b)
+        return ref a;
+    else
+        return ref b;
+}
+
+inline max(a, b) {
+    if (a > b)
+        return a;
+    else
+        return b;
+}
+
+inline overload max(ref a, ref b) {
+    if (a > b)
+        return ref a;
+    else
+        return ref b;
+}
+
+
+
+//
+// empty?
+//
+
+[T when SizedSequence?(T)]
+inline empty?(a:T) = (size(a) == 0);
+
+
+
+//
+// ifExpression
+//
+
+[T]
+alias overload ifExpression(condition, consequent:T, alternate:T) : T {
+    if (condition)
+        return consequent;
+    else
+        return alternate;
+}
+
+[T]
+alias overload ifExpression(condition, ref consequent:T, ref alternate:T) : ByRef[T] {
+    if (condition)
+        return ref consequent;
+    else
+        return ref alternate;
+}
+
+[consequent, alternate when StringLiteral?(consequent) and StringLiteral?(alternate)]
+alias overload ifExpression(condition, #consequent, #alternate) : StringLiteralRef {
+    if (condition)
+        return StringLiteralRef(consequent);
+    else
+        return StringLiteralRef(alternate);
+}
+
+
+
+//
+// bitandc, bitblend
+//
+
+inline bitandc(a, b) = (&)(a, (~)(b));
+inline bitblend(mask, ones, zeros)
+    = (|)((&)(ones, mask), bitandc(zeros, mask));
+
+
+
+//
+// bitrol, bitror
+//
+
+[I, J when Integer?(I) and Integer?(J)]
+bitrol(x:I, n:J) = (|)(wrapBitshl(x, n), (>>)(x, TypeSize(I)*8 - n));
+
+[I, J when Integer?(I) and Integer?(J)]
+bitror(x:I, n:J) = (|)((>>)(x, n), wrapBitshl(x, TypeSize(I)*8 - n));
+
+
+
+//
+// PrimitiveType?
+//
+
+PrimitiveType?(X) = false;
+overload PrimitiveType?(#Bool) = true;
+overload PrimitiveType?(#Int8) = true;
+overload PrimitiveType?(#Int16) = true;
+overload PrimitiveType?(#Int32) = true;
+overload PrimitiveType?(#Int64) = true;
+overload PrimitiveType?(#Int128) = true;
+overload PrimitiveType?(#UInt8) = true;
+overload PrimitiveType?(#UInt16) = true;
+overload PrimitiveType?(#UInt32) = true;
+overload PrimitiveType?(#UInt64) = true;
+overload PrimitiveType?(#UInt128) = true;
+overload PrimitiveType?(#Float32) = true;
+overload PrimitiveType?(#Float64) = true;
+overload PrimitiveType?(#Float80) = true;
+overload PrimitiveType?(#Imag32) = true;
+overload PrimitiveType?(#Imag64) = true;
+overload PrimitiveType?(#Imag80) = true;
+overload PrimitiveType?(#Complex32) = true;
+overload PrimitiveType?(#Complex64) = true;
+overload PrimitiveType?(#Complex80) = true;
+[T] overload PrimitiveType?(#Pointer[T]) = true;
+[I, O] overload PrimitiveType?(#CodePointer[I, O]) = true;
+[I, O] overload PrimitiveType?(#CCodePointer[I, O]) = true;
+[I, O] overload PrimitiveType?(#VarArgsCCodePointer[I, O]) = true;
+[I, O] overload PrimitiveType?(#StdCallCodePointer[I, O]) = true;
+[I, O] overload PrimitiveType?(#FastCallCodePointer[I, O]) = true;
+[T] overload PrimitiveType?(#Static[T]) = true;
+[T,n] overload PrimitiveType?(#Vec[T,n]) = true;
+[E when Enum?(E)] overload PrimitiveType?(#E) = true;
+[..T] overload PrimitiveType?(#Union[..T]) = true;
+[] overload PrimitiveType?(#Union[]) = true;
+overload PrimitiveType?(#Tuple[]) = true;
+
+
+
+//
+// PrimitiveCompoundType?, PrimitiveCompoundMemberTypes
+//
+
+PrimitiveCompoundType?(X) = false;
+
+[T,n] overload PrimitiveCompoundType?(#Array[T,n]) = true;
+[..T] overload PrimitiveCompoundType?(#Tuple[..T]) = true;
+[R when RegularRecord?(R)] overload PrimitiveCompoundType?(#R) = true;
+[V when Variant?(V)] overload PrimitiveCompoundType?(#V) = true;
+
+define PrimitiveCompoundMemberTypes;
+[T,n] overload PrimitiveCompoundMemberTypes(#Array[T,n]) = T;
+[..T] overload PrimitiveCompoundMemberTypes(#Tuple[..T]) = ..T;
+[R when RegularRecord?(R)]
+overload PrimitiveCompoundMemberTypes(#R) = ..RecordFieldTypes(R);
+[V when Variant?(V)]
+overload PrimitiveCompoundMemberTypes(#V) = ..VariantMembers(V);
+
+
+//
+// PODType?
+//
+
+PODType?(X) = false;
+
+[T when PrimitiveType?(T)]
+overload PODType?(#T) = true;
+
+[T when PrimitiveCompoundType?(T)]
+overload PODType?(#T) = allValues?(PODType?, ..PrimitiveCompoundMemberTypes(T));
+
+
+
+//
+// Finer-grained POD-related properties
+//
+
+BitwiseCopiedType?(T) = PODType?(T);
+BitwiseMovedType?(T) = PODType?(T);
+NotDestroyedType?(T) = PODType?(T);
+NotResetType?(T) = PODType?(T);
+CopyDoesNotThrowType?(T) = PODType?(T);
+AssignDoesNotThrowType?(T) = PODType?(T);
+BitwiseAssignedType?(T) = BitwiseCopiedType?(T) and NotDestroyedType?(T);
+BitwiseMoveAssignedType?(T) = BitwiseMovedType?(T) and NotDestroyedType?(T);
+
+[T when PrimitiveCompoundType?(T)]
+overload BitwiseCopiedType?(#T)
+    = allValues?(BitwiseCopiedType?, ..PrimitiveCompoundMemberTypes(T));
+[T when PrimitiveCompoundType?(T)]
+overload BitwiseMovedType?(#T)
+    = allValues?(BitwiseMovedType?, ..PrimitiveCompoundMemberTypes(T));
+[T when PrimitiveCompoundType?(T)]
+overload NotDestroyedType?(#T)
+    = allValues?(NotDestroyedType?, ..PrimitiveCompoundMemberTypes(T));
+[T when PrimitiveCompoundType?(T)]
+overload NotResetType?(#T)
+    = allValues?(NotResetType?, ..PrimitiveCompoundMemberTypes(T));
+[T when PrimitiveCompoundType?(T)]
+overload CopyDoesNotThrowType?(#T)
+    = allValues?(CopyDoesNotThrowType?, ..PrimitiveCompoundMemberTypes(T));
+[T when PrimitiveCompoundType?(T)]
+overload AssignDoesNotThrowType?(#T)
+    = allValues?(AssignDoesNotThrowType?, ..PrimitiveCompoundMemberTypes(T));
+[T when PrimitiveCompoundType?(T)]
+overload BitwiseAssignedType?(#T)
+    = allValues?(BitwiseAssignedType?, ..PrimitiveCompoundMemberTypes(T));
+[T when PrimitiveCompoundType?(T)]
+overload BitwiseMoveAssignedType?(#T)
+    = allValues?(BitwiseMoveAssignedType?, ..PrimitiveCompoundMemberTypes(T));
+
+
+
+//
+// identity test
+//
+
+inline is?(x, y) = @x == @y;
+inline isNot?(x, y) = not is?(x, y);
+
+
+//
+// case?
+//
+
+inline overload case?(x, forward ..ys) : Bool {
+    ..for (y in ..ys)
+        if ((==)(x, y))
+            return true;
+    return false;
+}
+
+
+//
+// CallDefined?, CallOutputTypes
+//
+
+define CallDefined?;
+[F]
+alias overload CallDefined?(f:F, ..In) = StaticCallDefined?(call, F, ..In);
+[f]
+alias overload CallDefined?(#f, ..In) = Symbol?(f) and StaticCallDefined?(f, ..In);
+
+define CallOutputTypes;
+[F]
+alias overload CallOutputTypes(f:F, ..In) = ..StaticCallOutputTypes(call, F, ..In);
+[f]
+alias overload CallOutputTypes(#f, ..In) = ..StaticCallOutputTypes(f, ..In);
+
+
+//
+// Mono?, MonoInputTypes, MonoOutputTypes
+//
+
+define MonoInputTypes;
+[f when StaticMono?(f)]
+alias overload MonoInputTypes(#f) = ..StaticMonoInputTypes(f);
+[F when LambdaRecord?(F) and LambdaMono?(F)]
+alias overload MonoInputTypes(f:F) = ..LambdaMonoInputTypes(F);
+
+[F]
+alias Mono?(f:F) = CallDefined?(MonoInputTypes, F);
+inline MonoType?(F) = Mono?(typeToRValue(F));
+
+[F when MonoType?(F)]
+alias MonoOutputTypes(f:F) = ..CallOutputTypes(f, ..MonoInputTypes(f));
+
+public define Monad?;
+overload Monad?(T) = false;
