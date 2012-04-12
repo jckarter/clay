@@ -1,5 +1,5 @@
 import printer.(println,print);
-import buffervector.*;
+import buffer.*;
 
 main() {
     var buf = Array[Char, 100]();
