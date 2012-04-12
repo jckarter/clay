@@ -1,4 +1,4 @@
-import core.platform.symbols.(PPC32, PPC);
+import platform.symbols.(PPC32, PPC);
 
 alias CPU = PPC32;
 alias CPUFamily = PPC;

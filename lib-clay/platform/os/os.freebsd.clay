@@ -1,4 +1,4 @@
-import core.platform.symbols.(FreeBSD, Unix);
+import platform.symbols.(FreeBSD, Unix);
 
 alias OS = FreeBSD;
 alias OSFamily = Unix;

@@ -1,4 +1,4 @@
-import core.platform.symbols.(X86_64, X86);
+import platform.symbols.(X86_64, X86);
 
 alias CPU = X86_64;
 alias CPUFamily = X86;

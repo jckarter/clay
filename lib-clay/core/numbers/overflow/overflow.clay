@@ -1,4 +1,4 @@
-import core.platform.(OSFamily, Windows);
+import platform.(OSFamily, Windows);
 import __operators__;
 
 __llvm__{
