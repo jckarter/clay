@@ -633,12 +633,12 @@ void initializeRecordFields(RecordTypePtr t) {
         MultiPValuePtr mpv = analyzeMulti(body->computed, env, 0);
         vector<TypePtr> fieldInfoTypes;
         if ((mpv->size() == 1) &&
-            (mpv->values[0]->type->typeKind == RECORD_TYPE) &&
-            (((RecordType *)mpv->values[0]->type.ptr())->record.ptr() ==
+            (mpv->values[0].type->typeKind == RECORD_TYPE) &&
+            (((RecordType *)mpv->values[0].type.ptr())->record.ptr() ==
              primitive_RecordWithProperties().ptr()))
         {
             const vector<ObjectPtr> &params =
-                ((RecordType *)mpv->values[0]->type.ptr())->params;
+                ((RecordType *)mpv->values[0].type.ptr())->params;
             assert(params.size() == 2);
             if (params[0]->objKind != TYPE)
                 argumentError(0, "expecting a tuple of properties");
@@ -657,7 +657,7 @@ void initializeRecordFields(RecordTypePtr t) {
         }
         else {
             for (unsigned i = 0; i < mpv->size(); ++i)
-                fieldInfoTypes.push_back(mpv->values[i]->type);
+                fieldInfoTypes.push_back(mpv->values[i].type);
         }
         for (unsigned i = 0; i < fieldInfoTypes.size(); ++i) {
             TypePtr x = fieldInfoTypes[i];

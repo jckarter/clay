@@ -3334,25 +3334,38 @@ ValueHolderPtr parseFloatLiteral(ModulePtr module, FloatLiteral *x);
 // analyzer
 //
 
-struct PValue : public Object {
+struct PVData {
     TypePtr type;
     bool isTemp;
+    PVData() : type(NULL), isTemp(NULL) {}
+    PVData(TypePtr type, bool isTemp)
+        : type(type), isTemp(isTemp) {}
+
+    bool ok() const { return type != NULL; }
+
+    bool operator==(PVData const &x) { return type == x.type && isTemp == x.isTemp; }
+};
+
+struct PValue : public Object {
+    PVData data;
     PValue(TypePtr type, bool isTemp)
-        : Object(PVALUE), type(type), isTemp(isTemp) {}
+        : Object(PVALUE), data(type, isTemp) {}
+    PValue(PVData data)
+        : Object(PVALUE), data(data) {}
 };
 
 struct MultiPValue : public Object {
-    vector<PValuePtr> values;
+    llvm::SmallVector<PVData, 4> values;
     MultiPValue()
         : Object(MULTI_PVALUE) {}
-    MultiPValue(PValuePtr pv)
+    MultiPValue(PVData const &pv)
         : Object(MULTI_PVALUE) {
         values.push_back(pv);
     }
-    MultiPValue(const vector<PValuePtr> &values)
-        : Object(MULTI_PVALUE), values(values) {}
+    MultiPValue(llvm::ArrayRef<PVData> values)
+        : Object(MULTI_PVALUE), values(values.begin(), values.end()) {}
     unsigned size() { return values.size(); }
-    void add(PValuePtr x) { values.push_back(x); }
+    void add(PVData const &x) { values.push_back(x); }
     void add(MultiPValuePtr x) {
         values.insert(values.end(), x->values.begin(), x->values.end());
     }
@@ -3367,7 +3380,7 @@ struct AnalysisCachingDisabler {
 };
 
 
-PValuePtr safeAnalyzeOne(ExprPtr expr, EnvPtr env);
+PVData safeAnalyzeOne(ExprPtr expr, EnvPtr env);
 MultiPValuePtr safeAnalyzeMulti(ExprListPtr exprs, EnvPtr env, unsigned wantCount);
 MultiPValuePtr safeAnalyzeExpr(ExprPtr expr, EnvPtr env);
 MultiPValuePtr safeAnalyzeIndexingExpr(ExprPtr indexable,
@@ -3386,12 +3399,12 @@ MultiPValuePtr safeAnalyzeCallByName(InvokeEntryPtr entry,
 MultiPValuePtr safeAnalyzeGVarInstance(GVarInstancePtr x);
 
 MultiPValuePtr analyzeMulti(ExprListPtr exprs, EnvPtr env, unsigned wantCount);
-PValuePtr analyzeOne(ExprPtr expr, EnvPtr env);
+PVData analyzeOne(ExprPtr expr, EnvPtr env);
 
 MultiPValuePtr analyzeMultiArgs(ExprListPtr exprs,
                                 EnvPtr env,
                                 vector<unsigned> &dispatchIndices);
-PValuePtr analyzeOneArg(ExprPtr x,
+PVData analyzeOneArg(ExprPtr x,
                         EnvPtr env,
                         unsigned startIndex,
                         vector<unsigned> &dispatchIndices);
@@ -3411,7 +3424,7 @@ GVarInstancePtr analyzeGVarIndexing(GlobalVariablePtr x,
                                     EnvPtr env);
 MultiPValuePtr analyzeGVarInstance(GVarInstancePtr x);
 
-PValuePtr analyzeExternalVariable(ExternalVariablePtr x);
+PVData analyzeExternalVariable(ExternalVariablePtr x);
 void analyzeExternalProcedure(ExternalProcedurePtr x);
 void verifyAttributes(ExternalProcedurePtr x);
 void verifyAttributes(ExternalVariablePtr x);
@@ -3421,7 +3434,7 @@ MultiPValuePtr analyzeIndexingExpr(ExprPtr indexable,
                                    EnvPtr env);
 bool unwrapByRef(TypePtr &t);
 TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args);
-PValuePtr analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args);
+PVData analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args);
 MultiPValuePtr analyzeAliasIndexing(GlobalAliasPtr x,
                                     ExprListPtr args,
                                     EnvPtr env);
@@ -3433,13 +3446,13 @@ MultiPValuePtr analyzeReturn(const vector<bool> &returnIsRef,
 MultiPValuePtr analyzeCallExpr(ExprPtr callable,
                                ExprListPtr args,
                                EnvPtr env);
-PValuePtr analyzeDispatchIndex(PValuePtr pv, int tag);
+PVData analyzeDispatchIndex(PVData const &pv, int tag);
 MultiPValuePtr analyzeDispatch(ObjectPtr obj,
                                MultiPValuePtr args,
                                const vector<unsigned> &dispatchIndices);
-MultiPValuePtr analyzeCallValue(PValuePtr callable,
+MultiPValuePtr analyzeCallValue(PVData const &callable,
                                 MultiPValuePtr args);
-MultiPValuePtr analyzeCallPointer(PValuePtr x,
+MultiPValuePtr analyzeCallPointer(PVData const &x,
                                   MultiPValuePtr args);
 bool analyzeIsDefined(ObjectPtr x,
                       const vector<TypePtr> &argsKey,
@@ -3476,7 +3489,7 @@ enum StatementAnalysis {
 StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx);
 void initializeStaticForClones(StaticForPtr x, unsigned count);
 EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
-bool returnKindToByRef(ReturnKind returnKind, PValuePtr pv);
+bool returnKindToByRef(ReturnKind returnKind, PVData const &pv);
 
 MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args);
 
