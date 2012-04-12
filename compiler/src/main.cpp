@@ -148,8 +148,8 @@ static void generateAssembly(llvm::Module *module,
 
 static bool generateBinary(llvm::Module *module,
                            llvm::TargetMachine *targetMachine,
-                           const llvm::sys::Path &outputFilePath,
-                           const llvm::sys::Path &clangPath,
+                           llvm::Twine const &outputFilePath,
+                           llvm::sys::Path const &clangPath,
                            unsigned optLevel,
                            bool /*exceptions*/,
                            bool sharedLib,
@@ -157,25 +157,21 @@ static bool generateBinary(llvm::Module *module,
                            bool debug,
                            const vector<string> &arguments)
 {
-    llvm::sys::Path tempObj("clayobj.obj");
-    string errMsg;
-    if (tempObj.createTemporaryFileOnDisk(false, &errMsg)) {
-        llvm::errs() << "error: " << errMsg << '\n';
+    int fd;
+    PathString tempObj;
+    if (llvm::error_code ec = llvm::sys::fs::unique_file("clayobj-%%%%%%%%.obj", fd, tempObj)) {
+        llvm::errs() << "error creating temporary object file: " << ec.message() << '\n';
         return false;
     }
-    llvm::sys::RemoveFileOnSignal(tempObj);
+    llvm::sys::RemoveFileOnSignal(llvm::sys::Path(tempObj));
 
-    errMsg.clear();
-    llvm::raw_fd_ostream objOut(tempObj.c_str(),
-                                errMsg,
-                                llvm::raw_fd_ostream::F_Binary);
-    if (!errMsg.empty()) {
-        llvm::errs() << "error: " << errMsg << '\n';
-        return false;
+    {
+        llvm::raw_fd_ostream objOut(fd, /*shouldClose=*/ true);
+
+        generateAssembly(module, targetMachine, &objOut, true, optLevel, sharedLib, genPIC, debug);
     }
 
-    generateAssembly(module, targetMachine, &objOut, true, optLevel, sharedLib, genPIC, debug);
-    objOut.close();
+    string outputFilePathStr = outputFilePath.str();
 
     vector<const char *> clangArgs;
     clangArgs.push_back(clangPath.c_str());
@@ -199,11 +195,11 @@ static bool generateBinary(llvm::Module *module,
         if (triple.getOS() == llvm::Triple::MinGW32
             || triple.getOS() == llvm::Triple::Cygwin) {
 
-            llvm::sys::Path defPath(outputFilePath);
-            defPath.eraseSuffix();
-            defPath.appendSuffix("def");
+            PathString defPath;
+            outputFilePath.toVector(defPath);
+            llvm::sys::path::replace_extension(defPath, "def");
 
-            linkerFlags = "-Wl,--output-def," + defPath.str();
+            linkerFlags = "-Wl,--output-def," + string(defPath.begin(), defPath.end());
 
             clangArgs.push_back(linkerFlags.c_str());
         }
@@ -213,7 +209,7 @@ static bool generateBinary(llvm::Module *module,
             clangArgs.push_back("-Wl,/debug");
     }
     clangArgs.push_back("-o");
-    clangArgs.push_back(outputFilePath.c_str());
+    clangArgs.push_back(outputFilePathStr.c_str());
     clangArgs.push_back(tempObj.c_str());
     for (unsigned i = 0; i < arguments.size(); ++i)
         clangArgs.push_back(arguments[i].c_str());
@@ -224,14 +220,14 @@ static bool generateBinary(llvm::Module *module,
     if (debug && triple.getOS() == llvm::Triple::Darwin) {
         llvm::sys::Path dsymutilPath = llvm::sys::Program::FindProgramByName("dsymutil");
         if (dsymutilPath.isValid()) {
-            llvm::sys::Path outputDSYMPath = outputFilePath;
-            outputDSYMPath.appendSuffix("dSYM");
+            string outputDSYMPath = outputFilePathStr;
+            outputDSYMPath.append(".dSYM");
 
             vector<const char *> dsymutilArgs;
             dsymutilArgs.push_back(dsymutilPath.c_str());
             dsymutilArgs.push_back("-o");
             dsymutilArgs.push_back(outputDSYMPath.c_str());
-            dsymutilArgs.push_back(outputFilePath.c_str());
+            dsymutilArgs.push_back(outputFilePathStr.c_str());
             dsymutilArgs.push_back(NULL);
 
             int dsymResult = llvm::sys::Program::ExecuteAndWait(dsymutilPath,
@@ -243,10 +239,8 @@ static bool generateBinary(llvm::Module *module,
             llvm::errs() << "warning: unable to find dsymutil on the path; debug info for executable will not be generated\n";
     }
 
-    if (tempObj.eraseFromDisk(false, &errMsg)) {
-        llvm::errs() << "error: " << errMsg << '\n';
-        return false;
-    }
+    bool dontcare;
+    llvm::sys::fs::remove(llvm::StringRef(tempObj), dontcare);
 
     return (result == 0);
 }
@@ -300,23 +294,6 @@ static void usage(char *argv0)
     llvm::errs() << "  -e <source>           compile and run <source> (implies -run)\n";
     llvm::errs() << "  -M<module>            \"import <module>.*;\" for -e\n";
     llvm::errs() << "  -v                    display version info\n";
-}
-
-string dirname(llvm::StringRef fullname)
-{
-    string::size_type slash = fullname.find_last_of(PATH_SEPARATORS);
-    return fullname.substr(0, slash == string::npos ? 0 : slash);
-}
-
-string basename(llvm::StringRef fullname, bool chopSuffix)
-{
-    string::size_type to = fullname.rfind('.');
-    string::size_type slash = fullname.find_last_of(PATH_SEPARATORS);
-    string::size_type from = slash == string::npos ? 0 : slash+1;
-    string::size_type length =
-        (!chopSuffix || to == string::npos) ? string::npos : to - from;
-
-    return fullname.substr(from, length);
 }
 
 static string sharedExtensionForTarget(llvm::Triple const &triple) {
@@ -797,51 +774,49 @@ int main2(int argc, char **argv, char const* const* envp) {
             end = begin;
             while (*end && (*end != ENV_SEPARATOR))
                 ++end;
-            addSearchPath(string(begin, end));
+            addSearchPath(llvm::StringRef(begin, end-begin));
             begin = end + 1;
         }
         while (*end);
     }
     // Add the relative path from the executable
-    llvm::sys::Path clayExe =
-        llvm::sys::Path::GetMainExecutable(argv[0], (void *)&usage);
-    llvm::sys::Path clayDir(llvm::sys::path::parent_path(clayExe.str()));
-    llvm::sys::Path libDirDevelopment(clayDir);
-    llvm::sys::Path libDirProduction1(clayDir);
-    llvm::sys::Path libDirProduction2(clayDir);
-    bool result;
-    result = libDirDevelopment.appendComponent("../../../lib-clay");
-    assert(result);
+    PathString clayExe(llvm::sys::Path::GetMainExecutable(argv[0], (void *)&usage).c_str());
+    llvm::StringRef clayDir = llvm::sys::path::parent_path(clayExe);
 
-    result = libDirProduction1.appendComponent("../lib/lib-clay");
-    result = libDirProduction2.appendComponent("lib-clay");
-    assert(result);
-    addSearchPath(libDirDevelopment.str());
-    addSearchPath(libDirProduction1.str());
-    addSearchPath(libDirProduction2.str());
+    PathString libDirDevelopment(clayDir);
+    PathString libDirProduction1(clayDir);
+    PathString libDirProduction2(clayDir);
+
+    llvm::sys::path::append(libDirDevelopment, "../../../lib-clay");
+    llvm::sys::path::append(libDirProduction1, "../lib/lib-clay");
+    llvm::sys::path::append(libDirProduction2, "lib-clay");
+
+    addSearchPath(libDirDevelopment);
+    addSearchPath(libDirProduction1);
+    addSearchPath(libDirProduction2);
     addSearchPath(".");
 
     if (outputFile.empty()) {
-        string clayFileBasename = basename(clayFile, true);
+        llvm::StringRef clayFileBasename = llvm::sys::path::stem(clayFile);
+        outputFile = string(clayFileBasename.begin(), clayFileBasename.end());
 
         if (emitLLVM && emitAsm)
-            outputFile = clayFileBasename + ".ll";
+            outputFile += ".ll";
         else if (emitAsm)
-            outputFile = clayFileBasename + ".s";
+            outputFile += ".s";
         else if (emitObject || emitLLVM)
-            outputFile = clayFileBasename + objExtensionForTarget(llvmTriple);
+            outputFile += objExtensionForTarget(llvmTriple);
         else if (sharedLib)
-            outputFile = clayFileBasename + sharedExtensionForTarget(llvmTriple);
+            outputFile += sharedExtensionForTarget(llvmTriple);
         else
-            outputFile = clayFileBasename + exeExtensionForTarget(llvmTriple);
+            outputFile += exeExtensionForTarget(llvmTriple);
     }
-    llvm::sys::PathWithStatus outputFilePath(outputFile);
-    const llvm::sys::FileStatus *outputFileStatus = outputFilePath.getFileStatus();
-    if (outputFileStatus != NULL && outputFileStatus->isDir) {
+    bool isDir;
+    if (!llvm::sys::fs::is_directory(outputFile, isDir) && isDir) {
         llvm::errs() << "error: output file '" << outputFile << "' is a directory\n";
         return 1;
     }
-    llvm::sys::RemoveFileOnSignal(outputFilePath);
+    llvm::sys::RemoveFileOnSignal(llvm::sys::Path(outputFile));
 
     if (generateDeps) {
         if (run) {
@@ -854,14 +829,12 @@ int main2(int argc, char **argv, char const* const* envp) {
         }
     }
 
-    llvm::sys::PathWithStatus dependenciesOutputFilePath(dependenciesOutputFile);
     if (generateDeps) {
-        const llvm::sys::FileStatus *dependenciesOutputFileStatus = dependenciesOutputFilePath.getFileStatus();
-        if (dependenciesOutputFileStatus != NULL && dependenciesOutputFileStatus->isDir) {
+        if (!llvm::sys::fs::is_directory(dependenciesOutputFile, isDir) && isDir) {
             llvm::errs() << "error: dependencies output file '" << dependenciesOutputFile << "' is a directory\n";
             return 1;
         }
-        llvm::sys::RemoveFileOnSignal(dependenciesOutputFilePath);
+        llvm::sys::RemoveFileOnSignal(llvm::sys::Path(dependenciesOutputFile));
     }
 
     HiResTimer loadTimer, compileTimer, optTimer, outputTimer;
@@ -884,7 +857,7 @@ int main2(int argc, char **argv, char const* const* envp) {
 
     if (generateDeps) {
         string errorInfo;
-        llvm::raw_fd_ostream dependenciesOut(dependenciesOutputFilePath.c_str(),
+        llvm::raw_fd_ostream dependenciesOut(dependenciesOutputFile.c_str(),
                                              errorInfo,
                                              llvm::raw_fd_ostream::F_Binary);
         if (!errorInfo.empty()) {
@@ -915,7 +888,7 @@ int main2(int argc, char **argv, char const* const* envp) {
     }
     else if (emitLLVM || emitAsm || emitObject) {
         string errorInfo;
-        llvm::raw_fd_ostream out(outputFilePath.c_str(),
+        llvm::raw_fd_ostream out(outputFile.c_str(),
                                  errorInfo,
                                  llvm::raw_fd_ostream::F_Binary);
         if (!errorInfo.empty()) {
@@ -931,21 +904,7 @@ int main2(int argc, char **argv, char const* const* envp) {
     }
     else {
         bool result;
-        llvm::sys::Path clangPath;
-#ifdef WIN32
-        clangPath = clayDir;
-        result = clangPath.appendComponent("mingw");
-        assert(result);
-        result = clangPath.appendComponent("bin");
-        assert(result);
-        result = clangPath.appendComponent("clang.exe");
-        assert(result);
-        if (!clangPath.exists())
-            clangPath = llvm::sys::Path();
-#endif
-        if (!clangPath.isValid()) {
-            clangPath = llvm::sys::Program::FindProgramByName("clang");
-        }
+        llvm::sys::Path clangPath = llvm::sys::Program::FindProgramByName("clang");
         if (!clangPath.isValid()) {
             llvm::errs() << "error: unable to find clang on the path\n";
             return 1;
@@ -976,7 +935,7 @@ int main2(int argc, char **argv, char const* const* envp) {
         copy(libraries.begin(), libraries.end(), back_inserter(arguments));
 
         outputTimer.start();
-        result = generateBinary(llvmModule, targetMachine, outputFilePath, clangPath,
+        result = generateBinary(llvmModule, targetMachine, outputFile, clangPath,
                                 optLevel, exceptions, sharedLib, genPIC, debug,
                                 arguments);
         outputTimer.stop();

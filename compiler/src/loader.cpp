@@ -4,8 +4,6 @@ namespace clay {
 
 using namespace std;
 
-typedef llvm::SmallString<260> PathString;
-
 static vector<PathString> searchPath;
 static vector<llvm::SmallString<32> > moduleSuffixes;
 

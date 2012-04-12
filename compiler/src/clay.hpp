@@ -136,6 +136,13 @@ namespace clay {
 
 
 //
+// container typedefs
+//
+
+typedef llvm::SmallString<260> PathString;
+
+
+//
 // Target-specific types
 //
 typedef int ptrdiff32_t;
@@ -3107,14 +3114,6 @@ void patternPrint(llvm::raw_ostream &out, MultiPatternPtr x);
 //
 
 void initializeLambda(LambdaPtr x, EnvPtr env);
-
-
-//
-// main
-//
-
-string dirname(llvm::StringRef fullname);
-string basename(llvm::StringRef fullname, bool chopSuffix);
 
 
 //
