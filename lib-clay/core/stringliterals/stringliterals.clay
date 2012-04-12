@@ -107,9 +107,9 @@ private StringLiteralStatic?(S) = false;
 [s]
 overload StringLiteralStatic?(#Static[s]) = StringLiteral?(s);
 
-AllStringLiterals?(..SS) = allValues?(S -> StringLiteralStatic?(S), ..SS);
+StringLiteralType?(..SS) = allValues?(S -> StringLiteralStatic?(S), ..SS);
 
-[..SS when AllStringLiterals?(..SS)]
+[..SS when StringLiteralType?(..SS)]
 inline overload (++)(..ss:SS) = stringLiteralConcat(..ss);
 
 

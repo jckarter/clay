@@ -244,7 +244,7 @@ alias array(..args:A) {
     return Array[takeValues(#1, ..A), countValues(..A)](..args);
 }
 
-[..SS when countValues(..SS) > 0 and AllStringLiterals?(..SS)]
+[..SS when countValues(..SS) > 0 and StringLiteralType?(..SS)]
 alias overload array(..strings:SS) {
     return array(..mapValues(StringLiteralRef, ..strings));
 }
