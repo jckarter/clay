@@ -473,50 +473,6 @@ static void print(llvm::raw_ostream &out, const Object *x) {
         out << "Location(" << y->source << ", " << y->offset << ")";
         break;
     }
-    case TOKEN : {
-        const Token *y = (const Token *)x;
-        out << "Token(";
-        switch (y->tokenKind) {
-        case T_OPSTRING :
-            out << "T_OPSTRING";
-            break;
-        case T_SYMBOL :
-            out << "T_SYMBOL";
-            break;
-        case T_KEYWORD :
-            out << "T_KEYWORD";
-            break;
-        case T_IDENTIFIER :
-            out << "T_IDENTIFIER";
-            break;
-        case T_STRING_LITERAL :
-            out << "T_STRING_LITERAL";
-            break;
-        case T_CHAR_LITERAL :
-            out << "T_CHAR_LITERAL";
-            break;
-        case T_INT_LITERAL :
-            out << "T_INT_LITERAL";
-            break;
-        case T_FLOAT_LITERAL :
-            out << "T_FLOAT_LITERAL";
-            break;
-        case T_SPACE :
-            out << "T_SPACE";
-            break;
-        case T_LINE_COMMENT :
-            out << "T_LINE_COMMENT";
-            break;
-        case T_BLOCK_COMMENT :
-            out << "T_BLOCK_COMMENT";
-            break;
-        default :
-            assert(false);
-        }
-        out << ", " << y->str << ")";
-        break;
-    }
-
     case IDENTIFIER : {
         const Identifier *y = (const Identifier *)x;
         out << "Identifier(" << y->str << ")";

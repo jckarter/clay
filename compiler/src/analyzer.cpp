@@ -412,18 +412,18 @@ MultiPValuePtr safeAnalyzeMultiArgs(ExprListPtr exprs,
     return result;
 }
 
-InvokeEntryPtr safeAnalyzeCallable(ObjectPtr x,
+InvokeEntry* safeAnalyzeCallable(ObjectPtr x,
                                    const vector<TypePtr> &argsKey,
                                    const vector<ValueTempness> &argsTempness)
 {
     ClearAnalysisError clear;
-    InvokeEntryPtr entry = analyzeCallable(x, argsKey, argsTempness);
+    InvokeEntry* entry = analyzeCallable(x, argsKey, argsTempness);
     if (!entry->callByName && !entry->analyzed)
         analysisError();
     return entry;
 }
 
-MultiPValuePtr safeAnalyzeCallByName(InvokeEntryPtr entry,
+MultiPValuePtr safeAnalyzeCallByName(InvokeEntry* entry,
                                      ExprPtr callable,
                                      ExprListPtr args,
                                      EnvPtr env)
@@ -1580,7 +1580,7 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
         vector<ValueTempness> argsTempness;
         computeArgsKey(mpv, argsKey, argsTempness);
         CompileContextPusher pusher(obj, argsKey);
-        InvokeEntryPtr entry =
+        InvokeEntry* entry =
             analyzeCallable(obj, argsKey, argsTempness);
         if (entry->callByName)
             return analyzeCallByName(entry, callable, args, env);
@@ -1736,7 +1736,7 @@ MultiPValuePtr analyzeCallValue(PVData const &callable,
         vector<ValueTempness> argsTempness;
         computeArgsKey(args, argsKey, argsTempness);
         CompileContextPusher pusher(obj, argsKey);
-        InvokeEntryPtr entry =
+        InvokeEntry* entry =
             analyzeCallable(obj, argsKey, argsTempness);
         if (entry->callByName) {
             ExprListPtr objectExprs = new ExprList();
@@ -1796,19 +1796,19 @@ bool analyzeIsDefined(ObjectPtr x,
                       const vector<ValueTempness> &argsTempness)
 {
     MatchFailureError failures;
-    InvokeEntryPtr entry = lookupInvokeEntry(x, argsKey, argsTempness, failures);
+    InvokeEntry* entry = lookupInvokeEntry(x, argsKey, argsTempness, failures);
 
     if (!entry || !entry->code->hasBody())
         return false;
     return true;
 }
 
-InvokeEntryPtr analyzeCallable(ObjectPtr x,
+InvokeEntry* analyzeCallable(ObjectPtr x,
                                const vector<TypePtr> &argsKey,
                                const vector<ValueTempness> &argsTempness)
 {
     MatchFailureError failures;
-    InvokeEntryPtr entry = lookupInvokeEntry(x, argsKey, argsTempness, failures);
+    InvokeEntry* entry = lookupInvokeEntry(x, argsKey, argsTempness, failures);
 
     if (!entry || !entry->code->hasBody()) {
         matchFailureError(failures);
@@ -1837,7 +1837,7 @@ InvokeEntryPtr analyzeCallable(ObjectPtr x,
 // analyzeCallByName
 //
 
-MultiPValuePtr analyzeCallByName(InvokeEntryPtr entry,
+MultiPValuePtr analyzeCallByName(InvokeEntry* entry,
                                  ExprPtr callable,
                                  ExprListPtr args,
                                  EnvPtr env)
@@ -1877,14 +1877,14 @@ MultiPValuePtr analyzeCallByName(InvokeEntryPtr entry,
         addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
     }
 
-    AnalysisContextPtr ctx = new AnalysisContext();
-    StatementAnalysis sa = analyzeStatement(code->body, bodyEnv, ctx);
-    if ((sa == SA_RECURSIVE) && (!ctx->returnInitialized))
+    AnalysisContext ctx;
+    StatementAnalysis sa = analyzeStatement(code->body, bodyEnv, &ctx);
+    if ((sa == SA_RECURSIVE) && (!ctx.returnInitialized))
         return NULL;
-    if (ctx->returnInitialized) {
-        return analyzeReturn(ctx->returnIsRef, ctx->returnTypes);
+    if (ctx.returnInitialized) {
+        return analyzeReturn(ctx.returnIsRef, ctx.returnTypes);
     }
-    else if ((sa == SA_TERMINATED) && ctx->hasRecursivePropagation) {
+    else if ((sa == SA_TERMINATED) && ctx.hasRecursivePropagation) {
         analysisError();
         return NULL;
     }
@@ -1900,7 +1900,7 @@ MultiPValuePtr analyzeCallByName(InvokeEntryPtr entry,
 // analyzeCodeBody
 //
 
-static void unifyInterfaceReturns(InvokeEntryPtr entry)
+static void unifyInterfaceReturns(InvokeEntry* entry)
 {
     if (entry->parent->interface == NULL)
         return;
@@ -1948,7 +1948,7 @@ static void unifyInterfaceReturns(InvokeEntryPtr entry)
     }
 }
 
-void analyzeCodeBody(InvokeEntryPtr entry)
+void analyzeCodeBody(InvokeEntry* entry)
 {
     assert(!entry->analyzed);
 
@@ -1981,15 +1981,15 @@ void analyzeCodeBody(InvokeEntryPtr entry)
         addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
     }
 
-    AnalysisContextPtr ctx = new AnalysisContext();
-    StatementAnalysis sa = analyzeStatement(code->body, bodyEnv, ctx);
-    if ((sa == SA_RECURSIVE) && (!ctx->returnInitialized))
+    AnalysisContext ctx;
+    StatementAnalysis sa = analyzeStatement(code->body, bodyEnv, &ctx);
+    if ((sa == SA_RECURSIVE) && (!ctx.returnInitialized))
         return;
-    if (ctx->returnInitialized) {
-        entry->returnIsRef = ctx->returnIsRef;
-        entry->returnTypes = ctx->returnTypes;
+    if (ctx.returnInitialized) {
+        entry->returnIsRef = ctx.returnIsRef;
+        entry->returnTypes = ctx.returnTypes;
     }
-    else if ((sa == SA_TERMINATED) && ctx->hasRecursivePropagation) {
+    else if ((sa == SA_TERMINATED) && ctx.hasRecursivePropagation) {
         analysisError();
     }
 
@@ -2019,9 +2019,9 @@ static StatementAnalysis combineStatementAnalysis(StatementAnalysis a,
     return SA_TERMINATED;
 }
 
-StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx);
+StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContext* ctx);
 
-static StatementAnalysis analyzeBlockStatement(StatementPtr stmt, EnvPtr &env, AnalysisContextPtr ctx)
+static StatementAnalysis analyzeBlockStatement(StatementPtr stmt, EnvPtr &env, AnalysisContext* ctx)
 {
     if (stmt->stmtKind == BINDING) {
         env = analyzeBinding((Binding *)stmt.ptr(), env);
@@ -2071,7 +2071,7 @@ static EnvPtr analyzeStatementExpressionStatements(vector<StatementPtr> const &s
     return env2;
 }
 
-StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx)
+StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContext* ctx)
 {
     LocationContext loc(stmt->location);
 
@@ -2318,7 +2318,7 @@ bool returnKindToByRef(ReturnKind returnKind, PVData const &pv)
 // analyzePrimOp
 //
 
-static std::pair<vector<TypePtr>, InvokeEntryPtr>
+static std::pair<vector<TypePtr>, InvokeEntry*>
 invokeEntryForCallableArguments(MultiPValuePtr args, size_t callableIndex, size_t firstArgTypeIndex)
 {
     if (args->size() < firstArgTypeIndex)
@@ -2378,7 +2378,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return new MultiPValue(PVData(boolType, true));
 
     case PRIM_StaticCallOutputTypes : {
-        std::pair<vector<TypePtr>, InvokeEntryPtr> entry =
+        std::pair<vector<TypePtr>, InvokeEntry*> entry =
             invokeEntryForCallableArguments(args, 0, 1);
         MultiPValuePtr values = new MultiPValue();
         for (size_t i = 0; i < entry.second->returnTypes.size(); ++i)
@@ -2535,7 +2535,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         error("no CodePointer type constructor overload found");
 
     case PRIM_makeCodePointer : {
-        std::pair<vector<TypePtr>, InvokeEntryPtr> entry =
+        std::pair<vector<TypePtr>, InvokeEntry*> entry =
             invokeEntryForCallableArguments(args, 0, 1);
         if (entry.second->callByName)
             argumentError(0, "cannot create pointer to call-by-name code");
@@ -2551,7 +2551,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         error("no ExternalCodePointer type constructor overload found");
 
     case PRIM_makeExternalCodePointer : {
-        std::pair<vector<TypePtr>, InvokeEntryPtr> entry =
+        std::pair<vector<TypePtr>, InvokeEntry*> entry =
             invokeEntryForCallableArguments(args, 0, 3);
         if (entry.second->callByName)
             argumentError(0, "cannot create pointer to call-by-name code");
@@ -3191,7 +3191,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     }
 
     case PRIM_GetOverload : {
-        std::pair<vector<TypePtr>, InvokeEntryPtr> entry =
+        std::pair<vector<TypePtr>, InvokeEntry*> entry =
             invokeEntryForCallableArguments(args, 0, 1);
 
         llvm::SmallString<128> buf;

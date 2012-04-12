@@ -49,6 +49,7 @@
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
 #include <llvm/PassManager.h>
+#include <llvm/Support/Allocator.h>
 #include <llvm/Support/Dwarf.h>
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/FormattedStream.h>
@@ -361,7 +362,6 @@ typedef Pointer<Object> ObjectPtr;
 enum ObjectKind {
     SOURCE,
     LOCATION,
-    TOKEN,
 
     IDENTIFIER,
     DOTTED_NAME,
@@ -431,8 +431,6 @@ enum ObjectKind {
 
 struct Source;
 struct Location;
-
-struct Token;
 
 struct ANode;
 struct Identifier;
@@ -580,8 +578,6 @@ struct ValueStackEntry;
 
 typedef Pointer<Source> SourcePtr;
 typedef Pointer<Location> LocationPtr;
-
-typedef Pointer<Token> TokenPtr;
 
 typedef Pointer<ANode> ANodePtr;
 typedef Pointer<Identifier> IdentifierPtr;
@@ -855,6 +851,14 @@ void error(Pointer<T> context, llvm::Twine const &msg)
     error(msg);
 }
 
+template <class T>
+void error(T const *context, llvm::Twine const &msg)
+{
+    if (context->location.ptr())
+        pushLocation(context->location);
+    error(msg);
+}
+
 void argumentError(unsigned int index, llvm::StringRef msg);
 
 void arityError(int expected, int received);
@@ -945,6 +949,7 @@ extern "C" void displayCompileContext();
 //
 
 enum TokenKind {
+    T_NONE,
     T_UOPSTRING,
     T_OPSTRING,
     T_SYMBOL,
@@ -961,14 +966,13 @@ enum TokenKind {
     T_LLVM
 };
 
-struct Token : public Object {
+struct Token {
     LocationPtr location;
+    llvm::SmallString<16> str;
     int tokenKind;
-    string str;
-    Token(int tokenKind)
-        : Object(TOKEN), tokenKind(tokenKind) {}
-    Token(int tokenKind, llvm::StringRef str)
-        : Object(TOKEN), tokenKind(tokenKind), str(str) {}
+    Token() : tokenKind(T_NONE) {}
+    explicit Token(int tokenKind) : tokenKind(tokenKind) {}
+    explicit Token(int tokenKind, llvm::StringRef str) : tokenKind(tokenKind), str(str) {}
 };
 
 
@@ -977,10 +981,10 @@ struct Token : public Object {
 // lexer module
 //
 
-void tokenize(SourcePtr source, vector<TokenPtr> &tokens);
+void tokenize(SourcePtr source, vector<Token> &tokens);
 
 void tokenize(SourcePtr source, int offset, int length,
-              vector<TokenPtr> &tokens);
+              vector<Token> &tokens);
 
 
 
@@ -2642,8 +2646,14 @@ struct ValueHolder : public Object {
 };
 
 
-bool objectEquals(ObjectPtr a, ObjectPtr b);
+bool _objectValueEquals(ObjectPtr a, ObjectPtr b);
 int objectHash(ObjectPtr a);
+
+inline bool objectEquals(ObjectPtr a, ObjectPtr b) {
+    if (a == b)
+        return true;
+    return _objectValueEquals(a,b);
+}
 
 template <typename T>
 bool objectVectorEquals(const vector<Pointer<T> > &a,
@@ -3215,7 +3225,7 @@ const vector<OverloadPtr> &callableOverloads(ObjectPtr x);
 
 struct InvokeSet;
 
-struct InvokeEntry : public Object {
+struct InvokeEntry {
     InvokeSet *parent;
     ObjectPtr callable;
     vector<TypePtr> argsKey;
@@ -3248,8 +3258,7 @@ struct InvokeEntry : public Object {
     InvokeEntry(InvokeSet *parent,
                 ObjectPtr callable,
                 const vector<TypePtr> &argsKey)
-        : Object(DONT_CARE),
-          parent(parent),
+        : parent(parent),
           callable(callable), argsKey(argsKey),
           analyzed(false), analyzing(false), callByName(false),
           isInline(false), llvmFunc(NULL), debugInfo(NULL)
@@ -3260,11 +3269,10 @@ struct InvokeEntry : public Object {
 
     llvm::DISubprogram getDebugInfo() { return llvm::DISubprogram(debugInfo); }
 };
-typedef Pointer<InvokeEntry> InvokeEntryPtr;
 
 extern vector<OverloadPtr> patternOverloads;
 
-struct InvokeSet : public Object {
+struct InvokeSet {
     ObjectPtr callable;
     vector<TypePtr> argsKey;
     OverloadPtr interface;
@@ -3273,21 +3281,20 @@ struct InvokeSet : public Object {
     vector<MatchSuccessPtr> matches;
     unsigned nextOverloadIndex;
 
-    map<vector<ValueTempness>, InvokeEntryPtr> tempnessMap;
-    map<vector<ValueTempness>, InvokeEntryPtr> tempnessMap2;
+    map<vector<ValueTempness>, InvokeEntry*> tempnessMap;
+    map<vector<ValueTempness>, InvokeEntry*> tempnessMap2;
 
     InvokeSet(ObjectPtr callable,
               const vector<TypePtr> &argsKey,
               OverloadPtr symbolInterface,
               const vector<OverloadPtr> &symbolOverloads)
-        : Object(DONT_CARE), callable(callable), argsKey(argsKey),
+        : callable(callable), argsKey(argsKey),
           interface(symbolInterface),
           overloads(symbolOverloads), nextOverloadIndex(0)
     {
         overloads.insert(overloads.end(), patternOverloads.begin(), patternOverloads.end());
     }
 };
-typedef Pointer<InvokeSet> InvokeSetPtr;
 
 typedef vector< pair<OverloadPtr, MatchResultPtr> > MatchFailureVector;
 
@@ -3298,12 +3305,12 @@ struct MatchFailureError {
     MatchFailureError() : failedInterface(false) {}
 };
 
-InvokeSetPtr lookupInvokeSet(ObjectPtr callable,
-                             const vector<TypePtr> &argsKey);
-InvokeEntryPtr lookupInvokeEntry(ObjectPtr callable,
-                                 const vector<TypePtr> &argsKey,
-                                 const vector<ValueTempness> &argsTempness,
-                                 MatchFailureError &failures);
+InvokeSet *lookupInvokeSet(ObjectPtr callable,
+                           const vector<TypePtr> &argsKey);
+InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
+                               const vector<TypePtr> &argsKey,
+                               const vector<ValueTempness> &argsTempness,
+                               MatchFailureError &failures);
 
 void matchFailureError(MatchFailureError const &err);
 
@@ -3389,10 +3396,10 @@ MultiPValuePtr safeAnalyzeIndexingExpr(ExprPtr indexable,
 MultiPValuePtr safeAnalyzeMultiArgs(ExprListPtr exprs,
                                     EnvPtr env,
                                     vector<unsigned> &dispatchIndices);
-InvokeEntryPtr safeAnalyzeCallable(ObjectPtr x,
-                                   const vector<TypePtr> &argsKey,
-                                   const vector<ValueTempness> &argsTempness);
-MultiPValuePtr safeAnalyzeCallByName(InvokeEntryPtr entry,
+InvokeEntry* safeAnalyzeCallable(ObjectPtr x,
+                                 const vector<TypePtr> &argsKey,
+                                 const vector<ValueTempness> &argsTempness);
+MultiPValuePtr safeAnalyzeCallByName(InvokeEntry* entry,
                                      ExprPtr callable,
                                      ExprListPtr args,
                                      EnvPtr env);
@@ -3457,28 +3464,26 @@ MultiPValuePtr analyzeCallPointer(PVData const &x,
 bool analyzeIsDefined(ObjectPtr x,
                       const vector<TypePtr> &argsKey,
                       const vector<ValueTempness> &argsTempness);
-InvokeEntryPtr analyzeCallable(ObjectPtr x,
-                               const vector<TypePtr> &argsKey,
-                               const vector<ValueTempness> &argsTempness);
+InvokeEntry* analyzeCallable(ObjectPtr x,
+                             const vector<TypePtr> &argsKey,
+                             const vector<ValueTempness> &argsTempness);
 
-MultiPValuePtr analyzeCallByName(InvokeEntryPtr entry,
+MultiPValuePtr analyzeCallByName(InvokeEntry* entry,
                                  ExprPtr callable,
                                  ExprListPtr args,
                                  EnvPtr env);
 
-void analyzeCodeBody(InvokeEntryPtr entry);
+void analyzeCodeBody(InvokeEntry* entry);
 
-struct AnalysisContext : public Object {
+struct AnalysisContext {
     bool hasRecursivePropagation;
     bool returnInitialized;
     vector<bool> returnIsRef;
     vector<TypePtr> returnTypes;
     AnalysisContext()
-        : Object(DONT_CARE),
-          hasRecursivePropagation(false),
+        : hasRecursivePropagation(false),
           returnInitialized(false) {}
 };
-typedef Pointer<AnalysisContext> AnalysisContextPtr;
 
 enum StatementAnalysis {
     SA_FALLTHROUGH,
@@ -3486,7 +3491,7 @@ enum StatementAnalysis {
     SA_TERMINATED
 };
 
-StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContextPtr ctx);
+StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContext *ctx);
 void initializeStaticForClones(StaticForPtr x, unsigned count);
 EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
 bool returnKindToByRef(ReturnKind returnKind, PVData const &pv);
@@ -3687,7 +3692,7 @@ struct ValueStackEntry {
     }
 };
 
-struct CodegenContext : public Object {
+struct CodegenContext {
     llvm::Function *llvmFunc;
     vector<llvm::TrackingVH<llvm::MDNode> > debugScope;
     llvm::IRBuilder<> *initBuilder;
@@ -3709,9 +3714,19 @@ struct CodegenContext : public Object {
     llvm::Value *exceptionValue;
     int inlineDepth;
 
+    CodegenContext()
+        : llvmFunc(NULL),
+          initBuilder(NULL),
+          builder(NULL),
+          valueForStatics(NULL),
+          checkExceptions(true),
+          exceptionValue(NULL),
+          inlineDepth(0)
+    {
+    }
+
     CodegenContext(llvm::Function *llvmFunc)
-        : Object(DONT_CARE),
-          llvmFunc(llvmFunc),
+        : llvmFunc(llvmFunc),
           initBuilder(NULL),
           builder(NULL),
           valueForStatics(NULL),
@@ -3741,12 +3756,10 @@ struct CodegenContext : public Object {
     }
 };
 
-typedef Pointer<CodegenContext> CodegenContextPtr;
-
 struct DebugLocationContext {
     LocationPtr loc;
-    CodegenContextPtr ctx;
-    DebugLocationContext(LocationPtr loc, CodegenContextPtr ctx)
+    CodegenContext* ctx;
+    DebugLocationContext(LocationPtr loc, CodegenContext* ctx)
         : loc(loc), ctx(ctx)
     {
         if (loc.ptr()) {
@@ -3773,11 +3786,11 @@ void codegenGVarInstance(GVarInstancePtr x);
 void codegenExternalVariable(ExternalVariablePtr x);
 void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody);
 
-InvokeEntryPtr codegenCallable(ObjectPtr x,
-                               const vector<TypePtr> &argsKey,
-                               const vector<ValueTempness> &argsTempness);
-void codegenCodeBody(InvokeEntryPtr entry);
-void codegenCWrapper(InvokeEntryPtr entry);
+InvokeEntry* codegenCallable(ObjectPtr x,
+                             const vector<TypePtr> &argsKey,
+                             const vector<ValueTempness> &argsTempness);
+void codegenCodeBody(InvokeEntry* entry);
+void codegenCWrapper(InvokeEntry* entry);
 
 void codegenEntryPoints(ModulePtr module, bool importedExternals);
 void codegenMain(ModulePtr module);
@@ -3817,38 +3830,38 @@ struct ExternalTarget : public Object {
                           TypePtr type,
                           llvm::Function::arg_iterator &ai,
                           vector<CReturn> &returns,
-                          CodegenContextPtr ctx);
+                          CodegenContext* ctx);
     CValuePtr allocArgumentValue(CallingConv conv,
                                  TypePtr type,
                                  llvm::StringRef name,
                                  llvm::Function::arg_iterator &ai,
-                                 CodegenContextPtr ctx);
+                                 CodegenContext* ctx);
     void returnStatement(CallingConv conv,
                          TypePtr type,
                          vector<CReturn> &returns,
-                         CodegenContextPtr ctx);
+                         CodegenContext* ctx);
 
     // for calling C functions
     void loadStructRetArgument(CallingConv conv,
                                TypePtr type,
                                vector<llvm::Value *> &llArgs,
                                vector< pair<unsigned, llvm::Attributes> > &llAttributes,
-                               CodegenContextPtr ctx,
+                               CodegenContext* ctx,
                                MultiCValuePtr out);
     void loadArgument(CallingConv conv,
                       CValuePtr cv,
                       vector<llvm::Value *> &llArgs,
                       vector< pair<unsigned, llvm::Attributes> > &llAttributes,
-                      CodegenContextPtr ctx);
+                      CodegenContext* ctx);
     void loadVarArgument(CallingConv conv,
                          CValuePtr cv,
                          vector<llvm::Value *> &llArgs,
                          vector< pair<unsigned, llvm::Attributes> > &llAttributes,
-                         CodegenContextPtr ctx);
+                         CodegenContext* ctx);
     void storeReturnValue(CallingConv conv,
                           llvm::Value *callReturnValue,
                           TypePtr returnType,
-                          CodegenContextPtr ctx,
+                          CodegenContext* ctx,
                           MultiCValuePtr out);
 };
 

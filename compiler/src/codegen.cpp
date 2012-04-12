@@ -9,8 +9,8 @@ const llvm::TargetData *llvmTargetData;
 
 static vector<CValuePtr> initializedGlobals;
 static llvm::StringMap<llvm::Constant*> stringTableConstants;
-static CodegenContextPtr constructorsCtx;
-static CodegenContextPtr destructorsCtx;
+static CodegenContext *constructorsCtx = NULL;
+static CodegenContext *destructorsCtx = NULL;
 
 static bool isMsvcTarget() {
     llvm::Triple target(llvmModule->getTargetTriple());
@@ -24,89 +24,89 @@ llvm::Value *noExceptionReturnValue() {
     return llvm::ConstantPointerNull::get(exceptionReturnType());
 }
 
-void codegenValueInit(CValuePtr dest, CodegenContextPtr ctx);
-void codegenValueDestroy(CValuePtr dest, CodegenContextPtr ctx);
+void codegenValueInit(CValuePtr dest, CodegenContext* ctx);
+void codegenValueDestroy(CValuePtr dest, CodegenContext* ctx);
 void codegenStackEntryDestroy(ValueStackEntry const &entry,
-    CodegenContextPtr ctx,
+    CodegenContext* ctx,
     bool exception);
-void codegenValueCopy(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx);
-void codegenValueMove(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx);
-void codegenValueAssign(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx);
+void codegenValueCopy(CValuePtr dest, CValuePtr src, CodegenContext* ctx);
+void codegenValueMove(CValuePtr dest, CValuePtr src, CodegenContext* ctx);
+void codegenValueAssign(CValuePtr dest, CValuePtr src, CodegenContext* ctx);
 void codegenValueMoveAssign(CValuePtr dest,
                             CValuePtr src,
-                            CodegenContextPtr ctx);
-llvm::Value *codegenToBoolFlag(CValuePtr a, CodegenContextPtr ctx);
+                            CodegenContext* ctx);
+llvm::Value *codegenToBoolFlag(CValuePtr a, CodegenContext* ctx);
 
-int cgMarkStack(CodegenContextPtr ctx);
-void cgDestroyStack(int marker, CodegenContextPtr ctx, bool exception);
-void cgPopStack(int marker, CodegenContextPtr ctx);
-void cgDestroyAndPopStack(int marker, CodegenContextPtr ctx, bool exception);
-void cgPushStackValue(CValuePtr cv, CodegenContextPtr ctx);
+int cgMarkStack(CodegenContext* ctx);
+void cgDestroyStack(int marker, CodegenContext* ctx, bool exception);
+void cgPopStack(int marker, CodegenContext* ctx);
+void cgDestroyAndPopStack(int marker, CodegenContext* ctx, bool exception);
+void cgPushStackValue(CValuePtr cv, CodegenContext* ctx);
 void cgPushStackStatement(ValueStackEntryType type,
     EnvPtr env,
     StatementPtr statement,
-    CodegenContextPtr ctx);
-CValuePtr codegenAllocValue(TypePtr t, CodegenContextPtr ctx);
-CValuePtr codegenAllocNewValue(TypePtr t, CodegenContextPtr ctx);
-CValuePtr codegenAllocValueForPValue(PVData const &pv, CodegenContextPtr ctx);
+    CodegenContext* ctx);
+CValuePtr codegenAllocValue(TypePtr t, CodegenContext* ctx);
+CValuePtr codegenAllocNewValue(TypePtr t, CodegenContext* ctx);
+CValuePtr codegenAllocValueForPValue(PVData const &pv, CodegenContext* ctx);
 
 MultiCValuePtr codegenMultiArgsAsRef(ExprListPtr exprs,
                                      EnvPtr env,
-                                     CodegenContextPtr ctx);
+                                     CodegenContext* ctx);
 MultiCValuePtr codegenArgExprAsRef(ExprPtr x,
                                    EnvPtr env,
-                                   CodegenContextPtr ctx);
+                                   CodegenContext* ctx);
 
 CValuePtr codegenForwardOneAsRef(ExprPtr expr,
                                  EnvPtr env,
-                                 CodegenContextPtr ctx);
+                                 CodegenContext* ctx);
 MultiCValuePtr codegenForwardMultiAsRef(ExprListPtr exprs,
                                         EnvPtr env,
-                                        CodegenContextPtr ctx);
+                                        CodegenContext* ctx);
 MultiCValuePtr codegenForwardExprAsRef(ExprPtr expr,
                                        EnvPtr env,
-                                       CodegenContextPtr ctx);
+                                       CodegenContext* ctx);
 
 CValuePtr codegenOneAsRef(ExprPtr expr,
                           EnvPtr env,
-                          CodegenContextPtr ctx);
+                          CodegenContext* ctx);
 MultiCValuePtr codegenMultiAsRef(ExprListPtr exprs,
                                  EnvPtr env,
-                                 CodegenContextPtr ctx);
+                                 CodegenContext* ctx);
 MultiCValuePtr codegenExprAsRef(ExprPtr expr,
                                 EnvPtr env,
-                                CodegenContextPtr ctx);
+                                CodegenContext* ctx);
 
 void codegenOneInto(ExprPtr expr,
                     EnvPtr env,
-                    CodegenContextPtr ctx,
+                    CodegenContext* ctx,
                     CValuePtr out);
 void codegenMultiInto(ExprListPtr exprs,
                       EnvPtr env,
-                      CodegenContextPtr ctx,
+                      CodegenContext* ctx,
                       MultiCValuePtr out,
                       unsigned count);
 void codegenExprInto(ExprPtr expr,
                      EnvPtr env,
-                     CodegenContextPtr ctx,
+                     CodegenContext* ctx,
                      MultiCValuePtr out);
 
 void codegenMulti(ExprListPtr exprs,
                   EnvPtr env,
-                  CodegenContextPtr ctx,
+                  CodegenContext* ctx,
                   MultiCValuePtr out,
                   unsigned count);
 void codegenOne(ExprPtr expr,
                 EnvPtr env,
-                CodegenContextPtr ctx,
+                CodegenContext* ctx,
                 CValuePtr out);
 void codegenExpr(ExprPtr expr,
                  EnvPtr env,
-                 CodegenContextPtr ctx,
+                 CodegenContext* ctx,
                  MultiCValuePtr out);
 
 void codegenStaticObject(ObjectPtr x,
-                         CodegenContextPtr ctx,
+                         CodegenContext* ctx,
                          MultiCValuePtr out);
 
 void codegenGVarInstance(GVarInstancePtr x);
@@ -114,109 +114,109 @@ void codegenExternalVariable(ExternalVariablePtr x);
 void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody);
 
 void codegenValueHolder(ValueHolderPtr x,
-                        CodegenContextPtr ctx,
+                        CodegenContext* ctx,
                         MultiCValuePtr out);
 void codegenCompileTimeValue(EValuePtr ev,
-                             CodegenContextPtr ctx,
+                             CodegenContext* ctx,
                              MultiCValuePtr out);
 llvm::Value *codegenSimpleConstant(EValuePtr ev);
 
 void codegenIndexingExpr(ExprPtr indexable,
                          ExprListPtr args,
                          EnvPtr env,
-                         CodegenContextPtr ctx,
+                         CodegenContext* ctx,
                          MultiCValuePtr out);
 void codegenAliasIndexing(GlobalAliasPtr x,
                           ExprListPtr args,
                           EnvPtr env,
-                          CodegenContextPtr ctx,
+                          CodegenContext* ctx,
                           MultiCValuePtr out);
 void codegenCallExpr(ExprPtr callable,
                      ExprListPtr args,
                      EnvPtr env,
-                     CodegenContextPtr ctx,
+                     CodegenContext* ctx,
                      MultiCValuePtr out);
 void codegenDispatch(ObjectPtr obj,
                      MultiCValuePtr args,
                      MultiPValuePtr pvArgs,
                      const vector<unsigned> &dispatchIndices,
-                     CodegenContextPtr ctx,
+                     CodegenContext* ctx,
                      MultiCValuePtr out);
 void codegenCallValue(CValuePtr callable,
                       MultiCValuePtr args,
-                      CodegenContextPtr ctx,
+                      CodegenContext* ctx,
                       MultiCValuePtr out);
 void codegenCallValue(CValuePtr callable,
                       MultiCValuePtr args,
                       MultiPValuePtr pvArgs,
-                      CodegenContextPtr ctx,
+                      CodegenContext* ctx,
                       MultiCValuePtr out);
 bool codegenShortcut(ObjectPtr callable,
                      MultiPValuePtr pvArgs,
                      ExprListPtr args,
                      EnvPtr env,
-                     CodegenContextPtr ctx,
+                     CodegenContext* ctx,
                      MultiCValuePtr out);
 void codegenCallPointer(CValuePtr x,
                         MultiCValuePtr args,
-                        CodegenContextPtr ctx,
+                        CodegenContext* ctx,
                         MultiCValuePtr out);
 void codegenCallCCode(CCodePointerTypePtr type,
                       llvm::Value *llCallable,
                       MultiCValuePtr args,
-                      CodegenContextPtr ctx,
+                      CodegenContext* ctx,
                       MultiCValuePtr out);
 void codegenCallCCodePointer(CValuePtr x,
                              MultiCValuePtr args,
-                             CodegenContextPtr ctx,
+                             CodegenContext* ctx,
                              MultiCValuePtr out);
-void codegenCallCode(InvokeEntryPtr entry,
+void codegenCallCode(InvokeEntry* entry,
                      MultiCValuePtr args,
-                     CodegenContextPtr ctx,
+                     CodegenContext* ctx,
                      MultiCValuePtr out);
 void codegenLowlevelCall(llvm::Value *llCallable,
                          vector<llvm::Value *>::iterator argBegin,
                          vector<llvm::Value *>::iterator argEnd,
-                         CodegenContextPtr ctx);
-void codegenCallInline(InvokeEntryPtr entry,
+                         CodegenContext* ctx);
+void codegenCallInline(InvokeEntry* entry,
                        MultiCValuePtr args,
-                       CodegenContextPtr ctx,
+                       CodegenContext* ctx,
                        MultiCValuePtr out);
-void codegenCallByName(InvokeEntryPtr entry,
+void codegenCallByName(InvokeEntry* entry,
                        ExprPtr callable,
                        ExprListPtr args,
                        EnvPtr env,
-                       CodegenContextPtr ctx,
+                       CodegenContext* ctx,
                        MultiCValuePtr out);
 
-void codegenCodeBody(InvokeEntryPtr entry);
+void codegenCodeBody(InvokeEntry* entry);
 
-void codegenCWrapper(InvokeEntryPtr entry, CallingConv cc);
+void codegenCWrapper(InvokeEntry* entry, CallingConv cc);
 
 bool codegenStatement(StatementPtr stmt,
                       EnvPtr env,
-                      CodegenContextPtr ctx);
+                      CodegenContext* ctx);
 
 void codegenCollectLabels(const vector<StatementPtr> &statements,
                           unsigned startIndex,
-                          CodegenContextPtr ctx);
-EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx);
+                          CodegenContext* ctx);
+EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx);
 
 void codegenExprAssign(ExprPtr left,
                        CValuePtr cvRight,
                        PVData const &pvRight,
                        EnvPtr env,
-                       CodegenContextPtr ctx);
+                       CodegenContext* ctx);
 
 void codegenMultiExprAssign(ExprListPtr left,
                             MultiCValuePtr mcvRight,
                             MultiPValuePtr mpvRight,
                             EnvPtr env,
-                            CodegenContextPtr ctx);
+                            CodegenContext* ctx);
 
 void codegenPrimOp(PrimOpPtr x,
                    MultiCValuePtr args,
-                   CodegenContextPtr ctx,
+                   CodegenContext* ctx,
                    MultiCValuePtr out);
 
 
@@ -255,14 +255,14 @@ void setExceptionsEnabled(bool enabled)
 //
 
 
-llvm::BasicBlock *newBasicBlock(llvm::StringRef name, CodegenContextPtr ctx)
+llvm::BasicBlock *newBasicBlock(llvm::StringRef name, CodegenContext* ctx)
 {
     return llvm::BasicBlock::Create(llvm::getGlobalContext(),
                                     name,
                                     ctx->llvmFunc);
 }
 
-static CValuePtr staticCValue(ObjectPtr obj, CodegenContextPtr ctx)
+static CValuePtr staticCValue(ObjectPtr obj, CodegenContext* ctx)
 {
     TypePtr t = staticType(obj);
     if (ctx->valueForStatics == NULL)
@@ -270,7 +270,7 @@ static CValuePtr staticCValue(ObjectPtr obj, CodegenContextPtr ctx)
     return new CValue(t, ctx->valueForStatics);
 }
 
-static CValuePtr derefValue(CValuePtr cvPtr, CodegenContextPtr ctx)
+static CValuePtr derefValue(CValuePtr cvPtr, CodegenContext* ctx)
 {
     assert(cvPtr->type->typeKind == POINTER_TYPE);
     PointerType *pt = (PointerType *)cvPtr->type.ptr();
@@ -278,7 +278,7 @@ static CValuePtr derefValue(CValuePtr cvPtr, CodegenContextPtr ctx)
     return new CValue(pt->pointeeType, ptrValue);
 }
 
-static CValuePtr derefValueForPValue(CValuePtr cv, PVData const &pv, CodegenContextPtr ctx)
+static CValuePtr derefValueForPValue(CValuePtr cv, PVData const &pv, CodegenContext* ctx)
 {
     if (pv.isTemp) {
         return cv;
@@ -294,7 +294,7 @@ static CValuePtr derefValueForPValue(CValuePtr cv, PVData const &pv, CodegenCont
 // codegen value ops
 //
 
-void codegenValueInit(CValuePtr dest, CodegenContextPtr ctx)
+void codegenValueInit(CValuePtr dest, CodegenContext* ctx)
 {
     if (isPrimitiveAggregateType(dest->type))
         return;
@@ -304,7 +304,7 @@ void codegenValueInit(CValuePtr dest, CodegenContextPtr ctx)
                      new MultiCValue(dest));
 }
 
-void codegenValueDestroy(CValuePtr dest, CodegenContextPtr ctx)
+void codegenValueDestroy(CValuePtr dest, CodegenContext* ctx)
 {
     if (isPrimitiveAggregateType(dest->type))
         return;
@@ -318,7 +318,7 @@ void codegenValueDestroy(CValuePtr dest, CodegenContextPtr ctx)
 }
 
 void codegenStackEntryDestroy(ValueStackEntry const &entry,
-    CodegenContextPtr ctx,
+    CodegenContext* ctx,
     bool exception)
 {
     switch (entry.type) {
@@ -344,7 +344,7 @@ void codegenStackEntryDestroy(ValueStackEntry const &entry,
     }
 }
 
-void codegenValueCopy(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
+void codegenValueCopy(CValuePtr dest, CValuePtr src, CodegenContext* ctx)
 {
     if (isPrimitiveAggregateType(dest->type)
         && (dest->type == src->type)
@@ -362,7 +362,7 @@ void codegenValueCopy(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
                      new MultiCValue(dest));
 }
 
-void codegenValueMove(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
+void codegenValueMove(CValuePtr dest, CValuePtr src, CodegenContext* ctx)
 {
     if (isPrimitiveAggregateType(dest->type)
         && (dest->type == src->type)
@@ -380,7 +380,7 @@ void codegenValueMove(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
                      new MultiCValue(dest));
 }
 
-static void codegenValueForward(CValuePtr dest, CValuePtr src, CodegenContextPtr ctx)
+static void codegenValueForward(CValuePtr dest, CValuePtr src, CodegenContext* ctx)
 {
     if (src->type == dest->type) {
         codegenValueMove(dest, src, ctx);
@@ -396,7 +396,7 @@ static void codegenValueAssign(
     CValuePtr dest,
     PVData const &psrc,
     CValuePtr src,
-    CodegenContextPtr ctx)
+    CodegenContext* ctx)
 {
     if (isPrimitiveAggregateType(dest->type)
         && !pdest.isTemp
@@ -420,7 +420,7 @@ static void codegenValueAssign(
                      new MultiCValue());
 }
 
-llvm::Value *codegenToBoolFlag(CValuePtr a, CodegenContextPtr ctx)
+llvm::Value *codegenToBoolFlag(CValuePtr a, CodegenContext* ctx)
 {
     if (a->type != boolType)
         typeError(boolType, a->type);
@@ -435,7 +435,7 @@ llvm::Value *codegenToBoolFlag(CValuePtr a, CodegenContextPtr ctx)
 // temps
 //
 
-static llvm::Value *allocTemp(llvm::Type *llType, CodegenContextPtr ctx)
+static llvm::Value *allocTemp(llvm::Type *llType, CodegenContext* ctx)
 {
     llvm::Value *llv = NULL;
     for (unsigned i = ctx->discardedSlots.size(); i > 0; --i) {
@@ -451,11 +451,11 @@ static llvm::Value *allocTemp(llvm::Type *llType, CodegenContextPtr ctx)
     return llv;
 }
 
-static int markTemps(CodegenContextPtr ctx) {
+static int markTemps(CodegenContext* ctx) {
     return ctx->allocatedSlots.size();
 }
 
-static void clearTemps(int marker, CodegenContextPtr ctx) {
+static void clearTemps(int marker, CodegenContext* ctx) {
     while (marker < (int)ctx->allocatedSlots.size()) {
         ctx->discardedSlots.push_back(ctx->allocatedSlots.back());
         ctx->allocatedSlots.pop_back();
@@ -468,12 +468,12 @@ static void clearTemps(int marker, CodegenContextPtr ctx) {
 // codegen value stack
 //
 
-int cgMarkStack(CodegenContextPtr ctx)
+int cgMarkStack(CodegenContext* ctx)
 {
     return ctx->valueStack.size();
 }
 
-void cgDestroyStack(int marker, CodegenContextPtr ctx, bool exception)
+void cgDestroyStack(int marker, CodegenContext* ctx, bool exception)
 {
     int i = (int)ctx->valueStack.size();
     assert(marker <= i);
@@ -483,14 +483,14 @@ void cgDestroyStack(int marker, CodegenContextPtr ctx, bool exception)
     }
 }
 
-void cgPopStack(int marker, CodegenContextPtr ctx)
+void cgPopStack(int marker, CodegenContext* ctx)
 {
     assert(marker <= (int)ctx->valueStack.size());
     while (marker < (int)ctx->valueStack.size())
         ctx->valueStack.pop_back();
 }
 
-void cgDestroyAndPopStack(int marker, CodegenContextPtr ctx, bool exception)
+void cgDestroyAndPopStack(int marker, CodegenContext* ctx, bool exception)
 {
     assert(marker <= (int)ctx->valueStack.size());
     while (marker < (int)ctx->valueStack.size()) {
@@ -500,7 +500,7 @@ void cgDestroyAndPopStack(int marker, CodegenContextPtr ctx, bool exception)
     }
 }
 
-void cgPushStackValue(CValuePtr cv, CodegenContextPtr ctx)
+void cgPushStackValue(CValuePtr cv, CodegenContext* ctx)
 {
     ctx->valueStack.push_back(ValueStackEntry(cv));
 }
@@ -508,18 +508,18 @@ void cgPushStackValue(CValuePtr cv, CodegenContextPtr ctx)
 void cgPushStackStatement(ValueStackEntryType type,
     EnvPtr env,
     StatementPtr statement,
-    CodegenContextPtr ctx)
+    CodegenContext* ctx)
 {
     ctx->valueStack.push_back(ValueStackEntry(type, env, statement));
 }
 
-CValuePtr codegenAllocValue(TypePtr t, CodegenContextPtr ctx)
+CValuePtr codegenAllocValue(TypePtr t, CodegenContext* ctx)
 {
     llvm::Value *llv = allocTemp(llvmType(t), ctx);
     return new CValue(t, llv);
 }
 
-CValuePtr codegenAllocValueForPValue(PVData const &pv, CodegenContextPtr ctx)
+CValuePtr codegenAllocValueForPValue(PVData const &pv, CodegenContext* ctx)
 {
     if (pv.isTemp)
         return codegenAllocValue(pv.type, ctx);
@@ -527,7 +527,7 @@ CValuePtr codegenAllocValueForPValue(PVData const &pv, CodegenContextPtr ctx)
         return codegenAllocValue(pointerType(pv.type), ctx);
 }
 
-CValuePtr codegenAllocNewValue(TypePtr t, CodegenContextPtr ctx)
+CValuePtr codegenAllocNewValue(TypePtr t, CodegenContext* ctx)
 {
     llvm::Type *llt = llvmType(t);
     llvm::Value *llv = ctx->initBuilder->CreateAlloca(llt);
@@ -542,7 +542,7 @@ CValuePtr codegenAllocNewValue(TypePtr t, CodegenContextPtr ctx)
 
 MultiCValuePtr codegenMultiArgsAsRef(ExprListPtr exprs,
                                      EnvPtr env,
-                                     CodegenContextPtr ctx)
+                                     CodegenContext* ctx)
 {
     MultiCValuePtr out = new MultiCValue();
     for (unsigned i = 0; i < exprs->size(); ++i) {
@@ -566,7 +566,7 @@ MultiCValuePtr codegenMultiArgsAsRef(ExprListPtr exprs,
 
 MultiCValuePtr codegenArgExprAsRef(ExprPtr x,
                                    EnvPtr env,
-                                   CodegenContextPtr ctx)
+                                   CodegenContext* ctx)
 {
     if (x->exprKind == DISPATCH_EXPR) {
         DispatchExpr *y = (DispatchExpr *)x.ptr();
@@ -583,7 +583,7 @@ MultiCValuePtr codegenArgExprAsRef(ExprPtr x,
 
 CValuePtr codegenForwardOneAsRef(ExprPtr expr,
                                  EnvPtr env,
-                                 CodegenContextPtr ctx)
+                                 CodegenContext* ctx)
 {
     MultiCValuePtr mcv = codegenForwardExprAsRef(expr, env, ctx);
     LocationContext loc(expr->location);
@@ -593,7 +593,7 @@ CValuePtr codegenForwardOneAsRef(ExprPtr expr,
 
 MultiCValuePtr codegenForwardMultiAsRef(ExprListPtr exprs,
                                         EnvPtr env,
-                                        CodegenContextPtr ctx)
+                                        CodegenContext* ctx)
 {
     MultiCValuePtr out = new MultiCValue();
     for (unsigned i = 0; i < exprs->size(); ++i) {
@@ -613,7 +613,7 @@ MultiCValuePtr codegenForwardMultiAsRef(ExprListPtr exprs,
 
 MultiCValuePtr codegenForwardExprAsRef(ExprPtr expr,
                                        EnvPtr env,
-                                       CodegenContextPtr ctx)
+                                       CodegenContext* ctx)
 {
     MultiPValuePtr mpv = safeAnalyzeExpr(expr, env);
     MultiCValuePtr mcv = codegenExprAsRef(expr, env, ctx);
@@ -638,7 +638,7 @@ MultiCValuePtr codegenForwardExprAsRef(ExprPtr expr,
 
 CValuePtr codegenOneAsRef(ExprPtr expr,
                           EnvPtr env,
-                          CodegenContextPtr ctx)
+                          CodegenContext* ctx)
 {
     MultiCValuePtr mcv = codegenExprAsRef(expr, env, ctx);
     LocationContext loc(expr->location);
@@ -648,7 +648,7 @@ CValuePtr codegenOneAsRef(ExprPtr expr,
 
 MultiCValuePtr codegenMultiAsRef(ExprListPtr exprs,
                                  EnvPtr env,
-                                 CodegenContextPtr ctx)
+                                 CodegenContext* ctx)
 {
     MultiCValuePtr out = new MultiCValue();
     for (unsigned i = 0; i < exprs->size(); ++i) {
@@ -672,7 +672,7 @@ MultiCValuePtr codegenMultiAsRef(ExprListPtr exprs,
 
 static MultiCValuePtr codegenExprAsRef2(ExprPtr expr,
                                         EnvPtr env,
-                                        CodegenContextPtr ctx)
+                                        CodegenContext* ctx)
 {
     MultiPValuePtr mpv = safeAnalyzeExpr(expr, env);
     MultiCValuePtr mcv = new MultiCValue();
@@ -697,7 +697,7 @@ static MultiCValuePtr codegenExprAsRef2(ExprPtr expr,
 static MultiCValuePtr codegenStaticObjectAsRef(ObjectPtr x,
                                                ExprPtr expr,
                                                EnvPtr env,
-                                               CodegenContextPtr ctx)
+                                               CodegenContext* ctx)
 {
     switch (x->objKind) {
     case CVALUE : {
@@ -725,7 +725,7 @@ static MultiCValuePtr codegenStaticObjectAsRef(ObjectPtr x,
 
 MultiCValuePtr codegenExprAsRef(ExprPtr expr,
                                 EnvPtr env,
-                                CodegenContextPtr ctx)
+                                CodegenContext* ctx)
 {
     LocationContext loc(expr->location);
 
@@ -761,7 +761,7 @@ MultiCValuePtr codegenExprAsRef(ExprPtr expr,
 
 void codegenOneInto(ExprPtr expr,
                     EnvPtr env,
-                    CodegenContextPtr ctx,
+                    CodegenContext* ctx,
                     CValuePtr out)
 {
     PVData pv = safeAnalyzeOne(expr, env);
@@ -779,7 +779,7 @@ void codegenOneInto(ExprPtr expr,
 
 void codegenMultiInto(ExprListPtr exprs,
                       EnvPtr env,
-                      CodegenContextPtr ctx,
+                      CodegenContext* ctx,
                       MultiCValuePtr out,
                       unsigned wantCount)
 {
@@ -836,7 +836,7 @@ void codegenMultiInto(ExprListPtr exprs,
 
 void codegenExprInto(ExprPtr expr,
                      EnvPtr env,
-                     CodegenContextPtr ctx,
+                     CodegenContext* ctx,
                      MultiCValuePtr out)
 {
     MultiPValuePtr mpv = safeAnalyzeExpr(expr, env);
@@ -874,7 +874,7 @@ void codegenExprInto(ExprPtr expr,
 
 void codegenMulti(ExprListPtr exprs,
                   EnvPtr env,
-                  CodegenContextPtr ctx,
+                  CodegenContext* ctx,
                   MultiCValuePtr out,
                   unsigned wantCount)
 {
@@ -932,7 +932,7 @@ void codegenMulti(ExprListPtr exprs,
 
 void codegenOne(ExprPtr expr,
                 EnvPtr env,
-                CodegenContextPtr ctx,
+                CodegenContext* ctx,
                 CValuePtr out)
 {
     codegenExpr(expr, env, ctx, new MultiCValue(out));
@@ -940,7 +940,7 @@ void codegenOne(ExprPtr expr,
 
 void codegenExpr(ExprPtr expr,
                  EnvPtr env,
-                 CodegenContextPtr ctx,
+                 CodegenContext* ctx,
                  MultiCValuePtr out)
 {
     LocationContext loc(expr->location);
@@ -1197,7 +1197,7 @@ void codegenExpr(ExprPtr expr,
 //
 
 void codegenStaticObject(ObjectPtr x,
-                         CodegenContextPtr ctx,
+                         CodegenContext* ctx,
                          MultiCValuePtr out)
 {
     switch (x->objKind) {
@@ -1453,7 +1453,7 @@ void codegenGVarInstance(GVarInstancePtr x)
     assert(!result);
 
     // generate destructor procedure body
-    InvokeEntryPtr entry =
+    InvokeEntry* entry =
         codegenCallable(operator_destroy(),
                         vector<TypePtr>(1, y.type),
                         vector<ValueTempness>(1, TEMPNESS_LVALUE));
@@ -1608,10 +1608,10 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
     if (!x->body)
         return;
 
-    CodegenContextPtr ctx = new CodegenContext(x->llvmFunc);
+    CodegenContext ctx(x->llvmFunc);
 
     if (llvmDIBuilder != NULL) {
-        ctx->pushDebugScope(llvmDIBuilder->createLexicalBlock(
+        ctx.pushDebugScope(llvmDIBuilder->createLexicalBlock(
             x->getDebugInfo(),
             file,
             line,
@@ -1619,33 +1619,33 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
             ));
     }
 
-    llvm::BasicBlock *initBlock = newBasicBlock("init", ctx);
-    llvm::BasicBlock *codeBlock = newBasicBlock("code", ctx);
-    llvm::BasicBlock *returnBlock = newBasicBlock("return", ctx);
-    llvm::BasicBlock *exceptionBlock = newBasicBlock("exception", ctx);
+    llvm::BasicBlock *initBlock = newBasicBlock("init", &ctx);
+    llvm::BasicBlock *codeBlock = newBasicBlock("code", &ctx);
+    llvm::BasicBlock *returnBlock = newBasicBlock("return", &ctx);
+    llvm::BasicBlock *exceptionBlock = newBasicBlock("exception", &ctx);
 
-    ctx->initBuilder = new llvm::IRBuilder<>(initBlock);
-    ctx->builder = new llvm::IRBuilder<>(codeBlock);
+    ctx.initBuilder = new llvm::IRBuilder<>(initBlock);
+    ctx.builder = new llvm::IRBuilder<>(codeBlock);
 
     if (llvmDIBuilder != NULL) {
         llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, x->getDebugInfo());
-        ctx->initBuilder->SetCurrentDebugLocation(debugLoc);
-        ctx->builder->SetCurrentDebugLocation(debugLoc);
+        ctx.initBuilder->SetCurrentDebugLocation(debugLoc);
+        ctx.builder->SetCurrentDebugLocation(debugLoc);
     }
 
-    ctx->exceptionValue = ctx->initBuilder->CreateAlloca(exceptionReturnType(), NULL, "exception");
+    ctx.exceptionValue = ctx.initBuilder->CreateAlloca(exceptionReturnType(), NULL, "exception");
 
     EnvPtr env = new Env(x->env);
     vector<CReturn> returns;
 
     llvm::Function::arg_iterator ai = x->llvmFunc->arg_begin();
 
-    target->allocReturnValue(x->callingConv, x->returnType2, ai, returns, ctx);
+    target->allocReturnValue(x->callingConv, x->returnType2, ai, returns, &ctx);
 
     for (unsigned i = 0; i < x->args.size(); ++i) {
         ExternalArgPtr arg = x->args[i];
         CValuePtr cvalue = target->allocArgumentValue(
-            x->callingConv, arg->type2, arg->name->str, ai, ctx);
+            x->callingConv, arg->type2, arg->name->str, ai, &ctx);
         addLocal(env, arg->name, cvalue.ptr());
         if (llvmDIBuilder != NULL) {
             int line, column;
@@ -1667,43 +1667,43 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
                 argValue,
                 debugVar,
                 initBlock)
-                ->setDebugLoc(ctx->initBuilder->getCurrentDebugLocation());
+                ->setDebugLoc(ctx.initBuilder->getCurrentDebugLocation());
         }
     }
 
-    ctx->returnLists.push_back(returns);
-    JumpTarget returnTarget(returnBlock, cgMarkStack(ctx));
-    ctx->returnTargets.push_back(returnTarget);
-    JumpTarget exceptionTarget(exceptionBlock, cgMarkStack(ctx));
-    ctx->exceptionTargets.push_back(exceptionTarget);
+    ctx.returnLists.push_back(returns);
+    JumpTarget returnTarget(returnBlock, cgMarkStack(&ctx));
+    ctx.returnTargets.push_back(returnTarget);
+    JumpTarget exceptionTarget(exceptionBlock, cgMarkStack(&ctx));
+    ctx.exceptionTargets.push_back(exceptionTarget);
 
-    bool terminated = codegenStatement(x->body, env, ctx);
+    bool terminated = codegenStatement(x->body, env, &ctx);
     if (!terminated) {
         if (x->returnType2.ptr()) {
             error(x, "not all paths have a return statement");
         }
-        cgDestroyStack(returnTarget.stackMarker, ctx, false);
-        ctx->builder->CreateBr(returnBlock);
+        cgDestroyStack(returnTarget.stackMarker, &ctx, false);
+        ctx.builder->CreateBr(returnBlock);
     }
-    cgPopStack(returnTarget.stackMarker, ctx);
+    cgPopStack(returnTarget.stackMarker, &ctx);
 
-    returnBlock->moveAfter(ctx->builder->GetInsertBlock());
+    returnBlock->moveAfter(ctx.builder->GetInsertBlock());
     exceptionBlock->moveAfter(returnBlock);
 
-    ctx->builder->SetInsertPoint(returnBlock);
-    target->returnStatement(x->callingConv, x->returnType2, returns, ctx);
+    ctx.builder->SetInsertPoint(returnBlock);
+    target->returnStatement(x->callingConv, x->returnType2, returns, &ctx);
 
-    ctx->builder->SetInsertPoint(exceptionBlock);
+    ctx.builder->SetInsertPoint(exceptionBlock);
     if (exceptionsEnabled()) {
         ObjectPtr callable = operator_unhandledExceptionInExternal();
-        codegenCallValue(staticCValue(callable, ctx),
+        codegenCallValue(staticCValue(callable, &ctx),
                          new MultiCValue(),
-                         ctx,
+                         &ctx,
                          new MultiCValue());
     }
-    ctx->builder->CreateUnreachable();
+    ctx.builder->CreateUnreachable();
 
-    ctx->initBuilder->CreateBr(codeBlock);
+    ctx.initBuilder->CreateBr(codeBlock);
 }
 
 
@@ -1713,7 +1713,7 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
 //
 
 void codegenValueHolder(ValueHolderPtr v,
-                        CodegenContextPtr ctx,
+                        CodegenContext* ctx,
                         MultiCValuePtr out)
 {
     EValuePtr ev = new EValue(v->type, v->buf);
@@ -1727,7 +1727,7 @@ void codegenValueHolder(ValueHolderPtr v,
 //
 
 void codegenCompileTimeValue(EValuePtr ev,
-                             CodegenContextPtr ctx,
+                             CodegenContext* ctx,
                              MultiCValuePtr out)
 {
     assert(out->size() == 1);
@@ -1913,7 +1913,7 @@ llvm::Value *codegenSimpleConstant(EValuePtr ev)
 void codegenIndexingExpr(ExprPtr indexable,
                          ExprListPtr args,
                          EnvPtr env,
-                         CodegenContextPtr ctx,
+                         CodegenContext* ctx,
                          MultiCValuePtr out)
 {
     MultiPValuePtr mpv = safeAnalyzeIndexingExpr(indexable, args, env);
@@ -1968,7 +1968,7 @@ void codegenIndexingExpr(ExprPtr indexable,
 void codegenAliasIndexing(GlobalAliasPtr x,
                           ExprListPtr args,
                           EnvPtr env,
-                          CodegenContextPtr ctx,
+                          CodegenContext* ctx,
                           MultiCValuePtr out)
 {
     assert(x->hasParams());
@@ -2003,7 +2003,7 @@ void codegenAliasIndexing(GlobalAliasPtr x,
 void codegenCallExpr(ExprPtr callable,
                      ExprListPtr args,
                      EnvPtr env,
-                     CodegenContextPtr ctx,
+                     CodegenContext* ctx,
                      MultiCValuePtr out)
 {
     PVData pv = safeAnalyzeOne(callable, env);
@@ -2070,7 +2070,7 @@ void codegenCallExpr(ExprPtr callable,
         vector<ValueTempness> argsTempness;
         computeArgsKey(mpv, argsKey, argsTempness);
         CompileContextPusher pusher(obj, argsKey);
-        InvokeEntryPtr entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
+        InvokeEntry* entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
         if (entry->callByName) {
             codegenCallByName(entry, callable, args, env, ctx, out);
         }
@@ -2095,7 +2095,7 @@ void codegenCallExpr(ExprPtr callable,
 // codegenDispatch
 //
 
-llvm::Value *codegenDispatchTag(CValuePtr cv, CodegenContextPtr ctx)
+llvm::Value *codegenDispatchTag(CValuePtr cv, CodegenContext* ctx)
 {
     CValuePtr ctag = codegenAllocValue(cIntType, ctx);
     codegenCallValue(staticCValue(operator_dispatchTag(), ctx),
@@ -2105,7 +2105,7 @@ llvm::Value *codegenDispatchTag(CValuePtr cv, CodegenContextPtr ctx)
     return ctx->builder->CreateLoad(ctag->llValue);
 }
 
-CValuePtr codegenDispatchIndex(CValuePtr cv, PVData const &pvOut, int tag, CodegenContextPtr ctx)
+CValuePtr codegenDispatchIndex(CValuePtr cv, PVData const &pvOut, int tag, CodegenContext* ctx)
 {
     MultiCValuePtr args = new MultiCValue();
     args->add(cv);
@@ -2126,7 +2126,7 @@ void codegenDispatch(ObjectPtr obj,
                      MultiCValuePtr args,
                      MultiPValuePtr pvArgs,
                      const vector<unsigned> &dispatchIndices,
-                     CodegenContextPtr ctx,
+                     CodegenContext* ctx,
                      MultiCValuePtr out)
 {
     if (dispatchIndices.empty()) {
@@ -2214,7 +2214,7 @@ void codegenDispatch(ObjectPtr obj,
 
 void codegenCallValue(CValuePtr callable,
                       MultiCValuePtr args,
-                      CodegenContextPtr ctx,
+                      CodegenContext* ctx,
                       MultiCValuePtr out)
 {
     MultiPValuePtr pvArgs = new MultiPValue();
@@ -2227,7 +2227,7 @@ void codegenCallValue(CValuePtr callable,
 void codegenCallValue(CValuePtr callable,
                       MultiCValuePtr args,
                       MultiPValuePtr pvArgs,
-                      CodegenContextPtr ctx,
+                      CodegenContext* ctx,
                       MultiCValuePtr out)
 {
     switch (callable->type->typeKind) {
@@ -2270,7 +2270,7 @@ void codegenCallValue(CValuePtr callable,
         vector<ValueTempness> argsTempness;
         computeArgsKey(pvArgs, argsKey, argsTempness);
         CompileContextPusher pusher(obj, argsKey);
-        InvokeEntryPtr entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
+        InvokeEntry* entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
         if (entry->callByName) {
             ExprListPtr objectExprs = new ExprList();
             for (vector<CValuePtr>::const_iterator i = args->values.begin();
@@ -2306,7 +2306,7 @@ bool codegenShortcut(ObjectPtr callable,
                      MultiPValuePtr pvArgs,
                      ExprListPtr args,
                      EnvPtr env,
-                     CodegenContextPtr ctx,
+                     CodegenContext* ctx,
                      MultiCValuePtr out)
 {
     switch (callable->objKind) {
@@ -2354,7 +2354,7 @@ bool codegenShortcut(ObjectPtr callable,
 
 void codegenCallPointer(CValuePtr x,
                         MultiCValuePtr args,
-                        CodegenContextPtr ctx,
+                        CodegenContext* ctx,
                         MultiCValuePtr out)
 {
     assert(x->type->typeKind == CODE_POINTER_TYPE);
@@ -2389,7 +2389,7 @@ void codegenCallPointer(CValuePtr x,
 void codegenCallCCode(CCodePointerTypePtr t,
                       llvm::Value *llCallable,
                       MultiCValuePtr args,
-                      CodegenContextPtr ctx,
+                      CodegenContext* ctx,
                       MultiCValuePtr out)
 {
     ExternalTargetPtr target = getExternalTarget();
@@ -2430,7 +2430,7 @@ void codegenCallCCode(CCodePointerTypePtr t,
 
 void codegenCallCCodePointer(CValuePtr x,
                              MultiCValuePtr args,
-                             CodegenContextPtr ctx,
+                             CodegenContext* ctx,
                              MultiCValuePtr out)
 {
     llvm::Value *llCallable = ctx->builder->CreateLoad(x->llValue);
@@ -2445,9 +2445,9 @@ void codegenCallCCodePointer(CValuePtr x,
 // codegenCallCode
 //
 
-void codegenCallCode(InvokeEntryPtr entry,
+void codegenCallCode(InvokeEntry* entry,
                      MultiCValuePtr args,
-                     CodegenContextPtr ctx,
+                     CodegenContext* ctx,
                      MultiCValuePtr out)
 {
     if (inlineEnabled() && entry->isInline && !entry->code->isLLVMBody()) {
@@ -2486,7 +2486,7 @@ void codegenCallCode(InvokeEntryPtr entry,
 void codegenLowlevelCall(llvm::Value *llCallable,
                          vector<llvm::Value *>::iterator argBegin,
                          vector<llvm::Value *>::iterator argEnd,
-                         CodegenContextPtr ctx)
+                         CodegenContext* ctx)
 {
     llvm::Value *result =
         ctx->builder->CreateCall(llCallable,
@@ -2520,11 +2520,11 @@ void codegenLowlevelCall(llvm::Value *llCallable,
 // codegenCallable
 //
 
-InvokeEntryPtr codegenCallable(ObjectPtr x,
+InvokeEntry* codegenCallable(ObjectPtr x,
                                const vector<TypePtr> &argsKey,
                                const vector<ValueTempness> &argsTempness)
 {
-    InvokeEntryPtr entry =
+    InvokeEntry* entry =
         safeAnalyzeCallable(x, argsKey, argsTempness);
     if (!entry->callByName) {
         if (!entry->llvmFunc)
@@ -2671,7 +2671,7 @@ static bool interpolateLLVMCode(LLVMCodePtr llvmBody, string &out, EnvPtr env)
 // codegenLLVMBody
 //
 
-void codegenLLVMBody(InvokeEntryPtr entry, llvm::StringRef callableName)
+void codegenLLVMBody(InvokeEntry* entry, llvm::StringRef callableName)
 {
     string llFunc;
     llvm::raw_string_ostream out(llFunc);
@@ -2742,7 +2742,7 @@ void codegenLLVMBody(InvokeEntryPtr entry, llvm::StringRef callableName)
 // getCodeName
 //
 
-static string getCodeName(InvokeEntryPtr entry)
+static string getCodeName(InvokeEntry* entry)
 {
     SafePrintNameEnabler enabler;
     ObjectPtr x = entry->callable;
@@ -2811,7 +2811,7 @@ static string getCodeName(InvokeEntryPtr entry)
 // codegenCodeBody
 //
 
-void codegenCodeBody(InvokeEntryPtr entry)
+void codegenCodeBody(InvokeEntry* entry)
 {
     assert(entry->analyzed);
     assert(!entry->llvmFunc);
@@ -2851,7 +2851,7 @@ void codegenCodeBody(InvokeEntryPtr entry)
 
     entry->llvmFunc = llFunc;
 
-    CodegenContextPtr ctx = new CodegenContext(entry->llvmFunc);
+    CodegenContext ctx(entry->llvmFunc);
 
     int line, column;
     llvm::DIFile file;
@@ -2897,7 +2897,7 @@ void codegenCodeBody(InvokeEntryPtr entry)
             entry->llvmFunc
         );
 
-        ctx->pushDebugScope(llvmDIBuilder->createLexicalBlock(
+        ctx.pushDebugScope(llvmDIBuilder->createLexicalBlock(
             entry->getDebugInfo(),
             file,
             line,
@@ -2905,21 +2905,21 @@ void codegenCodeBody(InvokeEntryPtr entry)
             ));
     }
 
-    llvm::BasicBlock *initBlock = newBasicBlock("init", ctx);
-    llvm::BasicBlock *codeBlock = newBasicBlock("code", ctx);
-    llvm::BasicBlock *returnBlock = newBasicBlock("return", ctx);
-    llvm::BasicBlock *exceptionBlock = newBasicBlock("exception", ctx);
+    llvm::BasicBlock *initBlock = newBasicBlock("init", &ctx);
+    llvm::BasicBlock *codeBlock = newBasicBlock("code", &ctx);
+    llvm::BasicBlock *returnBlock = newBasicBlock("return", &ctx);
+    llvm::BasicBlock *exceptionBlock = newBasicBlock("exception", &ctx);
 
-    ctx->initBuilder = new llvm::IRBuilder<>(initBlock);
-    ctx->builder = new llvm::IRBuilder<>(codeBlock);
+    ctx.initBuilder = new llvm::IRBuilder<>(initBlock);
+    ctx.builder = new llvm::IRBuilder<>(codeBlock);
 
     if (llvmDIBuilder != NULL) {
         llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, entry->getDebugInfo());
-        ctx->initBuilder->SetCurrentDebugLocation(debugLoc);
-        ctx->builder->SetCurrentDebugLocation(debugLoc);
+        ctx.initBuilder->SetCurrentDebugLocation(debugLoc);
+        ctx.builder->SetCurrentDebugLocation(debugLoc);
     }
 
-    ctx->exceptionValue = ctx->initBuilder->CreateAlloca(exceptionReturnType(), NULL, "exception");
+    ctx.exceptionValue = ctx.initBuilder->CreateAlloca(exceptionReturnType(), NULL, "exception");
 
     EnvPtr env = new Env(entry->env);
 
@@ -2954,8 +2954,8 @@ void codegenCodeBody(InvokeEntryPtr entry)
                 initBlock)
                 ->setDebugLoc(debugLoc);
             llvm::Value *debugAlloca =
-                ctx->initBuilder->CreateAlloca(llArgValue->getType());
-            ctx->initBuilder->CreateStore(llArgValue, debugAlloca);
+                ctx.initBuilder->CreateAlloca(llArgValue->getType());
+            ctx.initBuilder->CreateStore(llArgValue, debugAlloca);
         }
     }
 
@@ -2997,8 +2997,8 @@ void codegenCodeBody(InvokeEntryPtr entry)
                     initBlock)
                     ->setDebugLoc(debugLoc);
                 llvm::Value *debugAlloca =
-                    ctx->initBuilder->CreateAlloca(llArgValue->getType());
-                ctx->initBuilder->CreateStore(llArgValue, debugAlloca);
+                    ctx.initBuilder->CreateAlloca(llArgValue->getType());
+                ctx.initBuilder->CreateStore(llArgValue, debugAlloca);
             }
         }
         addLocal(env, entry->varArgName, varArgs.ptr());
@@ -3057,8 +3057,8 @@ void codegenCodeBody(InvokeEntryPtr entry)
                     initBlock)
                     ->setDebugLoc(debugLoc);
                 //llvm::Value *debugAlloca =
-                //    ctx->initBuilder->CreateAlloca(llArgValue->getType());
-                //ctx->initBuilder->CreateStore(llArgValue, debugAlloca);
+                //    ctx.initBuilder->CreateAlloca(llArgValue->getType());
+                //ctx.initBuilder->CreateStore(llArgValue, debugAlloca);
             }
         }
         ReturnSpecPtr varReturnSpec = entry->code->varReturnSpec;
@@ -3073,36 +3073,36 @@ void codegenCodeBody(InvokeEntryPtr entry)
         }
     }
 
-    ctx->returnLists.push_back(returns);
-    JumpTarget returnTarget(returnBlock, cgMarkStack(ctx));
-    ctx->returnTargets.push_back(returnTarget);
-    JumpTarget exceptionTarget(exceptionBlock, cgMarkStack(ctx));
-    ctx->exceptionTargets.push_back(exceptionTarget);
+    ctx.returnLists.push_back(returns);
+    JumpTarget returnTarget(returnBlock, cgMarkStack(&ctx));
+    ctx.returnTargets.push_back(returnTarget);
+    JumpTarget exceptionTarget(exceptionBlock, cgMarkStack(&ctx));
+    ctx.exceptionTargets.push_back(exceptionTarget);
 
     assert(entry->code->body.ptr());
-    bool terminated = codegenStatement(entry->code->body, env, ctx);
+    bool terminated = codegenStatement(entry->code->body, env, &ctx);
     if (!terminated) {
         if ((returns.size() > 0) && !hasNamedReturn) {
             error(entry->code, "not all paths have a return statement");
         }
-        cgDestroyStack(returnTarget.stackMarker, ctx, false);
-        ctx->builder->CreateBr(returnBlock);
+        cgDestroyStack(returnTarget.stackMarker, &ctx, false);
+        ctx.builder->CreateBr(returnBlock);
     }
-    cgPopStack(returnTarget.stackMarker, ctx);
+    cgPopStack(returnTarget.stackMarker, &ctx);
 
-    ctx->initBuilder->CreateBr(codeBlock);
+    ctx.initBuilder->CreateBr(codeBlock);
 
-    returnBlock->moveAfter(ctx->builder->GetInsertBlock());
+    returnBlock->moveAfter(ctx.builder->GetInsertBlock());
     exceptionBlock->moveAfter(returnBlock);
 
-    ctx->builder->SetInsertPoint(returnBlock);
+    ctx.builder->SetInsertPoint(returnBlock);
     llvm::Value *llRet = noExceptionReturnValue();
-    ctx->builder->CreateRet(llRet);
+    ctx.builder->CreateRet(llRet);
 
-    ctx->builder->SetInsertPoint(exceptionBlock);
-    assert(ctx->exceptionValue != NULL);
-    llvm::Value *llExcept = ctx->builder->CreateLoad(ctx->exceptionValue);
-    ctx->builder->CreateRet(llExcept);
+    ctx.builder->SetInsertPoint(exceptionBlock);
+    assert(ctx.exceptionValue != NULL);
+    llvm::Value *llExcept = ctx.builder->CreateLoad(ctx.exceptionValue);
+    ctx.builder->CreateRet(llExcept);
 }
 
 
@@ -3111,7 +3111,7 @@ void codegenCodeBody(InvokeEntryPtr entry)
 // codegenCWrapper
 //
 
-void codegenCWrapper(InvokeEntryPtr entry, CallingConv cc)
+void codegenCWrapper(InvokeEntry* entry, CallingConv cc)
 {
     assert(!entry->llvmCWrappers[cc]);
     ExternalTargetPtr target = getExternalTarget();
@@ -3169,7 +3169,7 @@ void codegenCWrapper(InvokeEntryPtr entry, CallingConv cc)
     llCWrapper->setCallingConv(target->callingConvention(cc));
 
     entry->llvmCWrappers[cc] = llCWrapper;
-    CodegenContextPtr ctx = new CodegenContext(llCWrapper);
+    CodegenContext ctx(llCWrapper);
 
     llvm::BasicBlock *llInitBlock =
         llvm::BasicBlock::Create(llvm::getGlobalContext(),
@@ -3179,17 +3179,17 @@ void codegenCWrapper(InvokeEntryPtr entry, CallingConv cc)
         llvm::BasicBlock::Create(llvm::getGlobalContext(),
                                  "code",
                                  llCWrapper);
-    ctx->initBuilder = new llvm::IRBuilder<>(llInitBlock);
-    ctx->builder     = new llvm::IRBuilder<>(llBlock);
+    ctx.initBuilder = new llvm::IRBuilder<>(llInitBlock);
+    ctx.builder     = new llvm::IRBuilder<>(llBlock);
 
-    ctx->exceptionValue = ctx->initBuilder->CreateAlloca(exceptionReturnType(), NULL, "exception");
+    ctx.exceptionValue = ctx.initBuilder->CreateAlloca(exceptionReturnType(), NULL, "exception");
 
     vector<llvm::Value *> innerArgs;
     vector<CReturn> returns;
     llvm::Function::arg_iterator ai = llCWrapper->arg_begin();
-    target->allocReturnValue(cc, returnType, ai, returns, ctx);
+    target->allocReturnValue(cc, returnType, ai, returns, &ctx);
     for (unsigned i = 0; i < entry->argsKey.size(); ++i) {
-        CValuePtr cv = target->allocArgumentValue(cc, entry->argsKey[i], "x", ai, ctx);
+        CValuePtr cv = target->allocArgumentValue(cc, entry->argsKey[i], "x", ai, &ctx);
         innerArgs.push_back(cv->llValue);
     }
 
@@ -3199,11 +3199,11 @@ void codegenCWrapper(InvokeEntryPtr entry, CallingConv cc)
         innerArgs.push_back(ret->value->llValue);
 
     // XXX check exception
-    ctx->builder->CreateCall(entry->llvmFunc, llvm::makeArrayRef(innerArgs));
+    ctx.builder->CreateCall(entry->llvmFunc, llvm::makeArrayRef(innerArgs));
 
-    target->returnStatement(cc, returnType, returns, ctx);
+    target->returnStatement(cc, returnType, returns, &ctx);
 
-    ctx->initBuilder->CreateBr(llBlock);
+    ctx.initBuilder->CreateBr(llBlock);
 }
 
 
@@ -3212,9 +3212,9 @@ void codegenCWrapper(InvokeEntryPtr entry, CallingConv cc)
 // codegenCallInline
 //
 
-void codegenCallInline(InvokeEntryPtr entry,
+void codegenCallInline(InvokeEntry* entry,
                        MultiCValuePtr args,
-                       CodegenContextPtr ctx,
+                       CodegenContext* ctx,
                        MultiCValuePtr out)
 {
     assert(entry->isInline);
@@ -3316,11 +3316,11 @@ void codegenCallInline(InvokeEntryPtr entry,
 // codegenCallByName
 //
 
-void codegenCallByName(InvokeEntryPtr entry,
+void codegenCallByName(InvokeEntry* entry,
                        ExprPtr callable,
                        ExprListPtr args,
                        EnvPtr env,
-                       CodegenContextPtr ctx,
+                       CodegenContext* ctx,
                        MultiCValuePtr out)
 {
     assert(entry->callByName);
@@ -3423,13 +3423,13 @@ void codegenCallByName(InvokeEntryPtr entry,
 
 bool codegenStatement(StatementPtr stmt,
                       EnvPtr env,
-                      CodegenContextPtr ctx);
+                      CodegenContext* ctx);
 
 static void codegenBlockStatement(BlockPtr block,
                                   unsigned i,
                                   StatementPtr stmt,
                                   EnvPtr &env,
-                                  CodegenContextPtr ctx,
+                                  CodegenContext* ctx,
                                   bool &terminated)
 {
     if (stmt->stmtKind == LABEL) {
@@ -3465,7 +3465,7 @@ static void codegenBlockStatement(BlockPtr block,
 
 static EnvPtr codegenStatementExpressionStatements(vector<StatementPtr> const &stmts,
     EnvPtr env,
-    CodegenContextPtr ctx)
+    CodegenContext* ctx)
 {
     EnvPtr env2 = env;
 
@@ -3496,7 +3496,7 @@ static EnvPtr codegenStatementExpressionStatements(vector<StatementPtr> const &s
     return env2;
 }
 
-static int codegenBeginScope(StatementPtr scopeStmt, CodegenContextPtr ctx)
+static int codegenBeginScope(StatementPtr scopeStmt, CodegenContext* ctx)
 {
     if (llvmDIBuilder != NULL) {
         llvm::DILexicalBlock outerScope = ctx->getDebugScope();
@@ -3512,7 +3512,7 @@ static int codegenBeginScope(StatementPtr scopeStmt, CodegenContextPtr ctx)
     return cgMarkStack(ctx);
 }
 
-static void codegenEndScope(int marker, bool terminated, CodegenContextPtr ctx)
+static void codegenEndScope(int marker, bool terminated, CodegenContext* ctx)
 {
     if (!terminated)
         cgDestroyStack(marker, ctx, false);
@@ -3523,7 +3523,7 @@ static void codegenEndScope(int marker, bool terminated, CodegenContextPtr ctx)
 
 bool codegenStatement(StatementPtr stmt,
                       EnvPtr env,
-                      CodegenContextPtr ctx)
+                      CodegenContext* ctx)
 {
     DebugLocationContext loc(stmt->location, ctx);
 
@@ -4017,7 +4017,7 @@ bool codegenStatement(StatementPtr stmt,
 
 void codegenCollectLabels(const vector<StatementPtr> &statements,
                           unsigned startIndex,
-                          CodegenContextPtr ctx)
+                          CodegenContext* ctx)
 {
     for (unsigned i = startIndex; i < statements.size(); ++i) {
         StatementPtr x = statements[i];
@@ -4046,7 +4046,7 @@ void codegenCollectLabels(const vector<StatementPtr> &statements,
 // codegenBinding
 //
 
-EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
+EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
 {
     DebugLocationContext loc(x->location, ctx);
 
@@ -4248,7 +4248,7 @@ void codegenExprAssign(ExprPtr left,
                        CValuePtr cvRight,
                        PVData const &pvRight,
                        EnvPtr env,
-                       CodegenContextPtr ctx)
+                       CodegenContext* ctx)
 {
     if (left->exprKind == INDEXING) {
         Indexing *x = (Indexing *)left.ptr();
@@ -4317,7 +4317,7 @@ void codegenMultiExprAssign(ExprListPtr left,
                             MultiCValuePtr mcvRight,
                             MultiPValuePtr mpvRight,
                             EnvPtr env,
-                            CodegenContextPtr ctx)
+                            CodegenContext* ctx)
 {
     MultiPValuePtr mpvLeft = safeAnalyzeMulti(left, env, 0);
     MultiCValuePtr mcvLeft = codegenMultiAsRef(left, env, ctx);
@@ -4479,7 +4479,7 @@ static IdentifierPtr valueToIdentifier(MultiCValuePtr args, unsigned index)
 static llvm::Value *numericValue(MultiCValuePtr args,
                                  unsigned index,
                                  TypePtr &type,
-                                 CodegenContextPtr ctx)
+                                 CodegenContext* ctx)
 {
     CValuePtr cv = args->values[index];
     if (type.ptr()) {
@@ -4502,7 +4502,7 @@ static llvm::Value *numericValue(MultiCValuePtr args,
 static llvm::Value *floatValue(MultiCValuePtr args,
                                unsigned index,
                                FloatTypePtr &type,
-                               CodegenContextPtr ctx)
+                               CodegenContext* ctx)
 {
     CValuePtr cv = args->values[index];
     if (type.ptr()) {
@@ -4524,7 +4524,7 @@ static llvm::Value *floatValue(MultiCValuePtr args,
 static llvm::Value *integerOrPointerLikeValue(MultiCValuePtr args,
                                               unsigned index,
                                               TypePtr &type,
-                                              CodegenContextPtr ctx)
+                                              CodegenContext* ctx)
 {
     CValuePtr cv = args->values[index];
     if (type.ptr()) {
@@ -4566,7 +4566,7 @@ static llvm::Value *complexValue(MultiCValuePtr args,
 static void checkIntegerValue(MultiCValuePtr args,
                               unsigned index,
                               IntegerTypePtr &type,
-                              CodegenContextPtr ctx)
+                              CodegenContext* ctx)
 {
     CValuePtr cv = args->values[index];
     if (type.ptr()) {
@@ -4583,7 +4583,7 @@ static void checkIntegerValue(MultiCValuePtr args,
 static llvm::Value *integerValue(MultiCValuePtr args,
                                  unsigned index,
                                  IntegerTypePtr &type,
-                                 CodegenContextPtr ctx)
+                                 CodegenContext* ctx)
 {
     checkIntegerValue(args, index, type, ctx);
     CValuePtr cv = args->values[index];
@@ -4593,7 +4593,7 @@ static llvm::Value *integerValue(MultiCValuePtr args,
 static llvm::Value *pointerValue(MultiCValuePtr args,
                                  unsigned index,
                                  PointerTypePtr &type,
-                                 CodegenContextPtr ctx)
+                                 CodegenContext* ctx)
 {
     CValuePtr cv = args->values[index];
     if (type.ptr()) {
@@ -4612,7 +4612,7 @@ static llvm::Value *pointerValue(MultiCValuePtr args,
 static llvm::Value *pointerLikeValue(MultiCValuePtr args,
                                      unsigned index,
                                      TypePtr &type,
-                                     CodegenContextPtr ctx)
+                                     CodegenContext* ctx)
 {
     CValuePtr cv = args->values[index];
     if (type.ptr()) {
@@ -4717,7 +4717,7 @@ static llvm::Value *variantValue(MultiCValuePtr args,
 static llvm::Value *enumValue(MultiCValuePtr args,
                               unsigned index,
                               EnumTypePtr &type,
-                              CodegenContextPtr ctx)
+                              CodegenContext* ctx)
 {
     CValuePtr cv = args->values[index];
     if (type.ptr()) {
@@ -4834,7 +4834,7 @@ static llvm::Constant *codegenStringTableConstant(llvm::StringRef s)
 
 void codegenPrimOp(PrimOpPtr x,
                    MultiCValuePtr args,
-                   CodegenContextPtr ctx,
+                   CodegenContext* ctx,
                    MultiCValuePtr out)
 {
     switch (x->primOpCode) {
@@ -5616,7 +5616,7 @@ void codegenPrimOp(PrimOpPtr x,
 
         CompileContextPusher pusher(callable, argsKey);
 
-        InvokeEntryPtr entry =
+        InvokeEntry* entry =
             safeAnalyzeCallable(callable, argsKey, argsTempness);
         if (entry->callByName)
             argumentError(0, "cannot create pointer to call-by-name code");
@@ -5678,7 +5678,7 @@ void codegenPrimOp(PrimOpPtr x,
 
         CompileContextPusher pusher(callable, argsKey);
 
-        InvokeEntryPtr entry =
+        InvokeEntry* entry =
             safeAnalyzeCallable(callable, argsKey, argsTempness);
         if (entry->callByName)
             argumentError(0, "cannot create pointer to call-by-name code");
@@ -6534,7 +6534,7 @@ void codegenTopLevelLLVM(ModulePtr m) {
 // codegenEntryPoints, codegenMain
 //
 
-static CodegenContextPtr makeSimpleContext(const char *name)
+static CodegenContext* setUpSimpleContext(CodegenContext *ctx, const char *name)
 {
     llvm::FunctionType *llFuncType =
         llvm::FunctionType::get(llvmVoidType(),
@@ -6546,7 +6546,7 @@ static CodegenContextPtr makeSimpleContext(const char *name)
                                name,
                                llvmModule);
 
-    CodegenContextPtr ctx = new CodegenContext(initGlobals);
+    ctx->llvmFunc = initGlobals;
 
     llvm::BasicBlock *initBlock = newBasicBlock("init", ctx);
     llvm::BasicBlock *codeBlock = newBasicBlock("code", ctx);
@@ -6567,7 +6567,7 @@ static CodegenContextPtr makeSimpleContext(const char *name)
     return ctx;
 }
 
-static void finalizeSimpleContext(CodegenContextPtr ctx,
+static void finalizeSimpleContext(CodegenContext* ctx,
                                   ObjectPtr errorProc)
 {
     ctx->builder->CreateBr(ctx->returnTargets.back().block);
@@ -6591,8 +6591,8 @@ static void finalizeSimpleContext(CodegenContextPtr ctx,
 
 static void initializeCtorsDtors()
 {
-    constructorsCtx = makeSimpleContext("clayglobals_init");
-    destructorsCtx = makeSimpleContext("clayglobals_destroy");
+    setUpSimpleContext(constructorsCtx, "clayglobals_init");
+    setUpSimpleContext(destructorsCtx, "clayglobals_destroy");
 
     if (isMsvcTarget()) {
         constructorsCtx->llvmFunc->setSection(".text$yc");
@@ -6758,6 +6758,12 @@ static void codegenModuleEntryPoints(ModulePtr module, bool importedExternals)
 
 void codegenEntryPoints(ModulePtr module, bool importedExternals)
 {
+    CodegenContext theConstructorCtx;
+    CodegenContext theDestructorCtx;
+
+    constructorsCtx = &theConstructorCtx;
+    destructorsCtx = &theDestructorCtx;
+
     codegenTopLevelLLVM(module);
     initializeCtorsDtors();
     generateLLVMCtorsAndDtors();
@@ -6772,6 +6778,9 @@ void codegenEntryPoints(ModulePtr module, bool importedExternals)
 
     if (llvmDIBuilder != NULL)
         llvmDIBuilder->finalize();
+
+    constructorsCtx = NULL;
+    destructorsCtx = NULL;
 }
 
 

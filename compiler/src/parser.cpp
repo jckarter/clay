@@ -4,14 +4,14 @@ namespace clay {
 
 map<llvm::StringRef, IdentifierPtr> Identifier::freeIdentifiers;
 
-static vector<TokenPtr> *tokens;
+static vector<Token> *tokens;
 static int position;
 static int maxPosition;
 
-static bool next(TokenPtr &x) {
+static bool next(Token *&x) {
     if (position == (int)tokens->size())
         return false;
-    x = (*tokens)[position];
+    x = &(*tokens)[position];
     if (position > maxPosition)
         maxPosition = position;
     ++position;
@@ -29,7 +29,7 @@ static void restore(int p) {
 static LocationPtr currentLocation() {
     if (position == (int)tokens->size())
         return NULL;
-    return (*tokens)[position]->location;
+    return (*tokens)[position].location;
 }
 
 
@@ -38,38 +38,38 @@ static LocationPtr currentLocation() {
 // symbol, keyword
 //
 
-static bool opstring(string &op) {
-    TokenPtr t;
+static bool opstring(llvm::StringRef &op) {
+    Token *t;
     if (!next(t) || (t->tokenKind != T_OPSTRING))
         return false;
-    op = t->str;
+    op = llvm::StringRef(t->str);
     return true;
 }
 
-static bool uopstring(string &op) {
-    TokenPtr t;
+static bool uopstring(llvm::StringRef &op) {
+    Token* t;
     if (!next(t) || (t->tokenKind != T_UOPSTRING))
         return false;
-    op = t->str;
+    op = llvm::StringRef(t->str);
     return true;
 }
 
 static bool opsymbol(const char *s) {
-    TokenPtr t;
+    Token* t;
     if (!next(t) || (t->tokenKind != T_OPSTRING))
         return false;
     return t->str == s;
 }
 
 static bool symbol(const char *s) {
-    TokenPtr t;
+    Token* t;
     if (!next(t) || (t->tokenKind != T_SYMBOL))
         return false;
     return t->str == s;
 }
 
 static bool keyword(const char *s) {
-    TokenPtr t;
+    Token* t;
     if (!next(t) || (t->tokenKind != T_KEYWORD))
         return false;
     return t->str == s;
@@ -87,7 +87,7 @@ static bool ellipsis() {
 
 static bool identifier(IdentifierPtr &x) {
     LocationPtr location = currentLocation();
-    TokenPtr t;
+    Token* t;
     if (!next(t) || (t->tokenKind != T_IDENTIFIER))
         return false;
     x = Identifier::get(t->str, location);
@@ -179,10 +179,10 @@ static string cleanNumericSeparator(llvm::StringRef op, llvm::StringRef s) {
 
 static bool intLiteral(llvm::StringRef op, ExprPtr &x) {
     LocationPtr location = currentLocation();
-    TokenPtr t;
+    Token* t;
     if (!next(t) || (t->tokenKind != T_INT_LITERAL))
         return false;
-    TokenPtr t2;
+    Token* t2;
     int p = save();
     if (next(t2) && (t2->tokenKind == T_IDENTIFIER)) {
         x = new IntLiteral(cleanNumericSeparator(op, t->str), t2->str);
@@ -197,10 +197,10 @@ static bool intLiteral(llvm::StringRef op, ExprPtr &x) {
 
 static bool floatLiteral(llvm::StringRef op, ExprPtr &x) {
     LocationPtr location = currentLocation();
-    TokenPtr t;
+    Token* t;
     if (!next(t) || (t->tokenKind != T_FLOAT_LITERAL))
         return false;
-    TokenPtr t2;
+    Token* t2;
     int p = save();
     if (next(t2) && (t2->tokenKind == T_IDENTIFIER)) {
         x = new FloatLiteral(cleanNumericSeparator(op, t->str), t2->str);
@@ -216,7 +216,7 @@ static bool floatLiteral(llvm::StringRef op, ExprPtr &x) {
 
 static bool charLiteral(ExprPtr &x) {
     LocationPtr location = currentLocation();
-    TokenPtr t;
+    Token* t;
     if (!next(t) || (t->tokenKind != T_CHAR_LITERAL))
         return false;
     x = new CharLiteral(t->str[0]);
@@ -226,7 +226,7 @@ static bool charLiteral(ExprPtr &x) {
 
 static bool stringLiteral(ExprPtr &x) {
     LocationPtr location = currentLocation();
-    TokenPtr t;
+    Token* t;
     if (!next(t) || (t->tokenKind != T_STRING_LITERAL))
         return false;
     IdentifierPtr id = Identifier::get(t->str, location);
@@ -467,7 +467,7 @@ static bool fieldRefSuffix(ExprPtr &x) {
 
 static bool staticIndexingSuffix(ExprPtr &x) {
     LocationPtr location = currentLocation();
-    TokenPtr t;
+    Token* t;
     if (!next(t) || (t->tokenKind != T_STATIC_INDEX))
         return false;
     char *b = const_cast<char *>(t->str.c_str());
@@ -565,14 +565,14 @@ static bool addressOfExpr(ExprPtr &x) {
     return true;
 }
 
-static bool plusOrMinus(string &op) {
+static bool plusOrMinus(llvm::StringRef &op) {
     int p = save();
     if (opsymbol("+")) {
-        restore(p);
-        return opstring(op);
+        op = llvm::StringRef("+");
+        return true;
     } else if (restore(p), opsymbol("-")) {
-        restore(p);
-        return opstring(op);
+        op = llvm::StringRef("-");
+        return true;
     } else
         return false;
 }
@@ -605,7 +605,7 @@ static bool staticExpr(ExprPtr &x) {
 }
 
 
-static bool operatorOp(string &op) {
+static bool operatorOp(llvm::StringRef &op) {
     int p = save();
     
     const char *s[] = {
@@ -621,7 +621,7 @@ static bool operatorOp(string &op) {
 
 static bool preopExpr(ExprPtr &x) {
     LocationPtr location = currentLocation();
-    string op;
+    llvm::StringRef op;
     int p = save();
     if (plusOrMinus(op)) {
         if (signedLiteral(op, x)) return true;
@@ -656,7 +656,7 @@ static bool operatorTail(VariadicOpPtr &x) {
     LocationPtr location = currentLocation();
     ExprListPtr exprs = new ExprList();
     ExprPtr b;
-    string op;
+    llvm::StringRef op;
     if (!operatorOp(op)) return false;
     int p = save();
     while (true) {
@@ -1199,7 +1199,7 @@ static bool initAssignment(StatementPtr &x) {
 static bool prefixUpdate(StatementPtr &x) {
     LocationPtr location = currentLocation();
     ExprPtr z;
-    string op;
+    llvm::StringRef op;
     if (!uopstring(op)) return false;
     if (!expression(z)) return false;
     if (!symbol(";")) return false;
@@ -1219,7 +1219,7 @@ static bool updateAssignment(StatementPtr &x) {
     LocationPtr location = currentLocation();
     ExprPtr y,z;
     if (!expression(y)) return false;
-    string op;
+    llvm::StringRef op;
     if (!uopstring(op)) return false;
     if (!expression(z)) return false;
     if (!symbol(";")) return false;
@@ -2266,7 +2266,7 @@ static bool optCallByName(bool &callByName) {
 }
 
 static bool llvmCode(LLVMCodePtr &b) {
-    TokenPtr t;
+    Token* t;
     if (!next(t) || (t->tokenKind != T_LLVM))
         return false;
     b = new LLVMCode(t->str);
@@ -2911,7 +2911,7 @@ static bool module(llvm::StringRef moduleName, ModulePtr &x) {
 template<typename Parser, typename Node>
 void applyParser(SourcePtr source, int offset, int length, Parser parser, Node &node)
 {
-    vector<TokenPtr> t;
+    vector<Token> t;
     tokenize(source, offset, length, t);
 
     tokens = &t;
@@ -2922,7 +2922,7 @@ void applyParser(SourcePtr source, int offset, int length, Parser parser, Node &
         if (maxPosition == (int)t.size())
             location = new Location(source, source->size());
         else
-            location = t[maxPosition]->location;
+            location = t[maxPosition].location;
         pushLocation(location);
         error("parse error");
     }

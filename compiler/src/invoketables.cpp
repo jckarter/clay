@@ -2,6 +2,9 @@
 
 namespace clay {
 
+static llvm::SpecificBumpPtrAllocator<InvokeEntry> invokeEntryAllocator;
+static llvm::SpecificBumpPtrAllocator<InvokeSet> invokeSetAllocator;
+
 
 //
 // callableOverloads
@@ -89,13 +92,14 @@ const vector<OverloadPtr> &callableOverloads(ObjectPtr x)
 //
 
 static bool invokeTablesInitialized = false;
+static const size_t INVOKE_TABLE_SIZE = 16384;
 
-static vector< vector<InvokeSetPtr> > invokeTable;
+static vector<llvm::SmallVector<InvokeSet*, 2> > invokeTable;
 
 
 static void initInvokeTables() {
     assert(!invokeTablesInitialized);
-    invokeTable.resize(16384);
+    invokeTable.resize(INVOKE_TABLE_SIZE);
     invokeTablesInitialized = true;
 }
 
@@ -105,16 +109,16 @@ static void initInvokeTables() {
 // lookupInvokeSet
 //
 
-InvokeSetPtr lookupInvokeSet(ObjectPtr callable,
+InvokeSet* lookupInvokeSet(ObjectPtr callable,
                              const vector<TypePtr> &argsKey)
 {
     if (!invokeTablesInitialized)
         initInvokeTables();
     int h = objectHash(callable) + objectVectorHash(argsKey);
     h &= (invokeTable.size() - 1);
-    vector<InvokeSetPtr> &bucket = invokeTable[h];
+    llvm::SmallVector<InvokeSet*, 2> &bucket = invokeTable[h];
     for (unsigned i = 0; i < bucket.size(); ++i) {
-        InvokeSetPtr invokeSet = bucket[i];
+        InvokeSet* invokeSet = bucket[i];
         if (objectEquals(invokeSet->callable, callable) &&
             objectVectorEquals(invokeSet->argsKey, argsKey))
         {
@@ -123,7 +127,8 @@ InvokeSetPtr lookupInvokeSet(ObjectPtr callable,
     }
     OverloadPtr interface = callableInterface(callable);
     const vector<OverloadPtr> &overloads = callableOverloads(callable);
-    InvokeSetPtr invokeSet = new InvokeSet(callable, argsKey, interface, overloads);
+    InvokeSet* invokeSet = invokeSetAllocator.Allocate();
+    new ((void*)invokeSet) InvokeSet(callable, argsKey, interface, overloads);
     bucket.push_back(invokeSet);
     return invokeSet;
 }
@@ -154,7 +159,7 @@ MatchSuccessPtr findMatchingInvoke(const vector<OverloadPtr> &overloads,
     return NULL;
 }
 
-static MatchSuccessPtr getMatch(InvokeSetPtr invokeSet,
+static MatchSuccessPtr getMatch(InvokeSet* invokeSet,
                                 unsigned entryIndex,
                                 MatchFailureError &failures)
 {
@@ -263,11 +268,12 @@ static bool matchTempness(CodePtr code,
     return true;
 }
 
-static InvokeEntryPtr newInvokeEntry(InvokeSetPtr parent,
-                                     MatchSuccessPtr match,
-                                     MatchSuccessPtr interfaceMatch)
+static InvokeEntry* newInvokeEntry(InvokeSet* parent,
+                                   MatchSuccessPtr match,
+                                   MatchSuccessPtr interfaceMatch)
 {
-    InvokeEntryPtr entry = new InvokeEntry(parent.ptr(), match->callable, match->argsKey);
+    InvokeEntry* entry = invokeEntryAllocator.Allocate();
+    new ((void*)entry) InvokeEntry(parent, match->callable, match->argsKey);
     entry->origCode = match->code;
     entry->code = clone(match->code);
     entry->env = match->env;
@@ -282,14 +288,14 @@ static InvokeEntryPtr newInvokeEntry(InvokeSetPtr parent,
     return entry;
 }
 
-InvokeEntryPtr lookupInvokeEntry(ObjectPtr callable,
-                                 const vector<TypePtr> &argsKey,
-                                 const vector<ValueTempness> &argsTempness,
-                                 MatchFailureError &failures)
+InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
+                               const vector<TypePtr> &argsKey,
+                               const vector<ValueTempness> &argsTempness,
+                               MatchFailureError &failures)
 {
-    InvokeSetPtr invokeSet = lookupInvokeSet(callable, argsKey);
+    InvokeSet* invokeSet = lookupInvokeSet(callable, argsKey);
 
-    map<vector<ValueTempness>,InvokeEntryPtr>::iterator iter =
+    map<vector<ValueTempness>,InvokeEntry*>::iterator iter =
         invokeSet->tempnessMap.find(argsTempness);
     if (iter != invokeSet->tempnessMap.end())
         return iter->second;
@@ -330,7 +336,7 @@ InvokeEntryPtr lookupInvokeEntry(ObjectPtr callable,
         return iter->second;
     }
 
-    InvokeEntryPtr entry = newInvokeEntry(invokeSet, match,
+    InvokeEntry* entry = newInvokeEntry(invokeSet, match,
         (MatchSuccess*)interfaceResult.ptr());
     entry->forwardedRValueFlags = forwardedRValueFlags;
 
