@@ -4,6 +4,7 @@ import hash.(hash);
 import printer.(str);
 import test.*;
 import test.memory.*;
+import strings.(String);
 import strings.cstringrefs.*;
 
 record Foo (x: Int64, y: Double);

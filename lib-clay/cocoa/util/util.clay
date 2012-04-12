@@ -4,6 +4,7 @@ import cocoa.nib.*;
 import cocoa.foundation.*;
 import hash.(hash);
 import printer.(printTo, str);
+import strings.(String, CCompatibleString?);
 import strings.cstringrefs.*;
 
 public import cocoa.util.platform.*;
