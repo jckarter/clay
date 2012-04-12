@@ -1,4 +1,6 @@
 
+alias __int64_t = Int64;
+
 var stdin = __stdinp;
 var stdout = __stdoutp;
 var stderr = __stderrp;
