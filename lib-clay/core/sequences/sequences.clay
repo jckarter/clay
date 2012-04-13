@@ -25,7 +25,7 @@ alias group(..args) = force(grouped(..args));
 // generic equals?, lesser?
 //
 
-[A,B when Sequence?(A) and Sequence?(B)]
+[A,B when Sequence?(A) and Sequence?(B) and not StringLiteralType?(A,B)]
 overload equals?(a:A, b:B) {
     var i, j = iterator(a), iterator(b);
     while (true) {
@@ -40,7 +40,7 @@ overload equals?(a:A, b:B) {
     }
 }
 
-[A,B when SizedSequence?(A) and SizedSequence?(B)]
+[A,B when SizedSequence?(A) and SizedSequence?(B) and not StringLiteralType?(A,B)]
 overload equals?(a:A, b:B) {
     if (size(a) != size(b))
         return false;
