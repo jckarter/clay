@@ -6,6 +6,6 @@ Array: Array
 Array[Bool, 10]: Array[Bool, 10]
 HashMap: HashMap
 HashMap[Int32, Int32]: HashMap[Int32, Int32]
-core.vectors.generic: core.vectors.generic
+vectors.generic: vectors.generic
 Record?: Record?
 disp: disp

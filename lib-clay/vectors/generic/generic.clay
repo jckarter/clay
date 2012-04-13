@@ -1,5 +1,4 @@
 
-
 
 //
 // generic vector requirements
@@ -76,22 +75,25 @@ inline overload reverseIterator(a:V) =
 overload equals?(a:V, b:V) {
     if (size(a) != size(b))
         return false;
-    for (x, y in zipped(a, b)) {
-        if (x != y)
+    var ptrA, ptrB, last = first, begin(b), end(a);
+    while (ptrA != last) {
+        if (ptrA^ != ptrB^)
             return false;
+        inc(ptrA,ptrB);
     }
     return true;
 }
 
 [V when Vector?(V)]
 overload lesser?(a:V, b:V) {
-    for (x, y in zipped(a, b)) {
-        if (x != y)
-            return x < y;
+    var ptrA, ptrB, last = first, begin(b), end(a);
+    while (ptrA != last) {
+        if (ptrA^ != ptrB^)
+            return ptrA^ < ptrB^;
+        inc(ptrA,ptrB);
     }
     return size(a) < size(b);
 }
-
 
 
 //

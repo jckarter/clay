@@ -1,5 +1,6 @@
 import printer.(println,print);
 import buffervector.*;
+import sequences.*;
 
 main() {
     var buf = Array[Char, 100]();

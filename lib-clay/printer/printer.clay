@@ -10,6 +10,8 @@ import printer.platform.(
 );
 import numbers.floats.(nan, nan?);
 import strings.*;
+import vectors.*;
+import sequences.(interleave);
 
 
 //

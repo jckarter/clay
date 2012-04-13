@@ -1,6 +1,7 @@
 import algorithms.(find,endsWith?,beginsWith?,split,join);
 import printer.(println);
 import strings.*;
+import sequences.*;
 
 main() {
     var a = array("", "foo", "foobar", "afoobarfoo");

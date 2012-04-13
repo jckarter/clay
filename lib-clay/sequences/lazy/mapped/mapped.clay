@@ -1,5 +1,7 @@
 
-import core.sequences.util.*;
+import sequences.util.*;
+import sequences.lazy.zipped.*;
+import sequences.force.*;
 
 
 //

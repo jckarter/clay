@@ -1,4 +1,5 @@
 import printer.(println,printTo);
+import sequences.lazy.enumerated.*;
 
 main() {
     var xs = allocateArray(Foo, 5);

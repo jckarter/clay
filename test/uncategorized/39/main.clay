@@ -2,6 +2,7 @@ import printer.(print);
 import io.files.(File,lines);
 import io.files;
 import strings.*;
+import vectors.*;
 
 main() {
     {

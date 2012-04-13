@@ -1,6 +1,9 @@
 import commandline.options.spec.*;
 import commandline.options.util.*;
 import strings.*;
+import vectors.*;
+import sequences.*;
+import sequences.operators.*;
 
 record OptionValue(
   option : String,

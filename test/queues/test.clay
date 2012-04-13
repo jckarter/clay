@@ -1,6 +1,7 @@
 import queues.*;
 import deques.*;
 import test.*;
+import vectors.*;
 
 main() = testMain(
     TestSuite("priority queues", array(

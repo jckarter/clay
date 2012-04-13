@@ -1,4 +1,6 @@
 import printer.(println);
+import sequences.*;
+import vectors.*;
 
 even?(x) = (x % 2 == 0);
 

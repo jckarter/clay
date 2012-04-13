@@ -5,6 +5,7 @@ import io.streams.*;
 import io.files.*;
 import strings.*;
 import lambdas.*;
+import vectors.*;
 
 record TestStatus (
     passed: UInt,

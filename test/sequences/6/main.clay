@@ -1,5 +1,7 @@
 import algorithms.(sort);
 import printer.(println,print);
+import sequences.*;
+import vectors.*;
 
 printList(a) {
     for (i, x in enumerated(a)) {

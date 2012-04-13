@@ -2,6 +2,7 @@ import test.*;
 import algorithms.(sort,sortBy);
 import comparators.(comparing,reversed);
 import printer.(str);
+import vectors.*;
 
 record Unordered[T](value : T);
 

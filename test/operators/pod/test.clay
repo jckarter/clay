@@ -3,6 +3,7 @@ import uniquepointers.(UniquePointer);
 import sharedpointers.*;
 import simd.*;
 import strings.*;
+import vectors.*;
 
 record IrregularRecord ();
 overload RegularRecord?(#IrregularRecord) = false;

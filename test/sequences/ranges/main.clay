@@ -1,4 +1,6 @@
 import printer.(println);
+import vectors.*;
+import sequences.*;
 
 main() {
     for (i in range(5))

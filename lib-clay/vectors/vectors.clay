@@ -1,6 +1,6 @@
 
-import core.vectors.generic.*;
-public import core.vectors.generic.(Vector?);
+import vectors.generic.*;
+public import vectors.generic.(Vector?);
 
 
 //
@@ -49,9 +49,6 @@ overload Vector(forward a:A) {
     alias T = SequenceElementType(A);
     return Vector[T](a);
 }
-
-[A when MultiValuedSequence?(A)]
-overload Vector(forward a:A) = Vector(mapped(Tuple, a));
 
 
 

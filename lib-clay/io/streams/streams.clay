@@ -2,6 +2,7 @@
 public import io.errors.*;
 import buffervector.*;
 import strings.*;
+import vectors.*;
 
 
 //

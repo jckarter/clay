@@ -2,6 +2,8 @@ import algorithms.heaps as heaps;
 import algorithms.introsort as introsort;
 import comparators.(comparing,natural,Comparator?);
 import hashmaps.(HashMap);
+import vectors.*;
+import sequences.lazy.*;
 
 alias log2 = introsort.log2;
 

@@ -1,6 +1,7 @@
 public import hash.(hash);
 import uniquepointers.(UniqueValue,nullUniqueValue);
 import printer.(printTo,printReprTo,printReprArgumentsTo);
+import vectors.*;
 
 record HashMap[K,V] (
     buckets : Vector[NodePtr[K,V]],

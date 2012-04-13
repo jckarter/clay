@@ -2,6 +2,8 @@ import io.sockets.*;
 import io.sockets.platform.(s_addr);
 import test.*;
 import byteorder.*;
+import vectors.*;
+import sequences.*;
 
 _expectSockaddrIn(test, name, expectedHost, expectedPort, sockaddr) {}
 overload _expectSockaddrIn(test, name, expectedHost, expectedPort, sockaddr: Sockaddr_in)

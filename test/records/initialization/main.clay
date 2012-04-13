@@ -1,5 +1,6 @@
 import printer.(println);
 import strings.*;
+import sequences.operators.*;
 
 record Foo (
     a: Int,
