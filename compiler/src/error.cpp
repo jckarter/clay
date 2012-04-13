@@ -199,47 +199,53 @@ static void displayLocation(LocationPtr location, int &line, int &column) {
     llvm::errs() << "###############################\n";
 }
 
+// This has to use stdio because it needs to be usable from the debugger
+// and cerr or errs may be destroyed if there's a bug in global dtors
 extern "C" void displayCompileContext() {
     if (contextStack.empty())
         return;
-    llvm::errs() << "\ncompilation context: \n";
-    for (unsigned i = contextStack.size(); i > 0; --i) {
+    fprintf(stderr, "\ncompilation context: \n");
+    string buf;
+    llvm::raw_string_ostream errs(buf);
+    for (size_t i = contextStack.size(); i > 0; --i) {
         ObjectPtr obj = contextStack[i-1].callable;
         const vector<ObjectPtr> &params = contextStack[i-1].params;
 
         if (i < contextStack.size() && contextStack[i-1].location != NULL) {
-            llvm::errs() << "  ";
-            printFileLineCol(llvm::errs(), contextStack[i-1].location);
-            llvm::errs() << ":\n";
+            errs << "  ";
+            printFileLineCol(errs, contextStack[i-1].location);
+            errs << ":\n";
         }
 
-        llvm::errs() << "    ";
+        errs << "    ";
         if (obj->objKind == GLOBAL_VARIABLE) {
-            llvm::errs() << "global ";
-            printName(llvm::errs(), obj);
+            errs << "global ";
+            printName(errs, obj);
             if (!params.empty()) {
-                llvm::errs() << "[";
-                printNameList(llvm::errs(), params);
-                llvm::errs() << "]";
+                errs << "[";
+                printNameList(errs, params);
+                errs << "]";
             }
         }
         else {
-            printName(llvm::errs(), obj);
+            printName(errs, obj);
             if (contextStack[i-1].hasParams) {
-                llvm::errs() << "(";
-                printNameList(llvm::errs(), params, contextStack[i-1].dispatchIndices);
-                llvm::errs() << ")";
+                errs << "(";
+                printNameList(errs, params, contextStack[i-1].dispatchIndices);
+                errs << ")";
             }
         }
-        llvm::errs() << "\n";
+        errs << "\n";
     }
+    fprintf(stderr, "%s", errs.str().c_str());
+    fflush(stderr);
 }
 
 static void displayDebugStack() {
     if (debugStack.empty())
         return;
     llvm::errs() << "\ndebug stack:\n";
-    for (unsigned i = debugStack.size(); i > 0; --i) {
+    for (size_t i = debugStack.size(); i > 0; --i) {
         llvm::errs() << "  " << debugStack[i-1] << "\n";
     }
 }
@@ -257,6 +263,7 @@ void displayError(llvm::Twine const &msg, llvm::StringRef kind) {
         displayLocation(location, line, column);
         llvm::errs() << location->source->fileName
             << '(' << line+1 << ',' << column << "): " << kind << ": " << msg << '\n';
+        llvm::errs().flush();
         displayCompileContext();
         displayDebugStack();
     }
