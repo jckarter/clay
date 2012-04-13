@@ -6,6 +6,7 @@ import hash.(hash);
 import printer.(printTo, str);
 import strings.(String, CCompatibleString?);
 import sequences.*;
+import vectors.*;
 
 public import cocoa.util.platform.*;
 
