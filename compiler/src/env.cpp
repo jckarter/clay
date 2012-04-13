@@ -264,13 +264,15 @@ static void addImportedSymbols(ModulePtr module,
 //
 
 ObjectPtr lookupPrivate(ModulePtr module, IdentifierPtr name) {
-    if (!module->allSymbolsLoaded) {
-        getAllSymbols(module);
-        module->allSymbolsLoaded = true;
-    }
+retry:
     llvm::StringMap<ObjectSet>::const_iterator i =
         module->allSymbols.find(name->str);
     if ((i == module->allSymbols.end()) || (i->second.empty())) {
+        if (!module->allSymbolsLoaded) {
+            getAllSymbols(module);
+            module->allSymbolsLoaded = true;
+            goto retry;
+        }
         ModulePtr prelude = preludeModule();
         if (module == prelude)
             return NULL;
@@ -291,14 +293,17 @@ ObjectPtr lookupPrivate(ModulePtr module, IdentifierPtr name) {
 //
 
 ObjectPtr lookupPublic(ModulePtr module, IdentifierPtr name) {
-    if (!module->publicSymbolsLoaded) {
-        getPublicSymbols(module);
-        module->publicSymbolsLoaded = true;
-    }
+retry:
     llvm::StringMap<ObjectSet>::const_iterator i =
         module->publicSymbols.find(name->str);
-    if ((i == module->publicSymbols.end()) || (i->second.empty()))
+    if ((i == module->publicSymbols.end()) || (i->second.empty())) {
+        if (!module->publicSymbolsLoaded) {
+            getPublicSymbols(module);
+            module->publicSymbolsLoaded = true;
+            goto retry;
+        }
         return NULL;
+    }
     const ObjectSet &objs = i->second;
     if (objs.size() > 1) {
         ambiguousImportError(name, objs);
