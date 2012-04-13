@@ -1,4 +1,5 @@
 import printer.(print,println);
+import vectors.*;
 
 //
 // Opaque

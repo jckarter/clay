@@ -1,4 +1,5 @@
 import printer.(println,print);
+import vectors.*;
 
 printList(a) {
     print(Type(a), ": ");

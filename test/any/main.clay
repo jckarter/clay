@@ -1,6 +1,7 @@
 
 import any.*;
 import printer.(println);
+import vectors.*;
 
 main() {
     var a = Vector[Any]();

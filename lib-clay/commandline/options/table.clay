@@ -2,6 +2,7 @@ public import commandline.options.spec.*;
 import commandline.options.parser.*;
 import printer.(printTo);
 import strings.*;
+import vectors.*;
 
 record NoSuchOption(name : String);
 

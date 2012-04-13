@@ -1,3 +1,4 @@
+import sequences.lazy.mapped.*;
 
 //
 // predicates
@@ -217,18 +218,24 @@ overload destroy(a:Array[T,n]) {
 
 [T,n]
 overload equals?(a:Array[T,n], b:Array[T,n]) {
-    for (x, y in zipped(a, b)) {
-        if (x != y)
+    var ptrA, ptrB, last = first, begin(b), end(a);
+    while (ptrA != last) {
+        if (ptrA^ != ptrB^)
             return false;
+        inc(ptrA);
+        inc(ptrB);
     }
     return true;
 }
 
 [T,n]
 overload lesser?(a:Array[T,n], b:Array[T,n]) {
-    for (x, y in zipped(a, b)) {
-        if (x != y)
-            return x < y;
+    var ptrA, ptrB, last = first, begin(b), end(a);
+    while (ptrA != last) {
+        if (ptrA^ != ptrB^)
+            return ptrA^ < ptrB^;
+        inc(ptrA);
+        inc(ptrB);
     }
     return false;
 }

@@ -1,6 +1,7 @@
 import algorithms.(find,reduce,reduceBy,sum,product,binarySearch);
 import printer.(println,print,printTo);
 import sharedpointers.*;
+import vectors.*;
 
 printList(a) {
     var first = true;
