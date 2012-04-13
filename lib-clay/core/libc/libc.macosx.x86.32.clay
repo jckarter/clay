@@ -58,6 +58,8 @@ external (cdecl) fprintf(arg0:Pointer[FILE], arg1:Pointer[CChar], ..) : Int;
 
 external (cdecl) strlen(arg0:Pointer[CChar]) : CULong;
 
+external (cdecl) strdup(arg0:Pointer[CChar]) : Pointer[CChar];
+
 external (cdecl) malloc(arg0:CULong) : OpaquePointer;
 
 external (cdecl) free(arg0:OpaquePointer) : ;

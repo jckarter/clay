@@ -26,6 +26,8 @@ external (cdecl) fprintf(arg0:Pointer[FILE], arg1:Pointer[CChar], ..) : Int;
 
 external (cdecl) strlen(arg0:Pointer[CChar]) : size_t;
 
+external (cdecl) _strdup(arg0:Pointer[CChar]) : Pointer[CChar];
+
 external (cdecl) malloc(arg0:size_t) : OpaquePointer;
 
 external (cdecl) free(arg0:OpaquePointer) : ;
@@ -46,3 +48,5 @@ asprintf(out:Pointer[Pointer[CChar]], fmt, ..args) : Int {
     out[bufsz] = CChar(0);
     return bufsz2;
 }
+
+alias strdup = _strdup;
