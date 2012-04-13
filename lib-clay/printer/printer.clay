@@ -502,7 +502,8 @@ overload error(..e) {
 overload error(..e) {
     var buf = String();
     printTo(buf, ..e);
-    throw Error(move(buf));
+    cstring(buf);
+    throw Error(CStringRef(Pointer[Int8](moveVectorBuffer(buf))));
 }
 
 [when AllAssertionsEnabled?()]

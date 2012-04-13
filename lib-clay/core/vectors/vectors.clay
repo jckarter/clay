@@ -90,6 +90,12 @@ overload destroy(a:Vector[T]) {
     freeRawMemory(a.data);
 }
 
+[T]
+moveVectorBuffer(a:Vector[T]) {
+    var data = a.data;
+    resetUnsafe(a);
+    return data;
+}
 
 
 //
