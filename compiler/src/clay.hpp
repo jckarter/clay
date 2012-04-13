@@ -2220,7 +2220,6 @@ struct Module : public ANode {
 
     EnvPtr env;
     bool initialized;
-
     bool attributesVerified;
     vector<llvm::SmallString<16> > attrBuildFlags;
     IntegerTypePtr attrDefaultIntegerType;

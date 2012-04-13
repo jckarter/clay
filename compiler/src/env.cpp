@@ -147,28 +147,6 @@ static const llvm::StringMap<ObjectSet> &getAllSymbols(ModulePtr module)
 
     addImportedSymbols(module, false);
 
-    set<string> definedNames;
-    llvm::StringMap<ObjectSet>::const_iterator
-        i = module->allSymbols.begin(),
-        end = module->allSymbols.end();
-    for (; i != end; ++i) {
-        if (!(i->second.empty()))
-            definedNames.insert(i->getKey());
-    }
-
-    ModulePtr prelude = loadedModule("prelude");
-    const llvm::StringMap<ObjectSet> &preludeSymbols =
-        getPublicSymbols(prelude);
-    i = preludeSymbols.begin();
-    end = preludeSymbols.end();
-    for (; i != end; ++i) {
-        llvm::StringRef name = i->getKey();
-        if (!definedNames.count(name)) {
-            const ObjectSet &objs = i->second;
-            module->allSymbols[name].insert(objs.begin(), objs.end());
-        }
-    }
-
     module->allSymbolsLoading -= 1;
     return module->allSymbols;
 }
@@ -292,8 +270,13 @@ ObjectPtr lookupPrivate(ModulePtr module, IdentifierPtr name) {
     }
     llvm::StringMap<ObjectSet>::const_iterator i =
         module->allSymbols.find(name->str);
-    if ((i == module->allSymbols.end()) || (i->second.empty()))
-        return NULL;
+    if ((i == module->allSymbols.end()) || (i->second.empty())) {
+        ModulePtr prelude = preludeModule();
+        if (module == prelude)
+            return NULL;
+        else
+            return lookupPublic(prelude, name);
+    }
     const ObjectSet &objs = i->second;
     if (objs.size() > 1) {
         ambiguousImportError(name, objs);
