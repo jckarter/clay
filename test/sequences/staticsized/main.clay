@@ -1,4 +1,5 @@
 import printer.(println);
+import sequences.*;
 
 main() {
     var a = integerArray(#5);

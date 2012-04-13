@@ -1,6 +1,7 @@
 
 import printer.(println);
 import lambdas.*;
+import vectors.*;
 
 multiplier(f) = (x => x*f);
 

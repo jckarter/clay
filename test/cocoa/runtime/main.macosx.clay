@@ -1,6 +1,5 @@
 import printer.(println);
 import cocoa.objc.runtime.*;
-import strings.cstringrefs.*;
 import strings.*;
 
 NSString(string) {

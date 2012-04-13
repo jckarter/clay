@@ -1,6 +1,5 @@
 import printer.(println);
 import cocoa.corefoundation.*;
-import strings.cstringrefs.*;
 
 main() {
     var format = CFStringCreateWithCString(

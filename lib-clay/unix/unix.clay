@@ -7,8 +7,8 @@ public import unix.errno.*;
 import unix.generated as generated;
 import unix.errnonames.(errnoNames);
 import printer.(printTo);
-import strings.cstringrefs.*;
 import libc;
+import sequences.lazy.mapped.*;
 
 printErrorMessageTo(stream, errorCode) {
     printTo(stream, CStringRef(libc.strerror(errorCode)));

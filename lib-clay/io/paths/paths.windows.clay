@@ -3,6 +3,8 @@ import win32;
 import io.errors.*;
 import algorithms.(findIf,reverseFindIf,reverseInPlace,beginsWith?);
 import strings.*;
+import vectors.*;
+import sequences.*;
 
 
 //

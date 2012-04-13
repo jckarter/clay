@@ -1,4 +1,5 @@
 import printer.(println);
+import sequences.*;
 
 [T]
 coordinateInfo(x:T) {

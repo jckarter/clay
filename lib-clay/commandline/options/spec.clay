@@ -1,5 +1,7 @@
 import printer.(printTo);
 import strings.*;
+import vectors.*;
+import sequences.*;
 
 record OptionSpec(
   names         : Vector[String],

@@ -2,6 +2,7 @@ import printer.formatter.(hexString);
 import byteorder.*;
 import hash.(hash);
 import printer.(printTo);
+import sequences.lazy.*;
 
 record SHA256 (digest: Array[UInt8, 32]);
 

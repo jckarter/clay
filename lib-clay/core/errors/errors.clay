@@ -25,7 +25,17 @@ overload errorWithPrintf(#fmt, ..e) {
 // error (exceptions enabled)
 //
 
-record Error (msg : Vector[Char]);
+record Error (msg : CStringRef);
+overload RegularRecord?(#Error) = false;
+overload BitwiseMovedType?(#Error) = true;
+overload Error(e:Error) {
+    if (null?(e.msg.ptr))
+        return Error(CStringRef());
+    else
+        return Error(CStringRef(libc.strdup(e.msg.ptr)));
+}
+overload resetUnsafe(e:Error) { e.msg.ptr = Pointer[Int8](); }
+overload destroy(e:Error) { libc.free(e.msg.ptr); }
 
 instance Exception (Error);
 
@@ -33,9 +43,7 @@ instance Exception (Error);
 overload errorWithPrintf(#fmt, ..e) {
     var bufp = Pointer[CChar]();
     libc.asprintf(@bufp, fmt, ..e);
-    var bufsize = SizeT(libc.strlen(bufp));
-    var str = initializeRecord(Vector[Char], bufsize, bufsize, Pointer[Char](bufp));
-    throw Error(move(str));
+    throw Error(CStringRef(bufp));
 }
 
 

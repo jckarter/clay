@@ -1,5 +1,6 @@
 import printer.(print,println);
 import strings.*;
+import sequences.*;
 
 test(s) {
     print(s, "... ");

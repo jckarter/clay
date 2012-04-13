@@ -3,13 +3,15 @@ import io.files.*;
 import numbers.parser.*;
 import strings.*;
 import lambdas.*;
+import vectors.*;
+import sequences.*;
 
 private dispatchCommand() {
     var args = commandLine(); 
     if (size(args) < 2)
         return nothing(String), Vector[String]();
     else
-        return Maybe(args[1]), Vector[String](slicedFrom(args, 2));
+        return Maybe(String(args[1])), Vector[String](mapped(String, slicedFrom(args, 2)));
 }
 
 printlnUsage(forward ..x) { printlnTo(stderr, ..x); }

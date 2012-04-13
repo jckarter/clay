@@ -19,11 +19,11 @@ public import core.variants.nested.*;
 
 public import core.arrays.*;
 public import core.coordinates.*;
-public import core.vectors.*;
-public import core.sequences.*;
+public import core.ranges.*;
 
 public import core.characters.*;
 public import core.stringliterals.*;
+public import core.cstringrefs.*;
 
 public import core.errors.*;
 public import core.exceptions.*;

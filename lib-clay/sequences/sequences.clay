@@ -1,0 +1,101 @@
+
+public import sequences.force.*;
+public import sequences.lazy.*;
+import vectors.*;
+
+
+//
+// strict wrappers around lazy sequences
+//
+
+alias zip(..args) = force(zipped(..args));
+alias map(..args) = force(mapped(..args));
+alias filter(..args) = force(filtered(..args));
+alias enumerate(..args) = force(enumerated(..args));
+alias reverse(..args) = force(reversed(..args));
+alias slice(..args) = force(sliced(..args));
+alias sliceFrom(..args) = force(slicedFrom(..args));
+alias sliceUpto(..args) = force(slicedUpto(..args));
+alias group(..args) = force(grouped(..args));
+
+
+
+
+//
+// generic equals?, lesser?
+//
+
+[A,B when Sequence?(A) and Sequence?(B) and not StringLiteralType?(A,B)]
+overload equals?(a:A, b:B) {
+    var i, j = iterator(a), iterator(b);
+    while (true) {
+        var iv, jv = nextValue(i), nextValue(j);
+        var iv?, jv? = hasValue?(iv), hasValue?(jv);
+        if (iv? != jv?)
+            return false;
+        if (not iv?)
+            return true;
+        if (getValue(i) != getValue(j))
+            return false;
+    }
+}
+
+[A,B when SizedSequence?(A) and SizedSequence?(B) and not StringLiteralType?(A,B)]
+overload equals?(a:A, b:B) {
+    if (size(a) != size(b))
+        return false;
+    var i, j = iterator(a), iterator(b);
+    while (true) {
+        var iv, jv = nextValue(i), nextValue(j);
+        if (not hasValue?(iv))
+            return true;
+        if (getValue(iv) != getValue(jv))
+            return false;
+    }
+}
+
+
+[A,B when Sequence?(A) and Sequence?(B)]
+overload lesser?(a:A, b:B) {
+    var i, j = iterator(a), iterator(b);
+    while (true) {
+        var iv, jv = nextValue(i), nextValue(j);
+        var iv?, jv? = hasValue?(iv), hasValue?(jv);
+        if (not iv?)
+            return jv?;
+        if (not jv?)
+            return false;
+
+        forward x, y = getValue(iv), getValue(jv);
+        if (x != y)
+            return x < y;
+    }
+}
+
+
+// 
+//
+// interleave
+//
+
+[S when Sequence?(S)]
+interleave(seq:S, betweenFn, fn) {
+    var i = iterator(seq);
+    if (var v = nextValue(i); hasValue?(v)) {
+        fn(..getValue(v));
+        while (v = nextValue(i); hasValue?(v)) {
+            betweenFn();
+            fn(..getValue(v));
+        }
+    }
+}
+
+
+[S when StaticSizedSequence?(S) and MultiValuedSequence?(S)]
+alias overload Array(s:S) = Array(mapped(Tuple, s));
+
+[n, S when MultiValuedSequence?(S)]
+overload Array(#n, forward s:S) = Array(#n, mapped(Tuple, s));
+
+[A when MultiValuedSequence?(A)]
+overload Vector(forward a:A) = Vector(mapped(Tuple, a));

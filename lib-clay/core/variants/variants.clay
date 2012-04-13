@@ -269,7 +269,7 @@ inline overload __operators__.dispatchIndex(x:V, #i) =
 [V]
 inline overload __operators__.invalidDispatch(x:V) {
     errorWithPrintfNoThrow(
-        "invalid " ++ StaticName(V) ++ ", tag = %d",
+        stringLiteralConcat("invalid ", StaticName(V), ", tag = %d"),
         __operators__.dispatchTag(x));
 }
 

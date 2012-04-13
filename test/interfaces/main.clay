@@ -2,6 +2,7 @@ import interfaces.*;
 import test.memory.*;
 import deques.*;
 import printer.(println,print);
+import vectors.*;
 
 record TestInterface = interfaceType(
     [print, [],    []],

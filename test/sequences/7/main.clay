@@ -1,4 +1,6 @@
 import printer.(println,print);
+import sequences.*;
+import vectors.*;
 
 printList(a) {
     var first = true;

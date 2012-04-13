@@ -1,4 +1,5 @@
 import printer.(println,str);
+import vectors.*;
 
 main() {
     println([1, true, 3.5]);

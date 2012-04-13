@@ -10,6 +10,8 @@ external stderr : Pointer[Struct__IO_FILE];
 
 external (cdecl) strlen(arg0:Pointer[CChar]) : CULong;
 
+external (cdecl) strdup(arg0:Pointer[CChar]) : Pointer[CChar];
+
 external (cdecl) malloc(arg0:CULong) : OpaquePointer;
 
 external (cdecl) free(arg0:OpaquePointer) : ;

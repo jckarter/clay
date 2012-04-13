@@ -1,5 +1,6 @@
 import printer.(println,printTo);
 import numbers.parser.*;
+import vectors.*;
 
 [T] testMinMaxParser(#T) {
     println("testing ", T);

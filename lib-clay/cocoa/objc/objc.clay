@@ -9,7 +9,7 @@ public import cocoa.objc.runtime.(
 );
 import algorithms.(log2);
 import printer.(str);
-import strings.cstringrefs.*;
+import sequences.*;
 
 
 //

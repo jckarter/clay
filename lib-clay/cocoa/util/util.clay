@@ -5,7 +5,7 @@ import cocoa.foundation.*;
 import hash.(hash);
 import printer.(printTo, str);
 import strings.(String, CCompatibleString?);
-import strings.cstringrefs.*;
+import sequences.*;
 
 public import cocoa.util.platform.*;
 

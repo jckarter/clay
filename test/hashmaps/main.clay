@@ -2,6 +2,7 @@ import hashmaps.(HashMap);
 import algorithms.(sort);
 import printer.(println,printTo);
 import strings.*;
+import vectors.*;
 
 even?(x) = (x % 2 == 0);
 

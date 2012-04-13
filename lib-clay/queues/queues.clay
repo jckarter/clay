@@ -1,4 +1,5 @@
 import algorithms.heaps.*;
+import vectors.*;
 
 record Queue[S] (seq: S);
 
