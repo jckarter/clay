@@ -2753,7 +2753,7 @@ The prefix `*` operator transforms a [call operator](#calloperator) expression i
     // Example
     variant Shape (Circle, Square);
 
-    [S | VariantMember?(S)]
+    [S | VariantMember?(Shape, S)]
     define draw(s:S) :;
     overload draw(s:Circle) { println("()"); }
     overload draw(s:Square) { println("[]"); }
