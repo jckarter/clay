@@ -3,25 +3,15 @@ import core.libc as libc;
 
 private var argc = 0;
 private var argv = Pointer[Pointer[Int8]]();
-private var commandLineInitialized? = false;
-private var commandLineArgs = Vector[Vector[Char]]();
+private var commandLineArgs = CoordinateRange[Pointer[CStringRef]]();
 
-commandLine() {
-    if (not commandLineInitialized?) {
-        clear(commandLineArgs);
-        for (i in range(argc)) {
-            var cstr = (argv + i)^;
-            push(commandLineArgs, Vector[Char](cstr));
-        }
-        commandLineInitialized? = true;
-    }
-    return ref commandLineArgs;
-}
+commandLine() = ref commandLineArgs;
 
 private setArgcArgv(argc_, argv_) {
     argc = argc_;
     argv = argv_;
-    commandLineInitialized? = false;
+    var argvRefs = bitcast(Pointer[CStringRef], argv);
+    commandLineArgs = CoordinateRange(argvRefs, argvRefs + argc);
 }
 
 getArgcArgv() = argc, argv;
