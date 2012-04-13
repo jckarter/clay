@@ -1,6 +1,4 @@
-
-import libc;
-import strings.*;
+import core.libc.(strlen);
 
 
 //
@@ -38,7 +36,7 @@ inline overload CStringRef(ptr : Pointer[Char]) = CStringRef(Pointer[Int8](ptr))
 // size, index
 //
 
-inline overload size(a:CStringRef) = SizeT(libc.strlen(a.ptr));
+inline overload size(a:CStringRef) = SizeT(strlen(a.ptr));
 
 [I when Integer?(I)]
 inline overload index(a:CStringRef, i:I) {

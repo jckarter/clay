@@ -24,6 +24,7 @@ public import core.sequences.*;
 
 public import core.characters.*;
 public import core.stringliterals.*;
+public import core.cstringrefs.*;
 
 public import core.errors.*;
 public import core.exceptions.*;
