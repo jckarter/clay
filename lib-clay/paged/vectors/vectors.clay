@@ -1,8 +1,7 @@
 
 import paged.*;
-import core.vectors.generic
-.*;
-
+import vectors.generic.*;
+import sequences.lazy.*;
 
 //
 // Vector[T]

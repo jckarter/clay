@@ -1,4 +1,7 @@
-import core.sequences.util.*;
+import sequences.util.*;
+import vectors.*;
+import sequences.lazy.sliced.*;
+import sequences.force.*;
 
 //
 // grouped() function

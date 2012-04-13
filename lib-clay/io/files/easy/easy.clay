@@ -64,7 +64,7 @@ overload destroy(fd:FileData) {
             write(fd.file, begin(fd.writeBuffer), fd.writeCount);
         }
         catch (e) {
-            errorWithPrintfNoThrow("caught " ++ StaticName(Type(e)) ++ " exception while flushing file buffer");
+            errorWithPrintfNoThrow(stringLiteralConcat("caught ",StaticName(Type(e))," exception while flushing file buffer"));
         }
         fd.writeCount = 0;
     }

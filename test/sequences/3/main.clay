@@ -1,4 +1,7 @@
 import printer.(println);
+import sequences.*;
+import vectors.*;
+
 main() {
     var a = Vector[Int](1, 4, 9, 16, 25, 36);
     var b = Vector[Int](6, 5, 4, 3, 2, 1);

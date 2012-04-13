@@ -1,5 +1,6 @@
 
-import core.sequences.util.*;
+import sequences.util.*;
+import sequences.force.*;
 
 
 //

@@ -1,5 +1,6 @@
 import test.(expect, printFailure);
 import printer.(println);
+import vectors.*;
 
 alias UNINITIALIZED_CANARY = Greatest(SizeT);
 alias NOISY_CANARIES = Flag?("test.memory.NoisyCanaries");

@@ -1,4 +1,5 @@
 import printer.(println);
+import vectors.*;
 
 record NonPODInt (x: Int);
 overload RegularRecord?(#NonPODInt) = false;

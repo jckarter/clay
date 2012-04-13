@@ -1,4 +1,5 @@
 import printer.(println);
+import vectors.*;
 
 quickSort(a) {
     sortRange(begin(a), end(a));

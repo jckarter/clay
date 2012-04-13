@@ -6,6 +6,7 @@ import printer.(printTo);
 import referencetypes.(referenceType);
 import sharedpointers.*;
 import strings.*;
+import vectors.*;
 
 expectMarshalingInvariants(test, name, value) {
     var marshaled = marshal(value);

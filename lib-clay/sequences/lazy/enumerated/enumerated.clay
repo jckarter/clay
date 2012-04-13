@@ -1,3 +1,4 @@
+import sequences.lazy.zipped.*;
 
 define enumerated;
 define enumeratedAs;

@@ -63,22 +63,10 @@ inline overload staticIndex(#s, #n) {
 
 
 //
-// convert to c-compatible string
-//
-
-cstring(s:Vector[Char]) {
-    reserve(s, size(s)+1);
-    end(s)^ = Char(0);
-    return Pointer[Int8](s.data);
-}
-
-
-
-//
 // cstring
 //
 
-inline overload cstring(a:StringLiteralRef) = Pointer[Int8](begin(a));
+inline cstring(a:StringLiteralRef) = Pointer[Int8](begin(a));
 
 [s when StringLiteral?(s)]
 inline overload cstring(#s) = Pointer[Int8](begin(s));
@@ -163,7 +151,7 @@ overload stringLiteralFind(identifier, sub) = stringLiteralFind(identifier, sub,
 
 define strl;
 
-overload strl(..xx) = (++)(..mapValues(strl, ..xx));
+overload strl(..xx) = stringLiteralConcat(..mapValues(strl, ..xx));
 
 [x]
 overload strl(#x) = StaticName(#x);
@@ -177,12 +165,12 @@ overload strl() = "";
 stringLiteralCapitalize("") = "";
 [s when StringLiteral?(s) and size(s) >= 1]
 overload stringLiteralCapitalize(#s)
-    = stringLiteralFromBytes(#(Int(asciiUpper(s.0)))) ++ stringLiteralByteSlice(s, #1, #size(s));
+    = stringLiteralConcat(stringLiteralFromBytes(#(Int(asciiUpper(s.0)))), stringLiteralByteSlice(s, #1, #size(s)));
 
 stringLiteralDecapitalize("") = "";
 [s when StringLiteral?(s) and size(s) >= 1]
 overload stringLiteralDecapitalize(#s)
-    = stringLiteralFromBytes(#(Int(asciiLower(s.0)))) ++ stringLiteralByteSlice(s, #1, #size(s));
+    = stringLiteralConcat(stringLiteralFromBytes(#(Int(asciiLower(s.0)))), stringLiteralByteSlice(s, #1, #size(s)));
 
 // stringLiteralChars, stringLiteralStaticChars, stringLiteralFromChars
 // XXX utf8

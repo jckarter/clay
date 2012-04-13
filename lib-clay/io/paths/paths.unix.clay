@@ -4,6 +4,8 @@ import libc;
 import io.errors.*;
 import algorithms.(reverseFind,reverseFindIf,reverseInPlace,beginsWith?,endsWith?);
 import strings.*;
+import vectors.*;
+import sequences.*;
 
 
 
