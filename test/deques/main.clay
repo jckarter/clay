@@ -1,6 +1,7 @@
 import deques.*;
 import printer.(print, println);
 import vectors.*;
+import sequences.*;
 
 main() {
     println("d1:");

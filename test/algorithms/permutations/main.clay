@@ -1,8 +1,8 @@
 import test.*;
 import algorithms.permutations.*;
 import printer.(str);
+import sequences.*;
 import vectors.*;
-
 
 fact(n){
   var result = 1;

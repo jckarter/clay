@@ -3,6 +3,7 @@ import algorithms.(reduce);
 import uniquepointers.(UniquePointer,nullUnique);
 import sharedpointers.*;
 import vectors.*;
+import sequences.*;
 
 
 //

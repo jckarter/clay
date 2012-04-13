@@ -1,4 +1,3 @@
-import sequences.lazy.mapped.*;
 
 //
 // predicates
@@ -128,9 +127,6 @@ overload Array(#n, forward s:S) {
     return Array[T,n](s);
 }
 
-[n, S when MultiValuedSequence?(S)]
-overload Array(#n, forward s:S) = Array(#n, mapped(Tuple, s));
-
 
 
 //
@@ -181,9 +177,6 @@ alias overload Array(s:S) {
     return Array[T,n](s);
 }
 
-[S when StaticSizedSequence?(S) and MultiValuedSequence?(S)]
-alias overload Array(s:S) = Array(mapped(Tuple, s));
-
 
 
 //
@@ -222,8 +215,7 @@ overload equals?(a:Array[T,n], b:Array[T,n]) {
     while (ptrA != last) {
         if (ptrA^ != ptrB^)
             return false;
-        inc(ptrA);
-        inc(ptrB);
+        inc(ptrA,ptrB);
     }
     return true;
 }
@@ -234,8 +226,7 @@ overload lesser?(a:Array[T,n], b:Array[T,n]) {
     while (ptrA != last) {
         if (ptrA^ != ptrB^)
             return ptrA^ < ptrB^;
-        inc(ptrA);
-        inc(ptrB);
+        inc(ptrA,ptrB);
     }
     return false;
 }

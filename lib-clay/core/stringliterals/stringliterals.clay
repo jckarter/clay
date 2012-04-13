@@ -151,7 +151,7 @@ overload stringLiteralFind(identifier, sub) = stringLiteralFind(identifier, sub,
 
 define strl;
 
-overload strl(..xx) = (++)(..mapValues(strl, ..xx));
+overload strl(..xx) = stringLiteralConcat(..mapValues(strl, ..xx));
 
 [x]
 overload strl(#x) = StaticName(#x);
@@ -165,12 +165,12 @@ overload strl() = "";
 stringLiteralCapitalize("") = "";
 [s when StringLiteral?(s) and size(s) >= 1]
 overload stringLiteralCapitalize(#s)
-    = stringLiteralFromBytes(#(Int(asciiUpper(s.0)))) ++ stringLiteralByteSlice(s, #1, #size(s));
+    = stringLiteralConcat(stringLiteralFromBytes(#(Int(asciiUpper(s.0)))), stringLiteralByteSlice(s, #1, #size(s)));
 
 stringLiteralDecapitalize("") = "";
 [s when StringLiteral?(s) and size(s) >= 1]
 overload stringLiteralDecapitalize(#s)
-    = stringLiteralFromBytes(#(Int(asciiLower(s.0)))) ++ stringLiteralByteSlice(s, #1, #size(s));
+    = stringLiteralConcat(stringLiteralFromBytes(#(Int(asciiLower(s.0)))), stringLiteralByteSlice(s, #1, #size(s)));
 
 // stringLiteralChars, stringLiteralStaticChars, stringLiteralFromChars
 // XXX utf8

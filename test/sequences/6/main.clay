@@ -1,5 +1,6 @@
 import algorithms.(sort);
 import printer.(println,print);
+import sequences.*;
 import vectors.*;
 
 printList(a) {

@@ -4,7 +4,7 @@ import numbers.parser.*;
 import strings.*;
 import lambdas.*;
 import vectors.*;
-import sequences.lazy.*;
+import sequences.*;
 
 private dispatchCommand() {
     var args = commandLine(); 

@@ -1,12 +1,14 @@
 import printer.(println);
 import strings.*;
+import sequences.*;
+import sequences.operators.*;
 
 main(){
 
     var h = String("hello");
     var w = String("world");
 
-    println(h++" "++w++"!");
+    println(h ++ " " ++ w ++ "!");
 
     var a = String("a");
     a ++: "b";

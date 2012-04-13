@@ -1,5 +1,6 @@
 import printer.(println);
 import deques.*;
+import sequences.*;
 import vectors.*;
 
 triple(x) = 3*x;

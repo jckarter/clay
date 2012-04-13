@@ -2,6 +2,7 @@ public import opengl.types.*;
 public import opengl.enums.*;
 import opengl.platform.*;
 import opengl.nolookup as self;
+import sequences.*;
 
 initGLFunctions(x) { }
 overload initGLFunctions() { }

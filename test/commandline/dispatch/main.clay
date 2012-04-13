@@ -2,6 +2,7 @@ import commandline.dispatch.*;
 import algorithms.(reduce);
 import printer.(println,printlnTo);
 import io.files.*;
+import sequences.*;
 
 add(args) {
     println(

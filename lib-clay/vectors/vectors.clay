@@ -1,7 +1,6 @@
 
 import vectors.generic.*;
 public import vectors.generic.(Vector?);
-import sequences.lazy.mapped.*;
 
 
 //
@@ -50,9 +49,6 @@ overload Vector(forward a:A) {
     alias T = SequenceElementType(A);
     return Vector[T](a);
 }
-
-[A when MultiValuedSequence?(A)]
-overload Vector(forward a:A) = Vector(mapped(Tuple, a));
 
 
 

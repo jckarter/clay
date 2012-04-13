@@ -6,6 +6,7 @@ import io.files.*;
 import io.streams.*;
 import strings.*;
 import libc;
+import sequences.*;
 
 public import io.sockets.platform.(
     Sockaddr, Sockaddr_in, Sockaddr_storage,

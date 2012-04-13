@@ -1,4 +1,6 @@
-import sequences.lazy.mapped.*;
+import sequences.handle.*;
+import sequences.*;
+
 
 //
 // Deque coordinates
