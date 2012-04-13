@@ -5,6 +5,8 @@ import hashmaps.*;
 import algorithms.(in?);
 import io.files.*;
 import strings.*;
+import vectors.*;
+import sequences.operators.*;
 
 var clayKeywords = array(
     "public", "private", "import", "as",
