@@ -180,8 +180,7 @@ alias overload Array(s:S) {
 
 
 //
-// other constructors, moveUnsafe, resetUnsafe,
-// destroy, equals?, lesser?
+// other constructors, moveUnsafe, resetUnsafe, destroy
 //
 
 [T,n]
@@ -207,28 +206,6 @@ overload resetUnsafe(a:Array[T,n]) {
 [T,n when not NotDestroyedType?(T)]
 overload destroy(a:Array[T,n]) {
     destroyMemory(begin(a), end(a));
-}
-
-[T,n]
-overload equals?(a:Array[T,n], b:Array[T,n]) {
-    var ptrA, ptrB, last = begin(a), begin(b), end(a);
-    while (ptrA != last) {
-        if (ptrA^ != ptrB^)
-            return false;
-        inc(ptrA,ptrB);
-    }
-    return true;
-}
-
-[T,n]
-overload lesser?(a:Array[T,n], b:Array[T,n]) {
-    var ptrA, ptrB, last = begin(a), begin(b), end(a);
-    while (ptrA != last) {
-        if (ptrA^ != ptrB^)
-            return ptrA^ < ptrB^;
-        inc(ptrA,ptrB);
-    }
-    return false;
 }
 
 
