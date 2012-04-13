@@ -9,9 +9,11 @@ static bool nextToken(Token &x);
 void tokenize(SourcePtr source, vector<Token> &tokens) {
     tokenize(source, 0, source->size(), tokens);
 }
-
+static double tCum = 0;
 void tokenize(SourcePtr source, int offset, int length,
               vector<Token> &tokens) {
+    HiResTimer tTimer;
+    tTimer.start();
     initLexer(source, offset, length);
     tokens.push_back(Token());
     while (nextToken(tokens.back())) {
@@ -26,6 +28,10 @@ void tokenize(SourcePtr source, int offset, int length,
     }
     tokens.pop_back();
     cleanupLexer();
+    tTimer.stop();
+    tCum += tTimer.elapsedMillis();
+    llvm::errs() << "Lextime = " << tTimer.elapsedMillis() << " ms , TCUM = " << tCum << " ms\n";
+    
 }
 
 static Source *lexerSource;

@@ -2907,13 +2907,14 @@ static bool module(llvm::StringRef moduleName, ModulePtr &x) {
 //
 // parse
 //
-
+static double pCum = 0;
 template<typename Parser, typename Node>
 void applyParser(SourcePtr source, int offset, int length, Parser parser, Node &node)
 {
     vector<Token> t;
     tokenize(source, offset, length, t);
-
+    HiResTimer pTimer;
+    pTimer.start();
     tokens = &t;
     position = maxPosition = 0;
 
@@ -2926,7 +2927,10 @@ void applyParser(SourcePtr source, int offset, int length, Parser parser, Node &
         pushLocation(location);
         error("parse error");
     }
-
+    pTimer.stop();
+    pCum += pTimer.elapsedMillis();
+llvm::errs() << "Parsing = " << pTimer.elapsedMillis() << " ms , CUM = " << pCum << " ms\n";
+    
     tokens = NULL;
     position = maxPosition = 0;
 }

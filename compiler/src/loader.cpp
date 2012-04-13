@@ -528,7 +528,11 @@ static void initVariantInstance(InstancePtr x) {
     }
 }
 
+static double mCum = 0;
+
 static void initModule(ModulePtr m) {
+    HiResTimer mTimer;
+
     if (m->initialized) return;
     m->initialized = true;
     vector<ImportPtr>::iterator ii, iend;
@@ -548,6 +552,8 @@ static void initModule(ModulePtr m) {
 
     verifyAttributes(m);
 
+    mTimer.start();
+
     const vector<TopLevelItemPtr> &items = m->topLevelItems;
     vector<TopLevelItemPtr>::const_iterator ti, tend;
     for (ti = items.begin(), tend = items.end(); ti != tend; ++ti) {
@@ -561,6 +567,11 @@ static void initModule(ModulePtr m) {
             break;
         }
     }
+
+    mTimer.stop();
+    mCum += mTimer.elapsedMillis();
+    llvm::errs() << "Module = " << m->moduleName << ", " << mTimer.elapsedMillis() << " ms , CUM = " << mCum << " ms\n";
+    
 
     if (llvmDIBuilder != NULL) {
         llvm::DIFile file = m->location == NULL
