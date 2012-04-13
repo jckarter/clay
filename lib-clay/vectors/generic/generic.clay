@@ -75,7 +75,7 @@ inline overload reverseIterator(a:V) =
 overload equals?(a:V, b:V) {
     if (size(a) != size(b))
         return false;
-    var ptrA, ptrB, last = first, begin(b), end(a);
+    var ptrA, ptrB, last = begin(a), begin(b), end(a);
     while (ptrA != last) {
         if (ptrA^ != ptrB^)
             return false;
@@ -86,7 +86,7 @@ overload equals?(a:V, b:V) {
 
 [V when Vector?(V)]
 overload lesser?(a:V, b:V) {
-    var ptrA, ptrB, last = first, begin(b), end(a);
+    var ptrA, ptrB, last = begin(a), begin(b), end(a);
     while (ptrA != last) {
         if (ptrA^ != ptrB^)
             return ptrA^ < ptrB^;

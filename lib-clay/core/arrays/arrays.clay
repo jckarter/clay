@@ -211,7 +211,7 @@ overload destroy(a:Array[T,n]) {
 
 [T,n]
 overload equals?(a:Array[T,n], b:Array[T,n]) {
-    var ptrA, ptrB, last = first, begin(b), end(a);
+    var ptrA, ptrB, last = begin(a), begin(b), end(a);
     while (ptrA != last) {
         if (ptrA^ != ptrB^)
             return false;
@@ -222,7 +222,7 @@ overload equals?(a:Array[T,n], b:Array[T,n]) {
 
 [T,n]
 overload lesser?(a:Array[T,n], b:Array[T,n]) {
-    var ptrA, ptrB, last = first, begin(b), end(a);
+    var ptrA, ptrB, last = begin(a), begin(b), end(a);
     while (ptrA != last) {
         if (ptrA^ != ptrB^)
             return ptrA^ < ptrB^;
