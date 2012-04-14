@@ -10,12 +10,15 @@ alias random = rand;
 alias strtoll = _strtoi64;
 alias strtoull = _strtoui64;
 
+alias copysign = _copysign;
+
 // The float variants of math functions are implemented as macros
 
 inline acosf(x:Float) : Float = Float(acos(Double(x)));
 inline asinf(x:Float) : Float = Float(asin(Double(x)));
 inline atanf(x:Float) : Float = Float(atan(Double(x)));
 inline atan2f(x:Float, y:Float) : Float = Float(atan2(Double(x), Double(y)));
+inline copysignf(x:Float) : Float = Float(_copysign(Double(x)));
 inline cosf(x:Float) : Float = Float(cos(Double(x)));
 inline coshf(x:Float) : Float = Float(cosh(Double(x)));
 inline expf(x:Float) : Float = Float(exp(Double(x)));

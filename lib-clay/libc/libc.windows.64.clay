@@ -10,6 +10,8 @@ alias random = rand;
 alias strtoll = _strtoi64;
 alias strtoull = _strtoui64;
 
+alias copysign = _copysign;
+
 // these are macros
 
 inline isnan(x:Double) : Int = Int(x != x);
