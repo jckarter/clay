@@ -360,7 +360,7 @@ static StatementPtr desugarWithBlock(WithStatementPtr with,
     }
 
     vector<FormalArgPtr> formalArgs;
-    for(int i = 0; i < with->lhs.size(); i++) {
+    for(size_t i = 0; i < with->lhs.size(); i++) {
         formalArgs.push_back(new FormalArg(with->lhs.at(i), NULL, TEMPNESS_DONTCARE));
     }
 

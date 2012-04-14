@@ -2491,8 +2491,8 @@ size_t valueHolderToSizeT(ValueHolderPtr vh)
 {
     switch (typeSize(cSizeTType)) {
     case 4 : return vh->as<size32_t>();
-    case 8 : return vh->as<size64_t>();
-    default : assert(false);
+    case 8 : return (size_t)vh->as<size64_t>();
+    default : llvm_unreachable("unexpected pointer size");
     }
 }
 
@@ -3552,17 +3552,19 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
     case PRIM_SymbolP : {
         ensureArity(args, 1);
         ObjectPtr obj = valueToStatic(args->values[0]);
-        bool isSymbol; 
-        switch (obj->objKind) {
-        case TYPE :
-        case RECORD :
-        case VARIANT :
-        case PROCEDURE :
-        case GLOBAL_ALIAS:
-            isSymbol = obj.ptr();
-            break;
-        default :
-            isSymbol = false;
+        bool isSymbol = false; 
+        if (obj.ptr() != NULL) {
+            switch (obj->objKind) {
+            case TYPE :
+            case RECORD :
+            case VARIANT :
+            case PROCEDURE :
+            case GLOBAL_ALIAS:
+                isSymbol = true;
+                break;
+            default :
+                break;
+            }
         }
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];

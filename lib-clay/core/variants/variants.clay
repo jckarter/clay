@@ -323,4 +323,11 @@ inline overload __operators__.dispatchTag(vr:VariantRef[V]) = vr.tag;
 inline overload __operators__.dispatchIndex(vr:VariantRef[V], #i) =
     ref staticIndex(vr.data^, #i);
 
+
+//
+// MemberTypeName
+//
 
+private alias TypeName(x) = StringLiteralRef(StaticName(Type(x)));
+
+MemberTypeName(v) = TypeName(*v);
