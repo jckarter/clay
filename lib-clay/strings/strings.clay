@@ -91,4 +91,4 @@ inline overload cstring(s: String) {
 // convert to cstringref
 //
 
-inline overload CStringRef(s : String) = CStringRef(begin(s));
+inline overload CStringRef(s : String) = CStringRef(cstring(s));
