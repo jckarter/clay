@@ -43,6 +43,6 @@ asprintf(out:Pointer[Pointer[CChar]], fmt, ..args) : Int {
     var bufsz = _scprintf(fmt, ..args);
     out^ = Pointer[CChar](malloc(bufsz+1));
     var bufsz2 = _snprintf(out^, bufsz, fmt, ..args);
-    out[bufsz] = CChar(0);
+    out^[bufsz] = CChar(0);
     return bufsz2;
 }
