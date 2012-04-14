@@ -2201,6 +2201,25 @@ struct ModuleDeclaration : public ANode {
         {}
 };
 
+struct ImportSet {
+    llvm::SmallVector<ObjectPtr,2> values;
+
+    size_t size() const { return values.size(); }
+    bool empty() const { return values.empty(); }
+    ObjectPtr &operator[](size_t i) { return values[i]; }
+    ObjectPtr const &operator[](size_t i) const { return values[i]; }
+    ObjectPtr const *begin() const { return values.begin(); }
+    ObjectPtr const *end() const { return values.end(); }
+
+    void insert(ObjectPtr o) {
+        ObjectPtr const *x = std::find(values.begin(), values.end(), o);
+        if (x == values.end())
+            values.push_back(o);
+    }
+
+    void clear() { values.clear(); }
+};
+
 struct Module : public ANode {
     SourcePtr source;
     string moduleName;
@@ -2224,11 +2243,11 @@ struct Module : public ANode {
     IntegerTypePtr attrDefaultIntegerType;
     FloatTypePtr attrDefaultFloatType;
 
-    llvm::StringMap<set<ObjectPtr> > publicSymbols;
+    llvm::StringMap<ImportSet> publicSymbols;
     bool publicSymbolsLoaded;
     int publicSymbolsLoading;
 
-    llvm::StringMap<set<ObjectPtr> > allSymbols;
+    llvm::StringMap<ImportSet> allSymbols;
     bool allSymbolsLoaded;
     int allSymbolsLoading;
 
