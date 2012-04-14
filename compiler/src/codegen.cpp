@@ -2158,22 +2158,23 @@ void codegenDispatch(ObjectPtr obj,
     CValuePtr cvDispatch = args->values[index];
     PVData const &pvDispatch = pvArgs->values[index];
 
-    int memberCount = dispatchTagCount(pvDispatch.type);
-    if (memberCount <= 0)
+    int iMemberCount = dispatchTagCount(pvDispatch.type);
+    if (iMemberCount <= 0)
         argumentError(index, "DispatchMemberCount for type must be positive");
+    size_t memberCount = (size_t)iMemberCount;
 
     llvm::Value *llTag = codegenDispatchTag(cvDispatch, ctx);
 
     vector<llvm::BasicBlock *> callBlocks;
     vector<llvm::BasicBlock *> elseBlocks;
 
-    for (unsigned i = 0; i < memberCount; ++i) {
+    for (size_t i = 0; i < memberCount; ++i) {
         callBlocks.push_back(newBasicBlock("dispatchCase", ctx));
         elseBlocks.push_back(newBasicBlock("dispatchNext", ctx));
     }
     llvm::BasicBlock *finalBlock = newBasicBlock("finalBlock", ctx);
 
-    for (unsigned i = 0; i < memberCount; ++i) {
+    for (size_t i = 0; i < memberCount; ++i) {
         llvm::Value *tagCase = llvm::ConstantInt::get(llvmIntType(32), i);
         llvm::Value *cond = ctx->builder->CreateICmpEQ(llTag, tagCase);
         ctx->builder->CreateCondBr(cond, callBlocks[i], elseBlocks[i]);
@@ -4867,17 +4868,19 @@ void codegenPrimOp(PrimOpPtr x,
     case PRIM_SymbolP : {
         ensureArity(args, 1);
         ObjectPtr obj = valueToStatic(args->values[0]);
-        bool isSymbol; 
-        switch (obj->objKind) {
-        case TYPE :
-        case RECORD :
-        case VARIANT :
-        case PROCEDURE :
-        case GLOBAL_ALIAS:
-            isSymbol = obj.ptr();
-            break;
-        default :
-            isSymbol = false;
+        bool isSymbol = false; 
+        if (obj.ptr() != NULL) {
+            switch (obj->objKind) {
+            case TYPE :
+            case RECORD :
+            case VARIANT :
+            case PROCEDURE :
+            case GLOBAL_ALIAS:
+                isSymbol = true;
+                break;
+            default :
+                break;
+            }
         }
         ValueHolderPtr vh = boolToValueHolder(isSymbol);
         codegenStaticObject(vh.ptr(), ctx, out);
@@ -5524,7 +5527,7 @@ void codegenPrimOp(PrimOpPtr x,
         llvm::Value *v0 = pointerValue(args, 0, t, ctx);
         IntegerTypePtr offsetT;
         llvm::Value *v1 = integerValue(args, 1, offsetT, ctx);
-        if (!offsetT->isSigned && offsetT->bits < typeSize(cSizeTType)*8)
+        if (!offsetT->isSigned && (size_t)offsetT->bits < typeSize(cSizeTType)*8)
             v1 = ctx->builder->CreateZExt(v1, llvmType(cSizeTType));
         vector<llvm::Value *> indices;
         indices.push_back(v1);
@@ -5755,7 +5758,7 @@ void codegenPrimOp(PrimOpPtr x,
         llvm::Value *av = arrayValue(args, 0, at);
         IntegerTypePtr indexType;
         llvm::Value *iv = integerValue(args, 1, indexType, ctx);
-        if (!indexType->isSigned && indexType->bits < typeSize(cSizeTType)*8)
+        if (!indexType->isSigned && (size_t)indexType->bits < typeSize(cSizeTType)*8)
             iv = ctx->builder->CreateZExt(iv, llvmType(cSizeTType));
         vector<llvm::Value *> indices;
         indices.push_back(llvm::ConstantInt::get(llvmIntType(32), 0));

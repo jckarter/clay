@@ -1637,10 +1637,14 @@ MultiPValuePtr analyzeDispatch(ObjectPtr obj,
     for (unsigned i = index+1; i < args->size(); ++i)
         suffix->add(args->values[i]);
     PVData const &pvDispatch = args->values[index];
-    int memberCount = dispatchTagCount(pvDispatch.type);
+    int iMemberCount = dispatchTagCount(pvDispatch.type);
+    if (iMemberCount <= 0)
+        argumentError(index, "DispatchMemberCount for type must be positive");
+    size_t memberCount = (size_t)iMemberCount;
+        
     MultiPValuePtr result;
     vector<TypePtr> dispatchedTypes;
-    for (unsigned i = 0; i < memberCount; ++i) {
+    for (size_t i = 0; i < memberCount; ++i) {
         MultiPValuePtr args2 = new MultiPValue();
         args2->add(prefix);
         PVData pvDispatch2 = analyzeDispatchIndex(pvDispatch, i);
@@ -2825,7 +2829,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         }
         else if (vh->type == cSizeTType) {
             size_t count = *((size_t *)vh->buf);
-            for (int i = 0; i < count; ++i)
+            for (size_t i = 0; i < count; ++i)
                 mpv->add(PVData(cSizeTType, true));
         }
         else {
