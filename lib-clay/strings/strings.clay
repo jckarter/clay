@@ -81,8 +81,14 @@ inline overload String(cstr : Pointer[T]) = String(CStringRef(cstr));
 // convert to c-compatible string
 //
 
-inline overload cstring(s:Vector[Char]) {
+inline overload cstring(s: String) {
     reserve(s, size(s)+1);
     end(s)^ = Char(0);
     return Pointer[Int8](s.data);
 }
+
+//
+// convert to cstringref
+//
+
+inline overload CStringRef(s : String) = CStringRef(begin(s));
