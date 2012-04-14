@@ -239,7 +239,7 @@ integerArray(#n) = array(..integers(#n));
 //
 
 [T,U,n when not (T == U and BitwiseAssignedType?(T)) and CallDefined?(assign, T, U)]
-overload assign(ref left: Array[T,n], right: Array[U, n]) {
+overload assign(ref left: Array[T,n], ref right: Array[U, n]) {
     assignNonoverlappingMemory(begin(left), begin(right), end(right));
 }
 
