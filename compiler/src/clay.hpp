@@ -430,7 +430,6 @@ enum ObjectKind {
 //
 
 struct Source;
-struct Location;
 
 struct ANode;
 struct Identifier;
@@ -577,7 +576,6 @@ struct ValueStackEntry;
 //
 
 typedef Pointer<Source> SourcePtr;
-typedef Pointer<Location> LocationPtr;
 
 typedef Pointer<ANode> ANodePtr;
 typedef Pointer<Identifier> IdentifierPtr;
@@ -738,22 +736,23 @@ struct Source : public Object {
         : Object(SOURCE), fileName(fileName), buffer(buffer), debugInfo(NULL)
     { }
 
-    const char *data() { return buffer->getBufferStart(); }
-    const char *endData() { return buffer->getBufferEnd(); }
-    size_t size() { return buffer->getBufferSize(); }
+    const char *data() const { return buffer->getBufferStart(); }
+    const char *endData() const { return buffer->getBufferEnd(); }
+    size_t size() const { return buffer->getBufferSize(); }
 
-    llvm::DIFile getDebugInfo() { return llvm::DIFile(debugInfo); }
+    llvm::DIFile getDebugInfo() const { return llvm::DIFile(debugInfo); }
 };
 
-struct Location : public Object {
+struct Location {
     SourcePtr source;
     int offset;
-    bool lineColumnInitialized;
-    int line, column, tabColumn;
 
+    Location()
+        : source(NULL), offset(0) {}
     Location(const SourcePtr &source, int offset)
-        : Object(LOCATION), source(source), offset(offset),
-          lineColumnInitialized(false), line(-1), column(-1), tabColumn(-1) {}
+        : source(source), offset(offset) {}
+
+    bool ok() const { return source != NULL; }
 };
 
 
@@ -770,7 +769,7 @@ struct CompileContextEntry {
     vector<ObjectPtr> params;
     vector<unsigned> dispatchIndices;
 
-    LocationPtr location;
+    Location location;
 
     CompileContextEntry(ObjectPtr callable)
         : callable(callable), hasParams(false) {}
@@ -819,18 +818,18 @@ struct CompileContextPusher {
     }
 };
 
-void pushLocation(LocationPtr location);
+void pushLocation(Location const &location);
 void popLocation();
-LocationPtr topLocation();
+Location topLocation();
 
 struct LocationContext {
-    LocationPtr loc;
-    LocationContext(LocationPtr loc)
+    Location loc;
+    LocationContext(Location const &loc)
         : loc(loc) {
-        if (loc.ptr()) pushLocation(loc);
+        if (loc.ok()) pushLocation(loc);
     }
     ~LocationContext() {
-        if (loc.ptr())
+        if (loc.ok())
             popLocation();
     }
 private :
@@ -846,7 +845,7 @@ void fmtError(const char *fmt, ...);
 template <class T>
 void error(Pointer<T> context, llvm::Twine const &msg)
 {
-    if (context->location.ptr())
+    if (context->location.ok())
         pushLocation(context->location);
     error(msg);
 }
@@ -854,7 +853,7 @@ void error(Pointer<T> context, llvm::Twine const &msg)
 template <class T>
 void error(T const *context, llvm::Twine const &msg)
 {
-    if (context->location.ptr())
+    if (context->location.ok())
         pushLocation(context->location);
     error(msg);
 }
@@ -867,7 +866,7 @@ void arityError2(int minExpected, int received);
 template <class T>
 void arityError(Pointer<T> context, int expected, int received)
 {
-    if (context->location.ptr())
+    if (context->location.ok())
         pushLocation(context->location);
     arityError(expected, received);
 }
@@ -875,7 +874,7 @@ void arityError(Pointer<T> context, int expected, int received)
 template <class T>
 void arityError2(Pointer<T> context, int minExpected, int received)
 {
-    if (context->location.ptr())
+    if (context->location.ok())
         pushLocation(context->location);
     arityError2(minExpected, received);
 }
@@ -922,14 +921,14 @@ void argumentIndexRangeError(unsigned int index,
                              size_t value,
                              size_t maxValue);
 
-void getLineCol(LocationPtr location,
+void getLineCol(Location const &location,
                 int &line,
                 int &column,
                 int &tabColumn);
 
-llvm::DIFile getDebugLineCol(LocationPtr location, int &line, int &column);
+llvm::DIFile getDebugLineCol(Location const &location, int &line, int &column);
 
-void printFileLineCol(llvm::raw_ostream &out, LocationPtr location);
+void printFileLineCol(llvm::raw_ostream &out, Location const &location);
 
 void invalidStaticObjectError(ObjectPtr obj);
 void argumentInvalidStaticObjectError(unsigned int index, ObjectPtr obj);
@@ -967,7 +966,7 @@ enum TokenKind {
 };
 
 struct Token {
-    LocationPtr location;
+    Location location;
     llvm::SmallString<16> str;
     int tokenKind;
     Token() : tokenKind(T_NONE) {}
@@ -993,7 +992,7 @@ void tokenize(SourcePtr source, int offset, int length,
 //
 
 struct ANode : public Object {
-    LocationPtr location;
+    Location location;
     ANode(int objKind)
         : Object(objKind) {}
 };
@@ -1015,7 +1014,7 @@ struct Identifier : public ANode {
             return iter->second.ptr();
     }
 
-    static Identifier *get(llvm::StringRef str, LocationPtr location) {
+    static Identifier *get(llvm::StringRef str, Location const &location) {
         Identifier *ident = new Identifier(str);
         ident->location = location;
         return ident;
@@ -1073,8 +1072,8 @@ enum ExprKind {
 
 struct Expr : public ANode {
     ExprKind exprKind;
-    LocationPtr startLocation;
-    LocationPtr endLocation;
+    Location startLocation;
+    Location endLocation;
 
     MultiPValuePtr cachedAnalysis;
 
@@ -1082,11 +1081,11 @@ struct Expr : public ANode {
         : ANode(EXPRESSION), exprKind(exprKind) {}
 
     string asString() {
-        if (startLocation == NULL || endLocation == NULL)
+        if (!startLocation.ok() || !endLocation.ok())
             return "<generated expression>";
-        assert(startLocation->source == endLocation->source);
-        const char *data = startLocation->source->data();
-        return string(data + startLocation->offset, data + endLocation->offset);
+        assert(startLocation.source == endLocation.source);
+        const char *data = startLocation.source->data();
+        return string(data + startLocation.offset, data + endLocation.offset);
     }
 };
 
@@ -1673,8 +1672,8 @@ struct EvalStatement : public Statement {
 struct WithStatement : public Statement {
     vector<IdentifierPtr> lhs;
     ExprPtr rhs;
-    LocationPtr withLocation;
-    WithStatement( vector<IdentifierPtr> i, ExprPtr r, LocationPtr l)
+    Location withLocation;
+    WithStatement( vector<IdentifierPtr> i, ExprPtr r, Location const &l)
         : Statement(WITH), lhs(i), rhs(r), withLocation(l) {}
 };
 
@@ -2202,6 +2201,25 @@ struct ModuleDeclaration : public ANode {
         {}
 };
 
+struct ImportSet {
+    llvm::SmallVector<ObjectPtr,2> values;
+
+    size_t size() const { return values.size(); }
+    bool empty() const { return values.empty(); }
+    ObjectPtr &operator[](size_t i) { return values[i]; }
+    ObjectPtr const &operator[](size_t i) const { return values[i]; }
+    ObjectPtr const *begin() const { return values.begin(); }
+    ObjectPtr const *end() const { return values.end(); }
+
+    void insert(ObjectPtr o) {
+        ObjectPtr const *x = std::find(values.begin(), values.end(), o);
+        if (x == values.end())
+            values.push_back(o);
+    }
+
+    void clear() { values.clear(); }
+};
+
 struct Module : public ANode {
     SourcePtr source;
     string moduleName;
@@ -2225,11 +2243,11 @@ struct Module : public ANode {
     IntegerTypePtr attrDefaultIntegerType;
     FloatTypePtr attrDefaultFloatType;
 
-    llvm::StringMap<set<ObjectPtr> > publicSymbols;
+    llvm::StringMap<ImportSet> publicSymbols;
     bool publicSymbolsLoaded;
     int publicSymbolsLoading;
 
-    llvm::StringMap<set<ObjectPtr> > allSymbols;
+    llvm::StringMap<ImportSet> allSymbols;
     bool allSymbolsLoaded;
     int allSymbolsLoading;
 
@@ -2397,7 +2415,7 @@ ObjectPtr lookupEnvEx(EnvPtr env, IdentifierPtr name,
 ExprPtr foreignExpr(EnvPtr env, ExprPtr expr);
 
 ExprPtr lookupCallByNameExprHead(EnvPtr env);
-LocationPtr safeLookupCallByNameLocation(EnvPtr env);
+Location safeLookupCallByNameLocation(EnvPtr env);
 
 
 
@@ -3756,12 +3774,12 @@ struct CodegenContext {
 };
 
 struct DebugLocationContext {
-    LocationPtr loc;
+    Location loc;
     CodegenContext* ctx;
-    DebugLocationContext(LocationPtr loc, CodegenContext* ctx)
+    DebugLocationContext(Location const &loc, CodegenContext* ctx)
         : loc(loc), ctx(ctx)
     {
-        if (loc.ptr()) {
+        if (loc.ok()) {
             pushLocation(loc);
             if (llvmDIBuilder != NULL && ctx->inlineDepth == 0) {
                 int line, column;
@@ -3772,7 +3790,7 @@ struct DebugLocationContext {
         }
     }
     ~DebugLocationContext() {
-        if (loc.ptr()) {
+        if (loc.ok()) {
             popLocation();
         }
     }

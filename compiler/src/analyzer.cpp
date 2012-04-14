@@ -339,13 +339,13 @@ static PVData staticPValue(ObjectPtr x)
 // safe analysis
 //
 
-static LocationPtr analysisErrorLocation;
+static Location analysisErrorLocation;
 static vector<CompileContextEntry> analysisErrorCompileContext;
 
 struct ClearAnalysisError {
     ClearAnalysisError() {}
     ~ClearAnalysisError() {
-        analysisErrorLocation = NULL;
+        analysisErrorLocation = Location();
         analysisErrorCompileContext.clear();
     }
 };
@@ -666,8 +666,8 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
     }
 
     case FILE_EXPR : {
-        LocationPtr location = safeLookupCallByNameLocation(env);
-        string filename = location->source->fileName;
+        Location location = safeLookupCallByNameLocation(env);
+        string filename = location.source->fileName;
         return analyzeStaticObject(Identifier::get(filename));
     }
 

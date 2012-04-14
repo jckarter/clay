@@ -49,9 +49,9 @@ static void cleanupLexer() {
     begin = ptr = end = maxPtr = NULL;
 }
 
-static LocationPtr locationFor(const char *ptr) {
+static Location locationFor(const char *ptr) {
     ptrdiff_t offset = (ptr - begin) + beginOffset;
-    return new Location(lexerSource, offset);
+    return Location(lexerSource, offset);
 }
 
 static const char *save() { return ptr; }
@@ -745,7 +745,7 @@ static bool nextToken(Token &x) {
     return false;
 success :
     assert(x.tokenKind != T_NONE);
-    if (x.location == NULL)
+    if (!x.location.ok())
         x.location = locationFor(p);
     return true;
 }

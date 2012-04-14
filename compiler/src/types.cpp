@@ -1460,8 +1460,8 @@ static void defineLLVMType(TypePtr t) {
                 size_t debugSize = debugTypeSize(memberLLT);
                 debugOffset = alignedUpTo(debugOffset, debugAlign);
 
-                LocationPtr fieldLocation = fieldNames[i]->location;
-                if (fieldLocation == NULL)
+                Location fieldLocation = fieldNames[i]->location;
+                if (!fieldLocation.ok())
                     fieldLocation = x->record->location;
                 int fieldLine, fieldColumn;
                 llvm::DIFile fieldFile = getDebugLineCol(fieldLocation, fieldLine, fieldColumn);
