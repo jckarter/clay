@@ -563,9 +563,9 @@ static void initModule(ModulePtr m) {
     }
 
     if (llvmDIBuilder != NULL) {
-        llvm::DIFile file = m->location == NULL
-            ? llvm::DIFile(NULL)
-            : m->location->source->getDebugInfo();
+        llvm::DIFile file = m->location.ok()
+            ? m->location.source->getDebugInfo()
+            : llvm::DIFile(NULL);
         m->debugInfo = (llvm::MDNode*)llvmDIBuilder->createNameSpace(
             llvm::DICompileUnit(llvmDIBuilder->getCU()), // scope
             m->moduleName, // name

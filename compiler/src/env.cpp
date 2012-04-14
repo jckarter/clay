@@ -497,12 +497,11 @@ ExprPtr lookupCallByNameExprHead(EnvPtr env)
 // safeLookupCallByNameLocation
 //
 
-LocationPtr safeLookupCallByNameLocation(EnvPtr env)
+Location safeLookupCallByNameLocation(EnvPtr env)
 {
     ExprPtr head = lookupCallByNameExprHead(env);
     if (head.ptr() == 0) {
         error("__FILE__, __LINE__, and __COLUMN__ are only allowed in an alias function");
-        return NULL;
     }
     return head->location;
 }

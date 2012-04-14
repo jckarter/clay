@@ -139,7 +139,7 @@ StatementPtr desugarForStatement(ForPtr x) {
 
 StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
     assert(!catchBlocks.empty());
-    LocationPtr firstCatchLocation = catchBlocks.front()->location;
+    Location firstCatchLocation = catchBlocks.front()->location;
     IdentifierPtr expVar = Identifier::get("%exp", firstCatchLocation);
 
     CallPtr activeException = new Call(primitive_expr_activeException(), new ExprList());
@@ -289,7 +289,7 @@ StatementPtr desugarSwitchStatement(SwitchPtr x) {
     return block.ptr();
 }
 
-static SourcePtr evalToSource(LocationPtr location, ExprListPtr args, EnvPtr env)
+static SourcePtr evalToSource(Location const &location, ExprListPtr args, EnvPtr env)
 {
     llvm::SmallString<128> sourceTextBuf;
     llvm::raw_svector_ostream sourceTextOut(sourceTextBuf);

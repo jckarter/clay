@@ -468,11 +468,6 @@ static void print(llvm::raw_ostream &out, const Object *x) {
         out << "Source(" << y->fileName << ")";
         break;
     }
-    case LOCATION : {
-        const Location *y = (const Location *)x;
-        out << "Location(" << y->source << ", " << y->offset << ")";
-        break;
-    }
     case IDENTIFIER : {
         const Identifier *y = (const Identifier *)x;
         out << "Identifier(" << y->str << ")";

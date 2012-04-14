@@ -984,7 +984,7 @@ void codegenExpr(ExprPtr expr,
         break;
 
     case LINE_EXPR : {
-        LocationPtr location = safeLookupCallByNameLocation(env);
+        Location location = safeLookupCallByNameLocation(env);
         int line, column, tabColumn;
         getLineCol(location, line, column, tabColumn);
 
@@ -993,7 +993,7 @@ void codegenExpr(ExprPtr expr,
         break;
     }
     case COLUMN_EXPR : {
-        LocationPtr location = safeLookupCallByNameLocation(env);
+        Location location = safeLookupCallByNameLocation(env);
         int line, column, tabColumn;
         getLineCol(location, line, column, tabColumn);
 
@@ -1649,7 +1649,7 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
         addLocal(env, arg->name, cvalue.ptr());
         if (llvmDIBuilder != NULL) {
             int line, column;
-            LocationPtr argLocation = arg->location;
+            Location argLocation = arg->location;
             llvm::DIFile file = getDebugLineCol(argLocation, line, column);
             llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
                 llvm::dwarf::DW_TAG_arg_variable, // tag
@@ -2622,8 +2622,8 @@ static void interpolateExpr(SourcePtr source, unsigned offset, unsigned length,
 
 static bool interpolateLLVMCode(LLVMCodePtr llvmBody, string &out, EnvPtr env)
 {
-    SourcePtr source = llvmBody->location->source;
-    int startingOffset = llvmBody->location->offset;
+    SourcePtr source = llvmBody->location.source;
+    int startingOffset = llvmBody->location.offset;
 
     llvm::StringRef body = llvmBody->body;
     llvm::raw_string_ostream outstream(out);
@@ -2933,7 +2933,7 @@ void codegenCodeBody(InvokeEntry* entry)
         addLocal(env, entry->fixedArgNames[i], cvalue.ptr());
         if (llvmDIBuilder != NULL) {
             int line, column;
-            LocationPtr argLocation = entry->origCode->formalArgs[i]->location;
+            Location argLocation = entry->origCode->formalArgs[i]->location;
             llvm::DIFile file = getDebugLineCol(argLocation, line, column);
             llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, entry->getDebugInfo());
             llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
@@ -2964,7 +2964,7 @@ void codegenCodeBody(InvokeEntry* entry)
         MultiCValuePtr varArgs = new MultiCValue();
 
         int line, column;
-        LocationPtr argLocation = entry->origCode->formalVarArg->location;
+        Location argLocation = entry->origCode->formalVarArg->location;
         llvm::DIFile file = getDebugLineCol(argLocation, line, column);
 
         for (unsigned i = 0; i < entry->varArgTypes.size(); ++i, ++ai, ++argNo) {
@@ -3036,7 +3036,7 @@ void codegenCodeBody(InvokeEntry* entry)
 
             if (rspec->name != NULL && llvmDIBuilder != NULL) {
                 int line, column;
-                LocationPtr argLocation = rspec->location;
+                Location argLocation = rspec->location;
                 llvm::DIFile file = getDebugLineCol(argLocation, line, column);
                 llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, entry->getDebugInfo());
                 llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
