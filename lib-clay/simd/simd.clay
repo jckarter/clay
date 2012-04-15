@@ -48,7 +48,7 @@ inline overload Vec[T,n](..args:A) {
 [T,n]
 inline overload Vec[T,n](x:T) {
     var a = uninitializedUnsafe(Vec[T,n]);
-    for (i in range(n))
+    ..for (i in integers(#n))
         a[i] = x;
     return a;
 }
