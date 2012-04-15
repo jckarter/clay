@@ -615,11 +615,11 @@ void initializeRecordFields(RecordTypePtr t) {
     else
         assert(t->params.size() == r->params.size());
     EnvPtr env = new Env(r->env);
-    for (unsigned i = 0; i < r->params.size(); ++i)
+    for (size_t i = 0; i < r->params.size(); ++i)
         addLocal(env, r->params[i], t->params[i].ptr());
     if (r->varParam.ptr()) {
         MultiStaticPtr rest = new MultiStatic();
-        for (unsigned i = r->params.size(); i < t->params.size(); ++i)
+        for (size_t i = r->params.size(); i < t->params.size(); ++i)
             rest->add(t->params[i]);
         addLocal(env, r->varParam, rest.ptr());
     }
@@ -723,11 +723,11 @@ static void initializeVariantType(VariantTypePtr t) {
         const vector<IdentifierPtr> &params = t->variant->params;
         IdentifierPtr varParam = t->variant->varParam;
         assert(params.size() <= t->params.size());
-        for (unsigned j = 0; j < params.size(); ++j)
+        for (size_t j = 0; j < params.size(); ++j)
             addLocal(variantEnv, params[j], t->params[j]);
         if (varParam.ptr()) {
             MultiStaticPtr ms = new MultiStatic();
-            for (unsigned j = params.size(); j < t->params.size(); ++j)
+            for (size_t j = params.size(); j < t->params.size(); ++j)
                 ms->add(t->params[j]);
             addLocal(variantEnv, varParam, ms.ptr());
         }
@@ -744,13 +744,13 @@ static void initializeVariantType(VariantTypePtr t) {
     evaluateMultiType(defaultInstances, variantEnv, t->memberTypes);
 
     const vector<InstancePtr> &instances = t->variant->instances;
-    for (unsigned i = 0; i < instances.size(); ++i) {
+    for (size_t i = 0; i < instances.size(); ++i) {
         InstancePtr x = instances[i];
         vector<PatternCellPtr> cells;
         vector<MultiPatternCellPtr> multiCells;
         const vector<PatternVar> &pvars = x->patternVars;
         EnvPtr patternEnv = new Env(x->env);
-        for (unsigned j = 0; j < pvars.size(); ++j) {
+        for (size_t j = 0; j < pvars.size(); ++j) {
             if (pvars[j].isMulti) {
                 MultiPatternCellPtr multiCell = new MultiPatternCell(NULL);
                 multiCells.push_back(multiCell);

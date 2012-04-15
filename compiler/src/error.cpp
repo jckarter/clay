@@ -316,22 +316,22 @@ void arityError2(int minExpected, int received) {
     error(sout.str());
 }
 
-void ensureArity(MultiStaticPtr args, unsigned int size) {
+void ensureArity(MultiStaticPtr args, size_t size) {
     if (args->size() != size)
         arityError(size, args->size());
 }
 
-void ensureArity(MultiEValuePtr args, unsigned int size) {
+void ensureArity(MultiEValuePtr args, size_t size) {
     if (args->size() != size)
         arityError(size, args->size());
 }
 
-void ensureArity(MultiPValuePtr args, unsigned int size) {
+void ensureArity(MultiPValuePtr args, size_t size) {
     if (args->size() != size)
         arityError(size, args->size());
 }
 
-void ensureArity(MultiCValuePtr args, unsigned int size) {
+void ensureArity(MultiCValuePtr args, size_t size) {
     if (args->size() != size)
         arityError(size, args->size());
 }

@@ -255,7 +255,7 @@ static bool matchTempness(CodePtr code,
             error(fvarArg, "forwarded arguments are not allowed "
                   "in call-by-name procedures");
         }
-        for (unsigned i = fargs.size(); i < argsTempness.size(); ++i) {
+        for (size_t i = fargs.size(); i < argsTempness.size(); ++i) {
             if (!tempnessMatches(argsTempness[i], fvarArg->tempness))
                 return false;
             tempnessKey.push_back(

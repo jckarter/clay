@@ -47,7 +47,7 @@ bool _objectValueEquals(ObjectPtr a, ObjectPtr b)
         ValueHolder *b1 = (ValueHolder *)b.ptr();
         if (a1->type != b1->type)
             return false;
-        int n = typeSize(a1->type);
+        size_t n = typeSize(a1->type);
         return memcmp(a1->buf, b1->buf, n) == 0;
     }
 
@@ -97,7 +97,7 @@ int objectHash(ObjectPtr a)
         ValueHolder *b = (ValueHolder *)a.ptr();
         // TODO: call clay 'hash'
         int h = 0;
-        int n = typeSize(b->type);
+        size_t n = typeSize(b->type);
         for (int i = 0; i < n; ++i)
             h += b->buf[i];
         h = h*11 + identityHash(b->type.ptr());

@@ -180,7 +180,7 @@ static PathString locateModule(DottedNamePtr name) {
         return path;
 
     error(name, "module not found: " + toKey(name));
-    assert(false);
+    llvm_unreachable("module not found");
 }
 
 

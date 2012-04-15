@@ -745,11 +745,11 @@ struct Source : public Object {
 
 struct Location {
     SourcePtr source;
-    int offset;
+    size_t offset;
 
     Location()
         : source(NULL), offset(0) {}
-    Location(const SourcePtr &source, int offset)
+    Location(const SourcePtr &source, size_t offset)
         : source(source), offset(offset) {}
 
     bool ok() const { return source != NULL; }
@@ -879,20 +879,20 @@ void arityError2(Pointer<T> context, int minExpected, int received)
     arityError2(minExpected, received);
 }
 
-void ensureArity(MultiStaticPtr args, unsigned int size);
-void ensureArity(MultiEValuePtr args, unsigned int size);
-void ensureArity(MultiPValuePtr args, unsigned int size);
-void ensureArity(MultiCValuePtr args, unsigned int size);
+void ensureArity(MultiStaticPtr args, size_t size);
+void ensureArity(MultiEValuePtr args, size_t size);
+void ensureArity(MultiPValuePtr args, size_t size);
+void ensureArity(MultiCValuePtr args, size_t size);
 
 template <class T>
-void ensureArity(const vector<T> &args, int size)
+void ensureArity(const vector<T> &args, size_t size)
 {
     if ((int)args.size() != size)
         arityError(size, args.size());
 }
 
 template <class T>
-void ensureArity2(const vector<T> &args, int size, bool hasVarArgs)
+void ensureArity2(const vector<T> &args, size_t size, bool hasVarArgs)
 {
     if (!hasVarArgs)
         ensureArity(args, size);
@@ -982,7 +982,7 @@ struct Token {
 
 void tokenize(SourcePtr source, vector<Token> &tokens);
 
-void tokenize(SourcePtr source, int offset, int length,
+void tokenize(SourcePtr source, size_t offset, size_t length,
               vector<Token> &tokens);
 
 
@@ -1346,7 +1346,7 @@ struct ExprList : public Object {
     }
     ExprList(const vector<ExprPtr> &exprs)
         : Object(EXPR_LIST), exprs(exprs) {}
-    unsigned size() { return exprs.size(); }
+    size_t size() { return exprs.size(); }
     void add(ExprPtr x) { exprs.push_back(x); }
     void add(ExprListPtr x) {
         exprs.insert(exprs.end(), x->exprs.begin(), x->exprs.end());
@@ -2206,8 +2206,8 @@ struct ImportSet {
 
     size_t size() const { return values.size(); }
     bool empty() const { return values.empty(); }
-    ObjectPtr &operator[](size_t i) { return values[i]; }
-    ObjectPtr const &operator[](size_t i) const { return values[i]; }
+    ObjectPtr &operator[](size_t i) { return values[(unsigned)i]; }
+    ObjectPtr const &operator[](size_t i) const { return values[(unsigned)i]; }
     ObjectPtr const *begin() const { return values.begin(); }
     ObjectPtr const *end() const { return values.end(); }
 
@@ -3077,7 +3077,7 @@ struct MultiStatic : public Object {
     }
     MultiStatic(const vector<ObjectPtr> &values)
         : Object(MULTI_STATIC), values(values) {}
-    unsigned size() { return values.size(); }
+    size_t size() { return values.size(); }
     void add(ObjectPtr x) { values.push_back(x); }
     void add(MultiStaticPtr x) {
         values.insert(values.end(), x->values.begin(), x->values.end());
@@ -3388,7 +3388,7 @@ struct MultiPValue : public Object {
     }
     MultiPValue(llvm::ArrayRef<PVData> values)
         : Object(MULTI_PVALUE), values(values.begin(), values.end()) {}
-    unsigned size() { return values.size(); }
+    size_t size() { return values.size(); }
     void add(PVData const &x) { values.push_back(x); }
     void add(MultiPValuePtr x) {
         values.insert(values.end(), x->values.begin(), x->values.end());
@@ -3584,7 +3584,7 @@ struct MultiEValue : public Object {
     }
     MultiEValue(const vector<EValuePtr> &values)
         : Object(MULTI_EVALUE), values(values) {}
-    unsigned size() { return values.size(); }
+    size_t size() { return values.size(); }
     void add(EValuePtr x) { values.push_back(x); }
     void add(MultiEValuePtr x) {
         values.insert(values.end(), x->values.begin(), x->values.end());
@@ -3655,7 +3655,7 @@ struct MultiCValue : public Object {
     }
     MultiCValue(const vector<CValuePtr> &values)
         : Object(MULTI_CVALUE), values(values) {}
-    unsigned size() { return values.size(); }
+    size_t size() { return values.size(); }
     void add(CValuePtr x) { values.push_back(x); }
     void add(MultiCValuePtr x) {
         values.insert(values.end(), x->values.begin(), x->values.end());

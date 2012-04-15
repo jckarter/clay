@@ -2,7 +2,7 @@
 
 namespace clay {
 
-static void initLexer(SourcePtr s, int offset, int length);
+static void initLexer(SourcePtr s, size_t offset, size_t length);
 static void cleanupLexer();
 static bool nextToken(Token &x);
 
@@ -10,7 +10,7 @@ void tokenize(SourcePtr source, vector<Token> &tokens) {
     tokenize(source, 0, source->size(), tokens);
 }
 
-void tokenize(SourcePtr source, int offset, int length,
+void tokenize(SourcePtr source, size_t offset, size_t length,
               vector<Token> &tokens) {
     initLexer(source, offset, length);
     tokens.push_back(Token());
@@ -29,13 +29,13 @@ void tokenize(SourcePtr source, int offset, int length,
 }
 
 static Source *lexerSource;
-static int beginOffset;
+static size_t beginOffset;
 static const char *begin;
 static const char *ptr;
 static const char *end;
 static const char *maxPtr;
 
-static void initLexer(SourcePtr source, int offset, int length) {
+static void initLexer(SourcePtr source, size_t offset, size_t length) {
     lexerSource = source.ptr();
     begin = source->data() + offset;
     end = begin + length;
