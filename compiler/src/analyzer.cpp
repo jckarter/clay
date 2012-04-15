@@ -1969,15 +1969,15 @@ void analyzeCodeBody(InvokeEntry* entry)
 
     EnvPtr bodyEnv = new Env(entry->env);
 
-    for (unsigned i = 0; i < entry->fixedArgNames.size(); ++i) {
+    for (size_t i = 0; i < entry->fixedArgNames.size(); ++i) {
         bool flag = entry->forwardedRValueFlags[i];
         addLocal(bodyEnv, entry->fixedArgNames[i], new PValue(entry->fixedArgTypes[i], flag));
     }
 
     if (entry->varArgName.ptr()) {
-        unsigned nFixed = entry->fixedArgNames.size();
+        size_t nFixed = entry->fixedArgNames.size();
         MultiPValuePtr varArgs = new MultiPValue();
-        for (unsigned i = 0; i < entry->varArgTypes.size(); ++i) {
+        for (size_t i = 0; i < entry->varArgTypes.size(); ++i) {
             bool flag = entry->forwardedRValueFlags[i + nFixed];
             PVData parg(entry->varArgTypes[i], flag);
             varArgs->values.push_back(parg);

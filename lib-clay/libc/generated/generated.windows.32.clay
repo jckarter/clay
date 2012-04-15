@@ -1414,13 +1414,13 @@ external (cdecl) tan(arg0:Double) : Double;
 
 external (cdecl) tanh(arg0:Double) : Double;
 
-external (cdecl) sqrt(arg0:Double) : Double;
+external (cdecl,"_sqrt") sqrt(arg0:Double) : Double;
 
 external (cdecl) _cabs(arg0:Struct__complex) : Double;
 
-external (cdecl) ceil(arg0:Double) : Double;
+external (cdecl,"_ceil") ceil(arg0:Double) : Double;
 
-external (cdecl) floor(arg0:Double) : Double;
+external (cdecl,"_floor") floor(arg0:Double) : Double;
 
 external (cdecl) frexp(arg0:Double, arg1:Pointer[Int]) : Double;
 

@@ -2414,8 +2414,9 @@ void codegenCallCCode(CCodePointerTypePtr t,
             target->loadVarArgument(t->callingConv, cv, llArgs, llAttributes, ctx);
         }
     }
-    llvm::Value *llCastCallable =
-        ctx->builder->CreateBitCast(llCallable, t->getCallType());
+    llvm::Value *llCastCallable = t->callingConv == CC_LLVM
+        ? llCallable
+        : ctx->builder->CreateBitCast(llCallable, t->getCallType());
     llvm::CallInst *callInst =
         ctx->builder->CreateCall(llCastCallable, llvm::makeArrayRef(llArgs));
     llvm::CallingConv::ID callingConv = target->callingConvention(t->callingConv);

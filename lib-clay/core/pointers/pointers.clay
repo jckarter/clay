@@ -74,12 +74,12 @@ inline overload add(i:I, p:Pointer[T]) {
 
 [T,I when Integer?(I)]
 inline overload subtract(p:Pointer[T], i:I) {
-    return pointerOffset(p, -PtrInt(i));
+    return pointerOffset(p, wrapSubtract(PtrInt(i)));
 }
 
 [T]
 inline overload subtract(a:Pointer[T], b:Pointer[T]) {
-    return (PtrInt(a) - PtrInt(b)) \ PtrInt(TypeSize(T));
+    return wrapQuotient(wrapSubtract(PtrInt(a), PtrInt(b)), PtrInt(TypeSize(T)));
 }
 
 [T]
