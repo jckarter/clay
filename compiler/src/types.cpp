@@ -1134,18 +1134,33 @@ static void declareLLVMType(TypePtr t) {
         break;
     }
     case CCODE_POINTER_TYPE : {
-        llvm::FunctionType *llOpaqueFuncType =
-            llvm::FunctionType::get(llvmVoidType(), vector<llvm::Type*>(), false);
-        t->llType = llvm::PointerType::getUnqual(llOpaqueFuncType);
+        CCodePointerType *x = (CCodePointerType *)t.ptr();
+
+        if (x->callingConv == CC_LLVM) {
+            // LLVM intrinsic function pointers can't be bitcast. Generate the LLVM type
+            // directly.
+            llvm::Type *returnType = llvmType(x->returnType);
+            vector<llvm::Type*> argTypes;
+            for (size_t i = 0; i < x->argTypes.size(); ++i)
+                argTypes.push_back(llvmType(x->argTypes[i]));
+            llvm::FunctionType *funcType =
+                llvm::FunctionType::get(returnType, argTypes, x->hasVarArgs);
+            t->llType = llvm::PointerType::getUnqual(funcType);
+        } else {
+            // Deriving the C ABI type may require type recursion, so cast to void()*
+            // for now. We can bitcast to the proper type when we know it.
+            llvm::FunctionType *llOpaqueFuncType =
+                llvm::FunctionType::get(llvmVoidType(), vector<llvm::Type*>(), false);
+            t->llType = llvm::PointerType::getUnqual(llOpaqueFuncType);
+        }
 
         if (llvmDIBuilder != NULL) {
-            CCodePointerType *x = (CCodePointerType *)t.ptr();
             llvm::SmallVector<llvm::Value*,16> debugParamTypes;
             debugParamTypes.push_back(x->returnType == NULL
                 ? llvmVoidTypeDebugInfo()
                 : llvmTypeDebugInfo(x->returnType));
 
-            for (unsigned i = 0; i < x->argTypes.size(); ++i) {
+            for (size_t i = 0; i < x->argTypes.size(); ++i) {
                 debugParamTypes.push_back(llvmTypeDebugInfo(x->argTypes[i]));
             }
 
