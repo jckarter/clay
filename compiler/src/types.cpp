@@ -1010,6 +1010,16 @@ llvm::Type *llvmType(TypePtr t) {
     return t->llType;
 }
 
+llvm::StructType *llvmStaticType() {
+    static llvm::StructType *theType = NULL;
+    if (theType == NULL) {
+        llvm::SmallVector<llvm::Type *, 2> llTypes;
+        llTypes.push_back(llvmIntType(8));
+        theType = llvm::StructType::get(llvm::getGlobalContext(), llTypes);
+    }
+    return theType;
+}
+
 llvm::DIType llvmTypeDebugInfo(TypePtr t) {
     if (t->llType == NULL)
         declareLLVMType(t);
@@ -1242,9 +1252,7 @@ static void declareLLVMType(TypePtr t) {
         break;
     }
     case STATIC_TYPE : {
-        vector<llvm::Type *> llTypes;
-        llTypes.push_back(llvmIntType(8));
-        t->llType = llvm::StructType::get(llvm::getGlobalContext(), llTypes);
+        t->llType = llvmStaticType();
         if (llvmDIBuilder != NULL)
             t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createBasicType(
                 typeName(t),
