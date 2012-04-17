@@ -1,5 +1,4 @@
 import simd.primitives as prims;
-import printer.(printTo,printReprTo,printReprValuesTo);
 
 
 //
@@ -228,26 +227,6 @@ inline overload subtract(a:Vec[T,n]) = Vec[T,n](T(0)) - a;
 
 [T,n]
 inline overload bitnot(a:Vec[T,n]) = bitxor(Vec[T,n](componentMask(T)), a);
-
-
-
-//
-// simd printing
-//
-
-[T,n]
-inline overload printTo(stream, a:Vec[T,n])
-{
-    printTo(stream, Type(a), "(", ..weaveValues(", ", ..unpackVec(a)), ")");
-}
-
-[T,n]
-inline overload printReprTo(stream, a:Vec[T,n])
-{
-    printTo(stream,Type(a),"(");
-    printReprValuesTo(stream, ..unpackVec(a));
-    printTo(stream,")");
-}
 
 
 //
