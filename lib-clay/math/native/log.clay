@@ -1,19 +1,18 @@
 // log
 
 import math.native.kernel.ieee754.*;
-import math.*;
+import math.(log);
 
-overload log(x:Double) {
+overload log(x:Double) : Double {
 	alias ZERO = 0.;
 	alias HALF = 0.5;
 	alias ONE = 1.;
-	var xdb = MAKE_IEEE(x);
+	var xdb,k = MAKE_IEEE(x),0;
 	
-	var k = 0;
-	if (GET_IEEE_HIGH(xdb) < CV8) {			/* x < 2**-1022  */
+	if (GET_IEEE_HIGH(xdb) < CV8) {			// x < 2**-1022  
 	    if (bitor(bitand(GET_IEEE_HIGH(xdb),MM),GET_IEEE_LOW(xdb))==0) 
-			return negativeInfinity(Double);		/* log(+-0)=-inf */
-	    if (GET_IEEE_HIGH(xdb)<0) return nan(Double);	/* log(-#) = NaN */
+			return -TWO54/ZERO;		// log(+-0)=-inf 
+	    if (GET_IEEE_HIGH(xdb)<0) return (x-x)/ZERO;	// log(-#) = NaN 
 	    k -: 54; 
 	    SET_IEEE_HIGH(xdb,GET_IEEE_HIGH(x*TWO54));
 	} 
@@ -21,70 +20,51 @@ overload log(x:Double) {
 	k +: bitshr(GET_IEEE_HIGH(xdb),20)-1023;
 	GET_IEEE_HIGH(xdb) = bitand(GET_IEEE_HIGH(xdb),NEM);
 	var i = bitand(GET_IEEE_HIGH(xdb)+0x95f64,CV8);
-	SET_IEEE_HIGH(xdb,bitor(GET_IEEE_HIGH(xdb),bitxor(i,RM)));	/* normalize x or x/2 */
+	SET_IEEE_HIGH(xdb,bitor(GET_IEEE_HIGH(xdb),bitxor(i,RM)));	// normalize x or x/2 
 	k +: bitshr(i,20);
 	var f,R = GET_IEEE_DB(xdb)-ONE,0.;
-	if(bitand(NEM,2+GET_IEEE_HIGH(xdb))<3) {	/* -2**-20 <= f < 2**-20 */
-	    if(f==ZERO) {
-			if(k==0) {
-			    return ZERO;
-			} else {
-			    return k*LN2HI+k*LN2LO;
-			}
-	    }
+	if(bitand(NEM,2+GET_IEEE_HIGH(xdb))<3) {	// -2**-20 <= f < 2**-20 
+	    if(f==ZERO) return if(k==0) ZERO else k*LN2HI+k*LN2LO;
 	    R = f*f*(HALF-0.33333333333333333*f);
-	    if(k==0) return f-R; 
-	    else {
-	    	return k*LN2HI-((R-k*LN2LO)-f);
-	    }
+	    return if(k==0) f-R else k*LN2HI-((R-k*LN2LO)-f);
 	}
  	var s = f/(2.0+f); 
 	var z = s*s;
-	i = GET_IEEE_HIGH(xdb)-0x6147a;
 	var w = z*z;
-	var j = 0x6b851-GET_IEEE_HIGH(xdb);
 	var t1 = w*(Lp2+w*(Lp4+w*Lp6)); 
 	var t2 = z*(Lp1+w*(Lp3+w*(Lp5+w*Lp7))); 
-	i = bitor(i,j);
+	i = bitor(GET_IEEE_HIGH(xdb)-0x6147a,0x6b851-GET_IEEE_HIGH(xdb));
 	R = t2+t1;
 	if(i > 0) {
 	    var hfsq = HALF*f*f;
-	    if(k == 0) 
-	    	return f-(hfsq-s*(hfsq+R)); 
-	    else
-		    return k*LN2HI-((hfsq-(s*(hfsq+R)+k*LN2LO))-f);
+	    return if(k == 0) f-(hfsq-s*(hfsq+R)) else k*LN2HI-((hfsq-(s*(hfsq+R)+k*LN2LO))-f);
 	} 
-	else {
-	    if(k==0) 
-	    	return f-s*(f-R); 
-	    else
-		    return k*LN2HI-((s*(f-R)-k*LN2LO)-f);
-	}
+	else
+	    return if(k==0) f-s*(f-R) else k*LN2HI-((s*(f-R)-k*LN2LO)-f);
 }
 
 
 
-alias ln2_hi =   6.9313812256e-01f;	/* 0x3f317180 */
-alias ln2_lo =   9.0580006145e-06f;	/* 0x3717f7d1 */
-alias two25 =    3.355443200e+07f;	/* 0x4c000000 */
+alias ln2_hi =   6.9313812256e-01f;	// 0x3f317180 
+alias ln2_lo =   9.0580006145e-06f;	// 0x3717f7d1 
+alias two25 =    3.355443200e+07f;	// 0x4c000000 
 
-alias Lg1 =      0xaaaaaa.0p-24f;	/* 0.66666662693 */
-alias Lg2 =      0xccce13.0p-25f;	/* 0.40000972152 */
-alias Lg3 =      0x91e9ee.0p-25f;	/* 0.28498786688 */
-alias Lg4 =      0xf89e26.0p-26f;	/* 0.24279078841 */
+alias Lg1 =      0xaaaaaa.0p-24f;	// 0.66666662693 
+alias Lg2 =      0xccce13.0p-25f;	// 0.40000972152 
+alias Lg3 =      0x91e9ee.0p-25f;	// 0.28498786688 
+alias Lg4 =      0xf89e26.0p-26f;	// 0.24279078841 
 
-
-overload log(x:Float) {
+overload log(x:Float) : Float {
 	alias ZERO = 0.f;
 	var ix = GET_FLOAT_SIGNED(x);
 	var k = 0;
-	if (ix < 0x00800000) {			/* x < 2**-126  */
+	if (ix < 0x00800000) {			// x < 2**-126  
 	    if (bitand(ix,0x7fffffff)==0)
-			return -two25/ZERO;		/* log(+-0)=-inf */
+			return -two25/ZERO;		// log(+-0)=-inf 
 	    if (ix<0) 
-	    	return (x-x)/ZERO;	/* log(-#) = NaN */
+	    	return (x-x)/ZERO;	// log(-#) = NaN 
 	    k -: 25; 
-	    ix = GET_FLOAT_SIGNED(x*two25); /* subnormal number, scale up x */
+	    ix = GET_FLOAT_SIGNED(x*two25); // subnormal number, scale up x 
 	}
 	if (ix >= 0x7f800000) return x+x;
 	k +: bitshr(ix,23)-127;
@@ -92,43 +72,20 @@ overload log(x:Float) {
 	var i = bitand(ix+bitshl(0x95f64,3),0x800000);
 	k +: bitshr(i,23);
 	var f = SET_FLOAT_WORD(bitor(ix,(bitxor(i,0x3f800000))))-1.f;
-	if(bitand(0x007fffff,(0x8000+ix))<0xc000) {	/* -2**-9 <= f < 2**-9 */
-	    if(f==ZERO) {
-			if(k==0) {
-			    return ZERO;
-			} 
-			else {
-			    return k*ln2_hi+k*ln2_lo;
-			}
-	    }
+	if(bitand(0x007fffff,(0x8000+ix))<0xc000) {	// -2**-9 <= f < 2**-9 
+	    if(f==ZERO) return if(k==0) ZERO else k*ln2_hi+k*ln2_lo;
 	    var R = f*f*(0.5f-0.33333333333333333f*f);
-	    if(k==0) 
-	    	return f-R; 
-	    else {
-	    	return k*ln2_hi-((R-k*ln2_lo)-f);
-	    }
+	    return if(k==0) f-R else k*ln2_hi-((R-k*ln2_lo)-f);
 	}
  	var s = f/(2.f+f);
 	var z = s*s;
-	i = ix-bitshl(0x6147a,3);
 	var w = z*z;
-	var j = bitshl(0x6b851,3)-ix;
-	var t1= w*(Lg2+w*Lg4);
-	var t2= z*(Lg1+w*Lg3);
-	i = bitor(i,j);
-	var R = t2+t1;
-	if(i>0) {
+	var R = z*(Lg1+w*Lg3) + w*(Lg2+w*Lg4);
+	if(bitor(ix-bitshl(0x6147a,3),bitshl(0x6b851,3)-ix) > 0) {
 	    var hfsq = 0.5f*f*f;
-	    if(k==0) 
-	    	return f-(hfsq-s*(hfsq+R)); 
-	    else
-		    return k*ln2_hi-((hfsq-(s*(hfsq+R)+k*ln2_lo))-f);
+	    return if(k==0) f-(hfsq-s*(hfsq+R)) else k*ln2_hi-((hfsq-(s*(hfsq+R)+k*ln2_lo))-f);
 	}
-	else {
-	    if(k==0) 
-	    	return f-s*(f-R); 
-	    else
-		    return k*ln2_hi-((s*(f-R)-k*ln2_lo)-f);
-	}
+	else
+	    return if(k==0) f-s*(f-R) else k*ln2_hi-((s*(f-R)-k*ln2_lo)-f);
 }
 

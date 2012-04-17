@@ -615,11 +615,11 @@ void initializeRecordFields(RecordTypePtr t) {
     else
         assert(t->params.size() == r->params.size());
     EnvPtr env = new Env(r->env);
-    for (unsigned i = 0; i < r->params.size(); ++i)
+    for (size_t i = 0; i < r->params.size(); ++i)
         addLocal(env, r->params[i], t->params[i].ptr());
     if (r->varParam.ptr()) {
         MultiStaticPtr rest = new MultiStatic();
-        for (unsigned i = r->params.size(); i < t->params.size(); ++i)
+        for (size_t i = r->params.size(); i < t->params.size(); ++i)
             rest->add(t->params[i]);
         addLocal(env, r->varParam, rest.ptr());
     }
@@ -723,11 +723,11 @@ static void initializeVariantType(VariantTypePtr t) {
         const vector<IdentifierPtr> &params = t->variant->params;
         IdentifierPtr varParam = t->variant->varParam;
         assert(params.size() <= t->params.size());
-        for (unsigned j = 0; j < params.size(); ++j)
+        for (size_t j = 0; j < params.size(); ++j)
             addLocal(variantEnv, params[j], t->params[j]);
         if (varParam.ptr()) {
             MultiStaticPtr ms = new MultiStatic();
-            for (unsigned j = params.size(); j < t->params.size(); ++j)
+            for (size_t j = params.size(); j < t->params.size(); ++j)
                 ms->add(t->params[j]);
             addLocal(variantEnv, varParam, ms.ptr());
         }
@@ -744,13 +744,13 @@ static void initializeVariantType(VariantTypePtr t) {
     evaluateMultiType(defaultInstances, variantEnv, t->memberTypes);
 
     const vector<InstancePtr> &instances = t->variant->instances;
-    for (unsigned i = 0; i < instances.size(); ++i) {
+    for (size_t i = 0; i < instances.size(); ++i) {
         InstancePtr x = instances[i];
         vector<PatternCellPtr> cells;
         vector<MultiPatternCellPtr> multiCells;
         const vector<PatternVar> &pvars = x->patternVars;
         EnvPtr patternEnv = new Env(x->env);
-        for (unsigned j = 0; j < pvars.size(); ++j) {
+        for (size_t j = 0; j < pvars.size(); ++j) {
             if (pvars[j].isMulti) {
                 MultiPatternCellPtr multiCell = new MultiPatternCell(NULL);
                 multiCells.push_back(multiCell);
@@ -1010,6 +1010,16 @@ llvm::Type *llvmType(TypePtr t) {
     return t->llType;
 }
 
+llvm::StructType *llvmStaticType() {
+    static llvm::StructType *theType = NULL;
+    if (theType == NULL) {
+        llvm::SmallVector<llvm::Type *, 2> llTypes;
+        llTypes.push_back(llvmIntType(8));
+        theType = llvm::StructType::get(llvm::getGlobalContext(), llTypes);
+    }
+    return theType;
+}
+
 llvm::DIType llvmTypeDebugInfo(TypePtr t) {
     if (t->llType == NULL)
         declareLLVMType(t);
@@ -1134,18 +1144,33 @@ static void declareLLVMType(TypePtr t) {
         break;
     }
     case CCODE_POINTER_TYPE : {
-        llvm::FunctionType *llOpaqueFuncType =
-            llvm::FunctionType::get(llvmVoidType(), vector<llvm::Type*>(), false);
-        t->llType = llvm::PointerType::getUnqual(llOpaqueFuncType);
+        CCodePointerType *x = (CCodePointerType *)t.ptr();
+
+        if (x->callingConv == CC_LLVM) {
+            // LLVM intrinsic function pointers can't be bitcast. Generate the LLVM type
+            // directly.
+            llvm::Type *returnType = llvmType(x->returnType);
+            vector<llvm::Type*> argTypes;
+            for (size_t i = 0; i < x->argTypes.size(); ++i)
+                argTypes.push_back(llvmType(x->argTypes[i]));
+            llvm::FunctionType *funcType =
+                llvm::FunctionType::get(returnType, argTypes, x->hasVarArgs);
+            t->llType = llvm::PointerType::getUnqual(funcType);
+        } else {
+            // Deriving the C ABI type may require type recursion, so cast to void()*
+            // for now. We can bitcast to the proper type when we know it.
+            llvm::FunctionType *llOpaqueFuncType =
+                llvm::FunctionType::get(llvmVoidType(), vector<llvm::Type*>(), false);
+            t->llType = llvm::PointerType::getUnqual(llOpaqueFuncType);
+        }
 
         if (llvmDIBuilder != NULL) {
-            CCodePointerType *x = (CCodePointerType *)t.ptr();
             llvm::SmallVector<llvm::Value*,16> debugParamTypes;
             debugParamTypes.push_back(x->returnType == NULL
                 ? llvmVoidTypeDebugInfo()
                 : llvmTypeDebugInfo(x->returnType));
 
-            for (unsigned i = 0; i < x->argTypes.size(); ++i) {
+            for (size_t i = 0; i < x->argTypes.size(); ++i) {
                 debugParamTypes.push_back(llvmTypeDebugInfo(x->argTypes[i]));
             }
 
@@ -1227,9 +1252,7 @@ static void declareLLVMType(TypePtr t) {
         break;
     }
     case STATIC_TYPE : {
-        vector<llvm::Type *> llTypes;
-        llTypes.push_back(llvmIntType(8));
-        t->llType = llvm::StructType::get(llvm::getGlobalContext(), llTypes);
+        t->llType = llvmStaticType();
         if (llvmDIBuilder != NULL)
             t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createBasicType(
                 typeName(t),
@@ -1460,8 +1483,8 @@ static void defineLLVMType(TypePtr t) {
                 size_t debugSize = debugTypeSize(memberLLT);
                 debugOffset = alignedUpTo(debugOffset, debugAlign);
 
-                LocationPtr fieldLocation = fieldNames[i]->location;
-                if (fieldLocation == NULL)
+                Location fieldLocation = fieldNames[i]->location;
+                if (!fieldLocation.ok())
                     fieldLocation = x->record->location;
                 int fieldLine, fieldColumn;
                 llvm::DIFile fieldFile = getDebugLineCol(fieldLocation, fieldLine, fieldColumn);

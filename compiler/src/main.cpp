@@ -951,10 +951,11 @@ int main2(int argc, char **argv, char const* const* envp) {
     }
 
     if (showTiming) {
-        llvm::errs() << "load time = " << loadTimer.elapsedMillis() << " ms\n";
-        llvm::errs() << "compile time = " << compileTimer.elapsedMillis() << " ms\n";
-        llvm::errs() << "optimization time = " << optTimer.elapsedMillis() << " ms\n";
-        llvm::errs() << "codegen time = " << outputTimer.elapsedMillis() << " ms\n";
+        llvm::errs() << "load time = " << (size_t)loadTimer.elapsedMillis() << " ms\n";
+        llvm::errs() << "compile time = " << (size_t)compileTimer.elapsedMillis() << " ms\n";
+        llvm::errs() << "optimization time = " << (size_t)optTimer.elapsedMillis() << " ms\n";
+        llvm::errs() << "codegen time = " << (size_t)outputTimer.elapsedMillis() << " ms\n";
+        llvm::errs().flush();
     }
 
     _exit(0);

@@ -64,7 +64,7 @@ alias overload assert(..whatever) {}
 
 [file, line, column, cond]
 private assertStringLiteral(#file, #line, #column, #cond, ..etc)
-    = strl(#file, "(", #line, ",", #column, "): assertion ", #cond, "failed", ..etc);
+    = strl(#file, "(", #line, ",", #column, "): assertion ", #cond, " failed", ..etc);
 
 [when AllAssertionsEnabled?()]
 alias overload assert(cond:Bool) {

@@ -55,9 +55,9 @@ void setCompileContext(const vector<CompileContextEntry> &x) {
 // source location of the current item being processed
 //
 
-static vector<LocationPtr> errorLocations;
+static vector<Location> errorLocations;
 
-void pushLocation(LocationPtr location) {
+void pushLocation(Location const& location) {
     errorLocations.push_back(location);
 }
 
@@ -65,15 +65,15 @@ void popLocation() {
     errorLocations.pop_back();
 }
 
-LocationPtr topLocation() {
-    vector<LocationPtr>::iterator i, begin;
+Location topLocation() {
+    vector<Location>::iterator i, begin;
     i = errorLocations.end();
     begin = errorLocations.begin();
     while (i != begin) {
         --i;
-        if (i->ptr()) return *i;
+        if (i->ok()) return *i;
     }
-    return NULL;
+    return Location();
 }
 
 
@@ -111,55 +111,47 @@ DebugPrinter::~DebugPrinter()
 // report error
 //
 
-static void computeLineCol(LocationPtr location) {
-    const char *p = location->source->data();
-    const char *end = p + location->offset;
-    location->line = location->column = location->tabColumn = 0;
+static void computeLineCol(Location const &location, int &line, int &column, int &tabColumn) {
+    const char *p = location.source->data();
+    const char *end = p + location.offset;
+    line = column = tabColumn = 0;
     for (; p != end; ++p) {
-        ++location->column;
-        ++location->tabColumn;
+        ++column;
+        ++tabColumn;
         if (*p == '\n') {
-            ++location->line;
-            location->column = 0;
-            location->tabColumn = 0;
+            ++line;
+            column = 0;
+            tabColumn = 0;
         }
         else if (*p == '\t') {
-            location->tabColumn += 7;
+            tabColumn += 7;
         }
     }
 }
 
-llvm::DIFile getDebugLineCol(LocationPtr location, int &line, int &column) {
-    if (location == NULL) {
+llvm::DIFile getDebugLineCol(Location const &location, int &line, int &column) {
+    if (!location.ok()) {
         line = 0;
         column = 0;
         return llvm::DIFile(NULL);
     }
 
-    if (!location->lineColumnInitialized) {
-        location->lineColumnInitialized = true;
-        computeLineCol(location);
-    }
-    line = location->line + 1;
-    column = location->column + 1;
-    return location->source->getDebugInfo();
+    int tabColumn;
+    computeLineCol(location, line, column, tabColumn);
+    line += 1;
+    column += 1;
+    return location.source->getDebugInfo();
 }
 
-void getLineCol(LocationPtr location, int &line, int &column, int &tabColumn) {
-    if (location == NULL) {
+void getLineCol(Location const &location, int &line, int &column, int &tabColumn) {
+    if (!location.ok()) {
         line = 0;
         column = 0;
         tabColumn = 0;
         return;
     }
 
-    if (!location->lineColumnInitialized) {
-        location->lineColumnInitialized = true;
-        computeLineCol(location);
-    }
-    line = location->line;
-    column = location->column;
-    tabColumn = location->tabColumn;
+    computeLineCol(location, line, column, tabColumn);
 }
 
 static void splitLines(SourcePtr source, vector<string> &lines) {
@@ -178,11 +170,11 @@ static bool endsWithNewline(llvm::StringRef s) {
     return s[s.size()-1] == '\n';
 }
 
-static void displayLocation(LocationPtr location, int &line, int &column) {
+static void displayLocation(Location const &location, int &line, int &column) {
     int tabColumn;
     getLineCol(location, line, column, tabColumn);
     vector<string> lines;
-    splitLines(location->source, lines);
+    splitLines(location.source, lines);
     llvm::errs() << "###############################\n";
     for (int i = line-2; i <= line+2; ++i) {
         if ((i < 0) || (i >= (int)lines.size()))
@@ -211,7 +203,7 @@ extern "C" void displayCompileContext() {
         ObjectPtr obj = contextStack[i-1].callable;
         const vector<ObjectPtr> &params = contextStack[i-1].params;
 
-        if (i < contextStack.size() && contextStack[i-1].location != NULL) {
+        if (i < contextStack.size() && contextStack[i-1].location.ok()) {
             errs << "  ";
             printFileLineCol(errs, contextStack[i-1].location);
             errs << ":\n";
@@ -257,11 +249,11 @@ void setAbortOnError(bool flag) {
 }
 
 void displayError(llvm::Twine const &msg, llvm::StringRef kind) {
-    LocationPtr location = topLocation();
-    if (location.ptr()) {
+    Location location = topLocation();
+    if (location.ok()) {
         int line, column;
         displayLocation(location, line, column);
-        llvm::errs() << location->source->fileName
+        llvm::errs() << location.source->fileName
             << '(' << line+1 << ',' << column << "): " << kind << ": " << msg << '\n';
         llvm::errs().flush();
         displayCompileContext();
@@ -324,22 +316,22 @@ void arityError2(int minExpected, int received) {
     error(sout.str());
 }
 
-void ensureArity(MultiStaticPtr args, unsigned int size) {
+void ensureArity(MultiStaticPtr args, size_t size) {
     if (args->size() != size)
         arityError(size, args->size());
 }
 
-void ensureArity(MultiEValuePtr args, unsigned int size) {
+void ensureArity(MultiEValuePtr args, size_t size) {
     if (args->size() != size)
         arityError(size, args->size());
 }
 
-void ensureArity(MultiPValuePtr args, unsigned int size) {
+void ensureArity(MultiPValuePtr args, size_t size) {
     if (args->size() != size)
         arityError(size, args->size());
 }
 
-void ensureArity(MultiCValuePtr args, unsigned int size) {
+void ensureArity(MultiCValuePtr args, size_t size) {
     if (args->size() != size)
         arityError(size, args->size());
 }
@@ -450,10 +442,10 @@ void matchFailureError(MatchFailureError const &err)
             continue;
         }
         sout << "\n    ";
-        LocationPtr location = overload->location;
+        Location location = overload->location;
         int line, column, tabColumn;
         getLineCol(location, line, column, tabColumn);
-        sout << location->source->fileName.c_str()
+        sout << location.source->fileName.c_str()
             << "(" << line+1 << "," << column << ")"
             << "\n        ";
         printMatchError(sout, i->second);
@@ -463,11 +455,11 @@ void matchFailureError(MatchFailureError const &err)
     error(sout.str());
 }
 
-void printFileLineCol(llvm::raw_ostream &out, LocationPtr location)
+void printFileLineCol(llvm::raw_ostream &out, Location const &location)
 {
     int line, column, tabColumn;
     getLineCol(location, line, column, tabColumn);
-    out << location->source->fileName << "(" << line+1 << "," << column << ")";
+    out << location.source->fileName << "(" << line+1 << "," << column << ")";
 }
 
 }

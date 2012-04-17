@@ -34,8 +34,6 @@ void addGlobal(ModulePtr module,
 // lookupModuleHolder, safeLookupModuleHolder
 //
 
-typedef set<ObjectPtr> ObjectSet;
-
 static void suggestModules(llvm::raw_ostream &err, set<string> const &moduleNames, IdentifierPtr name) {
     for (set<string>::const_iterator i = moduleNames.begin(), end = moduleNames.end();
          i != end;
@@ -45,12 +43,12 @@ static void suggestModules(llvm::raw_ostream &err, set<string> const &moduleName
     }
 }
 
-static void ambiguousImportError(IdentifierPtr name, ObjectSet const &candidates) {
+static void ambiguousImportError(IdentifierPtr name, ImportSet const &candidates) {
     string buf;
     llvm::raw_string_ostream err(buf);
     err << "ambiguous imported symbol: " << name->str;
     set<string> moduleNames;
-    for (ObjectSet::const_iterator i = candidates.begin(), end = candidates.end();
+    for (const ObjectPtr *i = candidates.begin(), *end = candidates.end();
          i != end;
          ++i)
     {
@@ -94,7 +92,7 @@ ObjectPtr lookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name) {
         result2 = lookupPublic(mh->module, name);
     if (result1.ptr()) {
         if (result2.ptr() && (result1 != result2)) {
-            ObjectSet candidates;
+            ImportSet candidates;
             candidates.insert(result1);
             candidates.insert(result2);
             ambiguousImportError(name, candidates);
@@ -120,12 +118,12 @@ ObjectPtr safeLookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name) {
 //
 
 
-static const llvm::StringMap<ObjectSet> &getPublicSymbols(ModulePtr module);
-static const llvm::StringMap<ObjectSet> &getAllSymbols(ModulePtr module);
+static const llvm::StringMap<ImportSet> &getPublicSymbols(ModulePtr module);
+static const llvm::StringMap<ImportSet> &getAllSymbols(ModulePtr module);
 
 static void addImportedSymbols(ModulePtr module, bool publicOnly);
 
-static const llvm::StringMap<ObjectSet> &getPublicSymbols(ModulePtr module)
+static const llvm::StringMap<ImportSet> &getPublicSymbols(ModulePtr module)
 {
     if (module->publicSymbolsLoaded)
         return module->publicSymbols;
@@ -137,7 +135,7 @@ static const llvm::StringMap<ObjectSet> &getPublicSymbols(ModulePtr module)
     return module->publicSymbols;
 }
 
-static const llvm::StringMap<ObjectSet> &getAllSymbols(ModulePtr module)
+static const llvm::StringMap<ImportSet> &getAllSymbols(ModulePtr module)
 {
     if (module->allSymbolsLoaded)
         return module->allSymbols;
@@ -147,28 +145,6 @@ static const llvm::StringMap<ObjectSet> &getAllSymbols(ModulePtr module)
 
     addImportedSymbols(module, false);
 
-    set<string> definedNames;
-    llvm::StringMap<ObjectSet>::const_iterator
-        i = module->allSymbols.begin(),
-        end = module->allSymbols.end();
-    for (; i != end; ++i) {
-        if (!(i->second.empty()))
-            definedNames.insert(i->getKey());
-    }
-
-    ModulePtr prelude = loadedModule("prelude");
-    const llvm::StringMap<ObjectSet> &preludeSymbols =
-        getPublicSymbols(prelude);
-    i = preludeSymbols.begin();
-    end = preludeSymbols.end();
-    for (; i != end; ++i) {
-        llvm::StringRef name = i->getKey();
-        if (!definedNames.count(name)) {
-            const ObjectSet &objs = i->second;
-            module->allSymbols[name].insert(objs.begin(), objs.end());
-        }
-    }
-
     module->allSymbolsLoading -= 1;
     return module->allSymbols;
 }
@@ -176,7 +152,7 @@ static const llvm::StringMap<ObjectSet> &getAllSymbols(ModulePtr module)
 static void insertImported(IdentifierPtr name,
                            ObjectPtr value,
                            const llvm::StringMap<ObjectPtr> &globals,
-                           llvm::StringMap<ObjectSet> &result,
+                           llvm::StringMap<ImportSet> &result,
                            set<string> &specificImported,
                            bool isSpecificImport)
 {
@@ -199,7 +175,7 @@ static void insertImported(IdentifierPtr name,
 static void addImportedSymbols(ModulePtr module,
                                bool publicOnly)
 {
-    llvm::StringMap<ObjectSet> &result =
+    llvm::StringMap<ImportSet> &result =
         publicOnly ? module->publicSymbols : module->allSymbols;
     set<string> specificImported;
 
@@ -233,15 +209,13 @@ static void addImportedSymbols(ModulePtr module,
         }
         else if (x->importKind == IMPORT_STAR) {
             ImportStar *y = (ImportStar *)x;
-            const llvm::StringMap<ObjectSet> &symbols2 =
+            const llvm::StringMap<ImportSet> &symbols2 =
                 getPublicSymbols(y->module);
-            llvm::StringMap<ObjectSet>::const_iterator
+            llvm::StringMap<ImportSet>::const_iterator
                 mmi = symbols2.begin(),
                 mmend = symbols2.end();
             for (; mmi != mmend; ++mmi) {
-                ObjectSet::const_iterator
-                    oi = mmi->second.begin(),
-                    oend = mmi->second.end();
+                const ObjectPtr *oi = mmi->second.begin(), *oend = mmi->second.end();
                 for (; oi != oend; ++oi) {
                     IdentifierPtr fakeIdent = Identifier::get(mmi->getKey(), y->location);
                     insertImported(fakeIdent, *oi, globals, result, specificImported, false);
@@ -250,25 +224,23 @@ static void addImportedSymbols(ModulePtr module,
         }
         else if (x->importKind == IMPORT_MEMBERS) {
             ImportMembers *y = (ImportMembers *)x;
-            const llvm::StringMap<ObjectSet> &publicSymbols =
+            const llvm::StringMap<ImportSet> &publicSymbols =
                 getPublicSymbols(y->module);
-            const llvm::StringMap<ObjectSet> &allSymbols =
+            const llvm::StringMap<ImportSet> &allSymbols =
                 getAllSymbols(y->module);
             for (unsigned i = 0; i < y->members.size(); ++i) {
                 const ImportedMember &z = y->members[i];
-                const llvm::StringMap<ObjectSet> &memberSymbols =
+                const llvm::StringMap<ImportSet> &memberSymbols =
                     z.visibility == PRIVATE ? allSymbols : publicSymbols;
-                llvm::StringMap<ObjectSet>::const_iterator si =
+                llvm::StringMap<ImportSet>::const_iterator si =
                     memberSymbols.find(z.name->str);
                 if ((si == memberSymbols.end()) || si->second.empty())
                     error(z.name, "imported name not found");
-                const ObjectSet &objs = si->second;
+                const ImportSet &objs = si->second;
                 IdentifierPtr name = z.name;
                 if (z.alias.ptr())
                     name = z.alias;
-                ObjectSet::const_iterator
-                    oi = objs.begin(),
-                    oend = objs.end();
+                const ObjectPtr *oi = objs.begin(), *oend = objs.end();
                 for (; oi != oend; ++oi)
                     insertImported(name, *oi, globals, result, specificImported, true);
             }
@@ -286,15 +258,22 @@ static void addImportedSymbols(ModulePtr module,
 //
 
 ObjectPtr lookupPrivate(ModulePtr module, IdentifierPtr name) {
-    if (!module->allSymbolsLoaded) {
-        getAllSymbols(module);
-        module->allSymbolsLoaded = true;
-    }
-    llvm::StringMap<ObjectSet>::const_iterator i =
+retry:
+    llvm::StringMap<ImportSet>::const_iterator i =
         module->allSymbols.find(name->str);
-    if ((i == module->allSymbols.end()) || (i->second.empty()))
-        return NULL;
-    const ObjectSet &objs = i->second;
+    if ((i == module->allSymbols.end()) || (i->second.empty())) {
+        if (!module->allSymbolsLoaded) {
+            getAllSymbols(module);
+            module->allSymbolsLoaded = true;
+            goto retry;
+        }
+        ModulePtr prelude = preludeModule();
+        if (module == prelude)
+            return NULL;
+        else
+            return lookupPublic(prelude, name);
+    }
+    const ImportSet &objs = i->second;
     if (objs.size() > 1) {
         ambiguousImportError(name, objs);
     }
@@ -308,15 +287,18 @@ ObjectPtr lookupPrivate(ModulePtr module, IdentifierPtr name) {
 //
 
 ObjectPtr lookupPublic(ModulePtr module, IdentifierPtr name) {
-    if (!module->publicSymbolsLoaded) {
-        getPublicSymbols(module);
-        module->publicSymbolsLoaded = true;
-    }
-    llvm::StringMap<ObjectSet>::const_iterator i =
+retry:
+    llvm::StringMap<ImportSet>::const_iterator i =
         module->publicSymbols.find(name->str);
-    if ((i == module->publicSymbols.end()) || (i->second.empty()))
+    if ((i == module->publicSymbols.end()) || (i->second.empty())) {
+        if (!module->publicSymbolsLoaded) {
+            getPublicSymbols(module);
+            module->publicSymbolsLoaded = true;
+            goto retry;
+        }
         return NULL;
-    const ObjectSet &objs = i->second;
+    }
+    const ImportSet &objs = i->second;
     if (objs.size() > 1) {
         ambiguousImportError(name, objs);
     }
@@ -509,12 +491,11 @@ ExprPtr lookupCallByNameExprHead(EnvPtr env)
 // safeLookupCallByNameLocation
 //
 
-LocationPtr safeLookupCallByNameLocation(EnvPtr env)
+Location safeLookupCallByNameLocation(EnvPtr env)
 {
     ExprPtr head = lookupCallByNameExprHead(env);
     if (head.ptr() == 0) {
         error("__FILE__, __LINE__, and __COLUMN__ are only allowed in an alias function");
-        return NULL;
     }
     return head->location;
 }

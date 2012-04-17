@@ -2,7 +2,7 @@
 
 namespace clay {
 
-static void initLexer(SourcePtr s, int offset, int length);
+static void initLexer(SourcePtr s, size_t offset, size_t length);
 static void cleanupLexer();
 static bool nextToken(Token &x);
 
@@ -10,7 +10,8 @@ void tokenize(SourcePtr source, vector<Token> &tokens) {
     tokenize(source, 0, source->size(), tokens);
 }
 static double tCum = 0;
-void tokenize(SourcePtr source, int offset, int length,
+
+void tokenize(SourcePtr source, size_t offset, size_t length,
               vector<Token> &tokens) {
     HiResTimer tTimer;
     tTimer.start();
@@ -35,13 +36,13 @@ void tokenize(SourcePtr source, int offset, int length,
 }
 
 static Source *lexerSource;
-static int beginOffset;
+static size_t beginOffset;
 static const char *begin;
 static const char *ptr;
 static const char *end;
 static const char *maxPtr;
 
-static void initLexer(SourcePtr source, int offset, int length) {
+static void initLexer(SourcePtr source, size_t offset, size_t length) {
     lexerSource = source.ptr();
     begin = source->data() + offset;
     end = begin + length;
@@ -55,9 +56,9 @@ static void cleanupLexer() {
     begin = ptr = end = maxPtr = NULL;
 }
 
-static LocationPtr locationFor(const char *ptr) {
+static Location locationFor(const char *ptr) {
     ptrdiff_t offset = (ptr - begin) + beginOffset;
-    return new Location(lexerSource, offset);
+    return Location(lexerSource, offset);
 }
 
 static const char *save() { return ptr; }
@@ -751,7 +752,7 @@ static bool nextToken(Token &x) {
     return false;
 success :
     assert(x.tokenKind != T_NONE);
-    if (x.location == NULL)
+    if (!x.location.ok())
         x.location = locationFor(p);
     return true;
 }

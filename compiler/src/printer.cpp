@@ -315,7 +315,7 @@ static void printExpr(llvm::raw_ostream &out, const Expr *x) {
 static void printStatement(llvm::raw_ostream &out, const Statement *x) {
     switch (x->stmtKind) {
     case WITH : {
-        const WithStatement *y = (const WithStatement *)y;
+        const WithStatement *y = (const WithStatement *)x;
         out << "WithStatement(" << y->lhs << ", " << y->rhs << ")";
         break;
     }
@@ -466,11 +466,6 @@ static void print(llvm::raw_ostream &out, const Object *x) {
     case SOURCE : {
         const Source *y = (const Source *)x;
         out << "Source(" << y->fileName << ")";
-        break;
-    }
-    case LOCATION : {
-        const Location *y = (const Location *)x;
-        out << "Location(" << y->source << ", " << y->offset << ")";
         break;
     }
     case IDENTIFIER : {

@@ -71,14 +71,14 @@ inline overload reduceToScalar(forward i) = ;
 
 [A, ..B when Sequence?(A) and allValues?(Sequence?,..B)
         and equalValues?(SequenceElementType(A),
-            ..mapValues(SequenceElementType,..B))]
+            ..mapValues(SequenceElementType,..B)) and not StringLiteralType?(A,..B)]
 overload (++)(forward a:A, forward ..b:B) {
     var result = Vector(a);
     push(result, ..b);
     return move(result);
 }
 
-[A, ..T when Sequence?(A) and equalValues?(SequenceElementType(A),..T)]
+[A, ..T when Sequence?(A) and equalValues?(SequenceElementType(A),..T) and not StringLiteralType?(A, ..T)]
 overload (++)(forward a:A, forward ..x:T) {
     var result = Vector(a);
     push(result, ..x);

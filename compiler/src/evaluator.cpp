@@ -71,31 +71,31 @@ enum TerminationKind {
 
 struct Termination : public Object {
     TerminationKind terminationKind;
-    LocationPtr location;
-    Termination(TerminationKind terminationKind, LocationPtr location)
+    Location location;
+    Termination(TerminationKind terminationKind, Location const & location)
         : Object(DONT_CARE), terminationKind(terminationKind),
           location(location) {}
 };
 typedef Pointer<Termination> TerminationPtr;
 
 struct TerminateReturn : Termination {
-    TerminateReturn(LocationPtr location)
+    TerminateReturn(Location const & location)
         : Termination(TERMINATE_RETURN, location) {}
 };
 
 struct TerminateBreak : Termination {
-    TerminateBreak(LocationPtr location)
+    TerminateBreak(Location const & location)
         : Termination(TERMINATE_BREAK, location) {}
 };
 
 struct TerminateContinue : Termination {
-    TerminateContinue(LocationPtr location)
+    TerminateContinue(Location const & location)
         : Termination(TERMINATE_CONTINUE, location) {}
 };
 
 struct TerminateGoto : Termination {
     IdentifierPtr targetLabel;
-    TerminateGoto(IdentifierPtr targetLabel, LocationPtr location)
+    TerminateGoto(IdentifierPtr targetLabel, Location const & location)
         : Termination(TERMINATE_GOTO, location),
           targetLabel(targetLabel) {}
 };
@@ -978,7 +978,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         break;
 
     case LINE_EXPR : {
-        LocationPtr location = safeLookupCallByNameLocation(env);
+        Location location = safeLookupCallByNameLocation(env);
         int line, column, tabColumn;
         getLineCol(location, line, column, tabColumn);
 
@@ -987,7 +987,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         break;
     }
     case COLUMN_EXPR : {
-        LocationPtr location = safeLookupCallByNameLocation(env);
+        Location location = safeLookupCallByNameLocation(env);
         int line, column, tabColumn;
         getLineCol(location, line, column, tabColumn);
 
@@ -2491,8 +2491,8 @@ size_t valueHolderToSizeT(ValueHolderPtr vh)
 {
     switch (typeSize(cSizeTType)) {
     case 4 : return vh->as<size32_t>();
-    case 8 : return vh->as<size64_t>();
-    default : assert(false);
+    case 8 : return (size_t)vh->as<size64_t>();
+    default : llvm_unreachable("unexpected pointer size");
     }
 }
 
@@ -3552,17 +3552,19 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
     case PRIM_SymbolP : {
         ensureArity(args, 1);
         ObjectPtr obj = valueToStatic(args->values[0]);
-        bool isSymbol; 
-        switch (obj->objKind) {
-        case TYPE :
-        case RECORD :
-        case VARIANT :
-        case PROCEDURE :
-        case GLOBAL_ALIAS:
-            isSymbol = obj.ptr();
-            break;
-        default :
-            isSymbol = false;
+        bool isSymbol = false; 
+        if (obj.ptr() != NULL) {
+            switch (obj->objKind) {
+            case TYPE :
+            case RECORD :
+            case VARIANT :
+            case PROCEDURE :
+            case GLOBAL_ALIAS:
+                isSymbol = true;
+                break;
+            default :
+                break;
+            }
         }
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];

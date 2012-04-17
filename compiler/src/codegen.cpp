@@ -984,7 +984,7 @@ void codegenExpr(ExprPtr expr,
         break;
 
     case LINE_EXPR : {
-        LocationPtr location = safeLookupCallByNameLocation(env);
+        Location location = safeLookupCallByNameLocation(env);
         int line, column, tabColumn;
         getLineCol(location, line, column, tabColumn);
 
@@ -993,7 +993,7 @@ void codegenExpr(ExprPtr expr,
         break;
     }
     case COLUMN_EXPR : {
-        LocationPtr location = safeLookupCallByNameLocation(env);
+        Location location = safeLookupCallByNameLocation(env);
         int line, column, tabColumn;
         getLineCol(location, line, column, tabColumn);
 
@@ -1649,7 +1649,7 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
         addLocal(env, arg->name, cvalue.ptr());
         if (llvmDIBuilder != NULL) {
             int line, column;
-            LocationPtr argLocation = arg->location;
+            Location argLocation = arg->location;
             llvm::DIFile file = getDebugLineCol(argLocation, line, column);
             llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
                 llvm::dwarf::DW_TAG_arg_variable, // tag
@@ -2158,22 +2158,23 @@ void codegenDispatch(ObjectPtr obj,
     CValuePtr cvDispatch = args->values[index];
     PVData const &pvDispatch = pvArgs->values[index];
 
-    int memberCount = dispatchTagCount(pvDispatch.type);
-    if (memberCount <= 0)
+    int iMemberCount = dispatchTagCount(pvDispatch.type);
+    if (iMemberCount <= 0)
         argumentError(index, "DispatchMemberCount for type must be positive");
+    size_t memberCount = (size_t)iMemberCount;
 
     llvm::Value *llTag = codegenDispatchTag(cvDispatch, ctx);
 
     vector<llvm::BasicBlock *> callBlocks;
     vector<llvm::BasicBlock *> elseBlocks;
 
-    for (unsigned i = 0; i < memberCount; ++i) {
+    for (size_t i = 0; i < memberCount; ++i) {
         callBlocks.push_back(newBasicBlock("dispatchCase", ctx));
         elseBlocks.push_back(newBasicBlock("dispatchNext", ctx));
     }
     llvm::BasicBlock *finalBlock = newBasicBlock("finalBlock", ctx);
 
-    for (unsigned i = 0; i < memberCount; ++i) {
+    for (size_t i = 0; i < memberCount; ++i) {
         llvm::Value *tagCase = llvm::ConstantInt::get(llvmIntType(32), i);
         llvm::Value *cond = ctx->builder->CreateICmpEQ(llTag, tagCase);
         ctx->builder->CreateCondBr(cond, callBlocks[i], elseBlocks[i]);
@@ -2413,8 +2414,9 @@ void codegenCallCCode(CCodePointerTypePtr t,
             target->loadVarArgument(t->callingConv, cv, llArgs, llAttributes, ctx);
         }
     }
-    llvm::Value *llCastCallable =
-        ctx->builder->CreateBitCast(llCallable, t->getCallType());
+    llvm::Value *llCastCallable = t->callingConv == CC_LLVM
+        ? llCallable
+        : ctx->builder->CreateBitCast(llCallable, t->getCallType());
     llvm::CallInst *callInst =
         ctx->builder->CreateCall(llCastCallable, llvm::makeArrayRef(llArgs));
     llvm::CallingConv::ID callingConv = target->callingConvention(t->callingConv);
@@ -2622,8 +2624,8 @@ static void interpolateExpr(SourcePtr source, unsigned offset, unsigned length,
 
 static bool interpolateLLVMCode(LLVMCodePtr llvmBody, string &out, EnvPtr env)
 {
-    SourcePtr source = llvmBody->location->source;
-    int startingOffset = llvmBody->location->offset;
+    SourcePtr source = llvmBody->location.source;
+    int startingOffset = llvmBody->location.offset;
 
     llvm::StringRef body = llvmBody->body;
     llvm::raw_string_ostream outstream(out);
@@ -2933,7 +2935,7 @@ void codegenCodeBody(InvokeEntry* entry)
         addLocal(env, entry->fixedArgNames[i], cvalue.ptr());
         if (llvmDIBuilder != NULL) {
             int line, column;
-            LocationPtr argLocation = entry->origCode->formalArgs[i]->location;
+            Location argLocation = entry->origCode->formalArgs[i]->location;
             llvm::DIFile file = getDebugLineCol(argLocation, line, column);
             llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, entry->getDebugInfo());
             llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
@@ -2964,7 +2966,7 @@ void codegenCodeBody(InvokeEntry* entry)
         MultiCValuePtr varArgs = new MultiCValue();
 
         int line, column;
-        LocationPtr argLocation = entry->origCode->formalVarArg->location;
+        Location argLocation = entry->origCode->formalVarArg->location;
         llvm::DIFile file = getDebugLineCol(argLocation, line, column);
 
         for (unsigned i = 0; i < entry->varArgTypes.size(); ++i, ++ai, ++argNo) {
@@ -3036,7 +3038,7 @@ void codegenCodeBody(InvokeEntry* entry)
 
             if (rspec->name != NULL && llvmDIBuilder != NULL) {
                 int line, column;
-                LocationPtr argLocation = rspec->location;
+                Location argLocation = rspec->location;
                 llvm::DIFile file = getDebugLineCol(argLocation, line, column);
                 llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, entry->getDebugInfo());
                 llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
@@ -4867,17 +4869,19 @@ void codegenPrimOp(PrimOpPtr x,
     case PRIM_SymbolP : {
         ensureArity(args, 1);
         ObjectPtr obj = valueToStatic(args->values[0]);
-        bool isSymbol; 
-        switch (obj->objKind) {
-        case TYPE :
-        case RECORD :
-        case VARIANT :
-        case PROCEDURE :
-        case GLOBAL_ALIAS:
-            isSymbol = obj.ptr();
-            break;
-        default :
-            isSymbol = false;
+        bool isSymbol = false; 
+        if (obj.ptr() != NULL) {
+            switch (obj->objKind) {
+            case TYPE :
+            case RECORD :
+            case VARIANT :
+            case PROCEDURE :
+            case GLOBAL_ALIAS:
+                isSymbol = true;
+                break;
+            default :
+                break;
+            }
         }
         ValueHolderPtr vh = boolToValueHolder(isSymbol);
         codegenStaticObject(vh.ptr(), ctx, out);
@@ -5524,7 +5528,7 @@ void codegenPrimOp(PrimOpPtr x,
         llvm::Value *v0 = pointerValue(args, 0, t, ctx);
         IntegerTypePtr offsetT;
         llvm::Value *v1 = integerValue(args, 1, offsetT, ctx);
-        if (!offsetT->isSigned && offsetT->bits < typeSize(cSizeTType)*8)
+        if (!offsetT->isSigned && (size_t)offsetT->bits < typeSize(cSizeTType)*8)
             v1 = ctx->builder->CreateZExt(v1, llvmType(cSizeTType));
         vector<llvm::Value *> indices;
         indices.push_back(v1);
@@ -5755,7 +5759,7 @@ void codegenPrimOp(PrimOpPtr x,
         llvm::Value *av = arrayValue(args, 0, at);
         IntegerTypePtr indexType;
         llvm::Value *iv = integerValue(args, 1, indexType, ctx);
-        if (!indexType->isSigned && indexType->bits < typeSize(cSizeTType)*8)
+        if (!indexType->isSigned && (size_t)indexType->bits < typeSize(cSizeTType)*8)
             iv = ctx->builder->CreateZExt(iv, llvmType(cSizeTType));
         vector<llvm::Value *> indices;
         indices.push_back(llvm::ConstantInt::get(llvmIntType(32), 0));

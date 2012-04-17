@@ -26,9 +26,9 @@ static void restore(int p) {
     position = p;
 }
 
-static LocationPtr currentLocation() {
+static Location currentLocation() {
     if (position == (int)tokens->size())
-        return NULL;
+        return Location();
     return (*tokens)[position].location;
 }
 
@@ -86,7 +86,7 @@ static bool ellipsis() {
 //
 
 static bool identifier(IdentifierPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     Token* t;
     if (!next(t) || (t->tokenKind != T_IDENTIFIER))
         return false;
@@ -130,7 +130,7 @@ static bool identifierListNoTail(vector<IdentifierPtr> &x) {
 }
 
 static bool dottedName(DottedNamePtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     DottedNamePtr y = new DottedName();
     IdentifierPtr ident;
     if (!identifier(ident)) return false;
@@ -154,7 +154,7 @@ static bool dottedName(DottedNamePtr &x) {
 //
 
 static bool boolLiteral(ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     int p = save();
     if (keyword("true"))
         x = new BoolLiteral(true);
@@ -178,7 +178,7 @@ static string cleanNumericSeparator(llvm::StringRef op, llvm::StringRef s) {
 }
 
 static bool intLiteral(llvm::StringRef op, ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     Token* t;
     if (!next(t) || (t->tokenKind != T_INT_LITERAL))
         return false;
@@ -196,7 +196,7 @@ static bool intLiteral(llvm::StringRef op, ExprPtr &x) {
 }
 
 static bool floatLiteral(llvm::StringRef op, ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     Token* t;
     if (!next(t) || (t->tokenKind != T_FLOAT_LITERAL))
         return false;
@@ -215,7 +215,7 @@ static bool floatLiteral(llvm::StringRef op, ExprPtr &x) {
 
 
 static bool charLiteral(ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     Token* t;
     if (!next(t) || (t->tokenKind != T_CHAR_LITERAL))
         return false;
@@ -225,7 +225,7 @@ static bool charLiteral(ExprPtr &x) {
 }
 
 static bool stringLiteral(ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     Token* t;
     if (!next(t) || (t->tokenKind != T_STRING_LITERAL))
         return false;
@@ -300,7 +300,7 @@ static bool optExpressionList(ExprListPtr &x) {
 //
 
 static bool tupleExpr(ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!symbol("[")) return false;
     ExprListPtr args;
     if (!optExpressionList(args)) return false;
@@ -311,7 +311,7 @@ static bool tupleExpr(ExprPtr &x) {
 }
 
 static bool parenExpr(ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!symbol("(")) return false;
     ExprListPtr args;
     if (!optExpressionList(args)) return false;
@@ -322,7 +322,7 @@ static bool parenExpr(ExprPtr &x) {
 }
 
 static bool nameRef(ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     IdentifierPtr a;
     if (!identifier(a)) return false;
     x = new NameRef(a);
@@ -331,7 +331,7 @@ static bool nameRef(ExprPtr &x) {
 }
 
 static bool fileExpr(ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!keyword("__FILE__")) return false;
     x = new FILEExpr();
     x->location = location;
@@ -339,7 +339,7 @@ static bool fileExpr(ExprPtr &x) {
 }
 
 static bool lineExpr(ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!keyword("__LINE__")) return false;
     x = new LINEExpr();
     x->location = location;
@@ -347,7 +347,7 @@ static bool lineExpr(ExprPtr &x) {
 }
 
 static bool columnExpr(ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!keyword("__COLUMN__")) return false;
     x = new COLUMNExpr();
     x->location = location;
@@ -355,7 +355,7 @@ static bool columnExpr(ExprPtr &x) {
 }
 
 static bool argExpr(ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!keyword("__ARG__")) return false;
     IdentifierPtr name;
     if (!identifier(name)) return false;
@@ -365,7 +365,7 @@ static bool argExpr(ExprPtr &x) {
 }
 
 static bool evalExpr(ExprPtr &ev) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!keyword("eval")) return false;
     ExprPtr args;
     if (!expression(args)) return false;
@@ -395,7 +395,7 @@ static bool atomicExpr(ExprPtr &x) {
 //
 
 static bool stringLiteralSuffix(ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     ExprPtr str;
     if (!stringLiteral(str)) return false;
     ExprListPtr strArgs = new ExprList(str);
@@ -405,7 +405,7 @@ static bool stringLiteralSuffix(ExprPtr &x) {
 }
 
 static bool indexingSuffix(ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!symbol("[")) return false;
     ExprListPtr args;
     if (!optExpressionList(args)) return false;
@@ -428,7 +428,7 @@ static bool optCallLambdaList(ExprListPtr &args) {
 
     while (true) {
         ExprPtr lambdaArg;
-        LocationPtr startLocation = currentLocation();
+        Location startLocation = currentLocation();
         if (!lambda(lambdaArg)) return false;
         lambdaArg->startLocation = startLocation;
         lambdaArg->endLocation = currentLocation();
@@ -443,7 +443,7 @@ static bool optCallLambdaList(ExprListPtr &args) {
 }
 
 static bool callSuffix(ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!symbol("(")) return false;
     ExprListPtr args;
     if (!optExpressionList(args)) return false;
@@ -456,7 +456,7 @@ static bool callSuffix(ExprPtr &x) {
 }
 
 static bool fieldRefSuffix(ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!symbol(".")) return false;
     IdentifierPtr a;
     if (!identifier(a)) return false;
@@ -466,7 +466,7 @@ static bool fieldRefSuffix(ExprPtr &x) {
 }
 
 static bool staticIndexingSuffix(ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     Token* t;
     if (!next(t) || (t->tokenKind != T_STATIC_INDEX))
         return false;
@@ -481,7 +481,7 @@ static bool staticIndexingSuffix(ExprPtr &x) {
 }
 
 static bool dereferenceSuffix(ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!symbol("^")) return false;
     x = new VariadicOp(DEREFERENCE, new ExprList());
     x->location = location;
@@ -556,7 +556,7 @@ static bool suffixExpr(ExprPtr &x) {
 static bool prefixExpr(ExprPtr &x);
 
 static bool addressOfExpr(ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!symbol("@")) return false;
     ExprPtr a;
     if (!prefixExpr(a)) return false;
@@ -585,7 +585,7 @@ static bool signedLiteral(llvm::StringRef op, ExprPtr &x) {
 }
 
 static bool dispatchExpr(ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!opsymbol("*")) return false;
     ExprPtr a;
     if (!prefixExpr(a)) return false;
@@ -595,7 +595,7 @@ static bool dispatchExpr(ExprPtr &x) {
 }
 
 static bool staticExpr(ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!symbol("#")) return false;
     ExprPtr y;
     if (!prefixExpr(y)) return false;
@@ -620,7 +620,7 @@ static bool operatorOp(llvm::StringRef &op) {
 }
 
 static bool preopExpr(ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     llvm::StringRef op;
     int p = save();
     if (plusOrMinus(op)) {
@@ -653,7 +653,7 @@ static bool prefixExpr(ExprPtr &x) {
 //
 
 static bool operatorTail(VariadicOpPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     ExprListPtr exprs = new ExprList();
     ExprPtr b;
     llvm::StringRef op;
@@ -696,7 +696,7 @@ static bool operatorExpr(ExprPtr &x) {
 //
 
 static bool notExpr(ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     int p = save();
     if (!keyword("not")) {
         restore(p);
@@ -710,7 +710,7 @@ static bool notExpr(ExprPtr &x) {
 }
 
 static bool andExprTail(AndPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!keyword("and")) return false;
     ExprPtr y;
     if (!notExpr(y)) return false;
@@ -735,7 +735,7 @@ static bool andExpr(ExprPtr &x) {
 }
 
 static bool orExprTail(OrPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!keyword("or")) return false;
     ExprPtr y;
     if (!andExpr(y)) return false;
@@ -766,7 +766,7 @@ static bool orExpr(ExprPtr &x) {
 //
 
 static bool ifExpr(ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     ExprPtr expr;
     if (!keyword("if")) return false;
     if (!symbol("(")) return false;
@@ -845,7 +845,7 @@ static bool lambdaArgs(vector<FormalArgPtr> &formalArgs,
 }
 
 static bool lambdaExprBody(StatementPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     ReturnKind rkind;
     ExprPtr expr;
     if (!returnExpr(rkind, expr)) return false;
@@ -877,7 +877,7 @@ static bool lambdaBody(StatementPtr &x) {
 }
 
 static bool lambda(ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     vector<FormalArgPtr> formalArgs;
     FormalArgPtr formalVarArg;
     bool captureByRef;
@@ -897,7 +897,7 @@ static bool lambda(ExprPtr &x) {
 //
 
 static bool unpack(ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!ellipsis()) return false;
     ExprPtr y;
     if (!expression(y)) return false;
@@ -913,7 +913,7 @@ static bool unpack(ExprPtr &x) {
 //
 
 static bool pairExpr(ExprPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     IdentifierPtr y;
     if (!identifier(y)) return false;
     if (!symbol(":")) return false;
@@ -935,7 +935,7 @@ static bool pairExpr(ExprPtr &x) {
 //
 
 static bool expression(ExprPtr &x) {
-    LocationPtr startLocation = currentLocation();
+    Location startLocation = currentLocation();
     int p = save();
     if (restore(p), lambda(x)) goto success;
     if (restore(p), pairExpr(x)) goto success;
@@ -980,7 +980,7 @@ static bool atomicPattern(ExprPtr &x) {
 }
 
 static bool patternSuffix(IndexingPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!symbol("[")) return false;
     ExprListPtr args;
     if (!optExpressionList(args)) return false;
@@ -991,7 +991,7 @@ static bool patternSuffix(IndexingPtr &x) {
 }
 
 static bool pattern(ExprPtr &x) {
-    LocationPtr start = currentLocation();
+    Location start = currentLocation();
     if (!atomicPattern(x)) return false;
     int p = save();
     IndexingPtr y;
@@ -1051,7 +1051,7 @@ static bool optExprTypeSpec(ExprPtr &x) {
 static bool statement(StatementPtr &x);
 
 static bool labelDef(StatementPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     IdentifierPtr y;
     if (!identifier(y)) return false;
     if (!symbol(":")) return false;
@@ -1076,7 +1076,7 @@ static bool bindingKind(int &bindingKind) {
 }
 
 static bool localBinding(StatementPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     int bk;
     if (!bindingKind(bk)) return false;
     vector<IdentifierPtr> y;
@@ -1092,7 +1092,7 @@ static bool localBinding(StatementPtr &x) {
 
 static bool blockItems(vector<StatementPtr> &stmts);
 static bool withStatement(StatementPtr &x) {
-    LocationPtr startLocation = currentLocation();
+    Location startLocation = currentLocation();
 
     if (!keyword("with")) return false;
     vector<IdentifierPtr> lhs;
@@ -1102,7 +1102,7 @@ static bool withStatement(StatementPtr &x) {
         lhs.clear();
         restore(p);
     }
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
 
     ExprPtr rhs = NULL;
     if (!suffixExpr(rhs)) return false;
@@ -1162,7 +1162,7 @@ static bool statementExpression(vector<StatementPtr> &stmts, ExprPtr &expr) {
 }
 
 static bool block(StatementPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!symbol("{")) return false;
     BlockPtr y = new Block();
     if (!blockItems(y->statements)) return false;
@@ -1173,7 +1173,7 @@ static bool block(StatementPtr &x) {
 }
 
 static bool assignment(StatementPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     ExprListPtr y, z;
     if (!expressionList(y)) return false;
     if (!opsymbol("=")) return false;
@@ -1185,7 +1185,7 @@ static bool assignment(StatementPtr &x) {
 }
 
 static bool initAssignment(StatementPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     ExprListPtr y, z;
     if (!expressionList(y)) return false;
     if (!opsymbol("<--")) return false;
@@ -1197,7 +1197,7 @@ static bool initAssignment(StatementPtr &x) {
 }
 
 static bool prefixUpdate(StatementPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     ExprPtr z;
     llvm::StringRef op;
     if (!uopstring(op)) return false;
@@ -1216,7 +1216,7 @@ static bool prefixUpdate(StatementPtr &x) {
 }
 
 static bool updateAssignment(StatementPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     ExprPtr y,z;
     if (!expression(y)) return false;
     llvm::StringRef op;
@@ -1238,7 +1238,7 @@ static bool updateAssignment(StatementPtr &x) {
 
 
 static bool gotoStatement(StatementPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     IdentifierPtr y;
     if (!keyword("goto")) return false;
     if (!identifier(y)) return false;
@@ -1249,7 +1249,7 @@ static bool gotoStatement(StatementPtr &x) {
 }
 
 static bool returnStatement(StatementPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!keyword("return")) return false;
     ReturnKind rkind;
     ExprListPtr exprs;
@@ -1270,7 +1270,7 @@ static bool optElse(StatementPtr &x) {
 }
 
 static bool ifStatement(StatementPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     vector<StatementPtr> condStmts;
     ExprPtr condition;
     StatementPtr thenPart, elsePart;
@@ -1294,7 +1294,7 @@ static bool caseList(ExprListPtr &x) {
 }
 
 static bool caseBlock(CaseBlockPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     ExprListPtr caseLabels;
     StatementPtr body;
     if (!caseList(caseLabels)) return false;
@@ -1320,7 +1320,7 @@ static bool caseBlockList(vector<CaseBlockPtr> &x) {
 }
 
 static bool switchStatement(StatementPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     vector<StatementPtr> exprStmts;
     ExprPtr expr;
     if (!keyword("switch")) return false;
@@ -1350,7 +1350,7 @@ static bool exprStatementNeedsSemicolon(ExprPtr expr) {
 }
 
 static bool exprStatement(StatementPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     ExprPtr y;
     if (!expression(y)) return false;
     if (exprStatementNeedsSemicolon(y) && !symbol(";")) return false;
@@ -1360,7 +1360,7 @@ static bool exprStatement(StatementPtr &x) {
 }
 
 static bool whileStatement(StatementPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     vector<StatementPtr> condStmts;
     ExprPtr cond;
     StatementPtr body;
@@ -1375,7 +1375,7 @@ static bool whileStatement(StatementPtr &x) {
 }
 
 static bool breakStatement(StatementPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!keyword("break")) return false;
     if (!symbol(";")) return false;
     x = new Break();
@@ -1384,7 +1384,7 @@ static bool breakStatement(StatementPtr &x) {
 }
 
 static bool continueStatement(StatementPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!keyword("continue")) return false;
     if (!symbol(";")) return false;
     x = new Continue();
@@ -1393,7 +1393,7 @@ static bool continueStatement(StatementPtr &x) {
 }
 
 static bool forStatement(StatementPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     vector<IdentifierPtr> a;
     ExprPtr b;
     StatementPtr c;
@@ -1410,7 +1410,7 @@ static bool forStatement(StatementPtr &x) {
 }
 
 static bool catchBlock(CatchPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!keyword("catch")) return false;
     if (!symbol("(")) return false;
     IdentifierPtr evar;
@@ -1441,7 +1441,7 @@ static bool catchBlockList(vector<CatchPtr> &x) {
 }
 
 static bool tryStatement(StatementPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     StatementPtr a;
     if (!keyword("try")) return false;
     if (!block(a)) return false;
@@ -1453,7 +1453,7 @@ static bool tryStatement(StatementPtr &x) {
 }
 
 static bool throwStatement(StatementPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     ExprPtr a;
     if (!keyword("throw")) return false;
     if (!optExpression(a)) return false;
@@ -1464,7 +1464,7 @@ static bool throwStatement(StatementPtr &x) {
 }
 
 static bool staticFor(StatementPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!ellipsis()) return false;
     if (!keyword("for")) return false;
     if (!symbol("(")) return false;
@@ -1482,7 +1482,7 @@ static bool staticFor(StatementPtr &x) {
 }
 
 static bool finallyStatement(StatementPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
 
     if (!keyword("finally")) return false;
     StatementPtr body;
@@ -1493,7 +1493,7 @@ static bool finallyStatement(StatementPtr &x) {
 }
 
 static bool onerrorStatement(StatementPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
 
     if (!keyword("onerror")) return false;
     StatementPtr body;
@@ -1504,7 +1504,7 @@ static bool onerrorStatement(StatementPtr &x) {
 }
 
 static bool evalStatement(StatementPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
 
     if (!keyword("eval")) return false;
     ExprListPtr args;
@@ -1652,7 +1652,7 @@ static bool optArgTempness(ValueTempness &tempness) {
 }
 
 static bool valueFormalArg(FormalArgPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     ValueTempness tempness;
     if (!optArgTempness(tempness)) return false;
     IdentifierPtr y;
@@ -1664,7 +1664,7 @@ static bool valueFormalArg(FormalArgPtr &x) {
     return true;
 }
 
-static FormalArgPtr makeStaticFormalArg(unsigned index, ExprPtr expr, LocationPtr location) {
+static FormalArgPtr makeStaticFormalArg(unsigned index, ExprPtr expr, Location const & location) {
     // desugar static args
     llvm::SmallString<128> buf;
     llvm::raw_svector_ostream sout(buf);
@@ -1685,7 +1685,7 @@ static FormalArgPtr makeStaticFormalArg(unsigned index, ExprPtr expr, LocationPt
 }
 
 static bool staticFormalArg(unsigned index, FormalArgPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     ExprPtr expr;
     if (!symbol("#")) return false;
     if (!expression(expr)) return false;
@@ -1699,7 +1699,7 @@ static bool staticFormalArg(unsigned index, FormalArgPtr &x) {
 }
 
 static bool stringFormalArg(unsigned index, FormalArgPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     ExprPtr expr;
     if (!stringLiteral(expr)) return false;
     x = makeStaticFormalArg(index, expr, location);
@@ -1731,7 +1731,7 @@ static bool formalArgs(vector<FormalArgPtr> &x) {
 
 static bool varArgTypeSpec(ExprPtr &vargType) {
     if (!symbol(":")) return false;
-    LocationPtr start = currentLocation();
+    Location start = currentLocation();
     if (!nameRef(vargType)) return false;
     vargType->startLocation = start;
     vargType->endLocation = currentLocation();
@@ -1748,7 +1748,7 @@ static bool optVarArgTypeSpec(ExprPtr &vargType) {
 }
 
 static bool varArg(FormalArgPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     ValueTempness tempness;
     if (!optArgTempness(tempness)) return false;
     if (!ellipsis()) return false;
@@ -1882,7 +1882,7 @@ static bool optPatternVarsWithCond(vector<PatternVar> &x, ExprPtr &y) {
 
 static bool exprBody(StatementPtr &x) {
     if (!opsymbol("=")) return false;
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     ReturnKind rkind;
     ExprListPtr exprs;
     if (!returnExprList(rkind, exprs)) return false;
@@ -1945,7 +1945,7 @@ bool importVisibility(Visibility &x) {
 //
 
 static bool recordField(RecordFieldPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     IdentifierPtr y;
     if (!identifier(y)) return false;
     ExprPtr z;
@@ -1985,7 +1985,7 @@ static bool optRecordFields(vector<RecordFieldPtr> &x) {
 }
 
 static bool recordBodyFields(RecordBodyPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!symbol("(")) return false;
     vector<RecordFieldPtr> y;
     if (!optRecordFields(y)) return false;
@@ -1997,7 +1997,7 @@ static bool recordBodyFields(RecordBodyPtr &x) {
 }
 
 static bool recordBodyComputed(RecordBodyPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!opsymbol("=")) return false;
     ExprListPtr y;
     if (!optExpressionList(y)) return false;
@@ -2015,7 +2015,7 @@ static bool recordBody(RecordBodyPtr &x) {
 }
 
 static bool record(TopLevelItemPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     vector<PatternVar> patternVars;
     ExprPtr predicate;
     Visibility vis;
@@ -2053,7 +2053,7 @@ static bool optInstances(ExprListPtr &x) {
 }
 
 static bool variant(TopLevelItemPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     vector<PatternVar> patternVars;
     ExprPtr predicate;
     Visibility vis;
@@ -2074,7 +2074,7 @@ static bool variant(TopLevelItemPtr &x) {
 }
 
 static bool instance(TopLevelItemPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     vector<PatternVar> patternVars;
     ExprPtr predicate;
     if (!optPatternVarsWithCond(patternVars, predicate)) return false;
@@ -2108,7 +2108,7 @@ static bool returnTypeExpression(ExprPtr &x) {
 }
 
 static bool returnType(ReturnSpecPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     ExprPtr z;
     if (!returnTypeExpression(z)) return false;
     x = new ReturnSpec(z, NULL);
@@ -2141,7 +2141,7 @@ static bool optReturnTypeList(vector<ReturnSpecPtr> &x) {
 }
 
 static bool namedReturn(ReturnSpecPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     IdentifierPtr y;
     if (!namedReturnName(y)) return false;
     ExprPtr z;
@@ -2176,7 +2176,7 @@ static bool optNamedReturnList(vector<ReturnSpecPtr> &x) {
 }
 
 static bool varReturnType(ReturnSpecPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!ellipsis()) return false;
     ExprPtr z;
     if (!returnTypeExpression(z)) return false;
@@ -2195,7 +2195,7 @@ static bool optVarReturnType(ReturnSpecPtr &x) {
 }
 
 static bool varNamedReturn(ReturnSpecPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!ellipsis()) return false;
     IdentifierPtr y;
     if (!namedReturnName(y)) return false;
@@ -2275,7 +2275,7 @@ static bool llvmCode(LLVMCodePtr &b) {
 }
 
 static bool llvmProcedure(vector<TopLevelItemPtr> &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     CodePtr y = new Code();
     if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
     Visibility vis;
@@ -2283,9 +2283,9 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x) {
     bool isInline;
     if (!optInline(isInline)) return false;
     IdentifierPtr z;
-    LocationPtr targetStartLocation = currentLocation();
+    Location targetStartLocation = currentLocation();
     if (!identifier(z)) return false;
-    LocationPtr targetEndLocation = currentLocation();
+    Location targetEndLocation = currentLocation();
     if (!arguments(y->formalArgs, y->formalVarArg)) return false;
     y->returnSpecsDeclared = allReturnSpecs(y->returnSpecs, y->varReturnSpec);
     if (!llvmCode(y->llvmBody)) return false;
@@ -2307,16 +2307,16 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x) {
 }
 
 static bool procedureWithInterface(vector<TopLevelItemPtr> &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     CodePtr interfaceCode = new Code();
     if (!optPatternVarsWithCond(interfaceCode->patternVars, interfaceCode->predicate)) return false;
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("define")) return false;
     IdentifierPtr name;
-    LocationPtr targetStartLocation = currentLocation();
+    Location targetStartLocation = currentLocation();
     if (!identifier(name)) return false;
-    LocationPtr targetEndLocation = currentLocation();
+    Location targetEndLocation = currentLocation();
     if (!arguments(interfaceCode->formalArgs, interfaceCode->formalVarArg)) return false;
     interfaceCode->returnSpecsDeclared = allReturnSpecs(interfaceCode->returnSpecs, interfaceCode->varReturnSpec);
     if (!symbol(";")) return false;
@@ -2337,7 +2337,7 @@ static bool procedureWithInterface(vector<TopLevelItemPtr> &x) {
 }
 
 static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     CodePtr code = new Code();
     if (!optPatternVarsWithCond(code->patternVars, code->predicate)) return false;
     Visibility vis;
@@ -2347,9 +2347,9 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
     bool callByName;
     if (!optCallByName(callByName)) return false;
     IdentifierPtr name;
-    LocationPtr targetStartLocation = currentLocation();
+    Location targetStartLocation = currentLocation();
     if (!identifier(name)) return false;
-    LocationPtr targetEndLocation = currentLocation();
+    Location targetEndLocation = currentLocation();
     if (!arguments(code->formalArgs, code->formalVarArg)) return false;
     code->returnSpecsDeclared = allReturnSpecs(code->returnSpecs, code->varReturnSpec);
     if (!body(code->body)) return false;
@@ -2371,7 +2371,7 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
 }
 
 static bool procedure(TopLevelItemPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("define")) return false;
@@ -2384,7 +2384,7 @@ static bool procedure(TopLevelItemPtr &x) {
 }
 
 static bool overload(TopLevelItemPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     CodePtr code = new Code();
     if (!optPatternVarsWithCond(code->patternVars, code->predicate)) return false;
     bool isInline;
@@ -2393,9 +2393,9 @@ static bool overload(TopLevelItemPtr &x) {
     if (!optCallByName(callByName)) return false;
     if (!keyword("overload")) return false;
     ExprPtr target;
-    LocationPtr targetStartLocation = currentLocation();
+    Location targetStartLocation = currentLocation();
     if (!pattern(target)) return false;
-    LocationPtr targetEndLocation = currentLocation();
+    Location targetEndLocation = currentLocation();
     if (!arguments(code->formalArgs, code->formalVarArg)) return false;
     code->returnSpecsDeclared = allReturnSpecs(code->returnSpecs, code->varReturnSpec);
     int p = save();
@@ -2420,7 +2420,7 @@ static bool overload(TopLevelItemPtr &x) {
 //
 
 static bool enumMember(EnumMemberPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     IdentifierPtr y;
     if (!identifier(y)) return false;
     x = new EnumMember(y);
@@ -2449,7 +2449,7 @@ static bool enumMemberList(vector<EnumMemberPtr> &x) {
 }
 
 static bool enumeration(TopLevelItemPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     vector<PatternVar> patternVars;
     ExprPtr predicate;
     Visibility vis;
@@ -2475,7 +2475,7 @@ static bool enumeration(TopLevelItemPtr &x) {
 //
 
 static bool globalVariable(TopLevelItemPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     vector<PatternVar> patternVars;
     ExprPtr predicate;
     Visibility vis;
@@ -2519,7 +2519,7 @@ static bool optExternalAttributes(ExprListPtr &x) {
 }
 
 static bool externalArg(ExternalArgPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     IdentifierPtr y;
     if (!identifier(y)) return false;
     ExprPtr z;
@@ -2613,7 +2613,7 @@ static bool optExternalReturn(ExprPtr &x) {
 }
 
 static bool external(TopLevelItemPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("external")) return false;
@@ -2631,7 +2631,7 @@ static bool external(TopLevelItemPtr &x) {
 }
 
 static bool externalVariable(TopLevelItemPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("external")) return false;
@@ -2652,7 +2652,7 @@ static bool externalVariable(TopLevelItemPtr &x) {
 //
 
 static bool globalAlias(TopLevelItemPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     vector<PatternVar> patternVars;
     ExprPtr predicate;
     Visibility vis;
@@ -2695,7 +2695,7 @@ static bool optImportAlias(IdentifierPtr &x) {
 }
 
 static bool importModule(ImportPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     Visibility vis;
     if (!importVisibility(vis)) return false;
     if (!keyword("import")) return false;
@@ -2710,7 +2710,7 @@ static bool importModule(ImportPtr &x) {
 }
 
 static bool importStar(ImportPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     Visibility vis;
     if (!importVisibility(vis)) return false;
     if (!keyword("import")) return false;
@@ -2752,7 +2752,7 @@ static bool importedMemberList(vector<ImportedMember> &x) {
 }
 
 static bool importMembers(ImportPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     Visibility vis;
     if (!importVisibility(vis)) return false;
     if (!keyword("import")) return false;
@@ -2792,7 +2792,7 @@ static bool imports(vector<ImportPtr> &x) {
 }
 
 static bool evalTopLevel(TopLevelItemPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     if (!keyword("eval")) return false;
     ExprListPtr args;
     if (!expressionList(args)) return false;
@@ -2859,7 +2859,7 @@ static bool optModuleDeclarationAttributes(ExprListPtr &x) {
 }
 
 static bool optModuleDeclaration(ModuleDeclarationPtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
 
     int p = save();
     if (!keyword("in")) {
@@ -2891,7 +2891,7 @@ static bool optTopLevelLLVM(LLVMCodePtr &x) {
 }
 
 static bool module(llvm::StringRef moduleName, ModulePtr &x) {
-    LocationPtr location = currentLocation();
+    Location location = currentLocation();
     ModulePtr y = new Module(moduleName);
     if (!imports(y->imports)) return false;
     if (!optModuleDeclaration(y->declaration)) return false;
@@ -2919,9 +2919,9 @@ void applyParser(SourcePtr source, int offset, int length, Parser parser, Node &
     position = maxPosition = 0;
 
     if (!parser(node) || (position < (int)t.size())) {
-        LocationPtr location;
+        Location location;
         if (maxPosition == (int)t.size())
-            location = new Location(source, source->size());
+            location = Location(source.ptr(), source->size());
         else
             location = t[maxPosition].location;
         pushLocation(location);

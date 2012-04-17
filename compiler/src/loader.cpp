@@ -180,7 +180,7 @@ static PathString locateModule(DottedNamePtr name) {
         return path;
 
     error(name, "module not found: " + toKey(name));
-    assert(false);
+    llvm_unreachable("module not found");
 }
 
 
@@ -574,9 +574,9 @@ static void initModule(ModulePtr m) {
     
 
     if (llvmDIBuilder != NULL) {
-        llvm::DIFile file = m->location == NULL
-            ? llvm::DIFile(NULL)
-            : m->location->source->getDebugInfo();
+        llvm::DIFile file = m->location.ok()
+            ? m->location.source->getDebugInfo()
+            : llvm::DIFile(NULL);
         m->debugInfo = (llvm::MDNode*)llvmDIBuilder->createNameSpace(
             llvm::DICompileUnit(llvmDIBuilder->getCU()), // scope
             m->moduleName, // name

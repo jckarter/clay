@@ -339,8 +339,8 @@ inline overload (-)(a:A) = numericNegate(a);
 // inc, dec
 //
 
-inline overload inc(..a) = eachValue(inc,..a);
-inline overload dec(..a) = eachValue(dec,..a);
+inline overload inc(..a) { eachValue(inc, ..a); }
+inline overload dec(..a) { eachValue(dec, ..a); }
 
 [A when Numeric?(A)]
 inline overload inc(a:A) {
