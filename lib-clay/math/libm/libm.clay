@@ -1,6 +1,6 @@
 import libc;
 public import math.native.defines.*;
-import numbers.floats.*;
+public import numbers.floats.*;
 
 alias LIBM = "libm";
 MathMode?(m) = Flag("math.Mode")==m;

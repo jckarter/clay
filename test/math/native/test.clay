@@ -1,6 +1,6 @@
 // Test math functions
 
-import math.*;
+import math.native.*;
 import printer.(println);
 
 itypes() = Int8, Int16, Int32, Int64;
@@ -77,8 +77,8 @@ evalFuncsInt(funcs,data,types) {
 
 main() {
 
-    evalFuncs(oneArgFuncs,f32data);
-    evalFuncs2(twoArgFuncs,f32data);
+    // evalFuncs(oneArgFuncs,f32data);
+    // evalFuncs2(twoArgFuncs,f32data);
     
     evalFuncs(oneArgFuncs,f64data);
     evalFuncs2(twoArgFuncs,f64data);

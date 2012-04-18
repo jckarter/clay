@@ -1,5 +1,4 @@
 // Test math functions
-
 import math.*;
 import platform.(OS, FreeBSD, Windows);
 import printer.(println);

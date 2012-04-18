@@ -1,5 +1,6 @@
 public import math.native.defines.*;
 public import math.native.constants.*;
+public import numbers.floats.*;
 
 import math.native.ldexp.*;
 import math.native.frexp.*;
