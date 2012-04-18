@@ -1,0 +1,33 @@
+import math.native.kernel.ieee754.*;
+import math.native.rem_pio2.*;
+import math.native.kernel.k_trig.*;
+public import math.native.defines.(cos);
+
+overload cos(x:Double) {
+	var y = Array[Double,2]();
+	
+    // High word of x. 
+	var ix = GET_IEEE_HIGH(x);
+
+    // |x| ~< pi/4 
+	ix = bitand(ix,MM);
+	if(ix <= 0x3fe921fb) {
+	    if(ix<0x3e46a09e)			// if x < 2**-27 * sqrt(2) 
+			if(wrapCast(Int32,x)==0) 
+				return 1.0;	// generate inexact 
+	    return kernel_cos(x,0.);
+	}
+
+    // cos(Inf or NaN) is NaN 
+	else if (ix>=EM) return x-x;
+
+    // argument reduction needed 
+	else {
+	    var n = rem_pio2(x,@y[0]);
+	    switch(bitand(n,3))
+		case (0) return  kernel_cos(y[0],y[1]);
+		case (1) return -kernel_sin(y[0],y[1],1);
+		case (2) return -kernel_cos(y[0],y[1]);
+		else return  kernel_sin(y[0],y[1],1);
+	}
+}

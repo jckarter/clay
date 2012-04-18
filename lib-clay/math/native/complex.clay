@@ -1,9 +1,23 @@
 
-import math.*;
-import complex.*;
+public import complex.*;
+public import math.native.csqrt.(sqrt);
+public import math.native.cabs.(abs);
+public import math.native.carg.(arg);
+public import math.native.clog.(log,log10);
+public import math.native.cproj.(proj);
+public import math.native.cpow.(pow);
+public import math.native.cexp.(exp);
+public import math.native.csinh.(sinh);
+public import math.native.ccosh.(cosh);
+public import math.native.csincos.(sin,cos);
+public import math.native.ctanh.(tanh,tan);
+public import math.native.defines.(cot,asinh,acosh,atanh);
 
-[U when Complex?(U)]
-inline overload abs(x:U) = hypot(real(x),imagValue(x));
+public import math.native.acos.(acos);
+public import math.native.asin.(asin);
+public import math.native.atan.(atan);
+import math.native.atan2.(atan2);
+import math.native.constants.(M_PI,M_PI_2);
 
 [T,C when Numeric?(T) and Complex?(C)]
 inline overload max(x:T,y:C) = max(x,abs(y));
@@ -17,271 +31,10 @@ inline overload min(x:T,y:C) = min(x,abs(y));
 [T,C when Numeric?(T) and Complex?(C)]
 inline overload min(x:C,y:T) = min(abs(x),y);
 
-[C when Complex?(C)]
-overload sqrt(x:C) --> res:C {
-    alias T = ComplexBaseType(C);
-    alias ZERO = T(0);
-    alias HALF = T(0.5);
-    alias HUGE_VAL = GreatestPositiveFinite(T);
-    alias xr = real(x);
-    alias xi = imagValue(x);
-    var rcls,icls = fpclassify(xr), fpclassify (xi);
-    if (rcls <= FP_INFINITE or icls <= FP_INFINITE){
-        if (icls == FP_INFINITE){
-            res <-- Complex(HUGE_VAL,xi);
-        }
-        else if (rcls == FP_INFINITE){
-            if (xr < ZERO){
-                res <-- Complex(if(icls == FP_NAN) nan(T) else ZERO, copysign (HUGE_VAL, xi));
-            }
-            else{
-                res <-- Complex(xr,if(icls == FP_NAN) nan(T) else copysign (ZERO, xi));
-            }
-        }
-        else {
-                res <-- Complex(nan(T),nan(T));
-        }
-    }
-    else{
-        if (icls == FP_ZERO){
-            if (xr < ZERO){
-                res <-- Complex(ZERO, copysign(sqrt(-xr),xi));
-            }
-            else{
-                res <-- Complex(abs(sqrt(xr)), copysign (ZERO, xi));
-            }
-        }
-        else if (rcls == FP_ZERO){
-            var r = sqrt(HALF * abs (xi));
-            res <-- Complex(r, copysign(r, xi));
-        }
-        else {
-            var d,r,s = hypot(xr, xi),ZERO,ZERO;
-            /* Use the identity   2  Re res  Im res = Im x
-            to avoid cancellation error in  d +/- Re x.  */
-            if (xr > ZERO){
-                r = sqrt(HALF * d + HALF * xr);
-                s = (HALF * xi) / r;
-            }
-            else{
-                s = sqrt(HALF * d - HALF * xr);
-                r = abs((HALF * xi) / s);
-            }
-            res <-- Complex(r,copysign(s, xi));
-        }
-    }
-}
-
-
-[I when Imaginary?(I)]
-inline overload sqrt(z:I) = sqrt(Complex(z));
-
 [T when Float?(T)]
 inline fromPolar(m:T,ph:T) = Complex(m*sin(ph),m*cos(ph));
 
-[T when Complex?(T)]
-inline overload arg(x:T) = atan2(imagValue(x),real(x));
 
-
-
-/*
- *  Complex natural logarithm
- *
- *
- *
- * SYNOPSIS:
- *
- * double complex clog();
- * double complex z, w;
- *
- * w = clog (z);
- *
- *
- *
- * DESCRIPTION:
- *
- * Returns complex logarithm to the base e (2.718...) of
- * the complex argument x.
- *
- * If z = x + iy, r = sqrt( x**2 + y**2 ),
- * then
- *       w = log(r) + i arctan(y/x).
- *
- * The arctangent ranges from -PI to +PI.
- *
- *
- * ACCURACY:
- *
- *                      Relative error:
- * arithmetic   domain     # trials      peak         rms
- *    DEC       -10,+10      7000       8.5e-17     1.9e-17
- *    IEEE      -10,+10     30000       5.0e-15     1.1e-16
- *
- * Larger relative error can be observed for z near 1 +i0.
- * In IEEE arithmetic the peak absolute error is 5.2e-16, rms
- * absolute error 1.0e-16.
- */
-
-
-[T when Complex?(T)]
-overload log(z:T){
-    var rr = abs(z);
-    var p = log(rr);
-    rr = atan2(imagValue(z), real(z));
-    return Complex(p, rr);
-}
-
-
-
-/*                         csin()
- *
- *  Complex circular sine
- *
- *
- *
- * SYNOPSIS:
- *
- * double complex csin();
- * double complex z, w;
- *
- * w = csin (z);
- *
- *
- *
- * DESCRIPTION:
- *
- * If
- *     z = x + iy,
- *
- * then
- *
- *     w = sin x  cosh y  +  i cos x sinh y.
- *
- * csin(z) = -i csinh(iz).
- *
- * ACCURACY:
- *
- *                      Relative error:
- * arithmetic   domain     # trials      peak         rms
- *    DEC       -10,+10      8400       5.3e-17     1.3e-17
- *    IEEE      -10,+10     30000       3.8e-16     1.0e-16
- * Also tested by csin(casin(z)) = z.
- *
- */
-
-//[T when Complex?(T)]
-//overload sin(z:T){
-//    var ch,sh = chsh(imagValue(z));
-//    return Complex(sin(real(z)) * ch , cos (real(z)) * sh);
-//}
-
-/* calculate cosh and sinh */
-[T when Float?(T)]
-private chsh(x:T){
-    if (abs(x) <= 0.5){
-        return cosh(x),sinh(x);
-    } else {
-        var e = exp(x);
-        var ei = 0.5/e;
-        e = 0.5 * e;
-        return  e + ei, e - ei;
-    }
-}
-
-/*                         ccos()
- *
- *  Complex circular cosine
- *
- *
- *
- * SYNOPSIS:
- *
- * double complex ccos();
- * double complex z, w;
- *
- * w = ccos (z);
- *
- *
- *
- * DESCRIPTION:
- *
- * If
- *     z = x + iy,
- *
- * then
- *
- *     w = cos x  cosh y  -  i sin x sinh y.
- *
- *
- *
- * ACCURACY:
- *
- *                      Relative error:
- * arithmetic   domain     # trials      peak         rms
- *    DEC       -10,+10      8400       4.5e-17     1.3e-17
- *    IEEE      -10,+10     30000       3.8e-16     1.0e-16
- */
-
-[T when Complex?(T)]
-overload cos(z:T){
-    var ch,sh = chsh(imagValue(z));
-    return Complex(cos(real(z)) * ch , - sin(real(z)) * sh);
-}
-
-
-/*                         ctan()
- *
- *  Complex circular tangent
- *
- *
- *
- * SYNOPSIS:
- *
- * double complex ctan();
- * double complex z, w;
- *
- * w = ctan (z);
- *
- *
- *
- * DESCRIPTION:
- *
- * If
- *     z = x + iy,
- *
- * then
- *
- *           sin 2x  +  i sinh 2y
- *     w  =  --------------------.
- *            cos 2x  +  cosh 2y
- *
- * On the real axis the denominator is zero at odd multiples
- * of PI/2.  The denominator is evaluated by its Taylor
- * series near these points.
- *
- * ctan(z) = -i ctanh(iz).
- *
- * ACCURACY:
- *
- *                      Relative error:
- * arithmetic   domain     # trials      peak         rms
- *    DEC       -10,+10      5200       7.1e-17     1.6e-17
- *    IEEE      -10,+10     30000       7.2e-16     1.2e-16
- * Also tested by ctan * ccot = 1 and catan(ctan(z))  =  z.
- */
-
-[T when Complex?(T)]
-overload tan(z:T){
-    alias C = ComplexBaseType(T);
-    alias MAXNUM = GreatestPositiveFinite(C);
-    var d = cos (2.0 * real (z)) + cosh (2.0 * imagValue(z));
-    if (abs(d) < 0.25)
-        d = tans(z);
-    if (d == 0.0 )
-//         mtherr ("ctan", OVERFLOW);
-        return Complex(MAXNUM,MAXNUM);
-    return Complex(sin(2.0 * real(z)) / d, sinh (2.0 * imagValue(z)) / d);
-}
 
 /*                         ccot()
  *
@@ -351,7 +104,7 @@ private inline redupi(x:T){
         t +: T(0.5);
     else
         t -: T(0.5);
-    var i = Long(t);    /* the multiple */
+    var i = Long(t); // the multiple
     t = T(i);
     return ((x - t * T(DP1)) - t * T(DP2)) - t * T(DP3);
 }
@@ -555,36 +308,6 @@ overload atan(z:T){
 }
 
 
-/*                          csinh
- *
- *  Complex hyperbolic sine
- *
- *
- *
- * SYNOPSIS:
- *
- * double complex csinh();
- * double complex z, w;
- *
- * w = csinh (z);
- *
- * DESCRIPTION:
- *
- * csinh z = (cexp(z) - cexp(-z))/2
- *         = sinh x * cos y  +  i cosh x * sin y .
- *
- * ACCURACY:
- *
- *                      Relative error:
- * arithmetic   domain     # trials      peak         rms
- *    IEEE      -10,+10     30000       3.1e-16     8.2e-17
- *
- */
-//[T when Complex?(T)]
-//overload sinh(z:T)
-//    = Complex(sinh(real(z)) * cos(imagValue(z)) , cosh(real(z)) * sin(imagValue(z)));
-
-
 /*                          casinh
  *
  *  Complex inverse hyperbolic sine
@@ -676,38 +399,6 @@ overload cosh(z:T)
 overload acosh(z:T) = 1.j * acos(z);
 
 
-/*                          ctanh
- *
- *  Complex hyperbolic tangent
- *
- *
- *
- * SYNOPSIS:
- *
- * double complex ctanh();
- * double complex z, w;
- *
- * w = ctanh (z);
- *
- *
- *
- * DESCRIPTION:
- *
- * tanh z = (sinh 2x  +  i sin 2y) / (cosh 2x + cos 2y) .
- *
- * ACCURACY:
- *prun
- *                      Relative error:
- * arithmetic   domain     # trials      peak         rms
- *    IEEE      -10,+10     30000       1.7e-14     2.4e-16
- *
- */
-[T when Complex?(T)]
-overload tanh(z:T){
-    var d = 1./(cosh(2.0 * real(z)) + cos(2.0 * imagValue(z)));
-    return Complex(sinh(2.0 * real(z)) * d  , sin (2.0 * imagValue(z)) * d) ;
-}
-
 
 /*                          catanh
  *
@@ -738,48 +429,3 @@ overload tanh(z:T){
 [T when Complex?(T)]
 overload atanh(z:T) = -1.j * atan(z * 1.j);
 
-/*                          cpow
- *
- *  Complex power function
- *
- *
- *
- * SYNOPSIS:
- *
- * double complex cpow();
- * double complex a, z, w;
- *
- * w = cpow (a, z);
- *
- *
- *
- * DESCRIPTION:
- *
- * Raises complex A to the complex Zth power.
- * Definition is per AMS55 # 4.2.8,
- * analytically equivalent to cpow(a,z) = cexp(z clog(a)).
- *
- * ACCURACY:
- *
- *                      Relative error:
- * arithmetic   domain     # trials      peak         rms
- *    IEEE      -10,+10     30000       9.4e-15     1.5e-15
- *
- */
-[T,U when Complex?(T,U)]
-overload pow(a:T, z:U){
-    var absa = abs(a);
-    if (absa == 0.0)
-        return T();
-    var r = pow(absa, real(z));
-    var theta = real(z) * arg(a);
-    if (imag(z) != 0.){
-        r = r * exp (-imagValue(z) * arg(a));
-        theta = theta + imagValue(z) * log(absa);
-    }
-    return Complex(r * cos(theta) , r * sin(theta));
-}
-
-
-[T when Complex?(T)]
-overload log10(x:T) = log(x)/log(10.0);

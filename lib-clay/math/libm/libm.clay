@@ -1,8 +1,9 @@
 import libc;
 public import math.native.defines.*;
 import numbers.floats.*;
-import math.(MathMode?,LIBM);
 
+alias LIBM = "libm";
+MathMode?(m) = Flag("math.Mode")==m;
 
 [when MathMode?(LIBM)] inline overload pow(x:Double,y:Double) = libc.pow(x,y);
 inline overload pow(x:Float,y:Float) = libc.powf(x,y);

@@ -1,3 +1,4 @@
+define abs;
 define sign;
 define copysign;
 

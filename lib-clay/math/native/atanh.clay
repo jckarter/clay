@@ -1,7 +1,8 @@
 // atanh
 
 import math.native.kernel.ieee754.*;
-import math.*;
+public import math.native.defines.(atanh);
+import math.native.log1p.(log1p);
 
 alias ONE = 1.0;
 alias HUGE = GreatestPositiveFinite(Double);

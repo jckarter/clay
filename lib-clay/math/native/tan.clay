@@ -1,0 +1,31 @@
+import math.native.kernel.ieee754.*;
+import math.native.rem_pio2.*;
+import math.native.kernel.k_trig.*;
+public import math.native.defines.(tan);
+
+
+overload tan(x:Double) {
+	var y = Array[Double,2]();
+	
+    // High word of x. 
+	var ix = GET_IEEE_HIGH(x);
+	    
+    // |x| ~< pi/4 
+	ix = bitand(ix,MM);
+	if(ix <= 0x3fe921fb) {
+		if(ix<0x3e400000)			// x < 2**-27 
+			if(wrapCast(Int32,x)==0) return x;		// generate inexact 
+	    return kernel_tan(x,0.,1);
+	}
+    // tan(Inf or NaN) is NaN 
+	else {
+		if (ix>=EM) return x-x;		// NaN 
+
+	    // argument reduction needed 
+		else {
+			var n = rem_pio2(x,@y[0]);
+		    return kernel_tan(y[0],y[1],1-bitshl(bitand(n,0x1),1)); //   1 -- n even -1 -- n odd 
+		}
+	}
+}
+

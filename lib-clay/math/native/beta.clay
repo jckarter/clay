@@ -1,4 +1,6 @@
-import math.(exp,beta,lgamma);
+public import math.native.defines.(beta);
+import math.native.exp.(exp);
+import math.native.gamma.(lgamma);
 import complex.*;
 
 [T,U when Float?(T,U) or Complex?(T,U)]

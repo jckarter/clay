@@ -1,0 +1,103 @@
+import complex.*;
+public import math.native.sin.(sin);
+public import math.native.cos.(cos);
+public import math.native.cosh.(cosh);
+public import math.native.sinh.(sinh);
+import math.native.exp.(exp);
+import math.native.abs.(abs);
+
+/*                         csin()
+ *
+ *  Complex circular sine
+ *
+ *
+ *
+ * SYNOPSIS:
+ *
+ * double complex csin();
+ * double complex z, w;
+ *
+ * w = csin (z);
+ *
+ *
+ *
+ * DESCRIPTION:
+ *
+ * If
+ *     z = x + iy,
+ *
+ * then
+ *
+ *     w = sin x  cosh y  +  i cos x sinh y.
+ *
+ * csin(z) = -i csinh(iz).
+ *
+ * ACCURACY:
+ *
+ *                      Relative error:
+ * arithmetic   domain     # trials      peak         rms
+ *    DEC       -10,+10      8400       5.3e-17     1.3e-17
+ *    IEEE      -10,+10     30000       3.8e-16     1.0e-16
+ * Also tested by csin(casin(z)) = z.
+ *
+ */
+
+[T when Complex?(T)]
+overload sin(z:T){
+   var ch,sh = chsh(imagValue(z));
+   return Complex(sin(real(z)) * ch , cos (real(z)) * sh);
+}
+
+// calculate cosh and sinh
+[T when Float?(T)]
+private chsh(x:T){
+    if (abs(x) <= 0.5){
+        return cosh(x),sinh(x);
+    } 
+    else {
+        var e = exp(x);
+        var ei = 0.5/e;
+        e = 0.5 * e;
+        return  e + ei, e - ei;
+    }
+}
+
+/*                         ccos()
+ *
+ *  Complex circular cosine
+ *
+ *
+ *
+ * SYNOPSIS:
+ *
+ * double complex ccos();
+ * double complex z, w;
+ *
+ * w = ccos (z);
+ *
+ *
+ *
+ * DESCRIPTION:
+ *
+ * If
+ *     z = x + iy,
+ *
+ * then
+ *
+ *     w = cos x  cosh y  -  i sin x sinh y.
+ *
+ *
+ *
+ * ACCURACY:
+ *
+ *                      Relative error:
+ * arithmetic   domain     # trials      peak         rms
+ *    DEC       -10,+10      8400       4.5e-17     1.3e-17
+ *    IEEE      -10,+10     30000       3.8e-16     1.0e-16
+ */
+
+[T when Complex?(T)]
+overload cos(z:T){
+    var ch,sh = chsh(imagValue(z));
+    return Complex(cos(real(z)) * ch , - sin(real(z)) * sh);
+}

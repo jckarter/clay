@@ -1,15 +1,15 @@
 // expm1 function adapted from openlibm
 
 import math.native.kernel.ieee754.*;
-import math.*;
+public import math.native.defines.(expm1);
 
-alias o_threshold = 7.09782712893383973096e+02;/* 0x40862E42, 0xFEFA39EF */
-/* Scaled Q's: Qn_here = 2**n * Qn_above, for R(2*z) where z = hxs = x*x/2: */
-alias Q1  =  -3.33333333333331316428e-02; /* BFA11111 111110F4 */
-alias Q2  =   1.58730158725481460165e-03; /* 3F5A01A0 19FE5585 */
-alias Q3  =  -7.93650757867487942473e-05; /* BF14CE19 9EAADBB7 */
-alias Q4  =   4.00821782732936239552e-06; /* 3ED0CFCA 86E65239 */
-alias Q5  =  -2.01099218183624371326e-07; /* BE8AFDB7 6E09C32D */
+alias o_threshold = 7.09782712893383973096e+02;// 0x40862E42, 0xFEFA39EF 
+// Scaled Q's: Qn_here = 2**n * Qn_above, for R(2*z) where z = hxs = x*x/2: 
+alias Q1  =  -3.33333333333331316428e-02; // BFA11111 111110F4 
+alias Q2  =   1.58730158725481460165e-03; // 3F5A01A0 19FE5585 
+alias Q3  =  -7.93650757867487942473e-05; // BF14CE19 9EAADBB7 
+alias Q4  =   4.00821782732936239552e-06; // 3ED0CFCA 86E65239 
+alias Q5  =  -2.01099218183624371326e-07; // BE8AFDB7 6E09C32D 
 
 overload expm1(a:Float) = Float(expm1(Double(a)));
 
@@ -20,30 +20,30 @@ overload expm1(a:Double)  {
 
 	var x = a;
 	var xdb = MAKE_IEEE(x);
-	var xsb = bitand(GET_IEEE_HIGH(xdb),SM);		/* sign bit of x */
-	GET_IEEE_HIGH(xdb) = bitand(GET_IEEE_HIGH(xdb),MM);		/* high word of |x| */
+	var xsb = bitand(GET_IEEE_HIGH(xdb),SM);		// sign bit of x 
+	GET_IEEE_HIGH(xdb) = bitand(GET_IEEE_HIGH(xdb),MM);		// high word of |x| 
 
 	var hi,lo,k,c = 0.,0.,0,0.;
 
-    /* filter out huge and non-finite argument */
-	if(GET_IEEE_HIGH(xdb) >= CV13) {			/* if |x|>=56*ln2 */
-	    if(GET_IEEE_HIGH(xdb) >= CV14) {		/* if |x|>=709.78... */
+    // filter out huge and non-finite argument 
+	if(GET_IEEE_HIGH(xdb) >= CV13) {			// if |x|>=56*ln2 
+	    if(GET_IEEE_HIGH(xdb) >= CV14) {		// if |x|>=709.78... 
             if(GET_IEEE_HIGH(xdb)>=EM) {
 			    if(bitor(bitand(GET_IEEE_HIGH(xdb),NEM),GET_IEEE_LOW(xdb))!=0)
-			         return x+x; 	 /* NaN */
-			    else return if(xsb==0) x else -1.0;/* exp(+-inf)={inf,-1} */
+			         return x+x; 	 // NaN 
+			    else return if(xsb==0) x else -1.0;// exp(+-inf)={inf,-1} 
 	        }
-	        if(x > o_threshold) return HUGE*HUGE; /* overfGET_IEEE_LOW(xdb) */
+	        if(x > o_threshold) return HUGE*HUGE; // overfGET_IEEE_LOW(xdb) 
 	    }
-	    if(xsb!=0) { /* x < -56*ln2, return -1.0 with inexact */
-			if(x+TINY<0.0)		/* raise inexact */
-				return TINY-ONE;	/* return -1 */
+	    if(xsb!=0) { // x < -56*ln2, return -1.0 with inexact 
+			if(x+TINY<0.0)		// raise inexact 
+				return TINY-ONE;	// return -1 
 	    }
 	}
 	
-    /* argument reduction */
-	if(GET_IEEE_HIGH(xdb) > CV15) {		/* if  |x| > 0.5 ln2 */
-	    if(GET_IEEE_HIGH(xdb) < CV16) {	/* and |x| < 1.5 ln2 */
+    // argument reduction 
+	if(GET_IEEE_HIGH(xdb) > CV15) {		// if  |x| > 0.5 ln2 
+	    if(GET_IEEE_HIGH(xdb) < CV16) {	// and |x| < 1.5 ln2 
 			if(xsb==0) {
 				hi = x - LN2HI; 
 				lo =  LN2LO;  
@@ -58,14 +58,14 @@ overload expm1(a:Double)  {
 	    else {
 			k  = wrapCast(Int32,IVLN2*x+(if(xsb==0) 0.5 else -0.5));
 			var t  = Double(k);
-			hi = x - t*LN2HI;	/* t*ln2_hi is exact here */
+			hi = x - t*LN2HI;	// t*ln2_hi is exact here 
 			lo = t*LN2LO;
 	    }
-	    x <-- hi - lo;
+	    x  = hi - lo;
 	    c  = (hi-x)-lo;
 	}
-	else if(GET_IEEE_HIGH(xdb) < CV17) {  	/* when |x|<2**-54, return x */
-	    var t = HUGE+x;	/* return x with inexact flags when x!=0 */
+	else if(GET_IEEE_HIGH(xdb) < CV17) {  	// when |x|<2**-54, return x 
+	    var t = HUGE+x;	// return x with inexact flags when x!=0 
 	    return x - (t-(HUGE+x));
 	}
 	else 
@@ -80,10 +80,10 @@ overload expm1(a:Double)  {
 	var y = 0.;
 
 	if(k==0) {
-		return x - (x*e-hxs);		/* c is 0 */
+		return x - (x*e-hxs);		// c is 0 
 	}
 	else {
-	    var twopk = MAKE_IEEE(RM+bitshl(k,20),0).2;	/* 2^k */
+	    var twopk = MAKE_IEEE(RM+bitshl(k,20),0).2;	// 2^k 
 	    e  = (x*(e-c)-c);
 	    e -: hxs;
 	    if(k == -1) return 0.5*(x-e)-0.5;
@@ -91,7 +91,7 @@ overload expm1(a:Double)  {
 	       	if(x < -0.25) return -2.0*(e-(x+0.5));
 	       	else 	      return  ONE+2.0*(x-e);
 	    }
-	    if (k <= -2 or k>56) {   /* suffice to return exp(x)-1 */
+	    if (k <= -2 or k>56) {   // suffice to return exp(x)-1 
 	        y = ONE-(e-x);
 		if (k == 1024) y = y*2.0*0x1p1023;
 		else y *: twopk;
@@ -99,11 +99,11 @@ overload expm1(a:Double)  {
 	    }
 	    t = ONE;
 	    if(k<20) {
-	        t = SET_IEEE_HIGH(t,RM - bitshr(CV20,k));  /* t=1-2^-k */
+	        t = SET_IEEE_HIGH(t,RM - bitshr(CV20,k));  // t=1-2^-k 
 	       	y = t-(e-x);
 			y *: twopk;
 	   } else {
-			t = SET_IEEE_HIGH(t,bitshl(0x3ff-k,20));	/* 2^-k */
+			t = SET_IEEE_HIGH(t,bitshl(0x3ff-k,20));	// 2^-k 
 	       	y = x-(e+t);
 	       	y +: ONE;
 			y *: twopk;

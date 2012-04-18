@@ -1,7 +1,7 @@
 // pow x^n when Type(n)==Integer
 // pow n^m when Type(n,m)==Integer
 
-import math.*;
+public import math.native.defines.(pow);
 
 [T,I when Float?(T) and Integer?(I)]
 overload pow(x:T, n:I) {

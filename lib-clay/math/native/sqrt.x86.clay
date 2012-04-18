@@ -1,9 +1,9 @@
-import math.*;
+public import math.native.defines.(sqrt);
 import simd.*;
 
 private external ("llvm.x86.sse2.sqrt.sd", llvm)
     x86_sqrtsd(a:Vec[Double,2]) : Vec[Double,2];
 
 [T when Float?(T)]
-inline overload sqrt(x:T) = T(x86_sqrtsd(Vec(Double(x),0.))[0]);
-inline overload sqrt(x:Double) = x86_sqrtsd(Vec(x,0.))[0];
+inline overload sqrt(x:T) = T(x86_sqrtsd(Vec[Double,2](Double(x),0.))[0]);
+inline overload sqrt(x:Double) = x86_sqrtsd(Vec[Double,2](x,0.))[0];

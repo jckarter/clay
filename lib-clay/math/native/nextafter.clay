@@ -1,0 +1,49 @@
+public import math.native.defines.(nextafter);
+import numbers.floats.(nan?,nan,infinity,signbit);
+import math.native.kernel.ieee754.*;
+
+// nextafter(x,y)
+// return the next machine floating-point number of x in the
+// direction toward y.
+
+overload nextafter(x:Double, y:Double){
+    alias MIN_SUB = LeastPositive(Double);
+    var xdb,ydb = MAKE_IEEE(x),MAKE_IEEE(y);
+
+    if(x == y) return x;
+    if(nan?(x) or nan?(y)) return nan(Double);
+    if(x == 0.) // x == 0 so return +-minsubnormal
+        return if(signbit(y) == 1) -MIN_SUB else MIN_SUB;// raise underflow flag
+    if(GET_IEEE_HIGH(xdb) >= 0)
+        if(GET_IEEE_HIGH(xdb) > GET_IEEE_HIGH(ydb) or (GET_IEEE_HIGH(xdb) 
+            == GET_IEEE_HIGH(ydb) and GET_IEEE_LOW(xdb) > GET_IEEE_LOW(ydb))) { // x > y, x -: ulp
+            if(GET_IEEE_LOW(xdb) == 0) dec(GET_IEEE_HIGH(xdb));
+            dec(GET_IEEE_LOW(xdb));
+        } 
+        else {    // x < y, x +: ulp
+            inc(GET_IEEE_LOW(xdb));
+            if(GET_IEEE_LOW(xdb) == 0) inc(GET_IEEE_HIGH(xdb));
+        }
+    else
+        if(GET_IEEE_HIGH(ydb)>=0 or GET_IEEE_HIGH(xdb)>GET_IEEE_HIGH(ydb) 
+            or ((GET_IEEE_HIGH(xdb)==GET_IEEE_HIGH(ydb))and(GET_IEEE_LOW(xdb)>GET_IEEE_LOW(ydb)))){// x < y, x -: ulp
+            if(GET_IEEE_LOW(xdb) == 0) dec(GET_IEEE_HIGH(xdb));
+            dec(GET_IEEE_LOW(xdb));
+        } 
+        else {        // x > y, x +: ulp
+            inc(GET_IEEE_LOW(xdb));
+            if(GET_IEEE_LOW(xdb) == 0) inc(GET_IEEE_HIGH(xdb));
+        }
+    GET_IEEE_HIGH(ydb) = bitand(GET_IEEE_HIGH(xdb),0x7ff00000);
+    if(GET_IEEE_HIGH(ydb) >= 0x7ff00000)
+        return infinity(Double);    // overflow
+    if(GET_IEEE_HIGH(ydb) < 0x00100000)     // underflow
+        if(x*x != x)        // raise underflow flag
+            return GET_IEEE_DB(xdb);
+    return GET_IEEE_DB(xdb);
+}
+
+overload nextafter(x:Double,y:Float) = nextafter(x,Double(y));
+overload nextafter(x:Float,y:Double) = nextafter(Double(x),y);
+
+alias nexttoward = nextafter;

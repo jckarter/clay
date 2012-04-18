@@ -1,6 +1,10 @@
 // bessel functions
 
-import math.*;
+public import math.native.defines.(j0,j1,i1);
+import math.native.abs.(abs);
+import math.native.sqrt.(sqrt);
+import math.native.cos.(cos);
+import math.native.sin.(sin);
 
 // Bessel J_0(x) function
 private var a = array(

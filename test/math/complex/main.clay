@@ -1,7 +1,7 @@
 
-import math.*;
+import math.native.complex.*;
 import printer.(println);
-import complex.*;
+import numbers.floats.(nan,infinity);
 
 ftypes() = Complex64;
 

@@ -192,13 +192,8 @@ overload floatBitsUnsigned(x:LongDouble) {
 overload floatBitsUnsigned(x:Double) = bitand(floatBits(x),0x7FFF_FFFF_FFFF_FFFFul);
 overload floatBitsUnsigned(x:Float) = bitand(floatBits(x),0x7FFF_FFFFu);
 
-[T when Imaginary?(T)]
-abs(x:T) = imagFromBits(floatBitsUnsigned(x));
-[T when Float?(T)]
-overload abs(x:T) = floatFromBits(floatBitsUnsigned(x));
 
-
-[T when Float?(T) or Imaginary?(T)] finite?(x:T) = floatExponent(x) < exponentMask(T);
+[T when Float?(T) or Imaginary?(T)] finite?(x:T) = floatExponent(x) != exponentMask(T);
 [T when Float?(T) or Imaginary?(T)] infinity?(x:T) = x == infinity(T);
 [T when Float?(T) or Imaginary?(T)] negativeInfinity?(x:T) = x == negativeInfinity(T);
 [T when Float?(T) or Imaginary?(T)] nan?(x:T) = floatExponent(x) == exponentMask(T) and floatMantissa(x)!=0;

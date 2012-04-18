@@ -1,14 +1,15 @@
 
 import math.native.kernel.ieee754.*;
-import math.*;
+public import math.native.defines.(scalbn,scalbln);
+import math.native.copysign.(copysign);
 
 // scalbn (double x, int n)
 // scalbn(x,n) returns x* 2**n  computed by  exponent
 // manipulation rather than by actually performing an
 // exponentiation or a multiplication.
 
-alias two54   =  1.80143985094819840000e+16; /* 0x43500000, 0x00000000 */
-alias twom54  =  5.55111512312578270212e-17; /* 0x3C900000, 0x00000000 */
+alias two54   =  1.80143985094819840000e+16; // 0x43500000, 0x00000000 
+alias twom54  =  5.55111512312578270212e-17; // 0x3C900000, 0x00000000 
 
 [I when Integer?(I)]
 overload scalbn (x:Float, n:I) = Float(scalbn(Double(x), n));
@@ -19,25 +20,25 @@ overload scalbn (x:Double, n:I) {
     alias TINY = LeastPositive(Double);
 
     var xdb = MAKE_IEEE(x);
-    var k = bitshr(bitand(GET_IEEE_HIGH(xdb),0x7ff00000),20);        /* extract exponent */
-    if (k==0) {             /* 0 or subnormal x */
-        if (bitor(GET_IEEE_LOW(xdb),bitand(GET_IEEE_HIGH(xdb),0x7fffffff))==0) return x; /* +-0 */
+    var k = bitshr(bitand(GET_IEEE_HIGH(xdb),0x7ff00000),20);        // extract exponent 
+    if (k==0) {             // 0 or subnormal x 
+        if (bitor(GET_IEEE_LOW(xdb),bitand(GET_IEEE_HIGH(xdb),0x7fffffff))==0) return x; // +-0 
         GET_IEEE_DB(xdb) *: two54;
         k = bitshr(bitand(GET_IEEE_HIGH(xdb),0x7ff00000),20) - 54;
-        if (n< -50000) return TINY*GET_IEEE_DB(xdb);   /*underflow*/
+        if (n< -50000) return TINY*GET_IEEE_DB(xdb);   //underflow
     }
-    if (k>=0x7ff) return x+x;       /* NaN or Inf */
+    if (k>=0x7ff) return x+x;       // NaN or Inf 
     k = k+n;
-    if (k >  0x7fe) return HUGE*copysign(HUGE,x); /* overflow  */
-    if (k > 0) {             /* normal result */
+    if (k >  0x7fe) return HUGE*copysign(HUGE,x); // overflow  
+    if (k > 0) {             // normal result 
         SET_IEEE_HIGH(xdb,bitor(bitand(GET_IEEE_HIGH(xdb),bitcast(Int,0x800fffffu)),bitshl(k,20))); 
         return GET_IEEE_DB(xdb);
     }
     if (k <= -54)
-        if (n > 50000)  /* in case integer overflow in n+k */
-            return HUGE*copysign(HUGE,x);   /*overflow*/
-        else return TINY*copysign(TINY,x);  /*underflow*/
-    k +: 54;                /* subnormal result */
+        if (n > 50000)  // in case integer overflow in n+k 
+            return HUGE*copysign(HUGE,x);   //overflow
+        else return TINY*copysign(TINY,x);  //underflow
+    k +: 54;                // subnormal result 
     SET_IEEE_HIGH(xdb,bitor(bitand(GET_IEEE_HIGH(xdb),bitcast(Int,0x800fffffu)),bitshl(k,20)));
     return GET_IEEE_DB(xdb)*twom54;
 }

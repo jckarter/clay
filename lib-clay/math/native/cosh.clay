@@ -1,6 +1,10 @@
 
 import math.native.kernel.ieee754.*;
-import math.*;
+public import math.native.defines.(cosh);
+import math.native.exp.(exp);
+import math.native.expm1.(expm1);
+import math.native.abs.(abs);
+import math.native.ldexp.(ldexp);
 
 overload cosh(x:Float) = Float(cosh(Double(x)));
 

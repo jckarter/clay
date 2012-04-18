@@ -1,7 +1,7 @@
 // log
 
 import math.native.kernel.ieee754.*;
-import math.(log);
+public import math.native.defines.(log);
 
 overload log(x:Double) : Double {
 	alias ZERO = 0.;

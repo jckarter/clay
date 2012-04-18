@@ -1,6 +1,9 @@
 // error function routines
 
-import math.*;
+public import math.native.defines.(erf,erfc);
+import math.native.exp.(exp);
+import math.native.abs.(abs);
+import numbers.floats.(nan?);
 
 private var a = array(
         5.958930743e-11, -1.13739022964e-9,

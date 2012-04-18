@@ -1,0 +1,30 @@
+import math.native.kernel.ieee754.*;
+public import math.native.defines.(round);
+import numbers.floats.(finite?);
+import math.native.floor.(floor);
+
+private alias DHUGE = GreatestPositiveFinite(Double);
+private alias FHUGE = GreatestPositiveFinite(Float);
+private alias DZERO = 0.ff;
+private alias FZERO = 0.f;
+
+[T when Float?(T)]
+overload round(x:T) --> t:T {
+	alias ZERO = T(0);
+	alias MHALF = T(-0.5);
+	alias ONE = T(1);
+	
+	if (not finite?(x))
+		return (x);
+
+	if (x >= ZERO) {
+		t <-- floor(x);
+		if (t - x <= MHALF)
+			t +: ONE;
+	} else {
+		t <-- floor(-x);
+		if (t + x <= MHALF)
+			t +: ONE;
+		t = -t;
+	}
+}

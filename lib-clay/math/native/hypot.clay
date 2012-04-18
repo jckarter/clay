@@ -1,7 +1,9 @@
 // hypot adapted from openlibm
 
 import math.native.kernel.ieee754.*;
-import math.*;
+public import math.native.defines.(hypot);
+import math.native.sqrt.(sqrt);
+import math.native.abs.(abs);
 
 //overload hypot(x:Double, y:Double) {
 //	alias ZERO = 0.;

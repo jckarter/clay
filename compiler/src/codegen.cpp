@@ -4658,7 +4658,7 @@ static llvm::Value *arrayValue(MultiCValuePtr args,
             argumentTypeError(index, type.ptr(), cv->type);
     }
     else {
-        if (cv->type->typeKind != ARRAY_TYPE)
+        if (cv->type->typeKind != ARRAY_TYPE && cv->type->typeKind != VEC_TYPE)
             argumentTypeError(index, "array type", cv->type);
         type = (ArrayType *)cv->type.ptr();
     }

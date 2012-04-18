@@ -1,5 +1,5 @@
 
-import numbers.floats.*;
+public import numbers.floats.*;
 
 [T] Complex?(#T) = false;
 overload Complex?(#Complex32) = true;
@@ -297,7 +297,7 @@ inline overload min(x:C,y:C) = min(abs(x),abs(y));
 inline overload nan?(x:T) = nan?(real(x)) or nan?(imag(x));
 
 [T when Complex?(T)]
-inline overload finite?(x:T) = floatExponent(abs(x)) < exponentMask(T);
+inline overload finite?(x:T) = floatExponent(abs(x)) != exponentMask((ComplexRealType(T)));
 
 [T when Complex?(T)]
 inline overload infinity?(x:T) = abs(x) == infinity(T);

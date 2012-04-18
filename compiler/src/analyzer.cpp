@@ -298,7 +298,7 @@ static CCodePointerTypePtr cCodePointerTypeOfValue(MultiPValuePtr x,
 static ArrayTypePtr arrayTypeOfValue(MultiPValuePtr x, unsigned index)
 {
     TypePtr t = x->values[index].type;
-    if (t->typeKind != ARRAY_TYPE)
+    if (t->typeKind != ARRAY_TYPE && t->typeKind != VEC_TYPE)
         argumentTypeError(index, "array type", t);
     return (ArrayType *)t.ptr();
 }

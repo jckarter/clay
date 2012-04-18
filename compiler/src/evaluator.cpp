@@ -2754,7 +2754,7 @@ static EValuePtr arrayValue(MultiEValuePtr args, unsigned index,
             argumentTypeError(index, type.ptr(), ev->type);
     }
     else {
-        if (ev->type->typeKind != ARRAY_TYPE)
+        if (ev->type->typeKind != ARRAY_TYPE && ev->type->typeKind != VEC_TYPE)
             argumentTypeError(index, "array type", ev->type);
         type = (ArrayType *)ev->type.ptr();
     }

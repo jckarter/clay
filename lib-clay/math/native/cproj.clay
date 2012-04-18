@@ -1,6 +1,9 @@
 
-import math.*;
+public import math.native.defines.(proj);
 import complex.*;
+import numbers.floats.(infinity?,infinity);
+import math.native.copysign.(copysign);
+
 
 [T when Complex?(T)]
 overload proj(z:T) {

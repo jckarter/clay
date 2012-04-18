@@ -1,7 +1,12 @@
 // asinh
 
 import math.native.kernel.ieee754.*;
-import math.*;
+public import math.native.defines.(asinh);
+import math.native.sqrt.(sqrt);
+import math.native.abs.(abs);
+import math.native.log.(log);
+import math.native.log1p.(log1p);
+import math.native.constants.(M_LN2);
 
 overload asinh(x:Float) = Float(asinh(Double(x)));
 

@@ -1,15 +1,20 @@
-import math.*;
-import math.native.defines.*;
+public import math.native.defines.*;
 public import math.native.constants.*;
 
 import math.native.ldexp.*;
 import math.native.frexp.*;
 import math.native.scalbn.*;
 import math.native.trunc.*;
-import math.native.rounding.*;
+import math.native.ceil.*;
+import math.native.floor.*;
+import math.native.rint.*;
+import math.native.round.*;
 import math.native.llround.*;
 import math.native.modf.*;
 import math.native.fmod.*;
+import math.native.nextafter.*;
+import math.native.abs.*;
+import math.native.sign.*;
 
 import math.native.hypot.*;
 import math.native.sqrt.*;
@@ -31,7 +36,10 @@ import math.native.erf.*;
 import math.native.gamma.*;
 import math.native.beta.*;
 import math.native.bessel.*;
-import math.native.trig.*;
+import math.native.sinpi.*;
+import math.native.tan.*;
+import math.native.cos.*;
+import math.native.sin.*;
 import math.native.atanh.*;
 import math.native.acosh.*;
 import math.native.asinh.*;
@@ -40,25 +48,10 @@ import math.native.acos.*;
 import math.native.atan.*;
 import math.native.atan2.*;
 
-import math.native.complex.*;
-import math.native.cproj.*;
-import math.native.cexp.*;
-import math.native.csinh.*;
-import math.native.ccosh.*;
-import math.native.ctanh.*;
-
 [T when Integer?(T)]
 overload recip(x:T) = T(0);
 [T when Float?(T)]
 overload recip(x:T) = T(1) / x;
-
-[I when Integer?(I)]
-inline overload abs(x:I) = if(x >= 0) x else -x;
-
-inline overload sign(x:Int64) = bitor(bitshr(x,63),Int64(bitshr(wrapCast(UInt64,wrapSubtract(x)),63)));
-inline overload sign(x:Int32) = bitor(bitshr(x,31),Int32(bitshr(wrapCast(UInt32,wrapSubtract(x)),31)));
-inline overload sign(x:Int16) = bitor(bitshr(x,15),Int16(bitshr(wrapCast(UInt16,wrapSubtract(x)),15)));
-inline overload sign(x:Int8) = bitor(bitshr(x,7),Int8(bitshr(wrapCast(UInt8,wrapSubtract(x)),7)));
 
 [T when Float?(T)]
 overload significand(x:T) = scalbn(x,wrapSubtract(ilogb(x)));
@@ -119,89 +112,6 @@ inline overload fma(a, b, c) = (a * b) + c;
 [T when Float?(T)] inline overload rsqrt(x:T) = recip(sqrt(x));
 [T when Float?(T)] inline overload sigmoid (x:T) = T(1) / (T(1) + exp (-x));
 
-
-[T,U when Float?(T,U)]
-overload copysign(a:T,b:U) = floatFromBits(bitor(floatBitsUnsigned(a),
-    wrapBitshl(signbit(b),mantissaSize(T)+exponentSize(T))));
-
-[T when Float?(T)]
-overload copysign(a:LongDouble,b:T) {
-    var tmp = floatBitsUnsigned(a);
-    return floatFromBits(tmp.mantissa,bitor(tmp.exponent,
-        wrapBitshl(signbit(b),exponentSize(LongDouble))));
-}
-
-
-alias FP_NAN = 0;
-alias FP_INFINITE = 1;
-alias FP_ZERO = 2;
-alias FP_SUBNORMAL = 3;
-alias FP_NORMAL = 4;
-alias FP_SNAN = 5;
-alias FP_NAN_NEG = 6;
-alias FP_INFINITE_NEG = 7;
-alias FP_ZERO_NEG = 8;
-alias FP_SUBNORMAL_NEG = 9;
-alias FP_NORMAL_NEG = 10;
-alias FP_SNAN_NEG = 11;
-
-[T when Float?(T) or Imaginary?(T)]
-overload fpclassify(x:T) --> res:Int {
-    if(x==T(0)) res <-- FP_ZERO;
-    else if(subnormal?(x)) res <-- FP_SUBNORMAL;
-    else if(nan?(x))
-        res <-- if(snan?(x)) FP_SNAN else FP_NAN;
-    else if(infinity?(x)) res <-- FP_INFINITE;
-    else res <-- FP_NORMAL;
-    if(floatNegative?(x)) res +: 6;
-}
-
-// nextafter(x,y)
-// return the next machine floating-point number of x in the
-// direction toward y.
-
-overload nextafter(x:Double, y:Double){
-    alias MIN_SUB = LeastPositive(Double);
-    alias EXP_MASK = 0x7ff00000;
-    var xdb,ydb = ieee_db(x),ieee_db(y);
-    alias hx = xdb.0[1];
-    alias lx = xdb.0[0];
-    alias hy = ydb.0[1];
-    alias ly = ydb.0[0];
-
-    if(x == y) return x;
-    if(nan?(x) or nan?(y)) return nan(Double);
-    if(x == 0.) // x == 0 so return +-minsubnormal
-        return if(signbit(y) == 1) -MIN_SUB else MIN_SUB;// raise underflow flag
-    if(hx >= 0)
-        if(hx > hy or (hx == hy and lx > ly)) { // x > y, x -: ulp
-            if(lx == 0) dec(hx);
-            dec(lx);
-        } else {    // x < y, x +: ulp
-            inc(lx);
-            if(lx == 0) inc(hx);
-        }
-    else
-        if(hy>=0 or hx>hy or ((hx==hy)and(lx>ly))){// x < y, x -: ulp
-            if(lx == 0) dec(hx);
-            dec(lx);
-        } else {        // x > y, x +: ulp
-            inc(lx);
-            if(lx == 0) inc(hx);
-        }
-    hy = bitand(hx,EXP_MASK);
-    if(hy >= EXP_MASK)
-        return infinity(Double);    // overflow
-    if(hy < 0x00100000)     // underflow
-        if(x*x != x)        // raise underflow flag
-            return xdb.2;
-    return xdb.2;
-}
-
-overload nextafter(x:Double,y:Float) = nextafter(x,Double(y));
-overload nextafter(x:Float,y:Double) = nextafter(Double(x),y);
-
-alias nexttoward = nextafter;
 
 alias normcoeff(#LongDouble) = floatFromBits(UInt128(0x4035ul));
 alias overload normcoeff(#Double) = floatFromBits(0x435ul);

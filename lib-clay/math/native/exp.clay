@@ -1,7 +1,7 @@
 // exp function adapted from openlibm
 
 import math.native.kernel.ieee754.*;
-import math.(exp);
+public import math.native.defines.(exp);
 
 
 private var halF = array(0.5,-0.5);

@@ -4,7 +4,7 @@
 // This is primarily intended for use in math libs to provide high accuracy
 // functions and as a high performance 'larger than Float80/128 float type'.
 
-import math.*;
+import math.native.*;
 import printer.formatter.(hex);
 import numbers.floats.*;
 

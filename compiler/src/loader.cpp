@@ -879,7 +879,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(arrayElements);
 
     PRIMITIVE(Vec);
-
+    
     PRIMITIVE(Tuple);
     PRIMITIVE(TupleElementCount);
     PRIMITIVE(tupleRef);
