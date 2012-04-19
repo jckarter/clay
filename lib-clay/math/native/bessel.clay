@@ -1,6 +1,5 @@
 // bessel functions
 
-public import math.native.defines.(LIBM,MathMode?,j0,j1,i1);
 import math.native.abs.(abs);
 import math.native.sqrt.(sqrt);
 import math.native.cos.(cos);
@@ -118,8 +117,8 @@ private var d = array(
         -0.0052083333227940760113
 );
 
-[T when Float?(T) and not MathMode?(LIBM)]
-overload j0(x:T) --> y:T {
+[T when Float?(T) ]
+j0(x:T) --> y:T {
 
     var w = abs(x);
     if (w < T(1)) {
@@ -273,8 +272,8 @@ private var j1d = array(
     0.01562499998712198636
 );
 
-[T when Float?(T) and not MathMode?(LIBM)]
-overload j1(x:T) --> y:T {
+[T when Float?(T) ]
+j1(x:T) --> y:T {
     var w = abs(x);
     if (w < T(1)) {
         var t = w * w;
@@ -555,8 +554,8 @@ private var i1c = array(
     0.05150322986693207715
 );
 
-[T when Float?(T) and not MathMode?(LIBM)]
-overload i1(x:T) --> y:T {
+[T when Float?(T) ]
+i1(x:T) --> y:T {
     var w = abs(x);
     if (w < T(8.5)) {
         var t = w * w * T(0.0625);

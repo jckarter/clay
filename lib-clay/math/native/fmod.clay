@@ -1,10 +1,8 @@
 // fmod
 
 import math.native.kernel.ieee754.*;
-public import math.native.defines.(LIBM,MathMode?,fmod);
 
-[when not MathMode?(LIBM)]
-overload fmod(a:Double, b:Double) {
+fmod(a:Double, b:Double) {
 
 	alias ONE = 1.0;
 	alias ZERO = array(0.0, -0.0);

@@ -1,10 +1,8 @@
 // log
 
 import math.native.kernel.ieee754.*;
-public import math.native.defines.(LIBM,MathMode?,log);
 
-[when not MathMode?(LIBM)]
-overload log(x:Double) : Double {
+log(x:Double) : Double {
 	alias ZERO = 0.;
 	alias HALF = 0.5;
 	alias ONE = 1.;
@@ -55,7 +53,7 @@ alias Lg2 =      0xccce13.0p-25f;	// 0.40000972152
 alias Lg3 =      0x91e9ee.0p-25f;	// 0.28498786688 
 alias Lg4 =      0xf89e26.0p-26f;	// 0.24279078841 
 
-[when not MathMode?(LIBM)]
+
 overload log(x:Float) : Float {
 	alias ZERO = 0.f;
 	var ix = GET_FLOAT_SIGNED(x);
@@ -91,3 +89,4 @@ overload log(x:Float) : Float {
 	    return if(k==0) f-s*(f-R) else k*ln2_hi-((s*(f-R)-k*ln2_lo)-f);
 }
 
+overload log(b,x) = log(x) / log(b);

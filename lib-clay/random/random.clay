@@ -1,5 +1,5 @@
-
-import math.(sqrt,cos,log,M_PI);
+import math.native.constants.(M_PI);
+import math.libm.(sqrt,cos,log);
 import printer.formatter.(hex, repr);
 import libc;
 

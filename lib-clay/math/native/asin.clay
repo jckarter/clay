@@ -1,7 +1,6 @@
 // asin
 
 import math.native.kernel.ieee754.*;
-public import math.native.defines.(LIBM,MathMode?,asin);
 import numbers.floats.(nan);
 import math.native.sqrt.(sqrt);
 import math.native.abs.(abs);
@@ -21,8 +20,8 @@ alias qS2 =  2.02094576023350569471e+00; // 0x40002AE5, 0x9C598AC8
 alias qS3 = -6.88283971605453293030e-01; // 0xBFE6066C, 0x1B8D0159 
 alias qS4 =  7.70381505559019352791e-02; // 0x3FB3B8C5, 0xB12E9282 
 
-[when not MathMode?(LIBM)]
-overload asin(x:Double) {
+
+asin(x:Double) {
 	alias ONE = 1.;
 	alias HUGE = GreatestPositiveFinite(Double);
 	var t=0.;

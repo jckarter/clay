@@ -1,61 +1,61 @@
-public import math.native.defines.*;
-public import math.native.constants.*;
-public import numbers.floats.*;
+public import math.native.ldexp.*;
+public import math.native.frexp.*;
+public import math.native.scalbn.*;
+public import math.native.trunc.*;
+public import math.native.ceil.*;
+public import math.native.floor.*;
+public import math.native.rint.*;
+public import math.native.round.*;
+public import math.native.llround.*;
+public import math.native.modf.*;
+public import math.native.fmod.*;
+public import math.native.nextafter.*;
+public import math.native.abs.*;
+public import math.native.sign.*;
 
-import math.native.ldexp.*;
-import math.native.frexp.*;
-import math.native.scalbn.*;
-import math.native.trunc.*;
-import math.native.ceil.*;
-import math.native.floor.*;
-import math.native.rint.*;
-import math.native.round.*;
-import math.native.llround.*;
-import math.native.modf.*;
-import math.native.fmod.*;
-import math.native.nextafter.*;
-import math.native.abs.*;
-import math.native.sign.*;
+public import math.native.hypot.*;
+public import math.native.sqrt.*;
+public import math.native.cbrt.*;
+public import math.native.pow.*;
+public import math.native.pown.*;
+public import math.native.exp.*;
+public import math.native.exp2.*;
+public import math.native.expm1.*;
+public import math.native.sinh.*;
+public import math.native.cosh.*;
+public import math.native.tanh.*;
+public import math.native.ilogb.*;
+public import math.native.log.*;
+public import math.native.log2.*;
+public import math.native.log10.*;
+public import math.native.log1p.*;
+public import math.native.erf.*;
+public import math.native.gamma.*;
+public import math.native.beta.*;
+public import math.native.bessel.*;
+public import math.native.sinpi.*;
+public import math.native.tan.*;
+public import math.native.cos.*;
+public import math.native.sin.*;
+public import math.native.atanh.*;
+public import math.native.acosh.*;
+public import math.native.asinh.*;
+public import math.native.asin.*;
+public import math.native.acos.*;
+public import math.native.atan.*;
+public import math.native.atan2.*;
+public import math.native.cot.*;
+import math.native.constants.(M_PI);
+import numbers.floats.(floatFromBits,floatExponent,mantissaSize);
 
-import math.native.hypot.*;
-import math.native.sqrt.*;
-import math.native.cbrt.*;
-import math.native.pow.*;
-import math.native.pown.*;
-import math.native.exp.*;
-import math.native.exp2.*;
-import math.native.expm1.*;
-import math.native.sinh.*;
-import math.native.cosh.*;
-import math.native.tanh.*;
-import math.native.ilogb.*;
-import math.native.log.*;
-import math.native.log2.*;
-import math.native.log10.*;
-import math.native.log1p.*;
-import math.native.erf.*;
-import math.native.gamma.*;
-import math.native.beta.*;
-import math.native.bessel.*;
-import math.native.sinpi.*;
-import math.native.tan.*;
-import math.native.cos.*;
-import math.native.sin.*;
-import math.native.atanh.*;
-import math.native.acosh.*;
-import math.native.asinh.*;
-import math.native.asin.*;
-import math.native.acos.*;
-import math.native.atan.*;
-import math.native.atan2.*;
 
 [T when Integer?(T)]
-overload recip(x:T) = T(0);
+recip(x:T) = T(0);
 [T when Float?(T)]
 overload recip(x:T) = T(1) / x;
 
 [T when Float?(T)]
-overload significand(x:T) = scalbn(x,wrapSubtract(ilogb(x)));
+significand(x:T) = scalbn(x,wrapSubtract(ilogb(x)));
 
 drem(x,y) = remainder(x,y);
 
@@ -70,8 +70,6 @@ clamp(x:T, lo:T, hi:T) {
 
 sec(z) = recip(cos(z));
 csc(z) = recip(sin(z));
-[T when Float?(T)] 
-overload cot(z:T) = recip(tan(z));
 asec(y) = acos(recip(y));
 acsc(y) = asin(recip(y));
 acot(y) = atan(recip(y));
@@ -102,17 +100,15 @@ cosc(x:T) {
     }
 }
 
-overload log(b,x) = log(x) / log(b);
-
 square(x) = x*x;
 cube(x) = x*x*x;
 
-[when not MathMode?(LIBM)]
-inline overload fma(a, b, c) = (a * b) + c;
+
+inline fma(a, b, c) = (a * b) + c;
 
 
-[T when Float?(T)] inline overload rsqrt(x:T) = recip(sqrt(x));
-[T when Float?(T)] inline overload sigmoid (x:T) = T(1) / (T(1) + exp (-x));
+[T when Float?(T)] inline rsqrt(x:T) = recip(sqrt(x));
+[T when Float?(T)] inline sigmoid (x:T) = T(1) / (T(1) + exp (-x));
 
 
 alias normcoeff(#LongDouble) = floatFromBits(UInt128(0x4035ul));

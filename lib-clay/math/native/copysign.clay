@@ -1,12 +1,11 @@
 
-public import math.native.defines.(LIBM,MathMode?,copysign);
 import numbers.floats.*;
 
-[T,U when Float?(T,U) and not MathMode?(LIBM)]
-overload copysign(a:T,b:U) = floatFromBits(bitor(floatBitsUnsigned(a),
+[T,U when Float?(T,U) ]
+copysign(a:T,b:U) = floatFromBits(bitor(floatBitsUnsigned(a),
     wrapBitshl(signbit(b),mantissaSize(T)+exponentSize(T))));
 
-[T when Float?(T) and not MathMode?(LIBM)]
+[T when Float?(T) ]
 overload copysign(a:LongDouble,b:T) {
     var tmp = floatBitsUnsigned(a);
     return floatFromBits(tmp.mantissa,bitor(tmp.exponent,

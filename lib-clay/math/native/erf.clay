@@ -1,6 +1,5 @@
 // error function routines
 
-public import math.native.defines.(LIBM,MathMode?,erf,erfc);
 import math.native.exp.(exp);
 import math.native.abs.(abs);
 import numbers.floats.(nan?);
@@ -81,8 +80,8 @@ private var b = array(
         0.09084526782065478489
 );
 
-[T when Numeric?(T) and not MathMode?(LIBM)]
-overload erf(x:T) {
+[T when Numeric?(T)]
+erf(x:T) {
     if (nan?(x)) return x;
     var w = if(x < T(0)) -x else x;
     var y = T(0);
@@ -116,8 +115,8 @@ overload erf(x:T) {
 }
 
 
-[T when Numeric?(T) and not MathMode?(LIBM)]
-overload erfc(x:T){
+[T when Numeric?(T)]
+erfc(x:T){
     if (nan?(x)) return x;
     var t = T(3.97886080735226) / (abs(x) + T(3.97886080735226));
     var u = t - T(0.5);

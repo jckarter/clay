@@ -1,10 +1,8 @@
 // modf
 
 import math.native.kernel.ieee754.*;
-public import math.native.defines.(LIBM,MathMode?,modf);
 
-[when not MathMode?(LIBM)]
-overload modf(x:Double, iptr:Pointer[Double]) {
+modf(x:Double, iptr:Pointer[Double]) {
 	
 	var ix = MAKE_IEEE(x);
 	var j0 = bitand(bitshr(GET_IEEE_HIGH(ix),20),0x7ff)-0x3ff;	// exponent of x 

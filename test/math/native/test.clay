@@ -1,5 +1,7 @@
 // Test math functions
 
+import numbers.floats.(nan,infinity,negativeInfinity);
+import math.native.constants.(M_PI);
 import math.native.*;
 import printer.(println);
 

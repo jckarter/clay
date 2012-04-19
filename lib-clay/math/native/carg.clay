@@ -1,7 +1,6 @@
 
-public import math.native.defines.(LIBM,MathMode?,arg);
 import math.native.atan2.(atan2);
 import complex.(Complex?,imagValue,real);
 
-[T when Complex?(T) and not MathMode?(LIBM)]
-inline overload arg(x:T) = atan2(imagValue(x),real(x));
+[T when Complex?(T) ]
+inline arg(x:T) = atan2(imagValue(x),real(x));

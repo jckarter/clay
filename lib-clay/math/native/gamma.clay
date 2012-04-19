@@ -1,7 +1,6 @@
 // l_gamma_r from openlibm
 
 import math.native.kernel.ieee754.*;
-public import math.native.defines.(LIBM,MathMode?,lgamma_r,gamma_r,tgamma,lgamma,gamma);
 import math.native.log.(log);
 import math.native.exp.(exp);
 import math.native.abs.(abs);
@@ -78,8 +77,8 @@ alias w4  = -5.95187557450339963135e-04; // 0xBF4380CB, 0x8C0FE741
 alias w5  =  8.36339918996282139126e-04; // 0x3F4B67BA, 0x4CDAD5D1 
 alias w6  = -1.63092934096575273989e-03; // 0xBF5AB89D, 0x0B9E43E4 
 
-[when not MathMode?(LIBM)]
-overload lgamma_r(xarg:Double, signgamp:Pointer[Int]) {
+
+lgamma_r(xarg:Double, signgamp:Pointer[Int]) {
 	alias ONE = 1.;
 	alias ZERO = 0.;
 	alias HALF = 0.5;
@@ -219,8 +218,8 @@ default:
 	return r;
 }
 
-[when not MathMode?(LIBM)]
-overload gamma_r (x:Double, signgamp:Pointer[Int]) {
+
+gamma_r (x:Double, signgamp:Pointer[Int]) {
   	// We don't have a real gamma implementation now.  We'll use lgamma
     // and the exp function.  But due to the required boundary
     // conditions we must check some values separately.  
@@ -247,12 +246,14 @@ overload gamma_r (x:Double, signgamp:Pointer[Int]) {
 	return exp(lgamma_r(x, signgamp));
 }
 
-[when not MathMode?(LIBM)]
-overload lgamma(x:Double) = lgamma_r(x,@signgam);
-[when not MathMode?(LIBM)]
-overload tgamma(x:Double) = gamma_r(x,@signgam);
 
-[when not MathMode?(LIBM)]
+lgamma(x:Double) = lgamma_r(x,@signgam);
+
+tgamma(x:Double) = gamma_r(x,@signgam);
+
+
 overload lgamma(x:Float) = Float(lgamma(Double(x)));
-[when not MathMode?(LIBM)]
+
 overload tgamma(x:Float) = Float(tgamma(Double(x)));
+
+alias gamma = tgamma;

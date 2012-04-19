@@ -8,13 +8,11 @@
 
 import math.native.kernel.k_log.*;
 import math.native.kernel.ieee754.*;
-public import math.native.defines.(LIBM,MathMode?,log2);
 import numbers.floats.(negativeInfinity,nan);
 
-[when not MathMode?(LIBM)]
-overload log2(x:Float) = Float(log2(Double(x)));
 
-[when not MathMode?(LIBM)]
+log2(x:Float) = Float(log2(Double(x)));
+
 overload log2(x:Double) {
 	alias ZERO = 0.;
 	var xdb = MAKE_IEEE(x);

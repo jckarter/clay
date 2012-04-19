@@ -7,13 +7,10 @@
 //	Inexact flag raised if x not equal to trunc(x).
 
 import math.native.kernel.ieee754.*;
-public import math.native.defines.(LIBM,MathMode?,trunc);
 import math.native.sign.(sign);
 
-[when not MathMode?(LIBM)]
-overload trunc(x:Float) = Float(trunc(Double(x)));
+trunc(x:Float) = Float(trunc(Double(x)));
 
-[when not MathMode?(LIBM)]
 overload trunc(x:Double) {
 	alias HUGE = GreatestPositiveFinite(Double);
 	alias ZERO = Double(0);

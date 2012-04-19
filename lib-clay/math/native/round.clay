@@ -1,5 +1,4 @@
 import math.native.kernel.ieee754.*;
-public import math.native.defines.(LIBM,MathMode?,round);
 import numbers.floats.(finite?);
 import math.native.floor.(floor);
 
@@ -8,8 +7,8 @@ private alias FHUGE = GreatestPositiveFinite(Float);
 private alias DZERO = 0.ff;
 private alias FZERO = 0.f;
 
-[T when Float?(T) and not MathMode?(LIBM)]
-overload round(x:T) --> t:T {
+[T when Float?(T)]
+round(x:T) --> t:T {
 	alias ZERO = T(0);
 	alias MHALF = T(-0.5);
 	alias ONE = T(1);

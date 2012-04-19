@@ -1,6 +1,5 @@
 
 import math.native.kernel.ieee754.*;
-public import math.native.defines.(LIBM,MathMode?,rint);
 
 private alias DHUGE = GreatestPositiveFinite(Double);
 private alias FHUGE = GreatestPositiveFinite(Float);
@@ -12,10 +11,10 @@ private var TWO52 = array(
  -4.50359962737049600000e+15 // 0xC3300000, 0x00000000 
 );
 
-[when not MathMode?(LIBM)]
-overload rint(a:Float) = Float(rint(Double(a)));
 
-[when not MathMode?(LIBM)]
+rint(a:Float) = Float(rint(Double(a)));
+
+
 overload rint(a:Double){
 	var x = a;
 	var ix = MAKE_IEEE(x);

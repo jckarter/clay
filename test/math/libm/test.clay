@@ -1,4 +1,5 @@
 // Test math functions
+import numbers.floats.(nan,infinity,negativeInfinity);
 import math.libm.*;
 import math.native.constants.(M_PI);
 import platform.(OS, FreeBSD, Windows);

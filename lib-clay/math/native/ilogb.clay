@@ -5,18 +5,15 @@
 // ilogb(inf) = INT_MAX (no signal is raised)
 
 import math.native.kernel.ieee754.*;
-public import math.native.defines.(LIBM,MathMode?,ilogb,logb);
 
 alias FP_ILOGB0	= Least(Int32);
 alias FP_ILOGBNAN = Least(Int32);
 
-[when not MathMode?(LIBM)]
-overload logb(x) = ilogb(x);
 
-[when not MathMode?(LIBM)]
-overload ilogb(x:Float) = ilogb(Double(x));
+alias logb = ilogb;
 
-[when not MathMode?(LIBM)]
+ilogb(x:Float) = ilogb(Double(x));
+
 overload ilogb(x:Double) {
 	
 	var xdb = MAKE_IEEE(x);

@@ -1,85 +1,84 @@
 // hypot adapted from openlibm
 
 import math.native.kernel.ieee754.*;
-public import math.native.defines.(LIBM,MathMode?,hypot);
 import math.native.sqrt.(sqrt);
 import math.native.abs.(abs);
 
-//overload hypot(x:Double, y:Double) {
-//	alias ZERO = 0.;
-//	alias ONE = 1.;
-//	var ha = GET_IEEE_HIGH(x);
-//	ha = bitand(ha,MM);
-//	var hb = GET_IEEE_HIGH(y);
-//	hb = bitand(hb,MM);
-//	var a,b = x,y; 
-//	if(hb > ha) {
-//		a=y;
-//		b=x;
-//		var j=ha;
-//		ha=hb;
-//		hb=j;
-//	} 
-//	a = abs(a);
-//	b = abs(b);
-//	if((ha-hb)>0x3c00000) return a+b; /* x/y > 2**60 */
-//	var k,low = 0,0u;
-//	if(ha > CV25) {	/* a>2**500 */
-//	   if(ha >= EM) {	/* Inf or NaN */
-//	       /* Use original arg order iff result is NaN; quieten sNaNs. */
-//	       var w = abs(x+ZERO)-abs(y+ZERO);
-//	       var low = GET_IEEE_LOW(a);
-//	       if(bitor(bitand(ha,NEM),low)==0) w = a;
-//	       low = GET_IEEE_LOW(b);
-//	       if(bitor(bitxor(hb,EM),low)==0) w = b;
-//	       return w;
-//	   }
-//	   /* scale a and b by 2**-600 */
-//	   ha -: CV22; 
-//	   hb -: CV22;	
-//	   k +: 600;
-//	   a = SET_IEEE_HIGH(a,ha);
-//	   b = SET_IEEE_HIGH(b,hb);
-//	}
-//	if(hb < CV24) {	/* b < 2**-500 */
-//	    if(hb <= NEM) {	/* subnormal b or 0 */
-//		    var low = GET_IEEE_LOW(b);
-//			if(bitor(hb,low)==0) return a;
-//			var t1 = SET_IEEE_HIGH(ZERO,CV23);	/* t1=2^1022 */
-//			b *: t1;
-//			a *: t1;
-//			k -: 1022;
-//	    } else {		/* scale a and b by 2^600 */
-//	        ha +: CV22; 	/* a *: 2^600 */
-//			hb +: CV22;	/* b *: 2^600 */
-//			k -: 600;
-//			a = SET_IEEE_HIGH(a,ha);
-//			b = SET_IEEE_HIGH(b,hb);
-//	    }
-//	}
-//    /* medium size a and b */
-//	var w = a-b;
-//	if (w>b) {
-//	    var t1 = SET_IEEE_HIGH(ZERO,ha);
-//	    var t2 = a-t1;
-//	    w  = sqrt(t1*t1-(b*(-b)-t2*(a+t1)));
-//	} else {
-//	    a  = a+a;
-//	    var y1 = SET_IEEE_HIGH(ZERO,hb);
-//	    var y2 = b - y1;
-//	    var t1 = SET_IEEE_HIGH(ZERO,ha+CV8);
-//	    var t2 = a - t1;
-//	    w  = sqrt(t1*y1-(w*(-w)-(t1*y2+t2*b)));
-//	}
-//	if(k!=0) {
-//	    return w*SET_IEEE_HIGH(ONE,GET_IEEE_HIGH(ONE)+bitshl(k,20));
-//	} 
-//	else 
-//		return w;
-//}
+hypot(x:Double, y:Double) {
+	alias ZERO = 0.;
+	alias ONE = 1.;
+	var ha = GET_IEEE_HIGH(x);
+	ha = bitand(ha,MM);
+	var hb = GET_IEEE_HIGH(y);
+	hb = bitand(hb,MM);
+	var a,b = x,y; 
+	if(hb > ha) {
+		a=y;
+		b=x;
+		var j=ha;
+		ha=hb;
+		hb=j;
+	} 
+	a = abs(a);
+	b = abs(b);
+	if((ha-hb)>0x3c00000) return a+b; /* x/y > 2**60 */
+	var k,low = 0,0u;
+	if(ha > CV25) {	/* a>2**500 */
+	   if(ha >= EM) {	/* Inf or NaN */
+	       /* Use original arg order iff result is NaN; quieten sNaNs. */
+	       var w = abs(x+ZERO)-abs(y+ZERO);
+	       var low = GET_IEEE_LOW(a);
+	       if(bitor(bitand(ha,NEM),low)==0) w = a;
+	       low = GET_IEEE_LOW(b);
+	       if(bitor(bitxor(hb,EM),low)==0) w = b;
+	       return w;
+	   }
+	   /* scale a and b by 2**-600 */
+	   ha -: CV22; 
+	   hb -: CV22;	
+	   k +: 600;
+	   a = SET_IEEE_HIGH(a,ha);
+	   b = SET_IEEE_HIGH(b,hb);
+	}
+	if(hb < CV24) {	/* b < 2**-500 */
+	    if(hb <= NEM) {	/* subnormal b or 0 */
+		    var low = GET_IEEE_LOW(b);
+			if(bitor(hb,low)==0) return a;
+			var t1 = SET_IEEE_HIGH(ZERO,CV23);	/* t1=2^1022 */
+			b *: t1;
+			a *: t1;
+			k -: 1022;
+	    } else {		/* scale a and b by 2^600 */
+	        ha +: CV22; 	/* a *: 2^600 */
+			hb +: CV22;	/* b *: 2^600 */
+			k -: 600;
+			a = SET_IEEE_HIGH(a,ha);
+			b = SET_IEEE_HIGH(b,hb);
+	    }
+	}
+   /* medium size a and b */
+	var w = a-b;
+	if (w>b) {
+	    var t1 = SET_IEEE_HIGH(ZERO,ha);
+	    var t2 = a-t1;
+	    w  = sqrt(t1*t1-(b*(-b)-t2*(a+t1)));
+	} else {
+	    a  = a+a;
+	    var y1 = SET_IEEE_HIGH(ZERO,hb);
+	    var y2 = b - y1;
+	    var t1 = SET_IEEE_HIGH(ZERO,ha+CV8);
+	    var t2 = a - t1;
+	    w  = sqrt(t1*y1-(w*(-w)-(t1*y2+t2*b)));
+	}
+	if(k!=0) {
+	    return w*SET_IEEE_HIGH(ONE,GET_IEEE_HIGH(ONE)+bitshl(k,20));
+	} 
+	else 
+		return w;
+}
 
 
-[T,U when Float?(T,U) and not MathMode?(LIBM)]
+[T,U when Float?(T,U)]
 overload hypot(m:T,n:U) --> r:T {
     var a = toBiggerNumericType(T,U,m);
     var b = toBiggerNumericType(T,U,n);

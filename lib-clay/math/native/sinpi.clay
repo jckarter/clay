@@ -1,12 +1,11 @@
 import math.native.kernel.ieee754.*;
 import math.native.rem_pio2.*;
 import math.native.kernel.k_trig.*;
-public import math.native.defines.(LIBM,MathMode?,sinpi);
 import math.native.floor.(floor);
 import math.native.constants.(M_PI);
 
-[when not MathMode?(LIBM)]
-overload sinpi(x:Double) {
+
+sinpi(x:Double) {
 	alias ONE = 1.;
 	alias ZERO = 0.;
 	var ix = GET_IEEE_HIGH(x);

@@ -1,4 +1,3 @@
-public import math.native.defines.(MathMode?,LIBM);
 public import math.native.pow.(pow);
 import math.native.cabs.(abs);
 import math.native.cexp.(exp);
@@ -38,7 +37,7 @@ import complex.*;
  *
  */
 
-[T,U when Complex?(T,U) and not MathMode?(LIBM)]
+[T,U when Complex?(T,U) ]
 overload pow(a:T, z:U){
     var absa = abs(a);
     if (absa == 0.0)

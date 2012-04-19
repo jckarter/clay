@@ -1,10 +1,8 @@
 import math.native.kernel.ieee754.*;
 import math.native.rem_pio2.*;
 import math.native.kernel.k_trig.*;
-public import math.native.defines.(LIBM,MathMode?,cos);
 
-[when not MathMode?(LIBM)]
-overload cos(x:Double) {
+cos(x:Double) {
 	var y = Array[Double,2]();
 	
     // High word of x. 

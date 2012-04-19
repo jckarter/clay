@@ -1,11 +1,10 @@
 
 import numbers.floats.(imagFromBits,floatFromBits,floatBitsUnsigned);
-public import math.native.defines.(LIBM,MathMode?,abs);
 
-[I when Integer?(I) and not MathMode?(LIBM)]
-inline overload abs(x:I) = if(x >= 0) x else -x;
+[I when Integer?(I) ]
+inline abs(x:I) = if(x >= 0) x else -x;
 
-[T when Imaginary?(T) and not MathMode?(LIBM)]
+[T when Imaginary?(T) ]
 inline overload abs(x:T) = imagFromBits(floatBitsUnsigned(x));
-[T when Float?(T) and not MathMode?(LIBM)]
+[T when Float?(T) ]
 inline overload abs(x:T) = floatFromBits(floatBitsUnsigned(x));

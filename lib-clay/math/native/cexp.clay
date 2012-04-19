@@ -1,5 +1,5 @@
 // complex exp function
-import math.native.defines.(MathMode?,LIBM);
+
 import math.native.kernel.ieee754.*;
 import math.native.kernel.k_cexp.(__ldexp_cexp);
 public import math.native.exp.(exp);
@@ -10,7 +10,7 @@ import complex.*;
 private alias exp_ovfl  = 0x40862e42u;			// high bits of MAX_EXP * ln2 ~= 710 
 private alias cexp_ovfl = 0x4096b8e4u;			// (MAX_EXP - MIN_DENORM_EXP) * ln2 
 
-[when not MathMode?(LIBM)]
+
 overload exp(z:ComplexDouble) {
 	
 	var x,y = real(z), imagValue(z);
