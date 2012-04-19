@@ -2913,6 +2913,7 @@ void applyParser(SourcePtr source, int offset, int length, Parser parser, Node &
 {
     vector<Token> t;
     tokenize(source, offset, length, t);
+
     tokens = &t;
     position = maxPosition = 0;
 
@@ -2925,6 +2926,7 @@ void applyParser(SourcePtr source, int offset, int length, Parser parser, Node &
         pushLocation(location);
         error("parse error");
     }
+    
     tokens = NULL;
     position = maxPosition = 0;
 }

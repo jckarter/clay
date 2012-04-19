@@ -529,7 +529,6 @@ static void initVariantInstance(InstancePtr x) {
 }
 
 static void initModule(ModulePtr m) {
-    
     if (m->initialized) return;
     m->initialized = true;
     vector<ImportPtr>::iterator ii, iend;
@@ -561,7 +560,7 @@ static void initModule(ModulePtr m) {
             initVariantInstance((Instance *)obj);
             break;
         }
-    }    
+    }
 
     if (llvmDIBuilder != NULL) {
         llvm::DIFile file = m->location.ok()
@@ -869,7 +868,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(arrayElements);
 
     PRIMITIVE(Vec);
-    
+
     PRIMITIVE(Tuple);
     PRIMITIVE(TupleElementCount);
     PRIMITIVE(tupleRef);
