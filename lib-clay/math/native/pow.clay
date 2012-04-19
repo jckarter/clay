@@ -1,7 +1,7 @@
 // pow function adapted from openlibm
 
 import math.native.kernel.ieee754.*;
-public import math.native.defines.(pow);
+public import math.native.defines.(LIBM,MathMode?,pow);
 import math.native.sqrt.(sqrt);
 import math.native.abs.(abs);
 import math.native.scalbn.(scalbn);
@@ -10,6 +10,7 @@ private var bp = array(1.0, 1.5);
 private var dp_h = array( 0.0, 5.84962487220764160156e-01); // 0x3FE2B803, 0x40000000 
 private var dp_l = array( 0.0, 1.35003920212974897128e-08); // 0x3E4CFDEB, 0x43CFD006 
 	
+[when not MathMode?(LIBM)]
 overload pow(x:Double, y:Double) : Double {
 
 	alias two53	=  9007199254740992.0;	// 0x43400000, 0x00000000 

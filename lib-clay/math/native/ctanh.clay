@@ -11,7 +11,9 @@ import math.native.sin.(sin);
 import math.native.cos.(cos);
 import math.native.copysign.(copysign);
 import numbers.floats.(infinity?);
+import math.native.defines.(MathMode?,LIBM);
 
+[when not MathMode?(LIBM)]
 overload tanh(z:ComplexDouble) {
 	
 	var x,y = real(z),imagValue(z);
@@ -66,6 +68,7 @@ overload tanh(z:ComplexDouble) {
 	return Complex((beta * rho * s) / denom, t / denom);
 }
 
+[when not MathMode?(LIBM)]
 overload tan(z:ComplexDouble) {
 	// ctan(z) = -I * ctanh(I * z) 
 	var z = tanh(Complex(-imagValue(z), real(z)));

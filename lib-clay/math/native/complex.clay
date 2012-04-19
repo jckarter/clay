@@ -11,7 +11,7 @@ public import math.native.csinh.(sinh);
 public import math.native.ccosh.(cosh);
 public import math.native.csincos.(sin,cos);
 public import math.native.ctanh.(tanh,tan);
-public import math.native.defines.(cot,asinh,acosh,atanh);
+public import math.native.defines.(LIBM,MathMode?,cot,asinh,acosh,atanh);
 
 public import math.native.acos.(acos);
 public import math.native.asin.(asin);
@@ -179,7 +179,7 @@ loop1:
  * Also tested by csin(casin(z)) = z.
  */
 
-[T when Complex?(T)]
+[T when Complex?(T) and not MathMode?(LIBM)]
 overload asin(z:T){
     alias x = real(z);
     alias y = imag(z);
@@ -226,7 +226,7 @@ overload asin(z:T){
  *    IEEE      -10,+10     30000      1.8e-14      2.2e-15
  */
 
-[T when Complex?(T)]
+[T when Complex?(T) and not MathMode?(LIBM)]
 overload acos(z:T) {
     var w = asin(z);
     return (M_PI_2  -  real(w)) - imag(w);
@@ -279,7 +279,7 @@ overload acos(z:T) {
  * 2.9e-17.  See also clog().
  */
 
-[T when Complex?(T)]
+[T when Complex?(T) and not MathMode?(LIBM)]
 overload atan(z:T){
     alias C = ComplexBaseType(T);
     alias MAXNUM = GreatestPositiveFinite(C);
@@ -334,7 +334,7 @@ overload atan(z:T){
  *    IEEE      -10,+10     30000       1.8e-14     2.6e-15
  *
  */
-[T when Complex?(T)]
+[T when Complex?(T) and not MathMode?(LIBM)]
 overload asinh(z:T) = -1.j *  asin (z * 1.j);
 
 
@@ -364,7 +364,7 @@ overload asinh(z:T) = -1.j *  asin (z * 1.j);
  *    IEEE      -10,+10     30000       2.9e-16     8.1e-17
  *
  */
-[T when Complex?(T)]
+[T when Complex?(T) and not MathMode?(LIBM)]
 overload cosh(z:T)
     = Complex(cosh(real(z)) * cos(imagValue(z)) , sinh(real(z)) * sin(imagValue(z)));
 
@@ -395,7 +395,7 @@ overload cosh(z:T)
  *    IEEE      -10,+10     30000       1.6e-14     2.1e-15
  *
  */
-[T when Complex?(T)]
+[T when Complex?(T) and not MathMode?(LIBM)]
 overload acosh(z:T) = 1.j * acos(z);
 
 
@@ -426,6 +426,6 @@ overload acosh(z:T) = 1.j * acos(z);
  *    IEEE      -10,+10     30000       2.3e-16     6.2e-17
  *
  */
-[T when Complex?(T)]
+[T when Complex?(T) and not MathMode?(LIBM)]
 overload atanh(z:T) = -1.j * atan(z * 1.j);
 

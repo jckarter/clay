@@ -1,6 +1,6 @@
 
 import math.native.kernel.ieee754.*;
-public import math.native.defines.(scalbn,scalbln);
+public import math.native.defines.(LIBM,MathMode?,scalbn,scalbln);
 import math.native.copysign.(copysign);
 
 // scalbn (double x, int n)
@@ -11,10 +11,10 @@ import math.native.copysign.(copysign);
 alias two54   =  1.80143985094819840000e+16; // 0x43500000, 0x00000000 
 alias twom54  =  5.55111512312578270212e-17; // 0x3C900000, 0x00000000 
 
-[I when Integer?(I)]
+[I when Integer?(I) and not MathMode?(LIBM)]
 overload scalbn (x:Float, n:I) = Float(scalbn(Double(x), n));
 
-[I when Integer?(I)]
+[I when Integer?(I) and not MathMode?(LIBM)]
 overload scalbn (x:Double, n:I) {
     alias HUGE = GreatestPositiveFinite(Double);
     alias TINY = LeastPositive(Double);
@@ -45,7 +45,7 @@ overload scalbn (x:Double, n:I) {
 
 
 
-[T when Float?(T)]
+[T when Float?(T) and not MathMode?(LIBM)]
 overload scalbln (x:T, n:Long) {
     var i = numericConvert(Int32,n);
     if (i != n) {

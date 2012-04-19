@@ -1,15 +1,17 @@
 // asinh
 
 import math.native.kernel.ieee754.*;
-public import math.native.defines.(asinh);
+public import math.native.defines.(LIBM,MathMode?,asinh);
 import math.native.sqrt.(sqrt);
 import math.native.abs.(abs);
 import math.native.log.(log);
 import math.native.log1p.(log1p);
 import math.native.constants.(M_LN2);
 
+[when not MathMode?(LIBM)]
 overload asinh(x:Float) = Float(asinh(Double(x)));
 
+[when not MathMode?(LIBM)]
 overload asinh(x:Double) {
 	alias ONE = 1.;
 	alias HUGE = GreatestPositiveFinite(Double);

@@ -1,4 +1,4 @@
-public import math.native.defines.(log10);
+public import math.native.defines.(LIBM,MathMode?,log10);
 public import math.native.log.(log);
 import math.native.abs.(abs);
 import math.native.atan2.(atan2);
@@ -43,7 +43,7 @@ import complex.(Complex,Complex?,imagValue,real);
  
 
 
-[T when Complex?(T)]
+[T when Complex?(T) and not MathMode?(LIBM)]
 overload log(z:T){
     var rr = abs(z);
     var p = log(rr);
@@ -53,6 +53,6 @@ overload log(z:T){
 
 
 
-[T when Complex?(T)]
+[T when Complex?(T) and not MathMode?(LIBM)]
 overload log10(x:T) = log(x)/log(10.0);
 

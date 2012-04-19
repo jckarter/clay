@@ -2,12 +2,14 @@
 
 import math.native.kernel.ieee754.*;
 import math.native.kernel.k_exp.*;
-public import math.native.defines.(tanh);
+public import math.native.defines.(LIBM,MathMode?,tanh);
 import math.native.expm1.(expm1);
 import math.native.abs.(abs);
 
+[when not MathMode?(LIBM)]
 overload tanh(x:Float) = Float(tanh(Double(x)));
 
+[when not MathMode?(LIBM)]
 overload tanh(x:Double) {
 	alias ONE = 1.;
 	alias TWO = 2.;

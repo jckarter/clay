@@ -1,8 +1,9 @@
 // modf
 
 import math.native.kernel.ieee754.*;
-public import math.native.defines.(modf);
+public import math.native.defines.(LIBM,MathMode?,modf);
 
+[when not MathMode?(LIBM)]
 overload modf(x:Double, iptr:Pointer[Double]) {
 	
 	var ix = MAKE_IEEE(x);

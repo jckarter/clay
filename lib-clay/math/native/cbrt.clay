@@ -1,7 +1,7 @@
 // cbrt function adapted from openlibm
 
 import math.native.kernel.ieee754.*;
-public import math.native.defines.(cbrt);
+public import math.native.defines.(LIBM,MathMode?,cbrt);
 
 alias B1 = 715094163; // B1 = (1023-1023/3-0.03306235651)*2**20 
 alias B2 = 696219795; // B2 = (1023-1023/3-54/3-0.03306235651)*2**20 
@@ -14,9 +14,10 @@ alias CP3 = -0.758397934778766047437;		// 0xbfe844cb, 0xbee751d9
 alias CP4 =  0.145996192886612446982;		// 0x3fc2b000, 0xd4e4edd7 
 
 
-[T when Float?(T)]
+[T when Float?(T) and not MathMode?(LIBM)]
 overload cbrt(x:T) = T(cbrt(Double(x)));
 
+[when not MathMode?(LIBM)]
 overload cbrt(x:Double) {
 	
 	var xdb = MAKE_IEEE(x);

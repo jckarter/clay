@@ -102,3 +102,7 @@ define jn;
 define y0;
 define y1;
 define yn;
+
+
+alias LIBM = "libm";
+MathMode?(m) = Flag("math.Mode")==m;

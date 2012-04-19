@@ -1,7 +1,7 @@
 // exp2
 
 import math.native.kernel.ieee754.*;
-public import math.native.defines.(exp2);
+public import math.native.defines.(LIBM,MathMode?,exp2);
 
 alias TBLBITS = 8;
 alias TBLSIZE = bitshl(1 , TBLBITS);
@@ -275,6 +275,7 @@ private var tbl = array(
 	0x1.690f4b19e9471p+0,	-0x1.9780p-45,
 );
 
+[when not MathMode?(LIBM)]
 overload exp2(x:Double) {
 	alias HUGE = GreatestPositiveFinite(Double);
 

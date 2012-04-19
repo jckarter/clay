@@ -1,7 +1,7 @@
 
 import math.native.kernel.exact.*;
 import math.native.kernel.ieee754.*;
-public import math.native.defines.(sqrt);
+public import math.native.defines.(LIBM,MathMode?,sqrt);
 import numbers.floats.(nan?,nan,infinity);
 
 private var inroot = array(
@@ -47,6 +47,7 @@ private var big = 134217728.0;
 private var t512 = 0x1.p512;
 private var tm256 = 0x1.p-256;
 
+[when not MathMode?(LIBM)]
 overload sqrt(x:Double) {
 
     var a = MAKE_IEEE(x);
@@ -89,6 +90,7 @@ overload sqrt(x:Double) {
 }
 
 
+[when not MathMode?(LIBM)]
 overload sqrt(x:Float) {
     alias ONE = 1.f;
     alias ZERO = 0.f;

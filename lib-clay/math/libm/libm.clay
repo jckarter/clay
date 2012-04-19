@@ -16,9 +16,11 @@ inline overload pow(x:LongDouble,y:Float) = libc.powl(x,LongDouble(y));
 [T when Integer?(T)] inline overload pow(x:Float,y:T) = libc.powf(x,Float(y));
 [T when Integer?(T)] inline overload pow(x:LongDouble,y:T) = libc.powl(x,LongDouble(y));
 
-inline overload abs(x:Double) = libc.abs(x);
-inline overload abs(x:Float) = libc.absf(x);
-inline overload abs(x:LongDouble) = libc.absl(x);
+inline overload abs(x:Double) = libc.fabs(x);
+inline overload abs(x:Float) = libc.fabsf(x);
+inline overload abs(x:LongDouble) = libc.fabsl(x);
+inline overload abs(x:Int) = libc.abs(x);
+inline overload abs(x:Long) = libc.labs(x);
 
 inline overload exp(x:Double) = libc.exp(x);
 inline overload exp(x:Float) = libc.expf(x);

@@ -6,8 +6,9 @@ import math.native.abs.(abs);
 import complex.(Complex?,Complex,ComplexBaseType, real,imagValue);
 import numbers.floats.(nan);
 import math.native.hypot.(hypot);
+import math.native.defines.(MathMode?,LIBM);
 
-[C when Complex?(C)]
+[C when Complex?(C) and not MathMode?(LIBM)]
 overload sqrt(x:C) --> res:C {
     alias T = ComplexBaseType(C);
     alias ZERO = T(0);
@@ -63,5 +64,5 @@ overload sqrt(x:C) --> res:C {
 }
 
 
-[I when Imaginary?(I)]
+[I when Imaginary?(I) and not MathMode?(LIBM)]
 inline overload sqrt(z:I) = sqrt(Complex(z));

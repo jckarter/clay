@@ -1,7 +1,7 @@
 // expm1 function adapted from openlibm
 
 import math.native.kernel.ieee754.*;
-public import math.native.defines.(expm1);
+public import math.native.defines.(LIBM,MathMode?,expm1);
 
 alias o_threshold = 7.09782712893383973096e+02;// 0x40862E42, 0xFEFA39EF 
 // Scaled Q's: Qn_here = 2**n * Qn_above, for R(2*z) where z = hxs = x*x/2: 
@@ -11,8 +11,10 @@ alias Q3  =  -7.93650757867487942473e-05; // BF14CE19 9EAADBB7
 alias Q4  =   4.00821782732936239552e-06; // 3ED0CFCA 86E65239 
 alias Q5  =  -2.01099218183624371326e-07; // BE8AFDB7 6E09C32D 
 
+[when not MathMode?(LIBM)]
 overload expm1(a:Float) = Float(expm1(Double(a)));
 
+[when not MathMode?(LIBM)]
 overload expm1(a:Double)  {
 	alias ONE = 1.;
 	alias HUGE = GreatestPositiveFinite(Double);

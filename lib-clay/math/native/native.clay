@@ -107,6 +107,7 @@ overload log(b,x) = log(x) / log(b);
 square(x) = x*x;
 cube(x) = x*x*x;
 
+[when not MathMode?(LIBM)]
 inline overload fma(a, b, c) = (a * b) + c;
 
 

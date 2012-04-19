@@ -1,8 +1,9 @@
 // llround
 
 import math.native.kernel.ieee754.*;
-public import math.native.defines.(llround);
+public import math.native.defines.(LIBM,MathMode?,llround);
 
+[when not MathMode?(LIBM)]
 overload llround(x:Float) {
     var result = 0l;
     var i = floatBits(x);
@@ -26,6 +27,7 @@ overload llround(x:Float) {
     return sign * result;
 }
 
+[when not MathMode?(LIBM)]
 overload llround (x:Double ) {
     var result = 0l;
     var xdb = ieee_db(x);

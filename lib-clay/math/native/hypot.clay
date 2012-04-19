@@ -1,7 +1,7 @@
 // hypot adapted from openlibm
 
 import math.native.kernel.ieee754.*;
-public import math.native.defines.(hypot);
+public import math.native.defines.(LIBM,MathMode?,hypot);
 import math.native.sqrt.(sqrt);
 import math.native.abs.(abs);
 
@@ -79,7 +79,7 @@ import math.native.abs.(abs);
 //}
 
 
-[T,U when Float?(T,U)]
+[T,U when Float?(T,U) and not MathMode?(LIBM)]
 overload hypot(m:T,n:U) --> r:T {
     var a = toBiggerNumericType(T,U,m);
     var b = toBiggerNumericType(T,U,n);

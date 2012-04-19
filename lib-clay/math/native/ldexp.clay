@@ -1,7 +1,7 @@
-public import math.native.defines.(ldexp);
+public import math.native.defines.(LIBM,MathMode?,ldexp);
 import math.native.scalbn.(scalbn);
 import numbers.floats.(finite?);
 
-[T,I when Float?(T) and Integer?(I)]
+[T,I when Float?(T) and Integer?(I) and not MathMode?(LIBM)]
 overload ldexp(value:T, i:I)
     = if(not finite?(value) or value==0.) value else scalbn(value,i);

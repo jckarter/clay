@@ -1,9 +1,10 @@
 // Test math functions
-import math.*;
+import math.libm.*;
+import math.native.constants.(M_PI);
 import platform.(OS, FreeBSD, Windows);
 import printer.(println);
 
-itypes() = Int8, Int16, Int32, Int64;
+itypes() = Int32, Int64;
 
 var f32data = array(0.f, 1.f, -1.f,3.f, 38.f, 355.f, 2147483647.f, 9223372036854775807.f, 
         -2147483648.f, -9223372036854775808.f, Float32(M_PI),Float32(-M_PI), nan(Float32), -nan(Float32),
@@ -18,41 +19,31 @@ var f64data = array(0., 1., -1.,3., 38. , 355. , 2147483647., 922337203685477580
 idata(T) = T(0), T(1), T(-1), T(3), T(38), Least(T)+1, Greatest(T);
 
 oneArgFuncs() = 
-                abs,recip,
-                sqrt,rsqrt,cbrt,square,cube,
+                abs,
+                sqrt,cbrt,
                 trunc,round,ceil,floor,rint,
-                significand,
                 sin,cos,tan,
                 asin,acos,atan,
                 sinh,cosh,tanh,
-                exp,expm1,sigmoid,
+                exp,expm1,
                 log,log10,log2,ilogb,log1p,
                 erf,erfc,gamma,lgamma,
                 //j0,j1,i1,
-                sec,csc,cot,
-                asec,acsc,acot,
-                sech,csch,coth,
-                asech,acsch,acoth, 
                 ;
 
 // FreeBSD does not have log2
 [when OS == FreeBSD]
 overload oneArgFuncs() =
-                abs,recip,
-                sqrt,rsqrt,cbrt,square,cube,
+                abs,
+                sqrt,cbrt,
                 trunc,round,ceil,floor,rint,
-                significand,
                 sin,cos,tan,
                 asin,acos,atan,
                 sinh,cosh,tanh,
-                exp,expm1,sigmoid,
+                exp,expm1,
                 log,log10,ilogb,log1p,
                 erf,erfc,gamma,lgamma,
                 //j0,j1,i1,
-                sec,csc,cot,
-                asec,acsc,acot,
-                sech,csch,coth,
-                asech,acsch,acoth, 
                 ;
 
 // Windows only has C89 libm
@@ -70,7 +61,7 @@ overload oneArgFuncs() =
 
 
 twoArgFuncs() = 
-                pow,beta,atan2,
+                pow,atan2,
                 ;
 
 [when OS == Windows]

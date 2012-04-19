@@ -1,7 +1,7 @@
 
-public import math.native.defines.(abs);
+public import math.native.defines.(LIBM,MathMode?,abs);
 import math.native.hypot.(hypot);
 import complex.(real,imagValue,Complex?);
 
-[U when Complex?(U)]
+[U when Complex?(U) and not MathMode?(LIBM)]
 inline overload abs(x:U) = hypot(real(x),imagValue(x));

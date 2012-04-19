@@ -1,4 +1,5 @@
 import complex.*;
+import math.native.defines.(MathMode?,LIBM);
 public import math.native.sin.(sin);
 public import math.native.cos.(cos);
 public import math.native.cosh.(cosh);
@@ -42,7 +43,7 @@ import math.native.abs.(abs);
  *
  */
 
-[T when Complex?(T)]
+[T when Complex?(T) and not MathMode?(LIBM)]
 overload sin(z:T){
    var ch,sh = chsh(imagValue(z));
    return Complex(sin(real(z)) * ch , cos (real(z)) * sh);
@@ -96,7 +97,7 @@ private chsh(x:T){
  *    IEEE      -10,+10     30000       3.8e-16     1.0e-16
  */
 
-[T when Complex?(T)]
+[T when Complex?(T) and not MathMode?(LIBM)]
 overload cos(z:T){
     var ch,sh = chsh(imagValue(z));
     return Complex(cos(real(z)) * ch , - sin(real(z)) * sh);

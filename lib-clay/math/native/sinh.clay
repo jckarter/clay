@@ -2,14 +2,16 @@
 
 import math.native.kernel.ieee754.*;
 import math.native.kernel.k_exp.*;
-public import math.native.defines.(sinh);
+public import math.native.defines.(LIBM,MathMode?,sinh);
 import math.native.log.(log);
 import math.native.abs.(abs);
 import math.native.exp.(exp);
 import math.native.expm1.(expm1);
 
+[when not MathMode?(LIBM)]
 overload sinh(x:Float) = Float(sinh(Double(x)));
 
+[when not MathMode?(LIBM)]
 overload sinh(x:Double) {
 	alias ONE = 1.;
 	alias HUGE = GreatestPositiveFinite(Double);

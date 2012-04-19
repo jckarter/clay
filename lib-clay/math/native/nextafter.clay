@@ -1,4 +1,4 @@
-public import math.native.defines.(nextafter);
+public import math.native.defines.(LIBM,MathMode?,nextafter);
 import numbers.floats.(nan?,nan,infinity,signbit);
 import math.native.kernel.ieee754.*;
 
@@ -6,6 +6,7 @@ import math.native.kernel.ieee754.*;
 // return the next machine floating-point number of x in the
 // direction toward y.
 
+[when not MathMode?(LIBM)]
 overload nextafter(x:Double, y:Double){
     alias MIN_SUB = LeastPositive(Double);
     var xdb,ydb = MAKE_IEEE(x),MAKE_IEEE(y);
@@ -43,7 +44,9 @@ overload nextafter(x:Double, y:Double){
     return GET_IEEE_DB(xdb);
 }
 
+[when not MathMode?(LIBM)]
 overload nextafter(x:Double,y:Float) = nextafter(x,Double(y));
+[when not MathMode?(LIBM)]
 overload nextafter(x:Float,y:Double) = nextafter(Double(x),y);
 
 alias nexttoward = nextafter;

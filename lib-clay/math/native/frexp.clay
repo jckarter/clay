@@ -1,5 +1,5 @@
 
-public import math.native.defines.(frexp);
+public import math.native.defines.(LIBM,MathMode?,frexp);
 
 // for non-zero x
 //  x = frexp(arg,@exp);
@@ -9,7 +9,7 @@ public import math.native.defines.(frexp);
 // If arg is inf, 0.0, or NaN, then frexp(arg,@exp) returns arg
 // with *exp=0.
 
-[T,I when Float?(T) and Integer?(I)]
+[T,I when Float?(T) and Integer?(I) and not MathMode?(LIBM)]
 overload frexp(x:T, eptr:Pointer[I]){
     var k = floatExponent(x);                      // extract exponent
     eptr^ = 0;

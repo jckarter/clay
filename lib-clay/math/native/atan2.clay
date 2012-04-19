@@ -1,7 +1,7 @@
 // atan2
 
 import math.native.kernel.ieee754.*;
-public import math.native.defines.(atan2);
+public import math.native.defines.(LIBM,MathMode?,atan2);
 import math.native.atan.(atan);
 import math.native.abs.(abs);
 import math.native.constants.(M_PI);
@@ -10,8 +10,10 @@ alias pi_o_4  = 7.8539816339744827900E-01; // 0x3FE921FB, 0x54442D18
 alias pi_o_2  = 1.5707963267948965580E+00; // 0x3FF921FB, 0x54442D18 
 alias pi_lo   = 1.2246467991473531772E-16; // 0x3CA1A626, 0x33145C07 
 
+[when not MathMode?(LIBM)]
 overload atan2(y:Float, x:Float) = Float(atan2(Double(y), Double(x)));
 
+[when not MathMode?(LIBM)]
 overload atan2(y:Double, x:Double) {
 	alias ONE = 1.;
 	alias ZERO = 0.;

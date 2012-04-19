@@ -1,8 +1,9 @@
 // fmod
 
 import math.native.kernel.ieee754.*;
-public import math.native.defines.(fmod);
+public import math.native.defines.(LIBM,MathMode?,fmod);
 
+[when not MathMode?(LIBM)]
 overload fmod(a:Double, b:Double) {
 
 	alias ONE = 1.0;

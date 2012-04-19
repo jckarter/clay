@@ -1,12 +1,13 @@
 
 import math.native.kernel.ieee754.*;
-public import math.native.defines.(ceil);
+public import math.native.defines.(LIBM,MathMode?,ceil);
 
 private alias DHUGE = GreatestPositiveFinite(Double);
 private alias FHUGE = GreatestPositiveFinite(Float);
 private alias DZERO = 0.ff;
 private alias FZERO = 0.f;
 
+[when not MathMode?(LIBM)]
 overload ceil(x:Double) {
 	var ix = MAKE_IEEE(x);
 	var j0 = bitand(bitshr(GET_IEEE_HIGH(ix),20),0x7ff)-0x3ff;
@@ -54,6 +55,7 @@ overload ceil(x:Double) {
 	return GET_IEEE_DB(ix);
 }
 
+[when not MathMode?(LIBM)]
 overload ceil(x:Float) {
 	var ix = GET_FLOAT_SIGNED(x);
 	var j0 = bitand(bitshr(ix,23),0xff)-0x7f;

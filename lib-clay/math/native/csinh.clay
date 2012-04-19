@@ -1,5 +1,6 @@
 // complex sin, sinh
 
+import math.native.defines.(MathMode?,LIBM);
 import math.native.kernel.ieee754.*;
 import math.native.kernel.k_cexp.*;
 public import math.native.sinh.(sinh);
@@ -19,8 +20,8 @@ import math.native.cosh.(cosh);
 //
 // Exceptional values are noted in the comments within the source code.
 // These values and the return value were taken from n1124.pdf.
- 
 
+[when not MathMode?(LIBM)]
 overload sinh(z:ComplexDouble) {
 	alias HUGE = GreatestPositiveFinite(Double);
 	var x,y = real(z),imagValue(z);
@@ -115,6 +116,7 @@ overload sinh(z:ComplexDouble) {
 	return Complex((x * x) * (y - y), (x + x) * (y - y));
 }
 
+[when not MathMode?(LIBM)]
 overload sin(z:ComplexDouble) {
 	// csin(z) = -I * csinh(I * z) 
 	var z = sinh(Complex(-imagValue(z), real(z)));

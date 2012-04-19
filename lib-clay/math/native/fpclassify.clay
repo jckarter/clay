@@ -1,5 +1,5 @@
 
-public import math.native.defines.(fpclassify);
+public import math.native.defines.(LIBM,MathMode?,fpclassify);
 import numbers.floats.*;
 
 alias FP_NAN = 0;
@@ -15,7 +15,7 @@ alias FP_SUBNORMAL_NEG = 9;
 alias FP_NORMAL_NEG = 10;
 alias FP_SNAN_NEG = 11;
 
-[T when Float?(T) or Imaginary?(T)]
+[T when (Float?(T) or Imaginary?(T)) and not MathMode?(LIBM)]
 overload fpclassify(x:T) --> res:Int {
     if(x==T(0)) res <-- FP_ZERO;
     else if(subnormal?(x)) res <-- FP_SUBNORMAL;

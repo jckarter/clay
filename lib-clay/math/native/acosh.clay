@@ -1,14 +1,16 @@
 // acosh
 
 import math.native.kernel.ieee754.*;
-public import math.native.defines.(acosh);
+public import math.native.defines.(LIBM,MathMode?,acosh);
 import math.native.log.(log);
 import math.native.log1p.(log1p);
 import math.native.sqrt.(sqrt);
 import math.native.constants.(M_LN2);
 
+[when not MathMode?(LIBM)]
 overload acosh(x:Float) = Float(acosh(Double(x)));
 
+[when not MathMode?(LIBM)]
 overload acosh(x:Double) {
 	alias ONE = 1.;
 	var xdb = MAKE_IEEE(x);
