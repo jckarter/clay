@@ -1,7 +1,7 @@
 // asin
 
 import math.native.kernel.ieee754.*;
-import numbers.floats.(nan);
+import numbers.floats.*;
 import math.native.sqrt.(sqrt);
 import math.native.abs.(abs);
 import math.native.asinh.(asinh); 
@@ -74,6 +74,7 @@ asin(x:Double) {
 
 // Return arc sine of complex double value.
 
+[C when Complex?(C)]
 overload asin(x:C) --> res:C {
  
     if (nan?(real(x)) or nan?(imagValue(x))) {
@@ -81,7 +82,7 @@ overload asin(x:C) --> res:C {
             res <-- x;
         }
         else if (infinity?(real(x)) or infinity?(imagValue(x))) {
-           res <-- Complex(nan(ComplexBaseType(C)),copysign(GreatestPositiveFinite(Double),imagValue(x)));
+           res <-- Complex(nan(ComplexBaseType(C)),copysign(infinity(Double),imagValue(x)));
         }
         else
             res <-- nan(C);

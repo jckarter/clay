@@ -62,7 +62,6 @@ overload sinh(x:Double) {
 
 
 overload sinh(z:ComplexDouble) {
-	alias HUGE = GreatestPositiveFinite(Double);
 	var x,y = real(z),imagValue(z);
 
 	var xdb = MAKE_IEEE(x);
@@ -91,7 +90,7 @@ overload sinh(z:ComplexDouble) {
 		} 
 		else {
 			// x >= 1455: the result always overflows 
-			var h = HUGE * x;
+			var h = GreatestPositiveFinite(Double) * x;
 			return Complex(h * cos(y), h * h * sin(y));
 		}
 	}

@@ -87,8 +87,8 @@ overload hypot(x:Float, y:Float) : Float {
 	if((ha-hb)>0xf000000) return a+b; // x/y > 2**30
 	var k = 0;
 	if(ha >= 0x7f800000 or hb >= 0x7f800000) {	// Inf or NaN
-		if(nan?(a) and nan?(b)) return nan(Double);
-		return infinity(Double);
+		if(nan?(a) and nan?(b)) return nan(Float);
+		return infinity(Float);
 	}
 	if(ha > 0x58800000) {	// a>2**50
 		// scale a and b by 2**-68

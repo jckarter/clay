@@ -1,5 +1,6 @@
 
-import math.native.complex.*;
+import math.native.*;
+import complex.*;
 import printer.(println);
 import numbers.floats.(nan,infinity);
 

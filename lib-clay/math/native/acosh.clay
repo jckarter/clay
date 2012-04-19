@@ -4,11 +4,13 @@ import math.native.kernel.ieee754.*;
 import math.native.log.(log);
 import math.native.log1p.(log1p);
 import math.native.sqrt.(sqrt);
-import math.native.constants.(M_LN2,M_PI_4,M_PI_2);
-import math.native.fpclassify.(FP_NAN,FP_ZERO,FP_INFINITE);
+import math.native.constants.(M_LN2,M_PI_4,M_PI_2,M_PI);
+import math.native.fpclassify.(fpclassify,FP_NAN,FP_ZERO,FP_INFINITE);
+import math.native.copysign.(copysign);
+import numbers.floats.(nan,signbit,infinity);
+import complex.*;
 
 acosh(x:Float) = Float(acosh(Double(x)));
-
 
 overload acosh(x:Double) {
 	alias ONE = 1.;
@@ -35,14 +37,14 @@ overload acosh(x:Double) {
 		}
 }
 
-overload acosh(x:ComplexDouble) {
+overload acosh(x:ComplexDouble) --> res:ComplexDouble {
   
   	var rcls = fpclassify(real(x));
   	var icls = fpclassify(imagValue(x));
 
   	if (rcls <= FP_INFINITE or icls <= FP_INFINITE) {
       	if (icls == FP_INFINITE) {
-	  		res <-- Complex(GreatestPositiveFinite(Double),
+	  		res <-- Complex(infinity(Double),
 
 			(if (rcls == FP_NAN)
 				nan(Double)
@@ -53,7 +55,7 @@ overload acosh(x:ComplexDouble) {
 						else M_PI_2), imagValue(x))));
 		}
       	else if (rcls == FP_INFINITE) {
-	  		res <-- Complex(GreatestPositiveFinite(Double),
+	  		res <-- Complex(infinity(Double),
 
 	  		(if (icls >= FP_ZERO)
 	    		copysign((if(signbit(real(x)) == 1) M_PI else 0.0), imagValue(x))
@@ -69,16 +71,10 @@ overload acosh(x:ComplexDouble) {
     }
   	else {
      	var y = Complex((real(x) - imagValue(x)) * (real(x) + imagValue(x)) - 1.0, 2.0 * real(x) * imagValue(x));
-
       	y = sqrt (y);
-
       	if (real(x) < 0.0) y = -y;
-
-      	real(y) += real(x);
-      	imag(y) += imagValue(x);
-
+      	y = Complex(real(y) + real(x), imagValue(y) + imagValue(x));
       	res <-- log(y);
-
       	// We have to use the positive branch.
       	if (real(res) < 0.0)
 			res = -res;

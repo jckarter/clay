@@ -168,17 +168,16 @@ overload sqrt(x:C) --> res:C {
     alias T = ComplexBaseType(C);
     alias ZERO = T(0);
     alias HALF = T(0.5);
-    alias HUGE_VAL = GreatestPositiveFinite(T);
     alias xr = real(x);
     alias xi = imagValue(x);
     var rcls,icls = fpclassify(xr), fpclassify (xi);
     if (rcls <= FP_INFINITE or icls <= FP_INFINITE){
         if (icls == FP_INFINITE){
-            res <-- Complex(HUGE_VAL,xi);
+            res <-- Complex(infinity(T),xi);
         }
         else if (rcls == FP_INFINITE){
             if (xr < ZERO){
-                res <-- Complex(if(icls == FP_NAN) nan(T) else ZERO, copysign (HUGE_VAL, xi));
+                res <-- Complex(if(icls == FP_NAN) nan(T) else ZERO, copysign (infinity(T), xi));
             }
             else{
                 res <-- Complex(xr,if(icls == FP_NAN) nan(T) else copysign (ZERO, xi));

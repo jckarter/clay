@@ -8,7 +8,7 @@ import math.native.exp.(exp);
 import math.native.sin.(sin);
 import math.native.cos.(cos);
 import math.native.log.(log);
-import math.native.carg.(arg);
+import math.native.arg.(arg);
 import complex.*;
 
 

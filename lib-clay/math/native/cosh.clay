@@ -53,7 +53,6 @@ overload cosh(x:Double) {
 
 overload cosh(z:ComplexDouble) {
 	
-	alias HUGE = GreatestPositiveFinite(Double);
 	var x,y = real(z),imagValue(z);
 
 	var xdb = MAKE_IEEE(x);
@@ -80,7 +79,7 @@ overload cosh(z:ComplexDouble) {
 			return Complex(real(z), imagValue(z) * copysign(1., x));
 		} else {
 			// x >= 1455: the result always overflows 
-			var h = HUGE * x;
+			var h = GreatestPositiveFinite(Double) * x;
 			return Complex(h * h * cos(y), h * sin(y));
 		}
 	}

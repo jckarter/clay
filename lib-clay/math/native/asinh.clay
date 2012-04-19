@@ -8,7 +8,7 @@ import math.native.log1p.(log1p);
 import math.native.constants.(M_LN2,M_PI_2,M_PI_4);
 import math.native.fpclassify.(fpclassify,FP_INFINITE,FP_ZERO,FP_NAN);
 import math.native.copysign.(copysign);
-import numbers.floats.(nan);
+import numbers.floats.(nan,infinity);
 import complex.*;
 
 asinh(x:Float) = Float(asinh(Double(x)));
@@ -43,7 +43,7 @@ overload asinh(x:ComplexDouble) --> res:ComplexDouble {
 
 	if (rcls <= FP_INFINITE or icls <= FP_INFINITE) {
 	  	if (icls == FP_INFINITE) {
-	  		res <-- Complex(copysign(GreatestPositiveFinite(Double), real(x)),
+	  		res <-- Complex(copysign(infinity(Double), real(x)),
 		  		(if (rcls == FP_NAN)
 		    		nan(Double)
 		  		else
@@ -66,10 +66,7 @@ overload asinh(x:ComplexDouble) --> res:ComplexDouble {
 	else {
 		var y = Complex((real(x) - imagValue(x)) * (real(x) + imagValue(x)) + 1.0, 2.0 * real(x) * imagValue(x));
 		y = sqrt(y);
-
-		real(y) += real(x);
-		imag(y) += imagValue(x);
-
+		y = Complex(real(y) + real(x), imagValue(y) + imagValue(x));
 		res <-- log(y);
 	}
 }

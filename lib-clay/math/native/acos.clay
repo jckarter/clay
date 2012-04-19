@@ -3,7 +3,7 @@
 import math.native.kernel.ieee754.*;
 import math.native.sqrt.(sqrt);
 import numbers.floats.(nan);
-import math.native.constants.(M_PI);
+import math.native.constants.(M_PI,M_PI_2);
 import math.native.asin.(asin);
 import complex.*;
 

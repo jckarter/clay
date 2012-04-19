@@ -5,6 +5,7 @@ import math.native.cos.(cos);
 import math.native.cosh.(cosh);
 import math.native.abs.(abs);
 import complex.*;
+import numbers.floats.(infinity);
 import math.native.constants.(M_PI);
 
 [T when Float?(T)] 
@@ -47,7 +48,7 @@ inline cot(z:T) = T(1)/tan(z);
 [T when Complex?(T)]
 overload cot(z:T) {
     alias C = ComplexBaseType(T);
-    alias MAXNUM = GreatestPositiveFinite(C);
+    alias MAXNUM = infinity(C);
     var d = cosh(2.0 * imagValue(z)) - cos(2.0 * real(z));
     if (abs(d) < 0.25)
         d = tans(z);

@@ -1,4 +1,4 @@
-import math.native.complex.(sqrt);
+import math.native.(sqrt);
 import printer.formatter.(repr);
 import printer.(println);
 import complex.*;

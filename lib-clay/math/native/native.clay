@@ -45,23 +45,24 @@ public import math.native.atan2.*;
 public import math.native.cot.*;
 public import math.native.arg.*;
 public import math.native.proj.*;
+public import complex.*;
 
 import math.native.constants.(M_PI);
 import numbers.floats.(floatFromBits,floatExponent,mantissaSize);
 
 
 [T when Integer?(T)]
-recip(x:T) = T(0);
+inline recip(x:T) = T(0);
 [T when Float?(T)]
-overload recip(x:T) = T(1) / x;
+inline overload recip(x:T) = T(1) / x;
 
 [T when Float?(T)]
-significand(x:T) = scalbn(x,wrapSubtract(ilogb(x)));
+inline significand(x:T) = scalbn(x,wrapSubtract(ilogb(x)));
 
-drem(x,y) = remainder(x,y);
+alias drem = remainder;
 
 [T]
-clamp(x:T, lo:T, hi:T) {
+inline clamp(x:T, lo:T, hi:T) {
     if(x > hi)
         return hi; 
     if(x < lo)
@@ -69,20 +70,20 @@ clamp(x:T, lo:T, hi:T) {
     return x;
 }
 
-sec(z) = recip(cos(z));
-csc(z) = recip(sin(z));
-asec(y) = acos(recip(y));
-acsc(y) = asin(recip(y));
-acot(y) = atan(recip(y));
-sech(z) = recip(cosh(z));
-csch(z) = recip(sinh(z));
-coth(z) = recip(tanh(z));
-asech(y) = acosh(recip(y));
-acsch(y) = asinh(recip(y));
-acoth(y) = atanh(recip(y));
+inline sec(z) = recip(cos(z));
+inline csc(z) = recip(sin(z));
+inline asec(y) = acos(recip(y));
+inline acsc(y) = asin(recip(y));
+inline acot(y) = atan(recip(y));
+inline sech(z) = recip(cosh(z));
+inline csch(z) = recip(sinh(z));
+inline coth(z) = recip(tanh(z));
+inline asech(y) = acosh(recip(y));
+inline acsch(y) = asinh(recip(y));
+inline acoth(y) = atanh(recip(y));
 
 [T when CallDefined?(sin,T)]
-sinc(x:T) {
+inline sinc(x:T) {
     if(x==0) 
         return T(1);
     else {
@@ -92,7 +93,7 @@ sinc(x:T) {
 }
 
 [T when CallDefined?(sin,T)]
-cosc(x:T) { 
+inline cosc(x:T) { 
     if(x==0) 
         return T(0);
     else {
@@ -101,25 +102,26 @@ cosc(x:T) {
     }
 }
 
-square(x) = x*x;
-cube(x) = x*x*x;
-
+inline square(x) = x*x;
+inline cube(x) = x*x*x;
 
 inline fma(a, b, c) = (a * b) + c;
 
+[T when Float?(T)] 
+inline rsqrt(x:T) = recip(sqrt(x));
 
-[T when Float?(T)] inline rsqrt(x:T) = recip(sqrt(x));
-[T when Float?(T)] inline sigmoid (x:T) = T(1) / (T(1) + exp (-x));
+[T when Float?(T)] 
+inline sigmoid (x:T) = T(1) / (T(1) + exp (-x));
 
-
-alias normcoeff(#LongDouble) = floatFromBits(UInt128(0x4035ul));
-alias overload normcoeff(#Double) = floatFromBits(0x435ul);
-alias overload normcoeff(#Float) = floatFromBits(0x4Cu);
+inline normcoeff(#LongDouble) = floatFromBits(UInt128(0x4035ul));
+inline overload normcoeff(#Double) = floatFromBits(0x435ul);
+inline overload normcoeff(#Float) = floatFromBits(0x4Cu);
 
 [T when Float?(T)]
-normalize(x:T) 
+inline normalize(x:T) 
     = if(normalized?(x)) x else floatFromBits(floatExponent(x*normcoeff(T)) - 
         (mantissaSize(T) + 2));
 
 
-[T when Float?(T)] epsilon(#T) = nextafter(T(1),T(2))-T(1);
+[T when Float?(T)] 
+inline epsilon(#T) = nextafter(T(1),T(2))-T(1);

@@ -6,6 +6,7 @@ import math.native.fpclassify.(fpclassify,FP_ZERO,FP_INFINITE);
 import math.native.log.(log);
 import math.native.atan2.(atan2);
 import math.native.copysign.(copysign);
+import math.native.constants.(M_PI_2);
 import numbers.floats.(nan);
 import complex.*;
 
