@@ -1,7 +1,0 @@
-
-public import math.native.abs.(abs);
-import math.native.hypot.(hypot);
-import complex.(real,imagValue,Complex?);
-
-[U when Complex?(U) ]
-inline overload abs(x:U) = hypot(real(x),imagValue(x));

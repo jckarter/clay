@@ -43,6 +43,9 @@ public import math.native.acos.*;
 public import math.native.atan.*;
 public import math.native.atan2.*;
 public import math.native.cot.*;
+public import math.native.arg.*;
+public import math.native.proj.*;
+
 import math.native.constants.(M_PI);
 import numbers.floats.(floatFromBits,floatExponent,mantissaSize);
 

@@ -5,8 +5,11 @@ import math.native.sqrt.(sqrt);
 import math.native.abs.(abs);
 import math.native.log.(log);
 import math.native.log1p.(log1p);
-import math.native.constants.(M_LN2);
-
+import math.native.constants.(M_LN2,M_PI_2,M_PI_4);
+import math.native.fpclassify.(fpclassify,FP_INFINITE,FP_ZERO,FP_NAN);
+import math.native.copysign.(copysign);
+import numbers.floats.(nan);
+import complex.*;
 
 asinh(x:Float) = Float(asinh(Double(x)));
 
@@ -16,16 +19,16 @@ overload asinh(x:Double) {
 	var t,w = 0.,0.;
 	var hx = GET_IEEE_HIGH(x);
 	var ix = bitand(hx,MM);
-	if(ix>=EM) return x+x;	/* x is inf or NaN */
-	if(ix< CV18) {	/* |x|<2**-28 */
-	    if(HUGE+x>ONE) return x;	/* return x inexact except 0 */
+	if(ix>=EM) return x+x;	// x is inf or NaN 
+	if(ix< CV18) {	// |x|<2**-28 
+	    if(HUGE+x>ONE) return x;	// return x inexact except 0 
 	}
-	if(ix>0x41b00000) {	/* |x| > 2**28 */
+	if(ix>0x41b00000) {	// |x| > 2**28 
 	    w = log(abs(x))+M_LN2;
-	} else if (ix>CV2) {	/* 2**28 > |x| > 2.0 */
+	} else if (ix>CV2) {	// 2**28 > |x| > 2.0 
 	    t = abs(x);
 	    w = log(2.0*t+ONE/(sqrt(x*x+ONE)+t));
-	} else {		/* 2.0 > |x| > 2**-28 */
+	} else {		// 2.0 > |x| > 2**-28 
 	    t = x*x;
 	    w =log1p(abs(x)+t/(ONE+sqrt(ONE+t)));
 	}
@@ -33,59 +36,40 @@ overload asinh(x:Double) {
 	else return -w;
 }
 
-// Return arc hyperbole sine for double value.
+overload asinh(x:ComplexDouble) --> res:ComplexDouble {
+  
+	var rcls = fpclassify(real(x));
+	var icls = fpclassify(imagValue(x));
 
-
-overload asinh (__complex__ double x) {
-  __complex__ double res;
-  int rcls = fpclassify (__real__ x);
-  int icls = fpclassify (__imag__ x);
-
-  if (rcls <= FP_INFINITE || icls <= FP_INFINITE)
-    {
-      if (icls == FP_INFINITE)
-	{
-	  __real__ res = __copysign (HUGE_VAL, __real__ x);
-
-	  if (rcls == FP_NAN)
-	    __imag__ res = __nan ("");
-	  else
-	    __imag__ res = __copysign (rcls >= FP_ZERO ? M_PI_2 : M_PI_4,
-				       __imag__ x);
+	if (rcls <= FP_INFINITE or icls <= FP_INFINITE) {
+	  	if (icls == FP_INFINITE) {
+	  		res <-- Complex(copysign(GreatestPositiveFinite(Double), real(x)),
+		  		(if (rcls == FP_NAN)
+		    		nan(Double)
+		  		else
+		    		copysign((if(rcls >= FP_ZERO) M_PI_2 else M_PI_4), imagValue(x))));
+		}
+	  	else if (rcls <= FP_INFINITE) {
+	  		res <-- Complex(real(x),(
+	  		if ((rcls == FP_INFINITE and icls >= FP_ZERO) or (rcls == FP_NAN and icls == FP_ZERO))
+	    		copysign(0.0, imagValue(x))
+	  		else
+	    		nan(Double)));
+		}
+	  	else {
+			res <-- nan(ComplexDouble);
+		}
 	}
-      else if (rcls <= FP_INFINITE)
-	{
-	  __real__ res = __real__ x;
-	  if ((rcls == FP_INFINITE && icls >= FP_ZERO)
-	      || (rcls == FP_NAN && icls == FP_ZERO))
-	    __imag__ res = __copysign (0.0, __imag__ x);
-	  else
-	    __imag__ res = __nan ("");
+	else if (rcls == FP_ZERO and icls == FP_ZERO) {
+		res <-- x;
 	}
-      else
-	{
-	  __real__ res = __nan ("");
-	  __imag__ res = __nan ("");
+	else {
+		var y = Complex((real(x) - imagValue(x)) * (real(x) + imagValue(x)) + 1.0, 2.0 * real(x) * imagValue(x));
+		y = sqrt(y);
+
+		real(y) += real(x);
+		imag(y) += imagValue(x);
+
+		res <-- log(y);
 	}
-    }
-  else if (rcls == FP_ZERO && icls == FP_ZERO)
-    {
-      res = x;
-    }
-  else
-    {
-      __complex__ double y;
-
-      __real__ y = (__real__ x - __imag__ x) * (__real__ x + __imag__ x) + 1.0;
-      __imag__ y = 2.0 * __real__ x * __imag__ x;
-
-      y = __csqrt (y);
-
-      __real__ y += __real__ x;
-      __imag__ y += __imag__ x;
-
-      res = __clog (y);
-    }
-
-  return res;
 }

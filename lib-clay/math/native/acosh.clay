@@ -4,8 +4,8 @@ import math.native.kernel.ieee754.*;
 import math.native.log.(log);
 import math.native.log1p.(log1p);
 import math.native.sqrt.(sqrt);
-import math.native.constants.(M_LN2);
-
+import math.native.constants.(M_LN2,M_PI_4,M_PI_2);
+import math.native.fpclassify.(FP_NAN,FP_ZERO,FP_INFINITE);
 
 acosh(x:Float) = Float(acosh(Double(x)));
 
@@ -14,7 +14,7 @@ overload acosh(x:Double) {
 	alias ONE = 1.;
 	var xdb = MAKE_IEEE(x);
 	var t = 0.;
-	if(GET_IEEE_HIGH(xdb) < RM) {		// x < 1 
+	if(GET_IEEE_HIGH(xdb) < RM) {	// x < 1 
 	    return (x-x)/(x-x);
 	} 
 	else if(GET_IEEE_HIGH(xdb) >=0x41b00000) {	// x > 2**28 
@@ -25,80 +25,62 @@ overload acosh(x:Double) {
 	} 
 	else 
 		if(bitor(GET_IEEE_HIGH(xdb)-RM,GET_IEEE_LOW(xdb)) == 0) {
-	    	return 0.0;			// acosh(1) = 0 
+	    	return 0.0;				// acosh(1) = 0 
 		} else if (GET_IEEE_HIGH(xdb) > CV2) {	// 2**28 > x > 2 
 	    	t = x*x;
 	    	return log(2.0*x-ONE/(x+sqrt(t-ONE)));
-		} else {			// 1<x<2 
+		} else {					// 1<x<2 
 	    	t = x-ONE;
 	    	return log1p(t+sqrt(2.0*t+t*t));
 		}
 }
 
+overload acosh(x:ComplexDouble) {
+  
+  	var rcls = fpclassify(real(x));
+  	var icls = fpclassify(imagValue(x));
 
-// Return arc hyperbole cosine for double value.
+  	if (rcls <= FP_INFINITE or icls <= FP_INFINITE) {
+      	if (icls == FP_INFINITE) {
+	  		res <-- Complex(GreatestPositiveFinite(Double),
 
-overload acosh (__complex__ double x) {
-  __complex__ double res;
-  int rcls = fpclassify (__real__ x);
-  int icls = fpclassify (__imag__ x);
+			(if (rcls == FP_NAN)
+				nan(Double)
+			else
+				copysign((if(rcls == FP_INFINITE)
+						 (if(real(x) < 0.0)
+						    M_PI - M_PI_4 else M_PI_4)
+						else M_PI_2), imagValue(x))));
+		}
+      	else if (rcls == FP_INFINITE) {
+	  		res <-- Complex(GreatestPositiveFinite(Double),
 
-  if (rcls <= FP_INFINITE || icls <= FP_INFINITE)
-    {
-      if (icls == FP_INFINITE)
-	{
-	  __real__ res = HUGE_VAL;
-
-	  if (rcls == FP_NAN)
-	    __imag__ res = __nan ("");
-	  else
-	    __imag__ res = __copysign ((rcls == FP_INFINITE
-					? (__real__ x < 0.0
-					   ? M_PI - M_PI_4 : M_PI_4)
-					: M_PI_2), __imag__ x);
-	}
-      else if (rcls == FP_INFINITE)
-	{
-	  __real__ res = HUGE_VAL;
-
-	  if (icls >= FP_ZERO)
-	    __imag__ res = __copysign (signbit (__real__ x) ? M_PI : 0.0,
-				       __imag__ x);
-	  else
-	    __imag__ res = __nan ("");
-	}
-      else
-	{
-	  __real__ res = __nan ("");
-	  __imag__ res = __nan ("");
-	}
+	  		(if (icls >= FP_ZERO)
+	    		copysign((if(signbit(real(x)) == 1) M_PI else 0.0), imagValue(x))
+	 		else
+	    		nan(Double)));
+		}
+      	else {
+			res <-- nan(ComplexDouble);
+		}
     }
-  else if (rcls == FP_ZERO && icls == FP_ZERO)
-    {
-      __real__ res = 0.0;
-      __imag__ res = __copysign (M_PI_2, __imag__ x);
+  	else if (rcls == FP_ZERO and icls == FP_ZERO) {
+      	res <-- Complex(0.0, copysign(M_PI_2, imagValue(x)));
     }
-  else
-    {
-      __complex__ double y;
+  	else {
+     	var y = Complex((real(x) - imagValue(x)) * (real(x) + imagValue(x)) - 1.0, 2.0 * real(x) * imagValue(x));
 
-      __real__ y = (__real__ x - __imag__ x) * (__real__ x + __imag__ x) - 1.0;
-      __imag__ y = 2.0 * __real__ x * __imag__ x;
+      	y = sqrt (y);
 
-      y = __csqrt (y);
+      	if (real(x) < 0.0) y = -y;
 
-      if (__real__ x < 0.0)
-	y = -y;
+      	real(y) += real(x);
+      	imag(y) += imagValue(x);
 
-      __real__ y += __real__ x;
-      __imag__ y += __imag__ x;
+      	res <-- log(y);
 
-      res = __clog (y);
-
-      /* We have to use the positive branch.  */
-      if (__real__ res < 0.0)
-	res = -res;
-    }
-
-  return res;
+      	// We have to use the positive branch.
+      	if (real(res) < 0.0)
+			res = -res;
+	}
 }

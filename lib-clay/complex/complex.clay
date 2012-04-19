@@ -1,5 +1,6 @@
 
-public import numbers.floats.*;
+import numbers.floats.*;
+import math.native.abs.(abs);
 
 [T] Complex?(#T) = false;
 overload Complex?(#Complex32) = true;
@@ -293,6 +294,18 @@ inline overload max(x:T,y:T) = max(abs(x),abs(y));
 [C when Complex?(C)]
 inline overload min(x:C,y:C) = min(abs(x),abs(y));
 
+[T,C when Numeric?(T) and Complex?(C)]
+inline overload max(x:T,y:C) = max(x,abs(y));
+
+[T,C when Numeric?(T) and Complex?(C)]
+inline overload max(x:C,y:T) = max(abs(x),y);
+
+[T,C when Numeric?(T) and Complex?(C)]
+inline overload min(x:T,y:C) = min(x,abs(y));
+
+[T,C when Numeric?(T) and Complex?(C)]
+inline overload min(x:C,y:T) = min(abs(x),y);
+
 [T when Complex?(T)]
 inline overload nan?(x:T) = nan?(real(x)) or nan?(imag(x));
 
@@ -322,3 +335,6 @@ overload nan(#T) = Complex(nan(ComplexRealType(T)),nan(ComplexImagType(T)));
 
 [T when Complex?(T)]
 overload snan(#T) = Complex(snan(ComplexRealType(T)),snan(ComplexImagType(T)));
+
+[T when Float?(T)]
+inline fromPolar(m:T,ph:T) = Complex(m*sin(ph),m*cos(ph));

@@ -2,25 +2,29 @@
 
 import math.native.kernel.ieee754.*;
 import math.native.log1p.(log1p);
+import math.native.fpclassify.(fpclassify,FP_ZERO,FP_INFINITE);
+import math.native.log.(log);
+import math.native.atan2.(atan2);
+import math.native.copysign.(copysign);
+import numbers.floats.(nan);
+import complex.*;
 
 alias ONE = 1.0;
 alias HUGE = GreatestPositiveFinite(Double);
 alias ZERO = 0.0;
 
-
 atanh(x:Float) = Float(atanh(Double(x)));
-
 
 overload atanh(a:Double) {
 	var x,t = a,0.;
 	var xdb = MAKE_IEEE(x);
 	var ix = bitand(GET_IEEE_HIGH(xdb),MM);
-	if (bitor(ix,bitshr(bitor(GET_IEEE_LOW(xdb),-GET_IEEE_LOW(xdb)),31))>RM) /* |x|>1 */
+	if (bitor(ix,bitshr(bitor(GET_IEEE_LOW(xdb),-GET_IEEE_LOW(xdb)),31))>RM) // |x|>1
 	    return (x-x)/(x-x);
 	if(ix==RM) return x/ZERO;
-	if(ix<CV18 and (HUGE+x)>ZERO) return x;	/* x<2**-28 */
+	if(ix<CV18 and (HUGE+x)>ZERO) return x;	// x<2**-28 
 	x = SET_IEEE_HIGH(x,ix);
-	if(ix<CV3) {		/* x < 0.5 */
+	if(ix<CV3) {		// x < 0.5
 	    t = x+x;
 	    t = 0.5*log1p(t+t*x/(ONE-x));
 	} else 
@@ -29,58 +33,33 @@ overload atanh(a:Double) {
 	else return -t;
 }
 
+overload atanh(x:ComplexDouble) --> res:ComplexDouble {
 
-// Return arc hyperbole tangent for double value.
+  	var rcls = fpclassify(real(x));
+  	var icls = fpclassify(imagValue(x));
 
-
-overload atanh (__complex__ double x) {
-  __complex__ double res;
-  int rcls = fpclassify (__real__ x);
-  int icls = fpclassify (__imag__ x);
-
-  if (rcls <= FP_INFINITE || icls <= FP_INFINITE)
-    {
-      if (icls == FP_INFINITE)
-	{
-	  __real__ res = __copysign (0.0, __real__ x);
-	  __imag__ res = __copysign (M_PI_2, __imag__ x);
-	}
-      else if (rcls == FP_INFINITE || rcls == FP_ZERO)
-	{
-	  __real__ res = __copysign (0.0, __real__ x);
-	  if (icls >= FP_ZERO)
-	    __imag__ res = __copysign (M_PI_2, __imag__ x);
-	  else
-	    __imag__ res = __nan ("");
-	}
-      else
-	{
-	  __real__ res = __nan ("");
-	  __imag__ res = __nan ("");
-	}
+  	if (rcls <= FP_INFINITE or icls <= FP_INFINITE) {
+     	if (icls == FP_INFINITE) {
+	  		res <-- Complex(copysign(0.0, real(x)), copysign(M_PI_2, imagValue(x)));
+		}
+      	else if (rcls == FP_INFINITE or rcls == FP_ZERO) {
+	  		res <-- Complex(copysign(0.0, real(x)),
+		  		(if(icls >= FP_ZERO) copysign(M_PI_2, imagValue(x)) else nan(Double)));
+		}
+      	else {
+	  		res <-- nan(ComplexDouble);
+		}
     }
-  else if (rcls == FP_ZERO && icls == FP_ZERO)
-    {
-      res = x;
+  	else if (rcls == FP_ZERO and icls == FP_ZERO) {
+      	res <-- x;
     }
-  else
-    {
-      double i2, num, den;
-
-      i2 = __imag__ x * __imag__ x;
-
-      num = 1.0 + __real__ x;
-      num = i2 + num * num;
-
-      den = 1.0 - __real__ x;
-      den = i2 + den * den;
-
-      __real__ res = 0.25 * (__ieee754_log (num) - __ieee754_log (den));
-
-      den = 1 - __real__ x * __real__ x - i2;
-
-      __imag__ res = 0.5 * __ieee754_atan2 (2.0 * __imag__ x, den);
+  	else {
+		var i2 = imagValue(x) * imagValue(x);
+		var num = 1.0 + real(x);
+		num = i2 + num * num;
+		var den = 1.0 - real(x);
+		den = i2 + den * den;
+		var den2 = 1 - real(x) * real(x) - i2;
+		res <-- Complex(0.25 * (log(num) - log(den)), 0.5 * atan2(2.0 * imagValue(x), den2));
     }
-
-  return res;
 }
