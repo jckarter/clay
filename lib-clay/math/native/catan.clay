@@ -1,60 +1,39 @@
 // Return arc tangent of complex double value.
 
-
+import math.native.
 
 overload atan(x:ComplexDouble) --> res:ComplexDouble {
   
-  int rcls = fpclassify (__real__ x);
-  int icls = fpclassify (__imag__ x);
+    var rcls = fpclassify(real(x));
+    var icls = fpclassify(imagValue(x));
 
-  if (rcls <= FP_INFINITE || icls <= FP_INFINITE)
-    {
-      if (rcls == FP_INFINITE)
-	{
-	  __real__ res = __copysign (M_PI_2, __real__ x);
-	  __imag__ res = __copysign (0.0, __imag__ x);
-	}
-      else if (icls == FP_INFINITE)
-	{
-	  if (rcls >= FP_ZERO)
-	    __real__ res = __copysign (M_PI_2, __real__ x);
-	  else
-	    __real__ res = __nan ("");
-	  __imag__ res = __copysign (0.0, __imag__ x);
-	}
-      else if (icls == FP_ZERO || icls == FP_INFINITE)
-	{
-	  __real__ res = __nan ("");
-	  __imag__ res = __copysign (0.0, __imag__ x);
-	}
-      else
-	{
-	  __real__ res = __nan ("");
-	  __imag__ res = __nan ("");
-	}
+    if (rcls <= FP_INFINITE or icls <= FP_INFINITE) {
+        if (rcls == FP_INFINITE) {
+            res <-- Complex(copysign(M_PI_2, real(x)), copysign(0.0, imagValue(x)));
+        }
+        else if (icls == FP_INFINITE) {
+            if (rcls >= FP_ZERO)
+  	            res <-- Complex(copysign(M_PI_2, real(x)), copysign(0.0, imagValue(x)));
+  	        else
+  	            res <-- Complex(nan(Double), copysign(0.0, imagValue(x)));
+  	    }
+        else if (icls == FP_ZERO or icls == FP_INFINITE) {
+        	  res <-- Complex(nan(Double), copysign(0.0, imagValue(x)));
+      	}
+        else {
+        	  res <-- nan(ComplexDouble);
+        }
     }
-  else if (rcls == FP_ZERO && icls == FP_ZERO)
-    {
-      res = x;
+    else if (rcls == FP_ZERO and icls == FP_ZERO) {
+        res <-- x;
     }
-  else
-    {
-      double r2, num, den;
-
-      r2 = __real__ x * __real__ x;
-
-      den = 1 - r2 - __imag__ x * __imag__ x;
-
-      __real__ res = 0.5 * __ieee754_atan2 (2.0 * __real__ x, den);
-
-      num = __imag__ x + 1.0;
-      num = r2 + num * num;
-
-      den = __imag__ x - 1.0;
-      den = r2 + den * den;
-
-      __imag__ res = 0.25 * __ieee754_log (num / den);
+    else { 
+        var r2 = real(x) * real(x);
+        var den = 1 - r2 - imagValue(x) * imagValue(x);
+        var num = imagValue(x) + 1.0;
+        num = r2 + num * num;
+        var den2 = imagValue(x) - 1.0;
+        den2 = r2 + den2 * den2;
+        res <-- Complex(0.5 * atan2 (2.0 * real(x), den),0.25 * log(num / den2));
     }
-
-  return res;
 }

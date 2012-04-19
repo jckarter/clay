@@ -1,6 +1,8 @@
 import math.native.kernel.ieee754.*;
 import math.native.rem_pio2.*;
 import math.native.kernel.k_trig.*;
+import math.native.cosh.(cosh);
+import complex.*;
 
 cos(x:Double) {
 	var y = Array[Double,2]();
@@ -29,4 +31,10 @@ cos(x:Double) {
 		case (2) return -kernel_cos(y[0],y[1]);
 		else return  kernel_sin(y[0],y[1],1);
 	}
+}
+
+
+overload cos(z:ComplexDouble) {
+	// ccos(z) = ccosh(I * z) 
+	return cosh(Complex(-imagValue(z), real(z)));
 }

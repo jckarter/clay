@@ -4,6 +4,8 @@ import math.native.kernel.ieee754.*;
 import math.native.sqrt.(sqrt);
 import numbers.floats.(nan);
 import math.native.constants.(M_PI);
+import math.native.asin.(asin);
+import complex.*;
 
 alias pio2_hi =  1.57079632679489655800e+00; // 0x3FF921FB, 0x54442D18 
 alias pio2_lo =  6.12323399573676603587e-17; // 0x3C91A626, 0x33145C07 
@@ -60,4 +62,12 @@ acos(x:Double) {
 	    w = r*s+c;
 	    return 2.0*(df+w);
 	}
+}
+
+
+// Return cosine of complex double value.
+
+overload acos(x:ComplexDouble) --> res:ComplexDouble {
+    var y = asin (x);
+    res <-- M_PI_2 - real(y) - imag(y);
 }

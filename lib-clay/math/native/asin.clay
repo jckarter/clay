@@ -4,6 +4,9 @@ import math.native.kernel.ieee754.*;
 import numbers.floats.(nan);
 import math.native.sqrt.(sqrt);
 import math.native.abs.(abs);
+import math.native.asinh.(asinh); 
+import math.native.copysign.(copysign);
+import complex.*;
 
 alias pio2_hi =  1.57079632679489655800e+00; // 0x3FF921FB, 0x54442D18 
 alias pio2_lo =  6.12323399573676603587e-17; // 0x3C91A626, 0x33145C07 
@@ -66,4 +69,25 @@ asin(x:Double) {
 	}    
 	if(hx>0) return t; 
 	else return -t;    
+}
+
+
+// Return arc sine of complex double value.
+
+overload asin(x:C) --> res:C {
+ 
+    if (nan?(real(x)) or nan?(imagValue(x))) {
+        if (real(x) == 0.0){
+            res <-- x;
+        }
+        else if (infinity?(real(x)) or infinity?(imagValue(x))) {
+           res <-- Complex(nan(ComplexBaseType(C)),copysign(GreatestPositiveFinite(Double),imagValue(x)));
+        }
+        else
+            res <-- nan(C);
+    }
+    else {
+        var y = asinh(Complex(-imagValue(x),real(x)));
+        res <-- Complex(imagValue(y),-real(y));
+    }
 }

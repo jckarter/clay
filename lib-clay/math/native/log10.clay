@@ -2,7 +2,9 @@
 
 import math.native.kernel.k_log.*;
 import math.native.kernel.ieee754.*;
+import math.native.log.(log);
 import numbers.floats.(negativeInfinity,nan);
+import complex.*;
 
 alias ivln10hi   =  4.34294481878168880939e-01; // 0x3fdbcb7b, 0x15200000 
 alias ivln10lo   =  2.50829467116452752298e-11; // 0x3dbb9438, 0xca9aadd5 
@@ -46,3 +48,7 @@ log10(x:Double) {
 	val_hi = w;
 	return val_lo + val_hi;
 }
+
+
+[T when Complex?(T) ]
+overload log10(x:T) = log(x)/log(10.0);

@@ -2,6 +2,9 @@
 import math.native.kernel.ieee754.*;
 import math.native.rem_pio2.*;
 import math.native.kernel.k_trig.*;
+import math.native.sinh.(sinh);
+import complex.*;
+
 
 sin(x:Double) {
 	var y = Array[Double,2]();
@@ -30,4 +33,12 @@ sin(x:Double) {
 		else return -kernel_cos(y[0],y[1]);
 	   
 	}
+}
+
+
+
+overload sin(z:ComplexDouble) {
+	// csin(z) = -I * csinh(I * z) 
+	var z = sinh(Complex(-imagValue(z), real(z)));
+	return Complex(imagValue(z), -real(z));
 }

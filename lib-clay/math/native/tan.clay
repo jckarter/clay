@@ -1,6 +1,8 @@
 import math.native.kernel.ieee754.*;
 import math.native.rem_pio2.*;
 import math.native.kernel.k_trig.*;
+import math.native.tanh.(tanh);
+import complex.*;
 
 tan(x:Double) {
 	var y = Array[Double,2]();
@@ -25,5 +27,12 @@ tan(x:Double) {
 		    return kernel_tan(y[0],y[1],1-bitshl(bitand(n,0x1),1)); //   1 -- n even -1 -- n odd 
 		}
 	}
+}
+
+
+overload tan(z:ComplexDouble) {
+	// ctan(z) = -I * ctanh(I * z) 
+	var z = tanh(Complex(-imagValue(z), real(z)));
+	return Complex(imagValue(z), -real(z));
 }
 

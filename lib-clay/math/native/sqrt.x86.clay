@@ -1,5 +1,12 @@
 import simd.*;
 
+import math.native.fpclassify.(fpclassify,FP_INFINITE,FP_NAN,FP_ZERO);
+import math.native.copysign.(copysign);
+import math.native.abs.(abs);
+import complex.(Complex?,Complex,ComplexBaseType, real,imagValue);
+import numbers.floats.(nan);
+import math.native.hypot.(hypot);
+
 private external ("llvm.x86.sse2.sqrt.sd", llvm)
     x86_sqrtsd(a:Vec[Double,2]) : Vec[Double,2];
 
@@ -7,3 +14,63 @@ private external ("llvm.x86.sse2.sqrt.sd", llvm)
 inline sqrt(x:T) = T(x86_sqrtsd(Vec[Double,2](Double(x),0.))[0]);
 
 inline overload sqrt(x:Double) = x86_sqrtsd(Vec[Double,2](x,0.))[0];
+
+
+[C when Complex?(C) ]
+overload sqrt(x:C) --> res:C {
+    alias T = ComplexBaseType(C);
+    alias ZERO = T(0);
+    alias HALF = T(0.5);
+    alias HUGE_VAL = GreatestPositiveFinite(T);
+    alias xr = real(x);
+    alias xi = imagValue(x);
+    var rcls,icls = fpclassify(xr), fpclassify (xi);
+    if (rcls <= FP_INFINITE or icls <= FP_INFINITE){
+        if (icls == FP_INFINITE){
+            res <-- Complex(HUGE_VAL,xi);
+        }
+        else if (rcls == FP_INFINITE){
+            if (xr < ZERO){
+                res <-- Complex(if(icls == FP_NAN) nan(T) else ZERO, copysign (HUGE_VAL, xi));
+            }
+            else{
+                res <-- Complex(xr,if(icls == FP_NAN) nan(T) else copysign (ZERO, xi));
+            }
+        }
+        else {
+                res <-- Complex(nan(T),nan(T));
+        }
+    }
+    else{
+        if (icls == FP_ZERO){
+            if (xr < ZERO){
+                res <-- Complex(ZERO, copysign(sqrt(-xr),xi));
+            }
+            else{
+                res <-- Complex(abs(sqrt(xr)), copysign (ZERO, xi));
+            }
+        }
+        else if (rcls == FP_ZERO){
+            var r = sqrt(HALF * abs (xi));
+            res <-- Complex(r, copysign(r, xi));
+        }
+        else {
+            var d,r,s = hypot(xr, xi),ZERO,ZERO;
+            /* Use the identity   2  Re res  Im res = Im x
+            to avoid cancellation error in  d +/- Re x.  */
+            if (xr > ZERO){
+                r = sqrt(HALF * d + HALF * xr);
+                s = (HALF * xi) / r;
+            }
+            else{
+                s = sqrt(HALF * d - HALF * xr);
+                r = abs((HALF * xi) / s);
+            }
+            res <-- Complex(r,copysign(s, xi));
+        }
+    }
+}
+
+
+[I when Imaginary?(I) ]
+inline overload sqrt(z:I) = sqrt(Complex(z));

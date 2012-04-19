@@ -4,6 +4,13 @@ import math.native.kernel.ieee754.*;
 import math.native.sqrt.(sqrt);
 import math.native.abs.(abs);
 import math.native.scalbn.(scalbn);
+import math.native.exp.(exp);
+import math.native.sin.(sin);
+import math.native.cos.(cos);
+import math.native.log.(log);
+import math.native.carg.(arg);
+import complex.*;
+
 
 private var bp = array(1.0, 1.5);
 private var dp_h = array( 0.0, 5.84962487220764160156e-01); // 0x3FE2B803, 0x40000000 
@@ -251,3 +258,48 @@ pow(x:Double, y:Double) : Double {
 
 	return s;
 }
+
+
+/*   cpow
+ *
+ *  Complex power function
+ *
+ *
+ *
+ * SYNOPSIS:
+ *
+ * double complex cpow();
+ * double complex a, z, w;
+ *
+ * w = cpow (a, z);
+ *
+ *
+ *
+ * DESCRIPTION:
+ *
+ * Raises complex A to the complex Zth power.
+ * Definition is per AMS55 # 4.2.8,
+ * analytically equivalent to cpow(a,z) = cexp(z clog(a)).
+ *
+ * ACCURACY:
+ *
+ *                      Relative error:
+ * arithmetic   domain     # trials      peak         rms
+ *    IEEE      -10,+10     30000       9.4e-15     1.5e-15
+ *
+ */
+
+[T,U when Complex?(T,U) ]
+overload pow(a:T, z:U){
+    var absa = abs(a);
+    if (absa == 0.0)
+        return T();
+    var r = pow(absa, real(z));
+    var theta = real(z) * arg(a);
+    if (imag(z) != 0.){
+        r = r * exp (-imagValue(z) * arg(a));
+        theta = theta + imagValue(z) * log(absa);
+    }
+    return Complex(r * cos(theta) , r * sin(theta));
+}
+
