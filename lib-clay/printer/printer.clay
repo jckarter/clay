@@ -12,6 +12,7 @@ import numbers.floats.(nan, nan?);
 import strings.*;
 import vectors.*;
 import sequences.(interleave);
+import simd.(unpackVec);
 
 
 //
@@ -522,14 +523,14 @@ overload printReprTo(stream, s:S) {
 [T,n]
 inline overload printTo(stream, a:Vec[T,n])
 {
-    printTo(stream, Type(a), "(", ..weaveValues(", ", ..arrayElements(a)), ")");
+    printTo(stream, Type(a), "(", ..weaveValues(", ", ..unpackVec(a)), ")");
 }
 
 [T,n]
 inline overload printReprTo(stream, a:Vec[T,n])
 {
     printTo(stream,Type(a),"(");
-    printReprValuesTo(stream, ..arrayElements(a));
+    printReprValuesTo(stream, ..unpackVec(a));
     printTo(stream,")");
 }
 
