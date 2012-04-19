@@ -1,0 +1,10 @@
+// Return cosine of complex double value.
+
+public import math.native.acos.(acos);
+import math.native.casin.(asin);
+import complex.*;
+
+overload acos(x:ComplexDouble) --> res:ComplexDouble {
+    var y = asin (x);
+    res <-- M_PI_2 - real(y) - imag(y);
+}
