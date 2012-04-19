@@ -1,0 +1,4 @@
+import math.native.tan.(tan);
+
+[T when Float?(T)] 
+inline cot(z:T) = T(1)/tan(z);

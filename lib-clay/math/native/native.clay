@@ -12,11 +12,9 @@ public import math.native.fmod.*;
 public import math.native.nextafter.*;
 public import math.native.abs.*;
 public import math.native.sign.*;
-
 public import math.native.hypot.*;
 public import math.native.sqrt.*;
 public import math.native.cbrt.*;
-public import math.native.pow.*;
 public import math.native.pown.*;
 public import math.native.exp.*;
 public import math.native.exp2.*;

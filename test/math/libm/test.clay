@@ -62,14 +62,8 @@ overload oneArgFuncs() =
 
 
 twoArgFuncs() = 
-                pow,atan2,
+                hypot,pow,atan2,
                 ;
-
-[when OS == Windows]
-overload twoArgFuncs() = 
-                pow,atan2,
-                ;
-
 
 intArgFuncs() = 
                 abs

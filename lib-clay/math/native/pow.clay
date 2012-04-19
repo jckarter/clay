@@ -136,10 +136,12 @@ pow(x:Double, y:Double) : Double {
 		// now |1-x| is tiny <= 2**-20, suffice to compute 
 		// log(x) by x-x^2/2+x^3/3-x^4/4 
 	    t = ax-ONE;		// t has 20 trailing zeros 
-	    w = t*t*(0.5-t*(0.3333333333333333333333-t*0.25));
+	    w = (t*t)*(0.5-t*(0.3333333333333333333333-t*0.25));
 	    u = ivln2_h*t;	// ivln2_h has 21 sig. bits 
 	    v = t*ivln2_l-w*IVLN2;
-	    t2 = v-(SET_IEEE_LOW(u+v,0)-u);
+	    t1 = u+v;
+ 	    t1 = SET_IEEE_LOW(t1,0);
+ 	    t2 = v-(t1-u);
 	} 
 	else {
 	    var n = 0;
@@ -173,29 +175,36 @@ pow(x:Double, y:Double) : Double {
 	    var s_h = ss; 
 	    s_h = SET_IEEE_LOW(s_h,0);
 		// t_h=ax+bp[k] High 
-		var t_h = SET_IEEE_HIGH(ZERO,bitor(bitshr(ix,1),0x20000000)+0x00080000+bitshl(k,18));
-	    var s_l = v*((u-s_h*t_h)-s_h*(ax - (t_h-bp[k])));
+		var t_h = ZERO;
+ 	    t_h = SET_IEEE_HIGH(t_h,bitor(bitshr(ix,1),0x20000000)+0x00080000+bitshl(k,18));
+ 	    var t_l = ax - (t_h-bp[k]);
+ 	    var s_l = v*((u-s_h*t_h)-s_h*t_l);
 		// compute log(ax) 
 	    var s2 = ss*ss;
-	    var r = s2*s2*(L1+s2*(L2+s2*(L3+s2*(L4+s2*(L5+s2*L6))))) + s_l*(s_h+ss);
+	    var r = s2*s2*(L1+s2*(L2+s2*(L3+s2*(L4+s2*(L5+s2*L6)))));
+ 	    r +: s_l*(s_h+ss);
 	    s2  = s_h*s_h;
-	    t_h = SET_IEEE_LOW(3.0+s2+r,0);
-	    var t_l = r-((t_h-3.0)-s2);
-		// u+v = ss*(1+...) 
+		t_h = 3.0+s2+r;
+ 	    t_h = SET_IEEE_LOW(t_h,0);
+ 	    t_l = r-((t_h-3.0)-s2);// u+v = ss*(1+...) 
 	    u = s_h*t_h;
 	    v = s_l*t_h+t_l*ss;
 		// 2/(3log2)*(ss+...) 
-		var p_h = SET_IEEE_LOW(u+v,0);
-	    var p_l = v-(p_h-u);
+		var p_h = u+v;
+ 	    p_h = SET_IEEE_LOW(p_h,0);
+		var p_l = v-(p_h-u);
 	    var z_h = cp_h*p_h;		// cp_h+cp_l = 2/(3*log2) 
 	    var z_l = cp_l*p_h+p_l*cp+dp_l[k];
 		// log2(ax) = (ss+..)*2/(3*log2) = n + dp_h + z_h + z_l 
-	    t1 = SET_IEEE_LOW((((z_h+z_l)+dp_h[k])+n),0);
+	    t = Double(n);
+ 	    t1 = (((z_h+z_l)+dp_h[k])+t);
+ 	    t1 = SET_IEEE_LOW(t1,0);
 	    t2 = z_l-(((t1-n)-dp_h[k])-z_h);
 	}
 
     // split up y into y1+y2 and compute (y1+y2)*(t1+t2) 
-	var y1  = SET_IEEE_LOW(y,0);
+	var y1 = y;
+ 	y1  = SET_IEEE_LOW(y1,0);
 	var p_l = (y-y1)*t1+y*t2;
 	var p_h = y1*t1;
 	var z = p_l+p_h;
@@ -213,10 +222,10 @@ pow(x:Double, y:Double) : Double {
 	    }
 	}
 	// compute 2**(p_h+p_l)
-	SET_IEEE_LOW(z, bitand(GET_IEEE_HIGH(z),MM));
-	k = bitshr(GET_IEEE_LOW(z),20)-0x3ff;
+	var i = bitand(GET_IEEE_HIGH(z),MM);
+	k = bitshr(i,20)-0x3ff;
 	n = 0;
-	if(GET_IEEE_LOW(z)>CV3) {		// if |z| > 0.5, set n = [z+0.5] 
+	if(i>CV3) {		// if |z| > 0.5, set n = [z+0.5] 
 	  	n = GET_IEEE_HIGH(z)+bitshr(CV8,k+1);
 	  	k = bitshr(bitand(n,MM),20)-0x3ff;	// new k for n 
 	    t = SET_IEEE_HIGH(ZERO,wrapCast(Int32,bitandc(n , bitshr(NEM,k))));
