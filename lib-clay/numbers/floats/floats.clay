@@ -202,6 +202,7 @@ overload floatBitsUnsigned(x:Float) = bitand(floatBits(x),0x7FFF_FFFFu);
 
 [T when Float?(T) or Imaginary?(T)] finite?(x:T) = floatExponent(x) != exponentMask(T);
 [T when Float?(T) or Imaginary?(T)] infinity?(x:T) = floatExponent(x) == exponentMask(T) and floatMantissa(x)==0;
+[T when Float?(T) or Imaginary?(T)] positiveInfinity?(x:T) = x == infinity(T);
 [T when Float?(T) or Imaginary?(T)] negativeInfinity?(x:T) = x == negativeInfinity(T);
 [T when Float?(T) or Imaginary?(T)] nan?(x:T) = floatExponent(x) == exponentMask(T) and floatMantissa(x)!=0;
 [T when Float?(T) or Imaginary?(T)] qnan?(x:T) {
