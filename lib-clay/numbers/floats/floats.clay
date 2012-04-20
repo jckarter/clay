@@ -163,6 +163,13 @@ overload exponentMask(#LongDouble) = 0x7FFFul;
 overload exponentMask(#Double) = 0x7FFul;
 overload exponentMask(#Float) = 0xFFu;
 
+signMask(#ILongDouble) = 0x8000ul;
+overload signMask(#IDouble) = 0x8000_0000_0000_0000_ul;
+overload signMask(#IFloat) = 0x8000_0000_ul;
+overload signMask(#LongDouble) = 0x8000ul;
+overload signMask(#Double) = 0x8000_0000_0000_0000_ul;
+overload signMask(#Float) = 0x8000_0000_u;
+
 floatMantissaZero(#ILongDouble) = 0x8000_0000_0000_0000_ul;
 overload floatMantissaZero(#IDouble) = 0x0000_0000_0000_0000_ul;
 overload floatMantissaZero(#IFloat) = 0x0000_0000_u;

@@ -32,7 +32,8 @@ tan(x:Double) {
 
 overload tan(z:ComplexDouble) {
 	// ctan(z) = -I * ctanh(I * z) 
-	var z = tanh(Complex(-imagValue(z), real(z)));
-	return Complex(imagValue(z), -real(z));
+	// var y = tanh(Complex(-imagValue(z), real(z)));
+	// return Complex(imagValue(y), real(y));
+	return  -1.j * tanh(z * 1.j);
 }
 

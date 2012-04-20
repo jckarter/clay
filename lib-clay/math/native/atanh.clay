@@ -60,7 +60,7 @@ overload atanh(x:ComplexDouble) --> res:ComplexDouble {
 		num = i2 + num * num;
 		var den = 1.0 - real(x);
 		den = i2 + den * den;
-		var den2 = 1 - real(x) * real(x) - i2;
+		var den2 = 1.0 - real(x) * real(x) - i2;
 		res <-- Complex(0.25 * (log(num) - log(den)), 0.5 * atan2(2.0 * imagValue(x), den2));
     }
 }

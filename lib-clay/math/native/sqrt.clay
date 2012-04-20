@@ -163,60 +163,64 @@ overload sqrt(x:Float) {
 }
 
 
-[C when Complex?(C) ]
-overload sqrt(x:C) --> res:C {
-    alias T = ComplexBaseType(C);
-    alias ZERO = T(0);
-    alias HALF = T(0.5);
-    alias xr = real(x);
-    alias xi = imagValue(x);
-    var rcls,icls = fpclassify(xr), fpclassify (xi);
-    if (rcls <= FP_INFINITE or icls <= FP_INFINITE){
-        if (icls == FP_INFINITE){
-            res <-- Complex(infinity(T),xi);
-        }
-        else if (rcls == FP_INFINITE){
-            if (xr < ZERO){
-                res <-- Complex(if(icls == FP_NAN) nan(T) else ZERO, copysign (infinity(T), xi));
-            }
-            else{
-                res <-- Complex(xr,if(icls == FP_NAN) nan(T) else copysign (ZERO, xi));
-            }
-        }
-        else {
-                res <-- Complex(nan(T),nan(T));
-        }
-    }
-    else{
-        if (icls == FP_ZERO){
-            if (xr < ZERO){
-                res <-- Complex(ZERO, copysign(sqrt(-xr),xi));
-            }
-            else{
-                res <-- Complex(abs(sqrt(xr)), copysign (ZERO, xi));
-            }
-        }
-        else if (rcls == FP_ZERO){
-            var r = sqrt(HALF * abs (xi));
-            res <-- Complex(r, copysign(r, xi));
-        }
-        else {
-            var d,r,s = hypot(xr, xi),ZERO,ZERO;
-            /* Use the identity   2  Re res  Im res = Im x
-            to avoid cancellation error in  d +/- Re x.  */
-            if (xr > ZERO){
-                r = sqrt(HALF * d + HALF * xr);
-                s = (HALF * xi) / r;
-            }
-            else{
-                s = sqrt(HALF * d - HALF * xr);
-                r = abs((HALF * xi) / s);
-            }
-            res <-- Complex(r,copysign(s, xi));
-        }
-    }
-}
-
-
 [I when Imaginary?(I) ]
 inline overload sqrt(z:I) = sqrt(Complex(z));
+
+[C when Complex?(C)]
+overload sqrt(z:C) --> result:C {
+    alias T = ComplexBaseType(C);
+    alias ZERO = T(0);
+    alias QUARTER = T(1/4);
+    alias HALF = T(1/2);
+    alias TWO = T(2);
+    
+    var a = real(z);
+    var b = imagValue(z);
+
+    // Handle special cases.
+    if (zero?(z))
+        result <-- Complex(ZERO, b);
+    else if (infinity?(b))
+        result <-- Complex(infinity(T), b);
+    else if (nan?(a)) {
+        var t = (b - b) / (b - b);  // raise invalid if b is not a NaN 
+        result <-- Complex(a, t); // return NaN + NaN i 
+    }
+    else if (infinity?(a)) {
+        // csqrt(inf + NaN i)  = inf +  NaN i
+        // csqrt(inf + y i)    = inf +  0 i
+        // csqrt(-inf + NaN i) = NaN +- inf i
+        // csqrt(-inf + y i)   = 0   +  inf i
+
+        if (signbit(a) == 1)
+            result <-- Complex(abs(b - b), copysign(a, b));
+        else
+            result <-- Complex(a, copysign(b - b, b));
+    }
+
+    // The remaining special case (b is NaN) is handled just fine by
+    // the normal code path below.
+    // Scale to avoid overflow. 
+    else {
+        var scale = 0;
+        if (abs(a) >= thresh(T) or abs(b) >= thresh(T)) {
+            a *: 0.25;
+            b *: 0.25;
+            scale = 1;
+        } 
+        
+        // Algorithm 312, CACM vol 10, Oct 1967. 
+        if (a >= ZERO) {
+            var t = sqrt((a + hypot(a, b)) * 0.5);
+            result <-- Complex(t, b / (2.0 * t));
+        } 
+        else {
+            var t = sqrt((-a + hypot(a, b)) * 0.5);
+            result <-- Complex(abs(b) / (2.0 * t), copysign(t, b));
+        }
+
+        // Rescale. 
+        if (scale == 1)
+            result *: 2.0;
+    }
+}

@@ -2,17 +2,17 @@
 import numbers.floats.*;
 
 alias FP_NAN = 0;
-alias FP_INFINITE = 1;
-alias FP_ZERO = 2;
-alias FP_SUBNORMAL = 3;
-alias FP_NORMAL = 4;
-alias FP_SNAN = 5;
-alias FP_NAN_NEG = 6;
-alias FP_INFINITE_NEG = 7;
-alias FP_ZERO_NEG = 8;
-alias FP_SUBNORMAL_NEG = 9;
-alias FP_NORMAL_NEG = 10;
-alias FP_SNAN_NEG = 11;
+alias FP_SNAN = 1;
+alias FP_INFINITE = 2;
+alias FP_ZERO = 3;
+alias FP_SUBNORMAL = 4;
+alias FP_NORMAL = 5;
+// alias FP_NAN_NEG = 6;
+// alias FP_INFINITE_NEG = 7;
+// alias FP_ZERO_NEG = 8;
+// alias FP_SUBNORMAL_NEG = 9;
+// alias FP_NORMAL_NEG = 10;
+// alias FP_SNAN_NEG = 11;
 
 [T when Float?(T) or Imaginary?(T)]
 fpclassify(x:T) --> res:Int {
@@ -22,5 +22,5 @@ fpclassify(x:T) --> res:Int {
         res <-- if(snan?(x)) FP_SNAN else FP_NAN;
     else if(infinity?(x)) res <-- FP_INFINITE;
     else res <-- FP_NORMAL;
-    if(floatNegative?(x)) res +: 6;
+    // if(floatNegative?(x)) res +: 6;
 }

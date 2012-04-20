@@ -67,6 +67,6 @@ overload asinh(x:ComplexDouble) --> res:ComplexDouble {
 		var y = Complex((real(x) - imagValue(x)) * (real(x) + imagValue(x)) + 1.0, 2.0 * real(x) * imagValue(x));
 		y = sqrt(y);
 		y = Complex(real(y) + real(x), imagValue(y) + imagValue(x));
-		res <-- log(y);
+		res <--  log(y);
 	}
 }

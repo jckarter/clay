@@ -72,23 +72,21 @@ asin(x:Double) {
 }
 
 
-// Return arc sine of complex double value.
-
 [C when Complex?(C)]
 overload asin(x:C) --> res:C {
- 
-    if (nan?(real(x)) or nan?(imagValue(x))) {
-        if (real(x) == 0.0){
+
+    alias T = ComplexBaseType(C);
+    
+    if (not finite?(x) or nan?(x))
+        if (real(x) == T(0))
             res <-- x;
-        }
-        else if (infinity?(real(x)) or infinity?(imagValue(x))) {
-           res <-- Complex(nan(ComplexBaseType(C)),copysign(infinity(Double),imagValue(x)));
-        }
+        else if (infinity?(real(x)) or infinity?(imagValue(x)))
+           res <-- Complex(nan(T), copysign(infinity(T),imagValue(x)));
         else
             res <-- nan(C);
-    }
+    
     else {
-        var y = asinh(Complex(-imagValue(x),real(x)));
-        res <-- Complex(imagValue(y),-real(y));
+        var y = asinh(x);
+        res <-- Complex(imagValue(y),real(y));
     }
 }

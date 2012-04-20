@@ -3,7 +3,7 @@ import numbers.floats.*;
 
 [T,U when Float?(T,U) ]
 copysign(a:T,b:U) = floatFromBits(bitor(floatBitsUnsigned(a),
-    wrapBitshl(signbit(b),mantissaSize(T)+exponentSize(T))));
+    bitand(floatBits(b),signMask(T))));
 
 [T when Float?(T) ]
 overload copysign(a:LongDouble,b:T) {
