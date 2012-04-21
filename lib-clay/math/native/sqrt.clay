@@ -166,12 +166,17 @@ overload sqrt(x:Float) {
 [I when Imaginary?(I) ]
 inline overload sqrt(z:I) = sqrt(Complex(z));
 
+
+alias thresh(#LongDouble) = 0xd.413cccfe77997ffp+16379fl;
+alias overload thresh(#Float)  = 0x1.a82797f7a7599p+126f;
+alias overload thresh(#Double) = 0x1.a827999fcef32p+1022;
+
 [C when Complex?(C)]
 overload sqrt(z:C) --> result:C {
     alias T = ComplexBaseType(C);
     alias ZERO = T(0);
-    alias QUARTER = T(1/4);
-    alias HALF = T(1/2);
+    alias QUARTER = T(0.25);
+    alias HALF = T(0.5);
     alias TWO = T(2);
     
     var a = real(z);
@@ -204,23 +209,23 @@ overload sqrt(z:C) --> result:C {
     else {
         var scale = 0;
         if (abs(a) >= thresh(T) or abs(b) >= thresh(T)) {
-            a *: 0.25;
-            b *: 0.25;
+            a *: QUARTER;
+            b *: QUARTER;
             scale = 1;
         } 
         
         // Algorithm 312, CACM vol 10, Oct 1967. 
         if (a >= ZERO) {
-            var t = sqrt((a + hypot(a, b)) * 0.5);
-            result <-- Complex(t, b / (2.0 * t));
+            var t = sqrt((a + hypot(a, b)) * HALF);
+            result <-- Complex(t, b / (TWO * t));
         } 
         else {
-            var t = sqrt((-a + hypot(a, b)) * 0.5);
-            result <-- Complex(abs(b) / (2.0 * t), copysign(t, b));
+            var t = sqrt((-a + hypot(a, b)) * HALF);
+            result <-- Complex(abs(b) / (TWO * t), copysign(t, b));
         }
 
         // Rescale. 
         if (scale == 1)
-            result *: 2.0;
+            result *: TWO;
     }
 }
