@@ -313,7 +313,7 @@ inline overload nan?(x:T) = nan?(real(x)) or nan?(imag(x));
 inline overload finite?(x:T) = floatExponent(abs(x)) != exponentMask((ComplexRealType(T)));
 
 [T when Complex?(T)]
-inline overload infinity?(x:T) = abs(x) == infinity(T);
+inline overload infinity?(x:T) = abs(x) == infinity(ComplexBaseType(T));
 
 [T when Complex?(T)]
 inline overload negativeInfinity?(x:T) = negativeInfinity?(real(x));

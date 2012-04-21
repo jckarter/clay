@@ -3,8 +3,7 @@
 import math.native.kernel.ieee754.*;
 import math.native.log1p.(log1p);
 import math.native.fpclassify.(fpclassify,FP_ZERO,FP_INFINITE);
-import math.native.log.(log);
-import math.native.atan2.(atan2);
+import math.native.atan.(atan);
 import math.native.copysign.(copysign);
 import math.native.constants.(M_PI_2);
 import numbers.floats.(nan);
@@ -28,7 +27,8 @@ overload atanh(a:Double) {
 	if(ix<CV3) {		// x < 0.5
 	    t = x+x;
 	    t = 0.5*log1p(t+t*x/(ONE-x));
-	} else 
+	} 
+	else 
 	    t = 0.5*log1p((x+x)/(ONE-x));
 	if(GET_IEEE_HIGH(xdb)>=0) return t; 
 	else return -t;
@@ -55,12 +55,7 @@ overload atanh(x:ComplexDouble) --> res:ComplexDouble {
       	res <-- x;
     }
   	else {
-		var i2 = imagValue(x) * imagValue(x);
-		var num = 1.0 + real(x);
-		num = i2 + num * num;
-		var den = 1.0 - real(x);
-		den = i2 + den * den;
-		var den2 = 1.0 - real(x) * real(x) - i2;
-		res <-- Complex(0.25 * (log(num) - log(den)), 0.5 * atan2(2.0 * imagValue(x), den2));
-    }
+		var y = atan(Complex(-imagValue(x), real(x)));
+		res <-- Complex(imagValue(y), -real(y));
+	}
 }

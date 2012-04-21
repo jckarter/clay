@@ -67,7 +67,9 @@ acos(x:Double) {
 
 // Return cosine of complex double value.
 
-overload acos(x:ComplexDouble) --> res:ComplexDouble {
+[C when Complex?(C)]
+overload acos(x:C) --> res:C {
+	alias T = ComplexBaseType(C);
     var y = asin (x);
-    res <-- M_PI_2 - real(y) - imag(y);
+    res <-- Complex(T(M_PI_2) - real(y), -imagValue(y));
 }
