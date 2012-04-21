@@ -1,4 +1,6 @@
 import libc;
+public import complex.*;
+public import numbers.floats.*;
 
 inline pow(x:Double,y:Double) = libc.pow(x,y);
 inline overload pow(x:Float,y:Float) = libc.powf(x,y);
