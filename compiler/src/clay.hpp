@@ -1296,7 +1296,7 @@ struct DispatchExpr : public Expr {
 };
 
 struct ForeignExpr : public Expr {
-    string moduleName;
+    llvm::StringRef moduleName;
     EnvPtr foreignEnv;
     ExprPtr expr;
 
@@ -1459,14 +1459,10 @@ struct InitAssignment : public Statement {
 
 struct VariadicAssignment : public Statement {
     int op;
-    vector<string> ops;
     ExprListPtr exprs;
     ExprPtr desugared;
     VariadicAssignment(int op, ExprListPtr exprs )
         : Statement(VARIADIC_ASSIGNMENT), op(op), exprs(exprs) {}
-    VariadicAssignment(int op, const vector<string> &ops, ExprListPtr exprs )
-        : Statement(VARIADIC_ASSIGNMENT), op(op), ops(ops), exprs(exprs) {}
-
 };
 
 struct Goto : public Statement {
@@ -1581,7 +1577,7 @@ struct For : public Statement {
 };
 
 struct ForeignStatement : public Statement {
-    string moduleName;
+    llvm::StringRef moduleName;
     EnvPtr foreignEnv;
     StatementPtr statement;
     ForeignStatement(llvm::StringRef moduleName, StatementPtr statement)

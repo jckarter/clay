@@ -298,7 +298,7 @@ StatementPtr clone(StatementPtr x)
 
     case VARIADIC_ASSIGNMENT : {
         VariadicAssignment *y = (VariadicAssignment *)x.ptr();
-        out = new VariadicAssignment(y->op, y->ops, clone(y->exprs));
+        out = new VariadicAssignment(y->op, clone(y->exprs));
         break;
     }
 
