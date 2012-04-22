@@ -5,8 +5,6 @@ import math.native.constants.(M_PI);
 import math.native.*;
 import printer.(println);
 
-itypes() = Int8, Int16, Int32, Int64;
-
 
 var fdata[T] = array(T(0), T(1), T(-1), T(3), T(38) , T(355) , 
         T(2147483647.0), T(9223372036854775807.0), T(-2147483648.0), 
@@ -65,7 +63,9 @@ main() {
     evalFuncs(oneArgFuncs[C1[Double]],fdata[Double]);
     evalFuncs2(twoArgFuncs[C2[Double]],fdata[Double]);
     
-    ..for(i in ..itypes())
-        evalFuncs(intFuncs[C1[i]],idata[i]);
+    evalFuncs(intFuncs[C1[Int8]],idata[Int8]);
+    evalFuncs(intFuncs[C1[Int16]],idata[Int16]);
+    evalFuncs(intFuncs[C1[Int32]],idata[Int32]);
+    evalFuncs(intFuncs[C1[Int64]],idata[Int64]);
 
 }
