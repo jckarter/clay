@@ -260,34 +260,32 @@ pow(x:Double, y:Double) : Double {
 }
 
 
-/*   cpow
- *
- *  Complex power function
- *
- *
- *
- * SYNOPSIS:
- *
- * double complex cpow();
- * double complex a, z, w;
- *
- * w = cpow (a, z);
- *
- *
- *
- * DESCRIPTION:
- *
- * Raises complex A to the complex Zth power.
- * Definition is per AMS55 # 4.2.8,
- * analytically equivalent to cpow(a,z) = cexp(z clog(a)).
- *
- * ACCURACY:
- *
- *                      Relative error:
- * arithmetic   domain     # trials      peak         rms
- *    IEEE      -10,+10     30000       9.4e-15     1.5e-15
- *
- */
+//   cpow
+//
+//  Complex power function
+//
+//
+//
+// SYNOPSIS:
+//
+// double complex cpow();
+// double complex a, z, w;
+//
+// w = cpow (a, z);
+//
+//
+//
+// DESCRIPTION:
+//
+// Raises complex A to the complex Zth power.
+// Definition is per AMS55 # 4.2.8,
+// analytically equivalent to cpow(a,z) = cexp(z clog(a)).
+//
+// ACCURACY:
+//
+//                      Relative error:
+// arithmetic   domain     # trials      peak         rms
+//    IEEE      -10,+10     30000       9.4e-15     1.5e-15
 
 [T,U when Complex?(T,U) ]
 overload pow(a:T, z:U){

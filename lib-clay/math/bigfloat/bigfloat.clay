@@ -206,7 +206,7 @@ overload Double(x:T) --> result:Double {
             nb.1 = bitshr(nb.1,-1023 - expofinal);
             // Look at the last bit to decide rounding
             if (bitand(nb.0[0] , 0x00000001)==1){
-                // need to add an half-ulp */
+                // need to add an half-ulp 
                 rndcorr.1 = 1;  // this is a full ulp but we multiply by 0.5 in the end
             }else{
                 // need to add nothing
@@ -258,7 +258,7 @@ overload multiply(x:T, y:T) --> result:T {
     result.sign = x.sign * y.sign;
     result.index = x.index + y.index;
 
-    /* Partial products computation */
+    // Partial products computation 
     var x7,y7,x6,y6 = UInt64(x.h_word[7]),y.h_word[7],UInt64(x.h_word[6]),y.h_word[6];
     var x5,y5,x4,y4 = UInt64(x.h_word[5]),y.h_word[5],UInt64(x.h_word[4]),y.h_word[4];
     var x3,y3,x2,y2 = UInt64(x.h_word[3]),y.h_word[3],UInt64(x.h_word[2]),y.h_word[2];
@@ -275,7 +275,7 @@ overload multiply(x:T, y:T) --> result:T {
     var r0 = x0*y0;
 
     var val,tmp = 0ul,0ul;
-    /* Carry Propagate */
+    // Carry Propagate 
     BF_CARRY_PROPAGATE(r8,r7,tmp);
     BF_CARRY_PROPAGATE(r7,r6,tmp);
     BF_CARRY_PROPAGATE(r6,r5,tmp);
@@ -287,7 +287,7 @@ overload multiply(x:T, y:T) --> result:T {
     BF_CARRY_PROPAGATE(r0,val,tmp);
 
     if(val != 0){
-        /* shift all the digits ! */
+        // shift all the digits ! 
         result.h_word[0] = UInt(val); result.h_word[1] = UInt(r0); result.h_word[2] = UInt(r1);  result.h_word[3] = UInt(r2);
         result.h_word[4] = UInt(r3);  result.h_word[5] = UInt(r4); result.h_word[6] = UInt(r5);  result.h_word[7] = UInt(r6);
         inc(result.index);

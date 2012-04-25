@@ -1,5 +1,4 @@
 
-import math.native.kernel.exact.*;
 import math.native.kernel.ieee754.*;
 import numbers.floats.(nan?,nan,infinity);
 import math.native.fpclassify.(fpclassify,FP_INFINITE,FP_NAN,FP_ZERO);

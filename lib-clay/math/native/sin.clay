@@ -9,21 +9,21 @@ import complex.*;
 sin(x:Double) {
 	var y = Array[Double,2]();
 	
-    /* High word of x. */
+    // High word of x. 
 	var ix = GET_IEEE_HIGH(x);
 
-    /* |x| ~< pi/4 */
+    // |x| ~< pi/4 
 	ix = bitand(ix,MM);
 	if(ix <= 0x3fe921fb) {
-	    if(ix<0x3e500000)			/* |x| < 2**-26 */
+	    if(ix<0x3e500000)			// |x| < 2**-26 
 	       	if(wrapCast(Int32,x) == 0) return x;
-	    	/* generate inexact */
+	    	// generate inexact 
 	    return kernel_sin(x,0.,0);
 	}
 
-    /* sin(Inf or NaN) is NaN */
+    // sin(Inf or NaN) is NaN 
 	else if (ix>=EM) return x-x;
-	/* argument reduction needed */
+	// argument reduction needed 
 	else {
 	    var n = rem_pio2(x,@y[0]);
     	switch(bitand(n,3))
