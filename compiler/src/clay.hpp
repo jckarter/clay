@@ -1428,22 +1428,22 @@ enum BindingKind {
     FORWARD
 };
 
+struct PatternVar;
+
 struct Binding : public Statement {
     int bindingKind;
     vector<PatternVar> patternVars;
-    ExprPtr predicate;
-    vector<FormalArgPtr> names;
-    FormalArgPtr formalVarArg;
+    vector<FormalArgPtr> args;
+    FormalArgPtr varg;
     ExprListPtr values;
     Binding(int bindingKind,
         const vector<PatternVar> &patternVars,
-        ExprPtr predicate,
-        const vector<FormalArgPtr> &formalArgs,
-        FormalArgPtr formalVarArg, 
+        const vector<FormalArgPtr> &args,
+        FormalArgPtr varg, 
         ExprListPtr values)
         : Statement(BINDING), bindingKind(bindingKind),
-          patternVars(patternVars), predicate(predicate),
-          formalArgs(formalArgs), formalVarArg(formalVarArg),
+          patternVars(patternVars),
+          args(args), varg(varg),
           values(values) {}
 };
 

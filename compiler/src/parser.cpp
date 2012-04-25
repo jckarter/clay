@@ -1080,8 +1080,7 @@ static bool localBinding(StatementPtr &x) {
     int bk;
     if (!bindingKind(bk)) return false;
     vector<PatternVar> patternVars;
-    ExprPtr predicate;
-    if (!optPatternVarsWithCond(patternVars, predicate)) return false;
+    if (!optPatternVarsNoCond(patternVars)) return false;
     vector<FormalArgPtr> args,
     FormalArgPtr varg
     if (!argumentsBody(args,varg)) return false;
@@ -1857,6 +1856,25 @@ static bool patternVarList(vector<PatternVar> &x) {
 static bool optPatternVarList(vector<PatternVar> &x) {
     int p = save();
     if (!patternVarList(x)) {
+        restore(p);
+        x.clear();
+    }
+    return true;
+}
+
+static bool patternVarsNoCond(vector<PatternVar> &x) {
+    if (!symbol("[")) return false;
+    if (!optPatternVarList(x)) return false;
+    if (!symbol("]")) {
+        x.clear();
+        return false;
+    }
+    return true;
+}
+
+static bool optPatternVarsNoCond(vector<PatternVar> &x) {
+    int p = save();
+    if (!patternVarsNoCond(x)) {
         restore(p);
         x.clear();
     }
