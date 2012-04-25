@@ -587,7 +587,7 @@ i1(x:T) --> y:T {
 
 
 
-// /* Bessel Y_0(x) function in double precision */
+// Bessel Y_0(x) function in double precision
 //
 // #include <math.h>
 //
@@ -803,7 +803,7 @@ i1(x:T) --> y:T {
 //
 //
 //
-// /* Bessel K_0(x) function in double precision */
+// Bessel K_0(x) function in double precision
 //
 // #include <math.h>
 //
@@ -1014,10 +1014,10 @@ i1(x:T) --> y:T {
 //     }
 //     return y;
 // }
-//
-//
-//
-// /* Bessel K_1(x) function in double precision */
+
+
+
+// Bessel K_1(x) function in double precision
 //
 // #include <math.h>
 //
@@ -1231,10 +1231,9 @@ i1(x:T) --> y:T {
 //     }
 //     return y;
 // }
-//
-//
-//
-// /* Bessel Y_1(x) function in double precision */
+
+
+// Bessel Y_1(x) function in double precision
 //
 // #include <math.h>
 //
