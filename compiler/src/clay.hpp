@@ -1430,13 +1430,21 @@ enum BindingKind {
 
 struct Binding : public Statement {
     int bindingKind;
-    vector<IdentifierPtr> names;
+    vector<PatternVar> patternVars;
+    ExprPtr predicate;
+    vector<FormalArgPtr> names;
+    FormalArgPtr formalVarArg;
     ExprListPtr values;
     Binding(int bindingKind,
-            const vector<IdentifierPtr> &names,
-            ExprListPtr values)
+        const vector<PatternVar> &patternVars,
+        ExprPtr predicate,
+        const vector<FormalArgPtr> &formalArgs,
+        FormalArgPtr formalVarArg, 
+        ExprListPtr values)
         : Statement(BINDING), bindingKind(bindingKind),
-          names(names), values(values) {}
+          patternVars(patternVars), predicate(predicate),
+          formalArgs(formalArgs), formalVarArg(formalVarArg),
+          values(values) {}
 };
 
 struct Assignment : public Statement {

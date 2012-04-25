@@ -1079,13 +1079,17 @@ static bool localBinding(StatementPtr &x) {
     Location location = currentLocation();
     int bk;
     if (!bindingKind(bk)) return false;
-    vector<IdentifierPtr> y;
-    if (!identifierList(y)) return false;
+    vector<PatternVar> patternVars;
+    ExprPtr predicate;
+    if (!optPatternVarsWithCond(patternVars, predicate)) return false;
+    vector<FormalArgPtr> args,
+    FormalArgPtr varg
+    if (!argumentsBody(args,varg)) return false;
     if (!opsymbol("=")) return false;
     ExprListPtr z;
     if (!expressionList(z)) return false;
     if (!symbol(";")) return false;
-    x = new Binding(bk, y, z);
+    x = new Binding(bk, patternVars, predicate, args, varg, z);
     x->location = location;
     return true;
 }
