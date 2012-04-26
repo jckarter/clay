@@ -1437,6 +1437,11 @@ struct Binding : public Statement {
     FormalArgPtr varg;
     ExprListPtr values;
     Binding(int bindingKind,
+        const vector<FormalArgPtr> &args,
+        ExprListPtr values)
+        : Statement(BINDING), bindingKind(bindingKind),
+          args(args), values(values) {}
+    Binding(int bindingKind,
         const vector<PatternVar> &patternVars,
         const vector<FormalArgPtr> &args,
         FormalArgPtr varg, 

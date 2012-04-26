@@ -1075,20 +1075,24 @@ static bool bindingKind(int &bindingKind) {
     return true;
 }
 
+static bool optPatternVarsNoCond(vector<PatternVar> &x);
+static bool argumentsBody(vector<FormalArgPtr> &args,
+                          FormalArgPtr &varg);
+
 static bool localBinding(StatementPtr &x) {
     Location location = currentLocation();
     int bk;
     if (!bindingKind(bk)) return false;
     vector<PatternVar> patternVars;
     if (!optPatternVarsNoCond(patternVars)) return false;
-    vector<FormalArgPtr> args,
-    FormalArgPtr varg
+    vector<FormalArgPtr> args;
+    FormalArgPtr varg;
     if (!argumentsBody(args,varg)) return false;
     if (!opsymbol("=")) return false;
     ExprListPtr z;
     if (!expressionList(z)) return false;
     if (!symbol(";")) return false;
-    x = new Binding(bk, patternVars, predicate, args, varg, z);
+    x = new Binding(bk, patternVars, args, varg, z);
     x->location = location;
     return true;
 }

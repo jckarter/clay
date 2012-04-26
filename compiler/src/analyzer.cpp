@@ -2277,25 +2277,25 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
     case VAR :
     case REF :
     case FORWARD : {
-        MultiPValuePtr right = analyzeMulti(x->values, env, x->names.size());
+        MultiPValuePtr right = analyzeMulti(x->values, env, x->args.size());
         if (!right)
             return NULL;
-        if (right->size() != x->names.size())
-            arityMismatchError(x->names.size(), right->size());
+        if (right->size() != x->args.size())
+            arityMismatchError(x->args.size(), right->size());
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < right->size(); ++i) {
             PVData const &pv = right->values[i];
-            addLocal(env2, x->names[i], new PValue(pv.type, false));
+            addLocal(env2, x->args[i]->name, new PValue(pv.type, false));
         }
         return env2;
     }
 
     case ALIAS : {
-        ensureArity(x->names, 1);
+        ensureArity(x->args, 1);
         ensureArity(x->values->exprs, 1);
         EnvPtr env2 = new Env(env);
         ExprPtr y = foreignExpr(env, x->values->exprs[0]);
-        addLocal(env2, x->names[0], y.ptr());
+        addLocal(env2, x->args[0]->name, y.ptr());
         return env2;
     }
 

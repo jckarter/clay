@@ -858,6 +858,8 @@ int main2(int argc, char **argv, char const* const* envp) {
     else
         m = loadProgram(clayFile, NULL);
     loadTimer.stop();
+    llvm::errs() << "Start compilation\n";    
+    
     compileTimer.start();
     codegenEntryPoints(m, codegenExternals);
     compileTimer.stop();

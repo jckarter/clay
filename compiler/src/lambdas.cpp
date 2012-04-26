@@ -269,8 +269,8 @@ static EnvPtr convertFreeVarsFromBinding(BindingPtr binding, EnvPtr env, LambdaC
 {
     convertFreeVars(binding->values, env, ctx);
     EnvPtr env2 = new Env(env);
-    for (unsigned j = 0; j < binding->names.size(); ++j)
-        addLocal(env2, binding->names[j], binding->names[j].ptr());
+    for (unsigned j = 0; j < binding->args.size(); ++j)
+        addLocal(env2, binding->args[j]->name, binding->args[j]->name.ptr());
     return env2;
 }
 

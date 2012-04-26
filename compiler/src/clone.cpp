@@ -278,12 +278,12 @@ StatementPtr clone(StatementPtr x)
 
     case BINDING : {
         Binding *y = (Binding *)x.ptr();
-        vector<FormalArgPtr> formalArgs;
+        vector<FormalArgPtr> args;
         vector<PatternVar> patternVars;
-        clone(y->formalArgs, formalArgs);
+        clone(y->args, args);
         clone(y->patternVars, patternVars);
-        out = new Binding(y->bindingKind, patternVars, clone(predicate),
-            formalArgs, clone(formalVarArg), clone(y->values));
+        out = new Binding(y->bindingKind, patternVars,
+            args, cloneOpt(y->varg), clone(y->values));
         break;
     }
 

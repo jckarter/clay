@@ -2378,29 +2378,29 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
     switch (x->bindingKind) {
 
     case VAR : {
-        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->names.size());
-        if (mpv->size() != x->names.size())
-            arityMismatchError(x->names.size(), mpv->size());
+        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
+        if (mpv->size() != x->args.size())
+            arityMismatchError(x->args.size(), mpv->size());
         MultiEValuePtr mev = new MultiEValue();
-        for (unsigned i = 0; i < x->names.size(); ++i) {
+        for (unsigned i = 0; i < x->args.size(); ++i) {
             EValuePtr ev = evalAllocValue(mpv->values[i].type);
             mev->add(ev);
         }
         int marker = evalMarkStack();
-        evalMultiInto(x->values, env, mev, x->names.size());
+        evalMultiInto(x->values, env, mev, x->args.size());
         evalDestroyAndPopStack(marker);
         EnvPtr env2 = new Env(env);
-        for (unsigned i = 0; i < x->names.size(); ++i)
-            addLocal(env2, x->names[i], mev->values[i].ptr());
+        for (unsigned i = 0; i < x->args.size(); ++i)
+            addLocal(env2, x->args[i]->name, mev->values[i].ptr());
         return env2;
     }
 
     case REF : {
-        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->names.size());
-        if (mpv->size() != x->names.size())
-            arityMismatchError(x->names.size(), mpv->size());
+        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
+        if (mpv->size() != x->args.size())
+            arityMismatchError(x->args.size(), mpv->size());
         MultiEValuePtr mev = new MultiEValue();
-        for (unsigned i = 0; i < x->names.size(); ++i) {
+        for (unsigned i = 0; i < x->args.size(); ++i) {
             PVData const &pv = mpv->values[i];
             if (pv.isTemp)
                 argumentError(i, "ref can only bind to an rvalue");
@@ -2408,48 +2408,48 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
             mev->add(evPtr);
         }
         int marker = evalMarkStack();
-        evalMulti(x->values, env, mev, x->names.size());
+        evalMulti(x->values, env, mev, x->args.size());
         evalDestroyAndPopStack(marker);
         EnvPtr env2 = new Env(env);
-        for (unsigned i = 0; i < x->names.size(); ++i) {
+        for (unsigned i = 0; i < x->args.size(); ++i) {
             EValuePtr evPtr = mev->values[i];
-            addLocal(env2, x->names[i], derefValue(evPtr).ptr());
+            addLocal(env2, x->args[i]->name, derefValue(evPtr).ptr());
         }
         return env2;
     }
 
     case FORWARD : {
-        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->names.size());
-        if (mpv->size() != x->names.size())
-            arityMismatchError(x->names.size(), mpv->size());
+        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
+        if (mpv->size() != x->args.size())
+            arityMismatchError(x->args.size(), mpv->size());
         MultiEValuePtr mev = new MultiEValue();
-        for (unsigned i = 0; i < x->names.size(); ++i) {
+        for (unsigned i = 0; i < x->args.size(); ++i) {
             PVData const &pv = mpv->values[i];
             mev->add(evalAllocValueForPValue(pv));
         }
         int marker = evalMarkStack();
-        evalMulti(x->values, env, mev, x->names.size());
+        evalMulti(x->values, env, mev, x->args.size());
         evalDestroyAndPopStack(marker);
         EnvPtr env2 = new Env(env);
-        for (unsigned i = 0; i < x->names.size(); ++i) {
+        for (unsigned i = 0; i < x->args.size(); ++i) {
             if (mpv->values[i].isTemp) {
                 EValuePtr ev = mev->values[i];
-                addLocal(env2, x->names[i], ev.ptr());
+                addLocal(env2, x->args[i]->name, ev.ptr());
             }
             else {
                 EValuePtr evPtr = mev->values[i];
-                addLocal(env2, x->names[i], derefValue(evPtr).ptr());
+                addLocal(env2, x->args[i]->name, derefValue(evPtr).ptr());
             }
         }
         return env2;
     }
 
     case ALIAS : {
-        ensureArity(x->names, 1);
+        ensureArity(x->args, 1);
         ensureArity(x->values->exprs, 1);
         EnvPtr env2 = new Env(env);
         ExprPtr y = foreignExpr(env, x->values->exprs[0]);
-        addLocal(env2, x->names[0], y.ptr());
+        addLocal(env2, x->args[0]->name, y.ptr());
         return env2;
     }
 

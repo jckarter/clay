@@ -1548,7 +1548,7 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
     else {
         llvmFuncName.append(x->name->str.begin(), x->name->str.end());
     }
-
+    
     llvm::DIFile file(NULL);
     int line = 0, column = 0;
     if (x->llvmFunc == NULL) {
@@ -3528,7 +3528,7 @@ bool codegenStatement(StatementPtr stmt,
                       CodegenContext* ctx)
 {
     DebugLocationContext loc(stmt->location, ctx);
-
+    
     switch (stmt->stmtKind) {
 
     case BLOCK : {
@@ -4054,15 +4054,15 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
 
     int line, column;
     llvm::DIFile file = getDebugLineCol(x->location, line, column);
-
+    
     switch (x->bindingKind) {
 
     case VAR : {
-        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->names.size());
-        if (mpv->size() != x->names.size())
-            arityMismatchError(x->names.size(), mpv->size());
+        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
+        if (mpv->size() != x->args.size())
+            arityMismatchError(x->args.size(), mpv->size());
         MultiCValuePtr mcv = new MultiCValue();
-        for (unsigned i = 0; i < x->names.size(); ++i) {
+        for (unsigned i = 0; i < x->args.size(); ++i) {
             CValuePtr cv = codegenAllocNewValue(mpv->values[i].type, ctx);
             mcv->add(cv);
             if (llvmDIBuilder != NULL) {
@@ -4070,7 +4070,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
                 llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
                     llvm::dwarf::DW_TAG_auto_variable, // tag
                     debugBlock, // scope
-                    x->names[i]->str, // name
+                    x->args[i]->name->str, // name
                     file, // file
                     line, // line
                     llvmTypeDebugInfo(cv->type), // type
@@ -4087,18 +4087,18 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
         }
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
-        codegenMultiInto(x->values, env, ctx, mcv, x->names.size());
+        codegenMultiInto(x->values, env, ctx, mcv, x->args.size());
         cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
         EnvPtr env2 = new Env(env);
-        for (unsigned i = 0; i < x->names.size(); ++i) {
+        for (unsigned i = 0; i < x->args.size(); ++i) {
             CValuePtr cv = mcv->values[i];
             cgPushStackValue(cv, ctx);
-            addLocal(env2, x->names[i], cv.ptr());
+            addLocal(env2, x->args[i]->name, cv.ptr());
 
             llvm::SmallString<128> buf;
             llvm::raw_svector_ostream ostr(buf);
-            ostr << x->names[i]->str << ":" << cv->type;
+            ostr << x->args[i]->name->str << ":" << cv->type;
             cv->llValue->setName(ostr.str());
 
         }
@@ -4106,11 +4106,11 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
     }
 
     case REF : {
-        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->names.size());
-        if (mpv->size() != x->names.size())
-            arityMismatchError(x->names.size(), mpv->size());
+        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
+        if (mpv->size() != x->args.size())
+            arityMismatchError(x->args.size(), mpv->size());
         MultiCValuePtr mcv = new MultiCValue();
-        for (unsigned i = 0; i < x->names.size(); ++i) {
+        for (unsigned i = 0; i < x->args.size(); ++i) {
             PVData const &pv = mpv->values[i];
             if (pv.isTemp)
                 argumentError(i, "ref can only bind to an lvalue");
@@ -4122,7 +4122,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
                 llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
                     llvm::dwarf::DW_TAG_auto_variable, // tag
                     debugBlock, // scope
-                    x->names[i]->str, // name
+                    x->args[i]->name->str, // name
                     file, // file
                     line, // line
                     llvmDIBuilder->createReferenceType(
@@ -4140,28 +4140,28 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
         }
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
-        codegenMulti(x->values, env, ctx, mcv, x->names.size());
+        codegenMulti(x->values, env, ctx, mcv, x->args.size());
         cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
         EnvPtr env2 = new Env(env);
-        for (unsigned i = 0; i < x->names.size(); ++i) {
+        for (unsigned i = 0; i < x->args.size(); ++i) {
             CValuePtr cv = derefValue(mcv->values[i], ctx);
-            addLocal(env2, x->names[i], cv.ptr());
+            addLocal(env2, x->args[i]->name, cv.ptr());
 
             llvm::SmallString<128> buf;
             llvm::raw_svector_ostream ostr(buf);
-            ostr << x->names[i]->str << ":" << cv->type;
+            ostr << x->args[i]->name->str << ":" << cv->type;
             cv->llValue->setName(ostr.str());
         }
         return env2;
     }
 
     case FORWARD : {
-        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->names.size());
-        if (mpv->size() != x->names.size())
-            arityMismatchError(x->names.size(), mpv->size());
+        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
+        if (mpv->size() != x->args.size())
+            arityMismatchError(x->args.size(), mpv->size());
         MultiCValuePtr mcv = new MultiCValue();
-        for (unsigned i = 0; i < x->names.size(); ++i) {
+        for (unsigned i = 0; i < x->args.size(); ++i) {
             PVData const &pv = mpv->values[i];
             CValuePtr cv;
             if (pv.isTemp) {
@@ -4178,7 +4178,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
                 llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
                     llvm::dwarf::DW_TAG_auto_variable, // tag
                     debugBlock, // scope
-                    x->names[i]->str, // name
+                    x->args[i]->name->str, // name
                     file, // file
                     line, // line
                     pv.isTemp
@@ -4198,11 +4198,11 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
         }
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
-        codegenMulti(x->values, env, ctx, mcv, x->names.size());
+        codegenMulti(x->values, env, ctx, mcv, x->args.size());
         cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
         EnvPtr env2 = new Env(env);
-        for (unsigned i = 0; i < x->names.size(); ++i) {
+        for (unsigned i = 0; i < x->args.size(); ++i) {
             CValuePtr rcv, cv;
             rcv = mcv->values[i];
             if (mpv->values[i].isTemp) {
@@ -4212,11 +4212,11 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
             else {
                 cv = derefValue(rcv, ctx);
             }
-            addLocal(env2, x->names[i], cv.ptr());
+            addLocal(env2, x->args[i]->name, cv.ptr());
 
             llvm::SmallString<128> buf;
             llvm::raw_svector_ostream ostr(buf);
-            ostr << x->names[i]->str << ":" << cv->type;
+            ostr << x->args[i]->name->str << ":" << cv->type;
             cv->llValue->setName(ostr.str());
 
         }
@@ -4224,11 +4224,11 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
     }
 
     case ALIAS : {
-        ensureArity(x->names, 1);
+        ensureArity(x->args, 1);
         ensureArity(x->values->exprs, 1);
         EnvPtr env2 = new Env(env);
         ExprPtr y = foreignExpr(env, x->values->exprs[0]);
-        addLocal(env2, x->names[0], y.ptr());
+        addLocal(env2, x->args[0]->name, y.ptr());
         return env2;
     }
 
@@ -6715,7 +6715,7 @@ void codegenMain(ModulePtr module)
     args->add(new NameRef(argc));
     args->add(new NameRef(argv));
     CallPtr mainCall = new Call(operator_expr_callMain(), args);
-
+    
     ReturnPtr ret = new Return(RETURN_VALUE, new ExprList(mainCall.ptr()));
     mainBody->statements.push_back(ret.ptr());
 
@@ -6771,10 +6771,13 @@ void codegenEntryPoints(ModulePtr module, bool importedExternals)
     codegenTopLevelLLVM(module);
     initializeCtorsDtors();
     generateLLVMCtorsAndDtors();
+    llvm::errs() << "codegenModuleEntryPoints\n";    
 
     codegenModuleEntryPoints(module, importedExternals);
 
     ObjectPtr mainProc = lookupPublic(module, Identifier::get("main"));
+    llvm::errs() << "codegenMain\n";    
+
     if (mainProc != NULL)
         codegenMain(module);
 
