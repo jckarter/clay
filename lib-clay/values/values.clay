@@ -78,8 +78,8 @@ inline overload countOccurrences(static value, static value, forward ..xs)
 
 define nthValue;
 [i] inline overload nthValue(static i, forward a, forward ..b)
-    = nthValue(static i-1, ..b);
-[i | i == 0] inline overload nthValue(static i, forward a, ..b) = a;
+    = forward nthValue(static i-1, ..b);
+[i | i == 0] inline overload nthValue(static i, forward a, ..b) = forward a;
 
 inline firstValue(forward a, ..rest) = forward a;
 
