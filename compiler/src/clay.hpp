@@ -1436,6 +1436,16 @@ struct Binding : public Statement {
     vector<FormalArgPtr> args;
     FormalArgPtr varg;
     ExprListPtr values;
+
+    bool analyzed;
+
+    vector<TypePtr> fixedArgTypes;
+    vector<IdentifierPtr> fixedArgNames;
+    IdentifierPtr varArgName;
+    vector<TypePtr> varArgTypes;
+
+    EnvPtr env;
+    
     Binding(int bindingKind,
         const vector<FormalArgPtr> &args,
         ExprListPtr values)

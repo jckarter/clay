@@ -1081,7 +1081,7 @@ void codegenExpr(ExprPtr expr,
         if (!x->desugared)
             x->desugared = desugarVariadicOp(x);
         codegenExpr(x->desugared, env, ctx, out);
-        break;
+        break; 
     }
 
     case EVAL_EXPR : {
@@ -4050,6 +4050,7 @@ void codegenCollectLabels(const vector<StatementPtr> &statements,
 
 EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
 {
+    
     DebugLocationContext loc(x->location, ctx);
 
     int line, column;
@@ -4058,11 +4059,11 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
     switch (x->bindingKind) {
 
     case VAR : {
-        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
-        if (mpv->size() != x->args.size())
-            arityMismatchError(x->args.size(), mpv->size());
+        vector<unsigned> dispatchIndices;
+        MultiPValuePtr mpv = safeAnalyzeMultiArgs(x->values, env, dispatchIndices);
         MultiCValuePtr mcv = new MultiCValue();
-        for (unsigned i = 0; i < x->args.size(); ++i) {
+    
+        for (unsigned i = 0; i < mpv->values.size(); ++i) {
             CValuePtr cv = codegenAllocNewValue(mpv->values[i].type, ctx);
             mcv->add(cv);
             if (llvmDIBuilder != NULL) {
@@ -4091,17 +4092,43 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
         cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
         EnvPtr env2 = new Env(env);
-        for (unsigned i = 0; i < x->args.size(); ++i) {
+        for (unsigned i = 0; i < x->fixedArgNames.size(); ++i) {
             CValuePtr cv = mcv->values[i];
             cgPushStackValue(cv, ctx);
-            addLocal(env2, x->args[i]->name, cv.ptr());
-
+            addLocal(env2, x->fixedArgNames[i], cv.ptr());
             llvm::SmallString<128> buf;
             llvm::raw_svector_ostream ostr(buf);
-            ostr << x->args[i]->name->str << ":" << cv->type;
+            ostr << x->fixedArgNames[i]->str << ":" << cv->type;
             cv->llValue->setName(ostr.str());
-
+            if(x->args[i]->type != NULL) {
+                TypePtr rt = evaluateType(x->args[i]->type, x->env);
+                if (cv->type != rt)
+                    argumentTypeError(i, rt, cv->type);
+                else {
+                    addLocal(env2, ((NameRef *)x->args[i]->type.ptr())->name, cv->type.ptr());
+                }
+            }
         }
+
+        if (x->varArgName.ptr()) {
+            unsigned nFixed = x->fixedArgTypes.size();
+            MultiCValuePtr varArgs = new MultiCValue();
+            for (unsigned i = 0; i < x->varArgTypes.size(); ++i) {
+                CValuePtr cv = mcv->values[nFixed + i];
+                varArgs->add(cv);
+            }
+            addLocal(env2, x->varArgName, varArgs.ptr());
+            if(x->varg->type != NULL) {
+                MultiStaticPtr vt = new MultiStatic();
+                for (unsigned i = 0; i < x->varArgTypes.size(); ++i) {
+                    vt->add(x->varArgTypes[i].ptr());
+                }
+                addLocal(env2, ((NameRef *)x->varg->type.ptr())->name, vt.ptr());
+            }
+            
+        }
+
+    
         return env2;
     }
 
@@ -6771,13 +6798,10 @@ void codegenEntryPoints(ModulePtr module, bool importedExternals)
     codegenTopLevelLLVM(module);
     initializeCtorsDtors();
     generateLLVMCtorsAndDtors();
-    llvm::errs() << "codegenModuleEntryPoints\n";    
-
     codegenModuleEntryPoints(module, importedExternals);
 
     ObjectPtr mainProc = lookupPublic(module, Identifier::get("main"));
-    llvm::errs() << "codegenMain\n";    
-
+    
     if (mainProc != NULL)
         codegenMain(module);
 
