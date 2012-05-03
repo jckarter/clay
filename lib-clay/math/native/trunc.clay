@@ -1,17 +1,15 @@
 
-/*
- * trunc(x)
- * Return x rounded toward 0 to integral value
- * Method:
- *	Bit twiddling.
- * Exception:
- *	Inexact flag raised if x not equal to trunc(x).
- */
+// trunc(x)
+// Return x rounded toward 0 to integral value
+// Method:
+//	Bit twiddling.
+// Exception:
+//	Inexact flag raised if x not equal to trunc(x).
 
 import math.native.kernel.ieee754.*;
-import math.*;
+import math.native.sign.(sign);
 
-overload trunc(x:Float) = Float(trunc(Double(x)));
+trunc(x:Float) = Float(trunc(Double(x)));
 
 overload trunc(x:Double) {
 	alias HUGE = GreatestPositiveFinite(Double);
@@ -19,25 +17,25 @@ overload trunc(x:Double) {
 	var ix = MAKE_IEEE(x);
 	var j0 = bitand(bitshr(GET_IEEE_HIGH(ix),20),0x7ff)-0x3ff;
 	if(j0 < 20) {
-	    if(j0 < 0) { 	/* raise inexact if x != 0 */
-			if(HUGE+x>ZERO) /* |x|<1, so return 0*sign(x) */
+	    if(j0 < 0) { 	// raise inexact if x != 0 
+			if(HUGE+x>ZERO) // |x|<1, so return 0*sign(x) 
 			    SET_IEEE(ix,bitand(GET_IEEE_HIGH(ix),SM),0);
 	    } 
 	    else {
 			var i = bitshr(NEM,j0);
-			if(bitor(bitand(GET_IEEE_HIGH(ix),i),GET_IEEE_LOW(ix))==0) return x; /* x is integral */
-			if(HUGE+x>ZERO) 	/* raise inexact flag */
+			if(bitor(bitand(GET_IEEE_HIGH(ix),i),GET_IEEE_LOW(ix))==0) return x; // x is integral 
+			if(HUGE+x>ZERO) 	// raise inexact flag 
 			    SET_IEEE(ix,bitand(GET_IEEE_HIGH(ix),bitnot(i)),0);
 	    }
 	} 
 	else 
 		if (j0>51) {
-	    	if(j0==0x400u) return x+x;	/* inf or NaN */
-	    	else return x;		/* x is integral */
+	    	if(j0==0x400u) return x+x;	// inf or NaN 
+	    	else return x;		// x is integral 
 		} else {
 		    var i = bitshr(0xffffffffu,j0-20);
-		    if(bitand(GET_IEEE_LOW(ix),i)==0) return x;	/* x is integral */
-		    if(HUGE+x>ZERO)		/* raise inexact flag */
+		    if(bitand(GET_IEEE_LOW(ix),i)==0) return x;	// x is integral 
+		    if(HUGE+x>ZERO)		// raise inexact flag 
 				SET_IEEE_LOW(ix, bitcast(Int32,bitand(GET_IEEE_LOW(ix),bitnot(i))));
 		}
 	return GET_IEEE_DB(ix);

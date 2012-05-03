@@ -9,12 +9,10 @@ alias __off_t = __int64_t;
 
 alias FILE = Struct___sFILE;
 
-alias Union_Unnamed1 = Union[
-    /* __mbstate8 */ Array[CChar, 128],
-    /* _mbstateL */ __int64_t,
+alias __mbstate_t = Union[
+    Array[CChar, 128], // __mbstate8
+    __int64_t,  // _mbstateL
 ];
-
-alias __mbstate_t = Union_Unnamed1;
 
 record Struct___sbuf (
     _base : Pointer[CUChar],

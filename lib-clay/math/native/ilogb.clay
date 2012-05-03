@@ -1,18 +1,18 @@
-/* ilogb(double x)
- * return the binary exponent of non-zero x
- * ilogb(0) = FP_ILOGB0
- * ilogb(NaN) = FP_ILOGBNAN (no signal is raised)
- * ilogb(inf) = INT_MAX (no signal is raised)
- */
+// ilogb(double x)
+// return the binary exponent of non-zero x
+// ilogb(0) = FP_ILOGB0
+// ilogb(NaN) = FP_ILOGBNAN (no signal is raised)
+// ilogb(inf) = INT_MAX (no signal is raised)
+
 import math.native.kernel.ieee754.*;
-import math.*;
 
 alias FP_ILOGB0	= Least(Int32);
 alias FP_ILOGBNAN = Least(Int32);
 
-overload logb(x) = ilogb(x);
 
-overload ilogb(x:Float) = ilogb(Double(x));
+alias logb = ilogb;
+
+ilogb(x:Float) = ilogb(Double(x));
 
 overload ilogb(x:Double) {
 	
@@ -21,7 +21,7 @@ overload ilogb(x:Double) {
 	if(GET_IEEE_HIGH(xdb) < CV8) {
 	    if(bitor(GET_IEEE_HIGH(xdb),GET_IEEE_LOW(xdb))==0)
 			return FP_ILOGB0;
-	    else {			/* subnormal x */
+	    else {			// subnormal x 
 			var ix = 0;
 			if(GET_IEEE_HIGH(xdb)==0) {
 				ix = -1043;

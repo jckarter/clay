@@ -1,7 +1,6 @@
 
 import numbers.floats.*;
-import printer.(printTo,printReprTo,printFloatWithSprintf);
-import platform;
+import math.native.abs.(abs);
 
 [T] Complex?(#T) = false;
 overload Complex?(#Complex32) = true;
@@ -295,14 +294,26 @@ inline overload max(x:T,y:T) = max(abs(x),abs(y));
 [C when Complex?(C)]
 inline overload min(x:C,y:C) = min(abs(x),abs(y));
 
+[T,C when Numeric?(T) and Complex?(C)]
+inline overload max(x:T,y:C) = max(x,abs(y));
+
+[T,C when Numeric?(T) and Complex?(C)]
+inline overload max(x:C,y:T) = max(abs(x),y);
+
+[T,C when Numeric?(T) and Complex?(C)]
+inline overload min(x:T,y:C) = min(x,abs(y));
+
+[T,C when Numeric?(T) and Complex?(C)]
+inline overload min(x:C,y:T) = min(abs(x),y);
+
 [T when Complex?(T)]
 inline overload nan?(x:T) = nan?(real(x)) or nan?(imag(x));
 
 [T when Complex?(T)]
-inline overload finite?(x:T) = floatExponent(abs(x)) < exponentMask(T);
+inline overload finite?(x:T) = floatExponent(abs(x)) != exponentMask((ComplexRealType(T)));
 
 [T when Complex?(T)]
-inline overload infinity?(x:T) = abs(x) == infinity(T);
+inline overload infinity?(x:T) = abs(x) == infinity(ComplexBaseType(T));
 
 [T when Complex?(T)]
 inline overload negativeInfinity?(x:T) = negativeInfinity?(real(x));
@@ -325,64 +336,5 @@ overload nan(#T) = Complex(nan(ComplexRealType(T)),nan(ComplexImagType(T)));
 [T when Complex?(T)]
 overload snan(#T) = Complex(snan(ComplexRealType(T)),snan(ComplexImagType(T)));
 
-
-
-overload printTo(stream, x:Complex80) {
-    printFloatWithSprintf(stream, "nan", "%.19Lg%+.19Lgj", ..rectValues(x));
-}
-
-overload printTo(stream, x:Complex64) {
-    printFloatWithSprintf(stream, "nan", "%.16g%+.16gj", ..rectValues(x));
-}
-
-overload printTo(stream, x:Complex32) {
-    printFloatWithSprintf(stream, "nan", "%.16g%+.16gj", ..mapValues(Double, ..rectValues(x)));
-}
-
-overload printTo(stream, x:Imag80) {
-    printFloatWithSprintf(stream, "nan", "%.19Lgj", x);
-}
-
-overload printTo(stream, x:Imag64) {
-    printFloatWithSprintf(stream, "nan", "%.16gj", x);
-}
-
-overload printTo(stream, x:Imag32) {
-    printFloatWithSprintf(stream, "nan", "%.8gj", Imag64(x));
-}
-
-
-overload printReprTo(stream, x:Imag32) {
-    printFloatWithSprintf(stream, "nan(Imag32)", "%.6afj", Imag64(x));
-}
-
-overload printReprTo(stream, x:Imag64) {
-    printFloatWithSprintf(stream, "nan(Imag64)", "%.13aj", x);
-}
-
-overload printReprTo(stream, x:Imag80) {
-    printFloatWithSprintf(stream, "nan(Imag80)", "%.15Laflj", x);
-}
-
-[when platform.OS == platform.FreeBSD]
-overload printReprTo(stream, x:Imag80) {
-    printFloatWithSprintf(stream, "nan(Imag80)", "%.16Lafl", x);
-}
-
-overload printReprTo(stream, x:Complex80) {
-    printFloatWithSprintf(stream, "nan(Complex80)", "%.15Lafl%+.15Laflj", ..rectValues(x));
-}
-
-[when platform.OS == platform.FreeBSD]
-overload printReprTo(stream, x:Complex80) {
-    printFloatWithSprintf(stream, "nan(Complex80)", "%.16Lafl%+.16Laflj", ..rectValues(x));
-}
-
-overload printReprTo(stream, x:Complex64) {
-    printFloatWithSprintf(stream, "nan(Complex64)", "%.13a%+.13aj", ..rectValues(x));
-}
-
-overload printReprTo(stream, x:Complex32) {
-    printFloatWithSprintf(stream, "nan(Complex32)", "%.6af%+.6afj", ..mapValues(Double, ..rectValues(x)));
-}
-
+[T when Float?(T)]
+inline fromPolar(m:T,ph:T) = Complex(m*sin(ph),m*cos(ph));

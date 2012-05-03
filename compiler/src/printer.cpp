@@ -363,7 +363,7 @@ static void printStatement(llvm::raw_ostream &out, const Statement *x) {
     }
     case VARIADIC_ASSIGNMENT : {
         const VariadicAssignment *y = (const VariadicAssignment *)x;
-        out << "VariadicAssignment(" << y->op << ", " << y->ops;
+        out << "VariadicAssignment(" << y->op ;
         out << ", " << y->exprs->exprs << ")";
         break;
     }

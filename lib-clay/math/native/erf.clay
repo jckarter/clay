@@ -1,6 +1,8 @@
 // error function routines
 
-import math.*;
+import math.native.exp.(exp);
+import math.native.abs.(abs);
+import numbers.floats.(nan?);
 
 private var a = array(
         5.958930743e-11, -1.13739022964e-9,
@@ -79,7 +81,7 @@ private var b = array(
 );
 
 [T when Numeric?(T)]
-overload erf(x:T) {
+erf(x:T) {
     if (nan?(x)) return x;
     var w = if(x < T(0)) -x else x;
     var y = T(0);
@@ -114,7 +116,7 @@ overload erf(x:T) {
 
 
 [T when Numeric?(T)]
-overload erfc(x:T){
+erfc(x:T){
     if (nan?(x)) return x;
     var t = T(3.97886080735226) / (abs(x) + T(3.97886080735226));
     var u = t - T(0.5);

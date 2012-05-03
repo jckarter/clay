@@ -1,9 +1,11 @@
 
-import math.*;
 import complex.*;
+import numbers.floats.(infinity?,infinity);
+import math.native.copysign.(copysign);
 
-[T when Complex?(T)]
-overload proj(z:T) {
+
+[T when Complex?(T) ]
+proj(z:T) {
 
 	if (not infinity?(real(z)) and not infinity?(imagValue(z)))
 		return z;

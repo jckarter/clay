@@ -1,6 +1,9 @@
 // bessel functions
 
-import math.*;
+import math.native.abs.(abs);
+import math.native.sqrt.(sqrt);
+import math.native.cos.(cos);
+import math.native.sin.(sin);
 
 // Bessel J_0(x) function
 private var a = array(
@@ -114,8 +117,8 @@ private var d = array(
         -0.0052083333227940760113
 );
 
-[T when Float?(T)]
-overload j0(x:T) --> y:T {
+[T when Float?(T) ]
+j0(x:T) --> y:T {
 
     var w = abs(x);
     if (w < T(1)) {
@@ -269,8 +272,8 @@ private var j1d = array(
     0.01562499998712198636
 );
 
-[T when Float?(T)]
-overload j1(x:T) --> y:T {
+[T when Float?(T) ]
+j1(x:T) --> y:T {
     var w = abs(x);
     if (w < T(1)) {
         var t = w * w;
@@ -551,8 +554,8 @@ private var i1c = array(
     0.05150322986693207715
 );
 
-[T when Float?(T)]
-overload i1(x:T) --> y:T {
+[T when Float?(T) ]
+i1(x:T) --> y:T {
     var w = abs(x);
     if (w < T(8.5)) {
         var t = w * w * T(0.0625);
@@ -584,7 +587,7 @@ overload i1(x:T) --> y:T {
 
 
 
-// /* Bessel Y_0(x) function in double precision */
+// Bessel Y_0(x) function in double precision
 //
 // #include <math.h>
 //
@@ -800,7 +803,7 @@ overload i1(x:T) --> y:T {
 //
 //
 //
-// /* Bessel K_0(x) function in double precision */
+// Bessel K_0(x) function in double precision
 //
 // #include <math.h>
 //
@@ -1011,10 +1014,10 @@ overload i1(x:T) --> y:T {
 //     }
 //     return y;
 // }
-//
-//
-//
-// /* Bessel K_1(x) function in double precision */
+
+
+
+// Bessel K_1(x) function in double precision
 //
 // #include <math.h>
 //
@@ -1228,10 +1231,9 @@ overload i1(x:T) --> y:T {
 //     }
 //     return y;
 // }
-//
-//
-//
-// /* Bessel Y_1(x) function in double precision */
+
+
+// Bessel Y_1(x) function in double precision
 //
 // #include <math.h>
 //

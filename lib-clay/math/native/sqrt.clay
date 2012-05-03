@@ -1,7 +1,11 @@
 
-import math.native.kernel.exact.*;
 import math.native.kernel.ieee754.*;
-import math.*;
+import numbers.floats.(nan?,nan,infinity);
+import math.native.fpclassify.(fpclassify,FP_INFINITE,FP_NAN,FP_ZERO);
+import math.native.copysign.(copysign);
+import math.native.abs.(abs);
+import complex.(Complex?,Complex,ComplexBaseType, real,imagValue);
+import math.native.hypot.(hypot);
 
 private var inroot = array(
   1.40872145012100,  1.39792649065766,  1.38737595123859,  1.37706074531819,
@@ -46,7 +50,8 @@ private var big = 134217728.0;
 private var t512 = 0x1.p512;
 private var tm256 = 0x1.p-256;
 
-overload sqrt(x:Double) {
+
+sqrt(x:Double) {
 
     var a = MAKE_IEEE(x);
     var k = GET_IEEE_HIGH(a);
@@ -88,6 +93,7 @@ overload sqrt(x:Double) {
 }
 
 
+
 overload sqrt(x:Float) {
     alias ONE = 1.f;
     alias ZERO = 0.f;
@@ -95,20 +101,20 @@ overload sqrt(x:Float) {
 
     var ix = GET_FLOAT_SIGNED(x);
 
-      /* take care of Inf and NaN */
+      // take care of Inf and NaN 
     if(bitand(ix,0x7f800000)==0x7f800000) {
-        return x*x+x;   /* sqrt(NaN)=NaN, sqrt(+inf)=+inf
-               sqrt(-inf)=sNaN */
+        return x*x+x;   // sqrt(NaN)=NaN, sqrt(+inf)=+inf
+               sqrt(-inf)=sNaN 
     }
-      /* take care of zero */
+      // take care of zero 
     if(ix<=0) {
-        if(bitandc(ix,SM)==0) return x;/* sqrt(+-0) = +-0 */
+        if(bitandc(ix,SM)==0) return x;// sqrt(+-0) = +-0 
         else if(ix<0)
-            return (x-x)/(x-x);   /* sqrt(-ve) = sNaN */
+            return (x-x)/(x-x);   // sqrt(-ve) = sNaN 
     }
-      /* normalize x */
+      // normalize x 
     var m = bitshr(ix,23);
-    if(m==0) {        /* subnormal x */
+    if(m==0) {        // subnormal x 
         var i = 0;
         while(bitand(ix,0x00800000)==0){ 
             ix = bitshl(ix,1);
@@ -116,16 +122,16 @@ overload sqrt(x:Float) {
         }
         m -: i-1;
     }
-    m -: 127; /* unbias exponent */
+    m -: 127; // unbias exponent 
     ix = bitor(bitand(ix,0x007fffff),0x00800000);
-    if(bitand(m,1)) /* odd m, double x to make it even */
+    if(bitand(m,1)) // odd m, double x to make it even 
         ix +: ix;
-    m = bitshr(m,1);  /* m = [m/2] */
+    m = bitshr(m,1);  // m = [m/2] 
 
-      /* generate sqrt(x) bit by bit */
+      // generate sqrt(x) bit by bit 
     ix +: ix;
-    var q,s = 0,0;    /* q = sqrt(x) */
-    var r = 0x01000000u;   /* r = moving bit from right to left */
+    var q,s = 0,0;    // q = sqrt(x) 
+    var r = 0x01000000u;   // r = moving bit from right to left 
 
     while(r!=0) {
         t = s+r;
@@ -139,9 +145,9 @@ overload sqrt(x:Float) {
     }
 
     var z = 0.;
-      /* use floating add to find out rounding direction */
+      // use floating add to find out rounding direction 
     if(ix!=0) {
-        z = ONE-TINY; /* trigger inexact flag */
+        z = ONE-TINY; // trigger inexact flag 
         if (z>=ONE) {
             z = ONE+TINY;
       if (z>ONE)
@@ -153,4 +159,72 @@ overload sqrt(x:Float) {
     ix = bitshr(q,1)+0x3f000000;
     ix +: bitshl(m,23);
     return SET_FLOAT_WORD(ix);
+}
+
+
+[I when Imaginary?(I) ]
+inline overload sqrt(z:I) = sqrt(Complex(z));
+
+
+alias thresh(#LongDouble) = 0xd.413cccfe77997ffp+16379fl;
+alias overload thresh(#Float)  = 0x1.a82797f7a7599p+126f;
+alias overload thresh(#Double) = 0x1.a827999fcef32p+1022;
+
+[C when Complex?(C)]
+overload sqrt(z:C) --> result:C {
+    alias T = ComplexBaseType(C);
+    alias ZERO = T(0);
+    alias QUARTER = T(0.25);
+    alias HALF = T(0.5);
+    alias TWO = T(2);
+    
+    var a = real(z);
+    var b = imagValue(z);
+
+    // Handle special cases.
+    if (zero?(z))
+        result <-- Complex(ZERO, b);
+    else if (infinity?(b))
+        result <-- Complex(infinity(T), b);
+    else if (nan?(a)) {
+        var t = (b - b) / (b - b);  // raise invalid if b is not a NaN 
+        result <-- Complex(a, t); // return NaN + NaN i 
+    }
+    else if (infinity?(a)) {
+        // csqrt(inf + NaN i)  = inf +  NaN i
+        // csqrt(inf + y i)    = inf +  0 i
+        // csqrt(-inf + NaN i) = NaN +- inf i
+        // csqrt(-inf + y i)   = 0   +  inf i
+
+        if (signbit(a) == 1)
+            result <-- Complex(abs(b - b), copysign(a, b));
+        else
+            result <-- Complex(a, copysign(b - b, b));
+    }
+
+    // The remaining special case (b is NaN) is handled just fine by
+    // the normal code path below.
+    // Scale to avoid overflow. 
+    else {
+        var scale = 0;
+        if (abs(a) >= thresh(T) or abs(b) >= thresh(T)) {
+            a *: QUARTER;
+            b *: QUARTER;
+            scale = 1;
+        } 
+        
+        // Algorithm 312, CACM vol 10, Oct 1967. 
+        if (a >= ZERO) {
+            var t = sqrt((a + hypot(a, b)) * HALF);
+            result <-- Complex(t, b / (TWO * t));
+        } 
+        else {
+            var t = sqrt((-a + hypot(a, b)) * HALF);
+            result <-- Complex(abs(b) / (TWO * t), copysign(t, b));
+        }
+
+        // Rescale. 
+        if (scale == 1)
+            result *: TWO;
+    }
 }

@@ -1,5 +1,4 @@
 
-import math.*;
 
 // for non-zero x
 //  x = frexp(arg,@exp);
@@ -9,8 +8,8 @@ import math.*;
 // If arg is inf, 0.0, or NaN, then frexp(arg,@exp) returns arg
 // with *exp=0.
 
-[T,I when Float?(T) and Integer?(I)]
-overload frexp(x:T, eptr:Pointer[I]){
+[T,I when Float?(T) and Integer?(I) ]
+frexp(x:T, eptr:Pointer[I]){
     var k = floatExponent(x);                      // extract exponent
     eptr^ = 0;
     if (not finite?(x)) return x+x;           // NaN or Inf

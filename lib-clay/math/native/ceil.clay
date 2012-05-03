@@ -1,0 +1,81 @@
+
+import math.native.kernel.ieee754.*;
+
+private alias DHUGE = GreatestPositiveFinite(Double);
+private alias FHUGE = GreatestPositiveFinite(Float);
+private alias DZERO = 0.ff;
+private alias FZERO = 0.f;
+
+
+ceil(x:Double) {
+	var ix = MAKE_IEEE(x);
+	var j0 = bitand(bitshr(GET_IEEE_HIGH(ix),20),0x7ff)-0x3ff;
+	if(j0<20) {
+	    if(j0<0) { 	// raise inexact if x != 0 
+			if(DHUGE+x>DZERO) {// return 0*sign(x) if |x|<1 
+			    if(GET_IEEE_HIGH(ix)<0) {
+			    	SET_IEEE_HIGH(ix,bitcast(Int32,0x80000000u));
+			    	SET_IEEE_LOW(ix,0);
+			    }
+			    else 
+			    	if(bitor(GET_IEEE_HIGH(ix),GET_IEEE_LOW(ix))!=0) { 
+			    		SET_IEEE_HIGH(ix,0x3ff00000);
+			    		SET_IEEE_LOW(ix,0);
+			    	}
+			}
+	    } 
+	    else {
+			var i = bitshr(0x000fffff,j0);
+			if(bitor(bitand(GET_IEEE_HIGH(ix),i),GET_IEEE_LOW(ix))==0) return x; // x is integral 
+			if(DHUGE+x>DZERO) {	// raise inexact flag 
+			    if(GET_IEEE_HIGH(ix)>0) GET_IEEE_HIGH(ix) +: bitshr(0x00100000,j0);
+			    SET_IEEE_HIGH(ix, bitandc(GET_IEEE_HIGH(ix),i)); 
+			    SET_IEEE_LOW(ix, 0);
+			}
+	    }
+	} else if (j0>51) {
+	    if(j0==0x400u) return x+x;	// inf or NaN 
+	    else return x;		// x is integral 
+	} else {
+	    var i = bitshr(0xffffffffu,j0-20);
+	    if(bitand(GET_IEEE_LOW(ix),i)==0) return x;	// x is integral 
+	    if(DHUGE+x>DZERO) { 		// raise inexact flag 
+			if(GET_IEEE_HIGH(ix)>0) {
+			    if(j0==20) GET_IEEE_HIGH(ix)+:1;
+			    else {
+					var j = GET_IEEE_LOW(ix) + bitshl(1,52-j0);
+					if(j<GET_IEEE_LOW(ix)) GET_IEEE_HIGH(ix)+:1;	// got a carry 
+					SET_IEEE_LOW(ix, j);
+			    }
+			}
+			SET_IEEE_LOW(ix, bitcast(Int32,bitandc(GET_IEEE_LOW(ix),i)));
+	    }
+	}
+	return GET_IEEE_DB(ix);
+}
+
+
+overload ceil(x:Float) {
+	var ix = GET_FLOAT_SIGNED(x);
+	var j0 = bitand(bitshr(ix,23),0xff)-0x7f;
+	if(j0 < 23) {
+	    if(j0 < 0) { 	// raise inexact if x != 0 
+			if(FHUGE+x>FZERO) {// return 0*sign(x) if |x|<1 
+			    if(ix<0) ix=bitcast(Int,0x80000000u);
+			    else if(ix!=0) ix=0x3f800000;
+			}
+	    } 
+	    else {
+			var i = bitshr(0x007fffff,j0);
+			if(bitand(ix,i)==0) return x; // x is integral 
+			if(FHUGE+x>FZERO) {	// raise inexact flag 
+			    if(ix>0) ix +: bitshr(0x00800000,j0);
+			    ix = bitandc(ix,i);
+			}
+	    }
+	} else {
+	    if(j0==0x80) return x+x;	// inf or NaN 
+	    else return x;		// x is integral 
+	}
+	return SET_FLOAT_WORD(ix);
+}

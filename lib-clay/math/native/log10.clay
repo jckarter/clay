@@ -2,32 +2,35 @@
 
 import math.native.kernel.k_log.*;
 import math.native.kernel.ieee754.*;
-import math.*;
+import math.native.log.(log);
+import numbers.floats.(negativeInfinity,nan);
+import complex.*;
 
-alias ivln10hi   =  4.34294481878168880939e-01; /* 0x3fdbcb7b, 0x15200000 */
-alias ivln10lo   =  2.50829467116452752298e-11; /* 0x3dbb9438, 0xca9aadd5 */
-alias log10_2hi  =  3.01029995663611771306e-01; /* 0x3FD34413, 0x509F6000 */
-alias log10_2lo  =  3.69423907715893078616e-13; /* 0x3D59FEF3, 0x11F12B36 */
+alias ivln10hi   =  4.34294481878168880939e-01; // 0x3fdbcb7b, 0x15200000 
+alias ivln10lo   =  2.50829467116452752298e-11; // 0x3dbb9438, 0xca9aadd5 
+alias log10_2hi  =  3.01029995663611771306e-01; // 0x3FD34413, 0x509F6000 
+alias log10_2lo  =  3.69423907715893078616e-13; // 0x3D59FEF3, 0x11F12B36 
 
-overload log10(x:Double) {
+
+log10(x:Double) {
 	alias ZERO = 0.;
 	var xdb = MAKE_IEEE(x);
 	
 	var k = 0;
-	if (GET_IEEE_HIGH(xdb) < CV8) {			/* x < 2**-1022  */
+	if (GET_IEEE_HIGH(xdb) < CV8) {			// x < 2**-1022  
 	    if (bitor(bitand(GET_IEEE_HIGH(xdb),MM),GET_IEEE_LOW(xdb))==0)
-			return negativeInfinity(Double);		/* log(+-0)=-inf */
-	    if (GET_IEEE_HIGH(xdb)<0) return nan(Double);	/* log(-#) = NaN */
+			return negativeInfinity(Double);		// log(+-0)=-inf 
+	    if (GET_IEEE_HIGH(xdb)<0) return nan(Double);	// log(-#) = NaN 
 	    k -: 54; 
 	    SET_IEEE_HIGH(xdb,GET_IEEE_HIGH(x*TWO54));
 	}
 	if (GET_IEEE_HIGH(xdb) >= EM) return x;
 	if (GET_IEEE_HIGH(xdb) == RM and GET_IEEE_LOW(xdb) == 0)
-	    return ZERO;			/* log(1) = +0 */
+	    return ZERO;			// log(1) = +0 
 	k +: bitshr(GET_IEEE_HIGH(xdb),20)-1023;
 	SET_IEEE_HIGH(xdb,bitand(GET_IEEE_HIGH(xdb),NEM));
 	var i = bitand(GET_IEEE_HIGH(xdb)+0x95f64,CV8);
-	SET_IEEE_HIGH(xdb,bitor(GET_IEEE_HIGH(xdb),bitxor(i,RM)));	/* normalize x or x/2 */
+	SET_IEEE_HIGH(xdb,bitor(GET_IEEE_HIGH(xdb),bitxor(i,RM)));	// normalize x or x/2 
 	k +: bitshr(i,20);
 	var f = GET_IEEE_DB(xdb) - 1.0;
 	var hfsq = 0.5*f*f;
@@ -45,3 +48,7 @@ overload log10(x:Double) {
 	val_hi = w;
 	return val_lo + val_hi;
 }
+
+
+[T when Complex?(T) ]
+overload log10(x:T) = log(x)/log(10.0);

@@ -1,37 +1,47 @@
 // pow function adapted from openlibm
 
 import math.native.kernel.ieee754.*;
-import math.*;
+import math.native.sqrt.(sqrt);
+import math.native.abs.(abs);
+import math.native.scalbn.(scalbn);
+import math.native.exp.(exp);
+import math.native.sin.(sin);
+import math.native.cos.(cos);
+import math.native.log.(log);
+import math.native.arg.(arg);
+import complex.*;
 
+
+private var bp = array(1.0, 1.5);
+private var dp_h = array( 0.0, 5.84962487220764160156e-01); // 0x3FE2B803, 0x40000000 
+private var dp_l = array( 0.0, 1.35003920212974897128e-08); // 0x3E4CFDEB, 0x43CFD006 
 	
-overload pow(x:Double, y:Double) {
 
-	alias bp = array(1.0, 1.5);
-	alias dp_h = array( 0.0, 5.84962487220764160156e-01); /* 0x3FE2B803, 0x40000000 */
-	alias dp_l = array( 0.0, 1.35003920212974897128e-08); /* 0x3E4CFDEB, 0x43CFD006 */
-	alias two53	=  9007199254740992.0;	/* 0x43400000, 0x00000000 */
+pow(x:Double, y:Double) : Double {
 
-		/* poGET_IEEE_LOW(ydb) coefs for (3/2)*(log(x)-2s-2/3*s**3 */
-	alias L1  =  5.99999999999994648725e-01; /* 0x3FE33333, 0x33333303 */
-	alias L2  =  4.28571428578550184252e-01; /* 0x3FDB6DB6, 0xDB6FABFF */
-	alias L3  =  3.33333329818377432918e-01; /* 0x3FD55555, 0x518F264D */
-	alias L4  =  2.72728123808534006489e-01; /* 0x3FD17460, 0xA91D4101 */
-	alias L5  =  2.30660745775561754067e-01; /* 0x3FCD864A, 0x93C9DB65 */
-	alias L6  =  2.06975017800338417784e-01; /* 0x3FCA7E28, 0x4A454EEF */
-	alias lg2  =  6.93147180559945286227e-01; /* 0x3FE62E42, 0xFEFA39EF */
-	alias lg2_h  =  6.93147182464599609375e-01; /* 0x3FE62E43, 0x00000000 */
-	alias lg2_l  = -1.90465429995776804525e-09; /* 0xBE205C61, 0x0CA86C39 */
-	alias ovt =  8.0085662595372944372e-0017; /* -(1024-log2(ovfl+.5ulp)) */
-	alias cp    =  9.61796693925975554329e-01; /* 0x3FEEC709, 0xDC3A03FD =2/(3ln2) */
-	alias cp_h  =  9.61796700954437255859e-01; /* 0x3FEEC709, 0xE0000000 =(float)cp */
-	alias cp_l  = -7.02846165095275826516e-09; /* 0xBE3E2FE0, 0x145B01F5 =tail of cp_h*/
-	alias ivln2_h  =  1.44269502162933349609e+00; /* 0x3FF71547, 0x60000000 =24b 1/ln2*/
-	alias ivln2_l  =  1.92596299112661746887e-08; /* 0x3E54AE0B, 0xF85DDF44 =1/ln2 tail*/
+	alias two53	=  9007199254740992.0;	// 0x43400000, 0x00000000 
+
+	// poly coefs for (3/2)*(log(x)-2s-2/3*s**3
+	alias L1  =  5.99999999999994648725e-01; // 0x3FE33333, 0x33333303 
+	alias L2  =  4.28571428578550184252e-01; // 0x3FDB6DB6, 0xDB6FABFF 
+	alias L3  =  3.33333329818377432918e-01; // 0x3FD55555, 0x518F264D 
+	alias L4  =  2.72728123808534006489e-01; // 0x3FD17460, 0xA91D4101 
+	alias L5  =  2.30660745775561754067e-01; // 0x3FCD864A, 0x93C9DB65 
+	alias L6  =  2.06975017800338417784e-01; // 0x3FCA7E28, 0x4A454EEF 
+	alias lg2  =  6.93147180559945286227e-01; // 0x3FE62E42, 0xFEFA39EF 
+	alias lg2_h  =  6.93147182464599609375e-01; // 0x3FE62E43, 0x00000000 
+	alias lg2_l  = -1.90465429995776804525e-09; // 0xBE205C61, 0x0CA86C39 
+	alias ovt =  8.0085662595372944372e-0017; // -(1024-log2(ovfl+.5ulp)) 
+	alias cp    =  9.61796693925975554329e-01; // 0x3FEEC709, 0xDC3A03FD =2/(3ln2) 
+	alias cp_h  =  9.61796700954437255859e-01; // 0x3FEEC709, 0xE0000000 =(float)cp 
+	alias cp_l  = -7.02846165095275826516e-09; // 0xBE3E2FE0, 0x145B01F5 =tail of cp_h
+	alias ivln2_h  =  1.44269502162933349609e+00; // 0x3FF71547, 0x60000000 =24b 1/ln2
+	alias ivln2_l  =  1.92596299112661746887e-08; // 0x3E54AE0B, 0xF85DDF44 =1/ln2 tail
 	alias ZERO = 0.;
 	alias ONE = 1.;
 	alias TWO = 2.;
-	alias HUGE = GreatestPositiveFinite(Double);
-	alias TINY = LeastPositive(Double);
+	alias HUGE_OVERFLOW = GreatestPositiveFinite(Double)*GreatestPositiveFinite(Double);
+	alias TINY_OVERFLOW = LeastPositive(Double)*LeastPositive(Double);
 
 	var xdb = MAKE_IEEE(x);
 	var ydb = MAKE_IEEE(y);
@@ -47,17 +57,17 @@ overload pow(x:Double, y:Double) {
 	   iy > EM or ((iy==EM) and (GET_IEEE_LOW(ydb)!=0))) {
 		return (x+0.0)+(y+0.0);
     }
-    /* determine if y is an odd int when x < 0
-     * yisint = 0	... y is not an integer
-     * yisint = 1	... y is an odd int
-     * yisint = 2	... y is an even int
-     */
+    // determine if y is an odd int when x < 0
+    // yisint = 0	... y is not an integer
+    // yisint = 1	... y is an odd int
+    // yisint = 2	... y is an even int
+    
 	var yisint  = 0;
 	if(GET_IEEE_HIGH(xdb) < 0) {	
 	    if(iy >= 0x43400000) 
-	    	yisint = 2; /* even integer y */
+	    	yisint = 2; // even integer y 
 	    else if(iy >= RM) {
-			var k = bitshr(iy,20)-0x3ff;	   /* exponent */
+			var k = bitshr(iy,20)-0x3ff;	   // exponent 
 			if(k > 20) {
 			    var j = bitshr(GET_IEEE_LOW(ydb),52-k);
 			    if(bitshl(j,52-k) == GET_IEEE_LOW(ydb)) yisint = 2-bitand(j,1);
@@ -70,38 +80,38 @@ overload pow(x:Double, y:Double) {
 	} 
 	// special value of y
 	if(GET_IEEE_LOW(ydb) == 0) { 	
-	    if (iy == EM) {	/* y is +-inf */
+	    if (iy == EM) {	// y is +-inf 
 	        if(bitor(ix-RM,GET_IEEE_LOW(xdb))==0)
-		    	return  ONE;	/* (-1)**+-inf is NaN */
-	        else if (ix >= RM)/* (|x|>1)**+-inf = inf,0 */
+		    	return  ONE;	// (-1)**+-inf is NaN 
+	        else if (ix >= RM)// (|x|>1)**+-inf = inf,0 
 		    	return if(GET_IEEE_HIGH(ydb)>=0) y else ZERO;
-	        else			/* (|x|<1)**-,+inf = inf,0 */
+	        else			// (|x|<1)**-,+inf = inf,0 
 		    	return if(GET_IEEE_HIGH(ydb)<0)-y else ZERO;
 	    } 
-	    if(iy==RM) {	/* y is  +-1 */
+	    if(iy==RM) {	// y is  +-1 
 			if(GET_IEEE_HIGH(ydb)<0) return ONE/x; 
 			else return x;
 	    }
 	    if(GET_IEEE_HIGH(ydb)==CV2) 
-	    	return x*x; /* y is  2 */
-	    if(GET_IEEE_HIGH(ydb)==CV3) {	/* y is  0.5 */
-			if(GET_IEEE_HIGH(xdb)>=0)	/* x >= +0 */
+	    	return x*x; // y is  2 
+	    if(GET_IEEE_HIGH(ydb)==CV3) {	// y is  0.5 
+			if(GET_IEEE_HIGH(xdb)>=0)	// x >= +0 
 			return sqrt(x);	
 	    }
 	}
     
 	var ax = abs(x);
-    /* special value of x */
+    // special value of x 
 	if(GET_IEEE_LOW(xdb)==0) {
 	    if(ix==EM or ix==0 or ix==RM){
-			var z = ax;			/*x is +-0,+-inf,+-1*/
-			if(GET_IEEE_HIGH(ydb)<0) z = ONE/z;	/* z = (1/|x|) */
+			var z = ax;			//x is +-0,+-inf,+-1
+			if(GET_IEEE_HIGH(ydb)<0) z = ONE/z;	// z = (1/|x|) 
 			if(GET_IEEE_HIGH(xdb)<0) {
 			    if(bitor(ix-RM,yisint)==0) {
-					z = (z-z)/(z-z); /* (-1)**non-int is NaN */
+					z = (z-z)/(z-z); // (-1)**non-int is NaN 
 			    } 
 			    else if(yisint==1) 
-					z = -z;		/* (x<0)**odd = -(|x|**odd) */
+					z = -z;		// (x<0)**odd = -(|x|**odd) 
 			}
 			return z;
 	    }
@@ -122,27 +132,27 @@ overload pow(x:Double, y:Double) {
 	var k,u,w,t,v,t1,t2 = 0,0.,0.,0.,0.,0.,0.;
     
     // |y| is huge 
-	if(iy>CV4) { // if |y| > 2**31 
-	    if(iy>CV5){	// if |y| > 2**64, must o/uflow
-			if(ix<=CV6) return if(GET_IEEE_HIGH(ydb)<0) HUGE*HUGE else TINY*TINY;
-			if(ix>=RM) return if(GET_IEEE_HIGH(ydb)>0) HUGE*HUGE else TINY*TINY;
+	if(iy > CV4) { // if |y| > 2**31 
+	    if(iy > CV5){	// if |y| > 2**64, must o/uflow
+			if(ix<=CV6) return if(GET_IEEE_HIGH(ydb)<0) HUGE_OVERFLOW else TINY_OVERFLOW;
+			if(ix>=RM) return if(GET_IEEE_HIGH(ydb)>0) HUGE_OVERFLOW else TINY_OVERFLOW;
 	    }
     	// over/underflow if x is not close to one 
-	    if(ix<CV7) return if(GET_IEEE_HIGH(ydb)<0) s*HUGE*HUGE else s*TINY*TINY;
-	    if(ix>RM) return if(GET_IEEE_HIGH(ydb)>0) s*HUGE*HUGE else s*TINY*TINY;
-	// now |1-x| is tiny <= 2**-20, suffice to compute 
-	//log(x) by x-x^2/2+x^3/3-x^4/4 
+	    if(ix<CV7) return if(GET_IEEE_HIGH(ydb)<0) s*HUGE_OVERFLOW else s*TINY_OVERFLOW;
+	    if(ix>RM) return if(GET_IEEE_HIGH(ydb)>0) s*HUGE_OVERFLOW else s*TINY_OVERFLOW;
+		// now |1-x| is tiny <= 2**-20, suffice to compute 
+		// log(x) by x-x^2/2+x^3/3-x^4/4 
 	    t = ax-ONE;		// t has 20 trailing zeros 
 	    w = (t*t)*(0.5-t*(0.3333333333333333333333-t*0.25));
 	    u = ivln2_h*t;	// ivln2_h has 21 sig. bits 
 	    v = t*ivln2_l-w*IVLN2;
 	    t1 = u+v;
-	    t1 = SET_IEEE_LOW(t1,0);
-	    t2 = v-(t1-u);
+ 	    t1 = SET_IEEE_LOW(t1,0);
+ 	    t2 = v-(t1-u);
 	} 
 	else {
 	    var n = 0;
-	/* take care subnormal number */
+		// take care subnormal number 
 	    if(ix<CV8) {
 			ax *: two53; 
 			n -: 53; 
@@ -150,84 +160,84 @@ overload pow(x:Double, y:Double) {
 		}
 	    n  +: bitshr(ix,20)-0x3ff;
 	    var j = bitand(ix,NEM);
-	/* determine interval */
-	    ix = bitor(j,RM);		/* normalize ix */
-	    if(j<=0x3988E) k =0 ;		/* |x|<sqrt(3/2) */
-	    else if(j<0xBB67A) k = 1;	/* |x|<sqrt(3)   */
-	    else {
-	    	k = 0;
-	    	n +: 1;
-	    	ix -: CV8;
-	    }
+		// determine interval 
+	    ix = bitor(j,RM);		// normalize ix 
+	    if(j<=0x3988E) 
+	    	k =0 ;		// |x|<sqrt(3/2) 
+	    else 
+	    	if(j<0xBB67A) 
+	    		k = 1;	// |x|<sqrt(3)   
+	    	else {
+		    	k = 0;
+		    	n +: 1;
+		    	ix -: CV8;
+	    	}
+
 	    ax = SET_IEEE_HIGH(ax,ix);
 
-	/* compute ss = s_h+s_l = (x-1)/(x+1) or (x-1.5)/(x+1.5) */
-	    u = ax-bp[k];		/* bp[0]=1.0, bp[1]=1.5 */
+		// compute ss = s_h+s_l = (x-1)/(x+1) or (x-1.5)/(x+1.5) 
+	    u = ax-bp[k];		// bp[0]=1.0, bp[1]=1.5 
 	    v = ONE/(ax+bp[k]);
 	    var ss = u*v;
 	    var s_h = ss; 
 	    s_h = SET_IEEE_LOW(s_h,0);
-	/* t_h=ax+bp[k] High */
+		// t_h=ax+bp[k] High 
 		var t_h = ZERO;
-	    t_h = SET_IEEE_HIGH(t_h,bitor(bitshr(ix,1),0x20000000)+0x00080000+bitshl(k,18));
-	    var t_l = ax - (t_h-bp[k]);
-	    var s_l = v*((u-s_h*t_h)-s_h*t_l);
-	/* compute log(ax) */
+ 	    t_h = SET_IEEE_HIGH(t_h,bitor(bitshr(ix,1),0x20000000)+0x00080000+bitshl(k,18));
+ 	    var t_l = ax - (t_h-bp[k]);
+ 	    var s_l = v*((u-s_h*t_h)-s_h*t_l);
+		// compute log(ax) 
 	    var s2 = ss*ss;
 	    var r = s2*s2*(L1+s2*(L2+s2*(L3+s2*(L4+s2*(L5+s2*L6)))));
-	    r +: s_l*(s_h+ss);
+ 	    r +: s_l*(s_h+ss);
 	    s2  = s_h*s_h;
-	    t_h = 3.0+s2+r;
-	    t_h = SET_IEEE_LOW(t_h,0);
-	    t_l = r-((t_h-3.0)-s2);
-	/* u+v = ss*(1+...) */
+		t_h = 3.0+s2+r;
+ 	    t_h = SET_IEEE_LOW(t_h,0);
+ 	    t_l = r-((t_h-3.0)-s2);// u+v = ss*(1+...) 
 	    u = s_h*t_h;
 	    v = s_l*t_h+t_l*ss;
-	/* 2/(3log2)*(ss+...) */
+		// 2/(3log2)*(ss+...) 
 		var p_h = u+v;
-	    p_h = SET_IEEE_LOW(p_h,0);
-	    var p_l = v-(p_h-u);
-	    var z_h = cp_h*p_h;		/* cp_h+cp_l = 2/(3*log2) */
+ 	    p_h = SET_IEEE_LOW(p_h,0);
+		var p_l = v-(p_h-u);
+	    var z_h = cp_h*p_h;		// cp_h+cp_l = 2/(3*log2) 
 	    var z_l = cp_l*p_h+p_l*cp+dp_l[k];
-	/* log2(ax) = (ss+..)*2/(3*log2) = n + dp_h + z_h + z_l */
+		// log2(ax) = (ss+..)*2/(3*log2) = n + dp_h + z_h + z_l 
 	    t = Double(n);
-	    t1 = (((z_h+z_l)+dp_h[k])+t);
-	    t1 = SET_IEEE_LOW(t1,0);
+ 	    t1 = (((z_h+z_l)+dp_h[k])+t);
+ 	    t1 = SET_IEEE_LOW(t1,0);
 	    t2 = z_l-(((t1-n)-dp_h[k])-z_h);
 	}
 
-    /* split up y into y1+y2 and compute (y1+y2)*(t1+t2) */
+    // split up y into y1+y2 and compute (y1+y2)*(t1+t2) 
 	var y1 = y;
-	y1  = SET_IEEE_LOW(y1,0);
+ 	y1  = SET_IEEE_LOW(y1,0);
 	var p_l = (y-y1)*t1+y*t2;
 	var p_h = y1*t1;
 	var z = p_l+p_h;
-	var j,i = GET_IEEE_HIGH(z),GET_IEEE_LOW(z);
-	if (j>=0x40900000) {				/* z >= 1024 */
-		if(bitor(j-0x40900000,i)!=0)			/* if z > 1024 */
-			return s*HUGE*HUGE;			/* overflow */
+	if (GET_IEEE_HIGH(z)>=0x40900000) {				// z >= 1024 
+		if(bitor(GET_IEEE_HIGH(z)-0x40900000,GET_IEEE_LOW(z))!=0)			// if z > 1024 
+			return s*HUGE_OVERFLOW;			// overflow 
 	    else {
-			if(p_l+ovt>z-p_h) return s*HUGE*HUGE;	/* overflow */
+			if(p_l+ovt>z-p_h) return s*HUGE_OVERFLOW;	// overflow 
 	    }
-	} else if(bitand(j,MM)>=0x4090cc00) {	/* z <= -1075 */
-		if(bitor(j-bitcast(Int32,0xc090cc00u),i)!=0) 		/* z < -1075 */
-			return s*TINY*TINY;		/* underflow */
+	} else if(bitand(GET_IEEE_HIGH(z),MM)>=0x4090cc00) {	// z <= -1075 
+		if(bitor(GET_IEEE_HIGH(z)-bitcast(Int32,0xc090cc00u),GET_IEEE_LOW(z))!=0) 		// z < -1075 
+			return s*TINY_OVERFLOW;		// underflow 
 	    else {
-			if(p_l<=z-p_h) return s*TINY*TINY;	/* underflow */
+			if(p_l<=z-p_h) return s*TINY_OVERFLOW;	// underflow 
 	    }
 	}
-	/*
-     * compute 2**(p_h+p_l)
-     */
-	i = bitand(j,MM);
+	// compute 2**(p_h+p_l)
+	var i = bitand(GET_IEEE_HIGH(z),MM);
 	k = bitshr(i,20)-0x3ff;
 	n = 0;
-	if(i>CV3) {		/* if |z| > 0.5, set n = [z+0.5] */
-	  	n = j+bitshr(CV8,k+1);
-	  	k = bitshr(bitand(n,MM),20)-0x3ff;	/* new k for n */
+	if(i>CV3) {		// if |z| > 0.5, set n = [z+0.5] 
+	  	n = GET_IEEE_HIGH(z)+bitshr(CV8,k+1);
+	  	k = bitshr(bitand(n,MM),20)-0x3ff;	// new k for n 
 	    t = SET_IEEE_HIGH(ZERO,wrapCast(Int32,bitandc(n , bitshr(NEM,k))));
 	    n = bitshr(bitor(bitand(n,NEM),CV8),20-k);
-	    if(j<0) n = -n;
+	    if(GET_IEEE_HIGH(z)<0) n = -n;
 	    p_h -: t;
 	} 
 	t = SET_IEEE_LOW(p_l+p_h,0);
@@ -237,14 +247,112 @@ overload pow(x:Double, y:Double) {
 	w = v-(z-u);
 	t  = z*z;
 	t1  = z - t*(P1+t*(P2+t*(P3+t*(P4+t*P5))));
-	var r  = (z*t1)/(t1-TWO)-(w+z*w);
-	z = ONE-(r-z);
-	j = GET_IEEE_HIGH(z);
-	j +: bitshl(n,20);
-	if(bitshr(j,20)<=0) {	
-		z = scalbn(z,n);	/* subnormal output */
-	} else {
-		z = SET_IEEE_HIGH(z,j);
-	}
-	return s*z;
+	y1  = (z*t1)/(t1-TWO)-(w+z*w);
+	z = ONE-(y1-z);
+	k = GET_IEEE_HIGH(z);
+	k +: bitshl(n,20);
+	if(bitshr(k,20) <= 0)	
+		 s *: scalbn(z,n);	// subnormal output 
+	else
+		 s *: SET_IEEE_HIGH(z,k);
+
+	return s;
+}
+
+
+//   cpow
+//
+//  Complex power function
+//
+//
+//
+// SYNOPSIS:
+//
+// double complex cpow();
+// double complex a, z, w;
+//
+// w = cpow (a, z);
+//
+//
+//
+// DESCRIPTION:
+//
+// Raises complex A to the complex Zth power.
+// Definition is per AMS55 # 4.2.8,
+// analytically equivalent to cpow(a,z) = cexp(z clog(a)).
+//
+// ACCURACY:
+//
+//                      Relative error:
+// arithmetic   domain     # trials      peak         rms
+//    IEEE      -10,+10     30000       9.4e-15     1.5e-15
+
+[T,U when Complex?(T,U) ]
+overload pow(a:T, z:U){
+    var absa = abs(a);
+    if (absa == 0.0)
+        return T();
+    var r = pow(absa, real(z));
+    var theta = real(z) * arg(a);
+    if (imag(z) != 0.){
+        r = r * exp (-imagValue(z) * arg(a));
+        theta = theta + imagValue(z) * log(absa);
+    }
+    return Complex(r * cos(theta) , r * sin(theta));
+}
+
+
+[T,I when Float?(T) and Integer?(I)]
+overload pow(x:T, n:I) {
+    alias ZERO = T(0);
+    alias ONE = T(1);
+    var p,v,m = ONE, ZERO, n;
+    if (n < 0) {
+        switch (n)
+        case (-1) return ONE / x;
+        case (-2) return ONE / (x * x);
+        m = -n;
+        v = ONE / x;
+    }
+    else {
+        switch (n)
+        case (0) return ONE;
+        case (1) return x;
+        case (2) return x * x;
+        v = x;
+    }
+
+    while (true) {
+        if (bitand(m,1)!=0)
+            p *: v;
+        m = bitshr(m,1);
+        if (m==0) break;
+        v *: v;
+    }
+    return p;
+}
+
+[I,J when Integer?(I,J)]
+overload pow(x:I, n:J) {
+    alias ZERO = I(0);
+    alias ONE = I(1);
+    if (n < ZERO) return x \ ZERO; // Only support positive powers
+    var p, v = ONE, ZERO;
+    var m = n;
+
+    switch (m)
+    case (0) p = ONE;
+    case (1) p = x;
+    case (2) p = x * x;
+    else {
+        v = x;
+        while (true){
+            if (bitand(m,ONE)!=ZERO)
+                p *: v;
+            m = bitshr(m,ONE);
+            if (m==ZERO) break;
+            v *: v;
+        }
+    }
+    return p;
 }

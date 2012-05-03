@@ -163,6 +163,13 @@ overload exponentMask(#LongDouble) = 0x7FFFul;
 overload exponentMask(#Double) = 0x7FFul;
 overload exponentMask(#Float) = 0xFFu;
 
+signMask(#ILongDouble) = 0x8000ul;
+overload signMask(#IDouble) = 0x8000_0000_0000_0000_ul;
+overload signMask(#IFloat) = 0x8000_0000_ul;
+overload signMask(#LongDouble) = 0x8000ul;
+overload signMask(#Double) = 0x8000_0000_0000_0000_ul;
+overload signMask(#Float) = 0x8000_0000_u;
+
 floatMantissaZero(#ILongDouble) = 0x8000_0000_0000_0000_ul;
 overload floatMantissaZero(#IDouble) = 0x0000_0000_0000_0000_ul;
 overload floatMantissaZero(#IFloat) = 0x0000_0000_u;
@@ -192,14 +199,10 @@ overload floatBitsUnsigned(x:LongDouble) {
 overload floatBitsUnsigned(x:Double) = bitand(floatBits(x),0x7FFF_FFFF_FFFF_FFFFul);
 overload floatBitsUnsigned(x:Float) = bitand(floatBits(x),0x7FFF_FFFFu);
 
-[T when Imaginary?(T)]
-abs(x:T) = imagFromBits(floatBitsUnsigned(x));
-[T when Float?(T)]
-overload abs(x:T) = floatFromBits(floatBitsUnsigned(x));
 
-
-[T when Float?(T) or Imaginary?(T)] finite?(x:T) = floatExponent(x) < exponentMask(T);
-[T when Float?(T) or Imaginary?(T)] infinity?(x:T) = x == infinity(T);
+[T when Float?(T) or Imaginary?(T)] finite?(x:T) = floatExponent(x) != exponentMask(T);
+[T when Float?(T) or Imaginary?(T)] infinity?(x:T) = floatExponent(x) == exponentMask(T) and floatMantissa(x)==0;
+[T when Float?(T) or Imaginary?(T)] positiveInfinity?(x:T) = x == infinity(T);
 [T when Float?(T) or Imaginary?(T)] negativeInfinity?(x:T) = x == negativeInfinity(T);
 [T when Float?(T) or Imaginary?(T)] nan?(x:T) = floatExponent(x) == exponentMask(T) and floatMantissa(x)!=0;
 [T when Float?(T) or Imaginary?(T)] qnan?(x:T) {

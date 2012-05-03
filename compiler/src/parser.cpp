@@ -2926,7 +2926,7 @@ void applyParser(SourcePtr source, int offset, int length, Parser parser, Node &
         pushLocation(location);
         error("parse error");
     }
-
+    
     tokens = NULL;
     position = maxPosition = 0;
 }

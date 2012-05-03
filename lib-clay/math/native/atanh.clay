@@ -1,28 +1,61 @@
 // atanh
 
 import math.native.kernel.ieee754.*;
-import math.*;
+import math.native.log1p.(log1p);
+import math.native.fpclassify.(fpclassify,FP_ZERO,FP_INFINITE);
+import math.native.atan.(atan);
+import math.native.copysign.(copysign);
+import math.native.constants.(M_PI_2);
+import numbers.floats.(nan);
+import complex.*;
 
 alias ONE = 1.0;
 alias HUGE = GreatestPositiveFinite(Double);
 alias ZERO = 0.0;
 
-overload atanh(x:Float) = Float(atanh(Double(x)));
+atanh(x:Float) = Float(atanh(Double(x)));
 
 overload atanh(a:Double) {
 	var x,t = a,0.;
 	var xdb = MAKE_IEEE(x);
 	var ix = bitand(GET_IEEE_HIGH(xdb),MM);
-	if (bitor(ix,bitshr(bitor(GET_IEEE_LOW(xdb),-GET_IEEE_LOW(xdb)),31))>RM) /* |x|>1 */
+	if (bitor(ix,bitshr(bitor(GET_IEEE_LOW(xdb),-GET_IEEE_LOW(xdb)),31))>RM) // |x|>1
 	    return (x-x)/(x-x);
 	if(ix==RM) return x/ZERO;
-	if(ix<CV18 and (HUGE+x)>ZERO) return x;	/* x<2**-28 */
+	if(ix<CV18 and (HUGE+x)>ZERO) return x;	// x<2**-28 
 	x = SET_IEEE_HIGH(x,ix);
-	if(ix<CV3) {		/* x < 0.5 */
+	if(ix<CV3) {		// x < 0.5
 	    t = x+x;
 	    t = 0.5*log1p(t+t*x/(ONE-x));
-	} else 
+	} 
+	else 
 	    t = 0.5*log1p((x+x)/(ONE-x));
 	if(GET_IEEE_HIGH(xdb)>=0) return t; 
 	else return -t;
+}
+
+overload atanh(x:ComplexDouble) --> res:ComplexDouble {
+
+  	var rcls = fpclassify(real(x));
+  	var icls = fpclassify(imagValue(x));
+
+  	if (rcls <= FP_INFINITE or icls <= FP_INFINITE) {
+     	if (icls == FP_INFINITE) {
+	  		res <-- Complex(copysign(0.0, real(x)), copysign(M_PI_2, imagValue(x)));
+		}
+      	else if (rcls == FP_INFINITE or rcls == FP_ZERO) {
+	  		res <-- Complex(copysign(0.0, real(x)),
+		  		(if(icls >= FP_ZERO) copysign(M_PI_2, imagValue(x)) else nan(Double)));
+		}
+      	else {
+	  		res <-- nan(ComplexDouble);
+		}
+    }
+  	else if (rcls == FP_ZERO and icls == FP_ZERO) {
+      	res <-- x;
+    }
+  	else {
+		var y = atan(Complex(-imagValue(x), real(x)));
+		res <-- Complex(imagValue(y), -real(y));
+	}
 }

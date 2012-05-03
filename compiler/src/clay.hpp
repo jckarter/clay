@@ -1459,14 +1459,10 @@ struct InitAssignment : public Statement {
 
 struct VariadicAssignment : public Statement {
     int op;
-    vector<string> ops;
     ExprListPtr exprs;
     ExprPtr desugared;
     VariadicAssignment(int op, ExprListPtr exprs )
         : Statement(VARIADIC_ASSIGNMENT), op(op), exprs(exprs) {}
-    VariadicAssignment(int op, const vector<string> &ops, ExprListPtr exprs )
-        : Statement(VARIADIC_ASSIGNMENT), op(op), ops(ops), exprs(exprs) {}
-
 };
 
 struct Goto : public Statement {

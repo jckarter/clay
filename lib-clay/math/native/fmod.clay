@@ -1,32 +1,31 @@
 // fmod
 
 import math.native.kernel.ieee754.*;
-import math.*;
 
-overload fmod(a:Double, b:Double) {
+fmod(a:Double, b:Double) {
 
 	alias ONE = 1.0;
 	alias ZERO = array(0.0, -0.0);
 	var ix,iy,i,n = 0,0,0u,0;
 	var x,y = a,b;
-	var xdb =MAKE_IEEE(x);
+	var xdb = MAKE_IEEE(x);
 	var ydb = MAKE_IEEE(y);
-	var sx = bitand(GET_IEEE_HIGH(xdb),SM);		/* sign of x */
-	GET_IEEE_HIGH(xdb) = bitxor(GET_IEEE_HIGH(xdb),sx);		/* |x| */
-	GET_IEEE_HIGH(ydb) = bitand(GET_IEEE_HIGH(ydb),MM);	/* |y| */
+	var sx = bitand(GET_IEEE_HIGH(xdb),SM);		// sign of x 
+	GET_IEEE_HIGH(xdb) = bitxor(GET_IEEE_HIGH(xdb),sx);		// |x| 
+	GET_IEEE_HIGH(ydb) = bitand(GET_IEEE_HIGH(ydb),MM);	// |y| 
 
-    /* purge off exception values */
-	if(bitor(GET_IEEE_HIGH(ydb),GET_IEEE_LOW(ydb))==0 or (GET_IEEE_HIGH(xdb)>=EM) or	/* y=0,or x not finite */
-	  (bitor(GET_IEEE_HIGH(ydb),bitshr(bitor(GET_IEEE_LOW(ydb),-GET_IEEE_LOW(ydb)),31))>EM))	/* or y is NaN */
+    // purge off exception values 
+	if(bitor(GET_IEEE_HIGH(ydb),GET_IEEE_LOW(ydb))==0 or (GET_IEEE_HIGH(xdb)>=EM) or	// y=0,or x not finite 
+	  (bitor(GET_IEEE_HIGH(ydb),bitshr(bitor(GET_IEEE_LOW(ydb),-GET_IEEE_LOW(ydb)),31))>EM))	// or y is NaN 
 	    return (x*y)/(x*y);
 	if(GET_IEEE_HIGH(xdb)<=GET_IEEE_HIGH(ydb)) {
-	    if((GET_IEEE_HIGH(xdb)<GET_IEEE_HIGH(ydb)) or (GET_IEEE_LOW(xdb)<GET_IEEE_LOW(ydb))) return x;	/* |x|<|y| return x */
+	    if((GET_IEEE_HIGH(xdb)<GET_IEEE_HIGH(ydb)) or (GET_IEEE_LOW(xdb)<GET_IEEE_LOW(ydb))) return x;	// |x|<|y| return x 
 	    if(GET_IEEE_LOW(xdb)==GET_IEEE_LOW(ydb)) 
-		return ZERO[bitshr(sx,31)];	/* |x|=|y| return x*0*/
+		return ZERO[bitshr(sx,31)];	// |x|=|y| return x*0
 	}
 
-    /* determine ix = ilogb(x) */
-	if(GET_IEEE_HIGH(xdb)<0x00100000) {	/* subnormal x */
+    // determine ix = ilogb(x) 
+	if(GET_IEEE_HIGH(xdb)<0x00100000) {	// subnormal x 
 	    if(GET_IEEE_HIGH(xdb)==0) {
 	    	ix,i = -1043, GET_IEEE_LOW(xdb);
 			while (i>0){ 
@@ -44,8 +43,8 @@ overload fmod(a:Double, b:Double) {
 	} 
 	else ix = bitshr(GET_IEEE_HIGH(xdb),20)-1023;
 
-    /* determine iy = ilogb(y) */
-	if(GET_IEEE_HIGH(ydb)<0x00100000) {	/* subnormal y */
+    // determine iy = ilogb(y) 
+	if(GET_IEEE_HIGH(ydb)<0x00100000) {	// subnormal y 
 		if(GET_IEEE_HIGH(ydb)==0) {
 	    	iy,i = -1043, GET_IEEE_LOW(ydb);
 			while (i>0){ 
@@ -63,10 +62,10 @@ overload fmod(a:Double, b:Double) {
 	} 
 	else iy = bitshr(GET_IEEE_HIGH(ydb),20)-1023;
 
-    /* set up {GET_IEEE_HIGH(xdb),GET_IEEE_LOW(xdb)}, {GET_IEEE_HIGH(ydb),GET_IEEE_LOW(ydb)} and align y to x */
+    // set up {GET_IEEE_HIGH(xdb),GET_IEEE_LOW(xdb)}, {GET_IEEE_HIGH(ydb),GET_IEEE_LOW(ydb)} and align y to x 
 	if(ix >= -1022) 
 	    GET_IEEE_HIGH(xdb) = bitor(0x00100000,bitand(0x000fffff,GET_IEEE_HIGH(xdb)));
-	else {		/* subnormal x, shift x to normal */
+	else {		// subnormal x, shift x to normal 
 	    n = -1022-ix;
 	    if(n<=31) {
 	        GET_IEEE_HIGH(xdb) = bitor(bitshl(GET_IEEE_HIGH(xdb),n),bitshr(GET_IEEE_LOW(xdb),32-n));
@@ -79,7 +78,7 @@ overload fmod(a:Double, b:Double) {
 	}
 	if(iy >= -1022) 
 	    GET_IEEE_HIGH(ydb) = bitor(0x00100000,bitand(0x000fffff,GET_IEEE_HIGH(ydb)));
-	else {		/* subnormal y, shift y to normal */
+	else {		// subnormal y, shift y to normal 
 	    n = -1022-iy;
 	    if(n<=31) {
 	        GET_IEEE_HIGH(ydb) = bitor(bitshl(GET_IEEE_HIGH(ydb),n),bitshr(GET_IEEE_LOW(ydb),32-n));
@@ -91,7 +90,7 @@ overload fmod(a:Double, b:Double) {
 	    }
 	}
 
-    /* fix point fmod */
+    // fix point fmod 
 	n = ix - iy;
 	var hz,lz = 0,0u;
 	while(n!=0) {
@@ -104,7 +103,7 @@ overload fmod(a:Double, b:Double) {
 	    	GET_IEEE_LOW(xdb) = GET_IEEE_LOW(xdb)+GET_IEEE_LOW(xdb);
 	    }
 	    else {
-	    	if(bitor(hz,lz)==0) 		/* return sign(x)*0 */
+	    	if(bitor(hz,lz)==0) 		// return sign(x)*0 
 		    	return ZERO[bitshr(sx,31)];
 	    	GET_IEEE_HIGH(xdb) = hz+hz+bitshr(lz,31); 
 	    	GET_IEEE_LOW(xdb) = lz+lz;
@@ -118,18 +117,18 @@ overload fmod(a:Double, b:Double) {
 		GET_IEEE_LOW(xdb)=lz;
 	}
 
-    /* convert back to floating value and restore the sign */
-	if(bitor(GET_IEEE_HIGH(xdb),GET_IEEE_LOW(xdb))==0) 			/* return sign(x)*0 */
+    // convert back to floating value and restore the sign 
+	if(bitor(GET_IEEE_HIGH(xdb),GET_IEEE_LOW(xdb))==0) 			// return sign(x)*0 
 	    return ZERO[bitshr(sx,31)];
-	while(GET_IEEE_HIGH(xdb)<0x00100000) {		/* normalize x */
+	while(GET_IEEE_HIGH(xdb)<0x00100000) {		// normalize x 
 	    GET_IEEE_HIGH(xdb) = GET_IEEE_HIGH(xdb)+GET_IEEE_HIGH(xdb)+bitshr(GET_IEEE_LOW(xdb),31);
 	    GET_IEEE_LOW(xdb) = GET_IEEE_LOW(xdb)+GET_IEEE_LOW(xdb);
 	    iy -: 1;
 	}
-	if(iy>= -1022) {	/* normalize output */
+	if(iy>= -1022) {	// normalize output 
 	    GET_IEEE_HIGH(xdb) = bitor((GET_IEEE_HIGH(xdb)-0x00100000),bitshl((iy+1023),20));
 	    x = INSERT_WORDS(bitor(GET_IEEE_HIGH(xdb),sx),GET_IEEE_LOW(xdb));
-	} else {		/* subnormal output */
+	} else {		// subnormal output 
 	    n = -1022 - iy;
 	    if(n<=20) {
 			GET_IEEE_LOW(xdb) = bitor(bitshr(GET_IEEE_LOW(xdb),n),bitshl(GET_IEEE_HIGH(xdb),32-n));
@@ -145,7 +144,7 @@ overload fmod(a:Double, b:Double) {
 	    }
 	    SET_IEEE(xdb,bitor(GET_IEEE_HIGH(xdb),sx),GET_IEEE_LOW(xdb));
 	    x = GET_IEEE_DB(xdb);
-	    x *: ONE;		/* create necessary signal */
+	    x *: ONE;		// create necessary signal 
 	}
-	return x;		/* exact output */
+	return x;		// exact output 
 }

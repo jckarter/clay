@@ -1,140 +1,136 @@
 // exp function adapted from openlibm
 
-
 import math.native.kernel.ieee754.*;
-import math.*;
+import math.native.kernel.k_cexp.(__ldexp_cexp);
+import math.native.cos.(cos);
+import math.native.sin.(sin);
+import complex.*;
 
 
+private var halF = array(0.5,-0.5);
+private var ln2HI = array(6.93147180369123816490e-01,-6.93147180369123816490e-01);// 0x3fe62e42, 0xfee00000 
+private var ln2LO = array(1.90821492927058770002e-10,-1.90821492927058770002e-10);// 0x3dea39ef, 0x35793c76 
 
-overload exp(a:Double) { /* default IEEE double exp */
-	alias halF 			= array(0.5,-0.5);
-	alias o_threshold	= 7.09782712893383973096e+02;/* 0x40862E42, 0xFEFA39EF */
-	alias u_threshold 	= -7.45133219101941108420e+02;  /* 0xc0874910, 0xD52D3051 */
-	alias ln2HI			= array(6.93147180369123816490e-01,-6.93147180369123816490e-01);/* 0x3fe62e42, 0xfee00000 */
-	alias ln2LO			= array(1.90821492927058770002e-10,-1.90821492927058770002e-10);/* 0x3dea39ef, 0x35793c76 */
-	alias TWOM1000 = 9.33263618503218878990e-302;     /* 2**-1000=0x01700000,0*/
+
+exp(a:Double) : Double { // default IEEE double exp 
+	alias o_threshold	= 7.09782712893383973096e+02;// 0x40862E42, 0xFEFA39EF 
+	alias u_threshold 	= -7.45133219101941108420e+02;  // 0xc0874910, 0xD52D3051 
+	alias TWOM1000 = 9.33263618503218878990e-302;     // 2**-1000=0x01700000,0
 	alias ONE = 1.;
 	alias HUGE = GreatestPositiveFinite(Double);
 	alias TINY = LeastPositive(Double);
 
-	var x = a;
-	var y,hi,lo,k = 0.,0.,0.,0;
-	var xdb = MAKE_IEEE(x);
-	var xsb = bitand(bitshr(GET_IEEE_HIGH(xdb),31),1);		/* sign bit of x */
-	GET_IEEE_HIGH(xdb) = bitand(GET_IEEE_HIGH(xdb),MM);		/* high word of |x| */
+	var xdb = MAKE_IEEE(a);
+	var xsb = bitand(bitshr(GET_IEEE_HIGH(xdb),31),1);		// sign bit of x 
+	SET_IEEE_HIGH(xdb, bitand(GET_IEEE_HIGH(xdb),MM));		// high word of |x| 
 
     // filter out non-finite argument
-	if(GET_IEEE_HIGH(xdb) >= CV14) {			/* if |x|>=709.78... */
+	if(GET_IEEE_HIGH(xdb) >= CV14) {			// if |x|>=709.78... 
         if(GET_IEEE_HIGH(xdb) >= EM) {
 	        if(bitor(bitand(GET_IEEE_HIGH(xdb),0xfffff),GET_IEEE_LOW(xdb))!=0)
-		    	return x+x; 		/* NaN */
+		    	return a+a; 		// NaN 
 			else 
-				return if(xsb==0) x else 0.;	/* exp(+-inf)={inf,0} */
+				return if(xsb==0) a else 0.;	// exp(+-inf)={inf,0} 
 	    }
-	    if(x > o_threshold) return HUGE*HUGE; /* overflow */
-	    if(x < u_threshold) return TWOM1000*TWOM1000; /* underflow */
+	    if(a > o_threshold) return HUGE*HUGE; // overflow 
+	    if(a < u_threshold) return TWOM1000*TWOM1000; // underflow 
 	}
 
     // argument reduction 
-	if(GET_IEEE_HIGH(xdb) > CV15) {		/* if  |x| > 0.5 ln2 */ 
-	    if(GET_IEEE_HIGH(xdb) < CV16) {	/* and |x| < 1.5 ln2 */
+	var x,hi,lo,k = a,0.,0.,0;
+	if(GET_IEEE_HIGH(xdb) > CV15) {		// if  |x| > 0.5 ln2  
+	    if(GET_IEEE_HIGH(xdb) < CV16) {	// and |x| < 1.5 ln2 
 			hi = x-ln2HI[xsb]; 
 			lo = ln2LO[xsb]; 
 			k = 1-xsb-xsb;
 	    } 
 	    else {
 			k  = wrapCast(Int32,IVLN2*x+halF[xsb]);
-			var t  = Double(k);
-			hi = x - t*ln2HI[0];	/* t*ln2HI is exact here */
-			lo = t*ln2LO[0];
+			hi = x - k*ln2HI[0];	// t*ln2HI is exact here 
+			lo = k*ln2LO[0];
 	    }
-	    x <-- hi - lo;
+	    x = hi - lo;
 	} 
-	else if(GET_IEEE_HIGH(xdb) < CV18)  {	/* when |x|<2**-28 */
-	    if(HUGE+x>ONE) return ONE+x;/* trigger inexact */
+	else if(GET_IEEE_HIGH(xdb) < CV18 and HUGE+x > ONE)  {	// when |x|<2**-28 
+	    return ONE+x; //trigger inexact 
 	}
 	else 
 		k = 0;
 
-    /* x is now in primary range */
-	var t,twopk  = x*x, 0.;
+    // x is now in primary range
 	if(k >= -1021)
-	    twopk = MAKE_IEEE(RM+bitshl(k,20), 0).2;
+	    SET_IEEE(xdb, RM+bitshl(k,20), 0);
 	else
-	    twopk = MAKE_IEEE(RM+bitshl(k+1000,20), 0).2;
+	    SET_IEEE(xdb,RM+bitshl(k+1000,20), 0);
+	
+	var t  = x*x;
 	var c  = x - t*(P1+t*(P2+t*(P3+t*(P4+t*P5))));
+	
 	if(k==0) return ONE-((x*c)/(c-2.0)-x); 
-	else 		y = ONE-((lo-(x*c)/(2.0-c))-hi);
-	if(k >= -1021) {
-	    if (k==1024) return y*2.0*0x1p1023;
-	    return y*twopk;
-	} else {
-	    return y*twopk*TWOM1000;
-	}
+	
+	c = ONE-((lo-(x*c)/(2.0-c))-hi);
+	
+	if(k >= -1021)
+	    return if (k==1024) c*2.0*0x1p1023 else c*GET_IEEE_DB(xdb);
+	else
+	    return c*GET_IEEE_DB(xdb)*TWOM1000;
 }
 
+// Domain [-0.34568, 0.34568], range ~[-4.278e-9, 4.447e-9]:
+// |x*(exp(x)+1)/(exp(x)-1) - p(x)| < 2**-27.74
+ 
+private var fhalF = array(0.5f,-0.5f);
+private var fln2HI = array(6.9314575195e-01f,-6.9314575195e-01f); //0x3f317200, 0xbf317200 
+private var fln2LO = array(1.4286067653e-06f,-1.4286067653e-06f); //0x35bfbe8e,0xb5bfbe8e 
+	
 
-/*
- * Domain [-0.34568, 0.34568], range ~[-4.278e-9, 4.447e-9]:
- * |x*(exp(x)+1)/(exp(x)-1) - p(x)| < 2**-27.74
- */
-
-overload exp(a:Float) {
-	alias fhalF	= array(0.5f,-0.5f);
-	alias fo_threshold=  8.8721679688e+01f; /* 0x42b17180 */
-	alias fu_threshold= -1.0397208405e+02f;  /* 0xc2cff1b5 */
-	alias fln2HI   = array( 6.9314575195e-01f,		/* 0x3f317200 */
-		     -6.9314575195e-01f);	/* 0xbf317200 */
-	alias fln2LO   = array( 1.4286067653e-06f,  	/* 0x35bfbe8e */
-		     -1.4286067653e-06f);	/* 0xb5bfbe8e */
-	alias finvln2 =  1.4426950216e+00f; 		/* 0x3fb8aa3b */
-	alias FP1 =  1.6666625440e-1f;		/*  0xaaaa8f.0p-26 */
-	alias FP2 = -2.7667332906e-3f;		/* -0xb55215.0p-32 */
-
-	alias FTWOM1000 = 7.8886090522e-31f;      /* 2**-100=0x0d800000 */
+overload exp(a:Float) : Float {
+	alias fo_threshold=  8.8721679688e+01f; // 0x42b17180 
+	alias fu_threshold= -1.0397208405e+02f;  // 0xc2cff1b5 
+	alias finvln2 =  1.4426950216e+00f; 		// 0x3fb8aa3b 
+	alias FP1 =  1.6666625440e-1f;		//  0xaaaa8f.0p-26 
+	alias FP2 = -2.7667332906e-3f;		// -0xb55215.0p-32 
+	alias FTWOM1000 = 7.8886090522e-31f;      // 2**-100=0x0d800000 
 	alias HUGE = GreatestPositiveFinite(Float);
 	alias ONE = 1.f;
-	var x = a;
-	var hx = GET_FLOAT_WORD(x);
-	var xsb = wrapCast(Int32,bitand(bitshr(hx,31),1));		/* sign bit of x */
-	hx = bitand(hx,0x7fffffff);		/* high word of |x| */
+	var hx = GET_FLOAT_WORD(a);
+	var xsb = wrapCast(Int32,bitand(bitshr(hx,31),1));		// sign bit of x 
+	hx = bitand(hx,0x7fffffff);		// high word of |x| 
 
-    /* filter out non-finite argument */
-	if(hx >= 0x42b17218) {			/* if |x|>=88.721... */
+    // filter out non-finite argument 
+	if(hx >= 0x42b17218) {			// if |x|>=88.721... 
 	    if(hx>0x7f800000) 
-	    	return x+x;	 		/* NaN */
+	    	return a+a;	 		// NaN 
         if(hx==0x7f800000) 
-        	return if(xsb == 0) x else 0.f;/* exp(+-inf)={inf,0} */
-	    if(x > fo_threshold) 
-	    	return HUGE*HUGE; /* overflow */
-	    if(x < fu_threshold) 
-	    	return FTWOM1000*FTWOM1000; /* underflow */
+        	return if(xsb == 0) a else 0.f;// exp(+-inf)={inf,0} 
+	    if(a > fo_threshold) 
+	    	return HUGE*HUGE; // overflow 
+	    if(a < fu_threshold) 
+	    	return FTWOM1000*FTWOM1000; // underflow 
 	}
 
-	var nx,hi,lo,k = 0.f,0.f,0.f,0;
-    /* argument reduction */
-	if(hx > 0x3eb17218) {		/* if  |x| > 0.5 ln2 */
-	    if(hx < 0x3F851592) {	/* and |x| < 1.5 ln2 */
+	var x,nx,hi,lo,k = a,0.f,0.f,0.f,0;
+    // argument reduction 
+	if(hx > 0x3eb17218) {		// if  |x| > 0.5 ln2 
+	    if(hx < 0x3F851592) {	// and |x| < 1.5 ln2 
 			hi = x-fln2HI[xsb]; 
 			lo = fln2LO[xsb]; 
 			k = 1-xsb-xsb;
 		} 
 	    else {
 			k  = wrapCast(Int32,finvln2*x+fhalF[xsb]);
-			var t  = k;
-			hi = x - t*fln2HI[0];	/* t*ln2HI is exact here */
-			lo = t*fln2LO[0];
+			hi = x - k*fln2HI[0];	// t*ln2HI is exact here 
+			lo = k*fln2LO[0];
 	    }
-	    x <-- hi - lo;
+	    x = hi - lo;
 	}
-	else if(hx < 0x39000000)  {	/* when |x|<2**-14 */
-	    if(HUGE+x>ONE) 
-	    	return ONE+x;/* trigger inexact */
+	else if(hx < 0x39000000 and HUGE+x>ONE)  {	// when |x|<2**-14 
+	    return ONE+x;// trigger inexact 
 	}
 	else k = 0;
 
 	
-    /* x is now in primary range */
+    // x is now in primary range 
 	var t,twopk  = x*x,0.f;
 	if(k >= -125)
 	    twopk = SET_FLOAT_WORD(0x3f800000+bitshl(k,23));
@@ -154,5 +150,57 @@ overload exp(a:Float) {
 	} 
 	else {
 	    return y*twopk*FTWOM1000;
+	}
+}
+
+
+// complex exp function
+
+private alias exp_ovfl  = 0x40862e42u;			// high bits of MAX_EXP * ln2 ~= 710 
+private alias cexp_ovfl = 0x4096b8e4u;			// (MAX_EXP - MIN_DENORM_EXP) * ln2 
+
+overload exp(z:ComplexDouble) {
+	
+	var x,y = real(z), imagValue(z);
+	var ydb = MAKE_IEEE( y);
+	GET_IEEE_HIGH(ydb) = bitand(GET_IEEE_HIGH(ydb),MM);
+
+	// cexp(x + I 0) = exp(x) + I 0 
+	if (bitor(GET_IEEE_HIGH(ydb),GET_IEEE_LOW(ydb)) == 0)
+		return Complex(exp(x), y);
+	var xdb =MAKE_IEEE( x);
+	// cexp(0 + I y) = cos(y) + I sin(y) 
+	if (bitor(bitand(GET_IEEE_HIGH(xdb), MM) , GET_IEEE_LOW(xdb)) == 0)
+		return Complex(cos(y), sin(y));
+
+	if (GET_IEEE_HIGH(ydb) >= EM) {
+		if (GET_IEEE_LOW(xdb) != 0 or bitand(GET_IEEE_HIGH(xdb),MM) != EM) {
+			// cexp(finite|NaN +- I Inf|NaN) = NaN + I NaN 
+			return Complex(y - y, y - y);
+		} 
+		else if (bitand(GET_IEEE_HIGH(xdb),SM)!=0) {
+			// cexp(-Inf +- I Inf|NaN) = 0 + I 0 
+			return Complex(0.0, 0.0);
+		} 
+		else {
+			// cexp(+Inf +- I Inf|NaN) = Inf + I NaN 
+			return Complex(x, y - y);
+		}
+	}
+
+	if (GET_IEEE_HIGH(xdb) >= exp_ovfl and GET_IEEE_HIGH(xdb) <= cexp_ovfl) {
+		// x is between 709.7 and 1454.3, so we must scale to avoid
+		// overflow in exp(x).
+		return __ldexp_cexp(z, 0);
+	} 
+	else {
+		// Cases covered here:
+		//  -  x < exp_ovfl and exp(x) won't overflow (common case)
+		//  -  x > cexp_ovfl, so exp(x) * s overflows for all s > 0
+		//  -  x = +-Inf (generated by exp())
+		//  -  x = NaN (spurious inexact exception from y)
+		 
+		var exp_x = exp(x);
+		return Complex(exp_x * cos(y), exp_x * sin(y));
 	}
 }

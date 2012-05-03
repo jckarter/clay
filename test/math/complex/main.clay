@@ -1,67 +1,63 @@
 
-import math.*;
-import printer.(println);
+import math.native.*;
 import complex.*;
-
-ftypes() = Complex64;
-
-var fdata = array(  0.+0j,
-                    -0.+0j,
-                    -1.-1j,
-                    2.+2j,
-                    0.+nan(Imag64),
-                    -0.+nan(Imag64),
-                    1.+infinity(Imag64),
-                    1.+nan(Imag64),
-                    -infinity(Double)+1j,
-                    infinity(Double)+1j,
-                    -infinity(Double)+infinity(Imag64),
-                    infinity(Complex64),
-                    infinity(Double)+nan(Imag64),
-                    -infinity(Double)+nan(Imag64),
-                    nan(Double)+1.j,
-                    nan(Double)+infinity(Imag64),
-                    nan(Complex64));
+import printer.(println);
+import numbers.floats.(nan,infinity);
 
 
-oneArgFuncs() =     
-                    sin,cos,tan,
-                    asin,acos,atan,
-                    sinh,cosh,tanh,
-                    asinh,acosh,atanh,
-                    exp,
-                    arg,
-                    abs,
-                    log,
-                    sqrt,
-                    proj
-                    ;
+alias CC[T] = CodePointer[[T],[T]];
+alias CD[T] = CodePointer[[T],[ComplexBaseType(T)]];
 
-evalFuncs(funcs,data,types) {
-    ..for(f in funcs()) {
-        ..for(t in types())
-            for(i in range(size(data)))
-                println(StaticName(f),"(",t(data[i]),") = ",f(t(data[i])));
+
+var fdata[T] = array(T(0.+0j),
+                    T(-0.+0j),
+                    T(-1.-1j),
+                    T(2.+2j),
+                    T(0.+nan(Imag64)),
+                    T(-0.+nan(Imag64)),
+                    T(1.+infinity(Imag64)),
+                    T(1.+nan(Imag64)),
+                    T(-infinity(Double)+1j),
+                    T(infinity(Double)+1j),
+                    T(-infinity(Double)+infinity(Imag64)),
+                    infinity(T),
+                    T(infinity(Double)+nan(Imag64)),
+                    T(-infinity(Double)+nan(Imag64)),
+                    T(nan(Double)+1.j),
+                    T(nan(Double)+infinity(Imag64)),
+                    nan(T));
+
+
+var ccFuncs[T] = array(T(sin),T(cos),T(tan),T(asin),T(acos),
+                            T(atan),T(sinh),T(cosh),T(tanh),T(asinh),
+                            T(acosh),T(atanh),T(exp),
+                            T(log),T(sqrt),T(proj));
+
+var cdFuncs[T] = array(T(arg),T(abs));
+
+evalFuncs(funcs,data) {
+    for(f in funcs) {
+        for(i in data)
+            println(f(i));
         println();            
     }
 }
 
 
-evalFuncs2(funcs,data,types) {
-    ..for(f in funcs()) {
-        ..for(t in types())
-            for(i in range(size(data)))
-                for(j in range(size(data))) {
-                    println(StaticName(f),"(",t(data[i]),",",t(data[j]),") = ",f(t(data[i]),t(data[j])));
-                }
+evalFuncs2(funcs,data) {
+    for(f in funcs) {
+        for(i in data)
+            for(j in data)
+                println(f(i,j));
+        
         println();            
     }
 }
-
 
 main() {
 
-    evalFuncs(oneArgFuncs,fdata,ftypes);
+    evalFuncs(ccFuncs[CC[Complex64]],fdata[Complex64]);
+    evalFuncs(cdFuncs[CD[Complex64]],fdata[Complex64]);
     //evalFuncs2(twoArgFuncs,fdata,ftypes);
 
 }

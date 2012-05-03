@@ -1,0 +1,13 @@
+
+import numbers.floats.*;
+
+[T,U when Float?(T,U) ]
+copysign(a:T,b:U) = floatFromBits(bitor(floatBitsUnsigned(a),
+    bitand(floatBits(b),signMask(T))));
+
+[T when Float?(T) ]
+overload copysign(a:LongDouble,b:T) {
+    var tmp = floatBitsUnsigned(a);
+    return floatFromBits(tmp.mantissa,bitor(tmp.exponent,
+        wrapBitshl(signbit(b),exponentSize(LongDouble))));
+}

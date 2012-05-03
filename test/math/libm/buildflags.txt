@@ -1,1 +1,1 @@
--Dmath.Mode=libm -lm
+ -lm

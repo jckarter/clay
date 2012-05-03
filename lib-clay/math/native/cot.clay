@@ -1,0 +1,115 @@
+import math.native.tan.(tan);
+import math.native.sin.(sin);
+import math.native.sinh.(sinh);
+import math.native.cos.(cos);
+import math.native.cosh.(cosh);
+import math.native.abs.(abs);
+import complex.*;
+import numbers.floats.(infinity);
+import math.native.constants.(M_PI);
+
+[T when Float?(T)] 
+inline cot(z:T) = T(1)/tan(z);
+
+
+// Complex circular cotangent
+//
+// SYNOPSIS:
+//
+// double complex ccot();
+// double complex z, w;
+//
+// w = ccot (z);
+//
+// DESCRIPTION:
+//
+// If
+//     z = x + iy,
+//
+// then
+//
+//           sin 2x  -  i sinh 2y
+//     w  =  --------------------.
+//            cosh 2y  -  cos 2x
+//
+// On the real axis, the denominator has zeros at even
+// multiples of PI/2.  Near these points it is evaluated
+// by a Taylor series.
+//
+//
+// ACCURACY:
+//
+//                      Relative error:
+// arithmetic   domain     # trials      peak         rms
+//    DEC       -10,+10      3000       6.5e-17     1.6e-17
+//    IEEE      -10,+10     30000       9.2e-16     1.2e-16
+// Also tested by ctan * ccot = 1 + i0.
+
+[T when Complex?(T)]
+overload cot(z:T) {
+    alias C = ComplexBaseType(T);
+    alias MAXNUM = infinity(C);
+    var d = cosh(2.0 * imagValue(z)) - cos(2.0 * real(z));
+    if (abs(d) < 0.25)
+        d = tans(z);
+    if (d == 0.0){
+        return Complex(MAXNUM,MAXNUM);
+    }
+    return Complex(sin (2.0 * real(z)) / d, - (sinh (2.0 * imagValue(z)) / d) );
+}
+
+// Program to subtract nearest integer multiple of PI 
+// extended precision value of PI: 
+alias DP1 = 3.14159265160560607910E0;
+alias DP2 = 1.98418714791870343106E-9;
+alias DP3 = 1.14423774522196636802E-17;
+
+[T when Float?(T)]
+private inline redupi(x:T){
+    var t = x/M_PI;
+    if(t >= T() )
+        t +: T(0.5);
+    else
+        t -: T(0.5);
+    var i = Long(t); // the multiple
+    t = T(i);
+    return ((x - t * T(DP1)) - t * T(DP2)) - t * T(DP3);
+}
+
+
+//  Taylor series expansion for cosh(2y) - cos(2x)  
+[C when Complex?(C)]
+private tans(z:C){
+    alias T = ComplexBaseType(C);
+    alias ZERO = T(0);
+    alias ONE = T(1);
+    var x = abs (2.0 * real(z));
+    var y = abs (2.0 * imagValue(z));
+    x = redupi(x);
+    x = x * x;
+    y = y * y;
+    var x2,y2,f,rn,d = ONE,ONE,ONE,ZERO,ZERO;
+loop1:
+        inc(rn);
+        f *: rn;
+        inc(rn);
+        f *: rn;
+        x2 *: x;
+        y2 *: y;
+        var t = y2 + x2;
+        t /: f;
+        d +: t;
+        inc(rn);
+        f *: rn;
+        inc(rn);
+        f *: rn;
+        x2 *: x;
+        y2 *: y;
+        t = y2 - x2;
+        t /: f;
+        d +: t;
+    if(abs(t/d) > epsilon(T)) goto loop1;
+    return d;
+}
+
+

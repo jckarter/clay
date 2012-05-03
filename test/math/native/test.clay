@@ -1,88 +1,71 @@
 // Test math functions
 
-import math.*;
+import numbers.floats.(nan,infinity,negativeInfinity);
+import math.native.constants.(M_PI);
+import math.native.*;
 import printer.(println);
 
-itypes() = Int8, Int16, Int32, Int64;
 
-var f32data = array(0.f, 1.f, -1.f,3.f, 38.f, 355.f, 2147483647.f, 9223372036854775807.f, 
-        -2147483648.f, -9223372036854775808.f, Float32(M_PI),Float32(-M_PI), nan(Float32), -nan(Float32),
-        infinity(Float32), negativeInfinity(Float32), LeastPositive(Float32),
-        LeastPositiveNormalized(Float32), GreatestPositiveFinite(Float32));
+var fdata[T] = array(T(0), T(1), T(-1), T(3), T(38) , T(355) , 
+        T(2147483647.0), T(9223372036854775807.0), T(-2147483648.0), 
+        T(-9223372036854775808.0), T(M_PI), T(-M_PI), nan(T), -nan(T),
+        infinity(T), negativeInfinity(T), LeastPositive(T),
+        LeastPositiveNormalized(T), GreatestPositiveFinite(T));
 
-var f64data = array(0., 1., -1.,3., 38. , 355. , 2147483647., 9223372036854775807., 
-        -2147483648., -9223372036854775808., M_PI,-M_PI, nan(Float64), -nan(Float64),
-        infinity(Float64), negativeInfinity(Float64), LeastPositive(Float64),
-        LeastPositiveNormalized(Float64), GreatestPositiveFinite(Float64));
+var idata[T] = array(T(0),T(1),T(-1),T(3),T(38),Least(T)+T(1),Greatest(T));
 
-idata(T) = T(0), T(1), T(-1), T(3), T(38), Least(T)+1, Greatest(T);
+alias C1[T] = CodePointer[[T],[T]];
+alias C2[T] = CodePointer[[T,T],[T]];
 
-oneArgFuncs() = 
-                abs,recip,
-                sqrt,rsqrt,cbrt,square,cube,
-                trunc,round,ceil,floor,rint,
-                significand,
-                sin,cos,tan,
-                asin,acos,atan,
-                sinh,cosh,tanh,
-                exp,expm1,sigmoid,
-                log,log10,log2,ilogb,log1p,
-                erf,erfc,gamma,lgamma,
-                //j0,j1,i1,
-                sec,csc,cot,
-                asec,acsc,acot,
-                sech,csch,coth,
-                asech,acsch,acoth, 
-                ;
+var oneArgFuncs[T] = array(T(abs),T(recip),T(sqrt),T(rsqrt),
+                            T(cbrt),T(square),T(cube),T(trunc),T(round),
+                            T(ceil),T(floor),T(rint),T(significand),T(sin),
+                            T(cos),T(tan),T(asin),T(acos),T(atan),T(sinh),
+                            T(cosh),T(tanh),T(exp),T(expm1),T(sigmoid),
+                            T(log),T(log10),T(log2),T(log1p),T(erf),T(erfc),
+                            T(gamma),T(lgamma),T(sec),T(csc),T(cot),T(asec),
+                            T(acsc),T(acot),T(sech),T(csch),T(coth),T(asech),
+                            T(acsch),T(acoth));
 
+//T(ilogb),
+//T(j0),T(j1),T(i1),
+                
 
-twoArgFuncs() = 
-                pow,beta,atan2,
-                ;
+var twoArgFuncs[T] = array(T(hypot),T(pow),T(beta),T(atan2));
 
+var intFuncs[T] = array(T(abs), T(sign));
 
-intArgFuncs() = 
-                abs, sign
-                ;
 
 evalFuncs(funcs,data) {
-    ..for(f in funcs()) {
-        for(i in range(size(data)))
-            println(StaticName(f),"(",data[i],") = ",f(data[i]));
+    for(f in funcs) {
+        for(i in data)
+            println(f(i));
         println();            
     }
 }
 
 
 evalFuncs2(funcs,data) {
-    ..for(f in funcs()) {
-        for(i in range(size(data)))
-            for(j in range(size(data))) {
-                println(StaticName(f),"(",data[i],",",data[j],") = ",f(data[i],data[j]));
-            }
+    for(f in funcs) {
+        for(i in data)
+            for(j in data)
+                println(f(i,j));
+        
         println();            
     }
 }
-
-
-evalFuncsInt(funcs,data,types) {
-    ..for(f in funcs()) {
-        ..for(t in types())
-            ..for(i in data(t))
-                println(StaticName(f),"(",i,") = ",f(i));
-        println();            
-    }
-}
-
 
 main() {
 
-    evalFuncs(oneArgFuncs,f32data);
-    evalFuncs2(twoArgFuncs,f32data);
+    // evalFuncs(oneArgFuncs,f32data);
+    // evalFuncs2(twoArgFuncs,f32data);
     
-    evalFuncs(oneArgFuncs,f64data);
-    evalFuncs2(twoArgFuncs,f64data);
+    evalFuncs(oneArgFuncs[C1[Double]],fdata[Double]);
+    evalFuncs2(twoArgFuncs[C2[Double]],fdata[Double]);
     
-    evalFuncsInt(intArgFuncs,idata,itypes);
+    evalFuncs(intFuncs[C1[Int8]],idata[Int8]);
+    evalFuncs(intFuncs[C1[Int16]],idata[Int16]);
+    evalFuncs(intFuncs[C1[Int32]],idata[Int32]);
+    evalFuncs(intFuncs[C1[Int64]],idata[Int64]);
 
 }

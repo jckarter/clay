@@ -1,102 +1,137 @@
 // hypot adapted from openlibm
 
 import math.native.kernel.ieee754.*;
-import math.*;
+import math.native.sqrt.(sqrt);
+import math.native.abs.(abs);
+import numbers.floats.(nan?,nan,infinity);
 
-//overload hypot(x:Double, y:Double) {
-//	alias ZERO = 0.;
-//	alias ONE = 1.;
-//	var ha = GET_IEEE_HIGH(x);
-//	ha = bitand(ha,MM);
-//	var hb = GET_IEEE_HIGH(y);
-//	hb = bitand(hb,MM);
-//	var a,b = x,y; 
-//	if(hb > ha) {
-//		a=y;
-//		b=x;
-//		var j=ha;
-//		ha=hb;
-//		hb=j;
-//	} 
-//	a = abs(a);
-//	b = abs(b);
-//	if((ha-hb)>0x3c00000) return a+b; /* x/y > 2**60 */
-//	var k,low = 0,0u;
-//	if(ha > CV25) {	/* a>2**500 */
-//	   if(ha >= EM) {	/* Inf or NaN */
-//	       /* Use original arg order iff result is NaN; quieten sNaNs. */
-//	       var w = abs(x+ZERO)-abs(y+ZERO);
-//	       var low = GET_IEEE_LOW(a);
-//	       if(bitor(bitand(ha,NEM),low)==0) w = a;
-//	       low = GET_IEEE_LOW(b);
-//	       if(bitor(bitxor(hb,EM),low)==0) w = b;
-//	       return w;
-//	   }
-//	   /* scale a and b by 2**-600 */
-//	   ha -: CV22; 
-//	   hb -: CV22;	
-//	   k +: 600;
-//	   a = SET_IEEE_HIGH(a,ha);
-//	   b = SET_IEEE_HIGH(b,hb);
-//	}
-//	if(hb < CV24) {	/* b < 2**-500 */
-//	    if(hb <= NEM) {	/* subnormal b or 0 */
-//		    var low = GET_IEEE_LOW(b);
-//			if(bitor(hb,low)==0) return a;
-//			var t1 = SET_IEEE_HIGH(ZERO,CV23);	/* t1=2^1022 */
-//			b *: t1;
-//			a *: t1;
-//			k -: 1022;
-//	    } else {		/* scale a and b by 2^600 */
-//	        ha +: CV22; 	/* a *: 2^600 */
-//			hb +: CV22;	/* b *: 2^600 */
-//			k -: 600;
-//			a = SET_IEEE_HIGH(a,ha);
-//			b = SET_IEEE_HIGH(b,hb);
-//	    }
-//	}
-//    /* medium size a and b */
-//	var w = a-b;
-//	if (w>b) {
-//	    var t1 = SET_IEEE_HIGH(ZERO,ha);
-//	    var t2 = a-t1;
-//	    w  = sqrt(t1*t1-(b*(-b)-t2*(a+t1)));
-//	} else {
-//	    a  = a+a;
-//	    var y1 = SET_IEEE_HIGH(ZERO,hb);
-//	    var y2 = b - y1;
-//	    var t1 = SET_IEEE_HIGH(ZERO,ha+CV8);
-//	    var t2 = a - t1;
-//	    w  = sqrt(t1*y1-(w*(-w)-(t1*y2+t2*b)));
-//	}
-//	if(k!=0) {
-//	    return w*SET_IEEE_HIGH(ONE,GET_IEEE_HIGH(ONE)+bitshl(k,20));
-//	} 
-//	else 
-//		return w;
-//}
+hypot(x:Double, y:Double) : Double {
+	alias ZERO = 0.;
+	alias ONE = 1.;
+	var ha = GET_IEEE_HIGH(x);
+	ha = bitand(ha,MM);
+	var hb = GET_IEEE_HIGH(y);
+	hb = bitand(hb,MM);
+	var a,b = x,y; 
+	if(hb > ha) {
+		swap(a,b);
+		swap(ha,hb);
+	} 
+	a = abs(a);
+	b = abs(b);
+	if((ha-hb)>0x3c00000) return a+b; // x/y > 2**60
+	var k = 0;
+	if(ha >= EM or hb >= EM) {	// Inf or NaN
+		if(nan?(a) and nan?(b)) return nan(Double);
+		return infinity(Double);
+	}
+	if(ha > CV25) {	// a>2**500
+		// scale a and b by 2**-600
+		ha -: CV22; 
+		hb -: CV22;	
+		k +: 600;
+		a = SET_IEEE_HIGH(a,ha);
+		b = SET_IEEE_HIGH(b,hb);
+	}
+	if(hb < CV24) {	// b < 2**-500 
+	    if(hb <= NEM) {	// subnormal b or 0 
+		    if(bitor(hb,GET_IEEE_LOW(b))==0) return a;
+			var t1 = SET_IEEE_HIGH(ZERO,CV23);	// t1=2^1022
+			b *: t1;
+			a *: t1;
+			k -: 1022;
+	    } 
+	    else {		// scale a and b by 2^600
+	        ha +: CV22; 	// a *: 2^600
+			hb +: CV22;	// b *: 2^600
+			k -: 600;
+			a = SET_IEEE_HIGH(a,ha);
+			b = SET_IEEE_HIGH(b,hb);
+	    }
+	}
+   	// medium size a and b
+	var w = a-b;
+	if (w>b) {
+	    var t1 = SET_IEEE_HIGH(ZERO,ha);
+	    var t2 = a-t1;
+	    w  = sqrt(t1*t1-(b*(-b)-t2*(a+t1)));
+	} else {
+	    a  = a+a;
+	    var y1 = SET_IEEE_HIGH(ZERO,hb);
+	    var y2 = b - y1;
+	    var t1 = SET_IEEE_HIGH(ZERO,ha+CV8);
+	    var t2 = a - t1;
+	    w  = sqrt(t1*y1-(w*(-w)-(t1*y2+t2*b)));
+	}
+	if(k != 0) {
+	    return w*SET_IEEE_HIGH(ONE,GET_IEEE_HIGH(ONE)+bitshl(k,20));
+	} 
+	else 
+		return w;
+}
 
-
-[T,U when Float?(T,U)]
-overload hypot(m:T,n:U) --> r:T {
-    var a = toBiggerNumericType(T,U,m);
-    var b = toBiggerNumericType(T,U,n);
-    alias T = Type(a);
-    alias ZERO = T(0);
-    alias ONE = T(1);
-    if (a == ZERO)
-        r <-- abs(b);
-    else if (b == ZERO)
-        r <-- abs(a);
-    else {
-        var x,y = abs(a),abs(b);
-        if (x > y){
-            var temp = y / x;
-            r <-- x * sqrt(ONE + temp * temp);
-        }
-        else{
-            var temp = x / y;
-            r <-- y * sqrt(ONE + temp * temp);
-        }
-    }
+overload hypot(x:Float, y:Float) : Float {
+	alias ZERO = 0.f;
+	alias ONE = 1.f;
+	var ha = GET_FLOAT_WORD(x);
+	ha = bitand(ha,MM);
+	var hb = GET_FLOAT_WORD(y);
+	hb = bitand(hb,MM);
+	var a,b = x,y; 
+	if(hb > ha) {
+		swap(a,b);
+		swap(ha,hb);
+	} 
+	a = abs(a);
+	b = abs(b);
+	if((ha-hb)>0xf000000) return a+b; // x/y > 2**30
+	var k = 0;
+	if(ha >= 0x7f800000 or hb >= 0x7f800000) {	// Inf or NaN
+		if(nan?(a) and nan?(b)) return nan(Float);
+		return infinity(Float);
+	}
+	if(ha > 0x58800000) {	// a>2**50
+		// scale a and b by 2**-68
+		ha -: 0x22000000; 
+		hb -: 0x22000000;	
+		k +: 68;
+		a = SET_FLOAT_WORD(ha);
+		b = SET_FLOAT_WORD(hb);
+	}
+	if(hb < 0x26800000) {	// b < 2**-50 
+	    if(hb <= 0x007fffff) {	// subnormal b or 0 
+		    if(hb==0) return a;
+			var t1 = SET_FLOAT_WORD(0x7e800000);	// t1=2^1022
+			b *: t1;
+			a *: t1;
+			k -: 126;
+	    } 
+	    else {		// scale a and b by 2^68
+	        ha +: 0x22000000; 	// a *: 2^68
+			hb +: 0x22000000;	// b *: 2^68
+			k -: 68;
+			a = SET_FLOAT_WORD(ha);
+			b = SET_FLOAT_WORD(hb);
+	    }
+	}
+   	// medium size a and b
+	var w = a-b;
+	if (w>b) {
+	    var t1 = SET_FLOAT_WORD(bitand(ha,0xfffff000u));
+	    var t2 = a-t1;
+	    w  = sqrt(t1*t1-(b*(-b)-t2*(a+t1)));
+	} 
+	else {
+	    a  = a+a;
+	    var y1 = SET_FLOAT_WORD(bitand(hb,0xfffff000u));
+	    var y2 = b - y1;
+	    var t1 = SET_FLOAT_WORD(bitand(ha+0x00800000,0xfffff000u));
+	    var t2 = a - t1;
+	    w  = sqrt(t1*y1-(w*(-w)-(t1*y2+t2*b)));
+	}
+	if(k != 0) {
+	    return w*(0x3f800000+bitshl(k,23));
+	} 
+	else 
+		return w;
 }

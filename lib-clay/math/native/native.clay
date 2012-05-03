@@ -1,72 +1,68 @@
-import math.*;
-import math.native.defines.*;
-public import math.native.constants.*;
+public import math.native.ldexp.*;
+public import math.native.frexp.*;
+public import math.native.scalbn.*;
+public import math.native.trunc.*;
+public import math.native.ceil.*;
+public import math.native.floor.*;
+public import math.native.rint.*;
+public import math.native.round.*;
+public import math.native.llround.*;
+public import math.native.modf.*;
+public import math.native.fmod.*;
+public import math.native.nextafter.*;
+public import math.native.abs.*;
+public import math.native.sign.*;
+public import math.native.hypot.*;
+public import math.native.sqrt.*;
+public import math.native.cbrt.*;
+public import math.native.pow.*;
+public import math.native.exp.*;
+public import math.native.exp2.*;
+public import math.native.expm1.*;
+public import math.native.sinh.*;
+public import math.native.cosh.*;
+public import math.native.tanh.*;
+public import math.native.ilogb.*;
+public import math.native.log.*;
+public import math.native.log2.*;
+public import math.native.log10.*;
+public import math.native.log1p.*;
+public import math.native.erf.*;
+public import math.native.gamma.*;
+public import math.native.beta.*;
+public import math.native.bessel.*;
+public import math.native.sinpi.*;
+public import math.native.tan.*;
+public import math.native.cos.*;
+public import math.native.sin.*;
+public import math.native.atanh.*;
+public import math.native.acosh.*;
+public import math.native.asinh.*;
+public import math.native.asin.*;
+public import math.native.acos.*;
+public import math.native.atan.*;
+public import math.native.atan2.*;
+public import math.native.cot.*;
+public import math.native.arg.*;
+public import math.native.proj.*;
+public import complex.*;
 
-import math.native.ldexp.*;
-import math.native.frexp.*;
-import math.native.scalbn.*;
-import math.native.trunc.*;
-import math.native.rounding.*;
-import math.native.llround.*;
-import math.native.modf.*;
-import math.native.fmod.*;
+import math.native.constants.(M_PI);
+import numbers.floats.(floatFromBits,floatExponent,mantissaSize);
 
-import math.native.hypot.*;
-import math.native.sqrt.*;
-import math.native.cbrt.*;
-import math.native.pow.*;
-import math.native.pown.*;
-import math.native.exp.*;
-import math.native.exp2.*;
-import math.native.expm1.*;
-import math.native.sinh.*;
-import math.native.cosh.*;
-import math.native.tanh.*;
-import math.native.ilogb.*;
-import math.native.log.*;
-import math.native.log2.*;
-import math.native.log10.*;
-import math.native.log1p.*;
-import math.native.erf.*;
-import math.native.gamma.*;
-import math.native.beta.*;
-import math.native.bessel.*;
-import math.native.trig.*;
-import math.native.atanh.*;
-import math.native.acosh.*;
-import math.native.asinh.*;
-import math.native.asin.*;
-import math.native.acos.*;
-import math.native.atan.*;
-import math.native.atan2.*;
-
-import math.native.complex.*;
-import math.native.cproj.*;
-import math.native.cexp.*;
-import math.native.csinh.*;
-import math.native.ccosh.*;
-import math.native.ctanh.*;
 
 [T when Integer?(T)]
-overload recip(x:T) = T(0);
+inline recip(x:T) = T(0);
 [T when Float?(T)]
-overload recip(x:T) = T(1) / x;
-
-[I when Integer?(I)]
-inline overload abs(x:I) = if(x >= 0) x else -x;
-
-inline overload sign(x:Int64) = bitor(bitshr(x,63),Int64(bitshr(wrapCast(UInt64,wrapSubtract(x)),63)));
-inline overload sign(x:Int32) = bitor(bitshr(x,31),Int32(bitshr(wrapCast(UInt32,wrapSubtract(x)),31)));
-inline overload sign(x:Int16) = bitor(bitshr(x,15),Int16(bitshr(wrapCast(UInt16,wrapSubtract(x)),15)));
-inline overload sign(x:Int8) = bitor(bitshr(x,7),Int8(bitshr(wrapCast(UInt8,wrapSubtract(x)),7)));
+inline overload recip(x:T) = T(1) / x;
 
 [T when Float?(T)]
-overload significand(x:T) = scalbn(x,wrapSubtract(ilogb(x)));
+inline significand(x:T) = scalbn(x,wrapSubtract(ilogb(x)));
 
-drem(x,y) = remainder(x,y);
+alias drem = remainder;
 
 [T]
-clamp(x:T, lo:T, hi:T) {
+inline clamp(x:T, lo:T, hi:T) {
     if(x > hi)
         return hi; 
     if(x < lo)
@@ -74,22 +70,20 @@ clamp(x:T, lo:T, hi:T) {
     return x;
 }
 
-sec(z) = recip(cos(z));
-csc(z) = recip(sin(z));
-[T when Float?(T)] 
-overload cot(z:T) = recip(tan(z));
-asec(y) = acos(recip(y));
-acsc(y) = asin(recip(y));
-acot(y) = atan(recip(y));
-sech(z) = recip(cosh(z));
-csch(z) = recip(sinh(z));
-coth(z) = recip(tanh(z));
-asech(y) = acosh(recip(y));
-acsch(y) = asinh(recip(y));
-acoth(y) = atanh(recip(y));
+inline sec(z) = recip(cos(z));
+inline csc(z) = recip(sin(z));
+inline asec(y) = acos(recip(y));
+inline acsc(y) = asin(recip(y));
+inline acot(y) = atan(recip(y));
+inline sech(z) = recip(cosh(z));
+inline csch(z) = recip(sinh(z));
+inline coth(z) = recip(tanh(z));
+inline asech(y) = acosh(recip(y));
+inline acsch(y) = asinh(recip(y));
+inline acoth(y) = atanh(recip(y));
 
 [T when CallDefined?(sin,T)]
-sinc(x:T) {
+inline sinc(x:T) {
     if(x==0) 
         return T(1);
     else {
@@ -99,7 +93,7 @@ sinc(x:T) {
 }
 
 [T when CallDefined?(sin,T)]
-cosc(x:T) { 
+inline cosc(x:T) { 
     if(x==0) 
         return T(0);
     else {
@@ -108,109 +102,26 @@ cosc(x:T) {
     }
 }
 
-overload log(b,x) = log(x) / log(b);
+inline square(x) = x*x;
+inline cube(x) = x*x*x;
 
-square(x) = x*x;
-cube(x) = x*x*x;
+inline fma(a, b, c) = (a * b) + c;
 
-inline overload fma(a, b, c) = (a * b) + c;
+[T when Float?(T)] 
+inline rsqrt(x:T) = recip(sqrt(x));
 
+[T when Float?(T)] 
+inline sigmoid (x:T) = T(1) / (T(1) + exp (-x));
 
-[T when Float?(T)] inline overload rsqrt(x:T) = recip(sqrt(x));
-[T when Float?(T)] inline overload sigmoid (x:T) = T(1) / (T(1) + exp (-x));
-
-
-[T,U when Float?(T,U)]
-overload copysign(a:T,b:U) = floatFromBits(bitor(floatBitsUnsigned(a),
-    wrapBitshl(signbit(b),mantissaSize(T)+exponentSize(T))));
-
-[T when Float?(T)]
-overload copysign(a:LongDouble,b:T) {
-    var tmp = floatBitsUnsigned(a);
-    return floatFromBits(tmp.mantissa,bitor(tmp.exponent,
-        wrapBitshl(signbit(b),exponentSize(LongDouble))));
-}
-
-
-alias FP_NAN = 0;
-alias FP_INFINITE = 1;
-alias FP_ZERO = 2;
-alias FP_SUBNORMAL = 3;
-alias FP_NORMAL = 4;
-alias FP_SNAN = 5;
-alias FP_NAN_NEG = 6;
-alias FP_INFINITE_NEG = 7;
-alias FP_ZERO_NEG = 8;
-alias FP_SUBNORMAL_NEG = 9;
-alias FP_NORMAL_NEG = 10;
-alias FP_SNAN_NEG = 11;
-
-[T when Float?(T) or Imaginary?(T)]
-overload fpclassify(x:T) --> res:Int {
-    if(x==T(0)) res <-- FP_ZERO;
-    else if(subnormal?(x)) res <-- FP_SUBNORMAL;
-    else if(nan?(x))
-        res <-- if(snan?(x)) FP_SNAN else FP_NAN;
-    else if(infinity?(x)) res <-- FP_INFINITE;
-    else res <-- FP_NORMAL;
-    if(floatNegative?(x)) res +: 6;
-}
-
-// nextafter(x,y)
-// return the next machine floating-point number of x in the
-// direction toward y.
-
-overload nextafter(x:Double, y:Double){
-    alias MIN_SUB = LeastPositive(Double);
-    alias EXP_MASK = 0x7ff00000;
-    var xdb,ydb = ieee_db(x),ieee_db(y);
-    alias hx = xdb.0[1];
-    alias lx = xdb.0[0];
-    alias hy = ydb.0[1];
-    alias ly = ydb.0[0];
-
-    if(x == y) return x;
-    if(nan?(x) or nan?(y)) return nan(Double);
-    if(x == 0.) // x == 0 so return +-minsubnormal
-        return if(signbit(y) == 1) -MIN_SUB else MIN_SUB;// raise underflow flag
-    if(hx >= 0)
-        if(hx > hy or (hx == hy and lx > ly)) { // x > y, x -: ulp
-            if(lx == 0) dec(hx);
-            dec(lx);
-        } else {    // x < y, x +: ulp
-            inc(lx);
-            if(lx == 0) inc(hx);
-        }
-    else
-        if(hy>=0 or hx>hy or ((hx==hy)and(lx>ly))){// x < y, x -: ulp
-            if(lx == 0) dec(hx);
-            dec(lx);
-        } else {        // x > y, x +: ulp
-            inc(lx);
-            if(lx == 0) inc(hx);
-        }
-    hy = bitand(hx,EXP_MASK);
-    if(hy >= EXP_MASK)
-        return infinity(Double);    // overflow
-    if(hy < 0x00100000)     // underflow
-        if(x*x != x)        // raise underflow flag
-            return xdb.2;
-    return xdb.2;
-}
-
-overload nextafter(x:Double,y:Float) = nextafter(x,Double(y));
-overload nextafter(x:Float,y:Double) = nextafter(Double(x),y);
-
-alias nexttoward = nextafter;
-
-alias normcoeff(#LongDouble) = floatFromBits(UInt128(0x4035ul));
-alias overload normcoeff(#Double) = floatFromBits(0x435ul);
-alias overload normcoeff(#Float) = floatFromBits(0x4Cu);
+inline normcoeff(#LongDouble) = floatFromBits(UInt128(0x4035ul));
+inline overload normcoeff(#Double) = floatFromBits(0x435ul);
+inline overload normcoeff(#Float) = floatFromBits(0x4Cu);
 
 [T when Float?(T)]
-normalize(x:T) 
+inline normalize(x:T) 
     = if(normalized?(x)) x else floatFromBits(floatExponent(x*normcoeff(T)) - 
         (mantissaSize(T) + 2));
 
 
-[T when Float?(T)] epsilon(#T) = nextafter(T(1),T(2))-T(1);
+[T when Float?(T)] 
+inline epsilon(#T) = nextafter(T(1),T(2))-T(1);
