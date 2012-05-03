@@ -2287,7 +2287,7 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
         vector<MultiPatternCellPtr> multiCells;
         vector<PatternPtr> argPatterns;
         MultiPatternPtr varArgPattern;
-
+        
         const vector<PatternVar> &pvars = x->patternVars;
         EnvPtr patternEnv = new Env(env);
         for (unsigned i = 0; i < pvars.size(); ++i) {
@@ -2366,15 +2366,9 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
         x->env = staticEnv;
 
         EnvPtr env2 = new Env(env);
-        llvm::errs() << "analyze args binding = " << x->bindingKind << "\n";
-        llvm::errs() << "analyze args size = " << formalArgs.size() << "\n";
-        llvm::errs() << "analyze args name = " << formalArgs[0]->name << "\n";
-
         for (unsigned i = 0; i < formalArgs.size(); ++i) {
             FormalArgPtr y = formalArgs[i];
             x->fixedArgNames.push_back(y->name);
-            llvm::errs() << "analyze args name = " << y->name << "\n";
-
             x->fixedArgTypes.push_back(argsKey[i]);
             addLocal(env2, y->name, new PValue(argsKey[i], false));
         }
