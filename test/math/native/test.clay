@@ -35,6 +35,7 @@ var twoArgFuncs[T] = array(T(hypot),T(pow),T(beta),T(atan2));
 
 var intFuncs[T] = array(T(abs), T(sign));
 
+iTypes() = Int8,Int16,Int32,Int64;
 
 evalFuncs(funcs,data) {
     for(f in funcs) {
@@ -57,15 +58,9 @@ evalFuncs2(funcs,data) {
 
 main() {
 
-    // evalFuncs(oneArgFuncs,f32data);
-    // evalFuncs2(twoArgFuncs,f32data);
-    
     evalFuncs(oneArgFuncs[C1[Double]],fdata[Double]);
     evalFuncs2(twoArgFuncs[C2[Double]],fdata[Double]);
     
-    evalFuncs(intFuncs[C1[Int8]],idata[Int8]);
-    evalFuncs(intFuncs[C1[Int16]],idata[Int16]);
-    evalFuncs(intFuncs[C1[Int32]],idata[Int32]);
-    evalFuncs(intFuncs[C1[Int64]],idata[Int64]);
-
+    ..for (t in iTypes())
+        evalFuncs(intFuncs[C1[t]],idata[t]);
 }
