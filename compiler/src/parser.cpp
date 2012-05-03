@@ -1092,6 +1092,11 @@ static bool localBinding(StatementPtr &x) {
     ExprListPtr z;
     if (!expressionList(z)) return false;
     if (!symbol(";")) return false;
+    if(bk != VAR) {
+        llvm::errs() << "BK = " << bk << "\n";
+        llvm::errs() << "BK = " << args[0] << "\n";
+    
+    }
     x = new Binding(bk, patternVars, args, varg, z);
     x->location = location;
     return true;

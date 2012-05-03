@@ -2396,6 +2396,8 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
     }
 
     case REF : {
+        llvm::errs() << "eval binding ref = " << x->args[0]->name << "\n";
+
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
         if (mpv->size() != x->args.size())
             arityMismatchError(x->args.size(), mpv->size());
