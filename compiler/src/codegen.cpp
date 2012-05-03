@@ -4088,7 +4088,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
         }
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
-        codegenMultiInto(x->values, env, ctx, mcv, x->args.size());
+        codegenMultiInto(x->values, env, ctx, mcv, mpv->values.size());
         cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
         EnvPtr env2 = new Env(env);
