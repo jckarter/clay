@@ -1296,7 +1296,7 @@ struct DispatchExpr : public Expr {
 };
 
 struct ForeignExpr : public Expr {
-    llvm::StringRef moduleName;
+    string moduleName;
     EnvPtr foreignEnv;
     ExprPtr expr;
 
@@ -1600,7 +1600,7 @@ struct For : public Statement {
 };
 
 struct ForeignStatement : public Statement {
-    llvm::StringRef moduleName;
+    string moduleName;
     EnvPtr foreignEnv;
     StatementPtr statement;
     ForeignStatement(llvm::StringRef moduleName, StatementPtr statement)
