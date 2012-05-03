@@ -4055,8 +4055,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
 
     int line, column;
     llvm::DIFile file = getDebugLineCol(x->location, line, column);
-    llvm::errs() << "codegen bindingKind = " << x->bindingKind << "\n";
-
+    
     switch (x->bindingKind) {
 
     case VAR : {
@@ -4131,8 +4130,6 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
 
     case REF : {
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
-        llvm::errs() << "REF, values = " << mpv->values.size() << "\n";
-        llvm::errs() << "REF: " << x->args[0]->name << "\n";
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < mpv->values.size(); ++i) {
             PVData const &pv = mpv->values[i];
@@ -4168,7 +4165,6 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
         cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
         EnvPtr env2 = new Env(env);
-        llvm::errs() << "REF: " << x->args[0]->name << "\n";
         for (unsigned i = 0; i < x->fixedArgNames.size(); ++i) {
             CValuePtr cv = derefValue(mcv->values[i], ctx);
             cgPushStackValue(cv, ctx);
@@ -4176,8 +4172,6 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
             llvm::SmallString<128> buf;
             llvm::raw_svector_ostream ostr(buf);
             ostr << x->fixedArgNames[i]->str << ":" << cv->type;
-            llvm::errs() << "REF: " << ostr.str() << "\n";
-        
             cv->llValue->setName(ostr.str());
             if(x->args[i]->type != NULL) {
                 TypePtr rt = evaluateType(x->args[i]->type, x->env);
@@ -4188,7 +4182,6 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
                 }
             }
         }
-llvm::errs() << "REF: " << x->args[0]->name << "\n";
         
         if (x->varArgName.ptr()) {
             unsigned nFixed = x->fixedArgTypes.size();
