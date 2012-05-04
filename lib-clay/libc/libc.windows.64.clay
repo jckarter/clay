@@ -9,6 +9,7 @@ alias random = rand;
 
 alias strtoll = _strtoi64;
 alias strtoull = _strtoui64;
+alias llabs = _abs64;
 
 alias copysign = _copysign;
 
