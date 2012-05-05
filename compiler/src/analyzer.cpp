@@ -2372,6 +2372,7 @@ llvm::errs() << "analyzeBinding: " << x->args[0]->name << "\n";
             x->fixedArgNames.push_back(y->name);
             x->fixedArgTypes.push_back(argsKey[i]);
             addLocal(env2, y->name, new PValue(argsKey[i], false));
+        llvm::errs() << "addLocal: " << y->name << "\n";
         }
         if (x->varg.ptr()) {
             x->varArgName = x->varg->name;
@@ -2381,7 +2382,8 @@ llvm::errs() << "analyzeBinding: " << x->args[0]->name << "\n";
                 PVData parg(argsKey[i], false);
                 varArgs->values.push_back(parg);
             }
-            addLocal(env2, x->varArgName, varArgs.ptr());
+            llvm::errs() << "addLocal: " << x->varArgName << "\n";
+        addLocal(env2, x->varArgName, varArgs.ptr());
         }
         return env2;
     }
