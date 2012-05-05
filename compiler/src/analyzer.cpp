@@ -2271,7 +2271,8 @@ void initializeStaticForClones(StaticForPtr x, unsigned count)
 EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
 {
     LocationContext loc(x->location);
-
+llvm::errs() << "analyzeBinding: " << x->args[0]->name << "\n";
+        
     switch (x->bindingKind) {
 
     case VAR :

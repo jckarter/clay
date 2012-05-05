@@ -3451,6 +3451,7 @@ static void codegenBlockStatement(BlockPtr block,
     }
     else if (stmt->stmtKind == BINDING) {
         env = codegenBinding((Binding *)stmt.ptr(), env, ctx);
+        llvm::errs() << "Binding: " << ((Binding *)stmt.ptr())->args[0]->name << "\n";
         codegenCollectLabels(block->statements, i+1, ctx);
     }
     else if (stmt->stmtKind == EVAL_STATEMENT) {
@@ -4055,6 +4056,9 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
 
     int line, column;
     llvm::DIFile file = getDebugLineCol(x->location, line, column);
+    // llvm::StringMap<ObjectPtr>::iterator ii, iend;
+    // for (ii = env->entries.begin(), iend = env->entries.end(); ii != iend; ++ii)
+    //     llvm::errs() << "env: " << ii << "\n";
     
     switch (x->bindingKind) {
 
