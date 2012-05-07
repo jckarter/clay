@@ -252,7 +252,7 @@ overload entryHash(entry: E) = largeHash(entry.key);
 //
 
 [K]
-overload SetVector[K]() set: SetVector[K]
+overload SetVector[K]() --> set: SetVector[K]
 {
     set.data <-- TwoHash[SetVectorEntry[K]]();
     set.sentinel = allocateRawMemory(SetVectorEntry[K], 1);
@@ -269,7 +269,7 @@ overload destroy(set: SetVector[K])
 }
 
 [K]
-overload SetVectorEntry[K](a: SetVector[K], key: K) entry: SetVectorEntry[K]
+overload SetVectorEntry[K](a: SetVector[K], key: K) --> entry: SetVectorEntry[K]
 {
     ref sentinel = a.sentinel;
     entry.key <-- move(key);
@@ -295,7 +295,7 @@ overload resetUnsafe(a: SetVectorEntry[K])
 }
 
 [K]
-overload moveEntry(src: SetVectorEntry[K], th) entry: SetVectorEntry[K]
+overload moveEntry(src: SetVectorEntry[K], th) --> entry: SetVectorEntry[K]
 {
     entry <-- move(src);
     entry.prev^.next = &entry;
