@@ -2271,7 +2271,7 @@ void initializeStaticForClones(StaticForPtr x, unsigned count)
 EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
 {
     LocationContext loc(x->location);
-llvm::errs() << "analyzeBinding: " << x->args[0]->name << "\n";
+    llvm::errs() << "analyzeBinding: " << x->args[0]->name << "\n";
         
     switch (x->bindingKind) {
 
@@ -2365,14 +2365,13 @@ llvm::errs() << "analyzeBinding: " << x->args[0]->name << "\n";
             }
         }
         x->env = staticEnv;
-
-        EnvPtr env2 = new Env(env);
+        EnvPtr env2 = new Env(staticEnv);
         for (unsigned i = 0; i < formalArgs.size(); ++i) {
             FormalArgPtr y = formalArgs[i];
             x->fixedArgNames.push_back(y->name);
             x->fixedArgTypes.push_back(argsKey[i]);
             addLocal(env2, y->name, new PValue(argsKey[i], false));
-        llvm::errs() << "addLocal: " << y->name << "\n";
+            llvm::errs() << "addLocal: " << y->name << "\n";
         }
         if (x->varg.ptr()) {
             x->varArgName = x->varg->name;
@@ -2383,8 +2382,9 @@ llvm::errs() << "analyzeBinding: " << x->args[0]->name << "\n";
                 varArgs->values.push_back(parg);
             }
             llvm::errs() << "addLocal: " << x->varArgName << "\n";
-        addLocal(env2, x->varArgName, varArgs.ptr());
+            addLocal(env2, x->varArgName, varArgs.ptr());
         }
+        x->analyzed = true;
         return env2;
     }
 

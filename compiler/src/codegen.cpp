@@ -4054,12 +4054,12 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
     
     DebugLocationContext loc(x->location, ctx);
 
+    if (!x->analyzed)
+        env = analyzeBinding(x, env);
+
     int line, column;
     llvm::DIFile file = getDebugLineCol(x->location, line, column);
-    // llvm::StringMap<ObjectPtr>::iterator ii, iend;
-    // for (ii = env->entries.begin(), iend = env->entries.end(); ii != iend; ++ii)
-    //     llvm::errs() << "env: " << ii << "\n";
-    
+   
     switch (x->bindingKind) {
 
     case VAR : {
