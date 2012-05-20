@@ -2271,13 +2271,21 @@ void initializeStaticForClones(StaticForPtr x, unsigned count)
 EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
 {
     LocationContext loc(x->location);
-    llvm::errs() << "analyzeBinding: " << x->args[0]->name << "\n";
+    // llvm::errs() << "analyzeBinding: " << x->args[0]->name << "\n";
         
     switch (x->bindingKind) {
 
     case VAR :
     case REF :
     case FORWARD : {
+        switch(x->bindingKind){
+            case VAR: llvm::errs() << "analyzeBinding:VAR " << x->args[0]->name << "\n";
+                        break;
+            case REF: llvm::errs() << "analyzeBinding:REF " << x->args[0]->name << "\n";
+                        break;
+            default: llvm::errs() << "analyzeBinding:FORWARD " << x->args[0]->name << "\n";
+        }
+
         MultiPValuePtr mpv = analyzeMulti(x->values, env, x->args.size());
         if (!mpv)
             return NULL;
@@ -2348,24 +2356,24 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
                 // matchFailureError(new MatchMultiArgumentError(formalArgs.size(), types, x->varg));
         }
         
-        EnvPtr staticEnv = new Env(env);
+        EnvPtr env2 = new Env(env);
         
         for (unsigned i = 0; i < pvars.size(); ++i) {
             if (pvars[i].isMulti) {
                 MultiStaticPtr ms = derefDeep(multiCells[i].ptr());
                 if (!ms)
                     error(pvars[i].name, "unbound pattern variable");
-                addLocal(staticEnv, pvars[i].name, ms.ptr());
+                addLocal(env2, pvars[i].name, ms.ptr());
             }
             else {
                 ObjectPtr v = derefDeep(cells[i].ptr());
                 if (!v)
                     error(pvars[i].name, "unbound pattern variable");
-                addLocal(staticEnv, pvars[i].name, v.ptr());
+                addLocal(env2, pvars[i].name, v.ptr());
             }
         }
-        x->env = staticEnv;
-        EnvPtr env2 = new Env(staticEnv);
+        // x->env = staticEnv;
+        // EnvPtr env2 = new Env(staticEnv);
         for (unsigned i = 0; i < formalArgs.size(); ++i) {
             FormalArgPtr y = formalArgs[i];
             x->fixedArgNames.push_back(y->name);
@@ -2384,7 +2392,6 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
             llvm::errs() << "addLocal: " << x->varArgName << "\n";
             addLocal(env2, x->varArgName, varArgs.ptr());
         }
-        x->analyzed = true;
         return env2;
     }
 
@@ -2394,7 +2401,6 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
         EnvPtr env2 = new Env(env);
         ExprPtr y = foreignExpr(env, x->values->exprs[0]);
         addLocal(env2, x->args[0]->name, y.ptr());
-        x->analyzed = true;
         return env2;
     }
 

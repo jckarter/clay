@@ -2374,10 +2374,10 @@ void evalCollectLabels(const vector<StatementPtr> &statements,
 EnvPtr evalBinding(BindingPtr x, EnvPtr env)
 {
     LocationContext loc(x->location);
-
     switch (x->bindingKind) {
 
     case VAR : {
+        llvm::errs() << "evalBinding: VAR\n";
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < mpv->values.size(); ++i) {
@@ -2419,6 +2419,8 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
     }
 
     case REF : {
+        llvm::errs() << "evalBinding:REF\n";
+    
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < x->args.size(); ++i) {
@@ -2464,6 +2466,8 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
     }
 
     case FORWARD : {
+        llvm::errs() << "evalBinding:FORWARD\n";
+    
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < x->args.size(); ++i) {
@@ -2518,6 +2522,8 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
     }
 
     case ALIAS : {
+        llvm::errs() << "evalBinding:ALIAS\n";
+    
         ensureArity(x->args, 1);
         ensureArity(x->values->exprs, 1);
         EnvPtr env2 = new Env(env);

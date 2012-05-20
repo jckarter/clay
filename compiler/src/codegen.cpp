@@ -4054,15 +4054,13 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
     
     DebugLocationContext loc(x->location, ctx);
 
-    if (!x->analyzed)
-        env = analyzeBinding(x, env);
-
     int line, column;
     llvm::DIFile file = getDebugLineCol(x->location, line, column);
-   
+    
     switch (x->bindingKind) {
 
     case VAR : {
+        llvm::errs() << "codegenBinding:VAR\n";
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < mpv->values.size(); ++i) {
@@ -4133,6 +4131,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
     }
 
     case REF : {
+        llvm::errs() << "codegenBinding:REF\n";
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < mpv->values.size(); ++i) {
@@ -4209,6 +4208,8 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
     }
 
     case FORWARD : {
+        llvm::errs() << "codegenBinding:FORWARD\n";
+
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < mpv->values.size(); ++i) {
@@ -4306,6 +4307,8 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
     }
 
     case ALIAS : {
+        llvm::errs() << "codegenBinding:ALIAS\n";
+
         ensureArity(x->args, 1);
         ensureArity(x->values->exprs, 1);
         EnvPtr env2 = new Env(env);
