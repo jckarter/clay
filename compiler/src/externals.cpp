@@ -799,7 +799,7 @@ void X86_64_ExternalTarget::fixupClassification(TypePtr type, vector<WordClass> 
             return;
         }
         if (*i == SSEUP) {
-            *i = SSE_INT_VECTOR;
+            *i = SSE_DOUBLE_VECTOR;
         } else if (X86_64_ExternalTarget::isSSEClass(*i)) {
             do { ++i; } while (*i == SSEUP);
         } else if (*i == X87) {
@@ -856,7 +856,11 @@ llvm::Type *X86_64_ExternalTarget::llvmWordType(TypePtr type)
         case SSE_INT_VECTOR: {
             int vectorRun = 0;
             do { ++vectorRun; ++i; } while (i != wordClasses.end() && *i == SSEUP);
-            llWordTypes.push_back(llvm::VectorType::get(llvmIntType(8), vectorRun*8));
+            // 8-byte int vectors are allocated to MMX registers
+            if (vectorRun == 1)
+                llWordTypes.push_back(llvm::VectorType::get(llvmFloatType(64), vectorRun));
+            else
+                llWordTypes.push_back(llvm::VectorType::get(llvmIntType(64), vectorRun));
             break;
         }
         case SSE_FLOAT_VECTOR: {
