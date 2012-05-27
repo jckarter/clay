@@ -956,9 +956,9 @@ void codegenExpr(ExprPtr expr,
     case STRING_LITERAL : {
         StringLiteral *x = (StringLiteral *)expr.ptr();
         llvm::Constant *initializer =
-            llvm::ConstantArray::get(llvm::getGlobalContext(),
-                                     x->value,
-                                     true);
+            llvm::ConstantDataArray::getString(llvm::getGlobalContext(),
+                                               x->value,
+                                               true);
         TypePtr type = arrayType(int8Type, x->value.size() + 1);
         ostringstream symbolName;
         symbolName << "StringConstant " << x->value << " clay";
@@ -2775,7 +2775,7 @@ void codegenLLVMBody(InvokeEntryPtr entry, const string &callableName)
 
     if(!llvm::ParseAssembly(buf, llvmModule, err,
                 llvm::getGlobalContext())) {
-        err.Print("\n", out);
+        err.print("\n", out);
         std::cerr << out.str() << std::endl;
         error("llvm assembly parse error");
     }
@@ -6155,7 +6155,7 @@ static void codegenTopLevelLLVMRecursive(ModulePtr m)
                              llvm::getGlobalContext())) {
         string errBuf;
         llvm::raw_string_ostream errOut(errBuf);
-        err.Print("\n", errOut);
+        err.print("\n", errOut);
         std::cerr << errOut.str() << std::endl;
         error("llvm assembly parse error");
     }
@@ -6463,7 +6463,7 @@ llvm::TargetMachine *initLLVM(std::string const &targetTriple,
     llvm::CodeModel::Model codeModel = llvm::CodeModel::Default;
 
     llvm::TargetMachine *targetMachine = target->createTargetMachine(
-        targetTriple, "", "", reloc, codeModel);
+        targetTriple, "", "", llvm::TargetOptions(), reloc, codeModel);
 
     if (targetMachine != NULL) {
         llvmTargetData = targetMachine->getTargetData();

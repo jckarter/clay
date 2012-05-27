@@ -112,7 +112,7 @@ static void generateAssembly(llvm::Module *module,
                              bool debug)
 {
     if (optLevel < 2 || debug)
-        llvm::NoFramePointerElim = true;
+        targetMachine->Options.NoFramePointerElim = 1;
 
     llvm::FunctionPassManager fpasses(module);
 
@@ -381,7 +381,7 @@ int main2(int argc, char **argv, char const* const* envp) {
 
     string clayFile;
     string outputFile;
-    string targetTriple = llvm::sys::getHostTriple();
+    string targetTriple = llvm::sys::getDefaultTargetTriple();
 
     string clayScriptImports;
     string clayScript;
@@ -568,7 +568,7 @@ int main2(int argc, char **argv, char const* const* envp) {
                 cerr << "error: target name missing after -target\n";
                 return 1;
             }
-            crossCompiling = targetTriple != llvm::sys::getHostTriple();
+            crossCompiling = targetTriple != llvm::sys::getDefaultTargetTriple();
         }
         else if (strstr(argv[i], "-Wl") == argv[i]) {
             linkerFlags += argv[i] + strlen("-Wl");
