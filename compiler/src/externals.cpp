@@ -584,8 +584,10 @@ struct X86_64_ExternalTarget : public LLVMExternalTarget {
         if (varArg && areYmmWordClasses(wordClasses))
             return true;
 
+        // According to the spec, X87-class arguments should also be passed by byval
+        // here; however, as of LLVM 3.1, LLVM appears not to pass an x87_fp80 correctly
+        // unless it is passed by value instead of by byval pointer.
         return wordClasses[0] == MEMORY
-            || wordClasses[0] == X87
             || wordClasses[0] == COMPLEX_X87;
     }
 
