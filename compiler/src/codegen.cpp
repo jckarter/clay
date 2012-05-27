@@ -2729,7 +2729,7 @@ void codegenLLVMBody(InvokeEntry* entry, llvm::StringRef callableName)
     if(!llvm::ParseAssembly(buf, llvmModule, err,
                 llvm::getGlobalContext())) {
         llvm::errs() << out.str();
-        err.Print("\n", llvm::errs());
+        err.print("\n", llvm::errs());
         llvm::errs() << "\n";
         error("llvm assembly parse error");
     }
@@ -4809,7 +4809,7 @@ static llvm::Constant *codegenStringTableConstant(llvm::StringRef s)
     llvm::Constant *sizeInitializer =
         llvm::ConstantInt::get(llvmType(cSizeTType), s.size(), false);
     llvm::Constant *stringInitializer =
-        llvm::ConstantArray::get(llvm::getGlobalContext(), s, true);
+        llvm::ConstantDataArray::getString(llvm::getGlobalContext(), s, true);
     llvm::Constant *structEntries[] = {sizeInitializer, stringInitializer};
     llvm::Constant *initializer =
         llvm::ConstantStruct::getAnon(llvm::getGlobalContext(),
@@ -6521,7 +6521,7 @@ static void codegenTopLevelLLVMRecursive(ModulePtr m)
 
     if (!llvm::ParseAssembly(buf, llvmModule, err,
                              llvm::getGlobalContext())) {
-        err.Print("\n", llvm::errs());
+        err.print("\n", llvm::errs());
         llvm::errs() << "\n";
         error("llvm assembly parse error");
     }
@@ -6834,7 +6834,7 @@ llvm::TargetMachine *initLLVM(llvm::StringRef targetTriple,
     llvm::CodeModel::Model codeModel = llvm::CodeModel::Default;
 
     llvm::TargetMachine *targetMachine = target->createTargetMachine(
-        targetTriple, "", "", reloc, codeModel);
+        targetTriple, "", "", llvm::TargetOptions(), reloc, codeModel);
 
     if (targetMachine != NULL) {
         llvmTargetData = targetMachine->getTargetData();
