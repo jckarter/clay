@@ -1,0 +1,7 @@
+import printer.(println);
+import simd.*;
+
+main() {
+    var a = Vec[Byte, 16](1uss);
+    for (i in range(8)) { println(a); a = a+a; }
+}
