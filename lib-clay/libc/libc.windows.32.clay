@@ -9,8 +9,11 @@ alias random = rand;
 
 alias strtoll = _strtoi64;
 alias strtoull = _strtoui64;
+alias llabs = _abs64;
 
 alias copysign = _copysign;
+alias hypot = _hypot;
+alias hypotf = _hypotf;
 
 // The float variants of math functions are implemented as macros
 

@@ -1,324 +1,324 @@
-sin(0+0j) = 0+0j
-sin(-0+0j) = -0+0j
-sin(-1-1j) = -1.298457581415977-0.6349639147847361j
-sin(2+2j) = 3.420954861117013-1.509306485323616j
-sin(nan) = nan
-sin(nan) = nan
-sin(1+1.#INFj) = 1.#INF+1.#INFj
-sin(nan) = nan
-sin(-1.#INF+1j) = nan
-sin(1.#INF+1j) = nan
-sin(-1.#INF+1.#INFj) = nan
-sin(1.#INF+1.#INFj) = nan
-sin(nan) = nan
-sin(nan) = nan
-sin(nan) = nan
-sin(nan) = nan
-sin(nan) = nan
+0+0j
+-0+0j
+-1.298457581415977-0.6349639147847361j
+3.420954861117013-1.509306485323616j
+nan
+nan
+1.#INF+1.#INFj
+nan
+nan
+nan
+nan
+nan
+nan
+nan
+nan
+nan
+nan
 
-cos(0+0j) = 1-0j
-cos(-0+0j) = 1+0j
-cos(-1-1j) = 0.8337300251311491-0.9888977057628651j
-cos(2+2j) = -1.565625835315744-3.297894836311237j
-cos(nan) = nan
-cos(nan) = nan
-cos(1+1.#INFj) = 1.#INF-1.#INFj
-cos(nan) = nan
-cos(-1.#INF+1j) = nan
-cos(1.#INF+1j) = nan
-cos(-1.#INF+1.#INFj) = nan
-cos(1.#INF+1.#INFj) = nan
-cos(nan) = nan
-cos(nan) = nan
-cos(nan) = nan
-cos(nan) = nan
-cos(nan) = nan
+1-0j
+1+0j
+0.8337300251311492-0.9888977057628651j
+-1.565625835315744-3.297894836311237j
+nan
+nan
+1.#INF-1.#INFj
+nan
+nan
+nan
+nan
+nan
+nan
+nan
+nan
+nan
+nan
 
-tan(0+0j) = 0+0j
-tan(-0+0j) = -0+0j
-tan(-1-1j) = -0.2717525853195117-1.083923327338695j
-tan(2+2j) = -0.02839295286823228+1.023835594570473j
-tan(nan) = nan
-tan(nan) = nan
-tan(1+1.#INFj) = 0+1j
-tan(nan) = nan
-tan(-1.#INF+1j) = nan
-tan(1.#INF+1j) = nan
-tan(-1.#INF+1.#INFj) = 0+1j
-tan(1.#INF+1.#INFj) = 0+1j
-tan(nan) = nan
-tan(nan) = nan
-tan(nan) = nan
-tan(nan) = 0+1j
-tan(nan) = nan
+0+0j
+-0+0j
+-0.2717525853195117-1.083923327338695j
+-0.02839295286823228+1.023835594570473j
+nan
+nan
+0+1j
+nan
+nan
+nan
+-0+1j
+0+1j
+nan
+nan
+nan
+0+1j
+nan
 
-asin(0+0j) = 0+0j
-asin(-0+0j) = -0+0j
-asin(-1-1j) = -0.09384622049358324-0.825079184917074j
-asin(2+2j) = 1.53764515109662-1.356160455761411j
-asin(nan) = nan
-asin(nan) = nan
-asin(1+1.#INFj) = nan
-asin(nan) = nan
-asin(-1.#INF+1j) = nan
-asin(1.#INF+1j) = nan
-asin(-1.#INF+1.#INFj) = nan
-asin(1.#INF+1.#INFj) = nan
-asin(nan) = nan
-asin(nan) = nan
-asin(nan) = nan
-asin(nan) = nan
-asin(nan) = nan
+0+0j
+-0+0j
+-0.6662394324925153-1.061275061905036j
+0.7542491446980463+1.734324521487968j
+nan
+nan
+0+1.#INFj
+nan
+-1.570796326794897+1.#INFj
+1.570796326794897+1.#INFj
+-0.7853981633974483+1.#INFj
+0.7853981633974483+1.#INFj
+nan
+nan
+nan
+nan
+nan
 
-acos(0+0j) = 1.570796326794897-0j
-acos(-0+0j) = 1.570796326794897-0j
-acos(-1-1j) = 1.66464254728848+0.825079184917074j
-acos(2+2j) = 0.03315117569827697+1.356160455761411j
-acos(nan) = nan
-acos(nan) = nan
-acos(1+1.#INFj) = nan
-acos(nan) = nan
-acos(-1.#INF+1j) = nan
-acos(1.#INF+1j) = nan
-acos(-1.#INF+1.#INFj) = nan
-acos(1.#INF+1.#INFj) = nan
-acos(nan) = nan
-acos(nan) = nan
-acos(nan) = nan
-acos(nan) = nan
-acos(nan) = nan
+1.570796326794897-0j
+1.570796326794897-0j
+2.237035759287412+1.061275061905036j
+0.8165471820968503-1.734324521487968j
+nan
+nan
+1.570796326794897-1.#INFj
+nan
+3.141592653589793-1.#INFj
+0-1.#INFj
+2.356194490192345-1.#INFj
+0.7853981633974483-1.#INFj
+nan
+nan
+nan
+nan
+nan
 
-atan(0+0j) = 0+0j
-atan(-0+0j) = -0+0j
-atan(-1-1j) = -1.017221967897851-0.4023594781085251j
-atan(2+2j) = 1.311223269671635+0.2388778612568591j
-atan(nan) = nan
-atan(nan) = nan
-atan(1+1.#INFj) = nan
-atan(nan) = nan
-atan(-1.#INF+1j) = nan
-atan(1.#INF+1j) = nan
-atan(-1.#INF+1.#INFj) = nan
-atan(1.#INF+1.#INFj) = nan
-atan(nan) = nan
-atan(nan) = nan
-atan(nan) = nan
-atan(nan) = nan
-atan(nan) = nan
+0+0j
+-0+0j
+-1.017221967897851-0.4023594781085251j
+1.311223269671635+0.2388778612568591j
+nan
+nan
+1.570796326794897+0j
+nan
+-1.570796326794897+0j
+1.570796326794897+0j
+-1.570796326794897+0j
+1.570796326794897+0j
+1.570796326794897+0j
+-1.570796326794897+0j
+nan
+nan
+nan
 
-sinh(0+0j) = 0+0j
-sinh(-0+0j) = -0+0j
-sinh(-1-1j) = -0.6349639147847361-1.298457581415977j
-sinh(2+2j) = -1.509306485323616+3.420954861117013j
-sinh(nan) = nan
-sinh(nan) = nan
-sinh(1+1.#INFj) = nan
-sinh(nan) = nan
-sinh(-1.#INF+1j) = -1.#INF+1.#INFj
-sinh(1.#INF+1j) = 1.#INF+1.#INFj
-sinh(-1.#INF+1.#INFj) = nan
-sinh(1.#INF+1.#INFj) = nan
-sinh(nan) = nan
-sinh(nan) = nan
-sinh(nan) = nan
-sinh(nan) = nan
-sinh(nan) = nan
+0+0j
+-0+0j
+-0.6349639147847361-1.298457581415977j
+-1.509306485323616+3.420954861117013j
+nan
+nan
+nan
+nan
+-1.#INF+1.#INFj
+1.#INF+1.#INFj
+nan
+nan
+nan
+nan
+nan
+nan
+nan
 
-cosh(0+0j) = 1+0j
-cosh(-0+0j) = 1-0j
-cosh(-1-1j) = 0.8337300251311492+0.9888977057628651j
-cosh(2+2j) = -1.565625835315744+3.297894836311237j
-cosh(nan) = nan
-cosh(nan) = nan
-cosh(1+1.#INFj) = nan
-cosh(nan) = nan
-cosh(-1.#INF+1j) = 1.#INF-1.#INFj
-cosh(1.#INF+1j) = 1.#INF+1.#INFj
-cosh(-1.#INF+1.#INFj) = nan
-cosh(1.#INF+1.#INFj) = nan
-cosh(nan) = nan
-cosh(nan) = nan
-cosh(nan) = nan
-cosh(nan) = nan
-cosh(nan) = nan
+1+0j
+1-0j
+0.8337300251311492+0.9888977057628651j
+-1.565625835315744+3.297894836311237j
+nan
+nan
+nan
+nan
+1.#INF-1.#INFj
+1.#INF+1.#INFj
+nan
+nan
+nan
+nan
+nan
+nan
+nan
 
-tanh(0+0j) = 0+0j
-tanh(-0+0j) = -0+0j
-tanh(-1-1j) = -1.083923327338695-0.2717525853195117j
-tanh(2+2j) = 1.023835594570473-0.02839295286823228j
-tanh(nan) = nan
-tanh(nan) = nan
-tanh(1+1.#INFj) = nan
-tanh(nan) = nan
-tanh(-1.#INF+1j) = -1+0j
-tanh(1.#INF+1j) = 1+0j
-tanh(-1.#INF+1.#INFj) = -1+0j
-tanh(1.#INF+1.#INFj) = 1+0j
-tanh(nan) = 1+0j
-tanh(nan) = -1+0j
-tanh(nan) = nan
-tanh(nan) = nan
-tanh(nan) = nan
+0+0j
+-0+0j
+-1.083923327338695-0.2717525853195117j
+1.023835594570473-0.02839295286823228j
+nan
+nan
+nan
+nan
+-1+0j
+1+0j
+-1+0j
+1+0j
+1+0j
+-1+0j
+nan
+nan
+nan
 
-asinh(0+0j) = 0+0j
-asinh(-0+0j) = 0+0j
-asinh(-1-1j) = -1.061275061905036-0.6662394324925153j
-asinh(2+2j) = 1.734324521487968+0.7542491446980463j
-asinh(nan) = nan
-asinh(nan) = nan
-asinh(1+1.#INFj) = nan
-asinh(nan) = nan
-asinh(-1.#INF+1j) = -1.#INF+0j
-asinh(1.#INF+1j) = nan
-asinh(-1.#INF+1.#INFj) = nan
-asinh(1.#INF+1.#INFj) = nan
-asinh(nan) = nan
-asinh(nan) = nan
-asinh(nan) = nan
-asinh(nan) = nan
-asinh(nan) = nan
+0+0j
+-0+0j
+-1.061275061905036-0.6662394324925153j
+1.734324521487966+0.7542491446980462j
+nan
+nan
+1.#INF+1.570796326794897j
+nan
+-1.#INF+0j
+1.#INF+0j
+-1.#INF+0.7853981633974483j
+1.#INF+0.7853981633974483j
+nan
+nan
+nan
+nan
+nan
 
-acosh(0+0j) = 0+1.570796326794897j
-acosh(-0+0j) = 0+1.570796326794897j
-acosh(-1-1j) = -0.825079184917074+1.66464254728848j
-acosh(2+2j) = -1.356160455761411+0.03315117569827697j
-acosh(nan) = nan
-acosh(nan) = nan
-acosh(1+1.#INFj) = nan
-acosh(nan) = nan
-acosh(-1.#INF+1j) = nan
-acosh(1.#INF+1j) = nan
-acosh(-1.#INF+1.#INFj) = nan
-acosh(1.#INF+1.#INFj) = nan
-acosh(nan) = nan
-acosh(nan) = nan
-acosh(nan) = nan
-acosh(nan) = nan
-acosh(nan) = nan
+0+1.570796326794897j
+0+1.570796326794897j
+1.061275061905036-2.237035759287412j
+1.734324521487966+0.8165471820968504j
+nan
+nan
+1.#INF+1.570796326794897j
+nan
+1.#INF+3.141592653589793j
+1.#INF+0j
+1.#INF+2.356194490192345j
+1.#INF+0.7853981633974483j
+nan
+nan
+nan
+nan
+nan
 
-atanh(0+0j) = 0+0j
-atanh(-0+0j) = 0+0j
-atanh(-1-1j) = -0.4023594781085251-1.017221967897851j
-atanh(2+2j) = 0.2388778612568591+1.311223269671635j
-atanh(nan) = nan
-atanh(nan) = nan
-atanh(1+1.#INFj) = nan
-atanh(nan) = nan
-atanh(-1.#INF+1j) = nan
-atanh(1.#INF+1j) = nan
-atanh(-1.#INF+1.#INFj) = nan
-atanh(1.#INF+1.#INFj) = nan
-atanh(nan) = nan
-atanh(nan) = nan
-atanh(nan) = nan
-atanh(nan) = nan
-atanh(nan) = nan
+0+0j
+-0+0j
+-0.4023594781085251-1.017221967897851j
+0.2388778612568591+1.311223269671635j
+nan
+nan
+0+1.570796326794897j
+nan
+-0+1.570796326794897j
+0+1.570796326794897j
+-0+1.570796326794897j
+0+1.570796326794897j
+nan
+nan
+nan
+0+1.570796326794897j
+nan
 
-exp(0+0j) = 1+0j
-exp(-0+0j) = 1+0j
-exp(-1-1j) = 0.198766110346413-0.3095598756531122j
-exp(2+2j) = -3.074932320639359+6.71884969742825j
-exp(nan) = nan
-exp(nan) = nan
-exp(1+1.#INFj) = nan
-exp(nan) = nan
-exp(-1.#INF+1j) = 0+0j
-exp(1.#INF+1j) = 1.#INF+1.#INFj
-exp(-1.#INF+1.#INFj) = 0+0j
-exp(1.#INF+1.#INFj) = nan
-exp(nan) = nan
-exp(nan) = 0+0j
-exp(nan) = nan
-exp(nan) = nan
-exp(nan) = nan
+1+0j
+1+0j
+0.198766110346413-0.3095598756531122j
+-3.074932320639359+6.71884969742825j
+nan
+nan
+nan
+nan
+0+0j
+1.#INF+1.#INFj
+0+0j
+nan
+nan
+0+0j
+nan
+nan
+nan
 
-arg(0+0j) = 0
-arg(-0+0j) = 3.141592653589793
-arg(-1-1j) = -2.356194490192345
-arg(2+2j) = 0.7853981633974483
-arg(nan) = nan
-arg(nan) = nan
-arg(1+1.#INFj) = 1.570796326794897
-arg(nan) = nan
-arg(-1.#INF+1j) = 3.141592653589793
-arg(1.#INF+1j) = 0
-arg(-1.#INF+1.#INFj) = 2.356194490192345
-arg(1.#INF+1.#INFj) = 0.7853981633974483
-arg(nan) = nan
-arg(nan) = nan
-arg(nan) = nan
-arg(nan) = nan
-arg(nan) = nan
+-1.#INF+0j
+-1.#INF+3.141592653589793j
+0.3465735902799727-2.356194490192345j
+1.039720770839918+0.7853981633974483j
+nan
+nan
+1.#INF+1.570796326794897j
+nan
+1.#INF+3.141592653589793j
+1.#INF+0j
+1.#INF+2.356194490192345j
+1.#INF+0.7853981633974483j
+nan
+nan
+nan
+nan
+nan
 
-abs(0+0j) = 0
-abs(-0+0j) = 0
-abs(-1-1j) = 1.414213562373095
-abs(2+2j) = 2.82842712474619
-abs(nan) = nan
-abs(nan) = nan
-abs(1+1.#INFj) = 1.#INF
-abs(nan) = nan
-abs(-1.#INF+1j) = 1.#INF
-abs(1.#INF+1j) = 1.#INF
-abs(-1.#INF+1.#INFj) = nan
-abs(1.#INF+1.#INFj) = nan
-abs(nan) = nan
-abs(nan) = nan
-abs(nan) = nan
-abs(nan) = nan
-abs(nan) = nan
+0+0j
+0+0j
+0.4550898605622273-1.09868411346781j
+1.553773974030037+0.6435942529055826j
+nan
+nan
+1.#INF+1.#INFj
+nan
+0+1.#INFj
+1.#INF+0j
+1.#INF+1.#INFj
+1.#INF+1.#INFj
+nan
+nan
+nan
+1.#INF+1.#INFj
+nan
 
-log(0+0j) = -1.#INF+0j
-log(-0+0j) = -1.#INF+3.141592653589793j
-log(-1-1j) = 0.3465735902799727-2.356194490192345j
-log(2+2j) = 1.039720770839918+0.7853981633974483j
-log(nan) = nan
-log(nan) = nan
-log(1+1.#INFj) = 1.#INF+1.570796326794897j
-log(nan) = nan
-log(-1.#INF+1j) = 1.#INF+3.141592653589793j
-log(1.#INF+1j) = 1.#INF+0j
-log(-1.#INF+1.#INFj) = nan
-log(1.#INF+1.#INFj) = nan
-log(nan) = nan
-log(nan) = nan
-log(nan) = nan
-log(nan) = nan
-log(nan) = nan
+0+0j
+-0+0j
+-1-1j
+2+2j
+nan
+nan
+1.#INF+0j
+nan
+1.#INF+0j
+1.#INF+0j
+1.#INF+0j
+1.#INF+0j
+1.#INF+0j
+1.#INF+0j
+nan
+1.#INF+0j
+nan
 
-sqrt(0+0j) = 0+0j
-sqrt(-0+0j) = 0+0j
-sqrt(-1-1j) = 0.4550898605622273+1.09868411346781j
-sqrt(2+2j) = 1.553773974030037+0.6435942529055826j
-sqrt(nan) = nan
-sqrt(nan) = nan
-sqrt(1+1.#INFj) = 1.797693134862316e+308+1.#INFj
-sqrt(nan) = nan
-sqrt(-1.#INF+1j) = 0+1.#INFj
-sqrt(1.#INF+1j) = 1.#INF+0j
-sqrt(-1.#INF+1.#INFj) = 1.797693134862316e+308+1.#INFj
-sqrt(1.#INF+1.#INFj) = 1.797693134862316e+308+1.#INFj
-sqrt(nan) = nan
-sqrt(nan) = nan
-sqrt(nan) = nan
-sqrt(nan) = 1.797693134862316e+308+1.#INFj
-sqrt(nan) = nan
+0
+3.141592653589793
+-2.356194490192345
+0.7853981633974483
+nan
+nan
+1.570796326794897
+nan
+3.141592653589793
+0
+2.356194490192345
+0.7853981633974483
+nan
+nan
+nan
+nan
+nan
 
-proj(0+0j) = 0+0j
-proj(-0+0j) = -0+0j
-proj(-1-1j) = -1-1j
-proj(2+2j) = 2+2j
-proj(nan) = nan
-proj(nan) = nan
-proj(1+1.#INFj) = 1.#INF+0j
-proj(nan) = nan
-proj(-1.#INF+1j) = -1.#INF+1j
-proj(1.#INF+1j) = 1.#INF+0j
-proj(-1.#INF+1.#INFj) = 1.#INF+0j
-proj(1.#INF+1.#INFj) = 1.#INF+0j
-proj(nan) = 1.#INF+0j
-proj(nan) = nan
-proj(nan) = nan
-proj(nan) = 1.#INF+0j
-proj(nan) = nan
+0
+0
+1.414213562373095
+2.82842712474619
+nan
+nan
+1.#INF
+nan
+1.#INF
+1.#INF
+1.#INF
+1.#INF
+1.#INF
+1.#INF
+nan
+1.#INF
+nan
 

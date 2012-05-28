@@ -20,7 +20,7 @@ inline abs(x:Double) = libc.fabs(x);
 inline overload abs(x:Float) = libc.fabsf(x);
 inline overload abs(x:LongDouble) = libc.fabsl(x);
 inline overload abs(x:Int) = libc.abs(x);
-inline overload abs(x:Long) = libc.labs(x);
+inline overload abs(x:Long) = libc.llabs(x);
 
 inline exp(x:Double) = libc.exp(x);
 inline overload exp(x:Float) = libc.expf(x);

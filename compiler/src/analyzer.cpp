@@ -2286,12 +2286,9 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
             default: llvm::errs() << "analyzeBinding:FORWARD " << x->args[0]->name << "\n";
         }
 
-        MultiPValuePtr mpv = analyzeMulti(x->values, env, x->args.size());
-        if (!mpv)
-            return NULL;
+        
         vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
-        computeArgsKey(mpv, argsKey, argsTempness);
         vector<PatternCellPtr> cells;
         vector<MultiPatternCellPtr> multiCells;
         vector<PatternPtr> argPatterns;
@@ -2329,6 +2326,12 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
             varArgPattern = evaluateMultiPattern(new ExprList(unpack), patternEnv);
         }
         
+        MultiPValuePtr mpv = analyzeMulti(x->values, patternEnv, x->args.size());
+        if (!mpv)
+            return NULL;
+
+        computeArgsKey(mpv, argsKey, argsTempness);
+        
         if (x->varg.ptr()) {
             if (argsKey.size() < x->args.size())
                     arityMismatchError(x->args.size(), argsKey.size());
@@ -2356,7 +2359,7 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
                 // matchFailureError(new MatchMultiArgumentError(formalArgs.size(), types, x->varg));
         }
         
-        EnvPtr env2 = new Env(env);
+        EnvPtr env2 = new Env(patternEnv);
         
         for (unsigned i = 0; i < pvars.size(); ++i) {
             if (pvars[i].isMulti) {
