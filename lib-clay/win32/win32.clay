@@ -7,9 +7,7 @@ import win32.errornames.(errorNames);
 import sequences.lazy.mapped.*;
 
 
-//
-// GetFileSizeEx, SetFilePointerEx
-//
+/// @section  GetFileSizeEx, SetFilePointerEx 
 // redefined because LARGE_INTEGER definition is wrong
 //
 
@@ -25,9 +23,7 @@ external (WINAPI) SetFilePointerEx(
 
 
 
-//
-// errorMessage
-//
+/// @section  errorMessage 
 
 alias FORMAT_MESSAGE_FROM_SYSTEM = CULong(0x1000);
 

@@ -2,9 +2,7 @@
 import sequences.util.*;
 
 
-//
-// zipped
-//
+/// @section  zipped 
 
 inline zipped(forward first, forward ..rest) =
     Zipped(packSequences(first, ..rest));
@@ -18,9 +16,7 @@ overload LightweightSequence?(#Zipped[Tuple[..S]]) = true;
 
 
 
-//
-// ZippedIterator
-//
+/// @section  ZippedIterator 
 
 [A]
 inline overload iterator(a:Zipped[A]) = ZippedIterator(multiIterators(a.seqs));
@@ -40,9 +36,7 @@ inline overload getValue(forward v:ZippedValue[..V])
     = forward ..mapValues(getValue, ..unpackTuple(v.values));
 
 
-//
-// reverse iteration
-//
+/// @section  reverse iteration 
 
 private AllReversible?(A) {
     var reversible? = (T => CallDefined?(reverseIterator, T));
@@ -55,9 +49,7 @@ inline overload reverseIterator(a:Zipped[A]) =
 
 
 
-//
-// size, index
-//
+/// @section  size, index 
 
 private AllSized?(A) {
     var sizeDefined? = (T => CallDefined?(size, T));

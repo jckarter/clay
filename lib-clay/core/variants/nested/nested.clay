@@ -1,8 +1,6 @@
 
 
-//
-// SubVariants
-//
+/// @section  SubVariants 
 
 private SubVariants(V) =
     ..filterStatics(Variant?, ..VariantMembers(V));
@@ -16,9 +14,7 @@ private define filterStatics;
 
 
 
-//
-// VariantNestingPaths
-//
+/// @section  VariantNestingPaths 
 
 [V,M when Variant?(V)]
 VariantNestingPaths(#V, #M) =
@@ -50,9 +46,7 @@ overload VariantNestingPaths3(Vs:T, M, Prefix, #i) = ;
 
 
 
-//
-// nestedVariantIs?
-//
+/// @section  nestedVariantIs? 
 
 [V, T when Variant?(V)]
 inline nestedVariantIs?(x:V, #T) {
@@ -62,9 +56,7 @@ inline nestedVariantIs?(x:V, #T) {
 
 
 
-//
-// nestedVariantAs
-//
+/// @section  nestedVariantAs 
 
 [V, T when Variant?(V)]
 inline nestedVariantAs(ref x:V, #T) {
@@ -82,9 +74,7 @@ inline overload nestedVariantAs(rvalue x:V, #T) {
 
 
 
-//
-// nestedVariantAsPtr
-//
+/// @section  nestedVariantAsPtr 
 
 [V, Target when Variant?(V)]
 nestedVariantAsPtr(x:V, #Target) {

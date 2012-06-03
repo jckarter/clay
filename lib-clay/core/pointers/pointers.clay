@@ -1,34 +1,26 @@
 
 
-//
-// type predicates
-//
+/// @section  type predicates 
 
 [T]
 overload ContiguousCoordinate?(#Pointer[T]) = true;
 
 
 
-//
-// null?
-//
+/// @section  null? 
 
 define null?;
 
 
 
-//
-// Pointer - constructor
-//
+/// @section  Pointer - constructor 
 
 [T]
 inline overload Pointer[T]() = nullPointer(Pointer[T]);
 
 
 
-//
-// Pointer - convert to/from integers and other pointers
-//
+/// @section  Pointer - convert to/from integers and other pointers 
 
 [I,T when Integer?(I)]
 inline overload I(a:Pointer[T]) = pointerToInt(I, a);
@@ -42,9 +34,7 @@ inline overload Pointer[DEST](a:Pointer[SRC]) =
 
 
 
-//
-// Pointer - assign, equals?, lesser?
-//
+/// @section  Pointer - assign, equals?, lesser? 
 
 [T]
 inline overload equals?(a:Pointer[T], b:Pointer[T]) {
@@ -58,9 +48,7 @@ inline overload lesser?(a:Pointer[T], b:Pointer[T]) {
 
 
 
-//
-// Pointer - arithmetic
-//
+/// @section  Pointer - arithmetic 
 
 [T,I when Integer?(I)]
 inline overload add(p:Pointer[T], i:I) {
@@ -94,9 +82,7 @@ inline overload dec(a:Pointer[T]) {
 
 
 
-//
-// Pointer - null, null?, dereference, index
-//
+/// @section  Pointer - null, null?, dereference, index 
 
 [T]
 inline null(#T) = nullPointer(Pointer[T]);
@@ -112,9 +98,7 @@ inline overload index(p:Pointer[T], i:I) = ref (p + i)^;
 
 
 
-//
-// CodePointer?, ExternalCodePointer?
-//
+/// @section  CodePointer?, ExternalCodePointer? 
 
 CodePointer?(x) = false;
 [In,Out] overload CodePointer?(#CodePointer[In,Out]) = true;
@@ -123,18 +107,14 @@ ExternalCodePointer?(x) = false;
 [CC,V?,In,Out] overload ExternalCodePointer?(#ExternalCodePointer[CC,V?,In,Out]) = true;
 
 
-//
-// CodePointer - constructor
-//
+/// @section  CodePointer - constructor 
 
 [In, Out]
 inline overload CodePointer[In,Out]() = nullPointer(CodePointer[In,Out]);
 
 
 
-//
-// CodePointer - convert to/from other pointers/integers
-//
+/// @section  CodePointer - convert to/from other pointers/integers 
 
 [T, In, Out]
 inline overload Pointer[T](a:CodePointer[In,Out]) = bitcast(Pointer[T], a);
@@ -174,9 +154,7 @@ inline overload null?(p:CodePointer[In,Out]) = p == nullPointer(CodePointer[In,O
 
 
 
-//
-// ExternalCodePointer - constructor
-//
+/// @section  ExternalCodePointer - constructor 
 
 [CC,V?,I,O]
 inline overload ExternalCodePointer[CC,V?,I,O]() =
@@ -184,9 +162,7 @@ inline overload ExternalCodePointer[CC,V?,I,O]() =
 
 
 
-//
-// ExternalCodePointer - convert to/from other pointers/integers
-//
+/// @section  ExternalCodePointer - convert to/from other pointers/integers 
 
 [T, CC,V?,I,O]
 inline overload Pointer[T](a:ExternalCodePointer[CC,V?,I,O]) = bitcast(Pointer[T], a);
@@ -208,9 +184,7 @@ inline overload I(a:ExternalCodePointer[CC,V?,In,Out]) =
     pointerToInt(I, a);
 
 
-//
-// ExternalCodePointer - equals?, lesser?, null?
-//
+/// @section  ExternalCodePointer - equals?, lesser?, null? 
 
 [C,V,I,O]
 inline overload equals?(a:ExternalCodePointer[C,V,I,O], b:ExternalCodePointer[C,V,I,O]) {
@@ -228,9 +202,7 @@ inline overload null?(p:ExternalCodePointer[C,V,I,O]) {
 }
 
 
-//
-// ExternalCodePointer - call
-//
+/// @section  ExternalCodePointer - call 
 
 [F, T]
 private CCastable?(#F, #T) = false;
@@ -276,9 +248,7 @@ inline overload call(ptr:ExternalCodePointer[CC, true, [..In], [..Out]], ..args:
     ..callExternalCodePointer(ptr, ..args);
 
 
-//
-// construct code pointers from #callables
-//
+/// @section  construct code pointers from #callables 
 
 [..In, ..Out, fn when CallDefined?(fn, ..In)]
 inline overload CodePointer[[..In], [..Out]](#fn) : CodePointer[[..In], [..Out]]
@@ -290,9 +260,7 @@ inline overload ExternalCodePointer[CC, V?, [..In], [..Out]](#fn)
     = makeExternalCodePointer(fn, #CC, #V?, ..In);
 
 
-//
-// code pointers are Mono?
-//
+/// @section  code pointers are Mono? 
 
 [..In, ..Out]
 alias overload MonoInputTypes(f:CodePointer[[..In], [..Out]]) = ..In;
@@ -300,9 +268,7 @@ alias overload MonoInputTypes(f:CodePointer[[..In], [..Out]]) = ..In;
 alias overload MonoInputTypes(f:ExternalCodePointer[CC, false, [..In], [..Out]]) = ..In;
 
 
-//
-// aliases for external code pointer types
-//
+/// @section  aliases for external code pointer types 
 
 alias CCodePointer[I,O] = ExternalCodePointer[cdecl, false, I, O];
 alias VarArgsCCodePointer[I,O] = ExternalCodePointer[cdecl, true, I, O];
@@ -315,9 +281,7 @@ alias makeCCodePointer(fn, ..In) =
     makeExternalCodePointer(fn, cdecl, #false, ..In);
 
 
-//
-// construct code pointers from mono #callables
-//
+/// @section  construct code pointers from mono #callables 
 
 [fn when Mono?(fn)]
 inline overload CodePointer(#fn) = makeCodePointer(fn, ..MonoInputTypes(fn));

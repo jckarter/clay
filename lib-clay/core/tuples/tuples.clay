@@ -1,26 +1,20 @@
 import __operators__;
 
 
-//
-// Tuple?
-//
+/// @section  Tuple? 
 
 Tuple?(x) = false;
 [..T] overload Tuple?(#Tuple[..T]) = true;
 
 
 
-//
-// TupleElements
-//
+/// @section  TupleElements 
 
 [..T] TupleElements(#Tuple[..T]) = ..T;
 
 
 
-//
-// staticIndex
-//
+/// @section  staticIndex 
 
 [..T, i]
 inline overload staticIndex(a:Tuple[..T], #i) =
@@ -28,9 +22,7 @@ inline overload staticIndex(a:Tuple[..T], #i) =
 
 
 
-//
-// unpackTuple, unpackTupleRef
-//
+/// @section  unpackTuple, unpackTupleRef 
 
 inline unpackTuple(x) = ..unpackTupleRef(x);
 
@@ -39,9 +31,7 @@ inline unpackTupleRef(x:Tuple[..T]) = ref ..tupleElements(x);
 
 
 
-//
-// unpack, unpackRef
-//
+/// @section  unpack, unpackRef 
 
 inline unpackRef(x) = ref x;
 [..T]
@@ -51,18 +41,14 @@ inline unpack(x) = ..unpackRef(x);
 
 
 
-//
-// Tuple type inferring constructor
-//
+/// @section  Tuple type inferring constructor 
 
 [..T]
 alias overload Tuple(..args:T) = Tuple[..T](..args);
 
 
 
-//
-// basic constructor
-//
+/// @section  basic constructor 
 
 [..T]
 alias overload Tuple[..T](..args:T) --> returned:Tuple[..T] {
@@ -71,9 +57,7 @@ alias overload Tuple[..T](..args:T) --> returned:Tuple[..T] {
 
 
 
-//
-// default constructor
-//
+/// @section  default constructor 
 
 [..T]
 inline overload Tuple[..T]() --> returned:Tuple[..T] {
@@ -91,9 +75,7 @@ inline overload initializeTypes() = ;
 
 
 
-//
-// copy constructor
-//
+/// @section  copy constructor 
 
 [..T when not allValues?(BitwiseCopiedType?, ..T)]
 inline overload Tuple[..T](src:Tuple[..T]) --> returned:Tuple[..T] {
@@ -102,9 +84,7 @@ inline overload Tuple[..T](src:Tuple[..T]) --> returned:Tuple[..T] {
 
 
 
-//
-// moveUnsafe, resetUnsafe
-//
+/// @section  moveUnsafe, resetUnsafe 
 
 [..T when not allValues?(BitwiseMovedType?, ..T)]
 inline overload moveUnsafe(src:Tuple[..T]) --> returned:Tuple[..T] {
@@ -121,9 +101,7 @@ inline overload resetUnsafe(a:Tuple[..T]) {
 
 
 
-//
-// destroy
-//
+/// @section  destroy 
 
 [..T when not allValues?(NotDestroyedType?, ..T)]
 inline overload destroy(a:Tuple[..T]) {
@@ -133,9 +111,7 @@ inline overload destroy(a:Tuple[..T]) {
 
 
 
-//
-// assign
-//
+/// @section  assign 
 
 [..T when not allValues?(BitwiseAssignedType?, ..T)]
 inline overload assign(ref dest:Tuple[..T], ref src:Tuple[..T]) {
@@ -146,9 +122,7 @@ inline overload assign(ref dest:Tuple[..T], ref src:Tuple[..T]) {
 
 
 
-//
-// equals?
-//
+/// @section  equals? 
 
 [..T]
 inline overload equals?(a:Tuple[..T], b:Tuple[..T]) {
@@ -162,9 +136,7 @@ inline overload equals?(a:Tuple[..T], b:Tuple[..T]) {
 
 
 
-//
-// lesser?
-//
+/// @section  lesser? 
 
 [..T]
 inline overload lesser?(a:Tuple[..T], b:Tuple[..T]) {
@@ -182,8 +154,6 @@ inline overload lesser?(a:Tuple[..T], b:Tuple[..T]) {
 
 
 
-//
-// tupleLiteral
-//
+/// @section  tupleLiteral 
 
 alias overload __operators__.tupleLiteral(..args) = Tuple(..args);

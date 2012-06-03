@@ -1,8 +1,6 @@
 
 
-//
-// numeric type predicates
-//
+/// @section  numeric type predicates 
 
 [T] SignedInteger?(#T) = false;
 overload SignedInteger?(#Int8) = true;
@@ -45,9 +43,7 @@ overload Imaginary?(#Imag80) = true;
 
 
 
-//
-// BiggerInteger?, BiggerFloat?, BiggerNumeric?
-//
+/// @section  BiggerInteger?, BiggerFloat?, BiggerNumeric? 
 
 [A,B when Integer?(A,B)]
 private BiggerInteger?(#A, #B) =
@@ -84,9 +80,7 @@ overload BiggerNumeric?(#A, #B) = BiggerFloat?(A,B);
 
 
 
-//
-// toBiggerNumericType
-//
+/// @section  toBiggerNumericType 
 
 define toBiggerNumericType;
 
@@ -116,9 +110,7 @@ overload ImagBaseType(#Imag80) = LongDouble;
 
 
 
-//
-// constructors
-//
+/// @section  constructors 
 
 [T when Numeric?(T)]
 inline overload T() = numericConvert(T, 0);
@@ -134,9 +126,7 @@ inline overload I(a:T) = I(0.j);
 
 
 
-//
-// assign
-//
+/// @section  assign 
 
 [A, B when Numeric?(A,B) and BiggerNumeric?(A,B)]
 inline overload assign(ref dest:A, src:B) {
@@ -150,9 +140,7 @@ inline overload assign(ref dest:A, src:B) {
 
 
 
-//
-// equals?,  notEquals?, lesser?, lesserEquals?, greater?, greaterEquals?
-//
+/// @section  equals?,  notEquals?, lesser?, lesserEquals?, greater?, greaterEquals? 
 
 [A,B when Numeric?(A,B)]
 inline overload (==)(a:A, b:B) =
@@ -228,9 +216,7 @@ inline zero?(x:T) = (==)(x, T(0));
 
 
 
-//
-// binary ops
-//
+/// @section  binary ops 
 
 [A,B when Numeric?(A,B)]
 inline overload (+)(a:A, b:B) =
@@ -277,9 +263,7 @@ inline overload (%)(a:A, b:B) =
 [A when Integer?(A)]
 inline overload (%)(a:A, b:A) = integerRemainder(a, b);
 
-//
-// Variadic ops
-//
+/// @section  Variadic ops 
 
 [A, ..AA when countValues(..AA) != 1]
 inline overload (+)(a:A, ..aa:AA) = foldlValues((+), a, ..aa);
@@ -299,9 +283,7 @@ inline overload (\)(a:A, ..aa:AA) = foldlValues((\), a, ..aa);
 [A, ..AA when countValues(..AA) != 1]
 inline overload (%)(a:A, ..aa:AA) = foldlValues((%), a, ..aa);
 
-//
-// Imaginary binary ops
-//
+/// @section  Imaginary binary ops 
 
 
 [A,B when Numeric?(A) and Imaginary?(B)]
@@ -323,9 +305,7 @@ inline overload (/)(a:A, b:B) = (/)(a, numericConvert(A,b));
 inline overload (/)(a:A, b:A) = numericConvert(ImagBaseType(A),floatDivide(a, b));
 
 
-//
-// unary ops
-//
+/// @section  unary ops 
 
 [A when Numeric?(A)]
 inline overload (+)(a:A) = a;
@@ -335,9 +315,7 @@ inline overload (-)(a:A) = numericNegate(a);
 
 
 
-//
-// inc, dec
-//
+/// @section  inc, dec 
 
 inline overload inc(..a) { eachValue(inc, ..a); }
 inline overload dec(..a) { eachValue(dec, ..a); }
@@ -354,9 +332,7 @@ inline overload dec(a:A) {
 
 
 
-//
-// bitwise ops
-//
+/// @section  bitwise ops 
 
 [A,B when Integer?(A,B)]
 inline overload (<<)(a:A, b:B) = integerShiftLeft(a, A(b));
@@ -405,9 +381,7 @@ overload octal(T, I) = unwrapStatic(_octal(T, I));
 overload octal(I) = octal(Int, I);
 
 
-//
-// overflow-checked math
-//
+/// @section  overflow-checked math 
 
 IntegerOverflowChecks?() = AllAssertionsEnabled?()
     and AssertionEnabled?("overflowChecks");
@@ -441,9 +415,7 @@ inline overload A(b:B) : A
     = integerConvertChecked(A, b);
 
 
-//
-// never-checked wrap-on-overflow math
-//
+/// @section  never-checked wrap-on-overflow math 
 
 [A when Integer?(A)]
 inline wrapAdd(a:A, b:A) : A = numericAdd(a, b);

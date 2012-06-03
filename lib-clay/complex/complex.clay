@@ -97,9 +97,7 @@ inline overload C(a:U, b:T) = Complex(a,b);
 inline overload C(a:I) = Complex(ComplexBaseType(C)(a));
 
 
-//
-// (==), (!=), less?, lessEquals?, (>), (>=)
-//
+/// @section  (==), (!=), less?, lessEquals?, (>), (>=) 
 
 [T,C when Numeric?(T) and Complex?(C)]
 inline overload (==)(z:C, y:T) = imag(z) != T(0) and (==)(real(z),y);
@@ -158,9 +156,7 @@ inline overload (>=)(a:C, b:C) = (>=)(real(a), real(b));
 [T when Complex?(T)]
 overload zero?(z:T) = real(z) == 0. and imag(z) == 0.j;
 
-//
-// unary ops
-//
+/// @section  unary ops 
 
 [T when Complex?(T)]
 inline overload (-)(z:T) = Complex(-real(z),-imag(z));
@@ -180,9 +176,7 @@ inline rect(c:C) = real(c), imag(c);
 [C when Complex?(C)]
 inline rectValues(c:C) = real(c), imagValue(c);
 
-//
-// binary ops
-//
+/// @section  binary ops 
 
 // complex/complex
 

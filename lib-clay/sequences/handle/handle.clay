@@ -1,9 +1,7 @@
 import sequences.force.*;
 
 
-//
-// SequenceHandle
-//
+/// @section  SequenceHandle 
 
 record SequenceHandle[A] (
     inner : Pointer[A]
@@ -21,18 +19,14 @@ overload UnderlyingContainerConstructor(#SequenceHandle[A]) =
 
 
 
-//
-// sequenceHandle
-//
+/// @section  sequenceHandle 
 
 [A when Sequence?(A)]
 inline sequenceHandle(seq:A) = SequenceHandle(@seq);
 
 
 
-//
-// sequence operations
-//
+/// @section  sequence operations 
 
 [A, ..ARGS when CallDefined?(iterator, A, ..ARGS)]
 inline overload iterator(seq:SequenceHandle[A], forward ..args:ARGS)

@@ -3,9 +3,7 @@ import printer.platform.*;
 import strings.*;
 
 
-//
-// Formatter types
-//
+/// @section  Formatter types 
 
 Formatter?(X) = false;
 
@@ -22,9 +20,7 @@ overload printTo(stream, forward formatter: F) {
 
 
 
-//
-// Repr formatter
-//
+/// @section  Repr formatter 
 
 private record ReprFormatter[T] (values: T);
 
@@ -35,9 +31,7 @@ repr(forward ..values) = ReprFormatter(captureValues(..values));
 }
 
 
-//
-// Number base formatters
-//
+/// @section  Number base formatters 
 
 private record HexFormatter[T] (value: T);
 private record HEXFormatter[T] (value: T);
@@ -92,9 +86,7 @@ overload formatBase(stream, value: UInt64, fmt, fmt64) {
 
 
 
-//
-// hexString
-//
+/// @section  hexString 
 
 record HexStringFormatter[T] (value: T);
 [T] overload Formatter?(#HexStringFormatter[T]) = true;
@@ -111,9 +103,7 @@ hexString(forward s:S) = formatter(HexStringFormatter, s);
 
 
 
-//
-// printedWidth function
-//
+/// @section  printedWidth function 
 
 // printedWidth(object) SizeT
 define printedWidth;
@@ -155,9 +145,7 @@ overload printedWidth(b: Bool) = if (b) 4 else 5;
 
 
 
-//
-// minimum-width alignment formatter
-//
+/// @section  minimum-width alignment formatter 
 
 private record LeftAlignedFormatter[T] (
     value: T,

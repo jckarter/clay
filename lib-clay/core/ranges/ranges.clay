@@ -1,8 +1,6 @@
 
 
-//
-// Range
-//
+/// @section  Range 
 
 record Range[T] (
     begin:T,
@@ -43,9 +41,7 @@ inline overload end(a:Range[T]) = ValueCoordinate(a.end);
 
 
 
-//
-// ReverseRange
-//
+/// @section  ReverseRange 
 
 record ReverseRange[T] (
     end : T,
@@ -85,9 +81,7 @@ inline overload end(a:ReverseRange[T]) = ValueReverseCoordinate(a.begin);
 
 
 
-//
-// range, reverseRange
-//
+/// @section  range, reverseRange 
 
 define range;
 
@@ -124,9 +118,7 @@ inline overload reverseRange(end:I) =
 
 
 
-//
-// CoordinateRange
-//
+/// @section  CoordinateRange 
 
 record CoordinateRange[T] (
     begin : T,
@@ -173,9 +165,7 @@ inline overload begin(a:CoordinateRange[T]) = a.begin;
 inline overload end(a:CoordinateRange[T]) = a.end;
 
 
-//
-// ReverseCoordinateRange
-//
+/// @section  ReverseCoordinateRange 
 
 record ReverseCoordinateRange[T] (
     end : T,
@@ -220,9 +210,7 @@ inline overload end(a:ReverseCoordinateRange[T]) = ReverseCoordinate(a.begin);
 
 
 
-//
-// coordinateRange, reverseCoordinateRange
-//
+/// @section  coordinateRange, reverseCoordinateRange 
 
 inline coordinateRange(begin, end) = CoordinateRange(begin, end);
 

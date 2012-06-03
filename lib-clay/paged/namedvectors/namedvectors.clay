@@ -9,9 +9,7 @@ import io.paths.*;
 import io.files.*;
 
 
-//
-// NamedVector[T]
-//
+/// @section  NamedVector[T] 
 
 record NamedVector[T] (
     fileName : strings.String,
@@ -28,9 +26,7 @@ record Header (
 
 
 
-//
-// predicates
-//
+/// @section  predicates 
 
 [T] overload RegularRecord?(#NamedVector[T]) = false;
 
@@ -38,9 +34,7 @@ record Header (
 
 
 
-//
-// constructor
-//
+/// @section  constructor 
 
 private headerSpace() = alignUp(TypeSize(Header), 16u);
 
@@ -74,9 +68,7 @@ overload NamedVector[T](fileName:S) {
 
 
 
-//
-// destroy
-//
+/// @section  destroy 
 
 [T]
 overload destroy(x:NamedVector[T]) {
@@ -87,9 +79,7 @@ overload destroy(x:NamedVector[T]) {
 
 
 
-//
-// generic vector requirements
-//
+/// @section  generic vector requirements 
 
 [T]
 overload Vector?(#NamedVector[T]) = true;

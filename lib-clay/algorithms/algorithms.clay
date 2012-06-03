@@ -8,9 +8,7 @@ import sequences.lazy.*;
 alias log2 = introsort.log2;
 
 
-//
-// reduce
-//
+/// @section  reduce 
 
 private getNext(iter) {
     var value = nextValue(iter);
@@ -37,9 +35,7 @@ overload reduce(f:F, initial:X, a:A) {
 
 
 
-//
-// reduceBy
-//
+/// @section  reduceBy 
 [KeyF, F, A, X when Sequence?(A) and CallDefined?(call, F, X, SequenceElementType(A))]
 reduceBy(keyF: KeyF, f: F, initial: X, a:A) {
     alias KeyType = Type(keyF(typeToLValue(SequenceElementType(A))));
@@ -59,9 +55,7 @@ reduceBy(keyF: KeyF, f: F, initial: X, a:A) {
 
 
 
-//
-// sum, product, count
-//
+/// @section  sum, product, count 
 
 [A when Sequence?(A)]
 sum(a:A) {
@@ -82,9 +76,7 @@ count(pred, a:A) {
 
 
 
-//
-// select
-//
+/// @section  select 
 
 private define select;
 
@@ -110,9 +102,7 @@ overload select(a:A, f) {
 
 
 
-//
-// min, max for sequences
-//
+/// @section  min, max for sequences 
 
 [A when Sequence?(A)]
 overload min(a:A) = forward select(a, lesser?);
@@ -122,9 +112,7 @@ overload max(a:A) = forward select(a, greaterEquals?);
 
 
 
-//
-// findIf, reverseFindIf
-//
+/// @section  findIf, reverseFindIf 
 
 findIf(seq, pred) {
     return findIf(begin(seq), end(seq), pred);
@@ -157,9 +145,7 @@ any?(seq, pred) = findIf(seq, pred) != end(seq);
 all?(seq, pred) = findIf(seq, x -> not pred(x)) != end(seq);
 
 
-//
-// find
-//
+/// @section  find 
 
 define find;
 
@@ -205,9 +191,7 @@ overload find(begin_:C, end_:C, b:B) {
 
 
 
-//
-// reverseFind
-//
+/// @section  reverseFind 
 
 define reverseFind;
 
@@ -231,16 +215,12 @@ overload reverseFind(begin:C, end:C, x:T) {
 
 
 
-//
-// in?
-//
+/// @section  in? 
 in?(seq, elem) = find(seq, elem) != end(seq);
 
 
 
-//
-// beginsWith?, endsWith?
-//
+/// @section  beginsWith?, endsWith? 
 
 [A, B when Sequence?(A) and Sequence?(B) and (SequenceElementType(A) == SequenceElementType(B))]
 beginsWith?(seq:A, prefix:B) =
@@ -262,9 +242,7 @@ overload endsWith?(seq:A, x:T) =
 
 
 
-//
-// reverseInPlace
-//
+/// @section  reverseInPlace 
 
 [A when RandomAccessSequence?(A) and LValueSequence?(A)]
 reverseInPlace(a:A) {
@@ -275,9 +253,7 @@ reverseInPlace(a:A) {
 
 
 
-//
-// split
-//
+/// @section  split 
 
 [A when CoordinateSequence?(A)]
 split(a:A, sep) {
@@ -309,9 +285,7 @@ overload advancePast(pos:C, x:T) {
 
 
 
-//
-// join
-//
+/// @section  join 
 
 [S, A when Sequence?(A) and Sequence?(SequenceElementType(A))
         and ((S == SequenceElementType(SequenceElementType(A)))
@@ -333,9 +307,7 @@ join(sep:S, a:A) {
 
 
 
-//
-// binarySearch, binarySearchLowerBound, binarySearchUpperBound
-//
+/// @section  binarySearch, binarySearchLowerBound, binarySearchUpperBound 
 
 [A when Sequence?(A)]
 binarySearch(a:A, x) {
@@ -383,9 +355,7 @@ overload binarySearchUpperBound(begin_, end_, x) {
 
 
 
-//
-// sort - use quicksort with median-of-3 partitioning
-//
+/// @section  sort - use quicksort with median-of-3 partitioning 
 
 [C when Comparator?(C)]
 sortBy(a, comparator : C) {

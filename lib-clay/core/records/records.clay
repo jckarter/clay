@@ -1,7 +1,5 @@
 
-//
-// fieldRef, fieldRefByIndex
-//
+/// @section  fieldRef, fieldRefByIndex 
 
 [T, FIELD when RecordWithField?(T, FIELD)]
 inline overload fieldRef(x:T, #FIELD) {
@@ -13,9 +11,7 @@ inline fieldRefByIndex(x:T, #i) =
     ref recordFieldRef(x, #SizeT(i));
 
 
-//
-// RecordFieldType, RecordFieldTypes
-//
+/// @section  RecordFieldType, RecordFieldTypes 
 
 [T,i when Record?(T)]
 RecordFieldType(#T, #i) = Type(fieldRefByIndex(null(T)^, #i));
@@ -25,9 +21,7 @@ RecordFieldTypes(#T) = ..Type(..recordFields(null(T)^));
 
 
 
-//
-// RecordFields
-//
+/// @section  RecordFields 
 
 RecordFields(R) {
     alias n = RecordFieldCount(R);
@@ -42,9 +36,7 @@ RecordFieldNames(R) = ..mapValues(
 
 
 
-//
-// RegularRecord?
-//
+/// @section  RegularRecord? 
 // true if record's value semantics is defined in terms of its fields
 //
 
@@ -56,9 +48,7 @@ overload RegularRecord?(#T) = true;
 
 
 
-//
-// basic constructor
-//
+/// @section  basic constructor 
 
 [T, ..A when Record?(T) and (Tuple[..RecordFieldTypes(T)] == Tuple[..A])]
 alias initializeRecord(#T, ..args:A) --> returned:T {
@@ -70,9 +60,7 @@ alias overload T(..args:A) = initializeRecord(T, ..args);
 
 
 
-//
-// default constructor
-//
+/// @section  default constructor 
 
 [T when Record?(T)]
 overload initializeRecord(#T) --> returned:T {
@@ -93,9 +81,7 @@ inline overload initializeTypes() = ;
 
 
 
-//
-// copy constructor
-//
+/// @section  copy constructor 
 
 [T when Record?(T)]
 copyRecord(src:T) --> returned:T {
@@ -107,9 +93,7 @@ overload T(src:T) = copyRecord(src);
 
 
 
-//
-// moveUnsafe, resetUnsafe
-//
+/// @section  moveUnsafe, resetUnsafe 
 
 [T when Record?(T)]
 moveRecordUnsafe(src:T) --> returned:T {
@@ -134,9 +118,7 @@ overload resetUnsafe(a:T) {
 
 
 
-//
-// destroy
-//
+/// @section  destroy 
 
 [T when Record?(T)]
 destroyRecord(a:T) {
@@ -151,9 +133,7 @@ overload destroy(a:T) {
 
 
 
-//
-// assign
-//
+/// @section  assign 
 
 [T when RegularRecord?(T) and not BitwiseAssignedType?(T)]
 overload assign(ref dest:T, ref src:T) {
@@ -164,9 +144,7 @@ overload assign(ref dest:T, ref src:T) {
 
 
 
-//
-// equals?
-//
+/// @section  equals? 
 
 [T when RegularRecord?(T)]
 overload equals?(a:T, b:T) {
@@ -180,9 +158,7 @@ overload equals?(a:T, b:T) {
 
 
 
-//
-// lesser?
-//
+/// @section  lesser? 
 
 [T when RegularRecord?(T)]
 overload lesser?(a:T, b:T) {
@@ -199,13 +175,11 @@ overload lesser?(a:T, b:T) {
 }
 
 
-
-//
-// recordWithProperties
-//
-// RecordWithProperties is a special primitive type known to the compiler.
-// can be used in computed records to set custom properties.
-//
+/// @section  recordWithProperties
+///
+/// RecordWithProperties is a special primitive type known to the compiler.
+/// can be used in computed records to set custom properties.
+
 
 recordWithProperties(properties, ..fields) {
     var fieldsTuple = Tuple(..fields);

@@ -7,6 +7,7 @@ map<llvm::StringRef, IdentifierPtr> Identifier::freeIdentifiers;
 static vector<Token> *tokens;
 static int position;
 static int maxPosition;
+static bool parserOptionKeepDocumentation = false;
 
 static bool next(Token *&x) {
     if (position == (int)tokens->size())
@@ -607,7 +608,7 @@ static bool staticExpr(ExprPtr &x) {
 
 static bool operatorOp(llvm::StringRef &op) {
     int p = save();
-    
+
     const char *s[] = {
         "<--", "-->", "=>", "->", "=", NULL
     };
@@ -2802,6 +2803,88 @@ static bool evalTopLevel(TopLevelItemPtr &x) {
     return true;
 }
 
+//
+// documentation
+//
+
+
+static bool documentationAnnotation(std::map<DocumentationAnnotation, string> &an)
+{
+    Location location = currentLocation();
+    Token* t;
+    if (!next(t) || t->tokenKind != T_DOC_PROPERTY) return false;
+    llvm::StringRef key = llvm::StringRef(t->str);
+
+    DocumentationAnnotation ano;
+    if (key == "section") {
+        ano = SectionAnnotation;
+    } else if (key == "module") {
+        ano = ModuleAnnotation;
+    } else if (key == "overload") {
+        ano = OverloadAnnotation;
+    } else if (key == "record") {
+        ano = RecordAnnotion;
+    } else {
+        pushLocation(location);
+        fmtError("invalid annotation '%s'\n", key.str().c_str());
+    }
+
+    if (!next(t) || t->tokenKind != T_DOC_TEXT) return false;
+    llvm::StringRef value = llvm::StringRef(t->str);
+
+    an.insert(std::pair<DocumentationAnnotation,string>(ano, value.str()));
+    return true;
+}
+
+static bool documentationText(std::string &text)
+{
+    Token* t;
+    if (!next(t) || t->tokenKind != T_DOC_TEXT) return false;
+    if (parserOptionKeepDocumentation)
+        text.append(t->str.str());
+        text.append("\n");
+    return true;
+}
+
+
+static bool documentation(TopLevelItemPtr &x)
+{
+    Location location = currentLocation();
+    std::map<DocumentationAnnotation, string> annotation;
+    std::string text;
+
+    bool success = false;
+    bool hasAttachmentAnnotation = false;
+
+    for (;;) {
+        int p = save();
+        if (documentationAnnotation(annotation)) {
+            if (hasAttachmentAnnotation) {
+                restore (p);
+                break;
+            }
+            hasAttachmentAnnotation = true;
+            success = true;
+            continue;
+        }
+        restore(p);
+        if (documentationText(text)) {
+            success = true;
+            continue;
+        }
+        restore(p);
+        break;
+    }
+
+    if (success) {
+        x = new Documentation(annotation, text);
+        return true;
+    }
+    return false;
+
+
+}
+
 
 //
 // module
@@ -2809,8 +2892,10 @@ static bool evalTopLevel(TopLevelItemPtr &x) {
 
 static bool topLevelItem(vector<TopLevelItemPtr> &x) {
     int p = save();
+
     TopLevelItemPtr y;
-    if (record(y)) goto success;
+    if (documentation(y)) goto success;
+    if (restore(p), record(y)) goto success;
     if (restore(p), variant(y)) goto success;
     if (restore(p), instance(y)) goto success;
     if (restore(p), procedure(y)) goto success;
@@ -2834,6 +2919,7 @@ success2 :
 
 static bool topLevelItems(vector<TopLevelItemPtr> &x) {
     x.clear();
+
     while (true) {
         int p = save();
         if (!topLevelItem(x)) {
@@ -2908,7 +2994,7 @@ static bool module(llvm::StringRef moduleName, ModulePtr &x) {
 // parse
 //
 
-template<typename Parser, typename Node>
+    template<typename Parser, typename Node>
 void applyParser(SourcePtr source, int offset, int length, Parser parser, Node &node)
 {
     vector<Token> t;
@@ -2926,7 +3012,7 @@ void applyParser(SourcePtr source, int offset, int length, Parser parser, Node &
         pushLocation(location);
         error("parse error");
     }
-    
+
     tokens = NULL;
     position = maxPosition = 0;
 }
@@ -2936,7 +3022,9 @@ struct ModuleParser {
     bool operator()(ModulePtr &m) { return module(moduleName, m); }
 };
 
-ModulePtr parse(llvm::StringRef moduleName, SourcePtr source) {
+ModulePtr parse(llvm::StringRef moduleName, SourcePtr source, ParserFlags flags) {
+    if (flags && ParserKeepDocumentation)
+        parserOptionKeepDocumentation = true;
     ModulePtr m;
     ModuleParser p = { moduleName };
     applyParser(source, 0, source->size(), p, m);
@@ -2972,7 +3060,7 @@ ExprListPtr parseExprList(SourcePtr source, int offset, int length) {
 //
 
 void parseStatements(SourcePtr source, int offset, int length,
-    vector<StatementPtr> &stmts)
+        vector<StatementPtr> &stmts)
 {
     applyParser(source, offset, length, blockItems, stmts);
 }
@@ -2983,7 +3071,7 @@ void parseStatements(SourcePtr source, int offset, int length,
 //
 
 void parseTopLevelItems(SourcePtr source, int offset, int length,
-    vector<TopLevelItemPtr> &topLevels)
+        vector<TopLevelItemPtr> &topLevels)
 {
     applyParser(source, offset, length, topLevelItems, topLevels);
 }

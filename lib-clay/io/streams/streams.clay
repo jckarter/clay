@@ -5,9 +5,7 @@ import strings.*;
 import vectors.*;
 
 
-//
-// read, write, flush - byte stream operations
-//
+/// @section  read, write, flush - byte stream operations 
 
 // read(stream, buf:Pointer[Byte], n:SizeT) SizeT
 define read;
@@ -29,9 +27,7 @@ ByteVector?(#T) = Vector?(T) and ByteLike?(SequenceElementType(T));
 ByteBuffer?(#T) = ContiguousSequence?(T) and ByteLike?(SequenceElementType(T));
 
 
-//
-// readByte, readChar
-//
+/// @section  readByte, readChar 
 
 readByte(stream, b:Byte) : Bool {
     var result = read(stream, @b, SizeT(1));
@@ -45,9 +41,7 @@ readChar(stream, c:Char) : Bool {
 }
 
 
-//
-// read - read into byte vector
-//
+/// @section  read - read into byte vector 
 
 [V when ByteVector?(V)]
 overload read(stream, n:SizeT, buf:V) {
@@ -66,9 +60,7 @@ overload read(stream, n:SizeT) {
 }
 
 
-//
-// readN - read exactly n bytes
-//
+/// @section  readN - read exactly n bytes 
 
 record PrematureEOF(expected:SizeT, received:SizeT);
 instance IOError (PrematureEOF);
@@ -100,9 +92,7 @@ overload readN(stream, n:SizeT) {
 }
 
 
-//
-// readAll
-//
+/// @section  readAll 
 
 define readAll;
 
@@ -127,9 +117,7 @@ overload readAll(stream) : String {
 }
 
 
-//
-// readUpto, readLine
-//
+/// @section  readUpto, readLine 
 
 define readUpto;
 
@@ -163,9 +151,7 @@ overload readLine(stream, buf:V) {
 overload readLine(stream) = readUpto(stream, '\n');
 
 
-//
-// write - write one byte
-//
+/// @section  write - write one byte 
 
 [I when Integer?(I)]
 overload write(stream, x:I) {
@@ -178,9 +164,7 @@ overload write(stream, x:Char) {
 }
 
 
-//
-// write - write byte buffer
-//
+/// @section  write - write byte buffer 
 
 [V when ByteBuffer?(V)]
 overload write(stream, x:V) {
@@ -188,9 +172,7 @@ overload write(stream, x:V) {
 }
 
 
-//
-// write, flush - write to ByteVector
-//
+/// @section  write, flush - write to ByteVector 
 
 [V when ByteVector?(V)]
 overload write(stream:V, buf:Pointer[Byte], n:SizeT) {

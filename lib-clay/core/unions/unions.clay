@@ -1,24 +1,18 @@
 
 
-//
-// Union?
-//
+/// @section  Union? 
 
 Union?(x) = false;
 [..T] overload Union?(#Union[..T]) = true;
 
 
-//
-// UnionMembers
-//
+/// @section  UnionMembers 
 
 [..T] UnionMembers(#Union[..T]) = ..T;
 
 
 
-//
-// constructors, resetUnsafe, destroy
-//
+/// @section  constructors, resetUnsafe, destroy 
 
 [..T]
 inline overload Union[..T]() --> returned:Union[..T] {
@@ -32,9 +26,7 @@ inline overload Union[..T](x:U) --> returned:Union[..T] {
 
 
 
-//
-// staticIndex
-//
+/// @section  staticIndex 
 
 [..T, i]
 inline overload staticIndex(x:Union[..T], #i) {

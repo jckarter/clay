@@ -2,9 +2,7 @@ import vectors.*;
 import core.numbers.(private BiggerNumeric?);
 
 
-//
-// prefixOperator, infixOperator, updateAssign
-//
+/// @section  prefixOperator, infixOperator, updateAssign 
 
 [S,F when Sequence?(S)]
 overload updateAssign(#F, ret:S, ..args) {
@@ -65,9 +63,7 @@ inline overload reduceToScalar(forward i) = ;
 
 
 
-//
-// concatenation
-//
+/// @section  concatenation 
 
 [A, ..B when Sequence?(A) and allValues?(Sequence?,..B)
         and equalValues?(SequenceElementType(A),

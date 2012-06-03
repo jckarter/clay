@@ -12,9 +12,7 @@ import __operators__.(
 );
 
 
-//
-// Exception, NoException, currentException
-//
+/// @section  Exception, NoException, currentException 
 
 variant Exception (NoException);
 
@@ -25,9 +23,7 @@ overload Exception() = Exception(NoException());
 private exceptionObject(exp:RawPointer) = ref Pointer[Exception](exp)^;
 
 
-//
-// throwValue, continueException
-//
+/// @section  throwValue, continueException 
 
 [T]
 overload throwValue(x:T) {
@@ -51,9 +47,7 @@ private signalException(exp:RawPointer) __llvm__{
 
 
 
-//
-// throwButPropagate
-//
+/// @section  throwButPropagate 
 
 throwButPropagate(ex, ..T) {
     if (true)
@@ -71,9 +65,7 @@ alias throwButPropagateLike(ex, ..expr) {
 
 
 
-//
-// exceptionIs?, exceptionAs, exceptionAsAny
-//
+/// @section  exceptionIs?, exceptionAs, exceptionAsAny 
 
 [T]
 overload exceptionIs?(#T, exp:RawPointer) = nestedVariantIs?(exceptionObject(exp), T);
@@ -91,9 +83,7 @@ overload exceptionAsAny(exp:RawPointer) --> ex:Exception {
 
 
 
-//
-// unhandledExceptionInExternal
-// exceptionInInitializer, exceptionInFinalizer
+/// @section  unhandledExceptionInExternal 
 //
 
 private inline errorMsg(msg) {
