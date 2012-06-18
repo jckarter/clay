@@ -1,8 +1,4 @@
 
-
-//
-// core operations
-//
 
 public import __operators__.(
     destroy,
@@ -48,16 +44,12 @@ define resetUnsafe;
 
 
 
-//
-// uninitialized stack allocation
-//
+/// @section  uninitialized stack allocation 
 
 [T] uninitializedUnsafe(#T) --> x:T {}
 
 
-//
-// coordinate type predicates
-//
+/// @section  coordinate type predicates 
 
 Coordinate?(T) = CallDefined?(dereference, T);
 CoordinateTargetType(T) = ..Type(..dereference(typeToLValue(T)));
@@ -77,40 +69,30 @@ ContiguousCoordinate?(T) = false;
 
 
 
-//
-// iterator type predicates
-//
+/// @section  iterator type predicates 
 
 Iterator?(T) = CallDefined?(nextValue, T);
 IteratorTargetType(T) = ..Type(..getValue(nextValue(typeToLValue(T))));
 
 
-//
-// Default two-arg hasValue?
-//
+/// @section  Default two-arg hasValue? 
 
 alias overload hasValue?(iter, coord) = hasValue?(coord);
 
 
-//
-// pointer as iterator value
-//
+/// @section  pointer as iterator value 
 
 [T] inline overload hasValue?(p:Pointer[T]) = not null?(p);
 [T] inline overload getValue(p:Pointer[T]) = ref p^;
 
 
-//
-// reverse iteration
-//
+/// @section  reverse iteration 
 
 define reverseIterator;
 
 
 
-//
-// sequence protocol
-//
+/// @section  sequence protocol 
 
 define size;
 
@@ -137,9 +119,7 @@ define StaticSize;
 
 
 
-//
-// sequence type predicates
-//
+/// @section  sequence type predicates 
 
 Sequence?(T) = CallDefined?(iterator, T);
 SequenceElementType(T) = ..Type(..getValue(nextValue(iterator(typeToLValue(T)))));
@@ -171,9 +151,7 @@ overload multiValued?(x) = false;
 
 
 
-//
-// mapping protocol
-//
+/// @section  mapping protocol 
 
 // 'index' and 'size' are available for mappings
 // 'remove' is available
@@ -186,9 +164,7 @@ inline contains?(map, key) = not null?(lookup(map, key));
 
 
 
-//
-// LValue?, RValue?
-//
+/// @section  LValue?, RValue? 
 
 define LValue?;
 alias overload LValue?(ref a) = true;
@@ -198,9 +174,7 @@ alias RValue?(x) = not LValue?(x);
 
 
 
-//
-// defaults
-//
+/// @section  defaults 
 
 inline initialize(a) {
     a <-- Type(a)();
@@ -326,9 +300,7 @@ inline overload indexUpdateAssign(#F, dest:T, forward ..indicesAndSrc:A) {
 }
 
 
-//
-// first occurence of non-numeric
-//
+/// @section  first occurence of non-numeric 
 
 private countIndices(..A) = _countIndices(#-1, ..A);
 private define _countIndices;
@@ -337,9 +309,7 @@ private define _countIndices;
 [n] inline overload _countIndices(#n) = n;
 
 
-//
-//  operators 
-//
+/// @section   operators  
 
 private define staticEquals?;
 [A, B]
@@ -512,9 +482,7 @@ inline overload infixOperator(forward ..args) = forward boolOp(..binaryOp(..args
 inline overload infixOperator(forward a, #OP, forward b) = forward ..OP(a,b);
 
 
-//
-// swap
-//
+/// @section  swap 
 
 inline swap(a, b) {
     var temp = moveUnsafe(a);
@@ -531,9 +499,7 @@ inline overload swap(a:T, b:T) {
 }
 
 
-//
-// min, max
-//
+/// @section  min, max 
 
 inline min(a, b) {
     if (a <= b)
@@ -565,9 +531,7 @@ inline overload max(ref a, ref b) {
 
 
 
-//
-// generic equals?, lesser?
-//
+/// @section  generic equals?, lesser? 
 
 [A,B when Sequence?(A) and Sequence?(B) and not StringLiteralType?(A,B)]
 overload equals?(a:A, b:B) {
@@ -617,18 +581,14 @@ overload lesser?(a:A, b:B) {
 }
 
 
-//
-// empty?
-//
+/// @section  empty? 
 
 [T when SizedSequence?(T)]
 inline empty?(a:T) = (size(a) == 0);
 
 
 
-//
-// ifExpression
-//
+/// @section  ifExpression 
 
 [T]
 alias overload ifExpression(condition, consequent:T, alternate:T) : T {
@@ -656,9 +616,7 @@ alias overload ifExpression(condition, #consequent, #alternate) : StringLiteralR
 
 
 
-//
-// bitandc, bitblend
-//
+/// @section  bitandc, bitblend 
 
 inline bitandc(a, b) = (&)(a, (~)(b));
 inline bitblend(mask, ones, zeros)
@@ -666,9 +624,7 @@ inline bitblend(mask, ones, zeros)
 
 
 
-//
-// bitrol, bitror
-//
+/// @section  bitrol, bitror 
 
 [I, J when Integer?(I) and Integer?(J)]
 bitrol(x:I, n:J) = (|)(wrapBitshl(x, n), (>>)(x, TypeSize(I)*8 - n));
@@ -678,9 +634,7 @@ bitror(x:I, n:J) = (|)((>>)(x, n), wrapBitshl(x, TypeSize(I)*8 - n));
 
 
 
-//
-// PrimitiveType?
-//
+/// @section  PrimitiveType? 
 
 PrimitiveType?(X) = false;
 overload PrimitiveType?(#Bool) = true;
@@ -715,9 +669,7 @@ overload PrimitiveType?(#Tuple[]) = true;
 
 
 
-//
-// PrimitiveCompoundType?, PrimitiveCompoundMemberTypes
-//
+/// @section  PrimitiveCompoundType?, PrimitiveCompoundMemberTypes 
 
 PrimitiveCompoundType?(X) = false;
 
@@ -735,9 +687,7 @@ overload PrimitiveCompoundMemberTypes(#R) = ..RecordFieldTypes(R);
 overload PrimitiveCompoundMemberTypes(#V) = ..VariantMembers(V);
 
 
-//
-// PODType?
-//
+/// @section  PODType? 
 
 PODType?(X) = false;
 
@@ -749,9 +699,7 @@ overload PODType?(#T) = allValues?(PODType?, ..PrimitiveCompoundMemberTypes(T));
 
 
 
-//
-// Finer-grained POD-related properties
-//
+/// @section  Finer-grained POD-related properties 
 
 BitwiseCopiedType?(T) = PODType?(T);
 BitwiseMovedType?(T) = PODType?(T);
@@ -789,17 +737,13 @@ overload BitwiseMoveAssignedType?(#T)
 
 
 
-//
-// identity test
-//
+/// @section  identity test 
 
 inline is?(x, y) = @x == @y;
 inline isNot?(x, y) = not is?(x, y);
 
 
-//
-// case?
-//
+/// @section  case? 
 
 inline overload case?(x, forward ..ys) : Bool {
     ..for (y in ..ys)
@@ -809,9 +753,7 @@ inline overload case?(x, forward ..ys) : Bool {
 }
 
 
-//
-// CallDefined?, CallOutputTypes
-//
+/// @section  CallDefined?, CallOutputTypes 
 
 define CallDefined?;
 [F]
@@ -826,9 +768,7 @@ alias overload CallOutputTypes(f:F, ..In) = ..StaticCallOutputTypes(call, F, ..I
 alias overload CallOutputTypes(#f, ..In) = ..StaticCallOutputTypes(f, ..In);
 
 
-//
-// Mono?, MonoInputTypes, MonoOutputTypes
-//
+/// @section  Mono?, MonoInputTypes, MonoOutputTypes 
 
 define MonoInputTypes;
 [f when StaticMono?(f)]

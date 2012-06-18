@@ -1,8 +1,6 @@
 
 
-//
-// flags for 'open'
-//
+/// @section  flags for 'open' 
 
 alias O_RDONLY   = 0x0000;
 alias O_WRONLY   = 0x0001;
@@ -20,9 +18,7 @@ alias O_ASYNC    = 0x0040;
 
 
 
-//
-// flags for 'chmod'
-//
+/// @section  flags for 'chmod' 
 
 alias S_IRWXU = octal("0000700");
 alias S_IRUSR = octal("0000400");
@@ -45,9 +41,7 @@ alias S_ISVTX = octal("0001000");
 
 
 
-//
-// flags for lseek
-//
+/// @section  flags for lseek 
 
 alias SEEK_SET = 0;
 alias SEEK_CUR = 1;
@@ -55,9 +49,7 @@ alias SEEK_END = 2;
 
 
 
-//
-// flags for mmap
-//
+/// @section  flags for mmap 
 
 alias PROT_NONE  = 0;
 alias PROT_READ  = 1;
@@ -75,9 +67,7 @@ alias MAP_FAILED = RawPointer(-1);
 
 
 
-//
-// flags for msync
-//
+/// @section  flags for msync 
 
 alias MS_ASYNC      = 0x0001;
 alias MS_SYNC       = 0x0000;
@@ -85,9 +75,7 @@ alias MS_INVALIDATE = 0x0002;
 
 
 
-//
-// flags for dlsym
-//
+/// @section  flags for dlsym 
 
 alias RTLD_LAZY = 1;
 alias RTLD_NOW = 2;
@@ -101,9 +89,7 @@ alias RTLD_SELF = RawPointer(-3);
 
 
 
-//
-// socket protocol families
-//
+/// @section  socket protocol families 
 alias AF_UNSPEC = UInt8(0);
 alias AF_LOCAL = UInt8(1);
 alias AF_INET = UInt8(2);
@@ -111,9 +97,7 @@ alias AF_INET6 = UInt8(28);
 
 
 
-//
-// socket protocol families
-//
+/// @section  socket protocol families 
 alias PF_UNSPEC = AF_UNSPEC;
 alias PF_LOCAL = AF_LOCAL;
 alias PF_INET = AF_INET;
@@ -121,18 +105,14 @@ alias PF_INET6 = AF_INET6;
 
 
 
-//
-// socket types
-//
+/// @section  socket types 
 alias SOCK_STREAM = 1;
 alias SOCK_DGRAM = 2;
 alias SOCK_RAW = 3;
 
 
 
-//
-// IP protocols
-//
+/// @section  IP protocols 
 alias IPPROTO_ICMP   =  1;
 alias IPPROTO_IGMP   =  2;
 alias IPPROTO_TCP    =  6;
@@ -141,9 +121,7 @@ alias IPPROTO_ICMPV6 = 58;
 
 
 
-//
-// special IPv4 addresses
-//
+/// @section  special IPv4 addresses 
 alias INADDR_ANY       = 0x00_00_00_00u;
 alias INADDR_BROADCAST = 0xFF_FF_FF_FFu;
 alias INADDR_LOOPBACK  = 0x7F_00_00_01u;
@@ -155,17 +133,13 @@ alias INADDR_MAX_LOCAL_GROUP = 0xE0_00_00_FFu;
 
 
 
-//
-// getsockopt/setsockopt constants
-//
+/// @section  getsockopt/setsockopt constants 
 alias SOL_SOCKET = 0xFFFF;
 
 alias SO_REUSEADDR = 0x0004;
 
 
-//
-// signals
-//
+/// @section  signals 
 
 alias SIGHUP    = 1;
 alias SIGINT    = 2;
@@ -211,9 +185,7 @@ alias SIG_IGN   = CCodePointer[[Int],[]](1);
 alias SIG_CATCH = CCodePointer[[Int],[]](2);
 alias SIG_HOLD  = CCodePointer[[Int],[]](3);
 
-//
-// status flags for wait() calls
-//
+/// @section  status flags for wait() calls 
 
 private alias _WSTOPPED = octal("0177");
 private _WSTATUS(x) = bitand(Int(x), octal("0177"));

@@ -1,8 +1,6 @@
 
 
-//
-// vecElementRef
-//
+/// @section  vecElementRef 
 
 [T,n]
 vecElementRef(a:Vec[T,n], i:Int) --> returned:ByRef[T] __llvm__{
@@ -14,9 +12,7 @@ vecElementRef(a:Vec[T,n], i:Int) --> returned:ByRef[T] __llvm__{
 
 
 
-//
-// add
-//
+/// @section  add 
 
 define add;
 
@@ -40,9 +36,7 @@ overload add(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 
 
 
-//
-// subtract
-//
+/// @section  subtract 
 
 define subtract;
 
@@ -66,9 +60,7 @@ overload subtract(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 
 
 
-//
-// multiply
-//
+/// @section  multiply 
 
 define multiply;
 
@@ -92,9 +84,7 @@ overload multiply(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 
 
 
-//
-// divide
-//
+/// @section  divide 
 
 define divide;
 
@@ -127,9 +117,7 @@ overload divide(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 
 
 
-//
-// remainder
-//
+/// @section  remainder 
 
 define remainder;
 
@@ -162,9 +150,7 @@ overload remainder(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 
 
 
-//
-// bitshl
-//
+/// @section  bitshl 
 
 define bitshl;
 
@@ -179,9 +165,7 @@ overload bitshl(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 
 
 
-//
-// bitshr
-//
+/// @section  bitshr 
 
 define bitshr;
 
@@ -205,9 +189,7 @@ overload bitshr(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 
 
 
-//
-// bitand, bitor, bitxor
-//
+/// @section  bitand, bitor, bitxor 
 
 [T,n when Integer?(T)]
 bitand(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{

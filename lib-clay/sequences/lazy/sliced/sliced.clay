@@ -5,9 +5,7 @@ import sequences.force.*;
 
 
 
-//
-// Sliced
-//
+/// @section  Sliced 
 
 record Sliced[A](
     seq : A,
@@ -27,9 +25,7 @@ overload UnderlyingContainerConstructor(#Sliced[A]) =
 
 
 
-//
-// sliced, slicedFrom, slicedUpto
-//
+/// @section  sliced, slicedFrom, slicedUpto 
 
 define sliced;
 
@@ -87,9 +83,7 @@ inline overload slicedUpto(forward a:A, last:I) {
 
 
 
-//
-// sequence operations
-//
+/// @section  sequence operations 
 
 [A]
 inline overload iterator(a:Sliced[A]) = coordinateRange(a.first, a.last);

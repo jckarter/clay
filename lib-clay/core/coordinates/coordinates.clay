@@ -1,9 +1,7 @@
 
 
 
-//
-// ValueCoordinate
-//
+/// @section  ValueCoordinate 
 
 record ValueCoordinate[T] (hasValue? : Bool, value : T);
 [T] overload ValueCoordinate[T](value:T) = ValueCoordinate[T](true, value);
@@ -41,9 +39,7 @@ inline overload dec(c:ValueCoordinate[T]) {
 
 
 
-//
-// ValueReverseCoordinate
-//
+/// @section  ValueReverseCoordinate 
 
 record ValueReverseCoordinate[T] (value : T);
 
@@ -74,9 +70,7 @@ inline overload dec(c:ValueReverseCoordinate[T]) {
 
 
 
-//
-// ReverseCoordinate
-//
+/// @section  ReverseCoordinate 
 
 record ReverseCoordinate[T] (coord : T);
 

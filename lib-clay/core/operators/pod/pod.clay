@@ -1,7 +1,5 @@
 
-//
-// copy*Memory*, move*Memory*, *assign*Memory* for POD types
-//
+/// @section  copy*Memory*, move*Memory*, *assign*Memory* for POD types 
 
 [P]
 private inline copyPODs(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
@@ -56,9 +54,7 @@ inline overload moveAssignNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Po
 }
 
 
-//
-// resetMemoryUnsafe, destroyMemory for POD
-//
+/// @section  resetMemoryUnsafe, destroyMemory for POD 
 
 [P when NotResetType?(P)]
 inline overload resetMemoryUnsafe(begin:Pointer[P], end:Pointer[P]) { }
@@ -67,9 +63,7 @@ inline overload resetMemoryUnsafe(begin:Pointer[P], end:Pointer[P]) { }
 inline overload destroyMemory(begin:Pointer[P], end:Pointer[P]) { }
 
 
-//
-// value semantics for POD
-//
+/// @section  value semantics for POD 
 
 [P] inline copyPOD(x: P) --> returned: P { memcpy(@returned, @x, TypeSize(P)); }
 inline overload copyPOD(x: Bool) --> returned: Bool { bitcopy(returned, x); }

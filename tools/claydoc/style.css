@@ -1,0 +1,175 @@
+*
+{
+    padding:0;
+    margin:0
+}
+
+
+body
+{
+    background: #fff;
+    font-family: sans-serif;
+    font-size: 0.8em;
+}
+
+#mainContentInner
+{
+    margin-left:10%;
+}
+
+#navigation
+{
+    background: #999;
+}
+
+#navigation li
+{
+    list-style: none;
+}
+#navigation li a
+{
+    display: block;
+    padding: 0.5em;
+    float:left;
+    background: #999;
+
+    text-decoration:underline;
+    color: #000;
+    font-weight:bold;
+}
+
+#navigation .post-ul
+{
+    clear:both;
+}
+
+#main h1
+{
+    background: #aaa;
+    padding-left:10%;
+}
+
+#mainContentHeader
+{
+    background: #aaa;
+    border-bottom: 1px solid black;
+}
+#mainContentHeader  .inlinedoc
+{
+    padding-left:11%;
+}
+
+h2
+{
+    padding-bottom: 0.5em;
+}
+
+section
+{
+    padding: 2em;
+}
+
+section h2
+{
+    width:80%;
+    display:block;
+    border-bottom: 1px solid #aaa;
+    padding: 0;
+    margin-bottom: 1.5em;
+    font-size:1em;
+}
+
+h3
+{
+    font-weight:normal;
+}
+
+.functionPredicate
+{
+    display:block;
+    font-size: 0.8em;
+    margin-left:0.7em;
+}
+
+.keyword
+{
+    font-weight: bold;
+    width: 5em;
+    display:inline-block;
+    text-align:right;
+    padding-right:0.5em;
+    color: #522;
+    line-height:1.4em;
+}
+
+
+.identifier
+{
+    height:1.4em;
+    line-height:1.4em;
+    display:inline-block;
+}
+
+.definition , .overload
+{
+    margin-top:0.5em;
+}
+
+.inlinedoc
+{
+    padding-bottom: 1em;
+    padding-left: 1em;
+}
+
+a.reference
+{
+    text-decoration:none;
+    color: #000;
+}
+a.reference:hover
+{
+    text-decoration:underline;
+    color: #00f;
+}
+
+.brokenreference
+{
+    background: url(underline.gif) bottom repeat-x;
+}
+
+
+/* index  */
+
+#moduleIndexOuter
+{
+}
+
+#moduleIndexOuter li
+{
+    list-style:none;
+}
+
+.moduleIndexSectionHeader
+{
+    margin-bottom: 1em;
+    padding-top: 2em;
+    clear:both;
+}
+
+.moduleIndexItem
+{
+    display:block;
+    float:left;
+    width:49%;
+}
+
+.moduleIndexItem a
+{
+    text-decoration:none;
+    color: #000;
+}
+.moduleIndexItem a:hover
+{
+    text-decoration:underline;
+    color: #00f;
+}

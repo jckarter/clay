@@ -2,9 +2,7 @@ import vectors.generic.*;
 import io.streams.(ByteBuffer?);
 import printer.(printTo);
 
-//
-// BufferVector[T]
-//
+/// @section  BufferVector[T] 
 
 record BufferVector[T] (
     begin: Pointer[T],
@@ -14,18 +12,14 @@ record BufferVector[T] (
 
 
 
-//
-// predicates
-//
+/// @section  predicates 
 
 [T]
 overload ContiguousSequence?(#BufferVector[T]) = true;
 
 
 
-//
-// constructors
-//
+/// @section  constructors 
 
 // disable all constructors
 [T] overload BufferVector[T](..args);
@@ -55,9 +49,7 @@ overload BufferVector(seq:S) =
     BufferVector(begin(seq), end(seq));
 
 
-//
-// default constructor and copy constructor
-//
+/// @section  default constructor and copy constructor 
 
 [T when PODType?(T)]
 overload BufferVector[T]() --> returned:BufferVector[T] {}
@@ -68,9 +60,7 @@ overload BufferVector[T](src:BufferVector[T]) =
 
 
 
-//
-// generic vector requirements
-//
+/// @section  generic vector requirements 
 
 [T]
 overload Vector?(#BufferVector[T]) = true;
@@ -96,9 +86,7 @@ overload vectorRequestCapacity(a:BufferVector[T], capacity:SizeT) {
 
 
 
-//
-// printBuffer
-//
+/// @section  printBuffer 
 
 [S when ByteBuffer?(S)]
 printBuffer(buf:S, ..args) {

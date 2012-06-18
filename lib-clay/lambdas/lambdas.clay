@@ -8,9 +8,7 @@ import __operators__.(
 import sharedpointers.*;
 
 
-//
-// Function - polymorphic callable object container
-//
+/// @section  Function - polymorphic callable object container 
 
 record Function[In,Out] (
     body : SharedPointer[FunctionBody[In,Out]]
@@ -72,9 +70,7 @@ overload call(x:Function[[..I], [..O]], forward ..args:I) : ..O {
 alias overload MonoInputTypes(x:Function[[..I], [..O]]) = ..I;
 
 
-//
-// FunctionBody
-//
+/// @section  FunctionBody 
 
 private record FunctionBody[In, Out] (
     obj : Pointer[Opaque],
@@ -108,9 +104,7 @@ overload destroy(x:FunctionBody[In, Out]) {
 
 
 
-//
-// operator functions for closure conversion
-//
+/// @section  operator functions for closure conversion 
 
 overload packMultiValuedFreeVar(..x) = [..x];
 

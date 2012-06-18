@@ -1,17 +1,13 @@
 
 
-//
-// constructor
-//
+/// @section  constructor 
 
 [E when Enum?(E)]
 inline overload E() = E(0);
 
 
 
-//
-// convert to/from integers
-//
+/// @section  convert to/from integers 
 
 [E,I when Enum?(E) and Integer?(I)]
 inline overload I(a:E) = I(enumToInt(a));
@@ -27,9 +23,7 @@ inline overload E(a:Int) = intToEnum(E, a);
 
 
 
-//
-// equals?, lesser?
-//
+/// @section  equals?, lesser? 
 
 [E when Enum?(E)]
 inline overload equals?(a:E, b:E) = (enumToInt(a) == enumToInt(b));
@@ -39,9 +33,7 @@ inline overload lesser?(a:E, b:E) = (enumToInt(a) < enumToInt(b));
 
 
 
-//
-// enumName
-//
+/// @section  enumName 
 
 [E when Enum?(E)]
 enumName(x:E) {
