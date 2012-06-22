@@ -5,6 +5,7 @@ namespace clay {
 static void initLexer(SourcePtr s, size_t offset, size_t length);
 static void cleanupLexer();
 static bool nextToken(Token &x);
+static bool nextDocToken(Token &x);
 
 void tokenize(SourcePtr source, vector<Token> &tokens) {
     tokenize(source, 0, source->size(), tokens);
@@ -19,6 +20,13 @@ void tokenize(SourcePtr source, size_t offset, size_t length,
         case T_SPACE :
         case T_LINE_COMMENT :
         case T_BLOCK_COMMENT :
+            break;
+        case T_DOC_START:
+            while (nextDocToken(tokens.back())) {
+                if (tokens.back().tokenKind == T_DOC_END)
+                    break;
+                tokens.push_back(Token());
+            }
             break;
         default :
             tokens.push_back(Token());
@@ -577,7 +585,6 @@ static bool blockComment(Token &x) {
     return true;
 }
 
-
 
 //
 // llvmToken
@@ -722,10 +729,15 @@ static bool staticIndex(Token &x) {
 // nextToken
 //
 
+static bool docStartLine(Token &x);
+static bool docStartBlock(Token &x);
+
 static bool nextToken(Token &x) {
     x = Token();
     const char *p = save();
     if (space(x)) goto success;
+    restore(p); if (docStartLine(x)) goto success;
+    restore(p); if (docStartBlock(x)) goto success;
     restore(p); if (lineComment(x)) goto success;
     restore(p); if (blockComment(x)) goto success;
     restore(p); if (staticIndex(x)) goto success;
@@ -741,6 +753,141 @@ static bool nextToken(Token &x) {
     if (p != end) {
         pushLocation(locationFor(p));
         error("invalid token");
+    }
+    return false;
+success :
+    assert(x.tokenKind != T_NONE);
+    if (!x.location.ok())
+        x.location = locationFor(p);
+    return true;
+}
+
+//
+// documentation
+//
+
+
+static bool docIsBlock = false;
+static bool docStartLine(Token &x) {
+    char c;
+    if (!next(c) || (c != '/')) return false;
+    if (!next(c) || (c != '/')) return false;
+    if (!next(c) || (c != '/')) return false;
+    x = Token(T_DOC_START);
+    docIsBlock = false;
+    return true;
+}
+
+static bool docStartBlock(Token &x) {
+    char c;
+    if (!next(c) || (c != '/')) return false;
+    if (!next(c) || (c != '*')) return false;
+    if (!next(c) || (c != '*')) return false;
+
+    docIsBlock = true;
+    x = Token(T_DOC_START);
+    return true;
+}
+
+
+static bool docEndLine(Token &x) {
+    char c;
+    if (!next(c)) return false;
+
+    if ((c == '\r') || (c == '\n')) {
+        x = Token(T_DOC_END);
+        return true;
+    }
+    return false;
+}
+
+static bool docEndBlock(Token &x) {
+    char c;
+    do {
+        if (!next(c)) return false;
+    } while (c == '*');
+    if (c != '/') return false;
+    x = Token(T_DOC_END);
+    return true;
+}
+
+static bool docProperty(Token &x) {
+    char c;
+    if (!next(c)) return false;
+    while (isSpace(c))
+        if (!next(c))
+            break;
+    if (c != '@') return false;
+
+
+    const char *begin = save();
+    while (!isSpace(c))
+        if (!next(c)) return false;
+
+    const char *end = save();
+    x = Token(T_DOC_PROPERTY, llvm::StringRef(begin, end - begin - 1));
+    x.location = locationFor(begin);
+    return true;
+}
+
+static bool maybeDocEnd()
+{
+    char c = '*';
+    while (c == '*')
+        if (!next(c))
+            return false;
+    return (c == '/');
+}
+
+static bool docText(Token &x) {
+    char c;
+
+    const char *begin = save();
+    do {
+        if (!next(c)) return false;
+        if (c == '\n' || c == '\r') return false;
+    } while (isSpace(c));
+
+    if (docIsBlock)
+        while (c == '*')
+            if (!next(c))
+                return false;
+
+    const char *end = begin;
+    for (;;) {
+        end = save();
+        if (!next(c)) return false;
+        if (c == '\n' || c == '\r') {
+            restore(end);
+            break;
+        }
+        if (docIsBlock && (c == '*')) {
+            if (maybeDocEnd()) {
+                restore(end);
+                break;
+            } else {
+                restore(end);
+            }
+        }
+    }
+    x = Token(T_DOC_TEXT, llvm::StringRef(begin, end - begin));
+    return true;
+}
+
+static bool nextDocToken(Token &x) {
+    x = Token();
+    const char *p = save();
+    if (docIsBlock) {
+        if (docEndBlock(x))  goto success;
+    } else {
+        if (docEndLine(x))  goto success;
+    }
+
+    restore(p); if (docProperty(x))  goto success;
+    restore(p); if (docText(x)) goto success;
+    if (p != end) {
+        pushLocation(locationFor(p));
+        error("invalid doc token");
     }
     return false;
 success :

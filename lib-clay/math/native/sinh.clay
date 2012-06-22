@@ -51,14 +51,14 @@ overload sinh(x:Double) {
 	return x*HUGE;
 }
 
-
-// Hyperbolic sine of a complex argument z = x + i y.
-//
-// sinh(z) = sinh(x+iy)
-//         = sinh(x) cos(y) + i cosh(x) sin(y).
-//
-// Exceptional values are noted in the comments within the source code.
-// These values and the return value were taken from n1124.pdf.
+/// @overload sinh
+/// Hyperbolic sine of a complex argument z = x + i y.
+///
+/// sinh(z) = sinh(x+iy)
+///         = sinh(x) cos(y) + i cosh(x) sin(y).
+///
+/// Exceptional values are noted in the comments within the source code.
+/// These values and the return value were taken from n1124.pdf.
 
 
 overload sinh(z:ComplexDouble) {

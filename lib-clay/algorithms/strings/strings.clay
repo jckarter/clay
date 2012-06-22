@@ -2,9 +2,7 @@ import strings.*;
 import vectors.*;
 
 
-//
-// trim, trimBegin, trimEnd
-//
+/// @section  trim, trimBegin, trimEnd 
 
 trim(seq, pred) = Vector(trimmed(seq, pred));
 
@@ -23,9 +21,7 @@ overload trimEnd(seq:S) = trimEnd(seq, asciiSpace?);
 
 
 
-//
-// trimmed, beginTrimmed, endTrimmed
-//
+/// @section  trimmed, beginTrimmed, endTrimmed 
 
 trimmed(seq, pred) = beginTrimmed(endTrimmed(seq, pred), pred);
 

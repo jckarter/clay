@@ -2,9 +2,7 @@ import core.errors.backtrace.(showBacktrace);
 import core.libc as libc;
 
 
-//
-// error (exceptions disabled)
-//
+/// @section  error (exceptions disabled) 
 
 [fmt]
 errorWithPrintfNoThrow(#fmt, ..e) {
@@ -21,9 +19,7 @@ overload errorWithPrintf(#fmt, ..e) {
 }
 
 
-//
-// error (exceptions enabled)
-//
+/// @section  error (exceptions enabled) 
 
 record Error (msg : CStringRef);
 overload RegularRecord?(#Error) = false;
@@ -47,9 +43,7 @@ overload errorWithPrintf(#fmt, ..e) {
 }
 
 
-//
-// assert
-//
+/// @section  assert 
 
 AllAssertionsEnabled?() = not Flag?("clay.DisableAssertions");
 AssertionEnabled?(tag) = not Flag?(stringLiteralConcat("clay.DisableAssertions.",tag));
@@ -81,9 +75,7 @@ alias overload assert[..tags](cond:Bool) {
 }
 
 
-//
-// sourceLocation(), argAndValue() helpers
-//
+/// @section  sourceLocation(), argAndValue() helpers 
 
 alias sourceLocation() = StaticName(__FILE__), __LINE__, __COLUMN__;
 

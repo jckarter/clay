@@ -3,18 +3,14 @@ public import __primitives__.(Static);
 
 
 
-//
-// Static? predicate
-//
+/// @section  Static? predicate 
 
 Static?(x) = false;
 [T] overload Static?(#T) = true;
 
 
 
-//
-// constructors, moveUnsafe, resetUnsafe, destroy
-//
+/// @section  constructors, moveUnsafe, resetUnsafe, destroy 
 
 [A]
 inline overload Static[A]() --> returned:Static[A] {
@@ -30,9 +26,7 @@ inline overload moveUnsafe(src:Static[A]) --> returned:Static[A] {
 
 
 
-//
-// equals?, lesser?
-//
+/// @section  equals?, lesser? 
 
 [A, B]
 inline overload equals?(a:Static[A], b:Static[B]) = false;
@@ -45,18 +39,14 @@ inline overload lesser?(a:Static[A], b:Static[A]) = false;
 
 
 
-//
-// unwrapStatic
-//
+/// @section  unwrapStatic 
 
 [A]
 inline unwrapStatic(#A) = A;
 
 
 
-//
-// call
-//
+/// @section  call 
 
 [F, ..AA when CallDefined?(F, ..AA)]
 inline overload call(#F, forward ..args:AA) =
@@ -64,9 +54,7 @@ inline overload call(#F, forward ..args:AA) =
 
 
 
-//
-// fieldRef
-//
+/// @section  fieldRef 
 
 [Module, Ident]
 inline overload fieldRef(#Module, #Ident) =

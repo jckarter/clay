@@ -23,9 +23,7 @@ errnoName(code:Int) {
 }
 
 
-//
-// shadow system calls to handle EINTR
-//
+/// @section  shadow system calls to handle EINTR 
 
 callIgnoringEINTR(f, ..args) {
     alias ResultType = Type(f(..args));

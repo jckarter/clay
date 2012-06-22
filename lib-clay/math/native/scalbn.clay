@@ -2,9 +2,7 @@
 import math.native.kernel.ieee754.*;
 import math.native.copysign.(copysign);
 
-// scalbn (double x, int n)
-// scalbn(x,n) returns x* 2**n  computed by  exponent
-// manipulation rather than by actually performing an
+/// @section  scalbn(x,n) returns x* 2**n  computed by  exponent 
 // exponentiation or a multiplication.
 
 alias two54   =  1.80143985094819840000e+16; // 0x43500000, 0x00000000 

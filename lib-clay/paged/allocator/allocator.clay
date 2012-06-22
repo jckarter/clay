@@ -5,9 +5,7 @@ import io.files.*;
 import strings.*;
 
 
-//
-// paged allocator global state
-//
+/// @section  paged allocator global state 
 
 alias nullBlock = Greatest(SizeT);
 nullBlock?(b) = (b == nullBlock);
@@ -31,9 +29,7 @@ dataEnd() = state.dataEnd;
 
 
 
-//
-// Header (block header)
-//
+/// @section  Header (block header) 
 
 record Header (
     sizeAndFlag : SizeT,
@@ -87,9 +83,7 @@ blockInit(b, size, previous, nextInBucket, previousInBucket) {
 
 
 
-//
-// free list
-//
+/// @section  free list 
 
 bucketId(size) = floorLog2(size);
 
@@ -151,9 +145,7 @@ removeFromFreeList(b) {
 
 
 
-//
-// initializePaging
-//
+/// @section  initializePaging 
 
 resetState() {
     destroy(state);
@@ -194,9 +186,7 @@ initializePaging(fileName, fileSize) {
 
 
 
-//
-// PagedPointer
-//
+/// @section  PagedPointer 
 
 record PagedPointer[T] (
     offset : SizeT
@@ -242,9 +232,7 @@ nullPaged(#T) = PagedPointer[T]();
 
 
 
-//
-// allocatePaged
-//
+/// @section  allocatePaged 
 
 splitBlock?(b, n) {
     assert(blockSize(b) >= n, "splitBlock?");
@@ -275,9 +263,7 @@ allocatePaged(#T, n_:I) {
 
 
 
-//
-// freePaged
-//
+/// @section  freePaged 
 
 firstBlock?(b) = (b == 0);
 lastBlock?(b) = (blockNext(b) == dataEnd() - dataBegin());
@@ -317,9 +303,7 @@ freePaged(p:PagedPointer[T]) {
 
 
 
-//
-// display state
-//
+/// @section  display state 
 
 printPagingState() {
     ref x = state;

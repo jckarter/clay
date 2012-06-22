@@ -3,9 +3,7 @@ import io.streams.(flush);
 import io.files.raw.(stderrRawFile);
 
 
-//
-// observe, observeTo, observeCall -- log intermediate values and forward them
-//
+/// @section  observe, observeTo, observeCall -- log intermediate values and forward them 
 
 observeTo(stream, forward ..x) {
     var captured = captureValues(..x);

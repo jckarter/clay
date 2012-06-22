@@ -3,9 +3,7 @@ import sequences.handle.*;
 
 
 
-//
-// wrapSequence
-//
+/// @section  wrapSequence 
 
 define wrapSequence;
 
@@ -17,9 +15,7 @@ inline overload wrapSequence(ref x:A) = x;
 
 
 
-//
-// packSequences, unpackSequences
-//
+/// @section  packSequences, unpackSequences 
 
 inline packSequences(forward ..args) = [..mapValues(wrapSequence, ..args)];
 
@@ -28,9 +24,7 @@ inline unpackSequences(x:Tuple[..T]) = ref ..unpackTupleRef(x);
 
 
 
-//
-// CapturedElementsType
-//
+/// @section  CapturedElementsType 
 
 alias CapturedElementsType(packedSeq) =
     Type(captureValues(..dummyElements(..unpackTupleRef(packedSeq))));
@@ -42,9 +36,7 @@ private inline dummyElements(..seqs) = forward ..mapValues(dummyElement, ..seqs)
 
 
 
-//
-// multiIterators, multiReverseIterators
-//
+/// @section  multiIterators, multiReverseIterators 
 
 inline multiIterators(packedSeq) =
     [..mapValues(iterator, ..unpackTupleRef(packedSeq))];

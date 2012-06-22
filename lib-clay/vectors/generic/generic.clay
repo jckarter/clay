@@ -1,8 +1,7 @@
+/// @module vector.generic
+/// generic vector interface
 
-
-//
-// generic vector requirements
-//
+/// @section generic vector requirements
 
 define Vector?;
 overload Vector?(x) = false;
@@ -14,19 +13,13 @@ define vectorCapacity;
 define vectorRequestCapacity;
 
 
-
-//
-// predicates
-//
+/// @section predicates
 
 [V when Vector?(V)]
 overload ContiguousSequence?(#V) = true;
 
 
-
-//
-// size, index
-//
+/// @section size, index
 
 [V when Vector?(V)]
 inline overload size(a:V) = vectorSize(a);
@@ -39,10 +32,7 @@ inline overload index(a:V, i:I) {
 }
 
 
-
-//
-// vector coordinates
-//
+/// @section vector coordinates
 
 alias VectorCoordinate[T] = Pointer[T];
 
@@ -53,23 +43,23 @@ inline overload begin(a:V) = vectorData(a);
 inline overload end(a:V) = vectorData(a) + size(a);
 
 
-
-//
-// vector iteration
-//
+/// @section vector iteration
 
+/// @overload iterator
+/// constructs an iterator on the vector
+/// \a ranges.CoordinateRange
 [V when Vector?(V)]
 inline overload iterator(a:V) = coordinateRange(begin(a), end(a));
 
+/// @overload reverseIterator
+/// constructs a reverse iterator on the vector
+/// \a ranges.ReverseCoordinateRange
 [V when Vector?(V)]
 inline overload reverseIterator(a:V) =
     reverseCoordinateRange(end(a), begin(a));
 
 
-
-//
-// front, back, push, pop
-//
+/// @section front, back, push, pop
 
 [V when Vector?(V)]
 inline overload front(a:V) = ref a[0];
@@ -107,10 +97,7 @@ overload pop(a:V) {
 }
 
 
-
-//
-// reserve, resize, resizeUnsafe, ensureSpace
-//
+/// @section reserve, resize, resizeUnsafe, ensureSpace
 
 [V, I when Vector?(V) and Integer?(I)]
 overload reserve(a:V, n:I) {
@@ -146,10 +133,7 @@ private inline ensureSpace(a, space:SizeT) {
 }
 
 
-
-//
-// insert
-//
+/// @section insert
 
 [I, J when Integer?(I) and Integer?(J)]
 private insertLocationsUnsafe(a, pos:I, n:J) {
@@ -255,11 +239,10 @@ overload insert(a:V, i:VectorCoordinate[T], forward x:T) {
 }
 
 
-
-//
-// clear, remove
-//
+/// @section clear, remove
 
+/// @overload clear
+/// remove all items from the vector
 [V when Vector?(V)]
 inline overload clear(a:V) {
     remove(a, begin(a), end(a));
@@ -280,6 +263,8 @@ private removeLocations(a:V, i:VectorCoordinate[T], j:VectorCoordinate[T]) {
     vectorSetSize(a, vectorSize(a) - (j-i));
 }
 
+/// @overload remove
+/// remove all items from the vector within the range \p i to \a j
 [V,T when Vector?(V) and (SequenceElementType(V) == T)]
 overload remove(a:V, i:VectorCoordinate[T], j:VectorCoordinate[T]) {
     assert["boundsChecks"](validVectorCoordinate?(a, i),

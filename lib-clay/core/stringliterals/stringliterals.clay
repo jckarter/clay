@@ -1,16 +1,12 @@
 
-//
-// StringLiteralRef
-//
+/// @section  StringLiteralRef 
 
 record StringLiteralRef (
     sizep : Pointer[SizeT],
 );
 
 
-//
-// predicates
-//
+/// @section  predicates 
 
 overload ContiguousSequence?(#StringLiteralRef) = true;
 [s when StringLiteral?(s)]
@@ -18,18 +14,14 @@ overload ContiguousSequence?(#Static[s]) = true;
 
 
 
-//
-// constructors
-//
+/// @section  constructors 
 
 [s when StringLiteral?(s)]
 inline overload StringLiteralRef(#s) = StringLiteralRef(stringTableConstant(s));
 inline overload StringLiteralRef() = StringLiteralRef(stringTableConstant(""));
 
 
-//
-// size, begin, end, index
-//
+/// @section  size, begin, end, index 
 
 inline overload size(a:StringLiteralRef) = a.sizep^;
 
@@ -62,9 +54,7 @@ inline overload staticIndex(#s, #n) {
 
 
 
-//
-// cstring
-//
+/// @section  cstring 
 
 inline cstring(a:StringLiteralRef) = Pointer[Int8](begin(a));
 
@@ -72,9 +62,7 @@ inline cstring(a:StringLiteralRef) = Pointer[Int8](begin(a));
 inline overload cstring(#s) = Pointer[Int8](begin(s));
 
 
-//
-// coordinates and iteration
-//
+/// @section  coordinates and iteration 
 
 inline overload iterator(a:StringLiteralRef) = coordinateRange(begin(a), end(a));
 [s when StringLiteral?(s)]
@@ -87,9 +75,7 @@ inline overload reverseIterator(#s) =
     reverseCoordinateRange(end(a), begin(a));
 
 
-//
-// string literal concatenation
-//
+/// @section  string literal concatenation 
 
 private StringLiteralStatic?(S) = false;
 [s]
@@ -101,9 +87,7 @@ StringLiteralType?(..SS) = allValues?(S -> StringLiteralStatic?(S), ..SS);
 inline overload (++)(..ss:SS) = stringLiteralConcat(..ss);
 
 
-//
-// string literal manipulation
-//
+/// @section  string literal manipulation 
 
 // stringLiteralStartsWith?
 

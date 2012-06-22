@@ -100,36 +100,28 @@ alias FILE_MAP_COPY       = 1u;
 
 
 
-//
-// socket protocol families
-//
+/// @section  socket protocol families 
 alias AF_UNSPEC = 0uss;
 alias AF_INET = 2uss;
 alias AF_INET6 = 30uss;
 
 
 
-//
-// socket protocol families
-//
+/// @section  socket protocol families 
 alias PF_UNSPEC = AF_UNSPEC;
 alias PF_INET = AF_INET;
 alias PF_INET6 = AF_INET6;
 
 
 
-//
-// socket types
-//
+/// @section  socket types 
 alias SOCK_STREAM = 1;
 alias SOCK_DGRAM = 2;
 alias SOCK_RAW = 3;
 
 
 
-//
-// special IPv4 addresses
-//
+/// @section  special IPv4 addresses 
 alias INADDR_ANY       = 0x00_00_00_00u;
 alias INADDR_BROADCAST = 0xFF_FF_FF_FFu;
 alias INADDR_LOOPBACK  = 0x7F_00_00_01u;
@@ -141,16 +133,12 @@ alias INADDR_MAX_LOCAL_GROUP = 0xE0_00_00_FFu;
 
 
 
-//
-// getsockopt/setsockopt constants
-//
+/// @section  getsockopt/setsockopt constants 
 alias SOL_SOCKET = 0xffff;
 
 alias SO_REUSEADDR = 4;
 
 
 
-//
-// socket error
-//
+/// @section  socket error 
 alias SOCKET_ERROR = Greatest(SOCKET);

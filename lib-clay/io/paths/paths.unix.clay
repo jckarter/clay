@@ -9,9 +9,7 @@ import sequences.*;
 
 
 
-//
-// PATH_SEPARATOR, PATH_LIST_SEPARATOR, rootDirectory?, absolutePath?
-//
+/// @section  PATH_SEPARATOR, PATH_LIST_SEPARATOR, rootDirectory?, absolutePath? 
 
 alias PATH_SEPARATOR = '/';
 alias PATH_LIST_SEPARATOR = ':';
@@ -21,9 +19,7 @@ absolutePath?(s) = beginsWith?(s, '/');
 
 
 
-//
-// slicedPath, splitPath, pathComponents
-//
+/// @section  slicedPath, splitPath, pathComponents 
 
 slicedPath(path) {
     var path2 = directoryTailTrimmed(path);
@@ -59,9 +55,7 @@ pathComponents(path) {
 
 
 
-//
-// joinPath
-//
+/// @section  joinPath 
 
 define joinPath;
 
@@ -101,9 +95,7 @@ private trimDirectoryTail(path:String) {
 
 
 
-//
-// pathExists?
-//
+/// @section  pathExists? 
 
 pathExists?(p) {
     var statBuf = unix.Struct_stat();
@@ -113,9 +105,7 @@ pathExists?(p) {
 
 
 
-//
-// systemPath, currentDirectory
-//
+/// @section  systemPath, currentDirectory 
 
 systemPath() {
     var pathList = CStringRef(libc.getenv(cstring("PATH")));
@@ -142,9 +132,7 @@ currentDirectory() {
 
 
 
-//
-// pathToExecutable
-//
+/// @section  pathToExecutable 
 
 define pathToExecutable;
 

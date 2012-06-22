@@ -36,9 +36,7 @@ inline overload equals?(x:C, y:D) = equals?(x.code, y.code);
 inline overload lesser?(x:C, y:D) = lesser?(x.code, y.code);
 
 
-//
-// asciiSpace?
-//
+/// @section  asciiSpace? 
 
 asciiSpace?(c) {
     switch (c) case (' ', '\r', '\n', '\t', '\f')
@@ -47,9 +45,7 @@ asciiSpace?(c) {
         return false;
 }
 
-//
-// asciiUpper, asciiLower
-//
+/// @section  asciiUpper, asciiLower 
 
 [C when Character?(C)]
 asciiUpper(c:C) = if ('a' <= c <= 'z') C(Int(c) - 0x20) else c;

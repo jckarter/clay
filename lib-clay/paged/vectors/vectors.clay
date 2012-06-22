@@ -3,9 +3,7 @@ import paged.*;
 import vectors.generic.*;
 import sequences.lazy.*;
 
-//
-// Vector[T]
-//
+/// @section  Vector[T] 
 
 record Vector[T] (
     size:SizeT,
@@ -15,9 +13,7 @@ record Vector[T] (
 
 
 
-//
-// predicates
-//
+/// @section  predicates 
 
 [T] overload RegularRecord?(#Vector[T]) = false;
 
@@ -25,9 +21,7 @@ record Vector[T] (
 
 
 
-//
-// constructors
-//
+/// @section  constructors 
 
 [T]
 overload Vector[T]() = Vector[T](SizeT(0), SizeT(0), nullPaged(T));
@@ -57,9 +51,7 @@ overload Vector(a:A) {
 
 
 
-//
-// varargs constructor
-//
+/// @section  varargs constructor 
 
 [T, ..A when (countValues(..A) > 0) and equalValues?(T, ..A)]
 alias overload Vector[T](..args:A) {
@@ -74,9 +66,7 @@ overload pushAll(a) {}
 
 
 
-//
-// moveUnsafe, resetUnsafe, assign, destroy
-//
+/// @section  moveUnsafe, resetUnsafe, assign, destroy 
 
 [T]
 overload BitwiseMovedType?(#Vector[T]) = true;
@@ -103,9 +93,7 @@ overload destroy(a:Vector[T]) {
 
 
 
-//
-// generic vector requirements
-//
+/// @section  generic vector requirements 
 
 [T]
 overload Vector?(#Vector[T]) = true;

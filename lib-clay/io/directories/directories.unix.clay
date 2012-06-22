@@ -4,9 +4,7 @@ import strings.*;
 import sequences.lazy.filtered.*;
 
 
-//
-// directoryListing
-//
+/// @section  directoryListing 
 
 directoryListing(x) =
     filtered(notCurrentOrPrevious?, mapped(direntName, direntSequence(x)));
@@ -16,9 +14,7 @@ private direntName(x) = CStringRef(begin(x.d_name));
 
 
 
-//
-// DirentSequence
-//
+/// @section  DirentSequence 
 
 record DirentSequence (
     dir : Pointer[DIR],
@@ -51,9 +47,7 @@ overload iterator(s:DirentSequence) = DirentIterator(s.dir, Struct_dirent());
 
 
 
-//
-// DirentIterator
-//
+/// @section  DirentIterator 
 
 private record DirentIterator (dir : Pointer[DIR]);
 
