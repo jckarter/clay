@@ -24,7 +24,7 @@ DocModule *docParseModule(string fileName, DocState *state, std::string fqn)
 
     DocumentationPtr lastAttachment;
 
-    for (vector<TopLevelItemPtr>::iterator i = m->topLevelItems.begin(); i !=  m->topLevelItems.end(); i++) {
+    for (vector<TopLevelItemPtr>::iterator i = m->topLevelItems.begin(); i != m->topLevelItems.end(); i++) {
         TopLevelItemPtr item = *i;
         if (!item)
             continue;
@@ -35,11 +35,11 @@ DocModule *docParseModule(string fileName, DocState *state, std::string fqn)
                 DocumentationPtr doc = ((Documentation*)item.ptr());
                 if (doc->annotation.count(ModuleAnnotation)) {
                     docMod->name = doc->annotation[ModuleAnnotation];
-                    docMod->description =  doc->text;
+                    docMod->description = doc->text;
 
                 } else if (doc->annotation.count(SectionAnnotation)) {
-                    section =  new DocSection;
-                    section->name =  doc->annotation[SectionAnnotation];
+                    section = new DocSection;
+                    section->name = doc->annotation[SectionAnnotation];
                     section->description = doc->text;
                     docMod->sections.push_back(section);
 
@@ -128,15 +128,19 @@ int main(int argc, char **argv)
         llvm::sys::fs::file_status status;
         if (!it->status(status) && is_regular_file(status) && endsWith(it->path(), ".clay")) {
 
-            std::stringstream pathS(it->path());
-            string word;
             std::string fqn;
-            for (int k = 0; std::getline(pathS, word, '/') , (k - 1) < it.level(); k++) {
-                if (k == 0)
-                    continue;
-                fqn.append(word);
+
+            llvm::sys::path::const_iterator word = llvm::sys::path::begin(it->path());
+            ++word;
+
+            llvm::sys::path::const_iterator worde = llvm::sys::path::end(it->path());
+            --worde;
+
+            for (; word != worde; ++word) {
+                fqn.append(*word);
                 fqn.append(".");
             }
+
             llvm::StringRef stemR = llvm::sys::path::stem(it->path());
             fqn.append(string(stemR.begin(), stemR.end()));
 

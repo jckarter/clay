@@ -71,10 +71,10 @@ static void emitHtmlOverload(std::ostream &o, DocState *state, DocObject *item)
     o << " ( ";
     o << "<span class='functionSignature'>\n";
     for (vector<FormalArgPtr>::iterator it = code->formalArgs.begin();
-            it !=  code->formalArgs.end(); it++){
+            it != code->formalArgs.end(); it++){
         FormalArgPtr arg = *it;
         if (!!arg->name) {
-            std::string name =  identifierString(arg->name);
+            std::string name = identifierString(arg->name);
             htmlEncode(name);
             o << "    <span class='functionArgumentName' > " << name << "</span>";
         }
@@ -82,9 +82,9 @@ static void emitHtmlOverload(std::ostream &o, DocState *state, DocObject *item)
             std::string type = arg->type->asString();
             htmlEncode(type);
             o << " : ";
-            o << "<span class='functionArgumentType' > " <<  type << "</span>\n";
+            o << "<span class='functionArgumentType' > " << type << "</span>\n";
         }
-        if (it + 1  != code->formalArgs.end())
+        if (it + 1 != code->formalArgs.end())
             o << " , ";
     }
 
@@ -94,7 +94,7 @@ static void emitHtmlOverload(std::ostream &o, DocState *state, DocObject *item)
     o << "</div>" << endl;
 }
 
-static void emitHtmlProcedure(std::ostream &o,  DocState *state, DocObject *item)
+static void emitHtmlProcedure(std::ostream &o, DocState *state, DocObject *item)
 {
     std::string htmlName(item->name);
     htmlEncode(htmlName);
@@ -107,7 +107,7 @@ static void emitHtmlProcedure(std::ostream &o,  DocState *state, DocObject *item
     o << "</div>" << endl;
 }
 
-static void emitHtmlRecord(std::ostream &o,  DocState *state, DocObject *item)
+static void emitHtmlRecord(std::ostream &o, DocState *state, DocObject *item)
 {
     std::string htmlName(item->name);
     htmlEncode(htmlName);
@@ -124,7 +124,7 @@ static void emitHtmlRecord(std::ostream &o,  DocState *state, DocObject *item)
 static void emitHtmlHeader(std::ostream &o, std::string title)
 {
     o << "<!doctype html>\n"
-      << "<html  lang='en'>\n"
+      << "<html lang='en'>\n"
       << "<head>\n"
       << "<title>" << title << "</title>\n"
       << "<link rel='stylesheet' href='style.css'>\n"
@@ -144,7 +144,7 @@ static void emitHtmlFooter(std::ostream &o)
 void emitHtmlModule(std::string outpath, DocState *state, DocModule *mod)
 {
     ofstream o;
-    std::string outFileName = outpath + "/" +  string(mod->fqn) + ".html";
+    std::string outFileName = outpath + "/" + string(mod->fqn) + ".html";
     o.open (outFileName.c_str(), ios::trunc);
     if (!o.is_open()) {
         llvm::errs() << "failed to open " << outFileName << "\n";
@@ -159,7 +159,7 @@ void emitHtmlModule(std::string outpath, DocState *state, DocModule *mod)
             it != mod->sections.end(); it++) {
         o << "<section>" << endl;
         if (!(*it)->name.empty())
-            o << "<h2> " <<  (*it)->name << "</h2>" << endl;
+            o << "<h2> " << (*it)->name << "</h2>" << endl;
         emitInlineDoc(o, (*it)->description);
         for (std::vector<DocObject *>::iterator i2 = (*it)->objects.begin();
                     i2 != (*it)->objects.end(); i2++) {
@@ -196,7 +196,7 @@ void emitHtmlIndex(std::string outpath, DocState *state)
         exit(errno);
     }
     emitHtmlHeader(index, state->name);
-    index << "<div id='mainContentOuter'>\n<h1> " << state->name <<  "</h1> \n";
+    index << "<div id='mainContentOuter'>\n<h1> " << state->name << "</h1> \n";
     index << "<div id='mainContentInner'>\n";
 
     char a = 0;
@@ -214,7 +214,7 @@ void emitHtmlIndex(std::string outpath, DocState *state)
             index << "<section class='moduleIndexSection' ><h2 class='moduleIndexSectionHeader'>" << a << "</h2> <ul>";
         }
 
-        index << "<li class='moduleIndexItem'> <a href='" <<  string(j->first) + ".html" << "'> " <<  string(j->first) << " </a> </li>\n";
+        index << "<li class='moduleIndexItem'> <a href='" << string(j->first) + ".html" << "'> " << string(j->first) << " </a> </li>\n";
         emitHtmlModule(outpath, state, j->second);
     }
 
@@ -224,4 +224,3 @@ void emitHtmlIndex(std::string outpath, DocState *state)
 
     index.close();
 }
-
