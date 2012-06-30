@@ -75,19 +75,19 @@ and the MSVC compiler. There are some issues with Debug builds and
 LLVM, so both LLVM and Clay will need to be built as Release. The
 default LLVM install directory needs Administrator permissions, so
 you may want to set a CMAKE_INSTALL_PREFIX as well. to change it.
-Place the Clang repository in llvm-3.0/tools/clang so that LLVM builds
+Place the Clang repository in llvm-3.1/tools/clang so that LLVM builds
 it automatically and compile LLVM with the following commands:
 
     mkdir build
     cd build
-    cmake -DCMAKE_INSTALL_PREFIX=c:\llvm-install -DCMAKE_BUILD_TYPE=Release ..
+    cmake -G "NMake Makefiles" -DCMAKE_INSTALL_PREFIX=c:\llvm31-install -DCMAKE_BUILD_TYPE=Release ..
     nmake install
 
 Then to build Clay, run CMake and generate nmake makefiles:
 
     mkdir build
     cd build
-    cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DLLVM_DIR=c:\llvm-install ..
+    cmake -G "NMake Makefiles" -DLLVM_DIR=c:\llvm31-install -DCMAKE_BUILD_TYPE=Release ..
     nmake
 
 Building under Cygwin or Mingw, or with Visual C++ using cmake's
