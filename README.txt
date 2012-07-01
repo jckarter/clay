@@ -14,7 +14,9 @@ is `v0.1`; for normal use you will want to switch to that branch:
 Pre-requisites
 --------------
 
-Clay requires LLVM 3.1, Clang 3.1, and CMake version 2.6 or later.
+Clay requires CMake version 2.6 or later, and LLVM and Clang 3.1. Note that
+LLVM versions are not backward-compatible so developer versions of LLVM and/or
+later releases are not compatible with this version of Clay.
 
 CMake Configuration
 -------------------
