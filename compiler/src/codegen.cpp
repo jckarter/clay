@@ -4056,16 +4056,25 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
 
     int line, column;
     llvm::DIFile file = getDebugLineCol(x->location, line, column);
-    
-    switch (x->bindingKind) {
 
     case VAR : {
         llvm::errs() << "codegenBinding:VAR\n";
+        
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
         MultiCValuePtr mcv = new MultiCValue();
+        llvm::errs() << "codegenBinding:VAR 2\n";
+        for (llvm::StringMap<ObjectPtr>::const_iterator i = env->entries.begin(), end = env->entries.end();
+             i != end;
+             ++i)
+        {
+            llvm::errs() << i->first().str() << "\n";
+        }
+        llvm::errs() << "codegenBinding:VAR 3\n";
         for (unsigned i = 0; i < mpv->values.size(); ++i) {
+            llvm::errs() << "codegenBinding:VAR 4\n";
             CValuePtr cv = codegenAllocNewValue(mpv->values[i].type, ctx);
             mcv->add(cv);
+            llvm::errs() << "codegenBinding:VAR 5\n";
             if (llvmDIBuilder != NULL) {
                 llvm::DILexicalBlock debugBlock = ctx->getDebugScope();
                 llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
@@ -4086,30 +4095,40 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
                     ->setDebugLoc(ctx->builder->getCurrentDebugLocation());
             }
         }
+        llvm::errs() << "codegenBinding:VAR 6\n";
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
         codegenMultiInto(x->values, env, ctx, mcv, x->args.size());
         cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
         EnvPtr env2 = new Env(env);
+        llvm::errs() << "codegenBinding:VAR 7 "<< x->fixedArgNames.size()<< " \n";
         for (unsigned i = 0; i < x->fixedArgNames.size(); ++i) {
             CValuePtr cv = mcv->values[i];
+            llvm::errs() << "codegenBinding:VAR 7a\n";
             cgPushStackValue(cv, ctx);
             addLocal(env2, x->fixedArgNames[i], cv.ptr());
+            llvm::errs() << "codegenBinding:VAR 7b\n";
             llvm::SmallString<128> buf;
             llvm::raw_svector_ostream ostr(buf);
             ostr << x->fixedArgNames[i]->str << ":" << cv->type;
+            llvm::errs() << "codegenBinding:VAR 7c\n";
             cv->llValue->setName(ostr.str());
             if(x->args[i]->type != NULL) {
+                llvm::errs() << "codegenBinding:VAR 7d\n";
                 TypePtr rt = evaluateType(x->args[i]->type, x->env);
-                if (cv->type != rt)
+                llvm::errs() << "codegenBinding:VAR 7e\n";
+                if (cv->type != rt) {
+                    llvm::errs() << "codegenBinding:VAR 7f\n";
                     argumentTypeError(i, rt, cv->type);
-                else {
+                } else {
+                    llvm::errs() << "codegenBinding:VAR 7g\n";
                     addLocal(env2, ((NameRef *)x->args[i]->type.ptr())->name, cv->type.ptr());
                 }
             }
         }
-
+        llvm::errs() << "codegenBinding:VAR 8\n";
+            
         if (x->varArgName.ptr()) {
             unsigned nFixed = x->fixedArgTypes.size();
             MultiCValuePtr varArgs = new MultiCValue();
@@ -4127,6 +4146,13 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
                 addLocal(env2, ((NameRef *)x->varg->type.ptr())->name, vt.ptr());
             }  
         }
+        llvm::errs() << "codegenBinding:VAR 9\n";
+        for (llvm::StringMap<ObjectPtr>::const_iterator i = env2->entries.begin(), end = env2->entries.end();
+             i != end;
+             ++i)
+        {
+            llvm::errs() << i->first().str() << "\n";
+        }
         return env2;
     }
 
@@ -4134,7 +4160,15 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
         llvm::errs() << "codegenBinding:REF\n";
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
         MultiCValuePtr mcv = new MultiCValue();
+        llvm::errs() << "codegenBinding:REF 2\n";
+        for (llvm::StringMap<ObjectPtr>::const_iterator i = env->entries.begin(), end = env->entries.end();
+             i != end;
+             ++i)
+        {
+            llvm::errs() << i->first().str() << "\n";
+        }
         for (unsigned i = 0; i < mpv->values.size(); ++i) {
+            llvm::errs() << "codegenBinding:REF 3\n";
             PVData const &pv = mpv->values[i];
             if (pv.isTemp)
                 argumentError(i, "ref can only bind to an lvalue");
@@ -4168,15 +4202,25 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
         cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
         EnvPtr env2 = new Env(env);
+        llvm::errs() << "codegenBinding:REF 6\n";
+        for (llvm::StringMap<ObjectPtr>::const_iterator i = env2->entries.begin(), end = env2->entries.end();
+             i != end;
+             ++i)
+        {
+            llvm::errs() << i->first().str() << "\n";
+        }
         for (unsigned i = 0; i < x->fixedArgNames.size(); ++i) {
+            llvm::errs() << "codegenBinding:REF 7a\n";
             CValuePtr cv = derefValue(mcv->values[i], ctx);
             cgPushStackValue(cv, ctx);
             addLocal(env2, x->fixedArgNames[i], cv.ptr());
+            llvm::errs() << "codegenBinding:REF 7b\n";
             llvm::SmallString<128> buf;
             llvm::raw_svector_ostream ostr(buf);
             ostr << x->fixedArgNames[i]->str << ":" << cv->type;
             cv->llValue->setName(ostr.str());
             if(x->args[i]->type != NULL) {
+                llvm::errs() << "codegenBinding:REF 7c\n";
                 TypePtr rt = evaluateType(x->args[i]->type, x->env);
                 if (cv->type != rt)
                     argumentTypeError(i, rt, cv->type);
@@ -4187,6 +4231,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
         }
         
         if (x->varArgName.ptr()) {
+            llvm::errs() << "codegenBinding:REF 8\n";
             unsigned nFixed = x->fixedArgTypes.size();
             MultiCValuePtr varArgs = new MultiCValue();
             for (unsigned i = 0; i < x->varArgTypes.size(); ++i) {
@@ -4204,6 +4249,14 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
             }
             
         }
+        llvm::errs() << "codegenBinding:REF 10\n";
+        for (llvm::StringMap<ObjectPtr>::const_iterator i = env2->entries.begin(), end = env2->entries.end();
+             i != end;
+             ++i)
+        {
+            llvm::errs() << i->first().str() << "\n";
+        }
+        
         return env2;
     }
 
