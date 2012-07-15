@@ -1,18 +1,14 @@
 import simd.primitives as prims;
 
 
-//
-// index
-//
+/// @section  index 
 
 [T,n,I when Integer?(I)]
 inline overload index(a:Vec[T,n], i:I) = ref prims.vecElementRef(a, Int(i));
 
 
 
-//
-// type inferring constructor
-//
+/// @section  type inferring constructor 
 
 [..A when (countValues(..A) > 0) and equalValues?(..A)]
 inline overload Vec(..args:A) {
@@ -23,9 +19,7 @@ inline overload Vec(..args:A) {
 
 
 
-//
-// basic constructor
-//
+/// @section  basic constructor 
 
 [T,n,..A when (countValues(..A) == n) and equalValues?(T, ..A)]
 inline overload Vec[T,n](..args:A) {
@@ -40,9 +34,7 @@ inline overload Vec[T,n](..args:A) {
 
 
 
-//
-// single element replicating constructor
-//
+/// @section  single element replicating constructor 
 
 [T,n]
 inline overload Vec[T,n](x:T) {
@@ -54,9 +46,7 @@ inline overload Vec[T,n](x:T) {
 
 
 
-//
-// other constructors, moveUnsafe, resetUnsafe, assign, destroy
-//
+/// @section  other constructors, moveUnsafe, resetUnsafe, assign, destroy 
 
 [T,n]
 inline overload Vec[T,n]() = Vec[T,n](T());
@@ -80,9 +70,7 @@ inline overload assign(ref dest:Vec[T,n], src:Vec[T,n]) {
 
 
 
-//
-// unpackVec
-//
+/// @section  unpackVec 
 
 [T,n]
 inline unpackVec(a:Vec[T,n]) = ..unpackElements(a, #0);
@@ -98,9 +86,7 @@ inline overload unpackElements(a:Vec[T,n], #i) = ;
 
 
 
-//
-// numeric ops
-//
+/// @section  numeric ops 
 
 [T,n]
 inline overload add(a:Vec[T,n], b:Vec[T,n]) = prims.add(a, b);
@@ -153,9 +139,7 @@ inline overload remainder(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) % a;
 
 
 
-//
-// bitwise ops
-//
+/// @section  bitwise ops 
 
 [T,n]
 inline overload bitshl(a:Vec[T,n], b:Vec[T,n]) = prims.bitshl(a, b);
@@ -215,9 +199,7 @@ inline overload bitxor(x:X, a:Vec[T,n]) = bitxor(Vec[T,n](T(x)),  a);
 
 
 
-//
-// unary ops
-//
+/// @section  unary ops 
 
 [T,n]
 inline overload add(a:Vec[T,n]) = a;
@@ -229,9 +211,7 @@ inline overload subtract(a:Vec[T,n]) = Vec[T,n](T(0)) - a;
 inline overload bitnot(a:Vec[T,n]) = bitxor(Vec[T,n](componentMask(T)), a);
 
 
-//
-// casting
-//
+/// @section  casting 
 
 CompatibleVectorTypes?(X, Y) = false;
 [T,n, U,m when TypeSize(Vec[T,n]) == TypeSize(Vec[U,m])]
@@ -242,9 +222,7 @@ inline overload Vec[T,n](v: Vec[U,m]) = bitcast(Vec[T,n], v);
 
 
 
-//
-// boolean masks
-//
+/// @section  boolean masks 
 
 [T when Integer?(T)]
 inline componentMask(#T) = wrapCast(T, -1);

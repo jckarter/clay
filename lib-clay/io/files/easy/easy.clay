@@ -6,9 +6,7 @@ import sharedpointers.*;
 import strings.*;
 
 
-//
-// File
-//
+/// @section  File 
 
 record File (
     ptr : SharedPointer[FileData],
@@ -30,9 +28,7 @@ private record FileData (
 
 
 
-//
-// constructors
-//
+/// @section  constructors 
 
 [S when CCompatibleString?(S)]
 overload File(path:S, mode:OpenMode) =
@@ -54,9 +50,7 @@ overload FileData(rvalue file:RawFile) --> returned:FileData {
 
 
 
-//
-// destroy
-//
+/// @section  destroy 
 
 overload destroy(fd:FileData) {
     if (fd.writeCount > 0) {
@@ -74,9 +68,7 @@ overload destroy(fd:FileData) {
 
 
 
-//
-// stdinFile, stdoutFile, stderrFile
-//
+/// @section  stdinFile, stdoutFile, stderrFile 
 
 stdinFile()  = File(new(FileData(stdinRawFile())));
 stdoutFile() = File(new(FileData(stdoutRawFile())));
@@ -84,17 +76,13 @@ stderrFile() = File(new(FileData(stderrRawFile())));
 
 
 
-//
-// fileHandle
-//
+/// @section  fileHandle 
 
 overload fileHandle(f:File) = fileHandle(f.ptr^.file);
 
 
 
-//
-// read, write, flush
-//
+/// @section  read, write, flush 
 
 overload read(f:File, buffer:Pointer[Byte], _requested:SizeT) {
     ref fd = f.ptr^;
@@ -169,9 +157,7 @@ private flushData(fd:FileData) {
 
 
 
-//
-// fileSize, seek
-//
+/// @section  fileSize, seek 
 
 overload fileSize(f:File) {
     flushData(f.ptr^);
@@ -188,8 +174,6 @@ overload seek(f:File, offset, whence) {
 
 
 
-//
-// terminal?
-//
+/// @section  terminal? 
 
 overload terminal?(f:File) = terminal?(f.ptr^.file);

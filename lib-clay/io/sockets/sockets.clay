@@ -24,9 +24,7 @@ public import io.sockets.platform.(
 );
 
 
-//
-// wrapper for socket API calls
-//
+/// @section  wrapper for socket API calls 
 
 record GenericSocketError (code: Int);
 
@@ -55,9 +53,7 @@ socketCall(callable, forward ..args) {
 
 
 
-//
-// high-level socket addresses
-//
+/// @section  high-level socket addresses 
 
 // makeSockaddr(addr) --> Sockaddr
 define makeSockaddr;
@@ -150,9 +146,7 @@ overload lookupInetHostname(hostname: S) {
 
 
 
-//
-// socket objects
-//
+/// @section  socket objects 
 Socket?(X) = false;
 
 record ListenSocket[Addr] (raw: platform.RawSocket);
@@ -183,9 +177,7 @@ overload fileHandle(s: S) { return s.raw; }
 
 
 
-//
-// ListenSocket()
-//
+/// @section  ListenSocket() 
 [T, I when StreamSocketAddress?(T) and Integer?(I)]
 overload ListenSocket(addr: T, backlog: I)
     --> socket: ListenSocket[T]
@@ -232,9 +224,7 @@ accept(listener: ListenSocket[T])
 
 
 
-//
-// StreamSocket()
-//
+/// @section  StreamSocket() 
 [T]
 overload StreamSocket(listener: ListenSocket[T])
     = takeValues(#1, ..accept(listener));
@@ -258,9 +248,7 @@ overload StreamSocket(addr: T) --> socket: StreamSocket {
 
 
 
-//
-// StreamSocket implementation of stream protocol
-//
+/// @section  StreamSocket implementation of stream protocol 
 overload read(s: StreamSocket, buffer: Pointer[Byte], n: SizeT)
     = SizeT(socketCall(platform.recv, s.raw,
         platform.DataPointer(buffer), platform.DataSize(n),
@@ -276,9 +264,7 @@ overload flush(s: StreamSocket) { }
 
 
 
-//
-// Print support for In_addr
-//
+/// @section  Print support for In_addr 
 overload printTo(stream, addr: In_addr) {
     var host = networkToHost(platform.s_addr(addr));
     printTo(stream,

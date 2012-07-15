@@ -23,8 +23,8 @@ if(UNIX)
         OUTPUT_VARIABLE LLVM_VERSION
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-    if(NOT ${LLVM_VERSION} STREQUAL "3.0")
-        message(FATAL_ERROR "Clay requires LLVM 3.0.")
+    if(NOT ${LLVM_VERSION} MATCHES "^3.1(svn)?$")
+        message(FATAL_ERROR "Clay requires LLVM 3.1.")
     endif()
 
     execute_process(
@@ -84,9 +84,7 @@ if(BUILD_BINDGEN)
     if(HAS_PATCHED_CLANG)
         set(BUILD_BINDGEN True)
     else()
-        message("-- libclang is either missing or needs to be patched to support")
-        message("-- bindgen. bindgen will not be built. Try applying the patch in")
-        message("-- tools/libclang.diff to the Clang source.")
+        message("-- libclang is missing, so bindgen will not be built.")
         set(BUILD_BINDGEN False)
     endif()
 endif()

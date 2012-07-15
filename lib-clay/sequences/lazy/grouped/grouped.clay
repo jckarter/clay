@@ -3,9 +3,7 @@ import vectors.*;
 import sequences.lazy.sliced.*;
 import sequences.force.*;
 
-//
-// grouped() function
-//
+/// @section  grouped() function 
 private record Group[S] (
     seq: S,
     groupSize: SizeT,
@@ -52,9 +50,7 @@ overload iterator(group: Group[S])
 
 
 
-//
-// group iterator
-//
+/// @section  group iterator 
 private record GroupIterator[I] (
     iter: I,
     groupSize: SizeT,
@@ -75,9 +71,7 @@ private record GroupIterator[I] (
 
 
 
-//
-// forward group coordinate
-//
+/// @section  forward group coordinate 
 private record FGroupCoordinate[Coordinate] (
     beginCoord: Coordinate,
     endCoord: Coordinate,
@@ -143,9 +137,7 @@ overload hasValue?(c: FGroupCoordinate[C]) {
 
 
 
-//
-// random access group coordinate
-//
+/// @section  random access group coordinate 
 private record RAGroupCoordinate[Coordinate] (
     coord: Coordinate,
     groupSize: SizeT,

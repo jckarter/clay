@@ -4,9 +4,7 @@ import sequences.lazy.zipped.*;
 import sequences.force.*;
 
 
-//
-// mapped
-//
+/// @section  mapped 
 
 inline mapped(forward mapper, forward ..seqs) = Mapped(mapper, zipped(..seqs));
 
@@ -27,9 +25,7 @@ overload UnderlyingContainerConstructor(#Mapped[F,A]) =
 
 
 
-//
-// MappedIterator
-//
+/// @section  MappedIterator 
 
 [F,A]
 inline overload iterator(a:Mapped[F,A]) =
@@ -59,9 +55,7 @@ inline overload hasValue?(v:MappedValue[F,V]) = hasValue?(v.value);
 inline overload getValue(forward v:MappedValue[F,V]) = forward ..v.mapper^(..getValue(v.value));
 
 
-//
-// MappedCoordinate, mappedInnerCoordinate
-//
+/// @section  MappedCoordinate, mappedInnerCoordinate 
 
 private record MappedCoordinate[F, COORD] (
     mapper : F,
@@ -106,9 +100,7 @@ inline overload dec(x:MappedCoordinate[F, COORD]) {
 
 
 
-//
-// size, StaticSize, index
-//
+/// @section  size, StaticSize, index 
 
 [F, A when CallDefined?(size, A)]
 inline overload size(a:Mapped[F, A]) = size(a.seq);

@@ -2,9 +2,7 @@ public import core.types.platform.*;
 public import __operators__.(typeToRValue, typesToRValues);
 
 
-//
-// types
-//
+/// @section  types 
 
 alias Byte = UInt8;
 
@@ -42,18 +40,14 @@ alias Opaque = Byte;
 
 
 
-//
-// Type
-//
+/// @section  Type 
 
 [..T]
 alias Type(..x:T) = ..T;
 
 
 
-//
-// typeToLValue, typeToRValue, typesToLValues, typesToRValues
-//
+/// @section  typeToLValue, typeToRValue, typesToLValues, typesToRValues 
 
 inline typeToLValue(a) = ref null(a)^;
 [T] inline overload typeToRValue(#T) --> returned:T {}
@@ -63,17 +57,13 @@ inline overload typesToRValues(..a) = ..mapValues(typeToRValue, ..a);
 
 
 
-//
-// ByRef[T] - return-by-reference type helper from __primitives__
-//
+/// @section  ByRef[T] - return-by-reference type helper from __primitives__ 
 
 [T] overload RegularRecord?(#ByRef[T]) = false;
 
 
 
-//
-// ReturnType
-//
+/// @section  ReturnType 
 
 alias ReturnType(..x) = ..Type(..returnValues(..x));
 
@@ -90,9 +80,7 @@ inline overload returnValues() = ;
 
 
 
-//
-// returnTypeToValue, returnTypesToValues
-//
+/// @section  returnTypeToValue, returnTypesToValues 
 
 define returnTypeToValue;
 [T] inline overload returnTypeToValue(#T) = typeToRValue(T);
@@ -102,9 +90,7 @@ inline returnTypesToValues(..a) = forward ..mapValues(returnTypeToValue, ..a);
 
 
 
-//
-// integer limits
-//
+/// @section  integer limits 
 
 define Least;
 define Greatest;
@@ -141,9 +127,7 @@ inline overload Least(#UInt128) : UInt128 = 0_ull;
 inline overload Greatest(#UInt128) : UInt128 = numericSubtract(0_ull, 1_ull);
 
 
-//
-// float limits
-//
+/// @section  float limits 
 
 define LeastPositive;
 define LeastPositiveNormalized;
@@ -189,9 +173,7 @@ inline overload GreatestPositiveFinite(#Imag80) : Imag80
     = numericConvert(Imag80,GreatestPositiveFinite(Float80));
 
 
-//
-// valueSize()
-//
+/// @section  valueSize() 
 
 [T] alias valueSize(x:T) = TypeSize(T);
 

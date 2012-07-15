@@ -584,8 +584,10 @@ struct X86_64_ExternalTarget : public LLVMExternalTarget {
         if (varArg && areYmmWordClasses(wordClasses))
             return true;
 
+        // According to the spec, X87-class arguments should also be passed by byval
+        // here; however, as of LLVM 3.1, LLVM appears not to pass an x87_fp80 correctly
+        // unless it is passed by value instead of by byval pointer.
         return wordClasses[0] == MEMORY
-            || wordClasses[0] == X87
             || wordClasses[0] == COMPLEX_X87;
     }
 
@@ -800,7 +802,7 @@ void X86_64_ExternalTarget::fixupClassification(TypePtr type, vector<WordClass> 
             return;
         }
         if (*i == SSEUP) {
-            *i = SSE_INT_VECTOR;
+            *i = SSE_DOUBLE_VECTOR;
         } else if (X86_64_ExternalTarget::isSSEClass(*i)) {
             do { ++i; } while ((i != end) && (*i == SSEUP));
         } else if (*i == X87) {
@@ -857,7 +859,11 @@ llvm::Type *X86_64_ExternalTarget::llvmWordType(TypePtr type)
         case SSE_INT_VECTOR: {
             int vectorRun = 0;
             do { ++vectorRun; ++i; } while (i != wordClasses.end() && *i == SSEUP);
-            llWordTypes.push_back(llvm::VectorType::get(llvmIntType(8), vectorRun*8));
+            // 8-byte int vectors are allocated to MMX registers
+            if (vectorRun == 1)
+                llWordTypes.push_back(llvm::VectorType::get(llvmFloatType(64), vectorRun));
+            else
+                llWordTypes.push_back(llvm::VectorType::get(llvmIntType(64), vectorRun));
             break;
         }
         case SSE_FLOAT_VECTOR: {

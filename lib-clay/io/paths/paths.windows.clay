@@ -7,9 +7,7 @@ import vectors.*;
 import sequences.*;
 
 
-//
-// separators
-//
+/// @section  separators 
 
 alias PATH_SEPARATOR1 = '\\';
 alias PATH_SEPARATOR2 = '/';
@@ -34,9 +32,7 @@ private absoluteDirectory?(s) = beginsWithPathSeparator?(s);
 
 
 
-//
-// path predicates
-//
+/// @section  path predicates 
 
 private uppercaseLetter?(c) = (c >= 'A') and (c <= 'Z');
 private lowercaseLetter?(c) = (c >= 'a') and (c <= 'z');
@@ -48,9 +44,7 @@ private uncPath?(path) = beginsWith?(path, "//") or beginsWith?(path, "\\\\");
 
 
 
-//
-// slicedWindowsPath. returns (volume, directory, name)
-//
+/// @section  slicedWindowsPath. returns (volume, directory, name) 
 
 slicedWindowsPath(path) {
     if (uncPath?(path))
@@ -96,9 +90,7 @@ private directoryTailTrimmed(path) {
 
 
 
-//
-// splitWindowsPath, slicedPath, splitPath, pathComponents
-//
+/// @section  splitWindowsPath, slicedPath, splitPath, pathComponents 
 
 splitWindowsPath(path) = ..mapValues(force, ..slicedWindowsPath(path));
 
@@ -130,9 +122,7 @@ pathComponents(path) {
 
 
 
-//
-// joinPath
-//
+/// @section  joinPath 
 
 define joinPath;
 
@@ -185,9 +175,7 @@ private appendComponent(base:String, suffix) {
 
 
 
-//
-// pathExists?
-//
+/// @section  pathExists? 
 
 pathExists?(p) {
     var result = win32.GetFileAttributesA(cstring(p));

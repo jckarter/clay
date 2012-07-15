@@ -2,10 +2,13 @@
 import vectors.generic.*;
 public import vectors.generic.(Vector?);
 
-
-//
-// Vector[T]
-//
+/// @module vector
+/// vector implementation
+/// see also: \a vectors.generic.generic
+
+
+/// @record Vector[T]
+/// A Vector of Elements
 
 record Vector[T] (
     size:SizeT,
@@ -14,13 +17,9 @@ record Vector[T] (
 );
 
 
-
-//
-// predicates
-//
+/// @section predicates
 
-[T]
-overload RegularRecord?(#Vector[T]) = false;
+[T] overload RegularRecord?(#Vector[T]) = false;
 
 [T]
 overload ContiguousSequence?(#Vector[T]) = true;
@@ -29,14 +28,16 @@ overload ContiguousSequence?(#Vector[T]) = true;
 overload SequenceContainer?(#Vector[T]) = true;
 
 
-
-//
-// constructors
-//
+/// @section constructors
 
+
+/// @overload Vector[T]()
+/// construct an empty Vector.
 [T]
 overload Vector[T]() = Vector[T](SizeT(0), SizeT(0), null(T));
 
+/// @overload  Vector[T](forward a:A)
+/// construct Vector from a sequence element
 [T,A when Sequence?(A) and (T == SequenceElementType(A))]
 overload Vector[T](forward a:A) {
     var v = Vector[T]();
@@ -44,17 +45,15 @@ overload Vector[T](forward a:A) {
     return move(v);
 }
 
+/// @overload  Vector[T](forward a:A)
+/// construct Vector from a sequence.
 [A when Sequence?(A)]
 overload Vector(forward a:A) {
     alias T = SequenceElementType(A);
     return Vector[T](a);
 }
 
-
-
-//
-// varargs constructor
-//
+/// @section varargs constructor
 
 [T, ..A when (countValues(..A) > 0) and equalValues?(T, ..A)]
 alias overload Vector[T](..elements:A) {
@@ -63,10 +62,7 @@ alias overload Vector[T](..elements:A) {
     return move(v);
 }
 
-
-//
-// moveUnsafe, resetUnsafe, assign, destroy
-//
+/// @section moveUnsafe, resetUnsafe, assign, destroy
 
 [T] overload BitwiseMovedType?(#Vector[T]) = true;
 
@@ -94,10 +90,7 @@ moveVectorBuffer(a:Vector[T]) {
     return data;
 }
 
-
-//
-// generic vector requirements
-//
+/// @section generic vector requirements
 
 [T]
 overload Vector?(#Vector[T]) = true;

@@ -2,9 +2,7 @@ import io.files.*;
 import io.streams.*;
 
 
-//
-// bit manipulation
-//
+/// @section  bit manipulation 
 
 alignUp(x, align) = bitand(x+align-1, bitnot(align-1));
 
@@ -47,9 +45,7 @@ ceilLog2(n:T) {
 
 
 
-//
-// resizeFile
-//
+/// @section  resizeFile 
 
 resizeFile(file, newSize) {
     assert(fileSize(file) < newSize, "resizeFile");

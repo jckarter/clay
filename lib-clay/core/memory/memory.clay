@@ -2,9 +2,7 @@ import core.memory.platform.(SystemMallocAlignment);
 import core.libc as libc;
 
 
-//
-// allocateObject, freeObject
-//
+/// @section  allocateObject, freeObject 
 
 [T]
 alias allocateObject(x:T) {
@@ -46,9 +44,7 @@ freeArray(array:CoordinateRange[T]) {
 }
 
 
-//
-// alignedMalloc, alignedFree
-//
+/// @section  alignedMalloc, alignedFree 
 
 alignedMalloc(numBytes:SizeT, alignment:SizeT) {
     var ptr = libc.malloc(numBytes + alignment + TypeSize(UInt8));
@@ -70,9 +66,7 @@ alignedFree(ptr:Pointer[UInt8]) {
 }
 
 
-//
-// allocateRawMemoryAligned, freeRawMemoryAligned
-//
+/// @section  allocateRawMemoryAligned, freeRawMemoryAligned 
 
 [T, I, J when Integer?(I) and Integer?(J)]
 allocateRawMemoryAligned(#T, count:I, alignment:J) {
@@ -87,9 +81,7 @@ freeRawMemoryAligned(ptr:Pointer[T]) {
 
 
 
-//
-// allocateRawMemory, freeRawMemory
-//
+/// @section  allocateRawMemory, freeRawMemory 
 
 [T,I when Integer?(I)]
 allocateRawMemory(#T, count:I) {
@@ -120,9 +112,7 @@ overload freeRawMemory(ptr:Pointer[T]) {
 
 
 
-//
-// initializeMemory
-//
+/// @section  initializeMemory 
 
 [T]
 initializeMemory(begin:Pointer[T], end:Pointer[T]) {
@@ -131,9 +121,7 @@ initializeMemory(begin:Pointer[T], end:Pointer[T]) {
 
 
 
-//
-// destroyMemory
-//
+/// @section  destroyMemory 
 
 [T when not PODType?(T)]
 destroyMemory(begin:Pointer[T], end:Pointer[T]) {
@@ -142,9 +130,7 @@ destroyMemory(begin:Pointer[T], end:Pointer[T]) {
 
 
 
-//
-// copyNonoverlappingMemory
-//
+/// @section  copyNonoverlappingMemory 
 
 [T when not PODType?(T)]
 copyNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
@@ -156,9 +142,7 @@ copyNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Point
 }
 
 
-//
-// move*Memory*
-//
+/// @section  move*Memory* 
 
 [T when not PODType?(T)]
 moveMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
@@ -215,9 +199,7 @@ moveNonoverlappingMemoryUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd
 
 
 
-//
-// resetMemoryUnsafe
-//
+/// @section  resetMemoryUnsafe 
 
 [T when not PODType?(T)]
 resetMemoryUnsafe(begin:Pointer[T], end:Pointer[T]) {
@@ -226,9 +208,7 @@ resetMemoryUnsafe(begin:Pointer[T], end:Pointer[T]) {
 
 
 
-//
-// fillMemory, zeroMemory
-//
+/// @section  fillMemory, zeroMemory 
 
 [T]
 fillMemory(begin:Pointer[T], end:Pointer[T], value:T) {
@@ -244,9 +224,7 @@ zeroMemory(begin:Pointer[T], end:Pointer[T]) {
 zeroObject(o) { zeroMemory(Pointer[UInt8](@o), Pointer[UInt8](@o + 1)); }
 
 
-//
-// assignNonoverlappingMemory, moveAssignNonoverlappingMemory
-//
+/// @section  assignNonoverlappingMemory, moveAssignNonoverlappingMemory 
 
 [T, U when not (T == U and PODType?(T)) and CallDefined?(assign, T, U)]
 assignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd:Pointer[U]) {
@@ -277,9 +255,7 @@ overload moveAssignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T
 
 
 
-//
-// eachLocation, eachLocationBackwards, eachLocationWithCleanup
-//
+/// @section  eachLocation, eachLocationBackwards, eachLocationWithCleanup 
 
 [T]
 private eachLocation(_begin:Pointer[T], _end:Pointer[T], f) {

@@ -8,9 +8,7 @@ import io.files.*;
 import strings.(String?);
 
 
-//
-// NamedScalar[T]
-//
+/// @section  NamedScalar[T] 
 
 record NamedScalar[T] (
     fileName : strings.String,
@@ -23,9 +21,7 @@ overload RegularRecord?(#NamedScalar[T]) = false;
 
 
 
-//
-// constructor
-//
+/// @section  constructor 
 
 [S,T when String?(S)]
 overload NamedScalar[T](fileName:S, initial:T) {
@@ -47,9 +43,7 @@ overload NamedScalar[T](fileName:S, initial:T) {
 
 
 
-//
-// destroy
-//
+/// @section  destroy 
 
 [T]
 overload destroy(x:NamedScalar[T]) {
@@ -60,9 +54,7 @@ overload destroy(x:NamedScalar[T]) {
 
 
 
-//
-// dereference
-//
+/// @section  dereference 
 
 [T]
 overload dereference(x:NamedScalar[T]) =

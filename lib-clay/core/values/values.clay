@@ -1,9 +1,7 @@
 
 
 
-//
-// eachValue, mapValues, foldValues, weaveValues,
-//
+/// @section  eachValue, mapValues, foldValues, weaveValues, 
 
 inline eachValue(fn, ..xs) {
     ..for (x in xs) {
@@ -42,9 +40,7 @@ inline overload weaveValues(between, forward x) = forward x;
 inline overload weaveValues(between) = ;
 
 
-//
-// countOccurrences, firstValue
-//
+/// @section  countOccurrences, firstValue 
 
 define countOccurrences;
 inline overload countOccurrences(value) = 0;
@@ -64,9 +60,7 @@ overload lastValue(forward a) = forward a;
 
 
 
-//
-// replicateValue, allValues?, anyValues?, equalValues?, inValues?
-//
+/// @section  replicateValue, allValues?, anyValues?, equalValues?, inValues? 
 
 [n]
 inline replicateValue(a, #n) = a, ..replicateValue(a, #(n-1));
@@ -94,9 +88,7 @@ inValues?(a, ..rest) = anyValues?(x => a == x, ..rest);
 
 
 
-//
-// capture/forward values
-// 
+/// @section  capture/forward values 
 
 // captureValue, forwardValue, capturedRef
 
@@ -130,9 +122,7 @@ inline capturedRefs(x:Tuple[..T]) =
 
 
 
-//
-// expand values from sequence or iterator 
-//
+/// @section  expand values from sequence or iterator  
 [S, n when Sequence?(S)]
 sequenceValues(seq: S, #n) = forward ..iteratorValues(iterator(seq), #n);
 
@@ -147,9 +137,7 @@ overload iteratorValues(iter: I, #n) {
 
 
 
-//
-// iterate over two sets of values in tandem
-//
+/// @section  iterate over two sets of values in tandem 
 [n when n > 0] eachValue2(fn, #n, forward x, forward ..xs) {
     fn(x, nthValue(#(n-1), ..xs));
     return ..eachValue2(fn, #(n-1), ..withoutNthValue(#(n-1), ..xs));
@@ -163,9 +151,7 @@ overload mapValues2(fn, #0, forward ..xs) = ;
 
 
 
-//
-// treat multiple #tuple values as key-values pairs
-//
+/// @section  treat multiple #tuple values as key-values pairs 
 
 [key]
 assocValue(#key, kv, forward ..kvs) = forward ..assocValue(#key, ..kvs);
@@ -190,9 +176,7 @@ overload assocCountValues(#key, kv: Tuple[Static[key], ..T], ..kvs) = countValue
 
 
 
-//
-// find the index of a value within a value list
-//
+/// @section  find the index of a value within a value list 
 
 [n, value, other]
 private _valueIndex(#n, #value, #other, ..etc)

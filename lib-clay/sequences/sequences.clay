@@ -1,6 +1,7 @@
 
 public import sequences.force.*;
 public import sequences.lazy.*;
+public import sequences.operators.*;
 import vectors.*;
 
 

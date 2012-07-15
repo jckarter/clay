@@ -1,7 +1,5 @@
 
-//
-// Maybe[T]
-//
+/// @section  Maybe[T] 
 
 variant Maybe[T] (Nothing, T);
 
@@ -9,9 +7,7 @@ record Nothing ();
 
 
 
-//
-// constructors
-//
+/// @section  constructors 
 
 [T]
 inline overload Maybe(x:T) = Maybe[T](x);
@@ -25,9 +21,7 @@ Maybe?(T) = false;
 [T] overload Maybe?(#Maybe[T]) = true;
 
 
-//
-// nothing?
-//
+/// @section  nothing? 
 
 inline nothing?(x) = variantIs?(x, Nothing);
 inline just?(x) = variantIs?(x, Type(just(x)));
@@ -38,9 +32,7 @@ inline just(forward m: Maybe[T]) = forward variantAs(m, T);
 inline overload just(m: Maybe[T], dflt: T) = maybe(m, v => v, () => dflt);
 
 
-//
-// maybe function
-//
+/// @section  maybe function 
 
 private define maybeValue;
 inline overload maybeValue(T, forward x, thenFn, ..elseFn) = forward ..thenFn(x);
@@ -58,9 +50,7 @@ inline maybe(forward m:Maybe[T], thenFn, ..elseFn)
 
 
 
-//
-// require function
-//
+/// @section  require function 
 
 record ValueMissing ();
 instance Exception (ValueMissing);
@@ -82,9 +72,7 @@ inline overload require(forward m:Maybe[T]) {
 }
 
 
-//
-// maybe as iterator value
-//
+/// @section  maybe as iterator value 
 
 [T] inline overload hasValue?(m:Maybe[T]) = just?(m);
 [T] inline overload getValue(forward m:Maybe[T]) = forward just(m);

@@ -3,9 +3,7 @@ import sequences.lazy.mapped.*;
 
 
 
-//
-// String?
-//
+/// @section  String? 
 
 [A]
 String?(#A) = false;
@@ -15,9 +13,7 @@ overload String?(#A) = true;
 
 
 
-//
-// SizedString?
-//
+/// @section  SizedString? 
 
 [A]
 SizedString?(#A) = false;
@@ -27,9 +23,7 @@ overload SizedString?(#A) = true;
 
 
 
-//
-// ContiguousString?
-//
+/// @section  ContiguousString? 
 
 [A]
 ContiguousString?(#A) = false;
@@ -39,9 +33,7 @@ overload ContiguousString?(#A) = true;
 
 
 
-//
-// CCompatibleString?
-//
+/// @section  CCompatibleString? 
 
 [A]
 CCompatibleString?(#A) = false;
@@ -51,35 +43,27 @@ overload CCompatibleString?(#A) = true;
 
 
 
-//
-// String
-//
+/// @section  String 
 
 alias String = Vector[Char];
 
 
 
-//
-// construct from sequences of bytes
-//
+/// @section  construct from sequences of bytes 
 
 [A when Sequence?(A) and ByteSizedInteger?(SequenceElementType(A))]
 inline overload String(a:A) = String(mapped(Char, a));
 
 
 
-//
-// construct from c-string
-//
+/// @section  construct from c-string 
 
 [T when ByteSizedInteger?(T)]
 inline overload String(cstr : Pointer[T]) = String(CStringRef(cstr));
 
 
 
-//
-// convert to c-compatible string
-//
+/// @section  convert to c-compatible string 
 
 inline overload cstring(s: String) {
     reserve(s, size(s)+1);
@@ -87,8 +71,6 @@ inline overload cstring(s: String) {
     return Pointer[Int8](s.data);
 }
 
-//
-// convert to cstringref
-//
+/// @section  convert to cstringref 
 
 inline overload CStringRef(s : String) = CStringRef(cstring(s));

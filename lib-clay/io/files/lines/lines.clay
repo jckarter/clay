@@ -3,17 +3,13 @@ import io.streams.(readLine);
 import strings.*;
 
 
-//
-// lines
-//
+/// @section  lines 
 
 lines(f:File) = LineSequence(f);
 
 
 
-//
-// LineSequence
-//
+/// @section  LineSequence 
 
 private record LineSequence (
     f : File,
@@ -23,9 +19,7 @@ overload iterator(x:LineSequence) = LineIterator(@x.f);
 
 
 
-//
-// LineIterator
-//
+/// @section  LineIterator 
 
 private record LineIterator (file : Pointer[File]);
 

@@ -360,26 +360,26 @@ typedef Pointer<Object> ObjectPtr;
 //
 
 enum ObjectKind {
-    SOURCE,
+    SOURCE,       // -- 0
     LOCATION,
 
     IDENTIFIER,
     DOTTED_NAME,
 
     EXPRESSION,
-    EXPR_LIST,
+    EXPR_LIST,    // -- 5
     STATEMENT,
     CASE_BLOCK,
     CATCH,
 
     FORMAL_ARG,
-    RETURN_SPEC,
+    RETURN_SPEC, // -- 10
     LLVM_CODE,
     CODE,
 
     RECORD,
     RECORD_BODY,
-    RECORD_FIELD,
+    RECORD_FIELD, // -- 15
     VARIANT,
     INSTANCE,
     OVERLOAD,
@@ -419,6 +419,8 @@ enum ObjectKind {
 
     CVALUE,
     MULTI_CVALUE,
+
+    DOCUMENTATION,
 
     DONT_CARE
 };
@@ -514,6 +516,7 @@ struct ExternalProcedure;
 struct ExternalArg;
 struct ExternalVariable;
 struct EvalTopLevel;
+struct Documentation;
 
 struct GlobalAlias;
 
@@ -660,6 +663,7 @@ typedef Pointer<ExternalProcedure> ExternalProcedurePtr;
 typedef Pointer<ExternalArg> ExternalArgPtr;
 typedef Pointer<ExternalVariable> ExternalVariablePtr;
 typedef Pointer<EvalTopLevel> EvalTopLevelPtr;
+typedef Pointer<Documentation> DocumentationPtr;
 
 typedef Pointer<GlobalAlias> GlobalAliasPtr;
 
@@ -962,7 +966,11 @@ enum TokenKind {
     T_SPACE,
     T_LINE_COMMENT,
     T_BLOCK_COMMENT,
-    T_LLVM
+    T_LLVM,
+    T_DOC_START,
+    T_DOC_PROPERTY,
+    T_DOC_TEXT,
+    T_DOC_END,
 };
 
 struct Token {
@@ -1296,7 +1304,7 @@ struct DispatchExpr : public Expr {
 };
 
 struct ForeignExpr : public Expr {
-    llvm::StringRef moduleName;
+    string moduleName;
     EnvPtr foreignEnv;
     ExprPtr expr;
 
@@ -1577,7 +1585,7 @@ struct For : public Statement {
 };
 
 struct ForeignStatement : public Statement {
-    llvm::StringRef moduleName;
+    string moduleName;
     EnvPtr foreignEnv;
     StatementPtr statement;
     ForeignStatement(llvm::StringRef moduleName, StatementPtr statement)
@@ -2093,6 +2101,29 @@ struct EvalTopLevel : public TopLevelItem {
         {}
 };
 
+
+//
+// documentation
+//
+
+enum DocumentationAnnotation
+{
+    SectionAnnotation,
+    ModuleAnnotation,
+    OverloadAnnotation,
+    RecordAnnotion
+};
+
+struct Documentation : public TopLevelItem {
+
+    std::map<DocumentationAnnotation, string> annotation;
+    std::string text;
+    Documentation(const std::map<DocumentationAnnotation, string> &annotation, const std::string &text)
+        : TopLevelItem(DOCUMENTATION), annotation(annotation), text(text)
+        {}
+};
+
+
 
 //
 // GlobalAlias
@@ -2294,7 +2325,14 @@ inline ModuleHolderPtr ModuleHolder::get(ModulePtr module)
 // parser module
 //
 
-ModulePtr parse(llvm::StringRef moduleName, SourcePtr source);
+
+enum ParserFlags
+{
+    NoParserFlags = 0,
+    ParserKeepDocumentation = 1
+};
+
+ModulePtr parse(llvm::StringRef moduleName, SourcePtr source, ParserFlags flags = NoParserFlags);
 ExprPtr parseExpr(SourcePtr source, int offset, int length);
 ExprListPtr parseExprList(SourcePtr source, int offset, int length);
 void parseStatements(SourcePtr source, int offset, int length,

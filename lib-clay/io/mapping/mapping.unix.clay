@@ -4,9 +4,7 @@ import io.files.*;
 import sharedpointers.*;
 
 
-//
-// FileMapping
-//
+/// @section  FileMapping 
 
 private record InnerFileMapping (
     address : Pointer[Byte],
@@ -21,9 +19,7 @@ record FileMapping (
 
 
 
-//
-// constructors, destroy
-//
+/// @section  constructors, destroy 
 
 enum MappingMode (
     MAP_READ,
@@ -83,18 +79,14 @@ overload destroy(x:InnerFileMapping) {
 
 
 
-//
-// mappingAddress, mappingLength
-//
+/// @section  mappingAddress, mappingLength 
 
 mappingAddress(fm:FileMapping) = fm.inner^.address;
 mappingLength(fm:FileMapping) = fm.inner^.length;
 
 
 
-//
-// flushMapping
-//
+/// @section  flushMapping 
 
 flushMapping(fm:FileMapping) {
     var result = unix.msync(fm.inner^.address, fm.inner^.length, unix.MS_SYNC);
