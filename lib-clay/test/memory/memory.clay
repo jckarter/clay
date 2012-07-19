@@ -1,7 +1,7 @@
 import test.(expect, printFailure);
 
 alias UNINITIALIZED_CANARY = Greatest(SizeT);
-alias NOISY_CANARIES = Flag?("test.memory.NoisyCanaries");
+alias NOISY_CANARIES = Flag?(#"test.memory.NoisyCanaries");
 
 noisyPrintln(forward ..values) {
     if (NOISY_CANARIES)
