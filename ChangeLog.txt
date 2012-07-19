@@ -442,7 +442,7 @@ Library changes:
 
 Compiler frontend changes:
 --------------------------
-* The compiler now requires LLVM 3.0.
+* The compiler now requires LLVM and Clang 3.1.
 * -unoptimized has been replaced with -O0 -O1 -O2 -O3 flags.
 * '-asm' and '-llvm' have been renamed to '-S' and '-emit-llvm' for consistency
   with Clang and GCC. '-emit-llvm' will now also generate LLVM bitcode by
