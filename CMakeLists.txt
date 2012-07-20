@@ -90,6 +90,7 @@ if(BUILD_BINDGEN)
 endif()
 
 install(DIRECTORY doc/ DESTINATION share/doc/clay)
+install(DIRECTORY examples/ DESTINATION share/doc/clay/examples)
 install(DIRECTORY lib-clay DESTINATION lib)
 
 add_subdirectory(compiler)
