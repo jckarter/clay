@@ -1,12 +1,33 @@
-Clay 0.1.1
+Clay 0.1.2
 ==========
 
-This is a bugfix release. All Clay 0.1.0 source code should be source-compatible.
+This is a maintenance release. All Clay 0.1.x source code should be backward-
+and forward-compatible. The following people contributed to this release:
+
+T.R. Shyam Sundar (trssnd@gmail.com)
+Philipp Brüschweilder (blei42@gmail.com)
+Scott Olson (scott@scott-olson.org)
+Jyun-Yan You (jyyou@cs.nctu.edu.tw)
+
+Changes in 0.1.2
+----------------
+- Clay now uses LLVM and Clang 3.1.
+- Bug fixes:
+  - #231 floatBits() now works with Float80 values on FreeBSD x86-32.
+  - #232 Single-precision variants of libc math functions are now supported on
+    Win32.
+  - #234 LLVM 3.1 fixes a codegen bug involving SIMD vector types.
+  - #254 External functions now show up in compiler error message backtraces.
+  - #280 nthValue() now correctly forwards the lvalue-ness of the selected
+    value.
+  - #282 The twohash module now compiles correctly.
+  - Spurious errors from the close() system call no longer cause an assertion
+    failure when destroying File objects on Unix systems.
 
 Platform support
 ----------------
-Linux, MacOS X, Win32, Win64, FreeBSD hosts and targets should work out of the box,
-with some expected test failures for Win64 and FreeBSD.
+Linux, MacOS X, Win32, Win64, FreeBSD hosts and targets should work out of the
+box, with some expected test failures for Win64 and FreeBSD.
 Windows with the MSVC toolchain is known to work, but Mingw, and Cygwin targets
 are untested.
 
@@ -15,7 +36,7 @@ Known issues
 #17 - emacs clay-mode does not properly indent braces.
 #36 - A single static value can still match a tuple pattern.
 #60 - Assertions and unhandled exception errors do not support backtrace display
-    on Windows or FreeBSD.
+    on Windows.
 #117 - The compiler does not prevent unsupported types, such as Int128 on 32-bit
     platforms or Float80 on non-x86 platforms, from being instantiated, leaving
     LLVM to fail hard when these types are used.
