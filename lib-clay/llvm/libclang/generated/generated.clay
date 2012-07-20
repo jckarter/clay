@@ -702,11 +702,11 @@ external clang_isFunctionTypeVariadic(
     T : CXType) : UInt;
 
 external clang_getNumArgTypes(
-    T : CXType) : Int64;
+    T : CXType) : Int;
 
 external clang_getArgType(
     T : CXType,
-    i : Int64) : CXType;
+    i : UInt) : CXType;
 
 external clang_getResultType(
     T : CXType) : CXType;
