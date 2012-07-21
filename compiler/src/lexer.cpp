@@ -871,7 +871,7 @@ static bool docSpace()
 {
     char c;
     if (!next(c)) return false;
-    if (!docIsBlock && c == '\n' || c == '\r')
+    if (!docIsBlock && (c == '\n' || c == '\r'))
         return false;
     else if (isSpace(c))
         return true;
