@@ -861,6 +861,7 @@ static bool docText(Token &x) {
             restore(end);
             break;
         }
+        end = save();
         if (docIsBlock && (c == '*')) {
             if (maybeDocEnd()) {
                 restore(end);
