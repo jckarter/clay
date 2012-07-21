@@ -878,6 +878,15 @@ static bool nextDocToken(Token &x) {
     x = Token();
     const char *p = save();
     if (docIsBlock) {
+        for(;;) {
+            p = save();
+            char c;
+            if (!next(c)) return false;
+            if (c != '\n' && c != '\r') {
+                restore(p);
+                break;
+            }
+        }
         if (docEndBlock(x))  goto success;
     } else {
         if (docEndLine(x))  goto success;
