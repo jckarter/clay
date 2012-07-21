@@ -840,18 +840,10 @@ static bool maybeDocEnd()
 }
 
 static bool docText(Token &x) {
-    char c;
 
     const char *begin = save();
-    do {
-        if (!next(c)) return false;
-        if (c == '\n' || c == '\r') return false;
-    } while (isSpace(c));
-
-    if (docIsBlock)
-        while (c == '*')
-            if (!next(c))
-                return false;
+    char c;
+    if (!next(c)) return false;
 
     const char *end = begin;
     for (;;) {
@@ -875,19 +867,40 @@ static bool docText(Token &x) {
     return true;
 }
 
+static bool docSpace()
+{
+    char c;
+    if (!next(c)) return false;
+    if (!docIsBlock && c == '\n' || c == '\r')
+        return false;
+    else if (isSpace(c))
+        return true;
+    else if (docIsBlock && c == '*') {
+        const char *p = save();
+        if (!next(c))
+            return true;
+        if (c == '/') {
+            return false;
+        }
+        restore(p);
+        return true;
+    }
+    return false;
+}
+
 static bool nextDocToken(Token &x) {
     x = Token();
     const char *p = save();
-    if (docIsBlock) {
-        for(;;) {
-            p = save();
-            char c;
-            if (!next(c)) return false;
-            if (c != '\n' && c != '\r') {
-                restore(p);
-                break;
-            }
+
+    for (;;) {
+        p = save();
+        if(!docSpace()) {
+            restore(p);
+            break;
         }
+    }
+
+    if (docIsBlock) {
         if (docEndBlock(x))  goto success;
     } else {
         if (docEndLine(x))  goto success;
