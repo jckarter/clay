@@ -1,0 +1,11 @@
+/** @section dig this
+**  a function to test docs
+  */
+function (x, y) { return x * y; }
+
+/// 
+///  @section  in tha haus
+/// this is main
+
+main(){}
+
