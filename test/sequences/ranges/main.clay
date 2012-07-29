@@ -21,15 +21,19 @@ main() {
     println("---");
     for (i in reverseRange(5))
         println(i);
+    println("size: ", size(reverseRange(5)));
     println("---");
     for (i in reverseRange(6,1))
         println(i);
+    println("size: ", size(reverseRange(6,1)));
     println("---");
     for (i in reverseRange(1,1))
         println(i);
+    println("size: ", size(reverseRange(1,1)));
     println("---");
     for (i in reverseRange(0,1))
         println(i);
+    println("size: ", size(reverseRange(0,1)));
     println("---");
     var v = Vector[Int](0,1,2,3,4,5,6);
     for (i in sliced(v,0,5))
