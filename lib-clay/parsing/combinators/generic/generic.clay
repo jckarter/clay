@@ -413,7 +413,8 @@ separatedListStrict(#TokenInput, forward _separator:Separator, forward _element:
 optSeparatedListStrict(#TokenInput, forward _separator:Separator, forward _element:Element) {
     alias T = ParseResult(TokenInput, Element);
     return modify(
+        TokenInput,
         x => maybe(move(x), y => move(y), () => Vector[T]()),
-        optional(separatedListStrict(_separator, _element)),
+        optional(TokenInput, separatedListStrict(TokenInput, _separator, _element)),
     );
 }
