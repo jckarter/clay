@@ -1,7 +1,0 @@
-Testing parsing.combinators.generic:
-  separatedList: passed
-  separatedListStrict: passed
-  optSeparatedList: passed
-  optSeparatedListStrict: passed
--- parsing.combinators.generic: 16 expectations passed; 0 failed (0 pending)
-Overall: 16 expectations passed; 0 failed (0 pending)
