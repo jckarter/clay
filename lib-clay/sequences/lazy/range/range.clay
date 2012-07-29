@@ -13,7 +13,7 @@ record Range[T] (
 overload LightweightSequence?(static Range[T]) = true;
 
 [T]
-inline overload size(a:Range[T]) = SizeT(a.end - a.begin);
+inline overload size(a:Range[T]) = if (a.end < a.begin) SizeT(0) else SizeT(a.end - a.begin);
 
 [T,I | Integer?(I)]
 inline overload index(a:Range[T], i:I) = T(a.begin + i);
@@ -55,7 +55,7 @@ record ReverseRange[T] (
 overload LightweightSequence?(static ReverseRange[T]) = true;
 
 [T]
-inline overload size(a:ReverseRange[T]) = SizeT(a.end - a.begin);
+inline overload size(a:ReverseRange[T]) = if (a.end < a.begin) SizeT(0) else SizeT(a.end - a.begin);
 
 [T,I | Integer?(I)]
 inline overload index(a:ReverseRange[T], i:I) = T(a.end - i - 1);
