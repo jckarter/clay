@@ -25,3 +25,5 @@ var zeroOrMoreAs = combinators.zeroOrMoreAs;
 var oneOrMoreAs = combinators.oneOrMoreAs;
 var separatedList = combinators.separatedList;
 var separatedListStrict = combinators.separatedListStrict;
+var optSeparatedList = combinators.optSeparatedList;
+var optSeparatedListStrict = combinators.optSeparatedListStrict;
