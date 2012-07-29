@@ -5,15 +5,19 @@ import sequences.*;
 main() {
     for (i in range(5))
         println(i);
+    println("size: ", size(range(5)));
     println("---");
     for (i in range(1,6))
         println(i);
+    println("size: ", size(range(1,6)));
     println("---");
     for (i in range(1,1))
         println(i);
+    println("size: ", size(range(1,1)));
     println("---");
     for (i in range(1,0))
         println(i);
+    println("size: ", size(range(1,0)));
     println("---");
     for (i in reverseRange(5))
         println(i);

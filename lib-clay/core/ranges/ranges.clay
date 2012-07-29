@@ -11,7 +11,7 @@ record Range[T] (
 overload LightweightSequence?(#Range[T]) = true;
 
 [T]
-inline overload size(a:Range[T]) = SizeT(a.end - a.begin);
+inline overload size(a:Range[T]) = if (a.end < a.begin) SizeT(0) else SizeT(a.end - a.begin);
 
 [T,I when Integer?(I)]
 inline overload index(a:Range[T], i:I) = T(a.begin + i);
