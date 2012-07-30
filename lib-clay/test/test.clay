@@ -6,6 +6,7 @@ import io.files.*;
 import strings.*;
 import lambdas.*;
 import vectors.*;
+import printer.formatter.(repr);
 
 record TestStatus (
     passed: UInt,
@@ -157,7 +158,7 @@ expectEqual(test: TestStatus, name, expected, result) {
         test,
         expected == result,
         () => {
-            printFailure(name, " is expected to equal ", expected, " but is ", result);
+            printFailure(name, " is expected to equal ", repr(expected), " but is ", repr(result));
         }
     );
 }
@@ -167,7 +168,7 @@ expectNotEqual(test: TestStatus, name, expected, result) {
         test,
         expected != result,
         () => {
-            printFailure(name, " is expected not to equal ", expected, " but is ", result);
+            printFailure(name, " is expected not to equal ", repr(expected), " but is ", repr(result));
         }
     );
 }
@@ -184,9 +185,9 @@ expectEqualValues(test: TestStatus, name, expectedTuple, ..results) {
         expectedResults?(expectedTuple, resultsTuple),
         () => {
             printFailure(name, " are expected to equal:");
-            printFailure(TEST_CASE_INDENT, ..weaveValues(", ", ..unpack(expectedTuple)));
+            printFailure(TEST_CASE_INDENT, ..weaveValues(", ", ..mapValues(repr, ..unpack(expectedTuple))));
             printFailure("but are:");
-            printFailure(TEST_CASE_INDENT, ..weaveValues(", ", ..unpack(resultsTuple)));
+            printFailure(TEST_CASE_INDENT, ..weaveValues(", ", ..mapValues(repr, ..unpack(resultsTuple))));
         }
     );
 }
@@ -227,10 +228,10 @@ expectIterator(test: TestStatus, name, iter:I, ..expected) {
         () => {
             printFailure(name, " is expected to contain:");
             for (expectedX in expectedV)
-                printFailure(TEST_CASE_INDENT, expectedX);
+                printFailure(TEST_CASE_INDENT, repr(expectedX));
             printFailure("but contains:");
             for (resultX in resultV)
-                printFailure(TEST_CASE_INDENT, resultX);
+                printFailure(TEST_CASE_INDENT, repr(resultX));
         }
     );
 }
