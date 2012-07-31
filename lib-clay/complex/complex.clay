@@ -84,14 +84,14 @@ overload ComplexType(#T) = Type(Complex(T()));
 [T when Complex?(T)]
 overload T() = T(0.);
 
-[C,T when Complex?(C,T)]
-forceinline overload C(a:T) = Complex(real(a), imag(a));
+[C,T when Complex?(C,T) and C != T]
+forceinline overload C(a:T) = Complex(ComplexBaseType(C)(real(a)), ComplexBaseType(C)(imag(a)));
 
 [T,C when (Float?(T) or Imaginary?(T)) and Complex?(C)]
-forceinline overload C(a:T) = Complex(a);
+forceinline overload C(a:T) = Complex(ComplexBaseType(C)(a));
 
 [U,T,C when Float?(U) and (Float?(T) or Imaginary?(T)) and Complex?(C)]
-forceinline overload C(a:U, b:T) = Complex(a,b);
+forceinline overload C(a:U, b:T) = Complex(ComplexBaseType(C)(a), ComplexBaseType(C)(b));
 
 [I,C when Integer?(I) and Complex?(C)]
 forceinline overload C(a:I) = Complex(ComplexBaseType(C)(a));
