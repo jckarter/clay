@@ -172,6 +172,7 @@ static void insertImported(IdentifierPtr name,
     }
 }
 
+
 static void addImportedSymbols(ModulePtr module,
                                bool publicOnly)
 {
@@ -204,7 +205,8 @@ static void addImportedSymbols(ModulePtr module,
                     publicOnly ?
                     module->publicRootHolder->children[name->str] :
                     module->rootHolder->children[name->str];
-                insertImported(name, holder.ptr(), globals, result, specificImported, true);
+                insertImported(name, holder.ptr(), globals, result, 
+                    specificImported, y->dottedName->parts.size()==1 ? true : false);
             }
         }
         else if (x->importKind == IMPORT_STAR) {
