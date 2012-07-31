@@ -2244,14 +2244,18 @@ static bool allReturnSpecs(vector<ReturnSpecPtr> &returnSpecs,
 // define, overload
 //
 
-static bool optInline(bool &isInline) {
+static bool optInline(InlineAttribute &isInline) {
     int p = save();
-    if (!keyword("inline")) {
+    if (keyword("inline"))
+        isInline = INLINE;
+    else if (restore(p), keyword("forceinline"))
+        isInline = FORCE_INLINE;
+    else if (restore(p), keyword("noinline"))
+        isInline = NEVER_INLINE;
+    else {
         restore(p);
-        isInline = false;
-        return true;
+        isInline = IGNORE;
     }
-    isInline = true;
     return true;
 }
 
@@ -2281,7 +2285,7 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x) {
     if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
-    bool isInline;
+    InlineAttribute isInline;
     if (!optInline(isInline)) return false;
     IdentifierPtr z;
     Location targetStartLocation = currentLocation();
@@ -2327,7 +2331,7 @@ static bool procedureWithInterface(vector<TopLevelItemPtr> &x) {
     target->location = location;
     target->startLocation = targetStartLocation;
     target->endLocation = targetEndLocation;
-    OverloadPtr interface = new Overload(target, interfaceCode, false, false);
+    OverloadPtr interface = new Overload(target, interfaceCode, false, IGNORE);
     interface->location = location;
 
     ProcedurePtr proc = new Procedure(name, vis, interface);
@@ -2343,7 +2347,7 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
     if (!optPatternVarsWithCond(code->patternVars, code->predicate)) return false;
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
-    bool isInline;
+    InlineAttribute isInline;
     if (!optInline(isInline)) return false;
     bool callByName;
     if (!optCallByName(callByName)) return false;
@@ -2388,7 +2392,7 @@ static bool overload(TopLevelItemPtr &x) {
     Location location = currentLocation();
     CodePtr code = new Code();
     if (!optPatternVarsWithCond(code->patternVars, code->predicate)) return false;
-    bool isInline;
+    InlineAttribute isInline;
     if (!optInline(isInline)) return false;
     bool callByName;
     if (!optCallByName(callByName)) return false;
