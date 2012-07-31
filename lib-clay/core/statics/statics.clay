@@ -13,15 +13,15 @@ Static?(x) = false;
 /// @section  constructors, moveUnsafe, resetUnsafe, destroy 
 
 [A]
-inline overload Static[A]() --> returned:Static[A] {
+forceinline overload Static[A]() --> returned:Static[A] {
 }
 
 [A]
-inline overload Static[A](src:Static[A]) --> returned:Static[A] {
+forceinline overload Static[A](src:Static[A]) --> returned:Static[A] {
 }
 
 [A]
-inline overload moveUnsafe(src:Static[A]) --> returned:Static[A] {
+forceinline overload moveUnsafe(src:Static[A]) --> returned:Static[A] {
 }
 
 
@@ -29,27 +29,27 @@ inline overload moveUnsafe(src:Static[A]) --> returned:Static[A] {
 /// @section  equals?, lesser? 
 
 [A, B]
-inline overload equals?(a:Static[A], b:Static[B]) = false;
+forceinline overload equals?(a:Static[A], b:Static[B]) = false;
 
 [A]
-inline overload equals?(a:Static[A], b:Static[A]) = true;
+forceinline overload equals?(a:Static[A], b:Static[A]) = true;
 
 [A]
-inline overload lesser?(a:Static[A], b:Static[A]) = false;
+forceinline overload lesser?(a:Static[A], b:Static[A]) = false;
 
 
 
 /// @section  unwrapStatic 
 
 [A]
-inline unwrapStatic(#A) = A;
+forceinline unwrapStatic(#A) = A;
 
 
 
 /// @section  call 
 
 [F, ..AA when CallDefined?(F, ..AA)]
-inline overload call(#F, forward ..args:AA) =
+forceinline overload call(#F, forward ..args:AA) =
     forward ..F(..args);
 
 
@@ -57,5 +57,5 @@ inline overload call(#F, forward ..args:AA) =
 /// @section  fieldRef 
 
 [Module, Ident]
-inline overload fieldRef(#Module, #Ident) =
+forceinline overload fieldRef(#Module, #Ident) =
     forward staticFieldRef(Module, Ident);

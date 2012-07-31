@@ -163,7 +163,7 @@ overload sqrt(x:Float) {
 
 
 [I when Imaginary?(I) ]
-inline overload sqrt(z:I) = sqrt(Complex(z));
+forceinline overload sqrt(z:I) = sqrt(Complex(z));
 
 
 alias thresh(#LongDouble) = 0xd.413cccfe77997ffp+16379fl;

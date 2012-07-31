@@ -86,7 +86,7 @@ overload exceptionAsAny(exp:RawPointer) --> ex:Exception {
 /// @section  unhandledExceptionInExternal 
 //
 
-private inline errorMsg(msg) {
+private forceinline errorMsg(msg) {
     libc.fprintf(libc.stderr, cstring(msg));
     showBacktrace();
 }

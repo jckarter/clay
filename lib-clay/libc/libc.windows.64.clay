@@ -17,9 +17,9 @@ alias hypotf = _hypotf;
 
 // these are macros
 
-inline isnan(x:Double) : Int = Int(x != x);
-inline isnanf(x:Float) : Int = Int(x != x);
-inline fabsf(x:Float) : Float = Float(fabs(Double(x)));
+forceinline isnan(x:Double) : Int = Int(x != x);
+forceinline isnanf(x:Float) : Int = Int(x != x);
+forceinline fabsf(x:Float) : Float = Float(fabs(Double(x)));
 
 // asprintf isn't standard and windows doesn't have it, but it's pretty useful so
 // let's fake it

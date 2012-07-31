@@ -6,11 +6,11 @@ private SubVariants(V) =
     ..filterStatics(Variant?, ..VariantMembers(V));
 
 private define filterStatics;
-[F, T] inline overload filterStatics(#F, #T, ..rest) =
+[F, T] forceinline overload filterStatics(#F, #T, ..rest) =
     ..filterStatics(F, ..rest);
-[F, T when F(T)] inline overload filterStatics(#F, #T, ..rest) =
+[F, T when F(T)] forceinline overload filterStatics(#F, #T, ..rest) =
     T, ..filterStatics(F, ..rest);
-[F] inline overload filterStatics(#F) = ;
+[F] forceinline overload filterStatics(#F) = ;
 
 
 
@@ -49,7 +49,7 @@ overload VariantNestingPaths3(Vs:T, M, Prefix, #i) = ;
 /// @section  nestedVariantIs? 
 
 [V, T when Variant?(V)]
-inline nestedVariantIs?(x:V, #T) {
+forceinline nestedVariantIs?(x:V, #T) {
     var ptr = nestedVariantAsPtr(x, T);
     return not null?(ptr);
 }
@@ -59,14 +59,14 @@ inline nestedVariantIs?(x:V, #T) {
 /// @section  nestedVariantAs 
 
 [V, T when Variant?(V)]
-inline nestedVariantAs(ref x:V, #T) {
+forceinline nestedVariantAs(ref x:V, #T) {
     var ptr = nestedVariantAsPtr(x, T);
     assert(not null?(ptr));
     return ref ptr^;
 }
 
 [V, T when Variant?(V)]
-inline overload nestedVariantAs(rvalue x:V, #T) {
+forceinline overload nestedVariantAs(rvalue x:V, #T) {
     var ptr = nestedVariantAsPtr(x, T);
     assert(not null?(ptr));
     return move(ptr^);
@@ -81,16 +81,16 @@ nestedVariantAsPtr(x:V, #Target) {
     return unboxAlongPaths(x, Target, ..VariantNestingPaths(V, Target));
 }
 
-private inline unboxAlongPaths(x, Target, firstPath, ..rest) {
+private forceinline unboxAlongPaths(x, Target, firstPath, ..rest) {
     var ptr = unboxAlong(x, Target, ..unpack(firstPath));
     if (not null?(ptr))
         return ptr;
     return unboxAlongPaths(x, Target, ..rest);
 }
 
-inline overload unboxAlongPaths(x, Target) = null(Target);
+forceinline overload unboxAlongPaths(x, Target) = null(Target);
 
-private inline unboxAlong(x, Target, first, ..rest) {
+private forceinline unboxAlong(x, Target, first, ..rest) {
     var ptr = variantAsPtr(x, first);
     if (null?(ptr))
         return null(Target);
@@ -98,6 +98,6 @@ private inline unboxAlong(x, Target, first, ..rest) {
 }
 
 [Target]
-inline overload unboxAlong(x:Target, #Target) {
+forceinline overload unboxAlong(x:Target, #Target) {
     return @x;
 }

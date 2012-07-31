@@ -102,7 +102,7 @@ private define safeFromOverflow?;
 
 private define toMask;
 
-private inline pb(x, n){ x = bitor(x, bitshr(x, n)); }
+private forceinline pb(x, n){ x = bitor(x, bitshr(x, n)); }
 [T] overload toMask(x:T){
   var t = x;
   pb(t, 1);

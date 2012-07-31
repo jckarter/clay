@@ -19,10 +19,10 @@ import simd.(unpackVec);
 
 define printTo;
 
-inline overload printTo(stream) {
+forceinline overload printTo(stream) {
 }
 
-inline overload printTo(stream, a, b, ..rest) {
+forceinline overload printTo(stream, a, b, ..rest) {
     ..for (x in a, b, ..rest)
         printTo(stream, x);
 }
@@ -143,7 +143,7 @@ printWithSprintf(stream, formatString, ..values) {
     write(stream, ptr, SizeT(n));
 }
 
-inline printFloatWithSprintf(stream, nanString, formatString, ..values) {
+forceinline printFloatWithSprintf(stream, nanString, formatString, ..values) {
     ..for (v in values)
         if (nan?(v)) {
             printTo(stream, nanString);
@@ -487,13 +487,13 @@ overload printReprTo(stream, s:S) {
 /// @section  simd printing 
 
 [T,n]
-inline overload printTo(stream, a:Vec[T,n])
+forceinline overload printTo(stream, a:Vec[T,n])
 {
     printTo(stream, Type(a), "(", ..weaveValues(", ", ..unpackVec(a)), ")");
 }
 
 [T,n]
-inline overload printReprTo(stream, a:Vec[T,n])
+forceinline overload printReprTo(stream, a:Vec[T,n])
 {
     printTo(stream,Type(a),"(");
     printReprValuesTo(stream, ..unpackVec(a));
@@ -503,15 +503,15 @@ inline overload printReprTo(stream, a:Vec[T,n])
 
 /// @section  print, println, printlnTo 
 
-inline print(..x) {
+forceinline print(..x) {
     printTo(stdoutRawFile(), ..x);
 }
 
-inline println(..x) {
+forceinline println(..x) {
     printTo(stdoutRawFile(), ..x, '\n');
 }
 
-inline printlnTo(stream, ..x) {
+forceinline printlnTo(stream, ..x) {
     printTo(stream, ..x, '\n');
 }
 

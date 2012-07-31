@@ -22,10 +22,10 @@ overload ContiguousSequence?(#V) = true;
 /// @section size, index
 
 [V when Vector?(V)]
-inline overload size(a:V) = vectorSize(a);
+forceinline overload size(a:V) = vectorSize(a);
 
 [V,I when Vector?(V) and Integer?(I)]
-inline overload index(a:V, i:I) {
+forceinline overload index(a:V, i:I) {
     assert["boundsChecks"](i >= 0 and i < size(a),
         V, " index out of bounds");
     return ref (vectorData(a) + SizeT(i))^;
@@ -37,10 +37,10 @@ inline overload index(a:V, i:I) {
 alias VectorCoordinate[T] = Pointer[T];
 
 [V when Vector?(V)]
-inline overload begin(a:V) = vectorData(a);
+forceinline overload begin(a:V) = vectorData(a);
 
 [V when Vector?(V)]
-inline overload end(a:V) = vectorData(a) + size(a);
+forceinline overload end(a:V) = vectorData(a) + size(a);
 
 
 /// @section vector iteration
@@ -49,23 +49,23 @@ inline overload end(a:V) = vectorData(a) + size(a);
 /// constructs an iterator on the vector
 /// \a ranges.CoordinateRange
 [V when Vector?(V)]
-inline overload iterator(a:V) = coordinateRange(begin(a), end(a));
+forceinline overload iterator(a:V) = coordinateRange(begin(a), end(a));
 
 /// @overload reverseIterator
 /// constructs a reverse iterator on the vector
 /// \a ranges.ReverseCoordinateRange
 [V when Vector?(V)]
-inline overload reverseIterator(a:V) =
+forceinline overload reverseIterator(a:V) =
     reverseCoordinateRange(end(a), begin(a));
 
 
 /// @section front, back, push, pop
 
 [V when Vector?(V)]
-inline overload front(a:V) = ref a[0];
+forceinline overload front(a:V) = ref a[0];
 
 [V when Vector?(V)]
-inline overload back(a:V) = ref a[size(a) - 1];
+forceinline overload back(a:V) = ref a[size(a) - 1];
 
 [V, S when Vector?(V) and Sequence?(S) and (SequenceElementType(S) == SequenceElementType(V))]
 overload push(a:V, forward seq:S) {
@@ -78,7 +78,7 @@ overload push(a:V, forward x:T) {
 }
 
 [V, A1, A2, ..AA when Vector?(V)]
-inline overload push(v:V, forward e1:A1, forward e2:A2, forward ..ee:AA) {
+forceinline overload push(v:V, forward e1:A1, forward e2:A2, forward ..ee:AA) {
     reserve(v, countValues(A1, A2, ..AA));
     ..for (x in e1, e2, ..ee) {
         push(v, x);
@@ -86,7 +86,7 @@ inline overload push(v:V, forward e1:A1, forward e2:A2, forward ..ee:AA) {
 }
 
 [V when Vector?(V)]
-inline overload push(v:V) { }
+forceinline overload push(v:V) { }
 
 [V when Vector?(V)]
 overload pop(a:V) {
@@ -106,12 +106,12 @@ overload reserve(a:V, n:I) {
 }
 
 [V, I when Vector?(V) and Integer?(I)]
-inline overload resize(a:V, n:I) {
+forceinline overload resize(a:V, n:I) {
     resizeInternal(a, SizeT(n), initializeMemory);
 }
 
 [V, I when Vector?(V) and Integer?(I)]
-inline overload resizeUnsafe(a:V, n:I) {
+forceinline overload resizeUnsafe(a:V, n:I) {
     resizeInternal(a, SizeT(n), resetMemoryUnsafe);
 }
 
@@ -128,7 +128,7 @@ private resizeInternal(a:V, n:SizeT, initializer) {
     vectorSetSize(a, n);
 }
 
-private inline ensureSpace(a, space:SizeT) {
+private forceinline ensureSpace(a, space:SizeT) {
     reserve(a, size(a) + space);
 }
 
@@ -244,7 +244,7 @@ overload insert(a:V, i:VectorCoordinate[T], forward x:T) {
 /// @overload clear
 /// remove all items from the vector
 [V when Vector?(V)]
-inline overload clear(a:V) {
+forceinline overload clear(a:V) {
     remove(a, begin(a), end(a));
 }
 

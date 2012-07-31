@@ -17,38 +17,38 @@ overload ContiguousSequence?(#Static[s]) = true;
 /// @section  constructors 
 
 [s when StringLiteral?(s)]
-inline overload StringLiteralRef(#s) = StringLiteralRef(stringTableConstant(s));
-inline overload StringLiteralRef() = StringLiteralRef(stringTableConstant(""));
+forceinline overload StringLiteralRef(#s) = StringLiteralRef(stringTableConstant(s));
+forceinline overload StringLiteralRef() = StringLiteralRef(stringTableConstant(""));
 
 
 /// @section  size, begin, end, index 
 
-inline overload size(a:StringLiteralRef) = a.sizep^;
+forceinline overload size(a:StringLiteralRef) = a.sizep^;
 
-inline overload begin(a:StringLiteralRef) = Pointer[Char](a.sizep + 1);
-inline overload end(a:StringLiteralRef) = begin(a) + size(a);
+forceinline overload begin(a:StringLiteralRef) = Pointer[Char](a.sizep + 1);
+forceinline overload end(a:StringLiteralRef) = begin(a) + size(a);
 
 [I when Integer?(I)]
-inline overload index(a:StringLiteralRef, i:I) {
+forceinline overload index(a:StringLiteralRef, i:I) {
     assert["boundsChecks"](i >= 0 and i < size(a), "StringLiteralRef index out of bounds");
     return ref (begin(a) + i)^;
 }
 
 [s when StringLiteral?(s)]
-inline overload size(#s) = stringLiteralByteSize(s);
+forceinline overload size(#s) = stringLiteralByteSize(s);
 [s when StringLiteral?(s)]
-inline overload begin(#s) = Pointer[Char](stringTableConstant(s) + 1);
+forceinline overload begin(#s) = Pointer[Char](stringTableConstant(s) + 1);
 [s when StringLiteral?(s)]
-inline overload end(#s) = begin(s) + size(s);
+forceinline overload end(#s) = begin(s) + size(s);
 
 [s, I when StringLiteral?(s) and Integer?(I)]
-inline overload index(#s, i:I) {
+forceinline overload index(#s, i:I) {
     assert["boundsChecks"](i >= 0 and i < size(s), "literal \"", s, "\" index out of bounds");
     return ref (begin(s) + i)^;
 }
 
 [s, n when StringLiteral?(s) and n >= 0 and n < size(s)]
-inline overload staticIndex(#s, #n) {
+forceinline overload staticIndex(#s, #n) {
     return Char(stringLiteralByteIndex(#s,#n));
 }
 
@@ -56,22 +56,22 @@ inline overload staticIndex(#s, #n) {
 
 /// @section  cstring 
 
-inline cstring(a:StringLiteralRef) = Pointer[Int8](begin(a));
+forceinline cstring(a:StringLiteralRef) = Pointer[Int8](begin(a));
 
 [s when StringLiteral?(s)]
-inline overload cstring(#s) = Pointer[Int8](begin(s));
+forceinline overload cstring(#s) = Pointer[Int8](begin(s));
 
 
 /// @section  coordinates and iteration 
 
-inline overload iterator(a:StringLiteralRef) = coordinateRange(begin(a), end(a));
+forceinline overload iterator(a:StringLiteralRef) = coordinateRange(begin(a), end(a));
 [s when StringLiteral?(s)]
-inline overload iterator(#s) = coordinateRange(begin(s), end(s));
+forceinline overload iterator(#s) = coordinateRange(begin(s), end(s));
 
-inline overload reverseIterator(a:StringLiteralRef) =
+forceinline overload reverseIterator(a:StringLiteralRef) =
     reverseCoordinateRange(end(a), begin(a));
 [s when StringLiteral?(s)]
-inline overload reverseIterator(#s) =
+forceinline overload reverseIterator(#s) =
     reverseCoordinateRange(end(a), begin(a));
 
 
@@ -84,7 +84,7 @@ overload StringLiteralStatic?(#Static[s]) = StringLiteral?(s);
 StringLiteralType?(..SS) = allValues?(S -> StringLiteralStatic?(S), ..SS);
 
 [..SS when StringLiteralType?(..SS)]
-inline overload (++)(..ss:SS) = stringLiteralConcat(..ss);
+forceinline overload (++)(..ss:SS) = stringLiteralConcat(..ss);
 
 
 /// @section  string literal manipulation 

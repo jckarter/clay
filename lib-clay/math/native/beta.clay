@@ -3,4 +3,4 @@ import math.native.gamma.(lgamma);
 import complex.*;
 
 [T,U when (Float?(T,U) or Complex?(T,U)) ]
-inline beta(x:T, y:U) = exp(lgamma(x)+lgamma(y)-lgamma(x+y));
+forceinline beta(x:T, y:U) = exp(lgamma(x)+lgamma(y)-lgamma(x+y));

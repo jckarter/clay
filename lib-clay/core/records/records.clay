@@ -2,12 +2,12 @@
 /// @section  fieldRef, fieldRefByIndex 
 
 [T, FIELD when RecordWithField?(T, FIELD)]
-inline overload fieldRef(x:T, #FIELD) {
+forceinline overload fieldRef(x:T, #FIELD) {
     return ref recordFieldRefByName(x, #FIELD);
 }
 
 [T, i when Record?(T)]
-inline fieldRefByIndex(x:T, #i) =
+forceinline fieldRefByIndex(x:T, #i) =
     ref recordFieldRef(x, #SizeT(i));
 
 
@@ -76,8 +76,8 @@ private initializeMulti(..args:A) {
 }
 
 private define initializeTypes;
-inline overload initializeTypes(A, ..B) = A(), ..initializeTypes(..B);
-inline overload initializeTypes() = ;
+forceinline overload initializeTypes(A, ..B) = A(), ..initializeTypes(..B);
+forceinline overload initializeTypes() = ;
 
 
 
