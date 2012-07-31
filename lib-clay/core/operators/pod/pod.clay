@@ -2,20 +2,20 @@
 /// @section  copy*Memory*, move*Memory*, *assign*Memory* for POD types 
 
 [P]
-private inline copyPODs(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
+private forceinline copyPODs(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
     memmove(destBegin, srcBegin, SizeT(RawPointer(srcEnd)-RawPointer(srcBegin)));
 }
 [P]
-private inline copyNonovPODs(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
+private forceinline copyNonovPODs(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
     memcpy(destBegin, srcBegin, SizeT(RawPointer(srcEnd)-RawPointer(srcBegin)));
 }
 
 [P when BitwiseCopiedType?(P)]
-inline overload copyNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
+forceinline overload copyNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
     copyNonovPODs(destBegin, srcBegin, srcEnd);
 }
 [P when BitwiseMovedType?(P)]
-inline overload moveMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
+forceinline overload moveMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
     copyPODs(destBegin, srcBegin, srcEnd);
     var destEnd = destBegin + (srcEnd - srcBegin);
     if (destBegin <= srcBegin)
@@ -24,32 +24,32 @@ inline overload moveMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Poi
         resetMemoryUnsafe(srcBegin, min(srcEnd, destBegin));
 }
 [P when BitwiseMovedType?(P) and NotResetType?(P)]
-inline overload moveMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
+forceinline overload moveMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
     copyPODs(destBegin, srcBegin, srcEnd);
 }
 [P when BitwiseMovedType?(P)]
-inline overload moveMemoryUnsafe(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
+forceinline overload moveMemoryUnsafe(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
     copyPODs(destBegin, srcBegin, srcEnd);
 }
 [P when BitwiseMovedType?(P)]
-inline overload moveNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
+forceinline overload moveNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
     copyNonovPODs(destBegin, srcBegin, srcEnd);
     resetMemoryUnsafe(srcBegin, srcEnd);
 }
 [P when BitwiseMovedType?(P) and NotResetType?(P)]
-inline overload moveNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
+forceinline overload moveNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
     copyNonovPODs(destBegin, srcBegin, srcEnd);
 }
 [P when BitwiseMovedType?(P)]
-inline overload moveNonoverlappingMemoryUnsafe(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
+forceinline overload moveNonoverlappingMemoryUnsafe(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
     copyNonovPODs(destBegin, srcBegin, srcEnd);
 }
 [P when BitwiseAssignedType?(P)]
-inline overload assignNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
+forceinline overload assignNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
     copyNonovPODs(destBegin, srcBegin, srcEnd);
 }
 [P when BitwiseMoveAssignedType?(P)]
-inline overload moveAssignNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
+forceinline overload moveAssignNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) {
     copyNonovPODs(destBegin, srcBegin, srcEnd);
 }
 
@@ -57,38 +57,38 @@ inline overload moveAssignNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Po
 /// @section  resetMemoryUnsafe, destroyMemory for POD 
 
 [P when NotResetType?(P)]
-inline overload resetMemoryUnsafe(begin:Pointer[P], end:Pointer[P]) { }
+forceinline overload resetMemoryUnsafe(begin:Pointer[P], end:Pointer[P]) { }
 
 [P when NotDestroyedType?(P)]
-inline overload destroyMemory(begin:Pointer[P], end:Pointer[P]) { }
+forceinline overload destroyMemory(begin:Pointer[P], end:Pointer[P]) { }
 
 
 /// @section  value semantics for POD 
 
-[P] inline copyPOD(x: P) --> returned: P { memcpy(@returned, @x, TypeSize(P)); }
-inline overload copyPOD(x: Bool) --> returned: Bool { bitcopy(returned, x); }
+[P] forceinline copyPOD(x: P) --> returned: P { memcpy(@returned, @x, TypeSize(P)); }
+forceinline overload copyPOD(x: Bool) --> returned: Bool { bitcopy(returned, x); }
 [N when Numeric?(N)]
-inline overload copyPOD(x: N) --> returned: N { bitcopy(returned, x); }
+forceinline overload copyPOD(x: N) --> returned: N { bitcopy(returned, x); }
 [E when Enum?(E)]
-inline overload copyPOD(x: E) --> returned: E { bitcopy(returned, x); }
+forceinline overload copyPOD(x: E) --> returned: E { bitcopy(returned, x); }
 [T]
-inline overload copyPOD(x: Pointer[T]) --> returned: Pointer[T] { bitcopy(returned, x); }
+forceinline overload copyPOD(x: Pointer[T]) --> returned: Pointer[T] { bitcopy(returned, x); }
 [In, Out]
-inline overload copyPOD(x: CodePointer[In, Out]) --> returned: CodePointer[In, Out]
+forceinline overload copyPOD(x: CodePointer[In, Out]) --> returned: CodePointer[In, Out]
     { bitcopy(returned, x); }
 [C,V,I,O]
-inline overload copyPOD(x: ExternalCodePointer[C,V,I,O])
+forceinline overload copyPOD(x: ExternalCodePointer[C,V,I,O])
     --> returned: ExternalCodePointer[C,V,I,O]
     { bitcopy(returned, x); }
 
 [P when NotDestroyedType?(P)]
-inline overload destroy(x: P) {}
+forceinline overload destroy(x: P) {}
 [P when BitwiseMovedType?(P)]
-inline overload moveUnsafe(x: P) = copyPOD(x);
+forceinline overload moveUnsafe(x: P) = copyPOD(x);
 [P when NotResetType?(P)]
-inline overload resetUnsafe(x: P) { }
+forceinline overload resetUnsafe(x: P) { }
 [P when BitwiseCopiedType?(P)]
-inline overload P(x: P) --> returned: P = copyPOD(x);
+forceinline overload P(x: P) --> returned: P = copyPOD(x);
 [P when BitwiseAssignedType?(P)]
-inline overload assign(ref x: P, y: P) { x <-- copyPOD(y); }
+forceinline overload assign(ref x: P, y: P) { x <-- copyPOD(y); }
 

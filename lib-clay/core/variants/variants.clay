@@ -62,7 +62,7 @@ overload V(src:V) --> returned:V {
 }
 
 [V when Variant?(V) and not (BitwiseMovedType?(V) and NotResetType?(V))]
-inline overload V(rvalue src:V) = move(src);
+forceinline overload V(rvalue src:V) = move(src);
 
 
 
@@ -90,7 +90,7 @@ overload moveUnsafe(src:V) --> returned:V {
 }
 
 [V when Variant?(V) and not NotResetType?(V)]
-inline overload resetUnsafe(x:V) {
+forceinline overload resetUnsafe(x:V) {
     ref repr = variantRepr(x);
     repr.tag = 0;
     resetUnsafe(staticIndex(repr.data, #0));
@@ -177,7 +177,7 @@ overload equals?(a:V, b:V) {
 /// @section  variantIs? 
 
 [V,T when Variant?(V) and VariantMember?(V, T)]
-inline variantIs?(x:V, #T) {
+forceinline variantIs?(x:V, #T) {
     ref repr = variantRepr(x);
     alias index = Int(VariantMemberIndex(V, T));
     return repr.tag == index;
@@ -190,7 +190,7 @@ inline variantIs?(x:V, #T) {
 define variantAs;
 
 [V,T when Variant?(V) and VariantMember?(V, T)]
-inline overload variantAs(ref x:V, #T) {
+forceinline overload variantAs(ref x:V, #T) {
     ref repr = variantRepr(x);
     alias index = Int(VariantMemberIndex(V, T));
     assert(repr.tag == index, "invalid cast");
@@ -198,7 +198,7 @@ inline overload variantAs(ref x:V, #T) {
 }
 
 [V,T when Variant?(V) and VariantMember?(V, T)]
-inline overload variantAs(rvalue x:V, #T) {
+forceinline overload variantAs(rvalue x:V, #T) {
     return move(variantAs(x, T));
 }
 
@@ -207,7 +207,7 @@ inline overload variantAs(rvalue x:V, #T) {
 /// @section  variantAsPtr - test and unbox in one operation 
 
 [V,T when Variant?(V) and VariantMember?(V,T)]
-inline variantAsPtr(x:V, #T) {
+forceinline variantAsPtr(x:V, #T) {
     ref repr = variantRepr(x);
     alias index = Int(VariantMemberIndex(V, T));
     if (repr.tag == index)
@@ -221,24 +221,24 @@ inline variantAsPtr(x:V, #T) {
 /// @section  variantTag 
 
 [V when Variant?(V)]
-inline variantTag(x:V) = variantRepr(x).tag;
+forceinline variantTag(x:V) = variantRepr(x).tag;
 
 
 /// @section  dispatch operators 
 
 [V when Variant?(V)]
-inline overload __operators__.DispatchTagCount(#V) =
+forceinline overload __operators__.DispatchTagCount(#V) =
     countValues(..VariantMembers(V));
 
 [V when Variant?(V)]
-inline overload __operators__.dispatchTag(x:V) = variantRepr(x).tag;
+forceinline overload __operators__.dispatchTag(x:V) = variantRepr(x).tag;
 
 [V,i when Variant?(V)]
-inline overload __operators__.dispatchIndex(x:V, #i) =
+forceinline overload __operators__.dispatchIndex(x:V, #i) =
     ref staticIndex(variantRepr(x).data, #i);
 
 [V]
-inline overload __operators__.invalidDispatch(x:V) {
+forceinline overload __operators__.invalidDispatch(x:V) {
     errorWithPrintfNoThrow(
         stringLiteralConcat("invalid ", StaticName(V), ", tag = %d"),
         __operators__.dispatchTag(x));
@@ -249,13 +249,13 @@ inline overload __operators__.invalidDispatch(x:V) {
 
 private define matchValue;
 [T]
-inline overload matchValue(forward x:T, forward f, forward ..fs)
+forceinline overload matchValue(forward x:T, forward f, forward ..fs)
     = forward ..matchValue(x, ..fs);
 [T, F when CallDefined?(call, F, T)]
-inline overload matchValue(forward x:T, forward f:F, forward ..fs)
+forceinline overload matchValue(forward x:T, forward f:F, forward ..fs)
     = forward ..f(x);
 
-inline match(forward v, forward ..fs) = forward ..matchValue(*v, ..fs);
+forceinline match(forward v, forward ..fs) = forward ..matchValue(*v, ..fs);
 
 
 /// @section  VariantRef tagged pointer 
@@ -267,27 +267,27 @@ record VariantRef[V] = tag:Int, data:Pointer[Union[..VariantMembers(V)]];
 overload VariantRef[V]();
 
 [V]
-inline overload VariantRef[V](ref v:V) {
+forceinline overload VariantRef[V](ref v:V) {
     ref repr = variantRepr(v);
     return VariantRef[V](repr.tag, @repr.data);
 }
 
 [V]
-inline overload VariantRef(ref v:V) = VariantRef[V](v);
+forceinline overload VariantRef(ref v:V) = VariantRef[V](v);
 
 [V, T when VariantMember?(V, T)]
-inline overload VariantRef[V](ref v:T) {
+forceinline overload VariantRef[V](ref v:T) {
     alias DataPointer = Pointer[Union[..VariantMembers(V)]];
     return VariantRef[V](Int(VariantMemberIndex(V, T)), DataPointer(@v));
 }
 
 [V]
-inline overload __operators__.DispatchTagCount(#VariantRef[V]) =
+forceinline overload __operators__.DispatchTagCount(#VariantRef[V]) =
     __operators__.DispatchTagCount(V);
 [V]
-inline overload __operators__.dispatchTag(vr:VariantRef[V]) = vr.tag;
+forceinline overload __operators__.dispatchTag(vr:VariantRef[V]) = vr.tag;
 [V, i]
-inline overload __operators__.dispatchIndex(vr:VariantRef[V], #i) =
+forceinline overload __operators__.dispatchIndex(vr:VariantRef[V], #i) =
     ref staticIndex(vr.data^, #i);
 
 

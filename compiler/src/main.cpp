@@ -270,8 +270,9 @@ static void usage(char *argv0)
     llvm::errs() << "  -g                    keep debug symbol information\n";
     llvm::errs() << "  -exceptions           enable exception handling\n";
     llvm::errs() << "  -no-exceptions        disable exception handling\n";
-    llvm::errs() << "  -inline               inline procedures marked 'inline'\n";
-    llvm::errs() << "  -no-inline            ignore 'inline' keyword\n";
+    llvm::errs() << "  -inline               inline procedures marked 'forceinline'\n"; 
+    llvm::errs() << "                        and enable 'inline' hints (default)\n";
+    llvm::errs() << "  -no-inline            ignore 'inline' and 'forceinline' keyword\n";
     llvm::errs() << "  -import-externals     include externals from imported modules\n"
          << "                        in compilation unit\n"
          << "                        (default when building standalone or -shared)\n";

@@ -132,13 +132,13 @@ static void initKeywords() {
          "record", "variant", "instance",
          "define", "overload", "external", "alias",
          "rvalue", "ref", "forward",
-         "inline", "enum", "var",
-         "and", "or", "not",
+         "inline", "noinline", "forceinline",
+         "enum", "var", "and", "or", "not",
          "if", "else", "goto", "return", "while",
          "switch", "case", "break", "continue", "for", "in",
          "true", "false", "try", "catch", "throw",
          "finally", "onerror",
-         "eval", "with","when",
+         "eval", "with", "when",
          "__FILE__", "__LINE__", "__COLUMN__", "__ARG__", NULL};
     keywords = new std::set<llvm::StringRef>();
     for (const char **p = s; *p; ++p)

@@ -610,7 +610,7 @@ private _objcNewClassMake(
 }
 
 [T when ClayClass?(T)]
-inline overload objcClassMake(#T) : ClassHandle {
+forceinline overload objcClassMake(#T) : ClassHandle {
     var handle = _objcNewClassMake(
         objcClass[SuperclassType(T)],
         StringLiteralRef(ClassName(T)),

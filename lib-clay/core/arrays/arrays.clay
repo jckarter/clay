@@ -12,35 +12,35 @@ overload SequenceContainer?(#Array[T,n]) = true;
 /// @section  size, index, iterator, begin, end, front, back 
 
 [T,n]
-inline overload size(a:Array[T,n]) = SizeT(n);
+forceinline overload size(a:Array[T,n]) = SizeT(n);
 
 [T,n]
-inline overload StaticSize(#Array[T,n]) = SizeT(n);
+forceinline overload StaticSize(#Array[T,n]) = SizeT(n);
 
 [T,n,I when Integer?(I)]
-inline overload index(a:Array[T,n], i:I) {
+forceinline overload index(a:Array[T,n], i:I) {
     assert["boundsChecks"](i >= 0 and SizeT(i) < size(a), Array[T,n], " access out of bounds");
     return ref arrayRef(a, SizeT(i));
 }
 
 [T,n]
-inline overload iterator(a:Array[T,n]) = coordinateRange(begin(a), end(a));
+forceinline overload iterator(a:Array[T,n]) = coordinateRange(begin(a), end(a));
 
 [T,n]
-inline overload reverseIterator(a:Array[T,n]) =
+forceinline overload reverseIterator(a:Array[T,n]) =
     reverseCoordinateRange(end(a), begin(a));
 
 [T,n]
-inline overload begin(a:Array[T,n]) = Pointer[T](@a);
+forceinline overload begin(a:Array[T,n]) = Pointer[T](@a);
 
 [T,n]
-inline overload end(a:Array[T,n]) = Pointer[T](@a + 1);
+forceinline overload end(a:Array[T,n]) = Pointer[T](@a + 1);
 
 [T,n]
-inline overload front(a:Array[T,n]) = ref a[0];
+forceinline overload front(a:Array[T,n]) = ref a[0];
 
 [T,n]
-inline overload back(a:Array[T,n]) = ref a[n-1];
+forceinline overload back(a:Array[T,n]) = ref a[n-1];
 
 
 

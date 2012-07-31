@@ -17,30 +17,30 @@ alias hypotf = _hypotf;
 
 // The float variants of math functions are implemented as macros
 
-inline acosf(x:Float) : Float = Float(acos(Double(x)));
-inline asinf(x:Float) : Float = Float(asin(Double(x)));
-inline atanf(x:Float) : Float = Float(atan(Double(x)));
-inline atan2f(x:Float, y:Float) : Float = Float(atan2(Double(x), Double(y)));
-inline copysignf(x:Float) : Float = Float(_copysign(Double(x)));
-inline cosf(x:Float) : Float = Float(cos(Double(x)));
-inline coshf(x:Float) : Float = Float(cosh(Double(x)));
-inline expf(x:Float) : Float = Float(exp(Double(x)));
-inline fabsf(x:Float) : Float = Float(fabs(Double(x)));
-inline floorf(x:Float) : Float = Float(floor(Double(x)));
-inline fmodf(x:Float, y:Float) : Float = Float(fmod(Double(x), Double(y)));
-inline logf(x:Float) : Float = Float(log(Double(x)));
-inline log10f(x:Float) : Float = Float(log10(Double(x)));
-inline powf(x:Float, y:Float) : Float = Float(pow(Double(x), Double(y)));
-inline sinf(x:Float) : Float = Float(sin(Double(x)));
-inline sinhf(x:Float) : Float = Float(sinh(Double(x)));
-inline sqrtf(x:Float) : Float = Float(sqrt(Double(x)));
-inline tanf(x:Float) : Float = Float(tan(Double(x)));
-inline tanhf(x:Float) : Float = Float(tanh(Double(x)));
+forceinline acosf(x:Float) : Float = Float(acos(Double(x)));
+forceinline asinf(x:Float) : Float = Float(asin(Double(x)));
+forceinline atanf(x:Float) : Float = Float(atan(Double(x)));
+forceinline atan2f(x:Float, y:Float) : Float = Float(atan2(Double(x), Double(y)));
+forceinline copysignf(x:Float) : Float = Float(_copysign(Double(x)));
+forceinline cosf(x:Float) : Float = Float(cos(Double(x)));
+forceinline coshf(x:Float) : Float = Float(cosh(Double(x)));
+forceinline expf(x:Float) : Float = Float(exp(Double(x)));
+forceinline fabsf(x:Float) : Float = Float(fabs(Double(x)));
+forceinline floorf(x:Float) : Float = Float(floor(Double(x)));
+forceinline fmodf(x:Float, y:Float) : Float = Float(fmod(Double(x), Double(y)));
+forceinline logf(x:Float) : Float = Float(log(Double(x)));
+forceinline log10f(x:Float) : Float = Float(log10(Double(x)));
+forceinline powf(x:Float, y:Float) : Float = Float(pow(Double(x), Double(y)));
+forceinline sinf(x:Float) : Float = Float(sin(Double(x)));
+forceinline sinhf(x:Float) : Float = Float(sinh(Double(x)));
+forceinline sqrtf(x:Float) : Float = Float(sqrt(Double(x)));
+forceinline tanf(x:Float) : Float = Float(tan(Double(x)));
+forceinline tanhf(x:Float) : Float = Float(tanh(Double(x)));
 
 // these are macros
 
-inline isnan(x:Double) : Int = Int(x != x);
-inline isnanf(x:Float) : Int = Int(x != x);
+forceinline isnan(x:Double) : Int = Int(x != x);
+forceinline isnanf(x:Float) : Int = Int(x != x);
 
 // asprintf isn't standard and windows doesn't have it, but it's pretty useful so
 // let's fake it

@@ -30,12 +30,12 @@ overload BigFloat() = BigFloat(array(0x00000000u, 0x00000000u, 0x00000000u, 0x00
 
 overload BitwiseMovedType?(#BigFloat) = true;
 
-inline overload resetUnsafe(a:BigFloat) {
+forceinline overload resetUnsafe(a:BigFloat) {
     a <-- BigFloat();
 }
 
 [T] BigFloat?(#T) = false;
-inline overload BigFloat?(#BigFloat) = true;
+forceinline overload BigFloat?(#BigFloat) = true;
 
 
 alias bf_zero = BigFloat(array(0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u,
@@ -223,7 +223,7 @@ overload Double(x:T) --> result:Double {
 }
 
 
-private inline BF_CARRY_PROPAGATE(r1,r0,tmp) {
+private forceinline BF_CARRY_PROPAGATE(r1,r0,tmp) {
     tmp = bitshr(UInt64(r1),BF_NB_BITS);
     r0 +: tmp;
     r1 -: wrapBitshl(tmp,BF_NB_BITS);
@@ -232,7 +232,7 @@ private inline BF_CARRY_PROPAGATE(r1,r0,tmp) {
 
 // This function copies a result into another.
 [T when BigFloat?(T)]
-inline overload assign(ref result:T, x:T) : {
+forceinline overload assign(ref result:T, x:T) : {
     result.hword = x.hword;
     result.excp = x.excp;
     result.index = x.index;
@@ -240,7 +240,7 @@ inline overload assign(ref result:T, x:T) : {
 }
 
 [T when Numeric?(T)]
-inline overload assign(ref result:BigFloat, x:T) {
+forceinline overload assign(ref result:BigFloat, x:T) {
     if(x == 0){
         resetUnsafe(result.h_word);
         result.excp = 0.;

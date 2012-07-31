@@ -1895,11 +1895,18 @@ struct Instance : public TopLevelItem {
         {}
 };
 
+enum InlineAttribute {
+    IGNORE,
+    INLINE,
+    FORCE_INLINE,
+    NEVER_INLINE
+};
+
 struct Overload : public TopLevelItem {
     ExprPtr target;
     CodePtr code;
     bool callByName;
-    bool isInline;
+    InlineAttribute isInline;
 
     // pre-computed patterns for matchInvoke
     int patternsInitializedState; // 0:notinit, -1:initing, +1:inited
@@ -1914,7 +1921,7 @@ struct Overload : public TopLevelItem {
     Overload(ExprPtr target,
              CodePtr code,
              bool callByName,
-             bool isInline)
+             InlineAttribute isInline)
         : TopLevelItem(OVERLOAD), target(target), code(code),
           callByName(callByName), isInline(isInline),
           patternsInitializedState(0), nameIsPattern(false) {}
@@ -3199,7 +3206,7 @@ typedef Pointer<MatchResult> MatchResultPtr;
 
 struct MatchSuccess : public MatchResult {
     bool callByName;
-    bool isInline;
+    InlineAttribute isInline;
     CodePtr code;
     EnvPtr env;
 
@@ -3210,7 +3217,7 @@ struct MatchSuccess : public MatchResult {
     vector<IdentifierPtr> fixedArgNames;
     IdentifierPtr varArgName;
     vector<TypePtr> varArgTypes;
-    MatchSuccess(bool callByName, bool isInline, CodePtr code, EnvPtr env,
+    MatchSuccess(bool callByName, InlineAttribute isInline, CodePtr code, EnvPtr env,
                  ObjectPtr callable, const vector<TypePtr> &argsKey)
         : MatchResult(MATCH_SUCCESS), callByName(callByName),
           isInline(isInline), code(code), env(env), callable(callable),
@@ -3295,7 +3302,7 @@ struct InvokeEntry {
     vector<TypePtr> varArgTypes;
 
     bool callByName; // if callByName the rest of InvokeEntry is not set
-    bool isInline;
+    InlineAttribute isInline;
 
     ObjectPtr analysis;
     vector<bool> returnIsRef;
@@ -3312,7 +3319,7 @@ struct InvokeEntry {
         : parent(parent),
           callable(callable), argsKey(argsKey),
           analyzed(false), analyzing(false), callByName(false),
-          isInline(false), llvmFunc(NULL), debugInfo(NULL)
+          isInline(IGNORE), llvmFunc(NULL), debugInfo(NULL)
     {
         for (size_t i = 0; i < CC_Count; ++i)
             llvmCWrappers[i] = NULL;

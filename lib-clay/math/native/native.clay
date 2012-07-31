@@ -52,17 +52,17 @@ import numbers.floats.(floatFromBits,floatExponent,mantissaSize);
 
 
 [T when Integer?(T)]
-inline recip(x:T) = T(0);
+forceinline recip(x:T) = T(0);
 [T when Float?(T)]
-inline overload recip(x:T) = T(1) / x;
+forceinline overload recip(x:T) = T(1) / x;
 
 [T when Float?(T)]
-inline significand(x:T) = scalbn(x,wrapSubtract(ilogb(x)));
+forceinline significand(x:T) = scalbn(x,wrapSubtract(ilogb(x)));
 
 alias drem = remainder;
 
 [T]
-inline clamp(x:T, lo:T, hi:T) {
+forceinline clamp(x:T, lo:T, hi:T) {
     if(x > hi)
         return hi; 
     if(x < lo)
@@ -70,20 +70,20 @@ inline clamp(x:T, lo:T, hi:T) {
     return x;
 }
 
-inline sec(z) = recip(cos(z));
-inline csc(z) = recip(sin(z));
-inline asec(y) = acos(recip(y));
-inline acsc(y) = asin(recip(y));
-inline acot(y) = atan(recip(y));
-inline sech(z) = recip(cosh(z));
-inline csch(z) = recip(sinh(z));
-inline coth(z) = recip(tanh(z));
-inline asech(y) = acosh(recip(y));
-inline acsch(y) = asinh(recip(y));
-inline acoth(y) = atanh(recip(y));
+forceinline sec(z) = recip(cos(z));
+forceinline csc(z) = recip(sin(z));
+forceinline asec(y) = acos(recip(y));
+forceinline acsc(y) = asin(recip(y));
+forceinline acot(y) = atan(recip(y));
+forceinline sech(z) = recip(cosh(z));
+forceinline csch(z) = recip(sinh(z));
+forceinline coth(z) = recip(tanh(z));
+forceinline asech(y) = acosh(recip(y));
+forceinline acsch(y) = asinh(recip(y));
+forceinline acoth(y) = atanh(recip(y));
 
 [T when CallDefined?(sin,T)]
-inline sinc(x:T) {
+forceinline sinc(x:T) {
     if(x==0) 
         return T(1);
     else {
@@ -93,7 +93,7 @@ inline sinc(x:T) {
 }
 
 [T when CallDefined?(sin,T)]
-inline cosc(x:T) { 
+forceinline cosc(x:T) { 
     if(x==0) 
         return T(0);
     else {
@@ -102,26 +102,26 @@ inline cosc(x:T) {
     }
 }
 
-inline square(x) = x*x;
-inline cube(x) = x*x*x;
+forceinline square(x) = x*x;
+forceinline cube(x) = x*x*x;
 
-inline fma(a, b, c) = (a * b) + c;
-
-[T when Float?(T)] 
-inline rsqrt(x:T) = recip(sqrt(x));
+forceinline fma(a, b, c) = (a * b) + c;
 
 [T when Float?(T)] 
-inline sigmoid (x:T) = T(1) / (T(1) + exp (-x));
+forceinline rsqrt(x:T) = recip(sqrt(x));
 
-inline normcoeff(#LongDouble) = floatFromBits(UInt128(0x4035ul));
-inline overload normcoeff(#Double) = floatFromBits(0x435ul);
-inline overload normcoeff(#Float) = floatFromBits(0x4Cu);
+[T when Float?(T)] 
+forceinline sigmoid (x:T) = T(1) / (T(1) + exp (-x));
+
+forceinline normcoeff(#LongDouble) = floatFromBits(UInt128(0x4035ul));
+forceinline overload normcoeff(#Double) = floatFromBits(0x435ul);
+forceinline overload normcoeff(#Float) = floatFromBits(0x4Cu);
 
 [T when Float?(T)]
-inline normalize(x:T) 
+forceinline normalize(x:T) 
     = if(normalized?(x)) x else floatFromBits(floatExponent(x*normcoeff(T)) - 
         (mantissaSize(T) + 2));
 
 
 [T when Float?(T)] 
-inline epsilon(#T) = nextafter(T(1),T(2))-T(1);
+forceinline epsilon(#T) = nextafter(T(1),T(2))-T(1);

@@ -93,8 +93,8 @@ record DequeCoordinate[T] (
     = x.node < y.node
     or (x.node == y.node and x.current < y.current);
 
-[T] inline overload hasValue?(i: DequeCoordinate[T]) = not null?(i.current);
-[T] inline overload getValue(i: DequeCoordinate[T]) = ref i.current^;
+[T] forceinline overload hasValue?(i: DequeCoordinate[T]) = not null?(i.current);
+[T] forceinline overload getValue(i: DequeCoordinate[T]) = ref i.current^;
 
 
 /// @section  Deque object interface 

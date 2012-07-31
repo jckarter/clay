@@ -67,7 +67,7 @@ alias overload Vector[T](..elements:A) {
 [T] overload BitwiseMovedType?(#Vector[T]) = true;
 
 [T]
-inline overload resetUnsafe(a:Vector[T]) {
+forceinline overload resetUnsafe(a:Vector[T]) {
     a <-- Vector[T]();
 }
 
@@ -96,18 +96,18 @@ moveVectorBuffer(a:Vector[T]) {
 overload Vector?(#Vector[T]) = true;
 
 [T]
-inline overload vectorData(a:Vector[T]) = a.data;
+forceinline overload vectorData(a:Vector[T]) = a.data;
 
 [T]
-inline overload vectorSize(a:Vector[T]) = a.size;
+forceinline overload vectorSize(a:Vector[T]) = a.size;
 
 [T]
-inline overload vectorSetSize(a:Vector[T], n:SizeT) {
+forceinline overload vectorSetSize(a:Vector[T], n:SizeT) {
     a.size = n;
 }
 
 [T]
-inline overload vectorCapacity(a:Vector[T]) = a.capacity;
+forceinline overload vectorCapacity(a:Vector[T]) = a.capacity;
 
 [T]
 overload vectorRequestCapacity(a:Vector[T], capacity:SizeT) {

@@ -8,7 +8,7 @@ alias ExternalException = Pointer[Maybe[Exception]];
 //    = ..callExternal(external_fn, ..);
 
 [inCount]
-inline wrapAsExternal(impl_fn, #inCount, exp:ExternalException, ..inoutp) {
+forceinline wrapAsExternal(impl_fn, #inCount, exp:ExternalException, ..inoutp) {
     try {
         ..mapValues(dereference, ..dropValues(#inCount, ..inoutp))
             <-- ..impl_fn(..mapValues(dereference, ..takeValues(#inCount, ..inoutp)));
@@ -23,7 +23,7 @@ inline wrapAsExternal(impl_fn, #inCount, exp:ExternalException, ..inoutp) {
 [..IO, ..T when
     [..T] == [..mapValues(unpointer, ..takeValues(#countValues(..T), ..IO))]
 ]
-inline callExternal(
+forceinline callExternal(
     external_fn:CCodePointer[[ExternalException, ..IO], []],
     ..args:T
 )

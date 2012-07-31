@@ -45,7 +45,7 @@ referenceType(..fields:F) = referenceTypeWithProperties([], ..fields);
 /// @section  referencePtr 
 
 [T when ReferenceType?(T)]
-inline referencePtr(x:T) =
+forceinline referencePtr(x:T) =
     ref recordFieldRef(x, #0);
 
 

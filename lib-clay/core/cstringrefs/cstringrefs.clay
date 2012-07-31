@@ -16,20 +16,20 @@ overload ContiguousSequence?(#CStringRef) = true;
 /// @section  constructors 
 
 [T when ByteSizedInteger?(T)]
-inline overload CStringRef(ptr : Pointer[T]) --> returned:CStringRef {
+forceinline overload CStringRef(ptr : Pointer[T]) --> returned:CStringRef {
     returned.ptr = Pointer[Int8](ptr);
 }
 
-inline overload CStringRef(ptr : Pointer[Char]) = CStringRef(Pointer[Int8](ptr));
+forceinline overload CStringRef(ptr : Pointer[Char]) = CStringRef(Pointer[Int8](ptr));
 
 
 
 /// @section  size, index 
 
-inline overload size(a:CStringRef) = SizeT(strlen(a.ptr));
+forceinline overload size(a:CStringRef) = SizeT(strlen(a.ptr));
 
 [I when Integer?(I)]
-inline overload index(a:CStringRef, i:I) {
+forceinline overload index(a:CStringRef, i:I) {
     assert["boundsChecks"](i >= 0 and i < size(a), "CStringRef index out of bounds");
     return ref (begin(a) + i)^;
 }
@@ -38,16 +38,16 @@ inline overload index(a:CStringRef, i:I) {
 
 /// @section  coordinates and iteration 
 
-inline overload begin(a:CStringRef) = Pointer[Char](a.ptr);
-inline overload end(a:CStringRef) = Pointer[Char](a.ptr + size(a));
+forceinline overload begin(a:CStringRef) = Pointer[Char](a.ptr);
+forceinline overload end(a:CStringRef) = Pointer[Char](a.ptr + size(a));
 
-inline overload iterator(a:CStringRef) = coordinateRange(begin(a), end(a));
+forceinline overload iterator(a:CStringRef) = coordinateRange(begin(a), end(a));
 
-inline overload reverseIterator(a:CStringRef) =
+forceinline overload reverseIterator(a:CStringRef) =
     reverseCoordinateRange(end(a), begin(a));
 
 
 
 /// @section  cstring 
 
-inline overload cstring(a:CStringRef) = a.ptr;
+forceinline overload cstring(a:CStringRef) = a.ptr;

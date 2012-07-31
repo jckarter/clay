@@ -6,6 +6,6 @@ var stderr = __stderrp;
 
 // these are macros in libc
 
-inline isnan(x:Double) : Int = Int(x != x);
-inline isnanf(x:Float) : Int = Int(x != x);
-inline isnanl(x:LongDouble) : Int = Int(x != x);
+forceinline isnan(x:Double) : Int = Int(x != x);
+forceinline isnanf(x:Float) : Int = Int(x != x);
+forceinline isnanl(x:LongDouble) : Int = Int(x != x);

@@ -52,20 +52,20 @@ alias String = Vector[Char];
 /// @section  construct from sequences of bytes 
 
 [A when Sequence?(A) and ByteSizedInteger?(SequenceElementType(A))]
-inline overload String(a:A) = String(mapped(Char, a));
+forceinline overload String(a:A) = String(mapped(Char, a));
 
 
 
 /// @section  construct from c-string 
 
 [T when ByteSizedInteger?(T)]
-inline overload String(cstr : Pointer[T]) = String(CStringRef(cstr));
+forceinline overload String(cstr : Pointer[T]) = String(CStringRef(cstr));
 
 
 
 /// @section  convert to c-compatible string 
 
-inline overload cstring(s: String) {
+forceinline overload cstring(s: String) {
     reserve(s, size(s)+1);
     end(s)^ = Char(0);
     return Pointer[Int8](s.data);
@@ -73,4 +73,4 @@ inline overload cstring(s: String) {
 
 /// @section  convert to cstringref 
 
-inline overload CStringRef(s : String) = CStringRef(cstring(s));
+forceinline overload CStringRef(s : String) = CStringRef(cstring(s));

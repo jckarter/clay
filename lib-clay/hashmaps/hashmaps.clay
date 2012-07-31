@@ -39,7 +39,7 @@ overload HashMap[K,V]() --> returned:HashMap[K,V] {
 /// @section  clear 
 
 [K,V]
-inline overload clear(a:HashMap[K,V]) {
+forceinline overload clear(a:HashMap[K,V]) {
     a.size = 0;
     for (bucket in a.buckets)
         bucket = nullUniqueValue(Node[K,V]);
