@@ -1,0 +1,7 @@
+import a;
+import a.b;
+
+main() { 
+	a.foo();
+	a.b.foo(); 
+}

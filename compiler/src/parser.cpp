@@ -2994,7 +2994,7 @@ static bool module(llvm::StringRef moduleName, ModulePtr &x) {
 // parse
 //
 
-    template<typename Parser, typename Node>
+template<typename Parser, typename Node>
 void applyParser(SourcePtr source, int offset, int length, Parser parser, Node &node)
 {
     vector<Token> t;
