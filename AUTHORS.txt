@@ -17,5 +17,6 @@ Doug Coleman <erg@factorcode.org>
 John Benediktsson <mrjbq7@gmail.com>
 Jyun-Yan You (github @crabtw)
 Stepan Koltsov (stepan.koltsov@gmail.com)
+T.R. Shyam Sundar (trssnd@gmail.com)
 
 If your name is missing from this list, let me know at joe@duriansoftware.com.
