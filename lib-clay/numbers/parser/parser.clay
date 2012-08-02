@@ -8,9 +8,7 @@ import sequences.*;
 
 
 
-//
-// Generic parsers
-//
+/// @section  Generic parsers 
 [S when CCompatibleString?(S)]
 parseIntWith(s:S, intType, convFunc) {
     var p = cstring(s);
@@ -50,9 +48,7 @@ parseImagWith(s:S, imagType, convFunc) {
     return numericConvert(imagType,value);
 }
 
-//
-// parseInt8, parseUInt8
-//
+/// @section  parseInt8, parseUInt8 
 
 [S when String?(S)]
 parseInt8(s:S) = parseInt8(String(s));
@@ -67,9 +63,7 @@ parseUInt8(s:S) = parseUInt8(String(s));
 overload parseUInt8(s:S) = parseIntWith(s, UInt8, libc.strtoul);
 
 
-//
-// parseInt16, parseUInt16
-//
+/// @section  parseInt16, parseUInt16 
 
 [S when String?(S)]
 parseInt16(s:S) = parseInt16(String(s));
@@ -84,9 +78,7 @@ parseUInt16(s:S) = parseUInt16(String(s));
 overload parseUInt16(s:S) =  parseIntWith(s, UInt16, libc.strtoul);
 
 
-//
-// parseInt32, parseUInt32
-//
+/// @section  parseInt32, parseUInt32 
 
 [S when String?(S)]
 parseInt32(s:S) = parseInt32(String(s));
@@ -101,9 +93,7 @@ parseUInt32(s:S) = parseUInt32(String(s));
 overload parseUInt32(s:S) = parseIntWith(s, UInt32, libc.strtoul);
 
 
-//
-// parseInt64, parseUInt64
-//
+/// @section  parseInt64, parseUInt64 
 
 [S when String?(S)]
 parseInt64(s:S) = parseInt64(String(s));
@@ -118,9 +108,7 @@ parseUInt64(s:S) = parseUInt64(String(s));
 overload parseUInt64(s:S) = parseIntWith(s, UInt64, libc.strtoull);
 
 
-//
-// parseFloat32
-//
+/// @section  parseFloat32 
 
 [S when String?(S)]
 parseFloat32(s:S) = parseFloat32(String(s));
@@ -129,9 +117,7 @@ parseFloat32(s:S) = parseFloat32(String(s));
 overload parseFloat32(s:S) = parseFloatWith(s, Float32, libc.strtod);
 
 
-//
-// parseFloat64
-//
+/// @section  parseFloat64 
 
 [S when String?(S)]
 parseFloat64(s:S) = parseFloat64(String(s));
@@ -139,9 +125,7 @@ parseFloat64(s:S) = parseFloat64(String(s));
 [S when CCompatibleString?(S)]
 overload parseFloat64(s:S) = parseFloatWith(s, Float64, libc.strtod);
 
-//
-// parseFloat80
-//
+/// @section  parseFloat80 
 
 [S when String?(S)]
 parseFloat80(s:S) = parseFloat80(String(s));
@@ -150,9 +134,7 @@ parseFloat80(s:S) = parseFloat80(String(s));
 overload parseFloat80(s:S) = parseFloatWith(s, Float80, libc.strtold);
 
 
-//
-// parseImag32
-//
+/// @section  parseImag32 
 
 [S when String?(S)]
 parseImag32(s:S) = parseImag32(String(s));
@@ -161,9 +143,7 @@ parseImag32(s:S) = parseImag32(String(s));
 overload parseImag32(s:S) = parseImagWith(s, Imag32, libc.strtod);
 
 
-//
-// parseImag64
-//
+/// @section  parseImag64 
 
 [S when String?(S)]
 parseImag64(s:S) = parseImag64(String(s));
@@ -171,9 +151,7 @@ parseImag64(s:S) = parseImag64(String(s));
 [S when CCompatibleString?(S)]
 overload parseImag64(s:S) = parseImagWith(s, Imag64, libc.strtod);
 
-//
-// parseComplex80
-//
+/// @section  parseComplex80 
 
 [S when String?(S)]
 parseImag80(s:S) = parseImag80(String(s));
@@ -185,49 +163,47 @@ overload parseImag80(s:S) = parseImagWith(s, Imag80, libc.strtold);
 
 
 
-//
-// parse numbers from strings
-//
+/// @section  parse numbers from strings 
 
 [S when String?(S)]
-inline overload Int8(s:S)  = parseInt8(s);
+forceinline overload Int8(s:S)  = parseInt8(s);
 
 [S when String?(S)]
-inline overload Int16(s:S) = parseInt16(s);
+forceinline overload Int16(s:S) = parseInt16(s);
 
 [S when String?(S)]
-inline overload Int32(s:S) = parseInt32(s);
+forceinline overload Int32(s:S) = parseInt32(s);
 
 [S when String?(S)]
-inline overload Int64(s:S) = parseInt64(s);
+forceinline overload Int64(s:S) = parseInt64(s);
 
 [S when String?(S)]
-inline overload UInt8(s:S)  = parseUInt8(s);
+forceinline overload UInt8(s:S)  = parseUInt8(s);
 
 [S when String?(S)]
-inline overload UInt16(s:S) = parseUInt16(s);
+forceinline overload UInt16(s:S) = parseUInt16(s);
 
 [S when String?(S)]
-inline overload UInt32(s:S) = parseUInt32(s);
+forceinline overload UInt32(s:S) = parseUInt32(s);
 
 [S when String?(S)]
-inline overload UInt64(s:S) = parseUInt64(s);
+forceinline overload UInt64(s:S) = parseUInt64(s);
 
 [S when String?(S)]
-inline overload Float32(s:S) = parseFloat32(s);
+forceinline overload Float32(s:S) = parseFloat32(s);
 
 [S when String?(S)]
-inline overload Float64(s:S) = parseFloat64(s);
+forceinline overload Float64(s:S) = parseFloat64(s);
 
 [S when String?(S)]
-inline overload Float80(s:S) = parseFloat80(s);
+forceinline overload Float80(s:S) = parseFloat80(s);
 
 [S when String?(S)]
-inline overload Imag32(s:S) = parseImag32(s);
+forceinline overload Imag32(s:S) = parseImag32(s);
 
 [S when String?(S)]
-inline overload Imag64(s:S) = parseImag64(s);
+forceinline overload Imag64(s:S) = parseImag64(s);
 
 [S when String?(S)]
-inline overload Imag80(s:S) = parseImag80(s);
+forceinline overload Imag80(s:S) = parseImag80(s);
 

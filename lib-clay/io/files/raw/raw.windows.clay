@@ -5,9 +5,7 @@ import io.streams.*;
 import strings.*;
 
 
-//
-// RawFile
-//
+/// @section  RawFile 
 
 record RawFile (
     handle : win32.HANDLE,
@@ -24,9 +22,7 @@ stderrRawFile() = RawFile(stdHandle(win32.STD_ERROR_HANDLE), false);
 
 
 
-//
-// constructors, destroy
-//
+/// @section  constructors, destroy 
 
 private accessFlags(mode) {
     switch (mode)
@@ -116,17 +112,13 @@ overload resetUnsafe(x:RawFile) {
 
 
 
-//
-// fileHandle
-//
+/// @section  fileHandle 
 
 overload fileHandle(f:RawFile) = f.handle;
 
 
 
-//
-// read, write, flush
-//
+/// @section  read, write, flush 
 
 overload read(f:RawFile, buffer:Pointer[Byte], n:SizeT) : SizeT {
     var nRead = win32.DWORD();
@@ -163,9 +155,7 @@ overload flush(f:RawFile) {
 
 
 
-//
-// fileSize, seek
-//
+/// @section  fileSize, seek 
 
 overload fileSize(f:RawFile) {
     var size = Int64();
@@ -200,8 +190,6 @@ overload seek(f:RawFile, offset, whence) {
 
 
 
-//
-// terminal?
-//
+/// @section  terminal? 
 
 overload terminal?(f:RawFile) = true; // FIXME: implement it

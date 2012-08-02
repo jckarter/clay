@@ -1,8 +1,6 @@
 
 
-//
-// type aliases for 32-bit platforms
-//
+/// @section  type aliases for 32-bit platforms 
 
 alias PtrInt = Int32;
 alias UPtrInt = UInt32;

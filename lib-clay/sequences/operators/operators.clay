@@ -2,9 +2,7 @@ import vectors.*;
 import core.numbers.(private BiggerNumeric?);
 
 
-//
-// prefixOperator, infixOperator, updateAssign
-//
+/// @section  prefixOperator, infixOperator, updateAssign 
 
 [S,F when Sequence?(S)]
 overload updateAssign(#F, ret:S, ..args) {
@@ -37,37 +35,35 @@ overload prefixOperator(..args:S) {
 
 private define seqType;
 [T when Numeric?(T)] 
-inline overload seqType(#T,a,..args) = ..seqType(T,..args);
+forceinline overload seqType(#T,a,..args) = ..seqType(T,..args);
 [T,U when Numeric?(T,U) and BiggerNumeric?(T,U)]
-inline overload seqType(#T,a:U,..args) = ..seqType(T,..args);
+forceinline overload seqType(#T,a:U,..args) = ..seqType(T,..args);
 [T,U when Numeric?(T,U) and BiggerNumeric?(U,T)]
-inline overload seqType(#T,a:U,..args) = ..seqType(U,..args);
+forceinline overload seqType(#T,a:U,..args) = ..seqType(U,..args);
 [T,S when Numeric?(T) and Sequence?(S) and BiggerNumeric?(T,SequenceElementType(S))] 
-inline overload seqType(#T,a:S,..args) = ..seqType(T,..args);
+forceinline overload seqType(#T,a:S,..args) = ..seqType(T,..args);
 [T,S when Numeric?(T) and Sequence?(S) and BiggerNumeric?(SequenceElementType(S),T)] 
-inline overload seqType(#T,a:S,..args) = ..seqType(SequenceElementType(S),..args);
+forceinline overload seqType(#T,a:S,..args) = ..seqType(SequenceElementType(S),..args);
 [T when Numeric?(T)] overload seqType(#T) = T;
 
 private define seqSize;
-inline overload seqSize(s,forward a,forward ..args) = forward ..seqSize(s,..args);
+forceinline overload seqSize(s,forward a,forward ..args) = forward ..seqSize(s,..args);
 [S when Sequence?(S)] 
-inline overload seqSize(s,forward a:S,forward ..args) = forward ..seqSize(max(s,size(a)),..args);
-inline overload seqSize(s) = s;
+forceinline overload seqSize(s,forward a:S,forward ..args) = forward ..seqSize(max(s,size(a)),..args);
+forceinline overload seqSize(s) = s;
 
 private define reduceToScalar;
 [F] 
-inline overload reduceToScalar(forward i, #F, forward ..args) = forward F, ..reduceToScalar(i,..args);
+forceinline overload reduceToScalar(forward i, #F, forward ..args) = forward F, ..reduceToScalar(i,..args);
 [S when Sequence?(S)] 
-inline overload reduceToScalar(forward i,forward a:S, forward ..args) = forward a[i],..reduceToScalar(i,..args);
+forceinline overload reduceToScalar(forward i,forward a:S, forward ..args) = forward a[i],..reduceToScalar(i,..args);
 [T when Numeric?(T)] 
-inline overload reduceToScalar(forward i, forward a:T,forward ..args) = forward a,..reduceToScalar(i,..args);
-inline overload reduceToScalar(forward i) = ;
+forceinline overload reduceToScalar(forward i, forward a:T,forward ..args) = forward a,..reduceToScalar(i,..args);
+forceinline overload reduceToScalar(forward i) = ;
 
 
 
-//
-// concatenation
-//
+/// @section  concatenation 
 
 [A, ..B when Sequence?(A) and allValues?(Sequence?,..B)
         and equalValues?(SequenceElementType(A),

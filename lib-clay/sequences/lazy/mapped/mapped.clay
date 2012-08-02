@@ -4,13 +4,11 @@ import sequences.lazy.zipped.*;
 import sequences.force.*;
 
 
-//
-// mapped
-//
+/// @section  mapped 
 
-inline mapped(forward mapper, forward ..seqs) = Mapped(mapper, zipped(..seqs));
+forceinline mapped(forward mapper, forward ..seqs) = Mapped(mapper, zipped(..seqs));
 
-inline overload mapped(forward mapper, forward seq) = Mapped(mapper, wrapSequence(seq));
+forceinline overload mapped(forward mapper, forward seq) = Mapped(mapper, wrapSequence(seq));
 
 
 private record Mapped[F, A] (
@@ -27,19 +25,17 @@ overload UnderlyingContainerConstructor(#Mapped[F,A]) =
 
 
 
-//
-// MappedIterator
-//
+/// @section  MappedIterator 
 
 [F,A]
-inline overload iterator(a:Mapped[F,A]) =
+forceinline overload iterator(a:Mapped[F,A]) =
     MappedIterator(a.mapper, iterator(a.seq));
 
 [F,A]
-inline overload iterator(a:MappedIterator[F,A]) = a;
+forceinline overload iterator(a:MappedIterator[F,A]) = a;
 
 [F,A when CallDefined?(reverseIterator, A)]
-inline overload reverseIterator(a:Mapped[F,A]) =
+forceinline overload reverseIterator(a:Mapped[F,A]) =
     MappedIterator(a.mapper, reverseIterator(a.seq));
 
 private record MappedIterator[F, ITER] (
@@ -50,18 +46,16 @@ private record MappedIterator[F, ITER] (
 private record MappedValue[F, V] (mapper:Pointer[F], value:V);
 
 [F, ITER]
-inline overload nextValue(iter:MappedIterator[F, ITER])
+forceinline overload nextValue(iter:MappedIterator[F, ITER])
     = MappedValue(@iter.mapper, nextValue(iter.iter));
 
 [F, V]
-inline overload hasValue?(v:MappedValue[F,V]) = hasValue?(v.value);
+forceinline overload hasValue?(v:MappedValue[F,V]) = hasValue?(v.value);
 [F, V]
-inline overload getValue(forward v:MappedValue[F,V]) = forward ..v.mapper^(..getValue(v.value));
+forceinline overload getValue(forward v:MappedValue[F,V]) = forward ..v.mapper^(..getValue(v.value));
 
 
-//
-// MappedCoordinate, mappedInnerCoordinate
-//
+/// @section  MappedCoordinate, mappedInnerCoordinate 
 
 private record MappedCoordinate[F, COORD] (
     mapper : F,
@@ -72,50 +66,48 @@ private record MappedCoordinate[F, COORD] (
 mappedInnerCoordinate(x:MappedCoordinate[F,COORD]) = ref x.coord;
 
 [F, A when CallDefined?(begin, A)]
-inline overload begin(a:Mapped[F, A]) = MappedCoordinate(a.mapper, begin(a.seq));
+forceinline overload begin(a:Mapped[F, A]) = MappedCoordinate(a.mapper, begin(a.seq));
 
 [F, A when CallDefined?(end, A)]
-inline overload end(a:Mapped[F, A]) = MappedCoordinate(a.mapper, end(a.seq));
+forceinline overload end(a:Mapped[F, A]) = MappedCoordinate(a.mapper, end(a.seq));
 
 [F, COORD]
-inline overload dereference(x:MappedCoordinate[F, COORD]) =
+forceinline overload dereference(x:MappedCoordinate[F, COORD]) =
     forward ..x.mapper(..dereference(x.coord));
 
 [F, COORD, I when CallDefined?(add, COORD, I)]
-inline overload add(x:MappedCoordinate[F, COORD], i:I) =
+forceinline overload add(x:MappedCoordinate[F, COORD], i:I) =
     MappedCoordinate(x.mapper, x.coord + i);
 
 [F, COORD, I when CallDefined?(subtract, COORD, I)]
-inline overload subtract(x:MappedCoordinate[F, COORD], i:I) =
+forceinline overload subtract(x:MappedCoordinate[F, COORD], i:I) =
     MappedCoordinate(x.mapper, x.coord - i);
 
 [F, COORD when CallDefined?(subtract, COORD, COORD)]
-inline overload subtract(x1:MappedCoordinate[F, COORD],
+forceinline overload subtract(x1:MappedCoordinate[F, COORD],
                          x2:MappedCoordinate[F, COORD]) =
     x1.coord - x2.coord;
 
 [F, COORD when CallDefined?(inc, COORD)]
-inline overload inc(x:MappedCoordinate[F, COORD]) {
+forceinline overload inc(x:MappedCoordinate[F, COORD]) {
     inc(x.coord);
 }
 
 [F, COORD when CallDefined?(dec, COORD)]
-inline overload dec(x:MappedCoordinate[F, COORD]) {
+forceinline overload dec(x:MappedCoordinate[F, COORD]) {
     dec(x.coord);
 }
 
 
 
-//
-// size, StaticSize, index
-//
+/// @section  size, StaticSize, index 
 
 [F, A when CallDefined?(size, A)]
-inline overload size(a:Mapped[F, A]) = size(a.seq);
+forceinline overload size(a:Mapped[F, A]) = size(a.seq);
 
 [F, A when CallDefined?(StaticSize, Static[A])]
 overload StaticSize(#Mapped[F,A]) = StaticSize(A);
 
 [F, A, I when CallDefined?(index, A, I)]
-inline overload index(a:Mapped[F, A], i:I) =
+forceinline overload index(a:Mapped[F, A], i:I) =
     forward ..a.mapper(..index(a.seq, i));

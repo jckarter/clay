@@ -1,9 +1,7 @@
 
 
 
-//
-// typeId[T]
-//
+/// @section  typeId[T] 
 
 private var _nextTypeId = 0;
 
@@ -17,9 +15,7 @@ private var typeId[T] = nextTypeId();
 
 
 
-//
-// Any
-//
+/// @section  Any 
 
 record Any (
     id : Int,

@@ -9,7 +9,7 @@ import numbers.floats.(infinity);
 import math.native.constants.(M_PI);
 
 [T when Float?(T)] 
-inline cot(z:T) = T(1)/tan(z);
+forceinline cot(z:T) = T(1)/tan(z);
 
 
 // Complex circular cotangent
@@ -65,7 +65,7 @@ alias DP2 = 1.98418714791870343106E-9;
 alias DP3 = 1.14423774522196636802E-17;
 
 [T when Float?(T)]
-private inline redupi(x:T){
+private forceinline redupi(x:T){
     var t = x/M_PI;
     if(t >= T() )
         t +: T(0.5);

@@ -58,7 +58,7 @@ decodeFour(c, d, e, f) {
     }
 }
 
-private inline getByte(v) = UInt8(getValue(v));
+private forceinline getByte(v) = UInt8(getValue(v));
 private NEXT_VALUE_OR_EOF(varName) = stringLiteralConcat("""
     v = nextValue(decoder.iter);
     if (not hasValue?(v)) goto eof;

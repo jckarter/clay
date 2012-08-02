@@ -1,1 +1,1 @@
-inline showBacktrace() { }
+forceinline showBacktrace() { }

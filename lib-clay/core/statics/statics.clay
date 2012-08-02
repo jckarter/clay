@@ -3,71 +3,59 @@ public import __primitives__.(Static);
 
 
 
-//
-// Static? predicate
-//
+/// @section  Static? predicate 
 
 Static?(x) = false;
 [T] overload Static?(#T) = true;
 
 
 
-//
-// constructors, moveUnsafe, resetUnsafe, destroy
-//
+/// @section  constructors, moveUnsafe, resetUnsafe, destroy 
 
 [A]
-inline overload Static[A]() --> returned:Static[A] {
+forceinline overload Static[A]() --> returned:Static[A] {
 }
 
 [A]
-inline overload Static[A](src:Static[A]) --> returned:Static[A] {
+forceinline overload Static[A](src:Static[A]) --> returned:Static[A] {
 }
 
 [A]
-inline overload moveUnsafe(src:Static[A]) --> returned:Static[A] {
+forceinline overload moveUnsafe(src:Static[A]) --> returned:Static[A] {
 }
 
 
 
-//
-// equals?, lesser?
-//
+/// @section  equals?, lesser? 
 
 [A, B]
-inline overload equals?(a:Static[A], b:Static[B]) = false;
+forceinline overload equals?(a:Static[A], b:Static[B]) = false;
 
 [A]
-inline overload equals?(a:Static[A], b:Static[A]) = true;
+forceinline overload equals?(a:Static[A], b:Static[A]) = true;
 
 [A]
-inline overload lesser?(a:Static[A], b:Static[A]) = false;
+forceinline overload lesser?(a:Static[A], b:Static[A]) = false;
 
 
 
-//
-// unwrapStatic
-//
+/// @section  unwrapStatic 
 
 [A]
-inline unwrapStatic(#A) = A;
+forceinline unwrapStatic(#A) = A;
 
 
 
-//
-// call
-//
+/// @section  call 
 
 [F, ..AA when CallDefined?(F, ..AA)]
-inline overload call(#F, forward ..args:AA) =
+forceinline overload call(#F, forward ..args:AA) =
     forward ..F(..args);
 
 
 
-//
-// fieldRef
-//
+/// @section  fieldRef 
 
 [Module, Ident]
-inline overload fieldRef(#Module, #Ident) =
+forceinline overload fieldRef(#Module, #Ident) =
     forward staticFieldRef(Module, Ident);

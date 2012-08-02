@@ -103,13 +103,13 @@ overload initialize(b: Bucket[E])
 //
 
 [B]
-inline overload moveUnsafe(src: Table[B]) --> returned: Table[B] {
+forceinline overload moveUnsafe(src: Table[B]) --> returned: Table[B] {
     returned.ptr = src.ptr;
     returned.ln2_size = src.ln2_size;
 }
 
 [B]
-inline overload resetUnsafe(t: Table[B]) {
+forceinline overload resetUnsafe(t: Table[B]) {
     t.ptr = null(B);
     t.ln2_size = 0; // actually -infinity
 }

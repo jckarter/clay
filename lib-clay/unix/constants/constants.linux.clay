@@ -1,8 +1,6 @@
 
 
-//
-// flags for 'open'
-//
+/// @section  flags for 'open' 
 
 alias O_RDONLY   = octal("00");
 alias O_WRONLY   = octal("01");
@@ -20,9 +18,7 @@ alias O_ASYNC    = octal("020000");
 
 
 
-//
-// flags for 'chmod'/'stat'
-//
+/// @section  flags for 'chmod'/'stat' 
 
 alias S_IRWXU = octal("0700");
 alias S_IRUSR = octal("0400");
@@ -55,9 +51,7 @@ alias S_IFWHT  = octal("0160000");
 
 
 
-//
-// flags for lseek
-//
+/// @section  flags for lseek 
 
 alias SEEK_SET = 0;
 alias SEEK_CUR = 1;
@@ -65,9 +59,7 @@ alias SEEK_END = 2;
 
 
 
-//
-// flags for mmap
-//
+/// @section  flags for mmap 
 
 alias PROT_NONE  = 0;
 alias PROT_READ  = 1;
@@ -91,9 +83,7 @@ alias MAP_FAILED = RawPointer(-1);
 
 
 
-//
-// flags for msync
-//
+/// @section  flags for msync 
 
 alias MS_ASYNC      = 1;
 alias MS_SYNC       = 4;
@@ -101,9 +91,7 @@ alias MS_INVALIDATE = 2;
 
 
 
-//
-// socket protocol families
-//
+/// @section  socket protocol families 
 alias AF_UNSPEC = 0uss;
 alias AF_LOCAL = 1uss;
 alias AF_INET = 2uss;
@@ -111,9 +99,7 @@ alias AF_INET6 = 30uss;
 
 
 
-//
-// socket protocol families
-//
+/// @section  socket protocol families 
 alias PF_UNSPEC = AF_UNSPEC;
 alias PF_LOCAL = AF_LOCAL;
 alias PF_INET = AF_INET;
@@ -121,9 +107,7 @@ alias PF_INET6 = AF_INET6;
 
 
 
-//
-// special IPv4 addresses
-//
+/// @section  special IPv4 addresses 
 alias INADDR_ANY       = 0x00_00_00_00u;
 alias INADDR_BROADCAST = 0xFF_FF_FF_FFu;
 alias INADDR_LOOPBACK  = 0x7F_00_00_01u;
@@ -135,17 +119,13 @@ alias INADDR_MAX_LOCAL_GROUP = 0xE0_00_00_FFu;
 
 
 
-//
-// getsockopt/setsockopt constants
-//
+/// @section  getsockopt/setsockopt constants 
 alias SOL_SOCKET = 1;
 
 alias SO_REUSEADDR = 2;
 
 
-//
-// signals
-//
+/// @section  signals 
 
 alias SIGHUP    = 1;
 alias SIGINT    = 2;
@@ -188,9 +168,7 @@ alias SIG_DFL  = CCodePointer[[Int],[]](0);
 alias SIG_IGN  = CCodePointer[[Int],[]](1);
 alias SIG_HOLD = CCodePointer[[Int],[]](2);
 
-//
-// status flags for wait() calls
-//
+/// @section  status flags for wait() calls 
 
 alias WCOREFLAG = 0x80;
 
@@ -205,9 +183,7 @@ WCOREDUMP(x) = bitand(Int(x), WCOREFLAG) != 0;
 W_EXITCODE(ret, sig) = bitor(bitshl(Int(ret), 8), Int(sig));
 W_STOPCODE(sig) = bitor(bitshl(Int(sig), 8), _WSTOPPED);
 
-//
-// clock ids for clock_gettime() etc.
-//
+/// @section  clock ids for clock_gettime() etc. 
 
 alias CLOCK_REALTIME            = 0;
 alias CLOCK_MONOTONIC           = 1;

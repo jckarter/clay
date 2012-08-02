@@ -103,7 +103,9 @@ convertPointerType(type:CXType, refCursor:CXCursor) : String {
 
             printTo(name, "[[");
 
-            for (arg in range(clang_getNumArgTypes(type))) {
+            var numArgs = clang_getNumArgTypes(type);
+            assert(numArgs >= 0);
+            for (arg in range(UInt(numArgs))) {
                 if (arg > 0)
                     printTo(name, ", ");
                 printTo(name, convertType(clang_getArgType(type, arg), refCursor));
@@ -422,7 +424,8 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
 
         printTo(g_bindingsOut, ") ", clayIdentifier(name), "(");
         var argCount = clang_getNumArgTypes(type);
-        for (arg in range(argCount)) {
+        assert(argCount >= 0);
+        for (arg in range(UInt(argCount))) {
             if (arg > 0)
                 printTo(g_bindingsOut, ", ");
             printTo(g_bindingsOut, "arg", arg, ":",

@@ -19,9 +19,7 @@ private record Node[K,V] (
 
 
 
-//
-// default constructor
-//
+/// @section  default constructor 
 
 [K,V]
 overload HashMap[K,V]() --> returned:HashMap[K,V] {
@@ -38,12 +36,10 @@ overload HashMap[K,V]() --> returned:HashMap[K,V] {
 
 
 
-//
-// clear
-//
+/// @section  clear 
 
 [K,V]
-inline overload clear(a:HashMap[K,V]) {
+forceinline overload clear(a:HashMap[K,V]) {
     a.size = 0;
     for (bucket in a.buckets)
         bucket = nullUniqueValue(Node[K,V]);
@@ -51,18 +47,14 @@ inline overload clear(a:HashMap[K,V]) {
 
 
 
-//
-// size
-//
+/// @section  size 
 
 [K,V]
 overload size(a:HashMap[K,V]) = a.size;
 
 
 
-//
-// lookup
-//
+/// @section  lookup 
 
 [K,V]
 overload lookup(a:HashMap[K,V], key:K) {
@@ -72,9 +64,7 @@ overload lookup(a:HashMap[K,V], key:K) {
 
 
 
-//
-// put
-//
+/// @section  put 
 
 [K,V]
 overload put(a:HashMap[K,V], key:K, forward value:V) {
@@ -94,9 +84,7 @@ overload put(a:HashMap[K,V], key:K, forward value:V) {
 
 
 
-//
-// index
-//
+/// @section  index 
 
 [K,V]
 overload index(a:HashMap[K,V], key:K) {
@@ -116,9 +104,7 @@ overload index(a:HashMap[K,V], key:K) {
 
 
 
-//
-// remove
-//
+/// @section  remove 
 
 [K,V]
 overload remove(a:HashMap[K,V], key:K) {
@@ -143,9 +129,7 @@ overload remove(a:HashMap[K,V], key:K) {
 
 
 
-//
-// items
-//
+/// @section  items 
 
 [K,V]
 overload items(forward a:HashMap[K,V]) = HashMapItems(captureValue(a), K, V);
@@ -186,9 +170,7 @@ overload hasValue?(x:HashMapItem[K,V]) = not null?(x.node);
 overload getValue(x:HashMapItem[K,V]) = ref x.node^.key, x.node^.value;
 
 
-//
-// assignment
-//
+/// @section  assignment 
 
 [K,V]
 overload assign(ref to: HashMap[K,V], ref from: HashMap[K,V]) {
@@ -199,9 +181,7 @@ overload assign(ref to: HashMap[K,V], ref from: HashMap[K,V]) {
 
 
 
-//
-// helper procs
-//
+/// @section  helper procs 
 
 [K,V]
 private bucketId(a:HashMap[K,V], key:K) =
@@ -236,9 +216,7 @@ private grow(a:HashMap[K,V]) {
 
 
 
-//
-// printTo - HashMap
-//
+/// @section  printTo - HashMap 
 
 [K,V]
 overload printTo(stream, x:HashMap[K,V]) {
@@ -246,9 +224,7 @@ overload printTo(stream, x:HashMap[K,V]) {
 }
 
 
-//
-// printReprTo - HashMap
-//
+/// @section  printReprTo - HashMap 
 
 [K, V]
 overload printReprTo(stream, x:HashMap[K,V]) {

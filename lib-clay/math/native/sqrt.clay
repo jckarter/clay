@@ -104,7 +104,7 @@ overload sqrt(x:Float) {
       // take care of Inf and NaN 
     if(bitand(ix,0x7f800000)==0x7f800000) {
         return x*x+x;   // sqrt(NaN)=NaN, sqrt(+inf)=+inf
-               sqrt(-inf)=sNaN 
+               sqrt(-inf)=sNaN;
     }
       // take care of zero 
     if(ix<=0) {
@@ -163,7 +163,7 @@ overload sqrt(x:Float) {
 
 
 [I when Imaginary?(I) ]
-inline overload sqrt(z:I) = sqrt(Complex(z));
+forceinline overload sqrt(z:I) = sqrt(Complex(z));
 
 
 alias thresh(#LongDouble) = 0xd.413cccfe77997ffp+16379fl;

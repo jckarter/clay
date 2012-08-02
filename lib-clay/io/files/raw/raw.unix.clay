@@ -5,9 +5,7 @@ import io.streams.*;
 import strings.*;
 
 
-//
-// RawFile
-//
+/// @section  RawFile 
 
 record RawFile (
     handle : Int,
@@ -19,9 +17,7 @@ overload RegularRecord?(#RawFile) = false;
 
 
 
-//
-// stdinRawFile, stdoutRawFile, stderrRawFile
-//
+/// @section  stdinRawFile, stdoutRawFile, stderrRawFile 
 
 stdinRawFile()  = RawFile(0, false);
 stdoutRawFile() = RawFile(1, false);
@@ -29,9 +25,7 @@ stderrRawFile() = RawFile(2, false);
 
 
 
-//
-// constructors, destroy
-//
+/// @section  constructors, destroy 
 
 private openFlags(mode) {
     switch (mode)
@@ -68,7 +62,7 @@ overload RawFile(path:S) = RawFile(path, READ);
 overload destroy(x:RawFile) {
     if (x.owned) {
         var result = unix.close(x.handle);
-        assert(result != wrapCast(Type(result), -1));
+        assert(result != wrapCast(Type(result), -1) or unix.errno() != unix.EBADF);
     }
 }
 
@@ -83,17 +77,13 @@ overload resetUnsafe(x:RawFile) {
 
 
 
-//
-// fileHandle
-//
+/// @section  fileHandle 
 
 overload fileHandle(f:RawFile) = f.handle;
 
 
 
-//
-// read, write, flush
-//
+/// @section  read, write, flush 
 
 overload read(f:RawFile, buffer:Pointer[Byte], n:SizeT) : SizeT {
     var result = unix.read(f.handle, buffer, n);
@@ -113,9 +103,7 @@ overload flush(f:RawFile) {
 
 
 
-//
-// fileSize, seek
-//
+/// @section  fileSize, seek 
 
 overload fileSize(f:RawFile) {
     var statBuf = unix.Struct_stat();
@@ -145,9 +133,7 @@ overload seek(f:RawFile, offset, whence) {
 
 
 
-//
-// terminal?
-//
+/// @section  terminal? 
 
 overload terminal?(f:RawFile) {
     return Bool(unix.isatty(f.handle));

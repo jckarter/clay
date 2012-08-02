@@ -1,9 +1,7 @@
 import printer.(printTo,printReprTo);
 
 
-//
-// UniquePointer
-//
+/// @section  UniquePointer 
 record UniquePointer[T] (ptr: Pointer[T]);
 
 [T]
@@ -11,9 +9,7 @@ overload RegularRecord?(#UniquePointer[T]) = false;
 
 
 
-//
-// newUnique
-//
+/// @section  newUnique 
 [T]
 alias newUnique(x:T) {
     var ptr = allocateRawMemory(T, SizeT(1));
@@ -28,9 +24,7 @@ alias newUnique(x:T) {
 
 
 
-//
-// constructors, moveUnsafe, resetUnsafe, assign, destroy
-//
+/// @section  constructors, moveUnsafe, resetUnsafe, assign, destroy 
 [T]
 overload UniquePointer[T]() = UniquePointer(null(T));
 
@@ -42,16 +36,16 @@ overload UniquePointer[T](src: UniquePointer[T]);
 overload BitwiseMovedType?(#UniquePointer[T]) = true;
 
 [T]
-inline overload resetUnsafe(p: UniquePointer[T]) {
+forceinline overload resetUnsafe(p: UniquePointer[T]) {
     p.ptr = null(T);
 }
 
 // no assign from ref
 [T]
-inline overload assign(ref dest: UniquePointer[T], ref src: UniquePointer[T]);
+forceinline overload assign(ref dest: UniquePointer[T], ref src: UniquePointer[T]);
 
 [T]
-inline overload destroy(p: UniquePointer[T]) {
+forceinline overload destroy(p: UniquePointer[T]) {
     if (not null?(p.ptr)) {
         destroy(p.ptr^);
         freeRawMemory(p.ptr);
@@ -60,31 +54,25 @@ inline overload destroy(p: UniquePointer[T]) {
 
 
 
-//
-// dereference, null?, nullUnique
-//
+/// @section  dereference, null?, nullUnique 
 [T]
-inline overload dereference(p: UniquePointer[T]) = ref p.ptr^;
+forceinline overload dereference(p: UniquePointer[T]) = ref p.ptr^;
 
 [T]
-inline overload null?(p: UniquePointer[T]) = null?(p.ptr);
+forceinline overload null?(p: UniquePointer[T]) = null?(p.ptr);
 
 [T]
-inline nullUnique(#T) = UniquePointer[T]();
+forceinline nullUnique(#T) = UniquePointer[T]();
 
 
 
-//
-// equality
-//
+/// @section  equality 
 [T]
-inline overload equals?(p: UniquePointer[T], q: UniquePointer[T])
+forceinline overload equals?(p: UniquePointer[T], q: UniquePointer[T])
     = p.ptr == q.ptr;
 
 
-//
-// UniqueValue -- deep-copies on copy or assignment
-//
+/// @section  UniqueValue -- deep-copies on copy or assignment 
 
 record UniqueValue[T] (ptr: UniquePointer[T]);
 
@@ -92,7 +80,7 @@ record UniqueValue[T] (ptr: UniquePointer[T]);
 alias overload UniqueValue(x:T) = UniqueValue[T](newUnique(x));
 
 [T]
-inline overload UniqueValue[T](x:UniqueValue[T]) =
+forceinline overload UniqueValue[T](x:UniqueValue[T]) =
     if (null?(x))
         nullUniqueValue(T)
     else
@@ -111,20 +99,18 @@ overload assign(ref to:UniqueValue[T], ref from:UniqueValue[T]) {
 }
 
 [T]
-inline overload dereference(p: UniqueValue[T]) = ref p.ptr^;
+forceinline overload dereference(p: UniqueValue[T]) = ref p.ptr^;
 
 [T]
-inline overload null?(p: UniqueValue[T]) = null?(p.ptr);
+forceinline overload null?(p: UniqueValue[T]) = null?(p.ptr);
 
 [T]
-inline nullUniqueValue(#T) = UniqueValue[T]();
+forceinline nullUniqueValue(#T) = UniqueValue[T]();
 
 
 
 
-//
-// printTo - UniqueValue
-//
+/// @section  printTo - UniqueValue 
 
 [T]
 overload printTo(stream, v:UniqueValue[T]) {
@@ -138,9 +124,7 @@ overload printTo(stream, v:UniqueValue[T]) {
 }
 
 
-//
-// printReprTo - UniqueValue
-//
+/// @section  printReprTo - UniqueValue 
 
 [T]
 overload printReprTo(stream, v:UniqueValue[T]) {

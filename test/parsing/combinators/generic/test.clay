@@ -1,0 +1,81 @@
+import test.*;
+import vectors.*;
+import strings.*;
+import core.types.*;
+import numbers.parser.*;
+import parsing.combinators.strings.*;
+import parsing.combinators.wrapper.*;
+import printer.*;
+
+var digit = condition(c -> (c >= '0') and (c <= '9'));
+var number = modify(Int, oneOrMore(digit));
+
+// (strict, opt)
+define makeSeparatedListParser;
+overload makeSeparatedListParser(#false, #false) {
+    return separatedList('.', number);
+}
+overload makeSeparatedListParser(#true, #false) {
+    return separatedListStrict('.', number);
+}
+overload makeSeparatedListParser(#false, #true) {
+    return optSeparatedList('.', number);
+}
+overload makeSeparatedListParser(#true, #true) {
+    return optSeparatedListStrict('.', number);
+}
+
+[strict, opt]
+testSeparatedListNotEmpty(test, #strict, #opt) {
+    var p = makeSeparatedListParser(#strict, #opt);
+    var s = String("1.12.xy");
+    var input = iterator(s);
+    var r = require(p(input));
+    var expected = Vector[Int](1, 12);
+    expectEqual(test, "parsed", expected, r);
+    if (strict) {
+        expectEqual(test, "checking strict", String(".xy"), String(input));
+    } else {
+        expectEqual(test, "checking not strict", String("xy"), String(input));
+    }
+}
+
+[strict, opt]
+testSeparatedListEmpty(test, #strict, #opt) {
+    var p = makeSeparatedListParser(#strict, #opt);
+    var s = String("invalid");
+    var input = iterator(s);
+    if (opt) {
+        var r = require(p(input));
+        var expected = Vector[Int]();
+        expectEqual(test, "empty vector", expected, r);
+    } else {
+        expectTrue(test, "nothing", nothing?(p(input)));
+    }
+    expectEqual(test, "like strict here", String("invalid"), String(input));
+}
+
+[strict, opt]
+testSeparatedList(test, #strict, #opt) {
+    testSeparatedListNotEmpty(test, #strict, #opt);
+    testSeparatedListEmpty(test, #strict, #opt);
+}
+
+testSuite() =
+    TestSuite("parsing.combinators.generic", array(
+        TestCase("separatedList", test => {
+            testSeparatedList(test, #false, #false);
+        }),
+        TestCase("separatedListStrict", test => {
+            testSeparatedList(test, #true, #false);
+        }),
+        TestCase("optSeparatedList", test => {
+            testSeparatedList(test, #false, #true);
+        }),
+        TestCase("optSeparatedListStrict", test => {
+            testSeparatedList(test, #true, #true);
+        }),
+    ));
+
+
+main() = testMain(testSuite());

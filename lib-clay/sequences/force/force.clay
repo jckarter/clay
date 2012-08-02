@@ -1,9 +1,7 @@
 import vectors.*;
 
 
-//
-// UnderlyingContainerConstructor
-//
+/// @section  UnderlyingContainerConstructor 
 
 define UnderlyingContainerConstructor;
 
@@ -15,9 +13,7 @@ overload UnderlyingContainerConstructor(#Vector[T]) = Vector;
 
 
 
-//
-// ForcedContainerConstructor
-//
+/// @section  ForcedContainerConstructor 
 
 define ForcedContainerConstructor;
 
@@ -34,9 +30,7 @@ overload ForcedContainerConstructor(#T) = Vector;
 
 
 
-//
-// force
-//
+/// @section  force 
 
 [A when Sequence?(A)]
 alias force(a:A) = ForcedContainerConstructor(A)(a);

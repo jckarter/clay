@@ -1,8 +1,6 @@
 
 
-//
-// numeric type predicates
-//
+/// @section  numeric type predicates 
 
 [T] SignedInteger?(#T) = false;
 overload SignedInteger?(#Int8) = true;
@@ -45,9 +43,7 @@ overload Imaginary?(#Imag80) = true;
 
 
 
-//
-// BiggerInteger?, BiggerFloat?, BiggerNumeric?
-//
+/// @section  BiggerInteger?, BiggerFloat?, BiggerNumeric? 
 
 [A,B when Integer?(A,B)]
 private BiggerInteger?(#A, #B) =
@@ -84,31 +80,29 @@ overload BiggerNumeric?(#A, #B) = BiggerFloat?(A,B);
 
 
 
-//
-// toBiggerNumericType
-//
+/// @section  toBiggerNumericType 
 
 define toBiggerNumericType;
 
 [A when Numeric?(A)]
-inline overload toBiggerNumericType(#A, #A, v) = v;
+forceinline overload toBiggerNumericType(#A, #A, v) = v;
 
 [A,B when Numeric?(A,B) and BiggerNumeric?(A,B)]
-inline overload toBiggerNumericType(#A, #B, v) = numericConvert(A,v);
+forceinline overload toBiggerNumericType(#A, #B, v) = numericConvert(A,v);
 
 [A,B when Numeric?(A,B) and BiggerNumeric?(B,A)]
-inline overload toBiggerNumericType(#A, #B, v) = numericConvert(B,v);
+forceinline overload toBiggerNumericType(#A, #B, v) = numericConvert(B,v);
 
 define wrapToBiggerNumericType;
 
 [A when Numeric?(A)]
-inline overload wrapToBiggerNumericType(#A, #A, v) = v;
+forceinline overload wrapToBiggerNumericType(#A, #A, v) = v;
 
 [A,B when Numeric?(A,B) and BiggerNumeric?(A,B)]
-inline overload wrapToBiggerNumericType(#A, #B, v) = wrapCast(A, v);
+forceinline overload wrapToBiggerNumericType(#A, #B, v) = wrapCast(A, v);
 
 [A,B when Numeric?(A,B) and BiggerNumeric?(B,A)]
-inline overload wrapToBiggerNumericType(#A, #B, v) = wrapCast(B, v);
+forceinline overload wrapToBiggerNumericType(#A, #B, v) = wrapCast(B, v);
 
 ImagBaseType(#Imag32) = Float;
 overload ImagBaseType(#Imag64) = Double;
@@ -116,280 +110,262 @@ overload ImagBaseType(#Imag80) = LongDouble;
 
 
 
-//
-// constructors
-//
+/// @section  constructors 
 
 [T when Numeric?(T)]
-inline overload T() = numericConvert(T, 0);
+forceinline overload T() = numericConvert(T, 0);
 
 [T1,T2 when Numeric?(T1,T2)]
-inline overload T1(src:T2) = numericConvert(T1, src);
+forceinline overload T1(src:T2) = numericConvert(T1, src);
 
 [T,I when Float?(T) and Imaginary?(I)]
-inline overload T(a:I) = T(0.);
+forceinline overload T(a:I) = T(0.);
 
 [T,I when Float?(T) and Imaginary?(I)]
-inline overload I(a:T) = I(0.j);
+forceinline overload I(a:T) = I(0.j);
 
 
 
-//
-// assign
-//
+/// @section  assign 
 
 [A, B when Numeric?(A,B) and BiggerNumeric?(A,B)]
-inline overload assign(ref dest:A, src:B) {
+forceinline overload assign(ref dest:A, src:B) {
     bitcopy(dest, numericConvert(A,src));
 }
 
 [A, B when Integer?(A,B) and (TypeSize(A) == TypeSize(B))]
-inline overload assign(ref dest:A, src:B) {
+forceinline overload assign(ref dest:A, src:B) {
     bitcopy(dest, A(src));
 }
 
 
 
-//
-// equals?,  notEquals?, lesser?, lesserEquals?, greater?, greaterEquals?
-//
+/// @section  equals?,  notEquals?, lesser?, lesserEquals?, greater?, greaterEquals? 
 
 [A,B when Numeric?(A,B)]
-inline overload (==)(a:A, b:B) =
+forceinline overload (==)(a:A, b:B) =
     (==)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
 [A when Numeric?(A)]
-inline overload (==)(a:A, b:A) = integerEquals?(a, b);
+forceinline overload (==)(a:A, b:A) = integerEquals?(a, b);
 
 [A when Float?(A) or Imaginary?(A)]
-inline overload (==)(a:A, b:A) = floatOrderedEquals?(a, b);
+forceinline overload (==)(a:A, b:A) = floatOrderedEquals?(a, b);
 
 
 [A, B when Numeric?(A, B)]
-inline overload (!=)(a:A, b:B) =
+forceinline overload (!=)(a:A, b:B) =
     (!=)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
 [A when Numeric?(A)]
-inline overload (!=)(a:A, b:A) = not (==)(a, b);
+forceinline overload (!=)(a:A, b:A) = not (==)(a, b);
 
 [A when Float?(A) or Imaginary?(A)]
-inline overload (!=)(a:A, b:A) = floatUnorderedNotEquals?(a, b);
+forceinline overload (!=)(a:A, b:A) = floatUnorderedNotEquals?(a, b);
 
 
 [A,B when Numeric?(A,B)]
-inline overload (<)(a:A, b:B) =
+forceinline overload (<)(a:A, b:B) =
     (<)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
 [A when Numeric?(A)]
-inline overload (<)(a:A, b:A) = integerLesser?(a, b);
+forceinline overload (<)(a:A, b:A) = integerLesser?(a, b);
 
 [A when Float?(A) or Imaginary?(A)]
-inline overload (<)(a:A, b:A) = floatOrderedLesser?(a, b);
+forceinline overload (<)(a:A, b:A) = floatOrderedLesser?(a, b);
 
 
 [A, B when Numeric?(A, B)]
-inline overload (<=)(a:A, b:B) =
+forceinline overload (<=)(a:A, b:B) =
     (<=)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
 [A when Numeric?(A)]
-inline overload (<=)(a:A, b:A) = not (<)(b, a);
+forceinline overload (<=)(a:A, b:A) = not (<)(b, a);
 
 [A when Float?(A) or Imaginary?(A)]
-inline overload (<=)(a:A, b:A) = floatOrderedLesserEquals?(a, b);
+forceinline overload (<=)(a:A, b:A) = floatOrderedLesserEquals?(a, b);
 
 
 [A,B when Numeric?(A,B)]
-inline overload (>)(a:A, b:B) =
+forceinline overload (>)(a:A, b:B) =
     (>)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
 [A when Numeric?(A)]
-inline overload (>)(a:A, b:A) = (<)(b, a);
+forceinline overload (>)(a:A, b:A) = (<)(b, a);
 
 [A when Float?(A) or Imaginary?(A)]
-inline overload (>)(a:A, b:A) = floatOrderedGreater?(a, b);
+forceinline overload (>)(a:A, b:A) = floatOrderedGreater?(a, b);
 
 
 [A, B when Numeric?(A, B)]
-inline overload (>=)(a:A, b:B) =
+forceinline overload (>=)(a:A, b:B) =
     (>=)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
 [A when Numeric?(A)]
-inline overload (>=)(a:A, b:A) = not (<)(a, b);
+forceinline overload (>=)(a:A, b:A) = not (<)(a, b);
 
 [A when Float?(A) or Imaginary?(A)]
-inline overload (>=)(a:A, b:A) = floatOrderedGreaterEquals?(a, b);
+forceinline overload (>=)(a:A, b:A) = floatOrderedGreaterEquals?(a, b);
 
-inline inRange?(x,l,u) =  (<)(x,u) and (<=)(l,x);
+forceinline inRange?(x,l,u) =  (<)(x,u) and (<=)(l,x);
 
-inline inRangeEquals?(x,l,u) =  (<=)(x,u) and (<=)(l,x);
+forceinline inRangeEquals?(x,l,u) =  (<=)(x,u) and (<=)(l,x);
 
 [T when Numeric?(T)]
-inline zero?(x:T) = (==)(x, T(0));
+forceinline zero?(x:T) = (==)(x, T(0));
 
 
 
-//
-// binary ops
-//
+/// @section  binary ops 
 
 [A,B when Numeric?(A,B)]
-inline overload (+)(a:A, b:B) =
+forceinline overload (+)(a:A, b:B) =
     (+)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
 [A when Numeric?(A)]
-inline overload (+)(a:A, b:A) = numericAdd(a, b);
+forceinline overload (+)(a:A, b:A) = numericAdd(a, b);
 
 
 [A,B when Numeric?(A,B)]
-inline overload (-)(a:A, b:B) =
+forceinline overload (-)(a:A, b:B) =
     (-)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
 [A when Numeric?(A)]
-inline overload (-)(a:A, b:A) = numericSubtract(a, b);
+forceinline overload (-)(a:A, b:A) = numericSubtract(a, b);
 
 
 [A,B when Numeric?(A,B)]
-inline overload (*)(a:A, b:B) =
+forceinline overload (*)(a:A, b:B) =
     (*)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
 [A when Numeric?(A)]
-inline overload (*)(a:A, b:A) = numericMultiply(a, b);
+forceinline overload (*)(a:A, b:A) = numericMultiply(a, b);
 
 
 [A,B when Float?(A,B)]
-inline overload (/)(a:A, b:B) =
+forceinline overload (/)(a:A, b:B) =
     (/)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
 [A when Float?(A)]
-inline overload (/)(a:A, b:A) = floatDivide(a, b);
+forceinline overload (/)(a:A, b:A) = floatDivide(a, b);
 
 [A,B when Integer?(A,B)]
-inline overload (\)(a:A, b:B) =
+forceinline overload (\)(a:A, b:B) =
     (\)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
 [A when Integer?(A)]
-inline overload (\)(a:A, b:A) = integerQuotient(a, b);
+forceinline overload (\)(a:A, b:A) = integerQuotient(a, b);
 
 [A,B when Integer?(A,B)]
-inline overload (%)(a:A, b:B) =
+forceinline overload (%)(a:A, b:B) =
     (%)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
 [A when Integer?(A)]
-inline overload (%)(a:A, b:A) = integerRemainder(a, b);
+forceinline overload (%)(a:A, b:A) = integerRemainder(a, b);
 
-//
-// Variadic ops
-//
+/// @section  Variadic ops 
 
 [A, ..AA when countValues(..AA) != 1]
-inline overload (+)(a:A, ..aa:AA) = foldlValues((+), a, ..aa);
+forceinline overload (+)(a:A, ..aa:AA) = foldlValues((+), a, ..aa);
 
 [A, ..AA when countValues(..AA) != 1]
-inline overload (-)(a:A, ..aa:AA) = foldlValues((-), a, ..aa);
+forceinline overload (-)(a:A, ..aa:AA) = foldlValues((-), a, ..aa);
 
 [A, ..AA when countValues(..AA) != 1]
-inline overload (*)(a:A, ..aa:AA) = foldlValues((*), a, ..aa);
+forceinline overload (*)(a:A, ..aa:AA) = foldlValues((*), a, ..aa);
 
 [A, ..AA when countValues(..AA) != 1]
-inline overload (/)(a:A, ..aa:AA) = foldlValues((/), a, ..aa);
+forceinline overload (/)(a:A, ..aa:AA) = foldlValues((/), a, ..aa);
 
 [A, ..AA when countValues(..AA) != 1]
-inline overload (\)(a:A, ..aa:AA) = foldlValues((\), a, ..aa);
+forceinline overload (\)(a:A, ..aa:AA) = foldlValues((\), a, ..aa);
 
 [A, ..AA when countValues(..AA) != 1]
-inline overload (%)(a:A, ..aa:AA) = foldlValues((%), a, ..aa);
+forceinline overload (%)(a:A, ..aa:AA) = foldlValues((%), a, ..aa);
 
-//
-// Imaginary binary ops
-//
+/// @section  Imaginary binary ops 
 
 
 [A,B when Numeric?(A) and Imaginary?(B)]
-inline overload (*)(a:A, b:B) = numericMultiply(numericConvert(B,a), b);
+forceinline overload (*)(a:A, b:B) = numericMultiply(numericConvert(B,a), b);
 
 [A,B when Numeric?(B) and Imaginary?(A)]
-inline overload (*)(a:A, b:B) = numericMultiply(a, numericConvert(A,b));
+forceinline overload (*)(a:A, b:B) = numericMultiply(a, numericConvert(A,b));
 
 [A when Imaginary?(A)]
-inline overload (*)(a:A, b:A) = numericConvert(ImagBaseType(A),(-)(numericMultiply(a, b)));
+forceinline overload (*)(a:A, b:A) = numericConvert(ImagBaseType(A),(-)(numericMultiply(a, b)));
 
 [A,B when Numeric?(A) and Imaginary?(B)]
-inline overload (/)(a:A, b:B) = (/)(numericConvert(B,-a), b);
+forceinline overload (/)(a:A, b:B) = (/)(numericConvert(B,-a), b);
 
 [A,B when Numeric?(B) and Imaginary?(A)]
-inline overload (/)(a:A, b:B) = (/)(a, numericConvert(A,b));
+forceinline overload (/)(a:A, b:B) = (/)(a, numericConvert(A,b));
 
 [A when Imaginary?(A)]
-inline overload (/)(a:A, b:A) = numericConvert(ImagBaseType(A),floatDivide(a, b));
+forceinline overload (/)(a:A, b:A) = numericConvert(ImagBaseType(A),floatDivide(a, b));
 
 
-//
-// unary ops
-//
+/// @section  unary ops 
 
 [A when Numeric?(A)]
-inline overload (+)(a:A) = a;
+forceinline overload (+)(a:A) = a;
 
 [A when Numeric?(A) and not UnsignedInteger?(A)]
-inline overload (-)(a:A) = numericNegate(a);
+forceinline overload (-)(a:A) = numericNegate(a);
 
 
 
-//
-// inc, dec
-//
+/// @section  inc, dec 
 
-inline overload inc(..a) { eachValue(inc, ..a); }
-inline overload dec(..a) { eachValue(dec, ..a); }
+forceinline overload inc(..a) { eachValue(inc, ..a); }
+forceinline overload dec(..a) { eachValue(dec, ..a); }
 
 [A when Numeric?(A)]
-inline overload inc(a:A) {
+forceinline overload inc(a:A) {
     a +: A(1);
 }
 
 [A when Numeric?(A)]
-inline overload dec(a:A) {
+forceinline overload dec(a:A) {
     a -: A(1);
 }
 
 
 
-//
-// bitwise ops
-//
+/// @section  bitwise ops 
 
 [A,B when Integer?(A,B)]
-inline overload (<<)(a:A, b:B) = integerShiftLeft(a, A(b));
+forceinline overload (<<)(a:A, b:B) = integerShiftLeft(a, A(b));
 
 [A,B when Integer?(A,B)]
-inline overload (>>)(a:A, b:B) = integerShiftRight(a, A(b));
+forceinline overload (>>)(a:A, b:B) = integerShiftRight(a, A(b));
 
 [A,B when Integer?(A,B)]
-inline overload (&)(a:A, b:B) =
+forceinline overload (&)(a:A, b:B) =
     integerBitwiseAnd(wrapToBiggerNumericType(A, B, a),
                       wrapToBiggerNumericType(A, B, b));
 
 [A when Integer?(A)]
-inline overload (&)(a:A, b:A) = integerBitwiseAnd(a, b);
+forceinline overload (&)(a:A, b:A) = integerBitwiseAnd(a, b);
 
 [A,B when Integer?(A,B)]
-inline overload (|)(a:A, b:B) =
+forceinline overload (|)(a:A, b:B) =
     integerBitwiseOr(wrapToBiggerNumericType(A, B, a),
                      wrapToBiggerNumericType(A, B, b));
 
 [A when Integer?(A)]
-inline overload (|)(a:A, b:A) = integerBitwiseOr(a, b);
+forceinline overload (|)(a:A, b:A) = integerBitwiseOr(a, b);
 
 [A,B when Integer?(A,B)]
-inline overload (~)(a:A, b:B) =
+forceinline overload (~)(a:A, b:B) =
     integerBitwiseXor(wrapToBiggerNumericType(A, B, a),
                       wrapToBiggerNumericType(A, B, b));
 
 [A when Integer?(A)]
-inline overload (~)(a:A, b:A) = integerBitwiseXor(a, b);
+forceinline overload (~)(a:A, b:A) = integerBitwiseXor(a, b);
 
 [A when Integer?(A)]
-inline overload (~)(a:A) = integerBitwiseNot(a);
+forceinline overload (~)(a:A) = integerBitwiseNot(a);
 
 
 
@@ -405,77 +381,73 @@ overload octal(T, I) = unwrapStatic(_octal(T, I));
 overload octal(I) = octal(Int, I);
 
 
-//
-// overflow-checked math
-//
+/// @section  overflow-checked math 
 
 IntegerOverflowChecks?() = AllAssertionsEnabled?()
     and AssertionEnabled?("overflowChecks");
 
 [A when Integer?(A) and IntegerOverflowChecks?()]
-inline overload (+)(a:A, b:A) : A
+forceinline overload (+)(a:A, b:A) : A
     = integerAddChecked(a, b);
 [A when Integer?(A) and IntegerOverflowChecks?()]
-inline overload (-)(a:A, b:A) : A
+forceinline overload (-)(a:A, b:A) : A
     = integerSubtractChecked(a, b);
 [A when Integer?(A) and IntegerOverflowChecks?()]
-inline overload (*)(a:A, b:A) : A
+forceinline overload (*)(a:A, b:A) : A
     = integerMultiplyChecked(a, b);
 [A when Integer?(A) and IntegerOverflowChecks?()]
-inline overload (\)(a:A, b:A) : A
+forceinline overload (\)(a:A, b:A) : A
     = integerQuotientChecked(a, b);
 [A when Integer?(A) and IntegerOverflowChecks?()]
-inline overload (%)(a:A, b:A) : A
+forceinline overload (%)(a:A, b:A) : A
     = integerRemainderChecked(a, b);
 
 [A, B when Integer?(A, B) and IntegerOverflowChecks?()]
-inline overload bitshl(a:A, b:B) : A
+forceinline overload bitshl(a:A, b:B) : A
     = integerShiftLeftChecked(a, A(b));
 
 [A when SignedInteger?(A) and IntegerOverflowChecks?()]
-inline overload (-)(a:A) : A
+forceinline overload (-)(a:A) : A
     = integerNegateChecked(a);
 
 [A, B when Integer?(A) and Numeric?(B) and IntegerOverflowChecks?()]
-inline overload A(b:B) : A
+forceinline overload A(b:B) : A
     = integerConvertChecked(A, b);
 
 
-//
-// never-checked wrap-on-overflow math
-//
+/// @section  never-checked wrap-on-overflow math 
 
 [A when Integer?(A)]
-inline wrapAdd(a:A, b:A) : A = numericAdd(a, b);
+forceinline wrapAdd(a:A, b:A) : A = numericAdd(a, b);
 [A when Integer?(A)]
-inline wrapSubtract(a:A, b:A) : A = numericSubtract(a, b);
+forceinline wrapSubtract(a:A, b:A) : A = numericSubtract(a, b);
 [A when Integer?(A)]
-inline wrapMultiply(a:A, b:A) : A = numericMultiply(a, b);
+forceinline wrapMultiply(a:A, b:A) : A = numericMultiply(a, b);
 [A when Integer?(A)]
-inline wrapQuotient(a:A, b:A) : A =  integerQuotient(a, b);
+forceinline wrapQuotient(a:A, b:A) : A =  integerQuotient(a, b);
 [A when Integer?(A)]
-inline wrapRemainder(a:A, b:A) : A = integerRemainder(a, b);
+forceinline wrapRemainder(a:A, b:A) : A = integerRemainder(a, b);
 
 [A, ..AA when equalValues?(A,..AA) and countValues(..AA) != 1]
-inline overload wrapAdd(a:A, ..aa:AA) : A = foldValues(wrapAdd, a, ..aa);
+forceinline overload wrapAdd(a:A, ..aa:AA) : A = foldValues(wrapAdd, a, ..aa);
 
 [A, ..AA when equalValues?(A,..AA) and countValues(..AA) != 1]
-inline overload wrapSubtract(a:A, ..aa:AA) : A = foldlValues(wrapSubtract, a, ..aa);
+forceinline overload wrapSubtract(a:A, ..aa:AA) : A = foldlValues(wrapSubtract, a, ..aa);
 
 [A, ..AA when equalValues?(A,..AA) and countValues(..AA) != 1]
-inline overload wrapMultiply(a:A, ..aa:AA) : A = foldValues(wrapMultiply, a, ..aa);
+forceinline overload wrapMultiply(a:A, ..aa:AA) : A = foldValues(wrapMultiply, a, ..aa);
 
 [A, ..AA when equalValues?(A,..AA) and countValues(..AA) != 1]
-inline overload wrapQuotient(a:A, ..aa:AA) : A = foldlValues(wrapQuotient, a, ..aa);
+forceinline overload wrapQuotient(a:A, ..aa:AA) : A = foldlValues(wrapQuotient, a, ..aa);
 
 [A, ..AA when equalValues?(A,..AA) and countValues(..AA) != 1]
-inline overload wrapRemainder(a:A, ..aa:AA) : A = foldlValues(wrapRemainder, a, ..aa);
+forceinline overload wrapRemainder(a:A, ..aa:AA) : A = foldlValues(wrapRemainder, a, ..aa);
 
 [A, B when Integer?(A, B)]
-inline wrapBitshl(a:A, b:B) : A = integerShiftLeft(a, A(b));
+forceinline wrapBitshl(a:A, b:B) : A = integerShiftLeft(a, A(b));
 
 [A when SignedInteger?(A)]
-inline overload wrapSubtract(a:A) : A = numericNegate(a);
+forceinline overload wrapSubtract(a:A) : A = numericNegate(a);
 
 [A, B when Integer?(A) and Numeric?(B)]
-inline wrapCast(#A, b:B) : A = numericConvert(A, b);
+forceinline wrapCast(#A, b:B) : A = numericConvert(A, b);

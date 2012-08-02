@@ -1,0 +1,24 @@
+// test uses repr to print values that are not equal
+
+import test.*;
+import vectors.*;
+
+main() = testMain(
+    TestSuite(
+        "test uses repr to print values", array(
+            TestCase("in expectEqual", test => {
+                expectEqual(test, "newline (not really)", "\n", "\t");
+            }),
+            TestCase("in expectNotEqual", test => {
+                expectNotEqual(test, "newline (not really)", "\n", "\n");
+            }),
+            TestCase("in expectEqualValues", test => {
+                expectEqualValues(test, "something (not really)", ['\r', "x\t"], '\x12', "x\t");
+            }),
+            TestCase("in expectIterator and expectSequence", test => {
+                var vs = Vector[UInt32](1u, 17u);
+                expectIterator(test, "values (not really)", iterator(vs), 4u);
+                expectSequence(test, "values (not really)", vs, 12u);
+            }),
+        ),
+    ));

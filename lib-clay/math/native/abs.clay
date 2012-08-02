@@ -4,12 +4,12 @@ import math.native.hypot.(hypot);
 import complex.(real,imagValue,Complex?);
 
 [I when Integer?(I) ]
-inline abs(x:I) = if(x >= 0) x else -x;
+forceinline abs(x:I) = if(x >= 0) x else -x;
 
 [T when Imaginary?(T) ]
-inline overload abs(x:T) = imagFromBits(floatBitsUnsigned(x));
+forceinline overload abs(x:T) = imagFromBits(floatBitsUnsigned(x));
 [T when Float?(T) ]
-inline overload abs(x:T) = floatFromBits(floatBitsUnsigned(x));
+forceinline overload abs(x:T) = floatFromBits(floatBitsUnsigned(x));
 
 [U when Complex?(U) ]
-inline overload abs(x:U) = hypot(real(x),imagValue(x));
+forceinline overload abs(x:U) = hypot(real(x),imagValue(x));

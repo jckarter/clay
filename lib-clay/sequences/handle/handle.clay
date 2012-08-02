@@ -1,9 +1,7 @@
 import sequences.force.*;
 
 
-//
-// SequenceHandle
-//
+/// @section  SequenceHandle 
 
 record SequenceHandle[A] (
     inner : Pointer[A]
@@ -21,74 +19,70 @@ overload UnderlyingContainerConstructor(#SequenceHandle[A]) =
 
 
 
-//
-// sequenceHandle
-//
+/// @section  sequenceHandle 
 
 [A when Sequence?(A)]
-inline sequenceHandle(seq:A) = SequenceHandle(@seq);
+forceinline sequenceHandle(seq:A) = SequenceHandle(@seq);
 
 
 
-//
-// sequence operations
-//
+/// @section  sequence operations 
 
 [A, ..ARGS when CallDefined?(iterator, A, ..ARGS)]
-inline overload iterator(seq:SequenceHandle[A], forward ..args:ARGS)
+forceinline overload iterator(seq:SequenceHandle[A], forward ..args:ARGS)
     = forward ..iterator(seq.inner^, ..args);
 
 [A, ..ARGS when CallDefined?(reverseIterator, A, ..ARGS)]
-inline overload reverseIterator(seq:SequenceHandle[A], forward ..args:ARGS)
+forceinline overload reverseIterator(seq:SequenceHandle[A], forward ..args:ARGS)
     = forward ..reverseIterator(seq.inner^, ..args);
 
 [A, ..ARGS when CallDefined?(size, A, ..ARGS)]
-inline overload size(seq:SequenceHandle[A], forward ..args:ARGS)
+forceinline overload size(seq:SequenceHandle[A], forward ..args:ARGS)
     = forward ..size(seq.inner^, ..args);
 
 [A when CallDefined?(StaticSize, Static[A])]
-inline overload StaticSize(#SequenceHandle[A]) = StaticSize(A);
+forceinline overload StaticSize(#SequenceHandle[A]) = StaticSize(A);
 
 [A, ..ARGS when CallDefined?(index, A, ..ARGS)]
-inline overload index(seq:SequenceHandle[A], forward ..args:ARGS)
+forceinline overload index(seq:SequenceHandle[A], forward ..args:ARGS)
     = forward ..index(seq.inner^, ..args);
 
 [A, ..ARGS when CallDefined?(begin, A, ..ARGS)]
-inline overload begin(seq:SequenceHandle[A], forward ..args:ARGS)
+forceinline overload begin(seq:SequenceHandle[A], forward ..args:ARGS)
     = forward ..begin(seq.inner^, ..args);
 
 [A, ..ARGS when CallDefined?(end, A, ..ARGS)]
-inline overload end(seq:SequenceHandle[A], forward ..args:ARGS)
+forceinline overload end(seq:SequenceHandle[A], forward ..args:ARGS)
     = forward ..end(seq.inner^, ..args);
 
 [A, ..ARGS when CallDefined?(front, A, ..ARGS)]
-inline overload front(seq:SequenceHandle[A], forward ..args:ARGS)
+forceinline overload front(seq:SequenceHandle[A], forward ..args:ARGS)
     = forward ..front(seq.inner^, ..args);
 
 [A, ..ARGS when CallDefined?(back, A, ..ARGS)]
-inline overload back(seq:SequenceHandle[A], forward ..args:ARGS)
+forceinline overload back(seq:SequenceHandle[A], forward ..args:ARGS)
     = forward ..back(seq.inner^, ..args);
 
 [A, ..ARGS when CallDefined?(push, A, ..ARGS)]
-inline overload push(seq:SequenceHandle[A], forward ..args:ARGS)
+forceinline overload push(seq:SequenceHandle[A], forward ..args:ARGS)
     = forward ..push(seq.inner^, ..args);
 
 [A, ..ARGS when CallDefined?(pop, A, ..ARGS)]
-inline overload pop(seq:SequenceHandle[A], forward ..args:ARGS)
+forceinline overload pop(seq:SequenceHandle[A], forward ..args:ARGS)
     = forward ..pop(seq.inner^, ..args);
 
 [A, ..ARGS when CallDefined?(clear, A, ..ARGS)]
-inline overload clear(seq:SequenceHandle[A], forward ..args:ARGS)
+forceinline overload clear(seq:SequenceHandle[A], forward ..args:ARGS)
     = forward ..clear(seq.inner^, ..args);
 
 [A, ..ARGS when CallDefined?(insert, A, ..ARGS)]
-inline overload insert(seq:SequenceHandle[A], forward ..args:ARGS)
+forceinline overload insert(seq:SequenceHandle[A], forward ..args:ARGS)
     = forward ..insert(seq.inner^, ..args);
 
 [A, ..ARGS when CallDefined?(remove, A, ..ARGS)]
-inline overload remove(seq:SequenceHandle[A], forward ..args:ARGS)
+forceinline overload remove(seq:SequenceHandle[A], forward ..args:ARGS)
     = forward ..remove(seq.inner^, ..args);
 
 [A, ..ARGS when CallDefined?(reserve, A, ..ARGS)]
-inline overload reserve(seq:SequenceHandle[A], forward ..args:ARGS)
+forceinline overload reserve(seq:SequenceHandle[A], forward ..args:ARGS)
     = forward ..reserve(seq.inner^, ..args);

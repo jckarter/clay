@@ -1,9 +1,7 @@
 import paged.*;
 
 
-//
-// SharedPointer
-//
+/// @section  SharedPointer 
 
 record RefCounted[T] (
     refCount:Int,
@@ -19,9 +17,7 @@ overload RegularRecord?(#SharedPointer[T]) = false;
 
 
 
-//
-// new, constructors
-// moveUnsafe, resetUnsafe,
+/// @section  new, constructors 
 // assign, destroy
 //
 
@@ -76,18 +72,14 @@ overload destroy(p : SharedPointer[T]) {
 
 
 
-//
-// dereference
-//
+/// @section  dereference 
 
 [T]
 overload dereference(p : SharedPointer[T]) = ref p.ptr^.value;
 
 
 
-//
-// null?, nullShared
-//
+/// @section  null?, nullShared 
 
 [T]
 overload null?(p : SharedPointer[T]) = null?(p.ptr);

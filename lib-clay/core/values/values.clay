@@ -1,78 +1,72 @@
 
 
 
-//
-// eachValue, mapValues, foldValues, weaveValues,
-//
+/// @section  eachValue, mapValues, foldValues, weaveValues, 
 
-inline eachValue(fn, ..xs) {
+forceinline eachValue(fn, ..xs) {
     ..for (x in xs) {
         fn(x);
     }
 }
 
 define mapValues;
-inline overload mapValues(fn, forward x, forward ..xs)
+forceinline overload mapValues(fn, forward x, forward ..xs)
     = forward ..fn(x), ..mapValues(fn, ..xs);
-inline overload mapValues(fn) = ;
+forceinline overload mapValues(fn) = ;
 
 private define _mapIndexedValues;
-[n] inline overload _mapIndexedValues(fn, #n, forward x, forward ..xs)
+[n] forceinline overload _mapIndexedValues(fn, #n, forward x, forward ..xs)
     = forward ..fn(x, n), .._mapIndexedValues(fn, #n+1, ..xs);
-[n] inline overload _mapIndexedValues(fn, #n) = ;
+[n] forceinline overload _mapIndexedValues(fn, #n) = ;
 
 mapIndexedValues(fn, forward ..values) = forward .._mapIndexedValues(fn, #0, ..values);
 
 define foldValues;
-inline overload foldValues(fn, forward x, forward ..xs)
+forceinline overload foldValues(fn, forward x, forward ..xs)
     = fn(x, foldValues(fn, ..xs));
-inline overload foldValues(fn, forward x) = forward x;
+forceinline overload foldValues(fn, forward x) = forward x;
 
 define foldlValues;
-inline overload foldlValues(fn, forward x1, forward x2, forward ..xs)
+forceinline overload foldlValues(fn, forward x1, forward x2, forward ..xs)
     = foldlValues(fn, fn(x1, x2), ..xs);
-inline overload foldlValues(fn, forward x) = forward x;
+forceinline overload foldlValues(fn, forward x) = forward x;
 
 define weaveValues;
-inline overload weaveValues(between, forward x, forward ..xs)
+forceinline overload weaveValues(between, forward x, forward ..xs)
     = forward x, between, ..weaveValues(between, ..xs);
-inline overload weaveValues(between, forward x, forward y)
+forceinline overload weaveValues(between, forward x, forward y)
     = forward x, between, y;
-inline overload weaveValues(between, forward x) = forward x;
-inline overload weaveValues(between) = ;
+forceinline overload weaveValues(between, forward x) = forward x;
+forceinline overload weaveValues(between) = ;
 
 
-//
-// countOccurrences, firstValue
-//
+/// @section  countOccurrences, firstValue 
 
 define countOccurrences;
-inline overload countOccurrences(value) = 0;
+forceinline overload countOccurrences(value) = 0;
 [value1, value2]
-inline overload countOccurrences(#value1, #value2, forward ..xs)
+forceinline overload countOccurrences(#value1, #value2, forward ..xs)
     = countOccurrences(#value1, ..xs);
 [value]
-inline overload countOccurrences(#value, #value, forward ..xs)
+forceinline overload countOccurrences(#value, #value, forward ..xs)
     = 1 + countOccurrences(#value, ..xs);
 
-inline firstValue(forward a, ..rest) = forward a;
+forceinline firstValue(forward a, ..rest) = forward a;
 
-inline restValues(a, forward ..rest) = forward ..rest;
+forceinline restValues(a, forward ..rest) = forward ..rest;
 
-inline lastValue(a, forward ..rest) = forward lastValue(..rest);
+forceinline lastValue(a, forward ..rest) = forward lastValue(..rest);
 overload lastValue(forward a) = forward a;
 
 
 
-//
-// replicateValue, allValues?, anyValues?, equalValues?, inValues?
-//
+/// @section  replicateValue, allValues?, anyValues?, equalValues?, inValues? 
 
 [n]
-inline replicateValue(a, #n) = a, ..replicateValue(a, #(n-1));
-inline overload replicateValue(a, #0) = ;
+forceinline replicateValue(a, #n) = a, ..replicateValue(a, #(n-1));
+forceinline overload replicateValue(a, #0) = ;
 
-inline allValues?(pred, ..rest) {
+forceinline allValues?(pred, ..rest) {
     ..for (x in rest) {
         if (not pred(x))
             return false;
@@ -80,7 +74,7 @@ inline allValues?(pred, ..rest) {
     return true;
 }
 
-inline anyValues?(pred, ..rest) {
+forceinline anyValues?(pred, ..rest) {
     ..for (x in rest) {
         if (pred(x))
             return true;
@@ -88,15 +82,13 @@ inline anyValues?(pred, ..rest) {
     return false;
 }
 
-inline equalValues?(a, ..rest) = allValues?(x => a == x, ..rest);
+forceinline equalValues?(a, ..rest) = allValues?(x => a == x, ..rest);
 
 inValues?(a, ..rest) = anyValues?(x => a == x, ..rest);
 
 
 
-//
-// capture/forward values
-// 
+/// @section  capture/forward values 
 
 // captureValue, forwardValue, capturedRef
 
@@ -105,34 +97,32 @@ private record CapturedLValue[T] (
 );
 
 define captureValue;
-inline overload captureValue(rvalue x) = move(x);
-inline overload captureValue(ref x) = CapturedLValue(@x);
+forceinline overload captureValue(rvalue x) = move(x);
+forceinline overload captureValue(ref x) = CapturedLValue(@x);
 
 define forwardValue;
-inline overload forwardValue(x) = move(x);
-[T] inline overload forwardValue(x:CapturedLValue[T]) = ref x.ptr^;
+forceinline overload forwardValue(x) = move(x);
+[T] forceinline overload forwardValue(x:CapturedLValue[T]) = ref x.ptr^;
 
 define capturedRef;
-inline overload capturedRef(x) = ref x;
-[T] inline overload capturedRef(x:CapturedLValue[T]) = ref x.ptr^;
+forceinline overload capturedRef(x) = ref x;
+[T] forceinline overload capturedRef(x:CapturedLValue[T]) = ref x.ptr^;
 
 // captureValues, forwardValues, capturedRefs
 
-inline captureValues(forward ..args) = Tuple(..mapValues(captureValue, ..args));
+forceinline captureValues(forward ..args) = Tuple(..mapValues(captureValue, ..args));
 
 [..T]
-inline forwardValues(x:Tuple[..T]) =
+forceinline forwardValues(x:Tuple[..T]) =
     forward ..mapValues(forwardValue, ..unpackTupleRef(x));
 
 [..T]
-inline capturedRefs(x:Tuple[..T]) =
+forceinline capturedRefs(x:Tuple[..T]) =
     forward ..mapValues(capturedRef, ..unpackTupleRef(x));
 
 
 
-//
-// expand values from sequence or iterator 
-//
+/// @section  expand values from sequence or iterator  
 [S, n when Sequence?(S)]
 sequenceValues(seq: S, #n) = forward ..iteratorValues(iterator(seq), #n);
 
@@ -147,9 +137,7 @@ overload iteratorValues(iter: I, #n) {
 
 
 
-//
-// iterate over two sets of values in tandem
-//
+/// @section  iterate over two sets of values in tandem 
 [n when n > 0] eachValue2(fn, #n, forward x, forward ..xs) {
     fn(x, nthValue(#(n-1), ..xs));
     return ..eachValue2(fn, #(n-1), ..withoutNthValue(#(n-1), ..xs));
@@ -163,9 +151,7 @@ overload mapValues2(fn, #0, forward ..xs) = ;
 
 
 
-//
-// treat multiple #tuple values as key-values pairs
-//
+/// @section  treat multiple #tuple values as key-values pairs 
 
 [key]
 assocValue(#key, kv, forward ..kvs) = forward ..assocValue(#key, ..kvs);
@@ -190,9 +176,7 @@ overload assocCountValues(#key, kv: Tuple[Static[key], ..T], ..kvs) = countValue
 
 
 
-//
-// find the index of a value within a value list
-//
+/// @section  find the index of a value within a value list 
 
 [n, value, other]
 private _valueIndex(#n, #value, #other, ..etc)

@@ -3,13 +3,11 @@ import sequences.util.*;
 import sequences.lazy.zipped.*;
 
 
-//
-// filtered
-//
+/// @section  filtered 
 
-inline filtered(predicate, forward ..seqs) = Filtered(predicate, zipped(..seqs));
+forceinline filtered(predicate, forward ..seqs) = Filtered(predicate, zipped(..seqs));
 
-inline overload filtered(predicate, forward seq) =
+forceinline overload filtered(predicate, forward seq) =
     Filtered(predicate, wrapSequence(seq));
 
 
@@ -27,22 +25,18 @@ overload UnderlyingContainerConstructor(#Filtered[F,A]) =
 
 
 
-//
-// iterator, reverseIterator
-//
+/// @section  iterator, reverseIterator 
 
 [F, A]
-inline overload iterator(a:Filtered[F, A])
+forceinline overload iterator(a:Filtered[F, A])
     = FilteredIterator(a.predicate, iterator(a.seq));
 
 [F, A when CallDefined?(reverseIterator, A)]
-inline overload reverseIterator(a:Filtered[F, A])
+forceinline overload reverseIterator(a:Filtered[F, A])
     = FilteredIterator(a.predicate, reverseIterator(a.seq));
 
 
-//
-// FilteredIterator
-//
+/// @section  FilteredIterator 
 
 private record FilteredIterator[F, ITER] (
     predicate : F,
@@ -50,7 +44,7 @@ private record FilteredIterator[F, ITER] (
 );
 
 [F, ITER]
-inline overload nextValue(iter:FilteredIterator[F, ITER]) {
+forceinline overload nextValue(iter:FilteredIterator[F, ITER]) {
     var value = nextValue(iter.iter);
     while (hasValue?(value) and not iter.predicate(..getValue(value)))
         value = nextValue(iter.iter);

@@ -2,9 +2,7 @@ import printer.(printTo,printReprTo,printReprArgumentsTo);
 import sharedpointers.*;
 
 
-//
-// reference type properties
-//
+/// @section  reference type properties 
 
 
 define ReferenceType?;
@@ -16,9 +14,7 @@ define ReferenceTypeFieldTypes;
 
 
 
-//
-// reference type type-definers
-//
+/// @section  reference type type-definers 
 
 [..F when (countValues(..F) > 0)]
 referenceTypeWithProperties(properties, ..fields:F) = recordWithProperties(
@@ -46,19 +42,15 @@ referenceType(..fields:F) = referenceTypeWithProperties([], ..fields);
 
 
 
-//
-// referencePtr
-//
+/// @section  referencePtr 
 
 [T when ReferenceType?(T)]
-inline referencePtr(x:T) =
+forceinline referencePtr(x:T) =
     ref recordFieldRef(x, #0);
 
 
 
-//
-// fieldRef, staticIndex
-//
+/// @section  fieldRef, staticIndex 
 
 [T when ReferenceType?(T)]
 overload fieldRef(x:T, field);
@@ -92,18 +84,14 @@ overload fieldRef(x:T, #Field) =
 
 
 
-//
-// referenceTypeFields
-//
+/// @section  referenceTypeFields 
 
 [T when ReferenceType?(T)]
 referenceTypeFields(x:T) = ref ..tupleElements(referencePtr(x)^);
 
 
 
-//
-// default constructor
-//
+/// @section  default constructor 
 
 [T when ReferenceType?(T)]
 overload T() --> returned:T {
@@ -112,9 +100,7 @@ overload T() --> returned:T {
 
 
 
-//
-// field order constructor
-//
+/// @section  field order constructor 
 
 [T, ..A when ReferenceType?(T) and (Tuple[..A] == Tuple[..ReferenceTypeFieldTypes(T)])]
 alias overload T(..args:A) --> returned:T {
@@ -123,9 +109,7 @@ alias overload T(..args:A) --> returned:T {
 
 
 
-//
-// allocateRef
-//
+/// @section  allocateRef 
 
 [T when ReferenceType?(T)]
 allocateRef(#T) --> returned:T {
@@ -141,9 +125,7 @@ allocateUninitializedRefUnsafe(#T) --> returned:T {
 
 
 
-//
-// copy constructor
-//
+/// @section  copy constructor 
 
 [T when ReferenceType?(T)]
 overload T(src:T) --> returned:T {
@@ -152,9 +134,7 @@ overload T(src:T) --> returned:T {
 
 
 
-//
-// moveUnsafe, resetUnsafe
-//
+/// @section  moveUnsafe, resetUnsafe 
 
 [T when ReferenceType?(T)]
 overload BitwiseMovedType?(#T) = true;
@@ -166,9 +146,7 @@ overload resetUnsafe(x:T) {
 
 
 
-//
-// destroy, assign
-//
+/// @section  destroy, assign 
 
 [T when ReferenceType?(T)]
 overload destroy(x:T) {
@@ -182,9 +160,7 @@ overload assign(ref dest:T, ref src:T) {
 
 
 
-//
-// equals?, lesser?
-//
+/// @section  equals?, lesser? 
 
 [T when ReferenceType?(T)]
 overload equals?(a:T, b:T) {
@@ -198,18 +174,14 @@ overload lesser?(a:T, b:T) {
 
 
 
-//
-// null?
-//
+/// @section  null? 
 
 [T when ReferenceType?(T)]
 overload null?(x:T) = null?(referencePtr(x));
 
 
 
-//
-// is?
-//
+/// @section  is? 
 
 [T when ReferenceType?(T)]
 overload is?(x:T, y:T) = referencePtr(x) == referencePtr(y);
@@ -217,9 +189,7 @@ overload is?(x:T, y:T) = referencePtr(x) == referencePtr(y);
 
 
 
-//
-// printTo - reference types
-//
+/// @section  printTo - reference types 
 
 [T when ReferenceType?(T)]
 overload printTo(stream, x:T) {
@@ -231,9 +201,7 @@ overload printTo(stream, x:T) {
 }
 
 
-//
-// printReprTo - reference types
-//
+/// @section  printReprTo - reference types 
 
 [T when ReferenceType?(T)]
 overload printReprTo(stream, x:T) {

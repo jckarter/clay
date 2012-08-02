@@ -360,26 +360,26 @@ typedef Pointer<Object> ObjectPtr;
 //
 
 enum ObjectKind {
-    SOURCE,
+    SOURCE,       // -- 0
     LOCATION,
 
     IDENTIFIER,
     DOTTED_NAME,
 
     EXPRESSION,
-    EXPR_LIST,
+    EXPR_LIST,    // -- 5
     STATEMENT,
     CASE_BLOCK,
     CATCH,
 
     FORMAL_ARG,
-    RETURN_SPEC,
+    RETURN_SPEC, // -- 10
     LLVM_CODE,
     CODE,
 
     RECORD,
     RECORD_BODY,
-    RECORD_FIELD,
+    RECORD_FIELD, // -- 15
     VARIANT,
     INSTANCE,
     OVERLOAD,
@@ -419,6 +419,8 @@ enum ObjectKind {
 
     CVALUE,
     MULTI_CVALUE,
+
+    DOCUMENTATION,
 
     DONT_CARE
 };
@@ -514,6 +516,7 @@ struct ExternalProcedure;
 struct ExternalArg;
 struct ExternalVariable;
 struct EvalTopLevel;
+struct Documentation;
 
 struct GlobalAlias;
 
@@ -660,6 +663,7 @@ typedef Pointer<ExternalProcedure> ExternalProcedurePtr;
 typedef Pointer<ExternalArg> ExternalArgPtr;
 typedef Pointer<ExternalVariable> ExternalVariablePtr;
 typedef Pointer<EvalTopLevel> EvalTopLevelPtr;
+typedef Pointer<Documentation> DocumentationPtr;
 
 typedef Pointer<GlobalAlias> GlobalAliasPtr;
 
@@ -962,7 +966,11 @@ enum TokenKind {
     T_SPACE,
     T_LINE_COMMENT,
     T_BLOCK_COMMENT,
-    T_LLVM
+    T_LLVM,
+    T_DOC_START,
+    T_DOC_PROPERTY,
+    T_DOC_TEXT,
+    T_DOC_END,
 };
 
 struct Token {
@@ -1910,11 +1918,18 @@ struct Instance : public TopLevelItem {
         {}
 };
 
+enum InlineAttribute {
+    IGNORE,
+    INLINE,
+    FORCE_INLINE,
+    NEVER_INLINE
+};
+
 struct Overload : public TopLevelItem {
     ExprPtr target;
     CodePtr code;
     bool callByName;
-    bool isInline;
+    InlineAttribute isInline;
 
     // pre-computed patterns for matchInvoke
     int patternsInitializedState; // 0:notinit, -1:initing, +1:inited
@@ -1929,7 +1944,7 @@ struct Overload : public TopLevelItem {
     Overload(ExprPtr target,
              CodePtr code,
              bool callByName,
-             bool isInline)
+             InlineAttribute isInline)
         : TopLevelItem(OVERLOAD), target(target), code(code),
           callByName(callByName), isInline(isInline),
           patternsInitializedState(0), nameIsPattern(false) {}
@@ -2115,6 +2130,29 @@ struct EvalTopLevel : public TopLevelItem {
         : TopLevelItem(EVAL_TOPLEVEL), args(args), evaled(false)
         {}
 };
+
+
+//
+// documentation
+//
+
+enum DocumentationAnnotation
+{
+    SectionAnnotation,
+    ModuleAnnotation,
+    OverloadAnnotation,
+    RecordAnnotion
+};
+
+struct Documentation : public TopLevelItem {
+
+    std::map<DocumentationAnnotation, string> annotation;
+    std::string text;
+    Documentation(const std::map<DocumentationAnnotation, string> &annotation, const std::string &text)
+        : TopLevelItem(DOCUMENTATION), annotation(annotation), text(text)
+        {}
+};
+
 
 
 //
@@ -2317,7 +2355,14 @@ inline ModuleHolderPtr ModuleHolder::get(ModulePtr module)
 // parser module
 //
 
-ModulePtr parse(llvm::StringRef moduleName, SourcePtr source);
+
+enum ParserFlags
+{
+    NoParserFlags = 0,
+    ParserKeepDocumentation = 1
+};
+
+ModulePtr parse(llvm::StringRef moduleName, SourcePtr source, ParserFlags flags = NoParserFlags);
 ExprPtr parseExpr(SourcePtr source, int offset, int length);
 ExprListPtr parseExprList(SourcePtr source, int offset, int length);
 void parseStatements(SourcePtr source, int offset, int length,
@@ -3184,7 +3229,7 @@ typedef Pointer<MatchResult> MatchResultPtr;
 
 struct MatchSuccess : public MatchResult {
     bool callByName;
-    bool isInline;
+    InlineAttribute isInline;
     CodePtr code;
     EnvPtr env;
 
@@ -3195,7 +3240,7 @@ struct MatchSuccess : public MatchResult {
     vector<IdentifierPtr> fixedArgNames;
     IdentifierPtr varArgName;
     vector<TypePtr> varArgTypes;
-    MatchSuccess(bool callByName, bool isInline, CodePtr code, EnvPtr env,
+    MatchSuccess(bool callByName, InlineAttribute isInline, CodePtr code, EnvPtr env,
                  ObjectPtr callable, const vector<TypePtr> &argsKey)
         : MatchResult(MATCH_SUCCESS), callByName(callByName),
           isInline(isInline), code(code), env(env), callable(callable),
@@ -3280,7 +3325,7 @@ struct InvokeEntry {
     vector<TypePtr> varArgTypes;
 
     bool callByName; // if callByName the rest of InvokeEntry is not set
-    bool isInline;
+    InlineAttribute isInline;
 
     ObjectPtr analysis;
     vector<bool> returnIsRef;
@@ -3297,7 +3342,7 @@ struct InvokeEntry {
         : parent(parent),
           callable(callable), argsKey(argsKey),
           analyzed(false), analyzing(false), callByName(false),
-          isInline(false), llvmFunc(NULL), debugInfo(NULL)
+          isInline(IGNORE), llvmFunc(NULL), debugInfo(NULL)
     {
         for (size_t i = 0; i < CC_Count; ++i)
             llvmCWrappers[i] = NULL;

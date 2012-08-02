@@ -3,11 +3,9 @@ import sequences.util.*;
 import sequences.force.*;
 
 
-//
-// reversed
-//
+/// @section  reversed 
 
-inline reversed(forward seq) = Reversed(wrapSequence(seq));
+forceinline reversed(forward seq) = Reversed(wrapSequence(seq));
 
 private record Reversed[A] (
     seq : A
@@ -21,23 +19,21 @@ overload UnderlyingContainerConstructor(#Reversed[A]) =
     UnderlyingContainerConstructor(A);
 
 [A]
-inline overload iterator(a:Reversed[A]) = reverseIterator(a.seq);
+forceinline overload iterator(a:Reversed[A]) = reverseIterator(a.seq);
 
 [A]
-inline overload reverseIterator(a:Reversed[A]) = iterator(a.seq);
+forceinline overload reverseIterator(a:Reversed[A]) = iterator(a.seq);
 
 
 
-//
-// size, index
-//
+/// @section  size, index 
 
 [A when CallDefined?(size, A)]
-inline overload size(a:Reversed[A]) = size(a.seq);
+forceinline overload size(a:Reversed[A]) = size(a.seq);
 
 [A when CallDefined?(StaticSize, Static[A])]
 overload StaticSize(#Reversed[A]) = StaticSize(A);
 
 [A, I when CallDefined?(index, A, I) and CallDefined?(size, A)]
-inline overload index(a:Reversed[A], i:I) =
+forceinline overload index(a:Reversed[A], i:I) =
     forward ..index(a.seq, size(a.seq) - i - 1);
