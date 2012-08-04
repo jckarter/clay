@@ -86,7 +86,7 @@ overload TwoHash[E]()
 [B]
 overload Table[B](ln2_size: Int) 
 {
-    var size = bitshl(1, ln2_size);
+    var size = bitshl(SizeT(1), ln2_size);
     var ptr = allocateRawMemoryAligned(B, size, 16);
     initializeMemory(ptr, ptr+size);
     return Table[B](ptr, ln2_size);
@@ -239,9 +239,9 @@ freeEntry(th: TwoHash[E], pEntry: Pointer[E])
 record TwoHashEntries[E, F]
 (
     data: Pointer[TwoHash[E]],
-    i: Int,
-    j: Int,
-    entryMask: Int,
+    i: SizeT,
+    j: SizeT,
+    entryMask: SizeT,
 );
 
 record TwoHashEntry[E, F]
@@ -265,7 +265,7 @@ overload nextValue(x: TwoHashEntries[E, F])
 {
     if (x.entryMask != 0) {
         var k = lowBit(x.entryMask);
-        x.entryMask = x.entryMask - bitshl(1, k);
+        x.entryMask = x.entryMask - bitshl(SizeT(1), k);
         ref e = x.data^.tables[x.i][x.j].entries[k];
         if (x.entryMask == 0)
         {
@@ -303,7 +303,7 @@ refillMask(x: TwoHashEntries[E, F])
         for (k in range(16))
         {
             if (th.tables[x.i][x.j].hashBytes[k] != 255uss)
-                x.entryMask = bitor(x.entryMask, bitshl(1, k));
+                x.entryMask = bitor(x.entryMask, bitshl(SizeT(1), k));
         }
         if (x.entryMask != 0) return;
         nextBucket(x);
@@ -318,7 +318,7 @@ refillMask(x: TwoHashEntries[E, F])
 overload iterator(t: Table[B]) = CoordinateRange(begin(t), end(t));
 
 [B]
-overload size(t: Table[B]) = bitshl(1, t.ln2_size);
+overload size(t: Table[B]) = bitshl(SizeT(1), t.ln2_size);
 
 [B]
 overload index(t: Table[B], idx) = ref t.ptr[idx];
