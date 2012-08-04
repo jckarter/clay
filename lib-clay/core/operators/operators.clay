@@ -36,11 +36,12 @@ public import __operators__.(
 );
 
 
-define inc;
-define dec;
+define inc(ref ..a) :;
+define dec(ref ..a) :;
 
-define moveUnsafe;
-define resetUnsafe;
+[A]
+define moveUnsafe(a:A) : A;
+define resetUnsafe(a) :;
 
 
 
@@ -88,34 +89,66 @@ alias overload hasValue?(iter, coord) = hasValue?(coord);
 
 /// @section  reverse iteration 
 
-define reverseIterator;
+[S when Sequence?(S)]
+define reverseIterator(s:S);
 
 
 
 /// @section  sequence protocol 
 
-define size;
+// defined for collections
+define size(s): SizeT;
 
-define begin;
-define end;
 
-define front;
-define back;
+[S when Sequence?(S)]
+define begin(s:S);
 
-define push;
-define pop;
-define clear;
-define insert;
+[S when Sequence?(S)]
+define end(s:S);
+
+
+[S when Sequence?(S)]
+define front(s:S);
+
+[S when Sequence?(S)]
+define back(s:S);
+
+
+[S when Sequence?(S)]
+define push(s:S, ..vs) :;
+
+[S when Sequence?(S)]
+define pop(s:S);
+
+// defined for collections
+define clear(s) :;
+
+[S when Sequence?(S)]
+define insert(s:S, coord, v) :;
+
+// defined for collections
 define remove;
-define reserve;
-define resize;
-define resizeUnsafe;
 
-define pushFront;
-define popFront;
+[S, I when Sequence?(S) and Integer?(I)]
+define reserve(s:S, n:I) :;
+
+[S, I when Sequence?(S) and Integer?(I)]
+define resize(s:S, n:I) :;
+
+[S, I when Sequence?(S) and Integer?(I)]
+define resizeUnsafe(s:S, n:I) :;
+
+
+[S when Sequence?(S)]
+define pushFront(s:S, v) :;
+
+[S when Sequence?(S)]
+define popFront(s:S);
+
 
 // defined for statically sized sequences like Array[T,n]
-define StaticSize;
+[S]
+define StaticSize(#S);
 
 
 
@@ -156,9 +189,11 @@ overload multiValued?(x) = false;
 // 'index' and 'size' are available for mappings
 // 'remove' is available
 
-define lookup; // get pointer to element, null if not available
-define put;
-define items; // iterate over all items
+// get pointer to element, null if not available
+define lookup(map, key);
+define put(map, key, value) :;
+// iterate over all items
+define items(map);
 
 forceinline contains?(map, key) = not null?(lookup(map, key));
 

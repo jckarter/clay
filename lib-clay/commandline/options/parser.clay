@@ -119,7 +119,7 @@ private seekToken(pr, key, scanner){
     addOption(pr, key, nextToken);
   } else {
     missingValue(pr, key);
-    push(scanner, nextToken);
+    pushback(scanner, nextToken);
   }
 }
 

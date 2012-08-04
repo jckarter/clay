@@ -10,7 +10,7 @@ record PushbackIterator[S, T](
   else return getMaybeValue(nextValue(it.base));
 }
 
-[S, T] overload push(it : PushbackIterator[S, T], x : S){ push(it.pending, x); }
+[S, T] pushback(it : PushbackIterator[S, T], x : S){ push(it.pending, x); }
 
 [T] withPushback(it : T) : PushbackIterator[IteratorTargetType(T), T] {
   alias S = IteratorTargetType(T);

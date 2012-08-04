@@ -71,12 +71,12 @@ forceinline overload subtract(a:Pointer[T], b:Pointer[T]) {
 }
 
 [T]
-forceinline overload inc(a:Pointer[T]) {
+forceinline overload inc(ref a:Pointer[T]) {
     a +: 1;
 }
 
 [T]
-forceinline overload dec(a:Pointer[T]) {
+forceinline overload dec(ref a:Pointer[T]) {
     a -: 1;
 }
 
