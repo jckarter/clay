@@ -315,6 +315,9 @@ refillMask(x: TwoHashEntries[E, F])
 //
 
 [B]
+overload iterator(t: Table[B]) = CoordinateRange(begin(t), end(t));
+
+[B]
 overload size(t: Table[B]) = bitshl(1, t.ln2_size);
 
 [B]
