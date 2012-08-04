@@ -99,7 +99,7 @@ overload end(group: Group[S]) {
 }
 
 [C]
-overload inc(c: FGroupCoordinate[C]) {
+overload inc(ref c: FGroupCoordinate[C]) {
     if (c.endCoord == c.sequenceEndCoord)
         c.beginCoord = c.endCoord;
     else
@@ -110,7 +110,7 @@ overload inc(c: FGroupCoordinate[C]) {
 }
 
 [C]
-overload dec(c: FGroupCoordinate[C]) {
+overload dec(ref c: FGroupCoordinate[C]) {
     if (c.beginCoord == c.sequenceEndCoord)
         for (i in range(group.groupSize))
             dec(c.beginCoord);
@@ -182,12 +182,12 @@ overload subtract(i: RAGroupCoordinate[C], j: RAGroupCoordinate[C])
     = PtrInt(i.coord - j.coord) \ PtrInt(i.groupSize);
 
 [C]
-overload inc(i: RAGroupCoordinate[C]) {
+overload inc(ref i: RAGroupCoordinate[C]) {
     i.coord +: i.groupSize;
 }
 
 [C]
-overload dec(i: RAGroupCoordinate[C]) {
+overload dec(ref i: RAGroupCoordinate[C]) {
     i.coord -: i.groupSize;
 }
 

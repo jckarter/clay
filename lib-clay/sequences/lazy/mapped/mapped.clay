@@ -89,12 +89,12 @@ forceinline overload subtract(x1:MappedCoordinate[F, COORD],
     x1.coord - x2.coord;
 
 [F, COORD when CallDefined?(inc, COORD)]
-forceinline overload inc(x:MappedCoordinate[F, COORD]) {
+forceinline overload inc(ref x:MappedCoordinate[F, COORD]) {
     inc(x.coord);
 }
 
 [F, COORD when CallDefined?(dec, COORD)]
-forceinline overload dec(x:MappedCoordinate[F, COORD]) {
+forceinline overload dec(ref x:MappedCoordinate[F, COORD]) {
     dec(x.coord);
 }
 
