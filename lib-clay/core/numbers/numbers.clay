@@ -317,16 +317,16 @@ forceinline overload (-)(a:A) = numericNegate(a);
 
 /// @section  inc, dec 
 
-forceinline overload inc(..a) { eachValue(inc, ..a); }
-forceinline overload dec(..a) { eachValue(dec, ..a); }
+forceinline overload inc(ref ..a) { eachValue(inc, ..a); }
+forceinline overload dec(ref ..a) { eachValue(dec, ..a); }
 
 [A when Numeric?(A)]
-forceinline overload inc(a:A) {
+forceinline overload inc(ref a:A) {
     a +: A(1);
 }
 
 [A when Numeric?(A)]
-forceinline overload dec(a:A) {
+forceinline overload dec(ref a:A) {
     a -: A(1);
 }
 

@@ -210,12 +210,12 @@ overload subtract(a:PagedPointer[T], b:PagedPointer[T]) {
 }
 
 [T]
-overload inc(p:PagedPointer[T]) {
+overload inc(ref p:PagedPointer[T]) {
     p +: 1;
 }
 
 [T]
-overload dec(p:PagedPointer[T]) {
+overload dec(ref p:PagedPointer[T]) {
     p -: 1;
 }
 
