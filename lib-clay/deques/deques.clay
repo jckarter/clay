@@ -29,7 +29,7 @@ record DequeCoordinate[T] (
 [T] overload DequeCoordinate[T](current: Pointer[T], node: Pointer[Pointer[T]])
     = DequeCoordinate[T](current, nodeBegin(node), nodeEnd(node), node);
 
-[T] overload inc(i: DequeCoordinate[T]) {
+[T] overload inc(ref i: DequeCoordinate[T]) {
     inc(i.current);
     if(i.current == i.last) {
         setNode(i, i.node + 1);
@@ -37,7 +37,7 @@ record DequeCoordinate[T] (
     }
 }
 
-[T] overload dec(i: DequeCoordinate[T]) {
+[T] overload dec(ref i: DequeCoordinate[T]) {
     if (i.current == i.first) {
         setNode(i, i.node - 1);
         i.current = i.last;
