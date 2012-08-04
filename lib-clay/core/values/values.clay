@@ -21,6 +21,17 @@ private define _mapIndexedValues;
 
 mapIndexedValues(fn, forward ..values) = forward .._mapIndexedValues(fn, #0, ..values);
 
+// filter values using given predicate
+// unlike most other functions, all parameters must be static values
+[Fn]
+define filterValues(#Fn, ..xs);
+[Fn, First when Fn(First)]
+overload filterValues(#Fn, #First, ..xs) = #First, ..filterValues(#Fn, ..xs);
+[Fn, First when not Fn(First)]
+overload filterValues(#Fn, #First, ..xs) = ..filterValues(#Fn, ..xs);
+[Fn]
+overload filterValues(#Fn) = ;
+
 define foldValues;
 forceinline overload foldValues(fn, forward x, forward ..xs)
     = fn(x, foldValues(fn, ..xs));

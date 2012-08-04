@@ -120,6 +120,24 @@ main() = testMain(
                 )]
             );
         }),
+        TestCase("filterValues", test => {
+            expectEqual(test, "filterValues 2 from 4",
+                [#2, #4],
+                [..filterValues(even?, #1, #2, #3, #4)]
+            );
+            expectEqual(test, "filterValues 0 from 2",
+                [],
+                [..filterValues(even?, #1, #3)]
+            );
+            expectEqual(test, "filterValues 2 from 2",
+                [#2, #6],
+                [..filterValues(even?, #2, #6)]
+            );
+            expectEqual(test, "filterValues 0 from 0",
+                [],
+                [..filterValues(even?)]
+            );
+        }),
         TestCase("assocValue", test => {
             expectEqual(test, "assocValue? first",
                 true,
