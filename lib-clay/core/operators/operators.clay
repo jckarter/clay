@@ -39,8 +39,9 @@ public import __operators__.(
 define inc(ref ..a) :;
 define dec(ref ..a) :;
 
-define moveUnsafe;
-define resetUnsafe;
+[A]
+define moveUnsafe(a:A) : A;
+define resetUnsafe(a) :;
 
 
 
