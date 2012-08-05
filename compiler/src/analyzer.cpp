@@ -2030,7 +2030,7 @@ StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContex
 static StatementAnalysis analyzeBlockStatement(StatementPtr stmt, EnvPtr &env, AnalysisContext* ctx)
 {
     if (stmt->stmtKind == BINDING) {
-        llvm::errs() << "analyzeBindinginBlock\n";
+        // llvm::errs() << "analyzeBindinginBlock\n";
         env = analyzeBinding((Binding *)stmt.ptr(), env);
         if (!env) {
             ctx->hasRecursivePropagation = true;
@@ -2059,7 +2059,7 @@ static EnvPtr analyzeStatementExpressionStatements(vector<StatementPtr> const &s
     {
         switch ((*i)->stmtKind) {
         case BINDING:
-            llvm::errs() << "analyzeStatementExprBindingStatement\n";
+            // llvm::errs() << "analyzeStatementExprBindingStatement\n";
             env2 = analyzeBinding((Binding*)i->ptr(), env2);
             if (env2 == NULL)
                 return NULL;
@@ -2098,7 +2098,7 @@ StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContex
     }
 
     case BINDING : {
-        llvm::errs() << "analyzeBindingStatement\n";
+        // llvm::errs() << "analyzeBindingStatement\n";
         return SA_FALLTHROUGH;
 
     }
@@ -2280,20 +2280,20 @@ void initializeStaticForClones(StaticForPtr x, unsigned count)
 EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
 {
     LocationContext loc(x->location);
-    // llvm::errs() << "analyzeBinding: " << x->args[0]->name << "\n";
+    llvm::errs() << "analyzeBinding: " << x->args[0]->name << "\n";
         
     switch (x->bindingKind) {
 
     case VAR :
     case REF :
     case FORWARD : {
-        switch(x->bindingKind){
-            case VAR: llvm::errs() << "analyzeBinding:VAR " << x->args[0]->name << "\n";
-                        break;
-            case REF: llvm::errs() << "analyzeBinding:REF " << x->args[0]->name << "\n";
-                        break;
-            default: llvm::errs() << "analyzeBinding:FORWARD " << x->args[0]->name << "\n";
-        }
+        // switch(x->bindingKind){
+        //     case VAR: llvm::errs() << "analyzeBinding:VAR " << x->args[0]->name << "\n";
+        //                 break;
+        //     case REF: llvm::errs() << "analyzeBinding:REF " << x->args[0]->name << "\n";
+        //                 break;
+        //     default: llvm::errs() << "analyzeBinding:FORWARD " << x->args[0]->name << "\n";
+        // }
 
         // for (llvm::StringMap<ObjectPtr>::const_iterator i = env->entries.begin(), end = env->entries.end();
         //      i != end;
@@ -2345,6 +2345,7 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
         if (!mpv)
             return NULL;
 
+        // Need to set tempness on bindings
         computeArgsKey(mpv, argsKey, argsTempness);
         
         if (x->varg.ptr()) {
@@ -2374,49 +2375,52 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
                 // matchFailureError(new MatchMultiArgumentError(formalArgs.size(), types, x->varg));
         }
         
-        EnvPtr staticEnv = new Env(env);
+        EnvPtr env2 = new Env(env);
         
         for (unsigned i = 0; i < pvars.size(); ++i) {
             if (pvars[i].isMulti) {
                 MultiStaticPtr ms = derefDeep(multiCells[i].ptr());
                 if (!ms)
                     error(pvars[i].name, "unbound pattern variable");
-                addLocal(staticEnv, pvars[i].name, ms.ptr());
+                addLocal(env2, pvars[i].name, ms.ptr());
             }
             else {
                 ObjectPtr v = derefDeep(cells[i].ptr());
                 if (!v)
                     error(pvars[i].name, "unbound pattern variable");
-                addLocal(staticEnv, pvars[i].name, v.ptr());
+                addLocal(env2, pvars[i].name, v.ptr());
             }
         }
-        x->env = staticEnv;
-        EnvPtr env2 = new Env(staticEnv);
+        
+        if (x->predicate.ptr()) {
+            if (!evaluateBool(x->predicate, env2))
+                assert(false);
+                // return new MatchPredicateError(x->predicate);
+        }
+
+        // EnvPtr env2 = new Env(staticEnv);
+        
         for (unsigned i = 0; i < formalArgs.size(); ++i) {
             FormalArgPtr y = formalArgs[i];
-            x->fixedArgNames.push_back(y->name);
-            x->fixedArgTypes.push_back(argsKey[i]);
             addLocal(env2, y->name, new PValue(argsKey[i], false));
-            llvm::errs() << "addLocal: " << y->name << "\n";
+            // llvm::errs() << "addLocal: " << y->name << "\n";
         }
         if (x->varg.ptr()) {
-            x->varArgName = x->varg->name;
             MultiPValuePtr varArgs = new MultiPValue();
             for (unsigned i = formalArgs.size(); i < argsKey.size(); ++i) {
-                x->varArgTypes.push_back(argsKey[i]);
                 PVData parg(argsKey[i], false);
                 varArgs->values.push_back(parg);
             }
-            llvm::errs() << "addLocal: " << x->varArgName << "\n";
-            addLocal(env2, x->varArgName, varArgs.ptr());
+            // llvm::errs() << "addLocal: " << x->varArgName << "\n";
+            addLocal(env2, x->varg->name, varArgs.ptr());
         }
 
-        for (llvm::StringMap<ObjectPtr>::const_iterator i = env->entries.begin(), end = env->entries.end();
-             i != end;
-             ++i)
-        {
-            llvm::errs() << i->first().str() << "\n";
-        }
+        // for (llvm::StringMap<ObjectPtr>::const_iterator i = env->entries.begin(), end = env->entries.end();
+        //      i != end;
+        //      ++i)
+        // {
+        //     llvm::errs() << i->first().str() << "\n";
+        // }
 
         return env2;
     }

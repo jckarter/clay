@@ -282,7 +282,7 @@ StatementPtr clone(StatementPtr x)
         vector<PatternVar> patternVars;
         clone(y->args, args);
         clone(y->patternVars, patternVars);
-        out = new Binding(y->bindingKind, patternVars,
+        out = new Binding(y->bindingKind, patternVars, cloneOpt(y->predicate),
             args, cloneOpt(y->varg), clone(y->values));
         break;
     }

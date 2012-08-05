@@ -1441,19 +1441,11 @@ struct PatternVar;
 struct Binding : public Statement {
     int bindingKind;
     vector<PatternVar> patternVars;
+    ExprPtr predicate;
     vector<FormalArgPtr> args;
     FormalArgPtr varg;
     ExprListPtr values;
-
-    bool analyzed;
-
-    vector<TypePtr> fixedArgTypes;
-    vector<IdentifierPtr> fixedArgNames;
-    IdentifierPtr varArgName;
-    vector<TypePtr> varArgTypes;
-
     EnvPtr env;
-    
     Binding(int bindingKind,
         const vector<FormalArgPtr> &args,
         ExprListPtr values)
@@ -1461,11 +1453,13 @@ struct Binding : public Statement {
           args(args), values(values) {}
     Binding(int bindingKind,
         const vector<PatternVar> &patternVars,
+        ExprPtr predicate,
         const vector<FormalArgPtr> &args,
         FormalArgPtr varg, 
         ExprListPtr values)
         : Statement(BINDING), bindingKind(bindingKind),
           patternVars(patternVars),
+          predicate(predicate),
           args(args), varg(varg),
           values(values) {}
 };
