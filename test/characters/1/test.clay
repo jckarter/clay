@@ -1,0 +1,43 @@
+import printer.(println);
+import test.*;
+
+main() = testMain(
+    TestSuite("characters", array(
+        TestCase("Char ==", test => {
+            expectTrue( test, "==", 'a' == 'a');
+            expectFalse(test, "==", 'a' == 'b');
+        }),
+        TestCase("Char <", test => {
+            expectTrue( test, "<",      'a' < 'b');
+            expectFalse(test, "< (==)", 'a' < 'a');
+            expectFalse(test, "<",      'b' < 'a');
+        }),
+        TestCase("Char == UniChar", test => {
+            expectTrue( test, "==", 'a' == UniChar('a'));
+            expectFalse(test, "==", 'a' == UniChar('b'));
+        }),
+        TestCase("UniChar == Char", test => {
+            expectTrue( test, "==", UniChar('a') == 'a');
+            expectFalse(test, "==", UniChar('a') == 'b');
+        }),
+        TestCase("Char < UniChar", test => {
+            expectTrue( test, "<",      'a' < UniChar('b'));
+            expectFalse(test, "< (==)", 'a' < UniChar('a'));
+            expectFalse(test, "<",      'b' < UniChar('a'));
+        }),
+        TestCase("UniChar < Char", test => {
+            expectTrue( test, "<",      UniChar('a') < 'b');
+            expectFalse(test, "< (==)", UniChar('a') < 'a');
+            expectFalse(test, "<",      UniChar('b') < 'a');
+        }),
+        TestCase("UniChar ==", test => {
+            expectTrue( test, "==", UniChar('a') == UniChar('a'));
+            expectFalse(test, "==", UniChar('a') == UniChar('b'));
+        }),
+        TestCase("UniChar <", test => {
+            expectTrue( test, "<",      UniChar('a') < UniChar('b'));
+            expectFalse(test, "< (==)", UniChar('a') < UniChar('a'));
+            expectFalse(test, "<",      UniChar('b') < UniChar('a'));
+        }),
+    )));
+
