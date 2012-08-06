@@ -580,7 +580,7 @@ overload equals?(a:A, b:B) {
             return false;
         if (not iv?)
             return true;
-        if (getValue(i) != getValue(j))
+        if (getValue(iv) != getValue(jv))
             return false;
     }
 }
