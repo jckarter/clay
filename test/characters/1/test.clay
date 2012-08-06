@@ -39,5 +39,17 @@ main() = testMain(
             expectFalse(test, "< (==)", UniChar('a') < UniChar('a'));
             expectFalse(test, "<",      UniChar('b') < UniChar('a'));
         }),
+        TestCase("conversion between Char, UniChar and integers", test => {
+            // only successful conversions are tested, because
+            // unsuccessful conversions crash process
+
+            expectEqual(test, "UniChar(Char(10))", UniChar(10), UniChar(Char(10)));
+            expectEqual(test, "Char(UniChar(20))", Char(20), Char(UniChar(20)));
+
+            expectEqual(test, "Char(250u)", Char(-6), Char(250u));
+            expectEqual(test, "Char(-6)", Char(-6), Char(-6));
+            
+            expectEqual(test, "Unichar(30000)", UniChar(30000), UniChar(30000));
+        }),
     )));
 
