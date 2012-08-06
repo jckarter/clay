@@ -34,7 +34,7 @@ private var sha256RoundConstants = array(
 alias ChunkBytes = Array[UInt8,  64];
 alias ChunkWords = Array[UInt32, 16];
 
-private sha256chunk(state, tempState, chunkSpace, chunk) {
+private sha256Chunk(state, tempState, chunkSpace, chunk) {
     for (toChunkWord, fromChunkWord in zipped(chunkSpace, chunk))
         toChunkWord = networkToHost(fromChunkWord);
     for (i in range(16, 64)) {
@@ -112,7 +112,7 @@ sha256(message: S) --> returned: SHA256 {
     var chunkSpace = Array[UInt32, 64]();
 
     for (chunk in coordinateRange(messageHeadBegin, messageHeadEnd))
-        sha256chunk(state, tempState, chunkSpace, chunk);
+        sha256Chunk(state, tempState, chunkSpace, chunk);
 
     var tailChunkUnion = Union[ChunkBytes,ChunkWords]();
     ref tailChunkBytes = tailChunkUnion.0;
@@ -129,7 +129,7 @@ sha256(message: S) --> returned: SHA256 {
             begin(tailChunkBytes) + messageTailSize + 1,
             end(tailChunkBytes)
         );
-        sha256chunk(state, tempState, chunkSpace, tailChunk);
+        sha256Chunk(state, tempState, chunkSpace, tailChunk);
         messageTailSize = 0;
     } else {
         messageTailSize +: 1;
@@ -140,7 +140,7 @@ sha256(message: S) --> returned: SHA256 {
         end(tailChunkBytes) - 8,
     );
     Pointer[UInt64](end(tailChunkBytes) - 8)^ = hostToNetwork(UInt64(messageSize) * 8);
-    sha256chunk(state, tempState, chunkSpace, tailChunk);
+    sha256Chunk(state, tempState, chunkSpace, tailChunk);
 
     // FIXME: the SHA2 type should be naturally 4-byte aligned (or more) so
     // we can safely use bitcast here. Need to add support for custom record
