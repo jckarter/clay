@@ -23,11 +23,12 @@ static llvm::Value *promoteCVarArg(CallingConv conv,
     }
     case FLOAT_TYPE : {
         FloatType *ft = (FloatType *)t.ptr();
-        if (ft->bits == 32)
+        if (ft->bits == 32) {
             if(ft->isImaginary)
                 return ctx->builder->CreateFPExt(llv, llvmType(imag64Type));
             else
                 return ctx->builder->CreateFPExt(llv, llvmType(float64Type));
+        }
         return llv;
     }
     default :
