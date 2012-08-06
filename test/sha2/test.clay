@@ -1,5 +1,5 @@
 import sha2.*;
-import printer.(println);
+import printer.*;
 import test.*;
 
 main() = testMain(
@@ -44,6 +44,34 @@ main() = testMain(
             expectPrinted(test, "SHA-256",
                 "50045F4231B493EB436AFC58E2B1F33B70E4071F68C1BC1930F58BA2776FBF25",
                 sha256("AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLL123456789"));
+        }),
+
+        TestCase("sha256 streaming", test => {
+            var context = SHA256Context();
+            sha256Update(context, "A long time ago in a galaxy far,");
+            sha256Update(context, " far away....");
+            expectPrinted(test, "SHA-256 1",
+                "A014AE72628AC605EF9456695E3721D455271752DED65F630D741601DB42B1D4",
+                sha256Finish(context));
+        
+            context = SHA256Context();
+            sha256Update(context, "It is a period of civil war. ");
+            sha256Update(context, "Rebel spaceships, striking ");
+            sha256Update(context, "from a hidden base, have won ");
+            sha256Update(context, "their first victory against ");
+            sha256Update(context, "the evil Galactic Empire.");
+            expectPrinted(test, "SHA-256 2",
+                "1D16FB2F8303CEB13C0092C8C244FD84F5EA5D3E46622405BD33C389DDC4CC68",
+                sha256Finish(context));
+
+            context = SHA256Context();
+            for (i in range(1000)) {
+                sha256Update(context, str(i));
+            }
+            // check with: `for i in {0..999}; do echo -n $i; done | shasum -a 256`
+            expectPrinted(test, "SHA-256 3",
+                "14E7FD93E3D8DD8D448B65A1BA7DBEC9433C57E554B522831089EB2064EF1F34",
+                sha256Finish(context));
         }),
     )));
 
