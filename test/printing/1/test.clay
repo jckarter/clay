@@ -1,0 +1,43 @@
+import printer.*;
+import strings.*;
+import vectors.*;
+
+import test.*;
+
+
+enum Gender (
+    MALE,
+    FEMALE,
+);
+
+record Person (
+    name : StringLiteralRef,
+    age : Int,
+    gender: Gender,
+    address : Address,
+);
+
+record Address (
+    email : StringLiteralRef,
+);
+
+testPrintRecordEnum(test) {
+    var p = Person(StringLiteralRef("Foo"), 100, FEMALE, Address(StringLiteralRef("foo@bar.com")));
+    expectPrinted(test, "p", "Person(Foo, 100, FEMALE, Address(foo@bar.com))", p);
+}
+
+
+main() = testMain(
+    TestSuite("printer", array(
+        TestCase("record, enum", testPrintRecordEnum),
+        TestCase("tuple", test => {
+            expectPrinted(test, "tuple", "[1, true, 3.5]", [1, true, 3.5]);
+        }),
+        TestCase("array", test => {
+            expectPrinted(test, "tuple", "{10, 20, 30}", array(10, 20, 30));
+        }),
+        TestCase("vector", test => {
+            expectPrinted(test, "vector", "{true, false, true}", Vector[Bool](true, false, true));
+        }),
+    )));
+
