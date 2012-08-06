@@ -122,8 +122,10 @@ static bool shouldLogCallable(ObjectPtr callable)
     printStaticName(sout, callable);
     sout.flush();
 
-    pair<string,string> key = make_pair(m->moduleName, name);
-    return logMatchSymbols.find(key) != logMatchSymbols.end();
+    pair<string,string> specificKey = make_pair(m->moduleName, name);
+    pair<string,string> moduleGlobKey = make_pair(m->moduleName, string("*"));
+    return logMatchSymbols.find(specificKey) != logMatchSymbols.end()
+        || logMatchSymbols.find(moduleGlobKey) != logMatchSymbols.end();
 }
 
 InvokeSet* lookupInvokeSet(ObjectPtr callable,
