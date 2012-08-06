@@ -10,18 +10,27 @@ Character?(x) = false;
 overload Character?(#Char) = true;
 overload Character?(#UniChar) = true;
 
-[I when Integer?(I)]
+// signed integer must be in range -128..128, otherwise this operation fails
+[I when SignedInteger?(I)]
 forceinline overload Char(c:I) --> returned:Char {
-    returned.code = wrapCast(Int8, c);
+    returned.code = Int8(c);
+}
+
+// unsigned integer must be in range 0..256, otherwise this operation fails
+[I when UnsignedInteger?(I)]
+forceinline overload Char(c:I) --> returned:Char {
+    returned.code = wrapCast(Int8, UInt8(c));
 }
 
 [I when Integer?(I)]
 forceinline overload UniChar(c:I) --> returned:UniChar {
-    returned.code = wrapCast(UInt32, c);
+    returned.code = UInt32(c);
 }
 
+// this operation fails if character is not in ASCII range
 forceinline overload UniChar(c:Char) = UniChar(c.code);
-forceinline overload Char(c:UniChar) = Char(c.code);
+// this operation fails if character is not in ASCII range
+forceinline overload Char(c:UniChar) = Char(Int8(c.code));
 
 [I when Integer?(I)]
 forceinline overload I(c:Char) = wrapCast(I, c.code);
