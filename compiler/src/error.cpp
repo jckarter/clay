@@ -3,6 +3,7 @@
 namespace clay {
 
 bool shouldPrintFullMatchErrors;
+set<pair<string,string> > logMatchSymbols;
 
 
 //
@@ -260,12 +261,16 @@ void displayError(llvm::Twine const &msg, llvm::StringRef kind) {
         displayDebugStack();
     }
     else {
-        llvm::errs() << "error: " << msg << '\n';
+        llvm::errs() << kind << ": " << msg << '\n';
     }
 }
 
 void warning(llvm::Twine const &msg) {
     displayError(msg, "warning");
+}
+
+void note(llvm::Twine const &msg) {
+    displayError(msg, "note");
 }
 
 void error(llvm::Twine const &msg) {
@@ -421,15 +426,9 @@ void argumentInvalidStaticObjectError(unsigned int index, ObjectPtr obj)
     argumentError(index, sout.str());
 }
 
-void matchFailureError(MatchFailureError const &err)
+static void matchFailureMessage(MatchFailureError const &err, string &outBuf)
 {
-    string buf;
-    llvm::raw_string_ostream sout(buf);
-    if (err.failedInterface)
-        sout << "call does not conform to function interface";
-    else
-        sout << "no matching overload found";
-
+    llvm::raw_string_ostream sout(outBuf);
     int hiddenPatternOverloads = 0;
 
     for (MatchFailureVector::const_iterator i = err.failures.begin();
@@ -452,7 +451,28 @@ void matchFailureError(MatchFailureError const &err)
     }
     if (hiddenPatternOverloads > 0)
         sout << "\n    " << hiddenPatternOverloads << " universal overloads not shown (show with -full-match-errors option)";
-    error(sout.str());
+    sout.flush();
+}
+
+void matchFailureError(MatchFailureError const &err)
+{
+    string buf;
+    if (err.failedInterface)
+        buf = "call does not conform to function interface";
+    else
+        buf = "no matching overload found";
+
+    matchFailureMessage(err, buf);
+    error(buf);
+}
+
+void matchFailureLog(MatchFailureError const &err)
+{
+    if (err.failures.empty())
+        return;
+    string buf = "matched";
+    matchFailureMessage(err, buf);
+    note(buf);
 }
 
 void printFileLineCol(llvm::raw_ostream &out, Location const &location)

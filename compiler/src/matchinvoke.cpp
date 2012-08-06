@@ -165,7 +165,7 @@ void printMatchError(llvm::raw_ostream &os, MatchResultPtr result)
 {
     switch (result->matchCode) {
     case MATCH_SUCCESS :
-        assert(false);
+        os << "matched";
         break;
     case MATCH_CALLABLE_ERROR : {
         MatchCallableError *e = (MatchCallableError*)result.ptr();
