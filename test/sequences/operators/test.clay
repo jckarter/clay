@@ -1,0 +1,21 @@
+import test.*;
+
+record MySequenceWithoutSize ();
+record MyAnotherSequenceWithoutSize ();
+
+record DummyIterator ();
+
+overload iterator(s: MySequenceWithoutSize) = DummyIterator();
+overload iterator(s: MyAnotherSequenceWithoutSize) = DummyIterator();
+
+overload nextValue(iter: DummyIterator): Maybe[Int] = nothing(Int);
+
+testEqualsOnSequencesWithoutSize(test) {
+    expectEqual(test, "==", MySequenceWithoutSize(), MyAnotherSequenceWithoutSize());
+}
+
+main() = testMain(
+    TestSuite("sequence operators", array(
+        TestCase("== on sequences without size", testEqualsOnSequencesWithoutSize),
+    )));
+
