@@ -12,6 +12,33 @@ overload printTo(stream, forward sha:SHA256) {
     printTo(stream, hexString(sha.digest));
 }
 
+
+private alias SHA256State = Array[UInt32, 8];
+
+private alias ChunkBytes = Array[UInt8,  64];
+private alias ChunkWords = Array[UInt32, 16];
+
+record SHA256Context (
+    total: UInt64, // in bytes
+    state: SHA256State,
+    buffer: Union[ChunkWords, ChunkBytes],
+);
+
+overload SHA256Context() --> returned:SHA256Context {
+    returned.total = 0ul;
+    returned.state = array(
+        0x6a09e667_u,
+        0xbb67ae85_u,
+        0x3c6ef372_u,
+        0xa54ff53a_u,
+        0x510e527f_u,
+        0x9b05688c_u,
+        0x1f83d9ab_u,
+        0x5be0cd19_u,
+    );
+    // returned.buffer does not need to be initialized
+}
+
 private var sha256RoundConstants = array(
    0x428a2f98_u, 0x71374491_u, 0xb5c0fbcf_u, 0xe9b5dba5_u,
    0x3956c25b_u, 0x59f111f1_u, 0x923f82a4_u, 0xab1c5ed5_u,
@@ -31,12 +58,12 @@ private var sha256RoundConstants = array(
    0x90befffa_u, 0xa4506ceb_u, 0xbef9a3f7_u, 0xc67178f2_u,
 );
 
-alias ChunkBytes = Array[UInt8,  64];
-alias ChunkWords = Array[UInt32, 16];
+private sha256Chunk(state: SHA256State, chunk: ChunkWords) {
+    var chunkSpace = Array[UInt32, 64]();
 
-private sha256Chunk(state, tempState, chunkSpace, chunk) {
     for (toChunkWord, fromChunkWord in zipped(chunkSpace, chunk))
         toChunkWord = networkToHost(fromChunkWord);
+
     for (i in range(16, 64)) {
         var s0 = bitxor(
             bitror(chunkSpace[i-15],  7),
@@ -51,7 +78,7 @@ private sha256Chunk(state, tempState, chunkSpace, chunk) {
         chunkSpace[i] = wrapAdd(chunkSpace[i-16], s0, chunkSpace[i-7], s1);
     }
 
-    tempState = state;
+    var tempState = state;
     for (roundWord, chunkWord in zipped(sha256RoundConstants, chunkSpace)) {
         var s0 = bitxor(
             bitror(tempState[0],  2),
@@ -88,64 +115,68 @@ private sha256Chunk(state, tempState, chunkSpace, chunk) {
 }
 
 [S when ContiguousSequence?(S) and TypeSize(SequenceElementType(S)) == 1]
-sha256(message: S) --> returned: SHA256 {
-    var messageSize = size(message);
-    var messageHeadSize = bitandc(messageSize, SizeT(63));
-    var messageTailSize = messageSize - messageHeadSize;
+sha256Update(context: SHA256Context, input: S) {
+    var inputBegin = Pointer[Char](begin(input));
+    var inputEnd   = Pointer[Char](end(input));
+    var inputSize  = size(input);
 
-    var messageHeadBegin = Pointer[ChunkWords](begin(message));
-    var messageHeadEnd   = Pointer[ChunkWords](begin(message) + messageHeadSize);
-    var messageTailBegin = Pointer[UInt8](messageHeadEnd);
-    var messageTailEnd   = Pointer[UInt8](end(message));
+    var left = context.total % 64;
+    var fill = 64 - left;
 
-    var state = array(
-        0x6a09e667_u,
-        0xbb67ae85_u,
-        0x3c6ef372_u,
-        0xa54ff53a_u,
-        0x510e527f_u,
-        0x9b05688c_u,
-        0x1f83d9ab_u,
-        0x5be0cd19_u,
-    );
-    var tempState = Array[UInt32, 8]();
-    var chunkSpace = Array[UInt32, 64]();
+    context.total +: inputSize;
 
-    for (chunk in coordinateRange(messageHeadBegin, messageHeadEnd))
-        sha256Chunk(state, tempState, chunkSpace, chunk);
-
-    var tailChunkUnion = Union[ChunkBytes,ChunkWords]();
-    ref tailChunkBytes = tailChunkUnion.0;
-    ref tailChunk = tailChunkUnion.1;
-    copyNonoverlappingMemory(
-        begin(tailChunkBytes),
-        messageTailBegin,
-        messageTailBegin + messageTailSize
-    );
-    tailChunkBytes[messageTailSize] = 0x80_uss;
-
-    if (messageTailSize >= 56) {
-        zeroMemory(
-            begin(tailChunkBytes) + messageTailSize + 1,
-            end(tailChunkBytes)
-        );
-        sha256Chunk(state, tempState, chunkSpace, tailChunk);
-        messageTailSize = 0;
-    } else {
-        messageTailSize +: 1;
+    if (left > 0 and inputSize >= fill) {
+        copyNonoverlappingMemory(
+            Pointer[Char](@context.buffer) + left,
+            inputBegin,
+            inputBegin + fill);
+        sha256Chunk(context.state, context.buffer.0);
+        inputSize  -: fill;
+        inputBegin +: fill;
+        left        = 0;
     }
 
-    zeroMemory(
-        begin(tailChunkBytes) + messageTailSize,
-        end(tailChunkBytes) - 8,
-    );
-    Pointer[UInt64](end(tailChunkBytes) - 8)^ = hostToNetwork(UInt64(messageSize) * 8);
-    sha256Chunk(state, tempState, chunkSpace, tailChunk);
+    while (inputSize >= 64) {
+        sha256Chunk(context.state, Pointer[ChunkWords](inputBegin)^);
+        inputSize  -: 64;
+        inputBegin +: 64;
+    }
+
+    if (inputSize >= 0) {
+        copyNonoverlappingMemory(
+            Pointer[Char](@context.buffer) + left,
+            inputBegin,
+            inputBegin + inputSize);
+    }
+}
+
+private var sha256Padding = array(0x80uss, ..replicateValue(0uss, #63));
+
+// finish and return computed SHA-256 sum
+// context cannot be reused after computation
+sha256Finish(context: SHA256Context) --> returned: SHA256 {
+    var total = context.total;
+
+    var last = total % 64;
+    var padn = if (last < 56) 56 - last else 120 - last;
+    sha256Update(context, coordinateRange(begin(sha256Padding), begin(sha256Padding) + padn));
+
+    var msglen = Union[Array[UInt8, 8], UInt64]();
+    msglen.1 = hostToNetwork(total * 8);
+    sha256Update(context, msglen.0);
 
     // FIXME: the SHA2 type should be naturally 4-byte aligned (or more) so
     // we can safely use bitcast here. Need to add support for custom record
     // alignment.
     ref returnedWords = Pointer[Array[UInt32, 8]](@returned.digest)^;
-    for (returnedWord, stateWord in zipped(returnedWords, state))
+    for (returnedWord, stateWord in zipped(returnedWords, context.state))
         returnedWord = hostToNetwork(stateWord);
 }
+
+[S when ContiguousSequence?(S) and TypeSize(SequenceElementType(S)) == 1]
+sha256(message: S) --> returned: SHA256 {
+    var context = SHA256Context();
+    sha256Update(context, message);
+    returned = sha256Finish(context);
+}
+
