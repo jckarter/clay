@@ -284,6 +284,9 @@ static void usage(char *argv0)
     llvm::errs() << "  -run                  execute the program without writing to disk\n";
     llvm::errs() << "  -timing               show timing information\n";
     llvm::errs() << "  -full-match-errors    show universal patterns in match failure errors\n";
+    llvm::errs() << "  -log-match <module.symbol>\n"
+        << "                         log overload matching behavior for calls to <symbol>\n"
+        << "                         in module <module>\n";
 #ifdef __APPLE__
     llvm::errs() << "  -arch <arch>          build for Darwin architecture <arch>\n";
     llvm::errs() << "  -F<dir>               add <dir> to framework search path\n";
@@ -445,6 +448,19 @@ int main2(int argc, char **argv, char const* const* envp) {
         }
         else if (strcmp(argv[i], "-full-match-errors") == 0) {
             shouldPrintFullMatchErrors = true;
+        }
+        else if (strcmp(argv[i], "-log-match") == 0) {
+            if (i+1 == argc) {
+                llvm::errs() << "error: symbol name missing after -log-match\n";
+                return 1;
+            }
+            ++i;
+            char const *dot = strrchr(argv[i], '.');
+            if (dot == NULL) {
+                llvm::errs() << "error: symbol name for -log-match must be in the form module.symbol\n";
+                return 1;
+            }
+            logMatchSymbols.insert(make_pair(string((char const*)argv[i], dot), string(dot+1)));
         }
         else if (strcmp(argv[i], "-e") == 0) {
             if (i+1 == argc) {

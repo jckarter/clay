@@ -766,6 +766,7 @@ struct Location {
 //
 
 extern bool shouldPrintFullMatchErrors;
+extern set<pair<string,string> > logMatchSymbols;
 
 struct CompileContextEntry {
     ObjectPtr callable;
@@ -3378,6 +3379,8 @@ struct InvokeSet {
     vector<MatchSuccessPtr> matches;
     unsigned nextOverloadIndex;
 
+    bool shouldLog;
+
     map<vector<ValueTempness>, InvokeEntry*> tempnessMap;
     map<vector<ValueTempness>, InvokeEntry*> tempnessMap2;
 
@@ -3387,7 +3390,8 @@ struct InvokeSet {
               const vector<OverloadPtr> &symbolOverloads)
         : callable(callable), argsKey(argsKey),
           interface(symbolInterface),
-          overloads(symbolOverloads), nextOverloadIndex(0)
+          overloads(symbolOverloads), nextOverloadIndex(0),
+          shouldLog(false)
     {
         overloads.insert(overloads.end(), patternOverloads.begin(), patternOverloads.end());
     }
@@ -3410,7 +3414,7 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
                                MatchFailureError &failures);
 
 void matchBindingError(MatchResultPtr result);
-
+void matchFailureLog(MatchFailureError const &err);
 void matchFailureError(MatchFailureError const &err);
 
 

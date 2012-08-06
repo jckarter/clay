@@ -1819,6 +1819,10 @@ InvokeEntry* analyzeCallable(ObjectPtr x,
     if (!entry || !entry->code->hasBody()) {
         matchFailureError(failures);
     }
+
+    if (entry->parent->shouldLog)
+        matchFailureLog(failures);
+
     if (entry->analyzed)
         return entry;
     if (entry->analyzing) {
