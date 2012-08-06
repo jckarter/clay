@@ -1,1 +1,0 @@
-Person(Foo, 100, FEMALE, Address(foo@bar.com))
