@@ -1,4 +1,4 @@
-import sha2.*;
+import crypto.digest.sha2.*;
 import printer.*;
 import printer.formatter.*;
 import test.*;
