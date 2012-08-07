@@ -75,4 +75,10 @@ main() = testMain(
             encodeUniChar(UniChar(0x044f), c -> ..push(s, c));
             expectEqual(test, "2 char", "\xd1\x8f", s);
         }),
+        TestCase("print UTF[String] should print string content", test => {
+            var s = UTF8(String());
+            push(s, UniChar(0x043c));
+            push(s, UniChar(0x044b));
+            expectPrinted(test, "printed", "\xd0\xbc\xd1\x8b", s);
+        }),
     )));

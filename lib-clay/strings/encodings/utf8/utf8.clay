@@ -1,3 +1,4 @@
+import printer.(printTo);
 
 record UTF8Decoder[Iterator] (
     iter: Iterator
@@ -145,3 +146,9 @@ encodeUniChar(c, callback) {
 [T] overload push(u: UTF8[T], uc) {
     encodeUniChar(uc, c -> ..push(u.encoded, c));
 }
+
+[T]
+overload printTo(stream, s: UTF8[T]) {
+    printTo(stream, s.encoded);
+}
+
