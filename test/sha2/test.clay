@@ -86,6 +86,17 @@ main() = testMain(
                 "14E7FD93E3D8DD8D448B65A1BA7DBEC9433C57E554B522831089EB2064EF1F34",
                 digestFinish(context));
         }),
+
+        TestCase("sha256 on unaligned data", test => {
+            var context = SHA256Context();
+            digestUpdate(context, "a");
+            // this array must be long enough to prevent copying data into context.buffer
+            digestUpdate(context, array(..replicateValue('a', #129)));
+            expectPrinted(test, "SHA-256",
+                "1E3C4F4750C8C29BBFA9CED317788176B156D342E57F7777F62FD7221A44312F",
+                digestFinish(context));
+        }),
+
         TestCase("sha512", test => {
             expectSha512(test,
                 "9719A6439375C9115E01DCEDA86E210E5F2D78A6CF3F4872997746832C4C0F58C5AE0923FABE5ACFB923DFC94A117A7D444E453622912DFA193FC6636581F159",
