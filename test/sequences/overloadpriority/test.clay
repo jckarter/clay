@@ -1,0 +1,22 @@
+import test.*;
+
+record MySequenceForPrecedence (
+    i: Int,
+);
+    
+record MyIteratorForPrecedence();
+
+overload iterator(seq: MySequenceForPrecedence) = MyIteratorForPrecedence();
+
+overload nextValue(iter: MyIteratorForPrecedence) = nothing(Int);
+
+testSequenceEqualsHigherThatRecordPrecedence(test) {
+    // if 'equal?' from records has higher precedence, this test fails
+    expectEqual(test, "==", MySequenceForPrecedence(1), MySequenceForPrecedence(2));
+}
+
+main() = testMain(
+    TestSuite(
+        "sequence equality overload priority", array(
+            TestCase("sequence type uses sequence equals? specialization",
+                testSequenceEqualsHigherThatRecordPrecedence))));
