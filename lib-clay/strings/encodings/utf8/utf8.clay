@@ -115,27 +115,33 @@ private encodeFour(code)
       bitor(0x80, bitshr(bitand(code, 0x000FC0),  6)),
       bitor(0x80, bitand(code, 0x3F));
 
-[T] overload push(u: UTF8[T], c) {
+// encode unicode char c into sequence of UTF-8 bytes
+// callback is called for each UTF-8 byte
+encodeUniChar(c, callback) {
     var code = UInt32(c);
     if (code > UInt32(MAX_CODE_POINT))
         code = UInt32(REPLACEMENT_CHAR);
 
     if (code < 0x80u) {
-        push(u.encoded, Char(c));
+        callback(Char(c));
     } else if (code < 0x800u) {
         var x, y = ..encodeTwo(code);
-        push(u.encoded, Char(x));
-        push(u.encoded, Char(y));
+        callback(Char(x));
+        callback(Char(y));
     } else if (code < 0x10000u) {
         var x, y, z = ..encodeThree(code);
-        push(u.encoded, Char(x));
-        push(u.encoded, Char(y));
-        push(u.encoded, Char(z));
+        callback(Char(x));
+        callback(Char(y));
+        callback(Char(z));
     } else {
         var x, y, z, w = ..encodeFour(code);
-        push(u.encoded, Char(x));
-        push(u.encoded, Char(y));
-        push(u.encoded, Char(z));
-        push(u.encoded, Char(w));
+        callback(Char(x));
+        callback(Char(y));
+        callback(Char(z));
+        callback(Char(w));
     }
+}
+
+[T] overload push(u: UTF8[T], uc) {
+    encodeUniChar(uc, c -> ..push(u.encoded, c));
 }
