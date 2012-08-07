@@ -4,29 +4,180 @@ import hash.(hash);
 import printer.(printTo);
 import sequences.lazy.*;
 
-record SHA256 (digest: Array[UInt8, 32]);
 
-overload hash(x:SHA256) = bitcast(SizeT, x.digest);
+
+// generic code
 
-overload printTo(stream, forward sha:SHA256) {
+// true iff A is digest algorithm name
+[A]
+private Algorithm?(#A) = #false;
+
+// true iff T is digest output
+[T]
+private Digest?(#T) = false;
+
+// true iff T is digest compute context
+[T]
+private DigestContext?(#T) = false;
+
+// algorithm name by digest or by digest context
+[T when Digest?(T) or DigestContext?(T)]
+private define Algorithm(#T);
+
+
+// hash size in bytes
+[A when Algorithm?(A)]
+private define DigestSize(#A);
+
+// digest internal word
+[A when Algorithm?(A)]
+private define Word(#A);
+
+// number of words in computation state
+[A when Algorithm?(A)]
+private define StateSizeWords(#A): Int;
+
+// algorithm internal state
+[A when Algorithm?(A)]
+private State(#A) = Array[Word(#A), StateSizeWords(#A)];
+
+// initial data for state
+[A when Algorithm?(A)]
+private define stateInitial(#A): State(#A);
+
+// digest update block size in words
+[A when Algorithm?(A)]
+private define BlockSizeWords(#A);
+
+// block size in bytes
+[A when Algorithm?(A)]
+private BlockSizeBytes(#A): Int = Int(BlockSizeWords(#A) * TypeSize(Word(#A)));
+
+// shortcut
+[A when Algorithm?(A)]
+private BlockBytes(#A) = Array[UInt8, BlockSizeBytes(#A)];
+
+// core of the algorithm
+[A, S, B when Algorithm?(A) and S == State(#A) and B == BlockSizeBytes(#A)]
+private define processBlock(#A, state: S, block: Array[UInt8, B]):;
+
+// complete digest computation and return the digest of type Digest(..)
+[C when DigestContext?(C)]
+define digestFinish(c: C);
+
+// make digest output record
+[A when Algorithm?(A)]
+MakeDigest(#A) = recordWithProperties(
+        [
+            [Digest?, #true],
+            [Algorithm, #A],
+        ],
+        // data itself
+        digest: Array[UInt8, DigestSize(#A)]
+    );
+
+// get digest and context by algorith name
+[A when Algorithm?(A)]
+define AlgorithmTypes(#A);
+
+// digest type by algorithm name
+[A when Algorithm?(A)]
+Digest(#A) = nthValue(#0, ..AlgorithmTypes(#A));
+
+// digest context type by algorithm name
+[A when Algorithm?(A)]
+DigestContext(#A) = nthValue(#1, ..AlgorithmTypes(#A));
+
+// make digest context record
+[A when Algorithm?(A)]
+MakeDigestContext(#A) = recordWithProperties(
+        [
+            [DigestContext?, #true],
+            [Algorithm, #A],
+        ],
+        total: UInt64, // in bytes
+        state: State(#A),
+        buffer: Array[UInt8, BlockSizeBytes(#A)],
+    );
+
+// digest context record is initialized with initial algorithm state
+[C when DigestContext?(C)]
+overload C() --> returned:C {
+    returned.total <-- 0ul;
+    returned.state <-- stateInitial(Algorithm(C));
+    // returned.buffer does not need to be initialized
+}
+
+// print digest as hex
+[H when Digest?(H)]
+overload printTo(stream, forward sha:H) {
     printTo(stream, hexString(sha.digest));
 }
 
+[H when Digest?(H)]
+overload hash(x:H) = bitcast(SizeT, x.digest);
 
-private alias SHA256State = Array[UInt32, 8];
+// generic update code
+[C, S when DigestContext?(C) and ContiguousSequence?(S) and TypeSize(SequenceElementType(S)) == 1]
+digestUpdate(context: C, input: S) {
+    alias A = Algorithm(#C);
 
-private alias ChunkBytes = Array[UInt8,  64];
-private alias ChunkWords = Array[UInt32, 16];
+    var inputBegin = Pointer[Char](begin(input));
+    var inputEnd   = Pointer[Char](end(input));
+    var inputSize  = size(input);
 
-record SHA256Context (
-    total: UInt64, // in bytes
-    state: SHA256State,
-    buffer: Union[ChunkWords, ChunkBytes],
-);
+    var left = context.total % BlockSizeBytes(#A);
+    var fill = BlockSizeBytes(#A) - left;
 
-overload SHA256Context() --> returned:SHA256Context {
-    returned.total = 0ul;
-    returned.state = array(
+    context.total +: inputSize;
+
+    if (left > 0 and inputSize >= fill) {
+        copyNonoverlappingMemory(
+            Pointer[Char](@context.buffer) + left,
+            inputBegin,
+            inputBegin + fill);
+        processBlock(#A, context.state, context.buffer);
+        inputSize  -: fill;
+        inputBegin +: fill;
+        left        = 0;
+    }
+
+    while (inputSize >= BlockSizeBytes(#A)) {
+        processBlock(#A, context.state, Pointer[BlockBytes(#A)](inputBegin)^);
+        inputSize  -: BlockSizeBytes(#A);
+        inputBegin +: BlockSizeBytes(#A);
+    }
+
+    if (inputSize >= 0) {
+        copyNonoverlappingMemory(
+            Pointer[Char](@context.buffer) + left,
+            inputBegin,
+            inputBegin + inputSize);
+    }
+}
+
+
+
+
+// SHA-256
+
+alias SHA256_NAME = #"SHA-256";
+
+overload Algorithm?(#SHA256_NAME) = true;
+
+overload DigestSize(#SHA256_NAME) = #32;
+
+overload Word(#SHA256_NAME) = UInt32;
+
+overload StateSizeWords(#SHA256_NAME) = 8;
+
+overload BlockSizeWords(#SHA256_NAME) = 16;
+
+record SHA256 = MakeDigest(#SHA256_NAME);
+record SHA256Context = MakeDigestContext(#SHA256_NAME);
+overload AlgorithmTypes(#SHA256_NAME) = #SHA256, #SHA256Context;
+
+var sha256Initial = array(
         0x6a09e667_u,
         0xbb67ae85_u,
         0x3c6ef372_u,
@@ -36,8 +187,8 @@ overload SHA256Context() --> returned:SHA256Context {
         0x1f83d9ab_u,
         0x5be0cd19_u,
     );
-    // returned.buffer does not need to be initialized
-}
+
+overload stateInitial(#SHA256_NAME) = ref sha256Initial;
 
 private var sha256RoundConstants = array(
    0x428a2f98_u, 0x71374491_u, 0xb5c0fbcf_u, 0xe9b5dba5_u,
@@ -58,7 +209,11 @@ private var sha256RoundConstants = array(
    0x90befffa_u, 0xa4506ceb_u, 0xbef9a3f7_u, 0xc67178f2_u,
 );
 
-private sha256Chunk(state: SHA256State, chunk: ChunkWords) {
+private alias SHA256State = State(#SHA256_NAME);
+private alias SHA256BlockBytes = BlockBytes(#SHA256_NAME);
+
+overload processBlock(#SHA256_NAME, state: SHA256State, chunkBytes: SHA256BlockBytes) {
+    ref chunk = Pointer[Array[UInt32, 16]](begin(chunkBytes))^;
     var chunkSpace = Array[UInt32, 64]();
 
     for (toChunkWord, fromChunkWord in zipped(chunkSpace, chunk))
@@ -114,56 +269,22 @@ private sha256Chunk(state: SHA256State, chunk: ChunkWords) {
         stateWord = wrapAdd(stateWord, tempStateWord);
 }
 
-[S when ContiguousSequence?(S) and TypeSize(SequenceElementType(S)) == 1]
-sha256Update(context: SHA256Context, input: S) {
-    var inputBegin = Pointer[Char](begin(input));
-    var inputEnd   = Pointer[Char](end(input));
-    var inputSize  = size(input);
-
-    var left = context.total % 64;
-    var fill = 64 - left;
-
-    context.total +: inputSize;
-
-    if (left > 0 and inputSize >= fill) {
-        copyNonoverlappingMemory(
-            Pointer[Char](@context.buffer) + left,
-            inputBegin,
-            inputBegin + fill);
-        sha256Chunk(context.state, context.buffer.0);
-        inputSize  -: fill;
-        inputBegin +: fill;
-        left        = 0;
-    }
-
-    while (inputSize >= 64) {
-        sha256Chunk(context.state, Pointer[ChunkWords](inputBegin)^);
-        inputSize  -: 64;
-        inputBegin +: 64;
-    }
-
-    if (inputSize >= 0) {
-        copyNonoverlappingMemory(
-            Pointer[Char](@context.buffer) + left,
-            inputBegin,
-            inputBegin + inputSize);
-    }
-}
-
 private var sha256Padding = array(0x80uss, ..replicateValue(0uss, #63));
 
 // finish and return computed SHA-256 sum
 // context cannot be reused after computation
-sha256Finish(context: SHA256Context) --> returned: SHA256 {
+overload digestFinish(context: SHA256Context) --> returned: SHA256 {
     var total = context.total;
 
     var last = total % 64;
     var padn = if (last < 56) 56 - last else 120 - last;
-    sha256Update(context, coordinateRange(begin(sha256Padding), begin(sha256Padding) + padn));
+    digestUpdate(context, coordinateRange(begin(sha256Padding), begin(sha256Padding) + padn));
 
     var msglen = Union[Array[UInt8, 8], UInt64]();
     msglen.1 = hostToNetwork(total * 8);
-    sha256Update(context, msglen.0);
+    digestUpdate(context, msglen.0);
+
+    assert(context.total % 64 == 0);
 
     // FIXME: the SHA2 type should be naturally 4-byte aligned (or more) so
     // we can safely use bitcast here. Need to add support for custom record
@@ -173,10 +294,13 @@ sha256Finish(context: SHA256Context) --> returned: SHA256 {
         returnedWord = hostToNetwork(stateWord);
 }
 
-[S when ContiguousSequence?(S) and TypeSize(SequenceElementType(S)) == 1]
-sha256(message: S) --> returned: SHA256 {
-    var context = SHA256Context();
-    sha256Update(context, message);
-    returned = sha256Finish(context);
+[A, S when Algorithm?(A) and ContiguousSequence?(S) and TypeSize(SequenceElementType(S)) == 1]
+digest(message: S, #A) --> returned: Digest(#A) {
+    var context = DigestContext(#A)();
+    digestUpdate(context, message);
+    returned <-- digestFinish(context);
 }
+
+[S when ContiguousSequence?(S) and TypeSize(SequenceElementType(S)) == 1]
+sha256(message: S) = digest(message, #SHA256_NAME);
 
