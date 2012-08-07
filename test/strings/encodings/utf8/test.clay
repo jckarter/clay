@@ -67,4 +67,12 @@ main() = testMain(
                 Vector[Int](0, 127, 128, 2047, 2048, 65535, 65536, 1114111, 65533),
                 map(Int, ustr));
         }),
+        TestCase("encodeUniChar", test => {
+            var s = String();
+            encodeUniChar(UniChar(0x30), c -> ..push(s, c));
+            expectEqual(test, "1 char", "\x30", s);
+            s = String();
+            encodeUniChar(UniChar(0x044f), c -> ..push(s, c));
+            expectEqual(test, "2 char", "\xd1\x8f", s);
+        }),
     )));
