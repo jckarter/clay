@@ -10,6 +10,7 @@ import printer.platform.(
 );
 import numbers.floats.(nan, nan?);
 import strings.*;
+import strings.encodings.utf8.*;
 import vectors.*;
 import sequences.(interleave);
 import simd.(unpackVec);
@@ -221,6 +222,10 @@ overload printTo(stream, x:T) {
 
 overload printTo(stream, x:Char) {
     write(stream, Pointer[Byte](@x), SizeT(1));
+}
+
+overload printTo(stream, x:UniChar) {
+    encodeUniChar(x, c -> ..printTo(stream, c));
 }
 
 [S when String?(S)]
