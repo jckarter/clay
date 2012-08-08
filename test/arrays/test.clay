@@ -1,0 +1,16 @@
+import test.*;
+
+main() = testMain(
+    TestSuite("arrays", array(
+        TestCase("arrayValues", test => {
+            expectEqual(test, "array 0",
+                [],
+                [..arrayValues(Array[Int, 0]())]);
+            expectEqual(test, "array 1",
+                [true],
+                [..arrayValues(array(true))]);
+            expectEqual(test, "array 2",
+                [4, 5],
+                [..arrayValues(array(4, 5))]);
+        }),
+    )));
