@@ -98,7 +98,7 @@ hexString(forward s:S) = formatter(HexStringFormatter, s);
 
 [T] overload formatTo(stream, f: HexStringFormatter[T], value) {
     for (b in value)
-        printWithSprintf(stream, "%02X", bitcast(UInt8, b));
+        printWithSprintf(stream, "%02x", bitcast(UInt8, b));
 }
 
 
