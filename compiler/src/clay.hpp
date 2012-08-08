@@ -384,19 +384,19 @@ enum ObjectKind {
     INSTANCE,
     OVERLOAD,
     PROCEDURE,
-    ENUMERATION,
+    ENUMERATION,    // -- 20
     ENUM_MEMBER,
     GLOBAL_VARIABLE,
     EXTERNAL_PROCEDURE,
     EXTERNAL_ARG,
-    EXTERNAL_VARIABLE,
+    EXTERNAL_VARIABLE,  // -- 25
     EVAL_TOPLEVEL,
 
     GLOBAL_ALIAS,
 
     IMPORT,
     MODULE_DECLARATION,
-    MODULE_HOLDER,
+    MODULE_HOLDER,  // -- 30
     MODULE,
 
     ENV,
@@ -405,7 +405,7 @@ enum ObjectKind {
 
     TYPE,
 
-    PATTERN,
+    PATTERN,    // -- 35
     MULTI_PATTERN,
 
     VALUE_HOLDER,
@@ -1441,16 +1441,17 @@ struct PatternVar;
 struct Binding : public Statement {
     int bindingKind;
     vector<PatternVar> patternVars;
+    vector<ObjectPtr> patternTypes;
     ExprPtr predicate;
     vector<FormalArgPtr> args;
     FormalArgPtr varg;
     ExprListPtr values;
-    EnvPtr env;
+    bool analyzed;
     Binding(int bindingKind,
         const vector<FormalArgPtr> &args,
         ExprListPtr values)
         : Statement(BINDING), bindingKind(bindingKind),
-          args(args), values(values) {}
+          args(args), values(values), analyzed(false) {}
     Binding(int bindingKind,
         const vector<PatternVar> &patternVars,
         ExprPtr predicate,
@@ -1461,7 +1462,7 @@ struct Binding : public Statement {
           patternVars(patternVars),
           predicate(predicate),
           args(args), varg(varg),
-          values(values) {}
+          values(values), analyzed(false) {}
 };
 
 struct Assignment : public Statement {
@@ -1930,7 +1931,6 @@ struct Overload : public TopLevelItem {
     bool nameIsPattern;
     vector<PatternCellPtr> cells;
     vector<MultiPatternCellPtr> multiCells;
-    EnvPtr patternEnv;
     PatternPtr callablePattern;
     vector<PatternPtr> argPatterns;
     MultiPatternPtr varArgPattern;

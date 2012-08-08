@@ -2280,10 +2280,8 @@ void initializeStaticForClones(StaticForPtr x, unsigned count)
 EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
 {
     LocationContext loc(x->location);
-    llvm::errs() << "analyzeBinding: " << x->args[0]->name << "\n";
         
     switch (x->bindingKind) {
-
     case VAR :
     case REF :
     case FORWARD : {
@@ -2293,13 +2291,6 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
         //     case REF: llvm::errs() << "analyzeBinding:REF " << x->args[0]->name << "\n";
         //                 break;
         //     default: llvm::errs() << "analyzeBinding:FORWARD " << x->args[0]->name << "\n";
-        // }
-
-        // for (llvm::StringMap<ObjectPtr>::const_iterator i = env->entries.begin(), end = env->entries.end();
-        //      i != end;
-        //      ++i)
-        // {
-        //     llvm::errs() << i->first().str() << "\n";
         // }
 
         vector<TypePtr> argsKey;
@@ -2341,13 +2332,13 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
             varArgPattern = evaluateMultiPattern(new ExprList(unpack), patternEnv);
         }
         
-        MultiPValuePtr mpv = analyzeMulti(x->values, patternEnv, x->args.size());
+        MultiPValuePtr mpv = analyzeMulti(x->values, env, x->args.size());
         if (!mpv)
-            return NULL;
+            return NULL; 
 
         // Need to set tempness on bindings
         computeArgsKey(mpv, argsKey, argsTempness);
-        
+
         if (x->varg.ptr()) {
             if (argsKey.size() < x->args.size())
                     arityMismatchError(x->args.size(), argsKey.size());
@@ -2356,6 +2347,8 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
             if (x->args.size() != argsKey.size())
                     arityMismatchError(x->args.size(), argsKey.size());
         }
+
+            
 
         for (unsigned i = 0; i < formalArgs.size(); ++i) {
             FormalArgPtr x = formalArgs[i];
@@ -2375,35 +2368,32 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
                 // matchFailureError(new MatchMultiArgumentError(formalArgs.size(), types, x->varg));
         }
         
-        EnvPtr env2 = new Env(env);
+        EnvPtr staticEnv = new Env(env);
         
         for (unsigned i = 0; i < pvars.size(); ++i) {
             if (pvars[i].isMulti) {
                 MultiStaticPtr ms = derefDeep(multiCells[i].ptr());
                 if (!ms)
                     error(pvars[i].name, "unbound pattern variable");
-                addLocal(env2, pvars[i].name, ms.ptr());
+                addLocal(staticEnv, pvars[i].name, ms.ptr());
+                x->patternTypes.push_back(ms.ptr());
             }
             else {
                 ObjectPtr v = derefDeep(cells[i].ptr());
                 if (!v)
                     error(pvars[i].name, "unbound pattern variable");
-                addLocal(env2, pvars[i].name, v.ptr());
+                addLocal(staticEnv, pvars[i].name, v.ptr());
+                x->patternTypes.push_back(v.ptr());
             }
         }
         
-        if (x->predicate.ptr()) {
-            if (!evaluateBool(x->predicate, env2))
-                assert(false);
-                // return new MatchPredicateError(x->predicate);
-        }
-
-        // EnvPtr env2 = new Env(staticEnv);
+        evaluateToplevelPredicate(x->patternVars, x->predicate, staticEnv);
+        
+        EnvPtr env2 = new Env(staticEnv);
         
         for (unsigned i = 0; i < formalArgs.size(); ++i) {
             FormalArgPtr y = formalArgs[i];
             addLocal(env2, y->name, new PValue(argsKey[i], false));
-            // llvm::errs() << "addLocal: " << y->name << "\n";
         }
         if (x->varg.ptr()) {
             MultiPValuePtr varArgs = new MultiPValue();
@@ -2411,17 +2401,9 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
                 PVData parg(argsKey[i], false);
                 varArgs->values.push_back(parg);
             }
-            // llvm::errs() << "addLocal: " << x->varArgName << "\n";
             addLocal(env2, x->varg->name, varArgs.ptr());
         }
-
-        // for (llvm::StringMap<ObjectPtr>::const_iterator i = env->entries.begin(), end = env->entries.end();
-        //      i != end;
-        //      ++i)
-        // {
-        //     llvm::errs() << i->first().str() << "\n";
-        // }
-
+        x->analyzed = true;
         return env2;
     }
 
