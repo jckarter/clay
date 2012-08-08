@@ -43,6 +43,12 @@ main() = testMain(
                 [..weaveValues(":", ..integers(#8))]
             );
         }),
+        TestCase("reverseValues", test => {
+            expectEqual(test, "reverseValues empty", [], [..reverseValues()]);
+            expectEqual(test, "reverseValues 1", [1], [..reverseValues(1)]);
+            expectEqual(test, "reverseValues 2", [1, "a"], [..reverseValues("a", 1)]);
+            expectEqual(test, "reverseValues 3", [true, 1, "a"], [..reverseValues("a", 1, true)]);
+        }),
         TestCase("foldValues", test => {
             expectEqual(test, "foldValues", 6, foldValues(add, 1, 2, 3));
         }),
