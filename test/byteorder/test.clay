@@ -1,0 +1,29 @@
+import byteorder.*;
+import printer.formatter.*;
+import printer.*;
+import test.*;
+
+[IntType]
+testNetworkToHost(test, #IntType, function) {
+    alias S = #TypeSize(IntType);
+    var digits = array(..mapValues(i -> UInt8(250 - i), ..integers(S)));
+    var digitsReversed = array(..reverseValues(..arrayValues(digits)));
+    var expected = if (LittleEndian?) digitsReversed else digits;
+    expectEqual(test, str(function, " ", IntType),
+        expected,
+        bitcast(Array[UInt8, Int(TypeSize(IntType))], function(Union[IntType, Array[UInt8, Int(TypeSize(IntType))]](digits).0)));
+}
+
+[IntType when not IntegerAvailable?(IntType)]
+overload testNetworkToHost(test, #IntType, function) {
+}
+
+main() = testMain(
+    TestSuite("byteorder", array(
+        TestCase("networkToHost, hostToNetwork", test => {
+            ..for (IntType in UInt8, Int8, UInt16, Int16, UInt32, Int32, UInt64, Int64, UInt128, Int128) {
+                testNetworkToHost(test, IntType, networkToHost);
+                testNetworkToHost(test, IntType, hostToNetwork);
+            }
+        }),
+    )));
