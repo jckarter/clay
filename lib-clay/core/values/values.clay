@@ -1,7 +1,7 @@
 
 
 
-/// @section  eachValue, mapValues, foldValues, weaveValues, 
+/// @section  eachValue, mapValues, foldValues, weaveValues, reverseValues
 
 forceinline eachValue(fn, ..xs) {
     ..for (x in xs) {
@@ -49,6 +49,10 @@ forceinline overload weaveValues(between, forward x, forward y)
     = forward x, between, y;
 forceinline overload weaveValues(between, forward x) = forward x;
 forceinline overload weaveValues(between) = ;
+
+define reverseValues;
+forceinline overload reverseValues() = ;
+forceinline overload reverseValues(forward x, forward ..xs) = forward ..reverseValues(..xs), x;
 
 
 /// @section  countOccurrences, firstValue 
