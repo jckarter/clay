@@ -218,6 +218,12 @@ integerArray(#n) = array(..integers(#n));
 
 
 
+/// @section arrayValues
+[T, n]
+arrayValues(a: Array[T,n]) = ..mapValues(i -> a[i], ..integers(#n));
+
+
+
 /// @section  array assignment 
 
 [T,U,n when not (T == U and BitwiseAssignedType?(T)) and CallDefined?(assign, T, U)]

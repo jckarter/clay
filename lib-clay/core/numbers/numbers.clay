@@ -1,3 +1,4 @@
+import platform.(OSFamily, Unix, CPU, X86_64);
 
 
 /// @section  numeric type predicates 
@@ -20,6 +21,13 @@ overload UnsignedInteger?(#UInt128) = true;
 
 [T] Integer?(#T) = SignedInteger?(T) or UnsignedInteger?(T);
 [A, B] overload Integer?(#A, #B) = Integer?(A) and Integer?(B);
+
+
+/// true iff integer operations work on given type
+[I when Integer?(I)]
+IntegerAvailable?(#I) =
+    // Int128 is available only on x86-64 Unices
+    TypeSize(I) <= TypeSize(Int64) or (CPU == X86_64 and OSFamily == Unix);
 
 
 [T] ByteSizedInteger?(#T) = false;
