@@ -134,7 +134,7 @@ main() = testMain(
         TestCase("hexString", test => {
             expectPrinted(test,
                 "hexString(array(0_uss, 0xFF_uss, 0x0F_uss))",
-                "00FF0F",
+                "00ff0f",
                 hexString(array(0_uss, 0xFF_uss, 0x0F_uss)),
             );
         }),
