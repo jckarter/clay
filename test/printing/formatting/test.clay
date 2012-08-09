@@ -134,9 +134,15 @@ main() = testMain(
         TestCase("hexString", test => {
             expectPrinted(test,
                 "hexString(array(0_uss, 0xFF_uss, 0x0F_uss))",
-                "00FF0F",
+                "00ff0f",
                 hexString(array(0_uss, 0xFF_uss, 0x0F_uss)),
             );
+        }),
+        TestCase("UniChar is printed as sequence of UTF-8 bytes", test => {
+            expectPrinted(test,
+                "UniChar(0x044f)",
+                "\xD1\x8F",
+                UniChar(0x044f));
         }),
     )),
 );

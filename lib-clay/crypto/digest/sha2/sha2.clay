@@ -1,0 +1,450 @@
+import printer.formatter.(hexString);
+import byteorder.*;
+import hash.(hash);
+import printer.(printTo);
+import sequences.lazy.*;
+
+
+
+// generic code
+
+// true iff A is digest algorithm name
+[A]
+private Algorithm?(#A) = #false;
+
+// true iff T is digest output
+[T]
+private Digest?(#T) = false;
+
+// true iff T is digest compute context
+[T]
+private DigestContext?(#T) = false;
+
+// algorithm name by digest or by digest context
+[T when Digest?(T) or DigestContext?(T)]
+private define Algorithm(#T);
+
+
+// hash size in bytes
+[A when Algorithm?(A)]
+private define DigestSize(#A);
+
+// digest internal word
+[A when Algorithm?(A)]
+private define Word(#A);
+
+// number of words in computation state
+[A when Algorithm?(A)]
+private define StateSizeWords(#A): Int;
+
+// algorithm internal state
+[A when Algorithm?(A)]
+private State(#A) = Array[Word(#A), StateSizeWords(#A)];
+
+// initial data for state
+[A when Algorithm?(A)]
+private define stateInitial(#A): State(#A);
+
+// digest update block size in words
+[A when Algorithm?(A)]
+private define BlockSizeWords(#A);
+
+// block size in bytes
+[A when Algorithm?(A)]
+private BlockSizeBytes(#A): Int = Int(BlockSizeWords(#A) * TypeSize(Word(#A)));
+
+// shortcut
+[A when Algorithm?(A)]
+private BlockBytes(#A) = Array[UInt8, BlockSizeBytes(#A)];
+
+// core of the algorithm
+[A, S, B when Algorithm?(A) and S == State(#A) and B == BlockSizeBytes(#A)]
+private define processBlock(#A, state: S, block: Array[UInt8, B]):;
+
+// complete digest computation and return the digest of type Digest(..)
+[C when DigestContext?(C)]
+define digestFinish(c: C);
+
+// make digest output record
+[A when Algorithm?(A)]
+MakeDigest(#A) = recordWithProperties(
+        [
+            [Digest?, #true],
+            [Algorithm, #A],
+        ],
+        // data itself
+        digest: Array[UInt8, DigestSize(#A)]
+    );
+
+// get digest and context by algorith name
+[A when Algorithm?(A)]
+define AlgorithmTypes(#A);
+
+// digest type by algorithm name
+[A when Algorithm?(A)]
+Digest(#A) = nthValue(#0, ..AlgorithmTypes(#A));
+
+// digest context type by algorithm name
+[A when Algorithm?(A)]
+DigestContext(#A) = nthValue(#1, ..AlgorithmTypes(#A));
+
+// make digest context record
+[A when Algorithm?(A)]
+MakeDigestContext(#A) = recordWithProperties(
+        [
+            [DigestContext?, #true],
+            [Algorithm, #A],
+        ],
+        total: UInt64, // in bytes
+        state: State(#A),
+        buffer: Array[UInt8, BlockSizeBytes(#A)],
+    );
+
+// digest context record is initialized with initial algorithm state
+[C when DigestContext?(C)]
+overload C() --> returned:C {
+    returned.total <-- 0ul;
+    returned.state <-- stateInitial(Algorithm(C));
+    // returned.buffer does not need to be initialized
+}
+
+// print digest as hex
+[H when Digest?(H)]
+overload printTo(stream, forward sha:H) {
+    printTo(stream, hexString(sha.digest));
+}
+
+[H when Digest?(H)]
+overload hash(x:H) = bitcast(SizeT, x.digest);
+
+// generic update code
+[C, S when DigestContext?(C) and ContiguousSequence?(S) and TypeSize(SequenceElementType(S)) == 1]
+digestUpdate(context: C, input: S) {
+    alias A = Algorithm(#C);
+
+    var inputBegin = Pointer[Char](begin(input));
+    var inputEnd   = Pointer[Char](end(input));
+    var inputSize  = size(input);
+
+    var left = context.total % BlockSizeBytes(#A);
+    var fill = BlockSizeBytes(#A) - left;
+
+    context.total +: inputSize;
+
+    if (left > 0 and inputSize >= fill) {
+        copyNonoverlappingMemory(
+            Pointer[Char](@context.buffer) + left,
+            inputBegin,
+            inputBegin + fill);
+        processBlock(#A, context.state, context.buffer);
+        inputSize  -: fill;
+        inputBegin +: fill;
+        left        = 0;
+    }
+
+    while (inputSize >= BlockSizeBytes(#A)) {
+        processBlock(#A, context.state, Pointer[BlockBytes(#A)](inputBegin)^);
+        inputSize  -: BlockSizeBytes(#A);
+        inputBegin +: BlockSizeBytes(#A);
+    }
+
+    if (inputSize >= 0) {
+        copyNonoverlappingMemory(
+            Pointer[Char](@context.buffer) + left,
+            inputBegin,
+            inputBegin + inputSize);
+    }
+}
+
+
+
+
+// SHA-256
+
+alias SHA256_NAME = #"SHA-256";
+
+overload Algorithm?(#SHA256_NAME) = true;
+
+overload DigestSize(#SHA256_NAME) = #32;
+
+overload Word(#SHA256_NAME) = UInt32;
+
+overload StateSizeWords(#SHA256_NAME) = 8;
+
+overload BlockSizeWords(#SHA256_NAME) = 16;
+
+record SHA256 = MakeDigest(#SHA256_NAME);
+record SHA256Context = MakeDigestContext(#SHA256_NAME);
+overload AlgorithmTypes(#SHA256_NAME) = #SHA256, #SHA256Context;
+
+var sha256Initial = array(
+        0x6a09e667_u,
+        0xbb67ae85_u,
+        0x3c6ef372_u,
+        0xa54ff53a_u,
+        0x510e527f_u,
+        0x9b05688c_u,
+        0x1f83d9ab_u,
+        0x5be0cd19_u,
+    );
+
+overload stateInitial(#SHA256_NAME) = ref sha256Initial;
+
+private var sha256RoundConstants = array(
+   0x428a2f98_u, 0x71374491_u, 0xb5c0fbcf_u, 0xe9b5dba5_u,
+   0x3956c25b_u, 0x59f111f1_u, 0x923f82a4_u, 0xab1c5ed5_u,
+   0xd807aa98_u, 0x12835b01_u, 0x243185be_u, 0x550c7dc3_u,
+   0x72be5d74_u, 0x80deb1fe_u, 0x9bdc06a7_u, 0xc19bf174_u,
+   0xe49b69c1_u, 0xefbe4786_u, 0x0fc19dc6_u, 0x240ca1cc_u,
+   0x2de92c6f_u, 0x4a7484aa_u, 0x5cb0a9dc_u, 0x76f988da_u,
+   0x983e5152_u, 0xa831c66d_u, 0xb00327c8_u, 0xbf597fc7_u,
+   0xc6e00bf3_u, 0xd5a79147_u, 0x06ca6351_u, 0x14292967_u,
+   0x27b70a85_u, 0x2e1b2138_u, 0x4d2c6dfc_u, 0x53380d13_u,
+   0x650a7354_u, 0x766a0abb_u, 0x81c2c92e_u, 0x92722c85_u,
+   0xa2bfe8a1_u, 0xa81a664b_u, 0xc24b8b70_u, 0xc76c51a3_u,
+   0xd192e819_u, 0xd6990624_u, 0xf40e3585_u, 0x106aa070_u,
+   0x19a4c116_u, 0x1e376c08_u, 0x2748774c_u, 0x34b0bcb5_u,
+   0x391c0cb3_u, 0x4ed8aa4a_u, 0x5b9cca4f_u, 0x682e6ff3_u,
+   0x748f82ee_u, 0x78a5636f_u, 0x84c87814_u, 0x8cc70208_u,
+   0x90befffa_u, 0xa4506ceb_u, 0xbef9a3f7_u, 0xc67178f2_u,
+);
+
+private alias SHA256State = State(#SHA256_NAME);
+private alias SHA256BlockBytes = BlockBytes(#SHA256_NAME);
+
+overload processBlock(#SHA256_NAME, state: SHA256State, chunkBytes: SHA256BlockBytes) {
+    ref chunk = Pointer[Array[UInt32, 16]](begin(chunkBytes))^;
+    var chunkSpace = Array[UInt32, 64]();
+
+    for (toChunkWord, fromChunkWord in zipped(chunkSpace, chunk))
+        toChunkWord = networkToHost(fromChunkWord);
+
+    for (i in range(16, 64)) {
+        var s0 = bitxor(
+            bitror(chunkSpace[i-15],  7),
+            bitror(chunkSpace[i-15], 18),
+            bitshr(chunkSpace[i-15],  3),
+        );
+        var s1 = bitxor(
+            bitror(chunkSpace[i-2], 17),
+            bitror(chunkSpace[i-2], 19),
+            bitshr(chunkSpace[i-2], 10),
+        );
+        chunkSpace[i] = wrapAdd(chunkSpace[i-16], s0, chunkSpace[i-7], s1);
+    }
+
+    var tempState = state;
+    for (roundWord, chunkWord in zipped(sha256RoundConstants, chunkSpace)) {
+        var s0 = bitxor(
+            bitror(tempState[0],  2),
+            bitror(tempState[0], 13),
+            bitror(tempState[0], 22),
+        );
+        var maj = bitxor(
+            bitand(tempState[0], tempState[1]),
+            bitand(tempState[0], tempState[2]),
+            bitand(tempState[1], tempState[2]),
+        );
+        var t2 = wrapAdd(s0, maj);
+        var s1 = bitxor(
+            bitror(tempState[4],  6),
+            bitror(tempState[4], 11),
+            bitror(tempState[4], 25),
+        );
+        var ch = bitxor(
+            bitand (tempState[4], tempState[5]),
+            bitandc(tempState[6], tempState[4]),
+        );
+        var t1 = wrapAdd(tempState[7], s1, ch, roundWord, chunkWord);
+        tempState[7] = tempState[6];
+        tempState[6] = tempState[5];
+        tempState[5] = tempState[4];
+        tempState[4] = wrapAdd(tempState[3], t1);
+        tempState[3] = tempState[2];
+        tempState[2] = tempState[1];
+        tempState[1] = tempState[0];
+        tempState[0] = wrapAdd(t1, t2);
+    }
+    for (stateWord, tempStateWord in zipped(state, tempState))
+        stateWord = wrapAdd(stateWord, tempStateWord);
+}
+
+private var sha256Padding = array(0x80uss, ..replicateValue(0uss, #63));
+
+// finish and return computed SHA-256 sum
+// context cannot be reused after computation
+overload digestFinish(context: SHA256Context) --> returned: SHA256 {
+    var total = context.total;
+
+    var last = total % 64;
+    var padn = if (last < 56) 56 - last else 120 - last;
+    digestUpdate(context, coordinateRange(begin(sha256Padding), begin(sha256Padding) + padn));
+
+    var msglen = Union[Array[UInt8, 8], UInt64]();
+    msglen.1 = hostToNetwork(total * 8);
+    digestUpdate(context, msglen.0);
+
+    assert(context.total % 64 == 0);
+
+    // FIXME: the SHA2 type should be naturally 4-byte aligned (or more) so
+    // we can safely use bitcast here. Need to add support for custom record
+    // alignment.
+    ref returnedWords = Pointer[Array[UInt32, 8]](@returned.digest)^;
+    for (returnedWord, stateWord in zipped(returnedWords, context.state))
+        returnedWord = hostToNetwork(stateWord);
+}
+
+[A, S when Algorithm?(A) and ContiguousSequence?(S) and TypeSize(SequenceElementType(S)) == 1]
+digest(message: S, #A) --> returned: Digest(#A) {
+    var context = DigestContext(#A)();
+    digestUpdate(context, message);
+    returned <-- digestFinish(context);
+}
+
+[S when ContiguousSequence?(S) and TypeSize(SequenceElementType(S)) == 1]
+sha256(message: S) = digest(message, #SHA256_NAME);
+
+
+// SHA-512
+
+alias SHA512_NAME = #"SHA-512";
+
+overload Algorithm?(#SHA512_NAME) = true;
+
+overload DigestSize(#SHA512_NAME) = #64;
+
+overload Word(#SHA512_NAME) = UInt64;
+
+overload StateSizeWords(#SHA512_NAME) = 8;
+
+overload BlockSizeWords(#SHA512_NAME) = 16;
+
+record SHA512 = MakeDigest(#SHA512_NAME);
+record SHA512Context = MakeDigestContext(#SHA512_NAME);
+overload AlgorithmTypes(#SHA512_NAME) = #SHA512, #SHA512Context;
+
+var sha512Initial = array(
+        0x6a09e667f3bcc908_ul,
+        0xbb67ae8584caa73b_ul,
+        0x3c6ef372fe94f82b_ul,
+        0xa54ff53a5f1d36f1_ul,
+        0x510e527fade682d1_ul,
+        0x9b05688c2b3e6c1f_ul,
+        0x1f83d9abfb41bd6b_ul,
+        0x5be0cd19137e2179_ul,
+    );
+
+overload stateInitial(#SHA512_NAME) = ref sha512Initial;
+
+private var sha512RoundConstants = array(
+        0x428A2F98D728AE22_ul, 0x7137449123EF65CD_ul, 0xB5C0FBCFEC4D3B2F_ul, 0xE9B5DBA58189DBBC_ul,
+        0x3956C25BF348B538_ul, 0x59F111F1B605D019_ul, 0x923F82A4AF194F9B_ul, 0xAB1C5ED5DA6D8118_ul,
+        0xD807AA98A3030242_ul, 0x12835B0145706FBE_ul, 0x243185BE4EE4B28C_ul, 0x550C7DC3D5FFB4E2_ul,
+        0x72BE5D74F27B896F_ul, 0x80DEB1FE3B1696B1_ul, 0x9BDC06A725C71235_ul, 0xC19BF174CF692694_ul,
+        0xE49B69C19EF14AD2_ul, 0xEFBE4786384F25E3_ul, 0x0FC19DC68B8CD5B5_ul, 0x240CA1CC77AC9C65_ul,
+        0x2DE92C6F592B0275_ul, 0x4A7484AA6EA6E483_ul, 0x5CB0A9DCBD41FBD4_ul, 0x76F988DA831153B5_ul,
+        0x983E5152EE66DFAB_ul, 0xA831C66D2DB43210_ul, 0xB00327C898FB213F_ul, 0xBF597FC7BEEF0EE4_ul,
+        0xC6E00BF33DA88FC2_ul, 0xD5A79147930AA725_ul, 0x06CA6351E003826F_ul, 0x142929670A0E6E70_ul,
+        0x27B70A8546D22FFC_ul, 0x2E1B21385C26C926_ul, 0x4D2C6DFC5AC42AED_ul, 0x53380D139D95B3DF_ul,
+        0x650A73548BAF63DE_ul, 0x766A0ABB3C77B2A8_ul, 0x81C2C92E47EDAEE6_ul, 0x92722C851482353B_ul,
+        0xA2BFE8A14CF10364_ul, 0xA81A664BBC423001_ul, 0xC24B8B70D0F89791_ul, 0xC76C51A30654BE30_ul,
+        0xD192E819D6EF5218_ul, 0xD69906245565A910_ul, 0xF40E35855771202A_ul, 0x106AA07032BBD1B8_ul,
+        0x19A4C116B8D2D0C8_ul, 0x1E376C085141AB53_ul, 0x2748774CDF8EEB99_ul, 0x34B0BCB5E19B48A8_ul,
+        0x391C0CB3C5C95A63_ul, 0x4ED8AA4AE3418ACB_ul, 0x5B9CCA4F7763E373_ul, 0x682E6FF3D6B2B8A3_ul,
+        0x748F82EE5DEFB2FC_ul, 0x78A5636F43172F60_ul, 0x84C87814A1F0AB72_ul, 0x8CC702081A6439EC_ul,
+        0x90BEFFFA23631E28_ul, 0xA4506CEBDE82BDE9_ul, 0xBEF9A3F7B2C67915_ul, 0xC67178F2E372532B_ul,
+        0xCA273ECEEA26619C_ul, 0xD186B8C721C0C207_ul, 0xEADA7DD6CDE0EB1E_ul, 0xF57D4F7FEE6ED178_ul,
+        0x06F067AA72176FBA_ul, 0x0A637DC5A2C898A6_ul, 0x113F9804BEF90DAE_ul, 0x1B710B35131C471B_ul,
+        0x28DB77F523047D84_ul, 0x32CAAB7B40C72493_ul, 0x3C9EBE0A15C9BEBC_ul, 0x431D67C49C100D4C_ul,
+        0x4CC5D4BECB3E42B6_ul, 0x597F299CFC657E2A_ul, 0x5FCB6FAB3AD6FAEC_ul, 0x6C44198C4A475817_ul,
+    );
+
+private alias SHA512State = State(#SHA512_NAME);
+private alias SHA512BlockBytes = BlockBytes(#SHA512_NAME);
+
+overload processBlock(#SHA512_NAME, state: SHA512State, chunkBytes: SHA512BlockBytes) {
+    ref chunk = Pointer[Array[UInt64, 16]](begin(chunkBytes))^;
+    var chunkSpace = Array[UInt64, 80]();
+
+    for (toChunkWord, fromChunkWord in zipped(chunkSpace, chunk))
+        toChunkWord = networkToHost(fromChunkWord);
+
+    for (i in range(16, 80)) {
+        var s0 = bitxor(
+            bitror(chunkSpace[i-15],  1),
+            bitror(chunkSpace[i-15],  8),
+            bitshr(chunkSpace[i-15],  7),
+        );
+        var s1 = bitxor(
+            bitror(chunkSpace[i-2], 19),
+            bitror(chunkSpace[i-2], 61),
+            bitshr(chunkSpace[i-2],  6),
+        );
+        chunkSpace[i] = wrapAdd(chunkSpace[i-16], s0, chunkSpace[i-7], s1);
+    }
+
+    var tempState = state;
+    for (roundWord, chunkWord in zipped(sha512RoundConstants, chunkSpace)) {
+        var s0 = bitxor(
+            bitror(tempState[0], 28),
+            bitror(tempState[0], 34),
+            bitror(tempState[0], 39),
+        );
+        var maj = bitxor(
+            bitand(tempState[0], tempState[1]),
+            bitand(tempState[0], tempState[2]),
+            bitand(tempState[1], tempState[2]),
+        );
+        var t2 = wrapAdd(s0, maj);
+        var s1 = bitxor(
+            bitror(tempState[4], 14),
+            bitror(tempState[4], 18),
+            bitror(tempState[4], 41),
+        );
+        var ch = bitxor(
+            bitand (tempState[4], tempState[5]),
+            bitandc(tempState[6], tempState[4]),
+        );
+        var t1 = wrapAdd(tempState[7], s1, ch, roundWord, chunkWord);
+        tempState[7] = tempState[6];
+        tempState[6] = tempState[5];
+        tempState[5] = tempState[4];
+        tempState[4] = wrapAdd(tempState[3], t1);
+        tempState[3] = tempState[2];
+        tempState[2] = tempState[1];
+        tempState[1] = tempState[0];
+        tempState[0] = wrapAdd(t1, t2);
+    }
+    for (stateWord, tempStateWord in zipped(state, tempState))
+        stateWord = wrapAdd(stateWord, tempStateWord);
+}
+
+private var sha512Padding = array(0x80uss, ..replicateValue(0uss, #127));
+
+// finish and return computed SHA-512 sum
+// context cannot be reused after computation
+overload digestFinish(context: SHA512Context) --> returned: SHA512 {
+    var total = context.total;
+
+    var last = total % 128;
+    var padn = if (last < 112) 112 - last else 240 - last;
+    digestUpdate(context, coordinateRange(begin(sha512Padding), begin(sha512Padding) + padn));
+
+    var msglen = Union[Array[UInt8, 16], Array[UInt64, 2]]();
+    msglen.1[0] = 0ul;
+    msglen.1[1] = hostToNetwork(total * 8ul);
+    digestUpdate(context, msglen.0);
+
+    assert(context.total % 128 == 0);
+
+    // FIXME: the SHA2 type should be naturally 4-byte aligned (or more) so
+    // we can safely use bitcast here. Need to add support for custom record
+    // alignment.
+    ref returnedWords = Pointer[Array[UInt64, 8]](@returned.digest)^;
+    for (returnedWord, stateWord in zipped(returnedWords, context.state))
+        returnedWord = hostToNetwork(stateWord);
+}
+
+[S when ContiguousSequence?(S) and TypeSize(SequenceElementType(S)) == 1]
+sha512(message: S) = digest(message, #SHA512_NAME);
+

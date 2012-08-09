@@ -1,0 +1,57 @@
+
+/// @section  generic equals?, lesser? 
+
+[A,B when Sequence?(A) and Sequence?(B) and not StringLiteralType?(A,B)]
+overload equals?(a:A, b:B) {
+    var i, j = iterator(a), iterator(b);
+    while (true) {
+        var iv, jv = nextValue(i), nextValue(j);
+        var iv?, jv? = hasValue?(iv), hasValue?(jv);
+        if (iv? != jv?)
+            return false;
+        if (not iv?)
+            return true;
+        if (getValue(iv) != getValue(jv))
+            return false;
+    }
+}
+
+[A,B when SizedSequence?(A) and SizedSequence?(B) and not StringLiteralType?(A,B)]
+overload equals?(a:A, b:B) {
+    if (size(a) != size(b))
+        return false;
+    var i, j = iterator(a), iterator(b);
+    while (true) {
+        var iv, jv = nextValue(i), nextValue(j);
+        if (not hasValue?(iv))
+            return true;
+        if (getValue(iv) != getValue(jv))
+            return false;
+    }
+}
+
+
+[A,B when Sequence?(A) and Sequence?(B)]
+overload lesser?(a:A, b:B) {
+    var i, j = iterator(a), iterator(b);
+    while (true) {
+        var iv, jv = nextValue(i), nextValue(j);
+        var iv?, jv? = hasValue?(iv), hasValue?(jv);
+        if (not iv?)
+            return jv?;
+        if (not jv?)
+            return false;
+
+        forward x, y = getValue(iv), getValue(jv);
+        if (x != y)
+            return x < y;
+    }
+}
+
+
+/// @section  empty? 
+
+[T when SizedSequence?(T)]
+forceinline empty?(a:T) = (size(a) == 0);
+
+

@@ -1819,6 +1819,10 @@ InvokeEntry* analyzeCallable(ObjectPtr x,
     if (!entry || !entry->code->hasBody()) {
         matchFailureError(failures);
     }
+
+    if (entry->parent->shouldLog)
+        matchFailureLog(failures);
+
     if (entry->analyzed)
         return entry;
     if (entry->analyzing) {
@@ -1908,6 +1912,27 @@ MultiPValuePtr analyzeCallByName(InvokeEntry* entry,
 
 static void unifyInterfaceReturns(InvokeEntry* entry)
 {
+    if (entry->parent->callable->objKind == TYPE) {
+        string buf;
+        llvm::raw_string_ostream out(buf);
+        if (entry->returnTypes.size() != 1) {
+            out << "constructor overload for type " << entry->parent->callable
+                << " must return a single value of that type";
+            error(entry->code, out.str());
+        }
+        if (entry->returnIsRef[0]) {
+            out << "constructor overload for type " << entry->parent->callable
+                << " must return by value";
+            error(entry->code, out.str());
+        }
+        if (entry->returnTypes[0].ptr() != entry->parent->callable.ptr()) {
+            out << "constructor overload for type " << entry->parent->callable
+                << " returns type " << entry->returnTypes[0];
+            error(entry->code, out.str());
+        }
+        return;
+    }
+
     if (entry->parent->interface == NULL)
         return;
 
@@ -1936,8 +1961,8 @@ static void unifyInterfaceReturns(InvokeEntry* entry)
             string buf;
             llvm::raw_string_ostream out(buf);
             out << "return value " << i+1 << ": "
-                << "interface declares type " << interfaceReturnTypes[i]
-                << ", but got type " << entry->returnTypes[i] << "\n"
+                << "interface declares return type " << interfaceReturnTypes[i]
+                << ", but overload returns type " << entry->returnTypes[i] << "\n"
                 << "    interface at ";
             printFileLineCol(out, entry->parent->interface->location);
             error(entry->code, out.str());
@@ -1946,7 +1971,7 @@ static void unifyInterfaceReturns(InvokeEntry* entry)
             string buf;
             llvm::raw_string_ostream out(buf);
             out << "return value " << i+1 << ": "
-                << "interface declares return by reference, but got return by value\n"
+                << "interface declares return by reference, but overload returns by value\n"
                 << "    interface at ";
             printFileLineCol(out, entry->parent->interface->location);
             error(entry->code, out.str());

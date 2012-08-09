@@ -1,3 +1,4 @@
+import platform.(OSFamily, Unix, CPU, X86_64);
 
 
 /// @section  numeric type predicates 
@@ -22,6 +23,47 @@ overload UnsignedInteger?(#UInt128) = true;
 [A, B] overload Integer?(#A, #B) = Integer?(A) and Integer?(B);
 
 
+/// true iff integer operations work on given type
+[I when Integer?(I)]
+IntegerAvailable?(#I) =
+    // Int128 is available only on x86-64 Unices
+    TypeSize(I) <= TypeSize(Int64) or (CPU == X86_64 and OSFamily == Unix);
+
+
+/// builtin integer types
+BuiltinIntegerTypes() = Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Int128, UInt128;
+
+
+/// get signed integer type by type size
+[S]
+define SignedIntegerOfSize(#S);
+
+/// get unsigned integer type by type size
+[S]
+define UnsignedIntegerOfSize(#S);
+
+overload SignedIntegerOfSize(#1) = Int8;
+overload SignedIntegerOfSize(#2) = Int16;
+overload SignedIntegerOfSize(#4) = Int32;
+overload SignedIntegerOfSize(#8) = Int64;
+overload SignedIntegerOfSize(#16) = Int128;
+
+overload UnsignedIntegerOfSize(#1) = UInt8;
+overload UnsignedIntegerOfSize(#2) = UInt16;
+overload UnsignedIntegerOfSize(#4) = UInt32;
+overload UnsignedIntegerOfSize(#8) = UInt64;
+overload UnsignedIntegerOfSize(#16) = UInt128;
+
+
+/// for integer type return signed integer of same type
+[I when Integer?(I)]
+SignedInteger(#I) = SignedIntegerOfSize(#Int(TypeSize(I)));
+
+/// for integer type return unsigned integer of same type
+[I when Integer?(I)]
+UnsignedInteger(#I) = UnsignedIntegerOfSize(#Int(TypeSize(I)));
+
+
 [T] ByteSizedInteger?(#T) = false;
 overload ByteSizedInteger?(#Int8) = true;
 overload ByteSizedInteger?(#UInt8) = true;
@@ -32,11 +74,21 @@ overload Float?(#Float64) = true;
 overload Float?(#Float80) = true;
 [A, B] overload Float?(#A, #B) = Float?(A) and Float?(B);
 
+
+/// builtin float types
+BuiltinFloatTypes() = Float32, Float64, Float80;
+
+
 [T] Imaginary?(#T) = false;
 overload Imaginary?(#Imag32) = true;
 overload Imaginary?(#Imag64) = true;
 overload Imaginary?(#Imag80) = true;
 [A, B] overload Imaginary?(#A, #B) = Imaginary?(A) and Imaginary?(B);
+
+
+/// builtin imaginary types
+BuiltinImaginaryTypes() = Imag32, Imag64, Imag80;
+
 
 [T] Numeric?(#T) = Integer?(T) or Float?(T) or Imaginary?(T);
 [A, B] overload Numeric?(#A, #B) = Numeric?(A) and Numeric?(B);
@@ -317,16 +369,16 @@ forceinline overload (-)(a:A) = numericNegate(a);
 
 /// @section  inc, dec 
 
-forceinline overload inc(..a) { eachValue(inc, ..a); }
-forceinline overload dec(..a) { eachValue(dec, ..a); }
+forceinline overload inc(ref ..a) { eachValue(inc, ..a); }
+forceinline overload dec(ref ..a) { eachValue(dec, ..a); }
 
 [A when Numeric?(A)]
-forceinline overload inc(a:A) {
+forceinline overload inc(ref a:A) {
     a +: A(1);
 }
 
 [A when Numeric?(A)]
-forceinline overload dec(a:A) {
+forceinline overload dec(ref a:A) {
     a -: A(1);
 }
 

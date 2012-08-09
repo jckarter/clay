@@ -79,16 +79,6 @@ endif()
 set(BUILD_BINDGEN True CACHE BOOL
     "Build the clay-bindgen tool for generating Clay bindings from C header files.")
 
-if(BUILD_BINDGEN)
-    check_symbol_exists(clang_getTypedefDeclUnderlyingType "clang-c/Index.h" HAS_PATCHED_CLANG)
-    if(HAS_PATCHED_CLANG)
-        set(BUILD_BINDGEN True)
-    else()
-        message("-- libclang is missing, so bindgen will not be built.")
-        set(BUILD_BINDGEN False)
-    endif()
-endif()
-
 install(DIRECTORY doc/ DESTINATION share/doc/clay)
 install(DIRECTORY examples/ DESTINATION share/doc/clay/examples)
 install(DIRECTORY lib-clay DESTINATION lib)

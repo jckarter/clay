@@ -1,0 +1,1 @@
+constructor overload for type Foo must return by value

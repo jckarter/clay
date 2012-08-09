@@ -28,6 +28,8 @@ public import core.cstringrefs.*;
 public import core.errors.*;
 public import core.exceptions.*;
 
+public import core.sequences.*;
+
 public import core.system.*;
 public import core.system.platform.*;
 

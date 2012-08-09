@@ -1,1 +1,1 @@
-interface declares type Float64, but got type Int32
+interface declares return type Float64, but overload returns type Int32

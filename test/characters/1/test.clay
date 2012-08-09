@@ -1,0 +1,55 @@
+import printer.(println);
+import test.*;
+
+main() = testMain(
+    TestSuite("characters", array(
+        TestCase("Char ==", test => {
+            expectTrue( test, "==", 'a' == 'a');
+            expectFalse(test, "==", 'a' == 'b');
+        }),
+        TestCase("Char <", test => {
+            expectTrue( test, "<",      'a' < 'b');
+            expectFalse(test, "< (==)", 'a' < 'a');
+            expectFalse(test, "<",      'b' < 'a');
+        }),
+        TestCase("Char == UniChar", test => {
+            expectTrue( test, "==", 'a' == UniChar('a'));
+            expectFalse(test, "==", 'a' == UniChar('b'));
+        }),
+        TestCase("UniChar == Char", test => {
+            expectTrue( test, "==", UniChar('a') == 'a');
+            expectFalse(test, "==", UniChar('a') == 'b');
+        }),
+        TestCase("Char < UniChar", test => {
+            expectTrue( test, "<",      'a' < UniChar('b'));
+            expectFalse(test, "< (==)", 'a' < UniChar('a'));
+            expectFalse(test, "<",      'b' < UniChar('a'));
+        }),
+        TestCase("UniChar < Char", test => {
+            expectTrue( test, "<",      UniChar('a') < 'b');
+            expectFalse(test, "< (==)", UniChar('a') < 'a');
+            expectFalse(test, "<",      UniChar('b') < 'a');
+        }),
+        TestCase("UniChar ==", test => {
+            expectTrue( test, "==", UniChar('a') == UniChar('a'));
+            expectFalse(test, "==", UniChar('a') == UniChar('b'));
+        }),
+        TestCase("UniChar <", test => {
+            expectTrue( test, "<",      UniChar('a') < UniChar('b'));
+            expectFalse(test, "< (==)", UniChar('a') < UniChar('a'));
+            expectFalse(test, "<",      UniChar('b') < UniChar('a'));
+        }),
+        TestCase("conversion between Char, UniChar and integers", test => {
+            // only successful conversions are tested, because
+            // unsuccessful conversions crash process
+
+            expectEqual(test, "UniChar(Char(10))", UniChar(10), UniChar(Char(10)));
+            expectEqual(test, "Char(UniChar(20))", Char(20), Char(UniChar(20)));
+
+            expectEqual(test, "Char(250u)", Char(-6), Char(250u));
+            expectEqual(test, "Char(-6)", Char(-6), Char(-6));
+            
+            expectEqual(test, "Unichar(30000)", UniChar(30000), UniChar(30000));
+        }),
+    )));
+

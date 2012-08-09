@@ -111,6 +111,23 @@ static void initInvokeTables() {
 // lookupInvokeSet
 //
 
+static bool shouldLogCallable(ObjectPtr callable)
+{
+    ModulePtr m = staticModule(callable);
+    if (!m)
+        return false;
+
+    string name;
+    llvm::raw_string_ostream sout(name);
+    printStaticName(sout, callable);
+    sout.flush();
+
+    pair<string,string> specificKey = make_pair(m->moduleName, name);
+    pair<string,string> moduleGlobKey = make_pair(m->moduleName, string("*"));
+    return logMatchSymbols.find(specificKey) != logMatchSymbols.end()
+        || logMatchSymbols.find(moduleGlobKey) != logMatchSymbols.end();
+}
+
 InvokeSet* lookupInvokeSet(ObjectPtr callable,
                              const vector<TypePtr> &argsKey)
 {
@@ -131,6 +148,8 @@ InvokeSet* lookupInvokeSet(ObjectPtr callable,
     const vector<OverloadPtr> &overloads = callableOverloads(callable);
     InvokeSet* invokeSet = invokeSetAllocator->Allocate();
     new ((void*)invokeSet) InvokeSet(callable, argsKey, interface, overloads);
+    invokeSet->shouldLog = shouldLogCallable(callable);
+
     bucket.push_back(invokeSet);
     return invokeSet;
 }
@@ -151,11 +170,10 @@ MatchSuccessPtr findMatchingInvoke(const vector<OverloadPtr> &overloads,
     while (overloadIndex < overloads.size()) {
         OverloadPtr x = overloads[overloadIndex++];
         MatchResultPtr result = matchInvoke(x, callable, argsKey);
+        failures.failures.push_back(make_pair(x, result));
         if (result->matchCode == MATCH_SUCCESS) {
             MatchSuccess *y = (MatchSuccess *)result.ptr();
             return y;
-        } else {
-            failures.failures.push_back(make_pair(x, result));
         }
     }
     return NULL;
@@ -287,6 +305,7 @@ static InvokeEntry* newInvokeEntry(InvokeSet* parent,
     entry->varArgTypes = match->varArgTypes;
     entry->callByName = match->callByName;
     entry->isInline = match->isInline;
+
     return entry;
 }
 

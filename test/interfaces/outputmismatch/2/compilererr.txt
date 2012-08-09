@@ -1,1 +1,1 @@
-interface declares return by reference, but got return by value
+interface declares return by reference, but overload returns by value
