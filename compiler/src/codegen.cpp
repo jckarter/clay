@@ -4052,8 +4052,8 @@ void codegenCollectLabels(const vector<StatementPtr> &statements,
 EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
 {
     
-    if(!x->analyzed)
-        analyzeBinding(x, env);
+    // if(!x->analyzed)
+    //     analyzeBinding(x, env);
 
     DebugLocationContext loc(x->location, ctx);
 
@@ -4098,7 +4098,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
             CValuePtr cv = mcv->values[i];
             cgPushStackValue(cv, ctx);
             addLocal(env2, x->args[i]->name, cv.ptr());
-            llvm::SmallString<128> buf,tbuf;
+            llvm::SmallString<128> buf;
             llvm::raw_svector_ostream ostr(buf);
             ostr << x->args[i]->name->str << ":" << cv->type;
             cv->llValue->setName(ostr.str());
@@ -4138,18 +4138,9 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
     }
 
     case REF : {
-        // llvm::errs() << "codegenBinding:REF\n";
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
         MultiCValuePtr mcv = new MultiCValue();
-        // llvm::errs() << "codegenBinding:REF 2\n";
-        // for (llvm::StringMap<ObjectPtr>::const_iterator i = env->entries.begin(), end = env->entries.end();
-        //      i != end;
-        //      ++i)
-        // {
-        //     llvm::errs() << i->first().str() << "\n";
-        // }
         for (unsigned i = 0; i < mpv->values.size(); ++i) {
-            // llvm::errs() << "codegenBinding:REF 3\n";
             PVData const &pv = mpv->values[i];
             if (pv.isTemp)
                 argumentError(i, "ref can only bind to an lvalue");
@@ -4183,19 +4174,10 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
         cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
         EnvPtr env2 = new Env(env);
-        // llvm::errs() << "codegenBinding:REF 6\n";
-        // for (llvm::StringMap<ObjectPtr>::const_iterator i = env2->entries.begin(), end = env2->entries.end();
-        //      i != end;
-        //      ++i)
-        // {
-        //     llvm::errs() << i->first().str() << "\n";
-        // }
         for (unsigned i = 0; i < x->args.size(); ++i) {
-            // llvm::errs() << "codegenBinding:REF 7a\n";
             CValuePtr cv = derefValue(mcv->values[i], ctx);
-            cgPushStackValue(cv, ctx);
+            // cgPushStackValue(cv, ctx);
             addLocal(env2, x->args[i]->name, cv.ptr());
-            // llvm::errs() << "codegenBinding:REF 7b\n";
             llvm::SmallString<128> buf;
             llvm::raw_svector_ostream ostr(buf);
             ostr << x->args[i]->name->str << ":" << cv->type;
@@ -4229,21 +4211,11 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
         //         addLocal(env2, ((NameRef *)x->varg->type.ptr())->name, vt.ptr());
         //     }
             
-        // }
-        // llvm::errs() << "codegenBinding:REF 10\n";
-        // for (llvm::StringMap<ObjectPtr>::const_iterator i = env2->entries.begin(), end = env2->entries.end();
-        //      i != end;
-        //      ++i)
-        // {
-        //     llvm::errs() << i->first().str() << "\n";
-        // }
-        
         return env2;
     }
 
     case FORWARD : {
-        // llvm::errs() << "codegenBinding:FORWARD\n";
-
+        
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < mpv->values.size(); ++i) {
@@ -4341,8 +4313,6 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
     }
 
     case ALIAS : {
-        // llvm::errs() << "codegenBinding:ALIAS\n";
-
         ensureArity(x->args, 1);
         ensureArity(x->values->exprs, 1);
         EnvPtr env2 = new Env(env);

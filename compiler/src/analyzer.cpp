@@ -2097,13 +2097,8 @@ StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContex
         return SA_FALLTHROUGH;
     }
 
-    case BINDING : {
-        // llvm::errs() << "analyzeBindingStatement\n";
-        return SA_FALLTHROUGH;
-
-    }
-
     case LABEL :
+    case BINDING :
     case ASSIGNMENT :
     case INIT_ASSIGNMENT :
     case VARIADIC_ASSIGNMENT :
@@ -2393,7 +2388,8 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
         
         for (unsigned i = 0; i < formalArgs.size(); ++i) {
             FormalArgPtr y = formalArgs[i];
-            addLocal(env2, y->name, new PValue(argsKey[i], false));
+            PVData const &pv = mpv->values[i];
+            addLocal(env2, y->name, new PValue(pv.type, false));
         }
         if (x->varg.ptr()) {
             MultiPValuePtr varArgs = new MultiPValue();

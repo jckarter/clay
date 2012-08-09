@@ -20,7 +20,6 @@ printSortedContents(h) {
 
 main() {
     var h = HashMap[Int,Int]();
-
     for (i in range(10))
         h[i*i] = i;
 
@@ -36,7 +35,7 @@ main() {
 
     var hh = HashMap[Int,Int]();
     hh = h;
-
+    
     println();
     printSortedContents(hh);
 
