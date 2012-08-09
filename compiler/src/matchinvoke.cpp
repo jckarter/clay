@@ -2,6 +2,29 @@
 
 namespace clay {
 
+
+void initializePatternEnv(EnvPtr patternEnv, const vector<PatternVar> &pvars, 
+    vector<PatternCellPtr> &cells, vector<MultiPatternCellPtr> &multiCells)
+{
+    
+    for (unsigned i = 0; i < pvars.size(); ++i) {
+        if (pvars[i].isMulti) {
+            MultiPatternCellPtr multiCell = new MultiPatternCell(NULL);
+            multiCells.push_back(multiCell);
+            cells.push_back(NULL);
+            addLocal(patternEnv, pvars[i].name, multiCell.ptr());
+        }
+        else {
+            PatternCellPtr cell = new PatternCell(NULL);
+            cells.push_back(cell);
+            multiCells.push_back(NULL);
+            addLocal(patternEnv, pvars[i].name, cell.ptr());
+        }
+    }
+
+
+}
+
 static void initializePatterns(OverloadPtr x)
 {
     if (x->patternsInitializedState == 1)
@@ -14,21 +37,7 @@ static void initializePatterns(OverloadPtr x)
     CodePtr code = x->code;
     const vector<PatternVar> &pvars = code->patternVars;
     EnvPtr patternEnv = new Env(x->env);
-    for (unsigned i = 0; i < pvars.size(); ++i) {
-        if (pvars[i].isMulti) {
-            MultiPatternCellPtr multiCell = new MultiPatternCell(NULL);
-            x->multiCells.push_back(multiCell);
-            x->cells.push_back(NULL);
-            addLocal(patternEnv, pvars[i].name, multiCell.ptr());
-        }
-        else {
-            PatternCellPtr cell = new PatternCell(NULL);
-            x->cells.push_back(cell);
-            x->multiCells.push_back(NULL);
-            addLocal(patternEnv, pvars[i].name, cell.ptr());
-        }
-    }
-
+    initializePatternEnv(patternEnv, pvars, x->cells, x->multiCells);
     assert(x->target.ptr());
     x->callablePattern = evaluateOnePattern(x->target, patternEnv);
 
@@ -200,6 +209,20 @@ void printMatchError(llvm::raw_ostream &os, MatchResultPtr result)
     case MATCH_PREDICATE_ERROR : {
         MatchPredicateError *e = (MatchPredicateError *)result.ptr();
         os << "predicate \"" << shortString(e->predicateExpr->asString()) << "\" failed";
+        break;
+    }
+    case MATCH_BINDING_ERROR : {
+        MatchBindingError *e = (MatchBindingError *)result.ptr();
+        os << "pattern \"" << shortString(e->arg->type->asString());
+        os << "\" did not match type \"";
+        printStaticName(os, e->type.ptr());
+        os << "\" of binding " << e->argIndex + 1;
+        break;
+    }
+    case MATCH_MULTI_BINDING_ERROR : {
+        MatchMultiBindingError *e = (MatchMultiBindingError *)result.ptr();
+        os << "variadic binding type pattern did not match types of values ";
+        os << "starting at " << e->argIndex + 1;
         break;
     }
     default :

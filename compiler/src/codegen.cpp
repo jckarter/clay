@@ -4052,9 +4052,6 @@ void codegenCollectLabels(const vector<StatementPtr> &statements,
 EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
 {
     
-    // if(!x->analyzed)
-    //     analyzeBinding(x, env);
-
     DebugLocationContext loc(x->location, ctx);
 
     int line, column;
@@ -4102,11 +4099,6 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
             llvm::raw_svector_ostream ostr(buf);
             ostr << x->args[i]->name->str << ":" << cv->type;
             cv->llValue->setName(ostr.str());
-            if(x->args[i]->type != NULL) {
-                TypePtr rt = evaluateType(x->args[i]->type, env2);
-                if (cv->type != rt)
-                    argumentTypeError(i, rt, cv->type);
-            }
         }
             
         // if (x->varArgName.ptr()) {
@@ -4176,21 +4168,12 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->args.size(); ++i) {
             CValuePtr cv = derefValue(mcv->values[i], ctx);
-            // cgPushStackValue(cv, ctx);
             addLocal(env2, x->args[i]->name, cv.ptr());
             llvm::SmallString<128> buf;
             llvm::raw_svector_ostream ostr(buf);
             ostr << x->args[i]->name->str << ":" << cv->type;
             cv->llValue->setName(ostr.str());
-            // if(x->args[i]->type != NULL) {
-            //     llvm::errs() << "codegenBinding:REF 7c\n";
-            //     TypePtr rt = evaluateType(x->args[i]->type, x->env);
-            //     if (cv->type != rt)
-            //         argumentTypeError(i, rt, cv->type);
-            //     else {
-            //         addLocal(env2, ((NameRef *)x->args[i]->type.ptr())->name, cv->type.ptr());
-            //     }
-            // }
+            
         }
         
         // if (x->varArgName.ptr()) {
@@ -4274,14 +4257,6 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
             llvm::raw_svector_ostream ostr(buf);
             ostr << x->args[i]->name->str << ":" << cv->type;
             cv->llValue->setName(ostr.str());
-            // if(x->args[i]->type != NULL) {
-            //     TypePtr rt = evaluateType(x->args[i]->type, x->env);
-            //     if (cv->type != rt)
-            //         argumentTypeError(i, rt, cv->type);
-            //     else {
-            //         addLocal(env2, ((NameRef *)x->args[i]->type.ptr())->name, cv->type.ptr());
-            //     }
-            // }
         }
 
         // if (x->varArgName.ptr()) {

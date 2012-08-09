@@ -322,7 +322,7 @@ bool evaluateBool(ExprPtr expr, EnvPtr env)
     return vh->as<bool>();
 }
 
-void evaluateToplevelPredicate(const vector<PatternVar> &patternVars,
+void evaluatePredicate(const vector<PatternVar> &patternVars,
     ExprPtr predicate, EnvPtr env)
 {
     for (unsigned i = 0; i < patternVars.size(); ++i) {

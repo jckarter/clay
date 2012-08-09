@@ -857,7 +857,7 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
             TypePtr t = staticType(x);
             return new MultiPValue(PVData(t, true));
         }
-        evaluateToplevelPredicate(y->patternVars, y->predicate, y->env);
+        evaluatePredicate(y->patternVars, y->predicate, y->env);
         return analyzeExpr(y->expr, y->env);
     }
 
@@ -1021,7 +1021,7 @@ MultiPValuePtr analyzeGVarInstance(GVarInstancePtr x)
         }
     }
     x->analyzing = true;
-    evaluateToplevelPredicate(x->gvar->patternVars, x->gvar->predicate, x->env);
+    evaluatePredicate(x->gvar->patternVars, x->gvar->predicate, x->env);
     PVData pv = analyzeOne(x->expr, x->env);
     x->analyzing = false;
     if (!pv.ok())
@@ -1495,7 +1495,7 @@ MultiPValuePtr analyzeAliasIndexing(GlobalAliasPtr x,
             varParams->add(params->values[i]);
         addLocal(bodyEnv, x->varParam, varParams.ptr());
     }
-    evaluateToplevelPredicate(x->patternVars, x->predicate, bodyEnv);
+    evaluatePredicate(x->patternVars, x->predicate, bodyEnv);
     AnalysisCachingDisabler disabler;
     return analyzeExpr(x->expr, bodyEnv);
 }
@@ -2030,7 +2030,6 @@ StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContex
 static StatementAnalysis analyzeBlockStatement(StatementPtr stmt, EnvPtr &env, AnalysisContext* ctx)
 {
     if (stmt->stmtKind == BINDING) {
-        // llvm::errs() << "analyzeBindinginBlock\n";
         env = analyzeBinding((Binding *)stmt.ptr(), env);
         if (!env) {
             ctx->hasRecursivePropagation = true;
@@ -2059,7 +2058,6 @@ static EnvPtr analyzeStatementExpressionStatements(vector<StatementPtr> const &s
     {
         switch ((*i)->stmtKind) {
         case BINDING:
-            // llvm::errs() << "analyzeStatementExprBindingStatement\n";
             env2 = analyzeBinding((Binding*)i->ptr(), env2);
             if (env2 == NULL)
                 return NULL;
@@ -2280,91 +2278,52 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
     case VAR :
     case REF :
     case FORWARD : {
-        // switch(x->bindingKind){
-        //     case VAR: llvm::errs() << "analyzeBinding:VAR " << x->args[0]->name << "\n";
-        //                 break;
-        //     case REF: llvm::errs() << "analyzeBinding:REF " << x->args[0]->name << "\n";
-        //                 break;
-        //     default: llvm::errs() << "analyzeBinding:FORWARD " << x->args[0]->name << "\n";
-        // }
 
-        vector<TypePtr> argsKey;
-        vector<ValueTempness> argsTempness;
+        vector<TypePtr> key;
         vector<PatternCellPtr> cells;
         vector<MultiPatternCellPtr> multiCells;
-        vector<PatternPtr> argPatterns;
-        MultiPatternPtr varArgPattern;
-        
-        const vector<PatternVar> &pvars = x->patternVars;
-        EnvPtr patternEnv = new Env(env);
-        for (unsigned i = 0; i < pvars.size(); ++i) {
-            if (pvars[i].isMulti) {
-                MultiPatternCellPtr multiCell = new MultiPatternCell(NULL);
-                multiCells.push_back(multiCell);
-                cells.push_back(NULL);
-                addLocal(patternEnv, pvars[i].name, multiCell.ptr());
-            }
-            else {
-                PatternCellPtr cell = new PatternCell(NULL);
-                cells.push_back(cell);
-                multiCells.push_back(NULL);
-                addLocal(patternEnv, pvars[i].name, cell.ptr());
-            }
-        }
-
-        const vector<FormalArgPtr> &formalArgs = x->args;
-        for (unsigned i = 0; i < formalArgs.size(); ++i) {
-            FormalArgPtr y = formalArgs[i];
-            PatternPtr pattern;
-            if (y->type.ptr())
-                pattern = evaluateOnePattern(y->type, patternEnv);
-            argPatterns.push_back(pattern);
-        }
-
-        if (x->varg.ptr() && x->varg->type.ptr()) {
-            ExprPtr unpack = new Unpack(x->varg->type.ptr());
-            unpack->location = x->varg->type->location;
-            varArgPattern = evaluateMultiPattern(new ExprList(unpack), patternEnv);
-        }
         
         MultiPValuePtr mpv = analyzeMulti(x->values, env, x->args.size());
         if (!mpv)
             return NULL; 
 
-        // Need to set tempness on bindings
-        computeArgsKey(mpv, argsKey, argsTempness);
+        for (unsigned i = 0; i < mpv->size(); ++i) {
+            PVData const &pv = mpv->values[i];
+            key.push_back(pv.type);
+        }
 
         if (x->varg.ptr()) {
-            if (argsKey.size() < x->args.size())
-                    arityMismatchError(x->args.size(), argsKey.size());
+            if (key.size() < x->args.size())
+                    arityMismatchError(x->args.size(), key.size());
         }
         else {
-            if (x->args.size() != argsKey.size())
-                    arityMismatchError(x->args.size(), argsKey.size());
+            if (x->args.size() != key.size())
+                    arityMismatchError(x->args.size(), key.size());
         }
 
-            
-
+        const vector<PatternVar> &pvars = x->patternVars;
+        EnvPtr patternEnv = new Env(env);
+        initializePatternEnv(patternEnv, pvars, cells, multiCells);
+        
+        const vector<FormalArgPtr> &formalArgs = x->args;
         for (unsigned i = 0; i < formalArgs.size(); ++i) {
-            FormalArgPtr x = formalArgs[i];
-            if (x->type.ptr()) {
-                PatternPtr pattern = argPatterns[i];
-                if (!unifyPatternObj(pattern, argsKey[i].ptr()))
-                    assert(false);
-                    // matchFailureError(new MatchArgumentError(i, argsKey[i], x));
-            }
+            FormalArgPtr y = formalArgs[i];
+            if (y->type.ptr())
+                if (!unifyPatternObj(evaluateOnePattern(y->type, patternEnv), key[i].ptr()))
+                    matchBindingError(new MatchBindingError(i, key[i], y));
         }
+
         if (x->varg.ptr() && x->varg->type.ptr()) {
+            ExprPtr unpack = new Unpack(x->varg->type.ptr());
+            unpack->location = x->varg->type->location;
             MultiStaticPtr types = new MultiStatic();
-            for (unsigned i = formalArgs.size(); i < argsKey.size(); ++i)
-                types->add(argsKey[i].ptr());
-            if (!unifyMulti(varArgPattern, types))
-                assert(false);
-                // matchFailureError(new MatchMultiArgumentError(formalArgs.size(), types, x->varg));
+            for (unsigned i = formalArgs.size(); i < key.size(); ++i)
+                types->add(key[i].ptr());
+            if (!unifyMulti(evaluateMultiPattern(new ExprList(unpack), patternEnv), types))
+                matchBindingError(new MatchMultiBindingError(formalArgs.size(), types, x->varg));
         }
-        
+              
         EnvPtr staticEnv = new Env(env);
-        
         for (unsigned i = 0; i < pvars.size(); ++i) {
             if (pvars[i].isMulti) {
                 MultiStaticPtr ms = derefDeep(multiCells[i].ptr());
@@ -2382,24 +2341,22 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
             }
         }
         
-        evaluateToplevelPredicate(x->patternVars, x->predicate, staticEnv);
+        evaluatePredicate(x->patternVars, x->predicate, staticEnv);   
         
         EnvPtr env2 = new Env(staticEnv);
-        
         for (unsigned i = 0; i < formalArgs.size(); ++i) {
             FormalArgPtr y = formalArgs[i];
-            PVData const &pv = mpv->values[i];
-            addLocal(env2, y->name, new PValue(pv.type, false));
+            addLocal(env2, y->name, new PValue(key[i], false));
         }
         if (x->varg.ptr()) {
             MultiPValuePtr varArgs = new MultiPValue();
-            for (unsigned i = formalArgs.size(); i < argsKey.size(); ++i) {
-                PVData parg(argsKey[i], false);
+            for (unsigned i = formalArgs.size(); i < key.size(); ++i) {
+                PVData parg(key[i], false);
                 varArgs->values.push_back(parg);
             }
             addLocal(env2, x->varg->name, varArgs.ptr());
         }
-        x->analyzed = true;
+        
         return env2;
     }
 
