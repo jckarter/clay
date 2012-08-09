@@ -4100,32 +4100,17 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
             ostr << x->args[i]->name->str << ":" << cv->type;
             cv->llValue->setName(ostr.str());
         }
-            
-        // if (x->varArgName.ptr()) {
-        //     unsigned nFixed = x->fixedArgTypes.size();
-        //     MultiCValuePtr varArgs = new MultiCValue();
-        //     for (unsigned i = 0; i < x->varArgTypes.size(); ++i) {
-        //         CValuePtr cv = mcv->values[nFixed + i];
-        //         cgPushStackValue(cv, ctx);
-        //         varArgs->add(cv);
-        //     }
-        //     addLocal(env2, x->varArgName, varArgs.ptr());
-        //     if(x->varg->type != NULL) {
-        //         MultiStaticPtr vt = new MultiStatic();
-        //         for (unsigned i = 0; i < x->varArgTypes.size(); ++i) {
-        //             vt->add(x->varArgTypes[i].ptr());
-        //         }
-        //         addLocal(env2, ((NameRef *)x->varg->type.ptr())->name, vt.ptr());
-        //     }  
-        // }
-        // llvm::errs() << "codegenBinding:VAR 9\n";
-        // for (llvm::StringMap<ObjectPtr>::const_iterator i = env2->entries.begin(), end = env2->entries.end();
-        //      i != end;
-        //      ++i)
-        // {
-        //     llvm::errs() << i->first().str() << "\n";
-        // }
-        
+        if (x->varg.ptr()) {
+            unsigned nFixed = x->args.size();
+            MultiCValuePtr varArgs = new MultiCValue();
+            for (unsigned i = nFixed; i < mcv->values.size(); ++i) {
+                CValuePtr cv = mcv->values[i];
+                cgPushStackValue(cv, ctx);
+                varArgs->add(cv);
+            }
+            addLocal(env2, x->varg->name, varArgs.ptr());  
+        }
+
         return env2;
     }
 
@@ -4166,6 +4151,8 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
         cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
         EnvPtr env2 = new Env(env);
+        for (unsigned i = 0; i < x->patternVars.size(); ++i)
+            addLocal(env2, x->patternVars[i].name, x->patternTypes[i]);
         for (unsigned i = 0; i < x->args.size(); ++i) {
             CValuePtr cv = derefValue(mcv->values[i], ctx);
             addLocal(env2, x->args[i]->name, cv.ptr());
@@ -4176,23 +4163,15 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
             
         }
         
-        // if (x->varArgName.ptr()) {
-        //     llvm::errs() << "codegenBinding:REF 8\n";
-        //     unsigned nFixed = x->fixedArgTypes.size();
-        //     MultiCValuePtr varArgs = new MultiCValue();
-        //     for (unsigned i = 0; i < x->varArgTypes.size(); ++i) {
-        //         CValuePtr cv = derefValue(mcv->values[nFixed + i], ctx);
-        //         cgPushStackValue(cv, ctx);
-        //         varArgs->add(cv);
-        //     }
-        //     addLocal(env2, x->varArgName, varArgs.ptr());
-        //     if(x->varg->type != NULL) {
-        //         MultiStaticPtr vt = new MultiStatic();
-        //         for (unsigned i = 0; i < x->varArgTypes.size(); ++i) {
-        //             vt->add(x->varArgTypes[i].ptr());
-        //         }
-        //         addLocal(env2, ((NameRef *)x->varg->type.ptr())->name, vt.ptr());
-        //     }
+        if (x->varg.ptr()) {
+            unsigned nFixed = x->args.size();
+            MultiCValuePtr varArgs = new MultiCValue();
+            for (unsigned i = nFixed; i < mcv->values.size(); ++i) {
+                CValuePtr cv = derefValue(mcv->values[i], ctx);
+                varArgs->add(cv);
+            }
+            addLocal(env2, x->varg->name, varArgs.ptr());  
+        }
             
         return env2;
     }
@@ -4242,6 +4221,8 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
         cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
         EnvPtr env2 = new Env(env);
+        for (unsigned i = 0; i < x->patternVars.size(); ++i)
+            addLocal(env2, x->patternVars[i].name, x->patternTypes[i]);
         for (unsigned i = 0; i < x->args.size(); ++i) {
             CValuePtr rcv, cv;
             rcv = mcv->values[i];
@@ -4258,32 +4239,23 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
             ostr << x->args[i]->name->str << ":" << cv->type;
             cv->llValue->setName(ostr.str());
         }
-
-        // if (x->varArgName.ptr()) {
-        //     unsigned nFixed = x->fixedArgTypes.size();
-        //     MultiCValuePtr varArgs = new MultiCValue();
-        //     for (unsigned i = 0; i < x->varArgTypes.size(); ++i) {
-        //         CValuePtr rcv, cv;
-        //         rcv = mcv->values[nFixed + i];
-        //         if (mpv->values[nFixed + i].isTemp) {
-        //             cv = rcv;
-        //             cgPushStackValue(cv, ctx);
-        //         }
-        //         else {
-        //             cv = derefValue(rcv, ctx);
-        //         }
-        //         varArgs->add(cv);
-        //     }
-        //     addLocal(env2, x->varArgName, varArgs.ptr());
-        //     if(x->varg->type != NULL) {
-        //         MultiStaticPtr vt = new MultiStatic();
-        //         for (unsigned i = 0; i < x->varArgTypes.size(); ++i) {
-        //             vt->add(x->varArgTypes[i].ptr());
-        //         }
-        //         addLocal(env2, ((NameRef *)x->varg->type.ptr())->name, vt.ptr());
-        //     }
-            
-        // }
+        if (x->varg.ptr()) {
+            unsigned nFixed = x->args.size();
+            MultiCValuePtr varArgs = new MultiCValue();
+            for (unsigned i = nFixed; i < mcv->values.size(); ++i) {
+                CValuePtr rcv, cv;
+                rcv = mcv->values[i];
+                if (mpv->values[i].isTemp) {
+                    cv = rcv;
+                    cgPushStackValue(cv, ctx);
+                }
+                else {
+                    cv = derefValue(rcv, ctx);
+                }
+                varArgs->add(cv);
+            }
+            addLocal(env2, x->varg->name, varArgs.ptr());  
+        }
         return env2;
     }
 
