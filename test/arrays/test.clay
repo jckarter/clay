@@ -2,15 +2,15 @@ import test.*;
 
 main() = testMain(
     TestSuite("arrays", array(
-        TestCase("arrayValues", test => {
+        TestCase("arrayElements", test => {
             expectEqual(test, "array 0",
                 [],
-                [..arrayValues(Array[Int, 0]())]);
+                [..arrayElements(Array[Int, 0]())]);
             expectEqual(test, "array 1",
                 [true],
-                [..arrayValues(array(true))]);
+                [..arrayElements(array(true))]);
             expectEqual(test, "array 2",
                 [4, 5],
-                [..arrayValues(array(4, 5))]);
+                [..arrayElements(array(4, 5))]);
         }),
     )));

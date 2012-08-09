@@ -7,7 +7,7 @@ import test.*;
 testNetworkToHost(test, #IntType, function) {
     alias S = #TypeSize(IntType);
     var digits = array(..mapValues(i -> UInt8(250 - i), ..integers(S)));
-    var digitsReversed = array(..reverseValues(..arrayValues(digits)));
+    var digitsReversed = array(..reverseValues(..arrayElements(digits)));
     var expected = if (LittleEndian?) digitsReversed else digits;
     expectEqual(test, str(function, " ", IntType),
         expected,
