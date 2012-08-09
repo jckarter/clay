@@ -4110,7 +4110,6 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
             }
             addLocal(env2, x->varg->name, varArgs.ptr());  
         }
-
         return env2;
     }
 
@@ -4162,7 +4161,6 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
             cv->llValue->setName(ostr.str());
             
         }
-        
         if (x->varg.ptr()) {
             unsigned nFixed = x->args.size();
             MultiCValuePtr varArgs = new MultiCValue();
@@ -4172,7 +4170,6 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
             }
             addLocal(env2, x->varg->name, varArgs.ptr());  
         }
-            
         return env2;
     }
 
