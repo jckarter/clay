@@ -1094,7 +1094,8 @@ static bool localBinding(StatementPtr &x) {
     ExprListPtr z;
     if (!expressionList(z)) return false;
     if (!symbol(";")) return false;
-    x = new Binding(bk, patternVars, predicate, args, varg, z);
+    vector<ObjectPtr> patternTypes;
+    x = new Binding(bk, patternVars, patternTypes, predicate, args, varg, z);
     x->location = location;
     return true;
 }

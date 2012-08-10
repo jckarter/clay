@@ -2428,7 +2428,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
             unsigned nFixed = x->args.size();
             MultiEValuePtr varArgs = new MultiEValue();
             for (unsigned i = nFixed; i < mev->values.size(); ++i) {
-                EValuePtr ev = derefValue(mev->values[i], ctx);
+                EValuePtr ev = derefValue(mev->values[i]);
                 varArgs->add(ev);
             }
             addLocal(env2, x->varg->name, varArgs.ptr());  
@@ -2465,11 +2465,11 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
             for (unsigned i = nFixed; i < mev->values.size(); ++i) {
                 EValuePtr rev, ev;
                 rev = mev->values[i];
-                if (mev->values[i].isTemp) {
+                if (mpv->values[i].isTemp) {
                     ev = rev;
                 }
                 else {
-                    ev = derefValue(rev, ctx);
+                    ev = derefValue(rev);
                 }
                 varArgs->add(ev);
             }

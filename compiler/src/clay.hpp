@@ -1455,6 +1455,7 @@ struct Binding : public Statement {
           args(args), values(values) {}
     Binding(int bindingKind,
         const vector<PatternVar> &patternVars,
+        const vector<ObjectPtr> &patternTypes,
         ExprPtr predicate,
         const vector<FormalArgPtr> &args,
         FormalArgPtr varg, 
