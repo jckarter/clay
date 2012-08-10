@@ -38,7 +38,6 @@ testSeparatedListNotEmpty(test, #strict, #opt) {
     } else {
         expectEqual(test, "checking not strict", String("xy"), String(input));
     }
-
 }
 
 [strict, opt]

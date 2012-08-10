@@ -875,7 +875,6 @@ int main2(int argc, char **argv, char const* const* envp) {
     else
         m = loadProgram(clayFile, NULL);
     loadTimer.stop();
-    
     compileTimer.start();
     codegenEntryPoints(m, codegenExternals);
     compileTimer.stop();
