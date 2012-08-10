@@ -29,11 +29,8 @@ overload makeSeparatedListParser(#true, #true) {
 testSeparatedListNotEmpty(test, #strict, #opt) {
     var p = makeSeparatedListParser(#strict, #opt);
     var s = String("1.12.xy");
-    println("blah1");
     var input = iterator(s);
-    println("blah2");
     var r = require(p(input));
-    println("blah3");
     var expected = Vector[Int](1, 12);
     expectEqual(test, "parsed", expected, r);
     if (strict) {
