@@ -31,12 +31,11 @@ bool _objectValueEquals(ObjectPtr a, ObjectPtr b)
     // at this point pointer identity should already have been checked by objectEquals
 
     int aKind = a->objKind, bKind = b->objKind;
-    if (aKind != bKind){
+    if (aKind != bKind)
         return false;
-    }
     
     switch (aKind) {
-
+        
     case IDENTIFIER : {
         Identifier *a1 = (Identifier *)a.ptr();
         Identifier *b1 = (Identifier *)b.ptr();

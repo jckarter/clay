@@ -2452,7 +2452,7 @@ void codegenCallCode(InvokeEntry* entry,
                      CodegenContext* ctx,
                      MultiCValuePtr out)
 {
-    if (inlineEnabled() && entry->isInline && !entry->code->isLLVMBody()) {
+    if (inlineEnabled() && entry->isInline==FORCE_INLINE && !entry->code->isLLVMBody()) {
         codegenCallInline(entry, args, ctx, out);
         return;
     }
@@ -2714,7 +2714,7 @@ void codegenLLVMBody(InvokeEntry* entry, llvm::StringRef callableName)
     }
 
     out << ") ";
-    if (entry->isInline)
+    if (entry->isInline==FORCE_INLINE)
         out << "alwaysinline ";
 
     string body;
@@ -2847,6 +2847,18 @@ void codegenCodeBody(InvokeEntry* entry)
                                llvm::Function::InternalLinkage,
                                llvmFuncName,
                                llvmModule);
+
+    switch(entry->isInline){
+    case INLINE : 
+        if(inlineEnabled())
+        llFunc->addFnAttr(llvm::Attribute::InlineHint);
+        break;
+    case NEVER_INLINE :
+        llFunc->addFnAttr(llvm::Attribute::NoInline);
+        break;
+    default:
+        break;
+    }
 
     for (unsigned i = 1; i <= llArgTypes.size(); ++i) {
         llFunc->addAttribute(i, llvm::Attribute::NoAlias);
@@ -3220,7 +3232,7 @@ void codegenCallInline(InvokeEntry* entry,
                        CodegenContext* ctx,
                        MultiCValuePtr out)
 {
-    assert(entry->isInline);
+    assert(entry->isInline==FORCE_INLINE);
     assert(ctx->inlineDepth >= 0);
     if (entry->code->isLLVMBody())
         error(entry->code, "llvm procedures cannot be inlined");

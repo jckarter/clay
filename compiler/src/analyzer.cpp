@@ -463,7 +463,6 @@ MultiPValuePtr analyzeMulti(ExprListPtr exprs, EnvPtr env, unsigned wantCount)
 
 static MultiPValuePtr analyzeMulti2(ExprListPtr exprs, EnvPtr env, unsigned wantCount)
 {
-    // llvm::errs() << "analyzeMulti2\n";
     MultiPValuePtr out = new MultiPValue();
     ExprPtr unpackExpr = implicitUnpackExpr(wantCount, exprs);
     if (unpackExpr != NULL) {
@@ -611,7 +610,6 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env);
 
 MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env)
 {
-    // llvm::errs() << "analyzeExpr\n";
     if (analysisCachingDisabled > 0)
         return analyzeExpr2(expr, env);
     if (!expr->cachedAnalysis)
@@ -622,7 +620,6 @@ MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env)
 static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
 {
     LocationContext loc(expr->location);
-    // llvm::errs() << "analyzeExpr2, " << expr->exprKind << "\n";
     switch (expr->exprKind) {
 
     case BOOL_LITERAL : {

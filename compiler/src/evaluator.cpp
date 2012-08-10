@@ -2378,7 +2378,6 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
     switch (x->bindingKind) {
 
     case VAR : {
-        // llvm::errs() << "evalBinding: VAR\n";
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < x->args.size(); ++i) {
@@ -2389,39 +2388,24 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
         evalMultiInto(x->values, env, mev, x->args.size());
         evalDestroyAndPopStack(marker);
         EnvPtr env2 = new Env(env);
+        for (unsigned i = 0; i < x->patternVars.size(); ++i)
+            addLocal(env2, x->patternVars[i].name, x->patternTypes[i]);
         for (unsigned i = 0; i < x->args.size(); ++i) {
             addLocal(env2, x->args[i]->name, mev->values[i].ptr());
-            // if(x->args[i]->type != NULL) {
-            //     TypePtr rt = evaluateType(x->args[i]->type, x->env);
-            //     if (mev->values[i]->type != rt)
-            //         argumentTypeError(i, rt, mev->values[i]->type);
-            //     else {
-            //         addLocal(env2, ((NameRef *)x->args[i]->type.ptr())->name, mev->values[i]->type.ptr());
-            //     }
-            // }
         }
-
-        // if (x->varArgName.ptr()) {
-        //     unsigned nFixed = x->fixedArgTypes.size();
-        //     MultiEValuePtr varArgs = new MultiEValue();
-        //     for (unsigned i = 0; i < x->varArgTypes.size(); ++i) {
-        //         varArgs->add(mev->values[nFixed + i]);
-        //     }
-        //     addLocal(env2, x->varArgName, varArgs.ptr());
-        //     if(x->varg->type != NULL) {
-        //         MultiStaticPtr vt = new MultiStatic();
-        //         for (unsigned i = 0; i < x->varArgTypes.size(); ++i) {
-        //             vt->add(x->varArgTypes[i].ptr());
-        //         }
-        //         addLocal(env2, ((NameRef *)x->varg->type.ptr())->name, vt.ptr());
-        //     }  
-        // }
+        if (x->varg.ptr()) {
+            unsigned nFixed = x->args.size();
+            MultiEValuePtr varArgs = new MultiEValue();
+            for (unsigned i = nFixed; i < mev->values.size(); ++i) {
+                EValuePtr ev = mev->values[i];
+                varArgs->add(ev);
+            }
+            addLocal(env2, x->varg->name, varArgs.ptr());  
+        }
         return env2;
     }
 
     case REF : {
-        // llvm::errs() << "evalBinding:REF\n";
-    
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < x->args.size(); ++i) {
@@ -2435,40 +2419,25 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
         evalMulti(x->values, env, mev, x->args.size());
         evalDestroyAndPopStack(marker);
         EnvPtr env2 = new Env(env);
+        for (unsigned i = 0; i < x->patternVars.size(); ++i)
+            addLocal(env2, x->patternVars[i].name, x->patternTypes[i]);
         for (unsigned i = 0; i < x->args.size(); ++i) {
             EValuePtr evPtr = mev->values[i];
             addLocal(env2, x->args[i]->name, derefValue(evPtr).ptr());
-            // if(x->args[i]->type != NULL) {
-            //     TypePtr rt = evaluateType(x->args[i]->type, x->env);
-            //     if (mev->values[i]->type != rt)
-            //         argumentTypeError(i, rt, mev->values[i]->type);
-            //     else {
-            //         addLocal(env2, ((NameRef *)x->args[i]->type.ptr())->name, mev->values[i]->type.ptr());
-            //     }
-            // }
         }
-        // if (x->varArgName.ptr()) {
-        //     unsigned nFixed = x->fixedArgTypes.size();
-        //     MultiEValuePtr varArgs = new MultiEValue();
-        //     for (unsigned i = 0; i < x->varArgTypes.size(); ++i) {
-        //         EValuePtr evPtr = mev->values[nFixed + i];
-        //         varArgs->add(derefValue(evPtr));
-        //     }
-        //     addLocal(env2, x->varArgName, varArgs.ptr());
-        //     if(x->varg->type != NULL) {
-        //         MultiStaticPtr vt = new MultiStatic();
-        //         for (unsigned i = 0; i < x->varArgTypes.size(); ++i) {
-        //             vt->add(x->varArgTypes[i].ptr());
-        //         }
-        //         addLocal(env2, ((NameRef *)x->varg->type.ptr())->name, vt.ptr());
-        //     }  
-        // }
+        if (x->varg.ptr()) {
+            unsigned nFixed = x->args.size();
+            MultiEValuePtr varArgs = new MultiEValue();
+            for (unsigned i = nFixed; i < mev->values.size(); ++i) {
+                EValuePtr ev = derefValue(mev->values[i]);
+                varArgs->add(ev);
+            }
+            addLocal(env2, x->varg->name, varArgs.ptr());  
+        }
         return env2;
     }
 
     case FORWARD : {
-        // llvm::errs() << "evalBinding:FORWARD\n";
-    
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < x->args.size(); ++i) {
@@ -2479,6 +2448,8 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
         evalMulti(x->values, env, mev, x->args.size());
         evalDestroyAndPopStack(marker);
         EnvPtr env2 = new Env(env);
+        for (unsigned i = 0; i < x->patternVars.size(); ++i)
+            addLocal(env2, x->patternVars[i].name, x->patternTypes[i]);
         for (unsigned i = 0; i < x->args.size(); ++i) {
             if (mpv->values[i].isTemp) {
                 EValuePtr ev = mev->values[i];
@@ -2488,43 +2459,27 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
                 EValuePtr evPtr = mev->values[i];
                 addLocal(env2, x->args[i]->name, derefValue(evPtr).ptr());
             }
-            // if(x->args[i]->type != NULL) {
-            //     TypePtr rt = evaluateType(x->args[i]->type, x->env);
-            //     if (mev->values[i]->type != rt)
-            //         argumentTypeError(i, rt, mev->values[i]->type);
-            //     else {
-            //         addLocal(env2, ((NameRef *)x->args[i]->type.ptr())->name, mev->values[i]->type.ptr());
-            //     }
-            // }
         }
-        // if (x->varArgName.ptr()) {
-        //     unsigned nFixed = x->fixedArgTypes.size();
-        //     MultiEValuePtr varArgs = new MultiEValue();
-        //     for (unsigned i = 0; i < x->varArgTypes.size(); ++i) {
-        //         if (mpv->values[nFixed + i].isTemp) {
-        //             EValuePtr ev = mev->values[nFixed + i];
-        //             varArgs->add(ev);
-        //         }
-        //         else {
-        //             EValuePtr evPtr = mev->values[nFixed + i];
-        //             varArgs->add(derefValue(evPtr));
-        //         }
-        //     }
-        //     addLocal(env2, x->varArgName, varArgs.ptr());
-        //     if(x->varg->type != NULL) {
-        //         MultiStaticPtr vt = new MultiStatic();
-        //         for (unsigned i = 0; i < x->varArgTypes.size(); ++i) {
-        //             vt->add(x->varArgTypes[i].ptr());
-        //         }
-        //         addLocal(env2, ((NameRef *)x->varg->type.ptr())->name, vt.ptr());
-        //     }  
-        // }
+        if (x->varg.ptr()) {
+            unsigned nFixed = x->args.size();
+            MultiEValuePtr varArgs = new MultiEValue();
+            for (unsigned i = nFixed; i < mev->values.size(); ++i) {
+                EValuePtr rev, ev;
+                rev = mev->values[i];
+                if (mpv->values[i].isTemp) {
+                    ev = rev;
+                }
+                else {
+                    ev = derefValue(rev);
+                }
+                varArgs->add(ev);
+            }
+            addLocal(env2, x->varg->name, varArgs.ptr());  
+        }
         return env2;
     }
 
     case ALIAS : {
-        // llvm::errs() << "evalBinding:ALIAS\n";
-    
         ensureArity(x->args, 1);
         ensureArity(x->values->exprs, 1);
         EnvPtr env2 = new Env(env);
