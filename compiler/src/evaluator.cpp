@@ -2152,7 +2152,8 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
-        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, 0);
+        unsigned wantCount = x->isReturnSpecs ? 1 : 0;
+        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, wantCount);
         MultiEValuePtr mev = new MultiEValue();
         ensureArity(mpv, ctx->returns.size());
         for (unsigned i = 0; i < mpv->size(); ++i) {
@@ -2170,7 +2171,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
         int marker = evalMarkStack();
         switch (x->returnKind) {
         case RETURN_VALUE :
-            evalMultiInto(x->values, env, mev, 0);
+            evalMultiInto(x->values, env, mev, wantCount);
             break;
         case RETURN_REF : {
             MultiEValuePtr mevRef = evalMultiAsRef(x->values, env);
@@ -2183,7 +2184,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
             break;
         }
         case RETURN_FORWARD :
-            evalMulti(x->values, env, mev, 0);
+            evalMulti(x->values, env, mev, wantCount);
             break;
         default :
             assert(false);

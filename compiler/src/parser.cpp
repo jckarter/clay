@@ -2002,7 +2002,7 @@ static bool exprBody(StatementPtr &x) {
     ExprListPtr exprs;
     if (!returnExprList(rkind, exprs)) return false;
     if (!symbol(";")) return false;
-    x = new Return(rkind, exprs);
+    x = new Return(rkind, exprs, true);
     x->location = location;
     return true;
 }
@@ -2330,14 +2330,16 @@ static bool optVarNamedReturn(ReturnSpecPtr &x) {
     return true;
 }
 
-static bool allReturnSpecs(vector<ReturnSpecPtr> &returnSpecs,
-                           ReturnSpecPtr &varReturnSpec) {
+static bool allReturnSpecsWithFlag(vector<ReturnSpecPtr> &returnSpecs,
+                           ReturnSpecPtr &varReturnSpec, bool &exprRetSpecs) {
     returnSpecs.clear();
     varReturnSpec = NULL;
     int p = save();
     if (symbol(":")) {
         if (!optReturnTypeList(returnSpecs)) return false;
         if (!optVarReturnType(varReturnSpec)) return false;
+        if (returnSpecs.size()>0 || varReturnSpec!=NULL)
+            exprRetSpecs = true;
         return true;
     } else {
         restore(p);
@@ -2352,6 +2354,11 @@ static bool allReturnSpecs(vector<ReturnSpecPtr> &returnSpecs,
     }
 }
 
+static bool allReturnSpecs(vector<ReturnSpecPtr> &returnSpecs,
+                           ReturnSpecPtr &varReturnSpec) {
+    bool exprRetSpecs = false;
+    return allReturnSpecsWithFlag(returnSpecs, varReturnSpec, exprRetSpecs);
+}
 
 
 //
@@ -2470,9 +2477,15 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
     if (!identifier(name)) return false;
     Location targetEndLocation = currentLocation();
     if (!arguments(code->formalArgs, code->formalVarArg)) return false;
-    code->returnSpecsDeclared = allReturnSpecs(code->returnSpecs, code->varReturnSpec);
+    bool exprRetSpecs = false;
+    code->returnSpecsDeclared = allReturnSpecsWithFlag(code->returnSpecs, code->varReturnSpec, exprRetSpecs);
     if (!body(code->body)) return false;
     code->location = location;
+    if(exprRetSpecs && code->body->stmtKind == RETURN){
+        Return *x = (Return *)code->body.ptr();    
+        if(x->isExprReturn)
+            x->isReturnSpecs = true;
+    }
 
     ProcedurePtr proc = new Procedure(name, vis);
     proc->location = location;
@@ -2516,12 +2529,18 @@ static bool overload(TopLevelItemPtr &x) {
     if (!pattern(target)) return false;
     Location targetEndLocation = currentLocation();
     if (!arguments(code->formalArgs, code->formalVarArg)) return false;
-    code->returnSpecsDeclared = allReturnSpecs(code->returnSpecs, code->varReturnSpec);
+    bool exprRetSpecs = false;
+    code->returnSpecsDeclared = allReturnSpecsWithFlag(code->returnSpecs, code->varReturnSpec, exprRetSpecs);
     int p = save();
     if (!optBody(code->body)) {
         restore(p);
         if (callByName) return false;
         if (!llvmCode(code->llvmBody)) return false;
+    }
+    if(exprRetSpecs && code->body->stmtKind == RETURN){
+        Return *x = (Return *)code->body.ptr();    
+        if(x->isExprReturn)
+            x->isReturnSpecs = true;
     }
     target->location = location;
     target->startLocation = targetStartLocation;

@@ -3708,7 +3708,7 @@ bool codegenStatement(StatementPtr stmt,
 
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
-        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, 0);
+        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, 1);
         MultiCValuePtr mcv = new MultiCValue();
         const vector<CReturn> &returns = ctx->returnLists.back();
         ensureArity(mpv, returns.size());
@@ -3726,7 +3726,7 @@ bool codegenStatement(StatementPtr stmt,
         }
         switch (x->returnKind) {
         case RETURN_VALUE :
-            codegenMultiInto(x->values, env, ctx, mcv, 0);
+            codegenMultiInto(x->values, env, ctx, mcv, 1);
             break;
         case RETURN_REF : {
             MultiCValuePtr mcvRef = codegenMultiAsRef(x->values, env, ctx);
@@ -3739,7 +3739,7 @@ bool codegenStatement(StatementPtr stmt,
             break;
         }
         case RETURN_FORWARD :
-            codegenMulti(x->values, env, ctx, mcv, 0);
+            codegenMulti(x->values, env, ctx, mcv, 1);
             break;
         default :
             assert(false);
