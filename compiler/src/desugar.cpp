@@ -64,9 +64,16 @@ ExprPtr desugarVariadicOp(VariadicOpPtr x) {
     return call.ptr();
 }
 
-static vector<IdentifierPtr> identV(IdentifierPtr x) {
-    vector<IdentifierPtr> v;
-    v.push_back(x);
+static vector<FormalArgPtr> identV(IdentifierPtr x) {
+    vector<FormalArgPtr> v;
+    v.push_back(new FormalArg(x, NULL));
+    return v;
+}
+
+static vector<FormalArgPtr> identVtoFormalV(vector<IdentifierPtr> x) {
+    vector<FormalArgPtr> v;
+    for(int i=0; i<x.size(); ++i)
+        v.push_back(new FormalArg(x[i], NULL));
     return v;
 }
 
@@ -128,7 +135,7 @@ StatementPtr desugarForStatement(ForPtr x) {
     BlockPtr whileBody = new Block();
     whileBody->location = x->body->location;
     vector<StatementPtr> &ws = whileBody->statements;
-    ws.push_back(new Binding(FORWARD, x->variables, new ExprList(getValueCall.ptr())));
+    ws.push_back(new Binding(FORWARD, identVtoFormalV(x->variables), new ExprList(getValueCall.ptr())));
     ws.push_back(x->body);
 
     StatementPtr whileStmt = new While(valueStatements, hasValueCall.ptr(), whileBody.ptr());
@@ -147,7 +154,7 @@ StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
 
     BindingPtr expBinding =
         new Binding(VAR,
-                    vector<IdentifierPtr>(1, expVar),
+                    identVtoFormalV(vector<IdentifierPtr>(1, expVar)),
                     new ExprList(activeException.ptr()));
     expBinding->location = firstCatchLocation;
 
@@ -172,7 +179,7 @@ StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
             getter->location = x->exceptionVar->location;
             BindingPtr binding =
                 new Binding(VAR,
-                            vector<IdentifierPtr>(1, x->exceptionVar),
+                            identVtoFormalV(vector<IdentifierPtr>(1, x->exceptionVar)),
                             new ExprList(getter.ptr()));
             binding->location = x->exceptionVar->location;
 
@@ -196,7 +203,7 @@ StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
             getter->location = x->exceptionVar->location;
             BindingPtr binding =
                 new Binding(VAR,
-                            vector<IdentifierPtr>(1, x->exceptionVar),
+                            identVtoFormalV(vector<IdentifierPtr>(1, x->exceptionVar)),
                             new ExprList(getter.ptr()));
             binding->location = x->exceptionVar->location;
             block->statements.push_back(binding.ptr());

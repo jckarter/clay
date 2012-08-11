@@ -426,6 +426,14 @@ void argumentInvalidStaticObjectError(unsigned int index, ObjectPtr obj)
     argumentError(index, sout.str());
 }
 
+void matchBindingError(MatchResultPtr result)
+{
+    string buf;
+    llvm::raw_string_ostream sout(buf);
+    printMatchError(sout, result);
+    error(sout.str());
+}
+
 static void matchFailureMessage(MatchFailureError const &err, string &outBuf)
 {
     llvm::raw_string_ostream sout(outBuf);
