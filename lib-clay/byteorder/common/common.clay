@@ -16,7 +16,7 @@ overload networkToHost(n:I) --> returned:I {
     alias A = Array[UInt8, Int(TypeSize(I))];
     ref bytes = bitcast(A, n);
     ref returnedBytes = bitcast(A, returned);
-    returnedBytes <-- array(..reverseValues(..arrayValues(bytes)));
+    returnedBytes <-- array(..reverseValues(..arrayElements(bytes)));
 }
 
 [I8 when inValues?(I8, Int8, UInt8)]
