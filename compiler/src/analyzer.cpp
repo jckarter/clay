@@ -2130,7 +2130,9 @@ StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContex
 
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
-        MultiPValuePtr mpv = analyzeMulti(x->values, env, 0);
+        unsigned wantCount = x->isReturnSpecs ? 1 : 0;
+        MultiPValuePtr mpv = analyzeMulti(x->values, env, wantCount);
+        
         if (!mpv) {
             ctx->hasRecursivePropagation = true;
             return SA_RECURSIVE;
