@@ -262,9 +262,8 @@ overload digestFinish(context: SHA512Context) --> returned: SHA512 {
     var padn = if (last < 112) 112 - last else 240 - last;
     digestUpdate(context, coordinateRange(begin(sha512Padding), begin(sha512Padding) + padn));
 
-    var msglen = Union[Array[UInt8, 16], Array[UInt64, 2]]();
-    msglen.1[0] = 0ul;
-    msglen.1[1] = hostToBig(total * 8ul);
+    var msglen = Union[Array[UInt8, 16], PoorManUInt128]();
+    msglen.1 = hostToBig(PoorManUInt128(total * 8ul));
     digestUpdate(context, msglen.0);
 
     assert(context.total % 128 == 0);

@@ -128,3 +128,32 @@ littleWordsToBytes(words) = wordsToBytesImpl(words, #BigEndian?);
 bigWordsToBytes(words) = wordsToBytesImpl(words, #LittleEndian?);
 
 
+
+/// Poor man UInt128
+
+/// 128-bit types are not available everywhere
+record PoorManUInt128 (
+    w: Array[UInt64, 2],
+);
+
+overload UnsignedInteger?(#PoorManUInt128) = true;
+
+overload assign(dest: PoorManUInt128, src: PoorManUInt128) {
+    dest.w = src.w;
+}
+
+overload PoorManUInt128(src: PoorManUInt128) --> returned:PoorManUInt128 {
+    returned.w = src.w;
+}
+
+[when LittleEndian?]
+overload PoorManUInt128(i: UInt64) --> returned:PoorManUInt128 {
+    returned.w[0] = i;
+    returned.w[1] = 0;
+}
+
+[when BigEndian?]
+overload PoorManUInt128(i: UInt64) --> returned:PoorManUInt128 {
+    returned.w[0] = 0;
+    returned.w[1] = i;
+}
