@@ -217,7 +217,7 @@ overload processBlock(#SHA256_NAME, state: SHA256State, chunkBytes: SHA256BlockB
     var chunkSpace = Array[UInt32, 64]();
 
     for (toChunkWord, fromChunkWord in zipped(chunkSpace, chunk))
-        toChunkWord = networkToHost(fromChunkWord);
+        toChunkWord = bigToHost(fromChunkWord);
 
     for (i in range(16, 64)) {
         var s0 = bitxor(
@@ -281,7 +281,7 @@ overload digestFinish(context: SHA256Context) --> returned: SHA256 {
     digestUpdate(context, coordinateRange(begin(sha256Padding), begin(sha256Padding) + padn));
 
     var msglen = Union[Array[UInt8, 8], UInt64]();
-    msglen.1 = hostToNetwork(total * 8);
+    msglen.1 = hostToBig(total * 8);
     digestUpdate(context, msglen.0);
 
     assert(context.total % 64 == 0);
@@ -291,7 +291,7 @@ overload digestFinish(context: SHA256Context) --> returned: SHA256 {
     // alignment.
     ref returnedWords = Pointer[Array[UInt32, 8]](@returned.digest)^;
     for (returnedWord, stateWord in zipped(returnedWords, context.state))
-        returnedWord = hostToNetwork(stateWord);
+        returnedWord = hostToBig(stateWord);
 }
 
 [A, S when Algorithm?(A) and ContiguousSequence?(S) and TypeSize(SequenceElementType(S)) == 1]
@@ -367,7 +367,7 @@ overload processBlock(#SHA512_NAME, state: SHA512State, chunkBytes: SHA512BlockB
     var chunkSpace = Array[UInt64, 80]();
 
     for (toChunkWord, fromChunkWord in zipped(chunkSpace, chunk))
-        toChunkWord = networkToHost(fromChunkWord);
+        toChunkWord = bigToHost(fromChunkWord);
 
     for (i in range(16, 80)) {
         var s0 = bitxor(
@@ -432,7 +432,7 @@ overload digestFinish(context: SHA512Context) --> returned: SHA512 {
 
     var msglen = Union[Array[UInt8, 16], Array[UInt64, 2]]();
     msglen.1[0] = 0ul;
-    msglen.1[1] = hostToNetwork(total * 8ul);
+    msglen.1[1] = hostToBig(total * 8ul);
     digestUpdate(context, msglen.0);
 
     assert(context.total % 128 == 0);
@@ -442,7 +442,7 @@ overload digestFinish(context: SHA512Context) --> returned: SHA512 {
     // alignment.
     ref returnedWords = Pointer[Array[UInt64, 8]](@returned.digest)^;
     for (returnedWord, stateWord in zipped(returnedWords, context.state))
-        returnedWord = hostToNetwork(stateWord);
+        returnedWord = hostToBig(stateWord);
 }
 
 [S when ContiguousSequence?(S) and TypeSize(SequenceElementType(S)) == 1]
