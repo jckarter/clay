@@ -1090,6 +1090,8 @@ static bool localBinding(StatementPtr &x) {
     vector<FormalArgPtr> args;
     FormalArgPtr varg;
     if (!bindingsBody(args,varg)) return false;
+    int p = save();
+    if (!symbol(",")) restore(p); 
     if (!opsymbol("=")) return false;
     ExprListPtr z;
     if (!expressionList(z)) return false;

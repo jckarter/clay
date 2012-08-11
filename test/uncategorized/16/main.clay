@@ -7,7 +7,7 @@ enum Kind (
 );
 
 main() {
-    var a, b = UGLY, BAD, ;
+    var a, b, = UGLY, BAD, ;
     var c = a > b;
     var d = a == b;
     var y = Int32(a);
