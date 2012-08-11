@@ -164,4 +164,17 @@ main() = testMain(
                 assocValue("bar", ["foo", 1, 2, 3], ["bar", 4])
             );
         }),
+        TestCase("replicateValue", test => {
+            ..for (Type in Int, UInt, Int8, UInt8, SizeT) {
+                expectEqual(test, "replicateValue(x, #" ++ StaticName(Type) ++ "(0))",
+                    [],
+                    [..replicateValue(true, #Type(0))]);
+                expectEqual(test, "replicateValue(x, #" ++ StaticName(Type) ++ "(1)",
+                    [17],
+                    [..replicateValue(17, #Type(1))]);
+                expectEqual(test, "replicateValue(x, #" ++ StaticName(Type) ++ "(3)",
+                    ['a', 'a', 'a'],
+                    [..replicateValue('a', #Type(3))]);
+            }
+        }),
     )));

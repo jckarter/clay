@@ -3,29 +3,51 @@ import byteorder.platform.*;
 import core.numbers.(wrapBitshl as shl);
 import core.operators.(bitshr as shr);
 
+
 alias BigEndian? = ByteOrder == BigEndian;
 alias LittleEndian? = ByteOrder == LittleEndian;
 
+
 [I when Integer?(I)]
-define networkToHost(n:I): I;
+define reverseBytes(n:I): I;
+
+
 [I when Integer?(I)]
-define hostToNetwork(n:I): I;
+define hostToLittle(n:I): I;
+[I when Integer?(I)]
+define hostToBig(n:I): I;
 
 [I when Integer?(I) and LittleEndian?]
-overload networkToHost(n:I) --> returned:I {
+overload hostToLittle(n:I) = n;
+[I when Integer?(I) and LittleEndian?]
+overload hostToBig(n:I) = reverseBytes(n);
+
+[I when Integer?(I) and BigEndian?]
+overload hostToLittle(n:I) = reverseBytes(n);
+[I when Integer?(I) and BigEndian?]
+overload hostToBig(n:I) = n;
+
+
+[I when Integer?(I)]
+littleToHost(n:I) = hostToLittle(n);
+[I when Integer?(I)]
+bigToHost(n:I) = hostToBig(n);
+
+[I when Integer?(I)]
+hostToNetwork(n:I) = hostToBig(n);
+[I when Integer?(I)]
+networkToHost(n:I) = bigToHost(n);
+
+
+[I when Integer?(I) and LittleEndian?]
+overload reverseBytes(n:I) --> returned:I {
     alias A = Array[UInt8, Int(TypeSize(I))];
     ref bytes = bitcast(A, n);
     ref returnedBytes = bitcast(A, returned);
-    returnedBytes <-- array(..reverseValues(..arrayValues(bytes)));
+    returnedBytes <-- array(..reverseValues(..arrayElements(bytes)));
 }
 
 [I8 when inValues?(I8, Int8, UInt8)]
-overload networkToHost(n:I8) = n;
+overload reverseBytes(n:I8) = n;
 
-[when BigEndian?]
-overload networkToHost(n) = n;
-[when BigEndian?]
-overload hostToNetwork(n) = n;
 
-[when LittleEndian?]
-overload hostToNetwork(n) = networkToHost(n);
