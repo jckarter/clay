@@ -1,0 +1,83 @@
+// This code is intended for digest implementations only. It is not
+// a part of public API. Do not use it directly.
+
+
+import crypto.digest.*;
+
+
+// digest internal word
+[A when Algorithm?(A)]
+define Word(#A);
+
+// number of words in computation state
+[A when Algorithm?(A)]
+define StateSizeWords(#A): Int;
+
+// algorithm internal state
+[A when Algorithm?(A)]
+State(#A) = Array[Word(#A), StateSizeWords(#A)];
+
+// initial data for state
+[A when Algorithm?(A)]
+define stateInitial(#A): State(#A);
+
+// digest update block size in words
+[A when Algorithm?(A)]
+define BlockSizeWords(#A);
+
+// block size in bytes
+[A when Algorithm?(A)]
+overload BlockSizeBytes(#A): UInt = UInt(BlockSizeWords(#A) * TypeSize(Word(#A)));
+
+// shortcut
+[A when Algorithm?(A)]
+BlockBytes(#A) = Array[UInt8, Int(BlockSizeBytes(#A))];
+
+// core of the algorithm
+[A, S, B when Algorithm?(A) and S == State(#A) and B == BlockSizeBytes(#A)]
+define processBlock(#A, state: S, block: Array[UInt8, B]):;
+
+// make digest output record
+[A when Algorithm?(A)]
+MakeDigest(#A) = recordWithProperties(
+        [
+            [Digest?, #true],
+            [Algorithm, #A],
+        ],
+        // data itself
+        digest: Array[UInt8, Int(DigestSize(#A))]
+    );
+
+// get digest and context by algorith name
+[A when Algorithm?(A)]
+define AlgorithmTypes(#A);
+
+// digest type by algorithm name
+[A when Algorithm?(A)]
+Digest(#A) = nthValue(#0, ..AlgorithmTypes(#A));
+
+// digest context type by algorithm name
+[A when Algorithm?(A)]
+DigestContext(#A) = nthValue(#1, ..AlgorithmTypes(#A));
+
+// make digest context record
+[A when Algorithm?(A)]
+MakeDigestContext(#A) = recordWithProperties(
+        [
+            [DigestContext?, #true],
+            [Algorithm, #A],
+        ],
+        total: UInt64, // in bytes
+        state: State(#A),
+        buffer: Array[UInt8, Int(BlockSizeBytes(#A))],
+    );
+
+// digest context record is initialized with initial algorithm state
+[C when DigestContext?(C)]
+overload C() --> returned:C {
+    returned.total <-- 0ul;
+    returned.state <-- stateInitial(Algorithm(C));
+    // returned.buffer does not need to be initialized
+}
+
+
