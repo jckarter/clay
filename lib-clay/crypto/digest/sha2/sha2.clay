@@ -60,11 +60,10 @@ private alias SHA256State = State(#SHA256_NAME);
 private alias SHA256BlockBytes = BlockBytes(#SHA256_NAME);
 
 overload processBlock(#SHA256_NAME, state: SHA256State, chunkBytes: SHA256BlockBytes) {
-    ref chunk = Pointer[Array[UInt32, 16]](begin(chunkBytes))^;
     var chunkSpace = Array[UInt32, 64]();
-
-    for (toChunkWord, fromChunkWord in zipped(chunkSpace, chunk))
-        toChunkWord = bigToHost(fromChunkWord);
+    
+    ref chunkSpaceFirstWords = Pointer[Array[UInt32, 16]](@chunkSpace)^;
+    chunkSpaceFirstWords <-- bytesToWordsBig(UInt32, chunkBytes);
 
     for (i in range(16, 64)) {
         var s0 = bitxor(
@@ -133,12 +132,7 @@ overload digestFinish(context: SHA256Context) --> returned: SHA256 {
 
     assert(context.total % 64 == 0);
 
-    // FIXME: the SHA2 type should be naturally 4-byte aligned (or more) so
-    // we can safely use bitcast here. Need to add support for custom record
-    // alignment.
-    ref returnedWords = Pointer[Array[UInt32, 8]](@returned.digest)^;
-    for (returnedWord, stateWord in zipped(returnedWords, context.state))
-        returnedWord = hostToBig(stateWord);
+    returned.digest = bigWordsToBytes(context.state);
 }
 
 sha256(message) = digest(message, #SHA256_NAME);
@@ -202,11 +196,10 @@ private alias SHA512State = State(#SHA512_NAME);
 private alias SHA512BlockBytes = BlockBytes(#SHA512_NAME);
 
 overload processBlock(#SHA512_NAME, state: SHA512State, chunkBytes: SHA512BlockBytes) {
-    ref chunk = Pointer[Array[UInt64, 16]](begin(chunkBytes))^;
     var chunkSpace = Array[UInt64, 80]();
-
-    for (toChunkWord, fromChunkWord in zipped(chunkSpace, chunk))
-        toChunkWord = bigToHost(fromChunkWord);
+    
+    ref chunkSpaceFirstWords = Pointer[Array[UInt64, 16]](@chunkSpace)^;
+    chunkSpaceFirstWords <-- bytesToWordsBig(UInt64, chunkBytes);
 
     for (i in range(16, 80)) {
         var s0 = bitxor(
@@ -276,12 +269,7 @@ overload digestFinish(context: SHA512Context) --> returned: SHA512 {
 
     assert(context.total % 128 == 0);
 
-    // FIXME: the SHA2 type should be naturally 4-byte aligned (or more) so
-    // we can safely use bitcast here. Need to add support for custom record
-    // alignment.
-    ref returnedWords = Pointer[Array[UInt64, 8]](@returned.digest)^;
-    for (returnedWord, stateWord in zipped(returnedWords, context.state))
-        returnedWord = hostToBig(stateWord);
+    returned.digest = bigWordsToBytes(context.state);
 }
 
 sha512(message) = digest(message, #SHA512_NAME);

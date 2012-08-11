@@ -2,6 +2,8 @@
 // a part of public API. Do not use it directly.
 
 
+import byteorder.(LittleEndian?, BigEndian?, reverseBytes);
+
 import crypto.digest.*;
 
 
@@ -79,5 +81,50 @@ overload C() --> returned:C {
     returned.state <-- stateInitial(Algorithm(C));
     // returned.buffer does not need to be initialized
 }
+
+
+[N, Word, ReverseBytes when N % TypeSize(Word) == 0]
+private define bytesToWordsImpl(#Word, #ReverseBytes, bytes: Array[UInt8, N]);
+
+[N, Word]
+overload bytesToWordsImpl(#Word, #false, bytes: Array[UInt8, N]) --> returned: Array[Word, Int(N \ Int(TypeSize(Word)))] {
+    ref returnedBytes = bitcast(Type(bytes), returned);
+    returnedBytes <-- bytes;
+}
+
+[N, Word]
+overload bytesToWordsImpl(#Word, #true, bytes: Array[UInt8, N]) --> returned: Array[Word, Int(N \ Int(TypeSize(Word)))] {
+    returned <-- bytesToWordsImpl(#Word, #false, bytes);
+    for (word in returned) {
+        word = reverseBytes(word);
+    }
+}
+
+[Word]
+bytesToWordsLittle(#Word, bytes) = bytesToWordsImpl(#Word, #BigEndian?, bytes);
+[Word]
+bytesToWordsBig(#Word, bytes) = bytesToWordsImpl(#Word, #LittleEndian?, bytes);
+
+
+[Word, K, ReverseBytes]
+private define wordsToBytesImpl(array: Array[Word, K], #ReverseBytes): Array[UInt8, Int(TypeSize(Word) * K)];
+
+[Word, K]
+overload wordsToBytesImpl(array: Array[Word, K], #false) --> returned: Array[UInt8, Int(TypeSize(Word) * K)] {
+    ref arrayBytes = bitcast(Type(returned), array);
+    returned <-- arrayBytes;
+}
+
+[Word, K]
+overload wordsToBytesImpl(words: Array[Word, K], #true) --> returned: Array[UInt8, Int(TypeSize(Word) * K)] {
+    for (i in range(K)) {
+        var word = reverseBytes(words[i]);
+        ref wordBytes = bitcast(Array[UInt8, Int(TypeSize(Word))], word);
+        copyNonoverlappingMemory(begin(returned) + i * TypeSize(Word), begin(wordBytes), end(wordBytes));
+    }
+}
+
+littleWordsToBytes(words) = wordsToBytesImpl(words, #BigEndian?);
+bigWordsToBytes(words) = wordsToBytesImpl(words, #LittleEndian?);
 
 
