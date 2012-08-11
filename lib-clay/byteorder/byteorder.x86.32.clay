@@ -3,7 +3,7 @@ public import byteorder.platform.*;
 public import byteorder.common.*;
 
 [I32 when inValues?(I32, Int32, UInt32)]
-overload networkToHost(n:I32) --> returned:I32 __llvm__ {
+overload reverseBytes(n:I32) --> returned:I32 __llvm__ {
     %nn = load $I32 * %n
     %rr = call $I32 asm "bswapl $0", "=r,r"($I32 %nn)
     store $I32 %rr, $I32 * %returned
@@ -11,7 +11,7 @@ overload networkToHost(n:I32) --> returned:I32 __llvm__ {
 }
 
 [I64 when inValues?(I64, Int64, UInt64)]
-overload networkToHost(n:I64) {
+overload reverseBytes(n:I64) {
     var nh = Union[Array[UInt32,2], I64](n);
     nh.0[1], nh.0[0] = networkToHost(nh.0[0]), networkToHost(nh.0[1]);
     return nh.1;
