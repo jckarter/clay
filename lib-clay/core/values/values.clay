@@ -77,9 +77,10 @@ overload lastValue(forward a) = forward a;
 
 /// @section  replicateValue, allValues?, anyValues?, equalValues?, inValues? 
 
-[n]
+[n when n > 0]
 forceinline replicateValue(a, #n) = a, ..replicateValue(a, #(n-1));
-forceinline overload replicateValue(a, #0) = ;
+[n when n == 0]
+forceinline overload replicateValue(a, #n) = ;
 
 forceinline allValues?(pred, ..rest) {
     ..for (x in rest) {
