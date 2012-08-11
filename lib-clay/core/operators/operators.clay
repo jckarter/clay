@@ -367,24 +367,26 @@ alias RIGHT = 1;
 alias VARIADIC = 2;
 alias BOOLEAN = 3;
 
-define (==);
-define (!=);
-define (>=);
-define (<=);
-define (>);
-define (<);
-define (++);
+// two of three arguments (x, x) or (comparator, x, x)
+define (==)(..p): Bool;
+define (!=)(..p): Bool;
+define (>=)(..p): Bool;
+define (<=)(..p): Bool;
+define (>)(..p): Bool;
+define (<)(..p): Bool;
+
+define (++)(a, b, ..cs);
 define (~);
-define (&);
-define (|);
-define (<<);
-define (>>);
-define (+);
-define (-);
-define (%);
-define (\);
-define (/);
-define (*);
+define (&)(a, b, ..cs);
+define (|)(a, b, ..cs);
+define (<<)(a, b);
+define (>>)(a, b);
+define (+)(a, ..b);
+define (-)(a, ..b);
+define (%)(a, b);
+define (\)(a, b);
+define (/)(a, b);
+define (*)(a, b, ..cs);
 
 alias equals? = (==);
 alias notEquals? = (!=);
