@@ -1,7 +1,5 @@
 import printer.(println);
 
-
-
 foo(x, ..y) {
 	var ..a = ..y;
 	nthValue(#0,..a) = 189;
@@ -10,11 +8,13 @@ foo(x, ..y) {
 
 main() {
 	
-	var [..I] a:Int32, ..c:I = 4, 5, 4, 5, 6, 7;
+	var [..I] a:Int32, ..c:I = 4, 5ul, 4.0, 5u, 6.8f, 7s;
 	var ..b = ..foo(..c);
 	ref ..j = ..b;
-	println(..j);
-	println(..c);
+	println(..weaveValues(", ", ..j));
+	println(..weaveValues(", ", ..c));
+	println(..weaveValues(", ", ..mapValues(Type, ..c)));
+	println(..weaveValues(", ", ..I));
 
 	var zero, one, ..rest = integers(#10);
 	println(..weaveValues(", ", ..rest));
