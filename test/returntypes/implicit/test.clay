@@ -1,0 +1,11 @@
+
+bar(..y) = 2,4;
+
+foo(x, y) : Int32, Int32 = bar(x,y);
+
+
+main() {
+	
+	var a, b = foo(2.0f, 3);
+	
+}

@@ -1489,8 +1489,14 @@ enum ReturnKind {
 struct Return : public Statement {
     ReturnKind returnKind;
     ExprListPtr values;
+    bool isExprReturn;
+    bool isReturnSpecs;
     Return(ReturnKind returnKind, ExprListPtr values)
-        : Statement(RETURN), returnKind(returnKind), values(values) {}
+        : Statement(RETURN), returnKind(returnKind), values(values), 
+          isExprReturn(false), isReturnSpecs(false) {}
+    Return(ReturnKind returnKind, ExprListPtr values, bool exprRet)
+        : Statement(RETURN), returnKind(returnKind), values(values), 
+          isExprReturn(exprRet), isReturnSpecs(false) {}
 };
 
 struct If : public Statement {
