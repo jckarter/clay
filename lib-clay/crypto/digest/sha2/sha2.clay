@@ -16,9 +16,13 @@ overload DigestSize(#SHA256_NAME) = 32u;
 
 overload Word(#SHA256_NAME) = UInt32;
 
+overload WordIsBigEndian?(#SHA256_NAME) = true;
+
 overload StateSizeWords(#SHA256_NAME) = 8;
 
 overload BlockSizeWords(#SHA256_NAME) = 16;
+
+overload BitCountWord(#SHA256_NAME) = UInt64;
 
 record SHA256 = MakeDigest(#SHA256_NAME);
 record SHA256Context = MakeDigestContext(#SHA256_NAME);
@@ -115,25 +119,7 @@ overload processBlock(#SHA256_NAME, state: SHA256State, chunkBytes: SHA256BlockB
         stateWord = wrapAdd(stateWord, tempStateWord);
 }
 
-private var sha256Padding = array(0x80uss, ..replicateValue(0uss, #63));
-
-// finish and return computed SHA-256 sum
-// context cannot be reused after computation
-overload digestFinish(context: SHA256Context) --> returned: SHA256 {
-    var total = context.total;
-
-    var last = total % 64;
-    var padn = if (last < 56) 56 - last else 120 - last;
-    digestUpdate(context, coordinateRange(begin(sha256Padding), begin(sha256Padding) + padn));
-
-    var msglen = Union[Array[UInt8, 8], UInt64]();
-    msglen.1 = hostToBig(total * 8);
-    digestUpdate(context, msglen.0);
-
-    assert(context.total % 64 == 0);
-
-    returned.digest = bigWordsToBytes(context.state);
-}
+overload digestFinish(context: SHA256Context) = digestFinishGeneric(context);
 
 sha256(message) = digest(message, #SHA256_NAME);
 
@@ -148,9 +134,13 @@ overload DigestSize(#SHA512_NAME) = 64u;
 
 overload Word(#SHA512_NAME) = UInt64;
 
+overload WordIsBigEndian?(#SHA512_NAME) = true;
+
 overload StateSizeWords(#SHA512_NAME) = 8;
 
 overload BlockSizeWords(#SHA512_NAME) = 16;
+
+overload BitCountWord(#SHA512_NAME) = PoorManUInt128;
 
 record SHA512 = MakeDigest(#SHA512_NAME);
 record SHA512Context = MakeDigestContext(#SHA512_NAME);
@@ -251,25 +241,7 @@ overload processBlock(#SHA512_NAME, state: SHA512State, chunkBytes: SHA512BlockB
         stateWord = wrapAdd(stateWord, tempStateWord);
 }
 
-private var sha512Padding = array(0x80uss, ..replicateValue(0uss, #127));
-
-// finish and return computed SHA-512 sum
-// context cannot be reused after computation
-overload digestFinish(context: SHA512Context) --> returned: SHA512 {
-    var total = context.total;
-
-    var last = total % 128;
-    var padn = if (last < 112) 112 - last else 240 - last;
-    digestUpdate(context, coordinateRange(begin(sha512Padding), begin(sha512Padding) + padn));
-
-    var msglen = Union[Array[UInt8, 16], PoorManUInt128]();
-    msglen.1 = hostToBig(PoorManUInt128(total * 8ul));
-    digestUpdate(context, msglen.0);
-
-    assert(context.total % 128 == 0);
-
-    returned.digest = bigWordsToBytes(context.state);
-}
+overload digestFinish(context: SHA512Context) = digestFinishGeneric(context);
 
 sha512(message) = digest(message, #SHA512_NAME);
 

@@ -2,7 +2,7 @@
 // a part of public API. Do not use it directly.
 
 
-import byteorder.(LittleEndian?, BigEndian?, reverseBytes);
+import byteorder.*;
 
 import crypto.digest.*;
 
@@ -10,6 +10,9 @@ import crypto.digest.*;
 // digest internal word
 [A when Algorithm?(A)]
 define Word(#A);
+
+[A when Algorithm?(A)]
+define WordIsBigEndian?(#A): Bool;
 
 // number of words in computation state
 [A when Algorithm?(A)]
@@ -34,6 +37,9 @@ overload BlockSizeBytes(#A): UInt = UInt(BlockSizeWords(#A) * TypeSize(Word(#A))
 // shortcut
 [A when Algorithm?(A)]
 BlockBytes(#A) = Array[UInt8, Int(BlockSizeBytes(#A))];
+
+[A when Algorithm?(A)]
+define BitCountWord(#A);
 
 // core of the algorithm
 [A, S, B when Algorithm?(A) and S == State(#A) and B == BlockSizeBytes(#A)]
@@ -127,6 +133,10 @@ overload wordsToBytesImpl(words: Array[Word, K], #true) --> returned: Array[UInt
 littleWordsToBytes(words) = wordsToBytesImpl(words, #BigEndian?);
 bigWordsToBytes(words) = wordsToBytesImpl(words, #LittleEndian?);
 
+private define wordsToBytes(words, bigEndian);
+overload wordsToBytes(words, #true) = bigWordsToBytes(words);
+overload wordsToBytes(words, #false) = littleWordsToBytes(words);
+
 
 
 /// Poor man UInt128
@@ -157,3 +167,44 @@ overload PoorManUInt128(i: UInt64) --> returned:PoorManUInt128 {
     returned.w[0] = 0;
     returned.w[1] = i;
 }
+
+
+
+/// generic digestFinish. Works for SHA-2, MD5 and probably something else
+
+[A when Algorithm?(A)]
+private var padding[A] = array(0x80uss, ..replicateValue(0uss, #Int(2 * BlockSizeBytes(A) - 1)));
+
+[I, B when Integer?(I)]
+private define hostToByteOrder(n:I, #B): I;
+
+overload hostToByteOrder(n, #true) = hostToBig(n);
+overload hostToByteOrder(n, #false) = hostToLittle(n);
+
+// finish and return computed sum
+// context cannot be reused after computation
+[C when DigestContext?(C)]
+digestFinishGeneric(context: C) --> returned: Digest(Algorithm(C)) {
+    alias A = Algorithm(C);
+    alias BS = BlockSizeBytes(A);
+    alias BC = BitCountWord(A);
+    alias BCS = Int(TypeSize(BC));
+    
+    var total = context.total;
+    
+    alias paddingForThis = padding[A];
+
+    var last = total % BS;
+    var padn = if (last < BS - BCS) BS - BCS - last else 2 * BS - BCS - last;
+    digestUpdate(context, coordinateRange(begin(paddingForThis), begin(paddingForThis) + padn));
+
+    var msglen = Union[Array[UInt8, BCS], BC]();
+    msglen.1 = hostToByteOrder(BC(total * 8), #WordIsBigEndian?(A));
+    digestUpdate(context, msglen.0);
+
+    assert(context.total % BS == 0);
+
+    returned.digest = wordsToBytes(context.state, #WordIsBigEndian?(A));
+}
+
+

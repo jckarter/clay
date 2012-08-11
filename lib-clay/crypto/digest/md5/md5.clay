@@ -15,9 +15,13 @@ overload DigestSize(#MD5_NAME) = 16u;
 
 overload Word(#MD5_NAME) = UInt32;
 
+overload WordIsBigEndian?(#MD5_NAME) = false;
+
 overload StateSizeWords(#MD5_NAME) = 4;
 
 overload BlockSizeWords(#MD5_NAME) = 16;
+
+overload BitCountWord(#MD5_NAME) = UInt64;
 
 record MD5 = MakeDigest(#MD5_NAME);
 record MD5Context = MakeDigestContext(#MD5_NAME);
@@ -164,25 +168,7 @@ overload processBlock(#MD5_NAME, state: MD5State, chunkBytes: MD5BlockBytes) {
     state[3] = wrapAdd(state[3], d);
 }
 
-private var md5Padding = array(0x80uss, ..replicateValue(0uss, #63));
-
-// finish and return computed MD5 sum
-// context cannot be reused after computation
-overload digestFinish(context: MD5Context) --> returned: MD5 {
-    var total = context.total;
-
-    var last = total % 64;
-    var padn = if (last < 56) 56 - last else 120 - last;
-    digestUpdate(context, coordinateRange(begin(md5Padding), begin(md5Padding) + padn));
-
-    var msglen = Union[Array[UInt8, 8], UInt64]();
-    msglen.1 = total * 8;
-    digestUpdate(context, msglen.0);
-
-    assert(context.total % 64 == 0);
-
-    returned.digest = littleWordsToBytes(context.state);
-}
+overload digestFinish(context: MD5Context) = digestFinishGeneric(context);
 
 md5(message) = digest(message, #MD5_NAME);
 
