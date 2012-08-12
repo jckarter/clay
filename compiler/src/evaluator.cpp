@@ -2390,17 +2390,18 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->patternVars.size(); ++i)
             addLocal(env2, x->patternVars[i].name, x->patternTypes[i]);
-        for (unsigned i = 0; i < x->args.size(); ++i) {
-            addLocal(env2, x->args[i]->name, mev->values[i].ptr());
-        }
-        if (x->varg.ptr()) {
-            unsigned nFixed = x->args.size();
-            MultiEValuePtr varArgs = new MultiEValue();
-            for (unsigned i = nFixed; i < mev->values.size(); ++i) {
-                EValuePtr ev = mev->values[i];
-                varArgs->add(ev);
-            }
-            addLocal(env2, x->varg->name, varArgs.ptr());  
+        unsigned varArgSize = mev->values.size()-x->args.size()+1;
+        for (unsigned i = 0, j = 0; i < x->args.size(); ++i) {
+            if (x->args[i]->varArg) {
+                MultiEValuePtr varArgs = new MultiEValue();
+                for (; j < varArgSize; ++j) {
+                    EValuePtr ev = mev->values[i+j];
+                    varArgs->add(ev);
+                }
+                --j;
+                addLocal(env2, x->args[i]->name, varArgs.ptr());  
+            } else
+                addLocal(env2, x->args[i]->name, mev->values[i+j].ptr());
         }
         return env2;
     }
@@ -2421,19 +2422,22 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->patternVars.size(); ++i)
             addLocal(env2, x->patternVars[i].name, x->patternTypes[i]);
-        for (unsigned i = 0; i < x->args.size(); ++i) {
-            EValuePtr evPtr = mev->values[i];
-            addLocal(env2, x->args[i]->name, derefValue(evPtr).ptr());
-        }
-        if (x->varg.ptr()) {
-            unsigned nFixed = x->args.size();
-            MultiEValuePtr varArgs = new MultiEValue();
-            for (unsigned i = nFixed; i < mev->values.size(); ++i) {
-                EValuePtr ev = derefValue(mev->values[i]);
-                varArgs->add(ev);
+        unsigned varArgSize = mev->values.size()-x->args.size()+1;
+        for (unsigned i = 0, j = 0; i < x->args.size(); ++i) {
+            if (x->args[i]->varArg) {
+                MultiEValuePtr varArgs = new MultiEValue();
+                for (; j < varArgSize; ++j) {
+                    EValuePtr ev = derefValue(mev->values[i+j]);
+                    varArgs->add(ev);
+                }
+                --j;
+                addLocal(env2, x->args[i]->name, varArgs.ptr());  
+            } else {        
+                EValuePtr evPtr = mev->values[i+j];
+                addLocal(env2, x->args[i]->name, derefValue(evPtr).ptr());
             }
-            addLocal(env2, x->varg->name, varArgs.ptr());  
         }
+        
         return env2;
     }
 
@@ -2450,32 +2454,35 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->patternVars.size(); ++i)
             addLocal(env2, x->patternVars[i].name, x->patternTypes[i]);
-        for (unsigned i = 0; i < x->args.size(); ++i) {
-            if (mpv->values[i].isTemp) {
-                EValuePtr ev = mev->values[i];
-                addLocal(env2, x->args[i]->name, ev.ptr());
-            }
-            else {
-                EValuePtr evPtr = mev->values[i];
-                addLocal(env2, x->args[i]->name, derefValue(evPtr).ptr());
-            }
-        }
-        if (x->varg.ptr()) {
-            unsigned nFixed = x->args.size();
-            MultiEValuePtr varArgs = new MultiEValue();
-            for (unsigned i = nFixed; i < mev->values.size(); ++i) {
-                EValuePtr rev, ev;
-                rev = mev->values[i];
-                if (mpv->values[i].isTemp) {
-                    ev = rev;
+        unsigned varArgSize = mev->values.size()-x->args.size()+1;
+        for (unsigned i = 0, j = 0; i < x->args.size(); ++i) {
+            if (x->args[i]->varArg) {
+                MultiEValuePtr varArgs = new MultiEValue();
+                for (; j < varArgSize; ++j) {
+                    EValuePtr rev, ev;
+                    rev = mev->values[i+j];
+                    if (mpv->values[i+j].isTemp) {
+                        ev = rev;
+                    }
+                    else {
+                        ev = derefValue(rev);
+                    }
+                    varArgs->add(ev);
+                }
+                --j;
+                addLocal(env2, x->args[i]->name, varArgs.ptr());  
+            } else {
+                if (mpv->values[i+j].isTemp) {
+                    EValuePtr ev = mev->values[i+j];
+                    addLocal(env2, x->args[i]->name, ev.ptr());
                 }
                 else {
-                    ev = derefValue(rev);
+                    EValuePtr evPtr = mev->values[i+j];
+                    addLocal(env2, x->args[i]->name, derefValue(evPtr).ptr());
                 }
-                varArgs->add(ev);
             }
-            addLocal(env2, x->varg->name, varArgs.ptr());  
         }
+        
         return env2;
     }
 

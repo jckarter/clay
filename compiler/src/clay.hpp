@@ -1445,7 +1445,6 @@ struct Binding : public Statement {
     vector<ObjectPtr> patternTypes;
     ExprPtr predicate;
     vector<FormalArgPtr> args;
-    FormalArgPtr varg;
     ExprListPtr values;
     
     Binding(int bindingKind,
@@ -1458,13 +1457,11 @@ struct Binding : public Statement {
         const vector<ObjectPtr> &patternTypes,
         ExprPtr predicate,
         const vector<FormalArgPtr> &args,
-        FormalArgPtr varg, 
         ExprListPtr values)
         : Statement(BINDING), bindingKind(bindingKind),
           patternVars(patternVars),
           predicate(predicate),
-          args(args), varg(varg),
-          values(values) {}
+          args(args), values(values) {}
 };
 
 struct Assignment : public Statement {
@@ -1722,12 +1719,16 @@ struct FormalArg : public ANode {
     IdentifierPtr name;
     ExprPtr type;
     ValueTempness tempness;
+    bool varArg;
     FormalArg(IdentifierPtr name, ExprPtr type)
         : ANode(FORMAL_ARG), name(name), type(type),
           tempness(TEMPNESS_DONTCARE) {}
     FormalArg(IdentifierPtr name, ExprPtr type, ValueTempness tempness)
         : ANode(FORMAL_ARG), name(name), type(type),
           tempness(tempness) {}
+    FormalArg(IdentifierPtr name, ExprPtr type, ValueTempness tempness, bool varArg)
+        : ANode(FORMAL_ARG), name(name), type(type),
+          tempness(tempness), varArg(varArg) {}
 };
 
 struct ReturnSpec : public ANode {

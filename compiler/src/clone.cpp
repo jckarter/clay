@@ -231,7 +231,7 @@ void clone(const vector<FormalArgPtr> &x, vector<FormalArgPtr> &out)
 
 FormalArgPtr clone(FormalArgPtr x)
 {
-    FormalArgPtr out = new FormalArg(x->name, cloneOpt(x->type), x->tempness);
+    FormalArgPtr out = new FormalArg(x->name, cloneOpt(x->type), x->tempness, x->varArg);
     out->location = x->location;
     return out;
 }
@@ -290,7 +290,7 @@ StatementPtr clone(StatementPtr x)
         clone(y->patternVars, patternVars);
         clone(y->patternTypes, patternTypes);
         out = new Binding(y->bindingKind, patternVars, patternTypes, cloneOpt(y->predicate),
-            args, cloneOpt(y->varg), clone(y->values));
+            args, clone(y->values));
         break;
     }
 

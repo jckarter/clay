@@ -1077,8 +1077,7 @@ static bool bindingKind(int &bindingKind) {
 }
 
 static bool optPatternVarsWithCond(vector<PatternVar> &x, ExprPtr &y);
-static bool bindingsBody(vector<FormalArgPtr> &args,
-                          FormalArgPtr &varg);
+static bool bindingsBody(vector<FormalArgPtr> &args);
 
 static bool localBinding(StatementPtr &x) {
     Location location = currentLocation();
@@ -1088,8 +1087,7 @@ static bool localBinding(StatementPtr &x) {
     ExprPtr predicate;
     if (!optPatternVarsWithCond(patternVars, predicate)) return false;
     vector<FormalArgPtr> args;
-    FormalArgPtr varg;
-    if (!bindingsBody(args,varg)) return false;
+    if (!bindingsBody(args)) return false;
     int p = save();
     if (!symbol(",")) restore(p); 
     if (!opsymbol("=")) return false;
@@ -1097,7 +1095,7 @@ static bool localBinding(StatementPtr &x) {
     if (!expressionList(z)) return false;
     if (!symbol(";")) return false;
     vector<ObjectPtr> patternTypes;
-    x = new Binding(bk, patternVars, patternTypes, predicate, args, varg, z);
+    x = new Binding(bk, patternVars, patternTypes, predicate, args, z);
     x->location = location;
     return true;
 }
@@ -1822,91 +1820,42 @@ static bool arguments(vector<FormalArgPtr> &args,
 }
 
 
-
-static bool valueBindingArg(FormalArgPtr &x) {
+static bool bindingArg(FormalArgPtr &x, bool &varArgFlag) {
     Location location = currentLocation();
     IdentifierPtr y;
     ExprPtr z;
+    bool varArg = false;
+    int p = save();
+    if (ellipsis()) {
+        if (varArgFlag) 
+            return false;    
+        else
+            varArgFlag = true;
+        varArg = true;
+    } else
+        restore(p);
     if (!identifier(y)) return false;
     if (!optTypeSpec(z)) return false;
     x = new FormalArg(y, z);
     x->location = location;
+    x->varArg = varArg;
     return true;
 }
 
-static bool bindingArg(FormalArgPtr &x) {
-    int p = save();
-    if (valueBindingArg(x)) return true;
-    return false;
-}
-
-static bool bindingArgs(vector<FormalArgPtr> &x) {
+static bool bindingsBody(vector<FormalArgPtr> &x) {
     FormalArgPtr y;
-    if (!bindingArg(y)) return false;
+    bool varArgFlag = false;
+    if (!bindingArg(y, varArgFlag)) return false;
     x.clear();
     while (true) {
         x.push_back(y);
         int p = save();
-        if (!symbol(",") || !bindingArg(y)) {
+        if (!symbol(",") || !bindingArg(y, varArgFlag)) {
             restore(p);
             break;
         }
     }
     return true;
-}
-
-
-static bool bindingVarArg(FormalArgPtr &x) {
-    Location location = currentLocation();
-    if (!ellipsis()) return false;
-    IdentifierPtr name;
-    if (!identifier(name)) return false;
-    ExprPtr type;
-    if (!optVarArgTypeSpec(type)) return false;
-    x = new FormalArg(name, type);
-    x->location = location;
-    return true;
-}
-
-static bool optBindingVarArg(FormalArgPtr &x) {
-    int p = save();
-    if (!bindingVarArg(x)) {
-        restore(p);
-        x = NULL;
-    }
-    return true;
-}
-
-static bool trailingBindingVarArg(FormalArgPtr &x) {
-    if (!symbol(",")) return false;
-    if (!bindingVarArg(x)) return false;
-    return true;
-}
-
-static bool optTrailingBindingVarArg(FormalArgPtr &x) {
-    int p = save();
-    if (!trailingBindingVarArg(x)) {
-        restore(p);
-        x = NULL;
-    }
-    return true;
-}
-
-static bool bindingArgsWithVArgs(vector<FormalArgPtr> &args,
-                                FormalArgPtr &varg) {
-    if (!bindingArgs(args)) return false;
-    if (!optTrailingBindingVarArg(varg)) return false;
-    return true;
-}
-
-static bool bindingsBody(vector<FormalArgPtr> &args,
-                          FormalArgPtr &varg) {
-    int p = save();
-    if (bindingArgsWithVArgs(args, varg)) return true;
-    restore(p);
-    args.clear();
-    varg = NULL;
-    return optBindingVarArg(varg);
 }
 
 static bool predicate(ExprPtr &x) {

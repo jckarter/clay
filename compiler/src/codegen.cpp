@@ -4070,7 +4070,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
     llvm::DIFile file = getDebugLineCol(x->location, line, column);
     switch(x->bindingKind){
     case VAR : {
-        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
+        MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, 1);
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < mpv->values.size(); ++i) {
             CValuePtr cv = codegenAllocNewValue(mpv->values[i].type, ctx);
@@ -4103,25 +4103,28 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->patternVars.size(); ++i)
             addLocal(env2, x->patternVars[i].name, x->patternTypes[i]);
-        for (unsigned i = 0; i < x->args.size(); ++i) {
-            CValuePtr cv = mcv->values[i];
-            cgPushStackValue(cv, ctx);
-            addLocal(env2, x->args[i]->name, cv.ptr());
-            llvm::SmallString<128> buf;
-            llvm::raw_svector_ostream ostr(buf);
-            ostr << x->args[i]->name->str << ":" << cv->type;
-            cv->llValue->setName(ostr.str());
-        }
-        if (x->varg.ptr()) {
-            unsigned nFixed = x->args.size();
-            MultiCValuePtr varArgs = new MultiCValue();
-            for (unsigned i = nFixed; i < mcv->values.size(); ++i) {
-                CValuePtr cv = mcv->values[i];
+        unsigned varArgSize = mcv->values.size()-x->args.size()+1;
+        for (unsigned i = 0, j = 0; i < x->args.size(); ++i) {
+            if (x->args[i]->varArg) {
+                MultiCValuePtr varArgs = new MultiCValue();
+                for (; j < varArgSize; ++j) {
+                    CValuePtr cv = mcv->values[i+j];
+                    cgPushStackValue(cv, ctx);
+                    varArgs->add(cv);
+                }
+                --j;
+                addLocal(env2, x->args[i]->name, varArgs.ptr());  
+            }else{
+                CValuePtr cv = mcv->values[i+j];
                 cgPushStackValue(cv, ctx);
-                varArgs->add(cv);
+                addLocal(env2, x->args[i]->name, cv.ptr());
+                llvm::SmallString<128> buf;
+                llvm::raw_svector_ostream ostr(buf);
+                ostr << x->args[i]->name->str << ":" << cv->type;
+                cv->llValue->setName(ostr.str());
             }
-            addLocal(env2, x->varg->name, varArgs.ptr());  
         }
+        
         return env2;
     }
 
@@ -4164,24 +4167,26 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->patternVars.size(); ++i)
             addLocal(env2, x->patternVars[i].name, x->patternTypes[i]);
-        for (unsigned i = 0; i < x->args.size(); ++i) {
-            CValuePtr cv = derefValue(mcv->values[i], ctx);
-            addLocal(env2, x->args[i]->name, cv.ptr());
-            llvm::SmallString<128> buf;
-            llvm::raw_svector_ostream ostr(buf);
-            ostr << x->args[i]->name->str << ":" << cv->type;
-            cv->llValue->setName(ostr.str());
-            
+        unsigned varArgSize = mcv->values.size()-x->args.size()+1;
+        for (unsigned i = 0, j = 0; i < x->args.size(); ++i) {
+            if (x->args[i]->varArg) {
+                MultiCValuePtr varArgs = new MultiCValue();
+                for (; j < varArgSize; ++j) {
+                    CValuePtr cv = derefValue(mcv->values[i+j], ctx);
+                    varArgs->add(cv);
+                }
+                --j;
+                addLocal(env2, x->args[i]->name, varArgs.ptr());  
+            }else{
+                CValuePtr cv = derefValue(mcv->values[i+j], ctx);
+                addLocal(env2, x->args[i]->name, cv.ptr());
+                llvm::SmallString<128> buf;
+                llvm::raw_svector_ostream ostr(buf);
+                ostr << x->args[i]->name->str << ":" << cv->type;
+                cv->llValue->setName(ostr.str());
+            }    
         }
-        if (x->varg.ptr()) {
-            unsigned nFixed = x->args.size();
-            MultiCValuePtr varArgs = new MultiCValue();
-            for (unsigned i = nFixed; i < mcv->values.size(); ++i) {
-                CValuePtr cv = derefValue(mcv->values[i], ctx);
-                varArgs->add(cv);
-            }
-            addLocal(env2, x->varg->name, varArgs.ptr());  
-        }
+        
         return env2;
     }
 
@@ -4232,39 +4237,43 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->patternVars.size(); ++i)
             addLocal(env2, x->patternVars[i].name, x->patternTypes[i]);
-        for (unsigned i = 0; i < x->args.size(); ++i) {
-            CValuePtr rcv, cv;
-            rcv = mcv->values[i];
-            if (mpv->values[i].isTemp) {
-                cv = rcv;
-                cgPushStackValue(cv, ctx);
-            }
-            else {
-                cv = derefValue(rcv, ctx);
-            }
-            addLocal(env2, x->args[i]->name, cv.ptr());
-            llvm::SmallString<128> buf;
-            llvm::raw_svector_ostream ostr(buf);
-            ostr << x->args[i]->name->str << ":" << cv->type;
-            cv->llValue->setName(ostr.str());
-        }
-        if (x->varg.ptr()) {
-            unsigned nFixed = x->args.size();
-            MultiCValuePtr varArgs = new MultiCValue();
-            for (unsigned i = nFixed; i < mcv->values.size(); ++i) {
+        unsigned varArgSize = mcv->values.size()-x->args.size()+1;
+        for (unsigned i = 0, j = 0; i < x->args.size(); ++i) {
+            if (x->args[i]->varArg) {
+                MultiCValuePtr varArgs = new MultiCValue();
+                for (; j < varArgSize; ++j) {
+                    CValuePtr rcv, cv;
+                    rcv = mcv->values[i+j];
+                    if (mpv->values[i+j].isTemp) {
+                        cv = rcv;
+                        cgPushStackValue(cv, ctx);
+                    }
+                    else {
+                        cv = derefValue(rcv, ctx);
+                    }
+                    varArgs->add(cv);
+                }
+                --j;
+                addLocal(env2, x->args[i]->name, varArgs.ptr());  
+            }else{
+
                 CValuePtr rcv, cv;
-                rcv = mcv->values[i];
-                if (mpv->values[i].isTemp) {
+                rcv = mcv->values[i+j];
+                if (mpv->values[i+j].isTemp) {
                     cv = rcv;
                     cgPushStackValue(cv, ctx);
                 }
                 else {
                     cv = derefValue(rcv, ctx);
                 }
-                varArgs->add(cv);
+                addLocal(env2, x->args[i]->name, cv.ptr());
+                llvm::SmallString<128> buf;
+                llvm::raw_svector_ostream ostr(buf);
+                ostr << x->args[i]->name->str << ":" << cv->type;
+                cv->llValue->setName(ostr.str());
             }
-            addLocal(env2, x->varg->name, varArgs.ptr());  
         }
+        
         return env2;
     }
 
