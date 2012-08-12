@@ -1,7 +1,8 @@
 import unix.*;
 import io.errors.*;
 import strings.*;
-import sequences.lazy.filtered.*;
+import sequences.*;
+import strings.*;
 
 
 /// @section  directoryListing 
@@ -10,7 +11,7 @@ directoryListing(x) =
     filtered(notCurrentOrPrevious?, mapped(direntName, direntSequence(x)));
 
 private notCurrentOrPrevious?(x) = not (x == "." or x == "..");
-private direntName(x) = CStringRef(begin(x.d_name));
+private direntName(x) = String(begin(x.d_name));
 
 
 
@@ -25,6 +26,8 @@ overload BitwiseMovedType?(#DirentSequence) = true;
 
 [T when CCompatibleString?(T)]
 overload DirentSequence(dir:T) --> returned: DirentSequence {
+    // TODO: directory is opened at constructor
+    // so this sequence is actually an iterator
     returned.dir = opendir(cstring(dir));
     if (null?(returned.dir))
         throw GenericIOError(errno());
@@ -43,7 +46,7 @@ overload resetUnsafe(s: DirentSequence) {
 [T when CCompatibleString?(T)]
 direntSequence(dir:T) = DirentSequence(dir);
 
-overload iterator(s:DirentSequence) = DirentIterator(s.dir, Struct_dirent());
+overload iterator(s:DirentSequence) = DirentIterator(s.dir);
 
 
 
@@ -54,7 +57,7 @@ private record DirentIterator (dir : Pointer[DIR]);
 overload nextValue(x:DirentIterator) {
     var entry = Struct_dirent();
     var ptr = Pointer[Struct_dirent]();
-    var returnCode = readdir_r(x.dir, @x.entry, @ptr);
+    var returnCode = readdir_r(x.dir, @entry, @ptr);
     if (returnCode != 0)
         throw GenericIOError(errno());
     if (null?(ptr))
