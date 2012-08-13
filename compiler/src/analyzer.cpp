@@ -2304,12 +2304,17 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
     case FORWARD : {
 
         
-        MultiPValuePtr mpv = analyzeMulti(x->values, env, 1);
+        MultiPValuePtr mpv = analyzeMulti(x->values, env, x->args.size());
         if (!mpv)
             return NULL;
-        if (mpv->values.size() < x->args.size())
-            arityMismatchError(x->args.size(), mpv->values.size());
         
+        if(x->hasVarArg){
+            if (mpv->values.size() < x->args.size())
+                arityMismatchError(x->args.size(), mpv->values.size());
+        } else
+            if (mpv->values.size() != x->args.size())
+                arityMismatchError(x->args.size(), mpv->values.size());
+
         vector<TypePtr> key;
         for (unsigned i = 0; i < mpv->size(); ++i) {
             PVData const &pv = mpv->values[i];

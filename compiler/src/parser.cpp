@@ -1077,7 +1077,7 @@ static bool bindingKind(int &bindingKind) {
 }
 
 static bool optPatternVarsWithCond(vector<PatternVar> &x, ExprPtr &y);
-static bool bindingsBody(vector<FormalArgPtr> &args);
+static bool bindingsBody(vector<FormalArgPtr> &args, bool &varArgFlag);
 
 static bool localBinding(StatementPtr &x) {
     Location location = currentLocation();
@@ -1087,7 +1087,8 @@ static bool localBinding(StatementPtr &x) {
     ExprPtr predicate;
     if (!optPatternVarsWithCond(patternVars, predicate)) return false;
     vector<FormalArgPtr> args;
-    if (!bindingsBody(args)) return false;
+    bool varArgFlag = false;
+    if (!bindingsBody(args, varArgFlag)) return false;
     int p = save();
     if (!symbol(",")) restore(p); 
     if (!opsymbol("=")) return false;
@@ -1095,7 +1096,7 @@ static bool localBinding(StatementPtr &x) {
     if (!expressionList(z)) return false;
     if (!symbol(";")) return false;
     vector<ObjectPtr> patternTypes;
-    x = new Binding(bk, patternVars, patternTypes, predicate, args, z);
+    x = new Binding(bk, patternVars, patternTypes, predicate, args, z, varArgFlag);
     x->location = location;
     return true;
 }
@@ -1842,9 +1843,8 @@ static bool bindingArg(FormalArgPtr &x, bool &varArgFlag) {
     return true;
 }
 
-static bool bindingsBody(vector<FormalArgPtr> &x) {
+static bool bindingsBody(vector<FormalArgPtr> &x, bool &varArgFlag) {
     FormalArgPtr y;
-    bool varArgFlag = false;
     if (!bindingArg(y, varArgFlag)) return false;
     x.clear();
     while (true) {

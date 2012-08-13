@@ -290,7 +290,7 @@ StatementPtr clone(StatementPtr x)
         clone(y->patternVars, patternVars);
         clone(y->patternTypes, patternTypes);
         out = new Binding(y->bindingKind, patternVars, patternTypes, cloneOpt(y->predicate),
-            args, clone(y->values));
+            args, clone(y->values), y->hasVarArg);
         break;
     }
 

@@ -1446,22 +1446,22 @@ struct Binding : public Statement {
     ExprPtr predicate;
     vector<FormalArgPtr> args;
     ExprListPtr values;
-    
+    bool hasVarArg;
     Binding(int bindingKind,
         const vector<FormalArgPtr> &args,
         ExprListPtr values)
         : Statement(BINDING), bindingKind(bindingKind),
-          args(args), values(values) {}
+          args(args), values(values), hasVarArg(false) {}
     Binding(int bindingKind,
         const vector<PatternVar> &patternVars,
         const vector<ObjectPtr> &patternTypes,
         ExprPtr predicate,
         const vector<FormalArgPtr> &args,
-        ExprListPtr values)
+        ExprListPtr values, bool hasVarArg)
         : Statement(BINDING), bindingKind(bindingKind),
           patternVars(patternVars),
           predicate(predicate),
-          args(args), values(values) {}
+          args(args), values(values), hasVarArg(hasVarArg) {}
 };
 
 struct Assignment : public Statement {
@@ -1722,10 +1722,10 @@ struct FormalArg : public ANode {
     bool varArg;
     FormalArg(IdentifierPtr name, ExprPtr type)
         : ANode(FORMAL_ARG), name(name), type(type),
-          tempness(TEMPNESS_DONTCARE) {}
+          tempness(TEMPNESS_DONTCARE), varArg(false) {}
     FormalArg(IdentifierPtr name, ExprPtr type, ValueTempness tempness)
         : ANode(FORMAL_ARG), name(name), type(type),
-          tempness(tempness) {}
+          tempness(tempness), varArg(false) {}
     FormalArg(IdentifierPtr name, ExprPtr type, ValueTempness tempness, bool varArg)
         : ANode(FORMAL_ARG), name(name), type(type),
           tempness(tempness), varArg(varArg) {}

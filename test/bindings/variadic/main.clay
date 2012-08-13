@@ -16,6 +16,8 @@ main() {
 	println(..weaveValues(", ", ..mapValues(Type, ..c)));
 	println(..weaveValues(", ", ..I));
 
-	var zero, one, ..rest = integers(#10);
-	println(..weaveValues(", ", ..rest));
+	var [T, ..I] a:T, ..b:I, c, d =  integers(#10);
+	println(..weaveValues(", ", a, c, d ));	
+	println(..weaveValues(", ", ..b));	
+	println(..weaveValues(", ", ..I));	
 }
