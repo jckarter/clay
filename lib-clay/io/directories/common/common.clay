@@ -1,0 +1,5 @@
+
+record DirectoryEntry (
+    // name is valid only before next iterator element fetched
+    name: CStringRef,
+);

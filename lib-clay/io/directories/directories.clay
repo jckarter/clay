@@ -1,0 +1,17 @@
+import vectors.(Vector);
+import strings.(String);
+
+import io.directories.platform.*;
+
+
+/// @section  listDirectory
+
+listDirectory(x) {
+    var r = Vector[String]();
+    var it = DirectoryIterator(x);
+    for (entry in it) {
+        push(r, String(entry.name));
+    }
+    return r;
+}
+
