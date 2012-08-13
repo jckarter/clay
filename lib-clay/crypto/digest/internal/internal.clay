@@ -60,13 +60,11 @@ MakeDigest(#A) = recordWithProperties(
 [A when Algorithm?(A)]
 define AlgorithmTypes(#A);
 
-// digest type by algorithm name
 [A when Algorithm?(A)]
-Digest(#A) = nthValue(#0, ..AlgorithmTypes(#A));
+overload Digest(#A) = nthValue(#0, ..AlgorithmTypes(#A));
 
-// digest context type by algorithm name
 [A when Algorithm?(A)]
-DigestContext(#A) = nthValue(#1, ..AlgorithmTypes(#A));
+overload DigestContext(#A) = nthValue(#1, ..AlgorithmTypes(#A));
 
 // make digest context record
 [A when Algorithm?(A)]
