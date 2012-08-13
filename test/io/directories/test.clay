@@ -15,9 +15,10 @@ overload testDirectoryListing(test) {
     expectTrue(test, "contains /bin", in?(l, "bin"));
 }
 
-// directoryListing is implemented only on Unices
-[when OSFamily != Unix]
+[when OSFamily == Windows]
 overload testDirectoryListing(test) {
+    var l = directoryListing("c:\\");
+    expectTrue(test, "contains 'System Volume Information'", in?(l, "System Volume Information"));
 }
 
 main() = testMain(
