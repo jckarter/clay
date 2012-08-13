@@ -94,7 +94,7 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
     string closureDataName = ostr.str();
 
     convertFreeVars(x, env, closureDataName, x->freeVars);
-    getProcedureMonoTypes(x->mono, env, x->formalArgs, x->formalVarArg);
+    getProcedureMonoTypes(x->mono, env, x->formalArgs, x->hasVarArg);
     if (x->freeVars.empty()) {
         initializeLambdaWithoutFreeVars(x, env, closureDataName, lname);
     }
@@ -184,9 +184,7 @@ static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
     for (unsigned i = 0; i < x->formalArgs.size(); ++i) {
         code->formalArgs.push_back(x->formalArgs[i]);
     }
-    if (x->formalVarArg.ptr()) {
-        code->formalVarArg = x->formalVarArg;
-    }
+    code->hasVarArg = x->hasVarArg;
     code->body = x->body;
 
     OverloadPtr overload = new Overload(
@@ -213,9 +211,7 @@ static void initializeLambdaWithoutFreeVars(LambdaPtr x, EnvPtr env,
     for (unsigned i = 0; i < x->formalArgs.size(); ++i) {
         code->formalArgs.push_back(x->formalArgs[i]);
     }
-    if (x->formalVarArg.ptr()) {
-        code->formalVarArg = x->formalVarArg;
-    }
+    code->hasVarArg = x->hasVarArg;
     code->body = x->body;
 
     ExprPtr procRef = new ObjectExpr(x->lambdaProc.ptr());
@@ -257,9 +253,6 @@ void convertFreeVars(LambdaPtr x, EnvPtr env,
     for (unsigned i = 0; i < x->formalArgs.size(); ++i) {
         FormalArgPtr arg = x->formalArgs[i];
         addLocal(env2, arg->name, arg->name.ptr());
-    }
-    if (x->formalVarArg.ptr()) {
-        addLocal(env2, x->formalVarArg->name, x->formalVarArg->name.ptr());
     }
     LambdaContext ctx(x->captureByRef, env, closureDataName, freeVars);
     convertFreeVars(x->body, env2, ctx);
@@ -624,8 +617,6 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < y->formalArgs.size(); ++i)
             addLocal(env2, y->formalArgs[i]->name, y->formalArgs[i]->name.ptr());
-        if (y->formalVarArg.ptr())
-            addLocal(env2, y->formalVarArg->name, y->formalVarArg->name.ptr());
         convertFreeVars(y->body, env2, ctx);
         break;
     }

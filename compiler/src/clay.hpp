@@ -1257,7 +1257,8 @@ struct ProcedureMono {
 struct Lambda : public Expr {
     bool captureByRef;
     vector<FormalArgPtr> formalArgs;
-    FormalArgPtr formalVarArg;
+    bool hasVarArg;
+
     StatementPtr body;
 
     ExprPtr converted;
@@ -1276,13 +1277,12 @@ struct Lambda : public Expr {
 
     Lambda(bool captureByRef) :
         Expr(LAMBDA), captureByRef(captureByRef),
-        initialized(false) {}
+        initialized(false), hasVarArg(false) {}
     Lambda(bool captureByRef,
            const vector<FormalArgPtr> &formalArgs,
-           FormalArgPtr formalVarArg,
-           StatementPtr body)
+           bool hasVarArg, StatementPtr body)
         : Expr(LAMBDA), captureByRef(captureByRef),
-          formalArgs(formalArgs), formalVarArg(formalVarArg),
+          formalArgs(formalArgs), hasVarArg(hasVarArg),
           body(body), initialized(false) {}
 };
 
@@ -1771,13 +1771,11 @@ struct Code : public ANode {
     Code(const vector<PatternVar> &patternVars,
          ExprPtr predicate,
          const vector<FormalArgPtr> &formalArgs,
-         FormalArgPtr formalVarArg,
          const vector<ReturnSpecPtr> &returnSpecs,
          ReturnSpecPtr varReturnSpec,
          StatementPtr body)
         : ANode(CODE), patternVars(patternVars), predicate(predicate),
-          formalArgs(formalArgs), formalVarArg(formalVarArg),
-          hasVarArg(false), returnSpecsDeclared(false),
+          formalArgs(formalArgs), hasVarArg(false), returnSpecsDeclared(false),
           returnSpecs(returnSpecs), varReturnSpec(varReturnSpec),
           body(body) {}
 
@@ -1942,6 +1940,7 @@ struct Overload : public TopLevelItem {
     vector<MultiPatternCellPtr> multiCells;
     PatternPtr callablePattern;
     vector<PatternPtr> argPatterns;
+    MultiPatternPtr varArgPattern;
     
     Overload(ExprPtr target,
              CodePtr code,
@@ -2495,7 +2494,7 @@ extern ModulePtr globalMainModule;
 
 void addProcedureOverload(ProcedurePtr proc, EnvPtr Env, OverloadPtr x);
 void getProcedureMonoTypes(ProcedureMono &mono, EnvPtr env,
-    vector<FormalArgPtr> const &formalArgs, FormalArgPtr formalVarArg);
+    vector<FormalArgPtr> const &formalArgs, bool hasVarArg);
 
 void addSearchPath(llvm::StringRef path);
 ModulePtr loadProgram(llvm::StringRef fileName, vector<string> *sourceFiles);

@@ -44,15 +44,17 @@ static void initializePatterns(OverloadPtr x)
     const vector<FormalArgPtr> &formalArgs = code->formalArgs;
     for (unsigned i = 0; i < formalArgs.size(); ++i) {
         FormalArgPtr y = formalArgs[i];
-        if (y->type.ptr())
+        if (y->type.ptr()) {
+            PatternPtr pattern;
             if (y->varArg) {
                 ExprPtr unpack = new Unpack(y->type.ptr());
                 unpack->location = y->type->location;
-                x->argPatterns.push_back(evaluateMultiPattern(new ExprList(unpack),
-                                                patternEnv));
+                x->varArgPattern = evaluateMultiPattern(new ExprList(unpack), patternEnv);
             } else {
-                x->argPatterns.push_back(evaluateOnePattern(y->type, patternEnv));
+                pattern = evaluateOnePattern(y->type, patternEnv);
             }
+            x->argPatterns.push_back(pattern);
+        }
     }
 
     x->patternsInitializedState = 1;
@@ -110,7 +112,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
     }
 
     const vector<FormalArgPtr> &formalArgs = code->formalArgs;
-    unsigned varArgSize = argskey.size()-formalArgs.size()+1;
+    unsigned varArgSize = argsKey.size()-formalArgs.size()+1;
     for (unsigned i = 0, j = 0; i < formalArgs.size(); ++i) {
         FormalArgPtr x = formalArgs[i];
         if (x->type.ptr()) {
@@ -119,7 +121,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
                 for (; j < varArgSize; ++j)
                     types->add(argsKey[i+j].ptr());
                 --j;
-                MultiPatternPtr pattern = overload->argPatterns[i];
+                MultiPatternPtr pattern = overload->varArgPattern;
                 if (!unifyMulti(pattern, types))
                     return new MatchMultiArgumentError(formalArgs.size(), types, x);
             } else {

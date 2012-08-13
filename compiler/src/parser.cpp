@@ -825,11 +825,10 @@ static bool returnExpr(ReturnKind &rkind, ExprPtr &expr) {
 
 static bool block(StatementPtr &x);
 
-static bool arguments(vector<FormalArgPtr> &args,
-                      FormalArgPtr &varg);
+static bool arguments(vector<FormalArgPtr> &args, bool &hasVarArg);
 
 static bool lambdaArgs(vector<FormalArgPtr> &formalArgs,
-                       FormalArgPtr &formalVarArg) {
+                       bool &hasVarArg) {
     int p = save();
     IdentifierPtr name;
     if (identifier(name)) {
@@ -837,11 +836,10 @@ static bool lambdaArgs(vector<FormalArgPtr> &formalArgs,
         FormalArgPtr arg = new FormalArg(name, NULL, TEMPNESS_DONTCARE);
         arg->location = name->location;
         formalArgs.push_back(arg);
-        formalVarArg = NULL;
         return true;
     }
     restore(p);
-    if (!arguments(formalArgs, formalVarArg)) return false;
+    if (!arguments(formalArgs, hasVarArg)) return false;
     return true;
 }
 
@@ -880,13 +878,13 @@ static bool lambdaBody(StatementPtr &x) {
 static bool lambda(ExprPtr &x) {
     Location location = currentLocation();
     vector<FormalArgPtr> formalArgs;
-    FormalArgPtr formalVarArg;
+    bool hasVarArg = false;
     bool captureByRef;
     StatementPtr body;
-    if (!lambdaArgs(formalArgs, formalVarArg)) return false;
+    if (!lambdaArgs(formalArgs, hasVarArg)) return false;
     if (!lambdaArrow(captureByRef)) return false;
     if (!lambdaBody(body)) return false;
-    x = new Lambda(captureByRef, formalArgs, formalVarArg, body);
+    x = new Lambda(captureByRef, formalArgs, hasVarArg, body);
     x->location = location;
     return true;
 }
@@ -2421,7 +2419,8 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
     OverloadPtr oload = new Overload(target, code, callByName, isInline);
     oload->location = location;
     x.push_back(oload.ptr());
-
+    // llvm::errs() << "proc: "<<target<<", "<<code->formalArgs[0] << "\n";
+    
     return true;
 }
 
@@ -2471,6 +2470,8 @@ static bool overload(TopLevelItemPtr &x) {
     code->location = location;
     x = new Overload(target, code, callByName, isInline);
     x->location = location;
+    // llvm::errs() << "proc: "<<target<<", "<<code->formalArgs[0] << "\n";
+    
     return true;
 }
 

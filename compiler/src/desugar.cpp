@@ -371,10 +371,9 @@ static StatementPtr desugarWithBlock(WithStatementPtr with,
         formalArgs.push_back(new FormalArg(with->lhs.at(i), NULL, TEMPNESS_DONTCARE));
     }
 
-    FormalArgPtr formalVarArg = NULL;
     bool captureByRef = false;
 
-    ExprPtr la = new Lambda(captureByRef, formalArgs, formalVarArg, b.ptr());
+    ExprPtr la = new Lambda(captureByRef, formalArgs, false, b.ptr());
     la->location = with->withLocation;
 
 

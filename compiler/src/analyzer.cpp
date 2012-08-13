@@ -3322,8 +3322,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             code->formalArgs.push_back(new FormalArg((*arg)->name, NULL));
         }
 
-        if (origCode->formalVarArg != NULL)
-            code->formalVarArg = new FormalArg(origCode->formalVarArg->name, NULL);
+        code->hasVarArg = origCode->hasVarArg;
 
         if (origCode->hasNamedReturns()) {
             code->returnSpecsDeclared = true;
