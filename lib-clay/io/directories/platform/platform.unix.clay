@@ -14,7 +14,7 @@ record DirectoryIterator (
 overload DirectoryIterator(dir: S) --> returned: DirectoryIterator {
     returned.dir = opendir(cstring(dir));
     if (null?(returned.dir))
-        throw GenericIOError(errno());
+        throw GenericIOError(errno(), "opendir");
 }
 
 
@@ -38,7 +38,7 @@ overload nextValue(x:DirectoryIterator) {
     var ptr = Pointer[Struct_dirent]();
     var returnCode = readdir_r(x.dir, @x.dirent, @ptr);
     if (returnCode != 0)
-        throw GenericIOError(errno());
+        throw GenericIOError(errno(), "readdir_r");
     if (null?(ptr))
         return nothing(DirectoryEntry);
         var name = CStringRef(begin(x.dirent.d_name));
