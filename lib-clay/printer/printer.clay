@@ -366,7 +366,13 @@ overload printReprTo(stream, x:E) {
 
 [X]
 overload printReprTo(stream, x:Static[X]) {
-    printTo(stream, StaticName(x));
+    printTo(stream, "#");
+    printReprTo(stream, unwrapStatic(x));
+}
+
+[S when Symbol?(S)]
+overload printReprTo(stream, #S) {
+    printTo(stream, StaticName(S));
 }
 
 

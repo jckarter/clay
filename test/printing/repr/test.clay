@@ -94,5 +94,19 @@ main() = testMain(
             expectPrinted(test, "Bar 1", "Bar(1i)",          repr(Bar(1)));
             expectPrinted(test, "Bar 2", "Bar(\"two\")",     repr(Bar(StringLiteralRef("two"))));
         }),
+        TestCase("statics", test => {
+            testWithEval(test, "#1i");
+            testWithEval(test, "#2u");
+            testWithEval(test, "#3l");
+            testWithEval(test, "#true");
+
+            // static strings are the same as string constants
+            // see https://groups.google.com/forum/#!topic/clay-language/mR4AFJzSafE
+            expectPrinted(test, "static string", "\"st\"", repr(#"st"));
+
+            // symbols
+            testWithEval(test, "TestCase");
+            testWithEval(test, "repr");
+        }),
     )));
 
