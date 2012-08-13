@@ -11,8 +11,7 @@ define testDirectoryListing(test):;
 
 [when OSFamily == Unix]
 overload testDirectoryListing(test) {
-    // converted to Vector, because some functions in algorithms module are broken
-    var l = Vector(directoryListing("/"));
+    var l = directoryListing("/");
     expectTrue(test, "contains /bin", in?(l, "bin"));
 }
 
