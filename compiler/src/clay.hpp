@@ -384,19 +384,19 @@ enum ObjectKind {
     INSTANCE,
     OVERLOAD,
     PROCEDURE,
-    ENUMERATION,
+    ENUMERATION,    // -- 20
     ENUM_MEMBER,
     GLOBAL_VARIABLE,
     EXTERNAL_PROCEDURE,
     EXTERNAL_ARG,
-    EXTERNAL_VARIABLE,
+    EXTERNAL_VARIABLE,  // -- 25
     EVAL_TOPLEVEL,
 
     GLOBAL_ALIAS,
 
     IMPORT,
     MODULE_DECLARATION,
-    MODULE_HOLDER,
+    MODULE_HOLDER,  // -- 30
     MODULE,
 
     ENV,
@@ -405,7 +405,7 @@ enum ObjectKind {
 
     TYPE,
 
-    PATTERN,
+    PATTERN,    // -- 35
     MULTI_PATTERN,
 
     VALUE_HOLDER,
@@ -1437,15 +1437,34 @@ enum BindingKind {
     FORWARD
 };
 
+struct PatternVar;
+
 struct Binding : public Statement {
     int bindingKind;
-    vector<IdentifierPtr> names;
+    vector<PatternVar> patternVars;
+    vector<ObjectPtr> patternTypes;
+    ExprPtr predicate;
+    vector<FormalArgPtr> args;
+    FormalArgPtr varg;
     ExprListPtr values;
+    
     Binding(int bindingKind,
-            const vector<IdentifierPtr> &names,
-            ExprListPtr values)
+        const vector<FormalArgPtr> &args,
+        ExprListPtr values)
         : Statement(BINDING), bindingKind(bindingKind),
-          names(names), values(values) {}
+          args(args), values(values) {}
+    Binding(int bindingKind,
+        const vector<PatternVar> &patternVars,
+        const vector<ObjectPtr> &patternTypes,
+        ExprPtr predicate,
+        const vector<FormalArgPtr> &args,
+        FormalArgPtr varg, 
+        ExprListPtr values)
+        : Statement(BINDING), bindingKind(bindingKind),
+          patternVars(patternVars),
+          predicate(predicate),
+          args(args), varg(varg),
+          values(values) {}
 };
 
 struct Assignment : public Statement {
@@ -1920,7 +1939,6 @@ struct Overload : public TopLevelItem {
     bool nameIsPattern;
     vector<PatternCellPtr> cells;
     vector<MultiPatternCellPtr> multiCells;
-    EnvPtr patternEnv;
     PatternPtr callablePattern;
     vector<PatternPtr> argPatterns;
     MultiPatternPtr varArgPattern;
@@ -3201,7 +3219,9 @@ enum MatchCode {
     MATCH_ARITY_ERROR,
     MATCH_ARGUMENT_ERROR,
     MATCH_MULTI_ARGUMENT_ERROR,
-    MATCH_PREDICATE_ERROR
+    MATCH_PREDICATE_ERROR,
+    MATCH_BINDING_ERROR,
+    MATCH_MULTI_BINDING_ERROR
 };
 
 struct MatchResult : public Object {
@@ -3274,6 +3294,26 @@ struct MatchPredicateError : public MatchResult {
         : MatchResult(MATCH_PREDICATE_ERROR), predicateExpr(predicateExpr) {}
 };
 
+struct MatchBindingError : public MatchResult {
+    unsigned argIndex;
+    TypePtr type;
+    FormalArgPtr arg;
+    MatchBindingError(unsigned argIndex, TypePtr type, FormalArgPtr arg)
+        : MatchResult(MATCH_BINDING_ERROR), argIndex(argIndex),
+            type(type), arg(arg) {}
+};
+
+struct MatchMultiBindingError : public MatchResult {
+    unsigned argIndex;
+    MultiStaticPtr types;
+    FormalArgPtr varArg;
+    MatchMultiBindingError(unsigned argIndex, MultiStaticPtr types, FormalArgPtr varArg)
+        : MatchResult(MATCH_MULTI_BINDING_ERROR),
+            argIndex(argIndex), types(types), varArg(varArg) {}
+};
+
+void initializePatternEnv(EnvPtr patternEnv, const vector<PatternVar> &pvars, vector<PatternCellPtr> &cells, vector<MultiPatternCellPtr> &multiCells);
+    
 MatchResultPtr matchInvoke(OverloadPtr overload,
                            ObjectPtr callable,
                            const vector<TypePtr> &argsKey);
@@ -3380,6 +3420,7 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
                                const vector<ValueTempness> &argsTempness,
                                MatchFailureError &failures);
 
+void matchBindingError(MatchResultPtr result);
 void matchFailureLog(MatchFailureError const &err);
 void matchFailureError(MatchFailureError const &err);
 
@@ -3596,7 +3637,7 @@ TypePtr evaluateType(ExprPtr expr, EnvPtr env);
 void evaluateMultiType(ExprListPtr exprs, EnvPtr env, vector<TypePtr> &out);
 IdentifierPtr evaluateIdentifier(ExprPtr expr, EnvPtr env);
 bool evaluateBool(ExprPtr expr, EnvPtr env);
-void evaluateToplevelPredicate(const vector<PatternVar> &patternVars,
+void evaluatePredicate(const vector<PatternVar> &patternVars,
     ExprPtr expr, EnvPtr env);
 
 ValueHolderPtr intToValueHolder(int x);

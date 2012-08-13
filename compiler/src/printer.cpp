@@ -348,7 +348,7 @@ static void printStatement(llvm::raw_ostream &out, const Statement *x) {
         default :
             assert(false);
         }
-        out << ", " << y->names << ", " << y->values << ")";
+        out << ", " << y->args << ", " << y->values << ")";
         break;
     }
     case ASSIGNMENT : {

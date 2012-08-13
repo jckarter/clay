@@ -7,8 +7,8 @@ pkgdesc='Clay is a programming language designed for Generic Programming.'
 arch=('i686' 'x86_64')
 url='http://claylabs.com/clay/'
 license=('BSD')
-depends=('llvm=3.0' 'clang=3.0') #'python' 'ocaml' really needed?
-optdepends=('llvm-clay-git: llvm+clang with Clay patches')
+depends=('llvm=3.1' 'clang=3.1') #'python' 'ocaml' really needed?
+optdepends=()
 makedepends=('git' 'cmake>=2.6')
 provides=('clay')
 conflicts=('clay-hg')

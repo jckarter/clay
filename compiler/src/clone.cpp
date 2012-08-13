@@ -23,6 +23,11 @@ void clone(const vector<PatternVar> &x, vector<PatternVar> &out)
     out = x;
 }
 
+void clone(const vector<ObjectPtr> &x, vector<ObjectPtr> &out)
+{
+    out = x;
+}
+
 void clone(const vector<IdentifierPtr> &x, vector<IdentifierPtr> &out)
 {
     for (unsigned i = 0; i < x.size(); ++i)
@@ -278,9 +283,14 @@ StatementPtr clone(StatementPtr x)
 
     case BINDING : {
         Binding *y = (Binding *)x.ptr();
-        vector<IdentifierPtr> names;
-        clone(y->names, names);
-        out = new Binding(y->bindingKind, names, clone(y->values));
+        vector<FormalArgPtr> args;
+        vector<PatternVar> patternVars;
+        vector<ObjectPtr> patternTypes;
+        clone(y->args, args);
+        clone(y->patternVars, patternVars);
+        clone(y->patternTypes, patternTypes);
+        out = new Binding(y->bindingKind, patternVars, patternTypes, cloneOpt(y->predicate),
+            args, cloneOpt(y->varg), clone(y->values));
         break;
     }
 

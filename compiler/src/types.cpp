@@ -384,7 +384,7 @@ void initializeEnumType(EnumTypePtr t) {
     CompileContextPusher pusher(t.ptr());
 
     EnvPtr env = new Env(t->enumeration->env);
-    evaluateToplevelPredicate(t->enumeration->patternVars, t->enumeration->predicate, env);
+    evaluatePredicate(t->enumeration->patternVars, t->enumeration->predicate, env);
     t->initialized = true;
 }
 
@@ -624,7 +624,7 @@ void initializeRecordFields(RecordTypePtr t) {
         addLocal(env, r->varParam, rest.ptr());
     }
 
-    evaluateToplevelPredicate(r->patternVars, r->predicate, env);
+    evaluatePredicate(r->patternVars, r->predicate, env);
 
     RecordBodyPtr body = r->body;
     if (body->isComputed) {
@@ -736,7 +736,7 @@ static void initializeVariantType(VariantTypePtr t) {
         }
     }
 
-    evaluateToplevelPredicate(t->variant->patternVars,
+    evaluatePredicate(t->variant->patternVars,
         t->variant->predicate,
         variantEnv);
 
