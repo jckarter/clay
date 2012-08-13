@@ -122,7 +122,7 @@ currentDirectory() {
             break;
         var err = unix.errno();
         if (err != unix.ERANGE)
-            throw GenericIOError(err);
+            throw GenericIOError(err, "getcwd");
         resize(buf, 2*size(buf));
     }
  

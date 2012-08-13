@@ -52,7 +52,7 @@ overload RawFile(path:S, mode:OpenMode) {
     else
         handle = unix.open(cstring(path), flags);
     if (handle == -1)
-        throw GenericIOError(unix.errno());
+        throw GenericIOError(unix.errno(), "open");
     return RawFile(handle, true);
 }
 
@@ -88,14 +88,14 @@ overload fileHandle(f:RawFile) = f.handle;
 overload read(f:RawFile, buffer:Pointer[Byte], n:SizeT) : SizeT {
     var result = unix.read(f.handle, buffer, n);
     if (result == Type(result)(-1))
-        throw GenericIOError(unix.errno());
+        throw GenericIOError(unix.errno(), "read");
     return SizeT(result);
 }
 
 overload write(f:RawFile, buffer:Pointer[Byte], n:SizeT) {
     var result = unix.write(f.handle, buffer, n);
     if (result == Type(result)(-1))
-        throw GenericIOError(unix.errno());
+        throw GenericIOError(unix.errno(), "write");
 }
 
 overload flush(f:RawFile) {
@@ -109,7 +109,7 @@ overload fileSize(f:RawFile) {
     var statBuf = unix.Struct_stat();
     var result = unix.fstat(f.handle, @statBuf);
     if (result == Type(result)(-1))
-        throw GenericIOError(unix.errno());
+        throw GenericIOError(unix.errno(), "fstat");
     return Int64(statBuf.st_size);
 }
 
@@ -127,7 +127,7 @@ private seekWhence(x) {
 overload seek(f:RawFile, offset, whence) {
     var result = unix.lseek(f.handle, Int64(offset), seekWhence(whence));
     if (result == Type(result)(-1))
-        throw GenericIOError(unix.errno());
+        throw GenericIOError(unix.errno(), "lseek");
     return result;
 }
 

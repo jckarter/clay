@@ -1,20 +1,23 @@
 public import os.errors.*;
 import printer.(printTo,printReprTo);
 
-record GenericIOError(code:Int);
 
-[I when Integer?(I)]
-overload GenericIOError(code:I) --> returned:GenericIOError {
+record GenericIOError(code:Int, where:StringLiteralRef);
+
+[I, S when Integer?(I) and StringLiteral?(S)]
+overload GenericIOError(code:I, #S) --> returned:GenericIOError {
     returned.code = Int(code);
+    returned.where = StringLiteralRef(S);
 }
 
 overload printTo(stream, x:GenericIOError) {
+    printTo(stream, x.where, ": ");
     printTo(stream, "error(", x.code, "): ");
     printErrorMessageTo(stream, x.code);
 }
 
 overload printReprTo(stream, x:GenericIOError) {
-    printTo(stream, "GenericIOError(", errorCodeName(x.code), ")");
+    printTo(stream, "GenericIOError(", errorCodeName(x.code), ", ", repr(x.where), ")");
 }
 
 variant IOError (GenericIOError);
