@@ -21,6 +21,14 @@ DigestContext?(#T) = false;
 [T when Digest?(T) or DigestContext?(T)]
 define Algorithm(#T);
 
+// digest type by algorithm name
+[A when Algorithm?(A)]
+define Digest(#A);
+
+// digest context type by algorithm name
+[A when Algorithm?(A)]
+define DigestContext(#A);
+
 // hash size in bytes
 [A when Algorithm?(A)]
 define DigestSize(#A): UInt;

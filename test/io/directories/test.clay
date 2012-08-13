@@ -1,0 +1,27 @@
+import platform.*;
+import algorithms.*;
+import vectors.*;
+import printer.*;
+
+import io.directories.*;
+
+import test.*;
+
+define testDirectoryListing(test):;
+
+[when OSFamily == Unix]
+overload testDirectoryListing(test) {
+    // converted to Vector, because some functions in algorithms module are broken
+    var l = Vector(directoryListing("/"));
+    expectTrue(test, "contains /bin", in?(l, "bin"));
+}
+
+// directoryListing is implemented only on Unices
+[when OSFamily != Unix]
+overload testDirectoryListing(test) {
+}
+
+main() = testMain(
+    TestSuite("io.directories", array(
+        TestCase("directoryListing", testDirectoryListing),
+    )));
