@@ -1836,7 +1836,11 @@ static bool bindingArg(FormalArgPtr &x, bool &varArgFlag) {
     } else
         restore(p);
     if (!identifier(y)) return false;
-    if (!optTypeSpec(z)) return false;
+    if (varArg) {
+        if (!optVarArgTypeSpec(z)) return false;
+    } else {
+        if (!optTypeSpec(z)) return false;
+    }
     x = new FormalArg(y, z);
     x->location = location;
     x->varArg = varArg;
