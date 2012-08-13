@@ -1,0 +1,28 @@
+import strings.*;
+
+import parsing.combinators.strings.*;
+
+import test.*;
+
+main() = testMain(
+    TestSuite("parsing.combinators.strings", array(
+        TestCase("literalString with string constant parameter", test => {
+            var p = literalString("hi");
+
+            {
+                var s = String("hi there");
+                var input = iterator(s);
+                var r = p(input);
+                expectEqual(test, "just", String("hi"), String(require(r)));
+                expectEqual(test, "rest", String(" there"), String(input));
+            }
+
+            {
+                var s = String("there");
+                var input = iterator(s);
+                var r = p(input);
+                expectTrue(test, "nothing", nothing?(r));
+            }
+        }),
+    )));
+
