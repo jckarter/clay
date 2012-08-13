@@ -1759,7 +1759,7 @@ struct Code : public ANode {
     vector<PatternVar> patternVars;
     ExprPtr predicate;
     vector<FormalArgPtr> formalArgs;
-    FormalArgPtr formalVarArg;
+    bool hasVarArg;
     bool returnSpecsDeclared;
     vector<ReturnSpecPtr> returnSpecs;
     ReturnSpecPtr varReturnSpec;
@@ -1767,7 +1767,7 @@ struct Code : public ANode {
     LLVMCodePtr llvmBody;
 
     Code()
-        : ANode(CODE), returnSpecsDeclared(false) {}
+        : ANode(CODE),  hasVarArg(false), returnSpecsDeclared(false) {}
     Code(const vector<PatternVar> &patternVars,
          ExprPtr predicate,
          const vector<FormalArgPtr> &formalArgs,
@@ -1777,7 +1777,7 @@ struct Code : public ANode {
          StatementPtr body)
         : ANode(CODE), patternVars(patternVars), predicate(predicate),
           formalArgs(formalArgs), formalVarArg(formalVarArg),
-          returnSpecsDeclared(false),
+          hasVarArg(false), returnSpecsDeclared(false),
           returnSpecs(returnSpecs), varReturnSpec(varReturnSpec),
           body(body) {}
 
@@ -1942,8 +1942,7 @@ struct Overload : public TopLevelItem {
     vector<MultiPatternCellPtr> multiCells;
     PatternPtr callablePattern;
     vector<PatternPtr> argPatterns;
-    MultiPatternPtr varArgPattern;
-
+    
     Overload(ExprPtr target,
              CodePtr code,
              bool callByName,
@@ -3240,11 +3239,7 @@ struct MatchSuccess : public MatchResult {
 
     ObjectPtr callable;
     vector<TypePtr> argsKey;
-
-    vector<TypePtr> fixedArgTypes;
-    vector<IdentifierPtr> fixedArgNames;
-    IdentifierPtr varArgName;
-    vector<TypePtr> varArgTypes;
+    
     MatchSuccess(bool callByName, InlineAttribute isInline, CodePtr code, EnvPtr env,
                  ObjectPtr callable, const vector<TypePtr> &argsKey)
         : MatchResult(MATCH_SUCCESS), callByName(callByName),
@@ -3344,11 +3339,7 @@ struct InvokeEntry {
     CodePtr code;
     EnvPtr env;
     EnvPtr interfaceEnv;
-    vector<TypePtr> fixedArgTypes;
-    vector<IdentifierPtr> fixedArgNames;
-    IdentifierPtr varArgName;
-    vector<TypePtr> varArgTypes;
-
+    
     bool callByName; // if callByName the rest of InvokeEntry is not set
     InlineAttribute isInline;
 

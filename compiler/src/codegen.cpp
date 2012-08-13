@@ -4070,6 +4070,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
     llvm::DIFile file = getDebugLineCol(x->location, line, column);
     switch(x->bindingKind){
     case VAR : {
+
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, 1);
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < mpv->values.size(); ++i) {
@@ -4124,11 +4125,11 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
                 cv->llValue->setName(ostr.str());
             }
         }
-        
         return env2;
     }
 
     case REF : {
+
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < mpv->values.size(); ++i) {
@@ -4186,7 +4187,6 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
                 cv->llValue->setName(ostr.str());
             }    
         }
-        
         return env2;
     }
 
@@ -4273,7 +4273,6 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
                 cv->llValue->setName(ostr.str());
             }
         }
-        
         return env2;
     }
 

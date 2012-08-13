@@ -9,7 +9,7 @@ CodePtr clone(CodePtr x)
     clone(x->patternVars, y->patternVars);
     y->predicate = cloneOpt(x->predicate);
     clone(x->formalArgs, y->formalArgs);
-    y->formalVarArg = cloneOpt(x->formalVarArg);
+    y->hasVarArg = x->hasVarArg;
     y->returnSpecsDeclared = x->returnSpecsDeclared;
     clone(x->returnSpecs, y->returnSpecs);
     y->varReturnSpec = cloneOpt(x->varReturnSpec);
