@@ -112,8 +112,9 @@ main() = testMain(
         TestCase("strings", test => {
             testWithEval(test, """"static"""");
             testWithEval(test, """StringLiteralRef("string literal ref")""");
-            testWithEval(test, """CStringRef("string ref")""");
             testWithEval(test, """String("string")""");
+            testWithEval(test, """CStringRef("string ref")""");
+            testWithEval(test, """CStringRef()""");
         }),
     )));
 

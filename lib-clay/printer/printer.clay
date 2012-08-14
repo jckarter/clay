@@ -510,6 +510,17 @@ overload printReprTo(stream, s:String) {
     printTo(stream, '"', ')');
 }
 
+overload printReprTo(stream, s:CStringRef) {
+    printTo(stream, "CStringRef(");
+    if (not null?(s.ptr)) {
+        printTo(stream, '"');
+        for (c in s)
+            printCharReprTo(stream, c);
+        printTo(stream, '"');
+    }
+    printTo(stream, ')');
+}
+
 [S when StringLiteral?(S)]
 overload printReprTo(stream, #S) {
     printTo(stream, '"');
