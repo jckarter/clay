@@ -2419,8 +2419,12 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
     OverloadPtr oload = new Overload(target, code, callByName, isInline);
     oload->location = location;
     x.push_back(oload.ptr());
-    // llvm::errs() << "proc: "<<target<<", "<<code->formalArgs[0] << "\n";
-    
+    if(name->str == "begin"){
+        if(code->formalArgs.size() > 0)
+            llvm::errs() << "proc: "<< name->str << ", " << code->formalArgs[0] << "\n";
+        else
+            llvm::errs() << "proc: "<< name->str <<", no args\n";    
+    }
     return true;
 }
 
@@ -2470,8 +2474,13 @@ static bool overload(TopLevelItemPtr &x) {
     code->location = location;
     x = new Overload(target, code, callByName, isInline);
     x->location = location;
-    // llvm::errs() << "proc: "<<target<<", "<<code->formalArgs[0] << "\n";
-    
+    NameRefPtr name = (NameRef *)target.ptr();
+    if(name->name->str == "begin"){
+        if(code->formalArgs.size() > 0)
+            llvm::errs() << "overload: "<< name->name->str << ", " << code->formalArgs[0] << "\n";
+        else
+            llvm::errs() << "overload: "<< name->name->str <<", no args\n";    
+    }
     return true;
 }
 

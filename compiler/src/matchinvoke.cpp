@@ -50,6 +50,7 @@ static void initializePatterns(OverloadPtr x)
                 ExprPtr unpack = new Unpack(y->type.ptr());
                 unpack->location = y->type->location;
                 x->varArgPattern = evaluateMultiPattern(new ExprList(unpack), patternEnv);
+                pattern = NULL;
             } else {
                 pattern = evaluateOnePattern(y->type, patternEnv);
             }
@@ -110,12 +111,13 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
         if (code->formalArgs.size() != argsKey.size())
             return new MatchArityError(code->formalArgs.size(), argsKey.size(), false);
     }
-
+    llvm::errs() << "matchInvoke: "<< overload->target << "\n";
     const vector<FormalArgPtr> &formalArgs = code->formalArgs;
     unsigned varArgSize = argsKey.size()-formalArgs.size()+1;
     for (unsigned i = 0, j = 0; i < formalArgs.size(); ++i) {
         FormalArgPtr x = formalArgs[i];
         if (x->type.ptr()) {
+            llvm::errs() << x->name << "\n";
             if (x->varArg) {
                 MultiStaticPtr types = new MultiStatic();
                 for (; j < varArgSize; ++j)
@@ -131,6 +133,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
             }
         }
     }
+    llvm::errs() << "matchInvoke unified\n";
     
 
     EnvPtr staticEnv = new Env(overload->env);
@@ -146,6 +149,8 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
             ObjectPtr v = derefDeep(overload->cells[i].ptr());
             if (!v)
                 error(pvars[i].name, "unbound pattern variable");
+            llvm::errs() << "addLocal staticEnv: "<< pvars[i].name << ", " << v << "\n";
+    
             addLocal(staticEnv, pvars[i].name, v.ptr());
         }
     }
@@ -156,7 +161,8 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
         if (!evaluateBool(code->predicate, staticEnv))
             return new MatchPredicateError(code->predicate);
     }
-
+    llvm::errs() << "matchInvoke predicate true\n";
+    
     MatchSuccessPtr result = new MatchSuccess(
         overload->callByName, overload->isInline, code, staticEnv,
         callable, argsKey
