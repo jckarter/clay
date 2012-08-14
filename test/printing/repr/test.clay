@@ -1,6 +1,7 @@
 import printer.formatter.(repr);
 import numbers.floats.(nan, nan?);
 import printer.(println);
+import strings.(String);
 import complex.*;
 
 import test.*;
@@ -88,11 +89,11 @@ main() = testMain(
             testWithEval(test, """[1i, "two"]""");
         }),
         TestCase("records", test => {
-            expectPrinted(test, "Foo",   "Foo(1i, \"two\")", repr(Foo(1, StringLiteralRef("two"))));
+            testWithEval(test, """Foo(1i, StringLiteralRef("two"))""");
         }),
         TestCase("variants", test => {
-            expectPrinted(test, "Bar 1", "Bar(1i)",          repr(Bar(1)));
-            expectPrinted(test, "Bar 2", "Bar(\"two\")",     repr(Bar(StringLiteralRef("two"))));
+            testWithEval(test, """Bar(1i)""");
+            testWithEval(test, """Bar(StringLiteralRef("two"))""");
         }),
         TestCase("statics", test => {
             testWithEval(test, "#1i");
@@ -107,6 +108,12 @@ main() = testMain(
             // symbols
             testWithEval(test, "TestCase");
             testWithEval(test, "repr");
+        }),
+        TestCase("strings", test => {
+            testWithEval(test, """"static"""");
+            testWithEval(test, """StringLiteralRef("string literal ref")""");
+            testWithEval(test, """CStringRef("string ref")""");
+            testWithEval(test, """String("string")""");
         }),
     )));
 

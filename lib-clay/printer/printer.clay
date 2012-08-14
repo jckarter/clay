@@ -487,8 +487,25 @@ overload printReprTo(stream, c:Char) {
 
 [S when String?(S)]
 overload printReprTo(stream, s:S) {
-    printTo(stream, '"');
+    printReprTo(stream, S);
+    printTo(stream, '(', '"');
     for (c in s)
+        printCharReprTo(stream, c);
+    printTo(stream, '"', ')');
+}
+
+overload printReprTo(stream, s:String) {
+    // this overload is needed because String is Vector[Char] now
+    printTo(stream, "String(", '"');
+    for (c in s)
+        printCharReprTo(stream, c);
+    printTo(stream, '"', ')');
+}
+
+[S when StringLiteral?(S)]
+overload printReprTo(stream, #S) {
+    printTo(stream, '"');
+    for (c in S)
         printCharReprTo(stream, c);
     printTo(stream, '"');
 }
