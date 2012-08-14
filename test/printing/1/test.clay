@@ -39,5 +39,9 @@ main() = testMain(
         TestCase("vector", test => {
             expectPrinted(test, "vector", "{true, false, true}", Vector[Bool](true, false, true));
         }),
+        TestCase("CStringRef", test => {
+            expectPrinted(test, "CStringRef(aaa)", "aaa", CStringRef(cstring("aaa")));
+            expectPrinted(test, "CStringRef()", "(null)", CStringRef());
+        }),
     )));
 

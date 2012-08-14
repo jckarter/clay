@@ -1,0 +1,120 @@
+import printer.formatter.(repr);
+import numbers.floats.(nan, nan?);
+import printer.(println);
+import strings.(String);
+import complex.*;
+
+import test.*;
+
+record Foo (x:Int, y:StringLiteralRef);
+
+variant Bar (Int, StringLiteralRef);
+
+testWithEval(test, expr) {
+    expectPrinted(test, expr, expr, repr(eval expr));
+}
+
+main() = testMain(
+    TestSuite("repr", array(
+        TestCase("numbers", test => {
+            testWithEval(test, "0ss");
+            testWithEval(test, "0uss");
+            testWithEval(test, "0s");
+            testWithEval(test, "0us");
+            testWithEval(test, "0i");
+            testWithEval(test, "0u");
+            testWithEval(test, "0l");
+            testWithEval(test, "0ul");
+
+            expectPrinted(test, "0.0",         "0x0.0000000000000p+0",  repr(0.0));
+            expectPrinted(test, "-0.0",       "-0x0.0000000000000p+0",  repr(-0.0));
+            expectPrinted(test, "1.0",         "0x1.0000000000000p+0",  repr(1.0));
+            expectPrinted(test, "1.5",         "0x1.8000000000000p+0",  repr(1.5));
+            expectPrinted(test, "nan(Double)", "nan(Float64)"        ,  repr(nan(Double)));
+
+            expectPrinted(test, "0.0f",        "0x0.000000p+0f", repr(0.0f));
+            expectPrinted(test, "-0.0f",      "-0x0.000000p+0f", repr(-0.0f));
+            expectPrinted(test, "1.0f",        "0x1.000000p+0f", repr(1.0f));
+            expectPrinted(test, "1.5f",        "0x1.800000p+0f", repr(1.5f));
+            expectPrinted(test, "nan(Float)",  "nan(Float32)",   repr(nan(Float)));
+
+            expectPrinted(test, "fj1",  "0x0.000000p+0f+0x0.000000p+0fj", repr( 0.0f+0.0fj));
+            expectPrinted(test, "fj2",  "0x0.000000p+0f-0x0.000000p+0fj", repr( 0.0f-0.0fj));
+            expectPrinted(test, "fj3", "-0x0.000000p+0f+0x0.000000p+0fj", repr(-0.0f+0.0fj));
+            expectPrinted(test, "fj4", "-0x0.000000p+0f-0x0.000000p+0fj", repr(-0.0f-0.0fj));
+
+            expectPrinted(test, "fj5",  "0x1.000000p+0f+0x1.000000p+0fj", repr( 1.0f+1.0fj));
+            expectPrinted(test, "fj6",  "0x1.000000p+0f-0x1.000000p+0fj", repr( 1.0f-1.0fj));
+            expectPrinted(test, "fj7", "-0x1.000000p+0f+0x1.000000p+0fj", repr(-1.0f+1.0fj));
+            expectPrinted(test, "fj8", "-0x1.000000p+0f-0x1.000000p+0fj", repr(-1.0f-1.0fj));
+
+            expectPrinted(test, "nan(Complex32)", "nan(Complex32)", repr(nan(Complex32)));
+
+            expectPrinted(test, "dj1",  "0x0.0000000000000p+0+0x0.0000000000000p+0j", repr( 0.0+0.0j));
+            expectPrinted(test, "dj2",  "0x0.0000000000000p+0-0x0.0000000000000p+0j", repr( 0.0-0.0j));
+            expectPrinted(test, "dj3", "-0x0.0000000000000p+0+0x0.0000000000000p+0j", repr(-0.0+0.0j));
+            expectPrinted(test, "dj4", "-0x0.0000000000000p+0-0x0.0000000000000p+0j", repr(-0.0-0.0j));
+
+            expectPrinted(test, "dj5",  "0x1.0000000000000p+0+0x1.0000000000000p+0j", repr( 1.0+1.0j));
+            expectPrinted(test, "dj6",  "0x1.0000000000000p+0-0x1.0000000000000p+0j", repr( 1.0-1.0j));
+            expectPrinted(test, "dj7", "-0x1.0000000000000p+0+0x1.0000000000000p+0j", repr(-1.0+1.0j));
+            expectPrinted(test, "dj8", "-0x1.0000000000000p+0-0x1.0000000000000p+0j", repr(-1.0-1.0j));
+
+            expectPrinted(test, "nan(Complex64)", "nan(Complex64)", repr(nan(Complex64)));
+        }),
+        TestCase("chars, strings", test => {
+            testWithEval(test, "'x'");
+            testWithEval(test, "' '");
+            testWithEval(test, "'~'");
+            testWithEval(test, "'\\x01'");
+            testWithEval(test, "'\\x1F'");
+            testWithEval(test, "'\\x7F'");
+            testWithEval(test, "'\\x80'");
+            testWithEval(test, "'\\xFF'");
+
+            testWithEval(test, "'\\0'");
+            testWithEval(test, "'\\n'");
+            testWithEval(test, "'\\r'");
+            testWithEval(test, "'\\t'");
+            testWithEval(test, "'\\f'");
+            testWithEval(test, "'\\\''");
+            testWithEval(test, "'\\\"'");
+
+            testWithEval(test, "\"x ~\\x01\\x1F\\x7F\\x80\\xFF\"");
+            testWithEval(test, """"\\0\\n\\r\\t\\f\\'\\""""");
+        }),
+        TestCase("tuples", test => {
+            testWithEval(test, """[]""");
+            testWithEval(test, """[1u]""");
+            testWithEval(test, """[1i, "two"]""");
+        }),
+        TestCase("records", test => {
+            testWithEval(test, """Foo(1i, StringLiteralRef("two"))""");
+        }),
+        TestCase("variants", test => {
+            testWithEval(test, """Bar(1i)""");
+            testWithEval(test, """Bar(StringLiteralRef("two"))""");
+        }),
+        TestCase("statics", test => {
+            testWithEval(test, "#1i");
+            testWithEval(test, "#2u");
+            testWithEval(test, "#3l");
+            testWithEval(test, "#true");
+
+            // static strings are the same as string constants
+            // see https://groups.google.com/forum/#!topic/clay-language/mR4AFJzSafE
+            expectPrinted(test, "static string", "\"st\"", repr(#"st"));
+
+            // symbols
+            testWithEval(test, "TestCase");
+            testWithEval(test, "repr");
+        }),
+        TestCase("strings", test => {
+            testWithEval(test, """"static"""");
+            testWithEval(test, """StringLiteralRef("string literal ref")""");
+            testWithEval(test, """String("string")""");
+            testWithEval(test, """CStringRef("string ref")""");
+            testWithEval(test, """CStringRef()""");
+        }),
+    )));
+
