@@ -1,0 +1,11 @@
+import libc;
+import strings.(String);
+
+tempDirectory() {
+    var r = libc.getenv(cstring("TMPDIR"));
+    if (null?(r)) {
+        return String("/tmp");
+    } else {
+        return String(r);
+    }
+}
