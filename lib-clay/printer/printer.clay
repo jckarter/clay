@@ -239,6 +239,14 @@ overload printTo(stream, x:S) {
     write(stream, x);
 }
 
+overload printTo(stream, x:CStringRef) {
+    if (null?(x.ptr)) {
+        printTo(stream, "(null)");
+    } else {
+        write(stream, x);
+    }
+}
+
 
 
 /// @section  printReprTo 
