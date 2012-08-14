@@ -1,0 +1,50 @@
+import io.errors.*;
+import unix.(opendir, readdir_r, closedir, DIR, Struct_dirent, errno);
+import strings.*;
+
+
+import io.directories.common.*;
+
+record DirectoryIterator (
+    dir : Pointer[DIR],
+    dirent: Struct_dirent,
+);
+
+[S when CCompatibleString?(S)]
+overload DirectoryIterator(dir: S) --> returned: DirectoryIterator {
+    returned.dir = opendir(cstring(dir));
+    if (null?(returned.dir))
+        throw GenericIOError(errno());
+}
+
+
+overload RegularRecord?(#DirectoryIterator) = false;
+overload BitwiseMovedType?(#DirectoryIterator) = true;
+
+overload destroy(s: DirectoryIterator) {
+    if (not null?(s.dir)) {
+        var result = closedir(s.dir);
+        assert(result != wrapCast(Type(result), -1));
+    }
+}
+overload resetUnsafe(s: DirectoryIterator) {
+    s.dir = null(DIR);
+}
+
+overload iterator(x:DirectoryIterator) = forward x;
+
+overload nextValue(x:DirectoryIterator) {
+    while (true) {
+    var ptr = Pointer[Struct_dirent]();
+    var returnCode = readdir_r(x.dir, @x.dirent, @ptr);
+    if (returnCode != 0)
+        throw GenericIOError(errno());
+    if (null?(ptr))
+        return nothing(DirectoryEntry);
+        var name = CStringRef(begin(x.dirent.d_name));
+        if (name == "." or name == "..")
+            continue;
+        return Maybe(DirectoryEntry(name));
+    }
+}
+
