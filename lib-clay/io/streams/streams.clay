@@ -4,6 +4,8 @@ import buffervector.*;
 import strings.*;
 import vectors.*;
 
+public import io.streams.bytevector.*;
+
 
 /// @section  readBytes, writeBytes, flush - byte stream operations 
 ///
