@@ -5,16 +5,17 @@ import strings.*;
 import vectors.*;
 
 
-/// @section  read, write, flush - byte stream operations 
+/// @section  readBytes, writeBytes, flush - byte stream operations 
+///
+/// readBytes and writeBytes are SPI functions, orinary clients don't
+/// need to call these functions directly, bug should use write
+/// overloads instead
 
-// read(stream, buf:Pointer[Byte], n:SizeT) SizeT
-define read;
+define readBytes(stream, buf:Pointer[Byte], n:SizeT) : SizeT;
 
-// write(stream, buf:Pointer[Byte], n:SizeT) Void
-define write;
+define writeBytes(stream, buf:Pointer[Byte], n:SizeT) : SizeT;
 
-// flush(stream) Void
-define flush;
+define flush(stream) :;
 
 
 [T]
@@ -25,6 +26,22 @@ ByteVector?(#T) = Vector?(T) and ByteLike?(SequenceElementType(T));
 
 [T]
 ByteBuffer?(#T) = ContiguousSequence?(T) and ByteLike?(SequenceElementType(T));
+
+
+
+/// @section  read, write wrappers to readBytes, writeBytes
+
+define read(stream, ..args);
+define write(stream, ..args) :;
+
+overload read(stream, buf:Pointer[Byte], n:SizeT) = readBytes(stream, buf, n);
+
+overload write(stream, buf:Pointer[Byte], n:SizeT) {
+    var pos = SizeT(0);
+    while (pos < n) {
+        pos +: writeBytes(stream, buf + pos, n - pos);
+    }
+}
 
 
 /// @section  readByte, readChar 
@@ -175,11 +192,12 @@ overload write(stream, x:V) {
 /// @section  write, flush - write to ByteVector 
 
 [V when ByteVector?(V)]
-overload write(stream:V, buf:Pointer[Byte], n:SizeT) {
+overload writeBytes(stream:V, buf:Pointer[Byte], n:SizeT) {
     var currentSize = size(stream);
     resize(stream, currentSize + n);
     var dest = Pointer[Byte](begin(stream)) + currentSize;
     copyNonoverlappingMemory(dest, buf, buf+n);
+    return n;
 }
 
 [V when ByteVector?(V)]

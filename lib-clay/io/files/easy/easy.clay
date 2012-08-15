@@ -84,7 +84,7 @@ overload fileHandle(f:File) = fileHandle(f.ptr^.file);
 
 /// @section  read, write, flush 
 
-overload read(f:File, buffer:Pointer[Byte], _requested:SizeT) {
+overload readBytes(f:File, buffer:Pointer[Byte], _requested:SizeT) {
     ref fd = f.ptr^;
     var requested = _requested;
     var pending = requested;
@@ -112,7 +112,7 @@ overload read(f:File, buffer:Pointer[Byte], _requested:SizeT) {
     return requested - pending;
 }
 
-overload write(f:File, buffer:Pointer[Byte], n:SizeT) {
+overload writeBytes(f:File, buffer:Pointer[Byte], n:SizeT) {
     ref fd = f.ptr^;
 
     var src = buffer;
@@ -141,6 +141,8 @@ overload write(f:File, buffer:Pointer[Byte], n:SizeT) {
 
     if (fd.lineBuffered? and (pendingNewlines > 0))
         flushData(fd);
+
+    return n;
 }
 
 overload flush(f:File) {
