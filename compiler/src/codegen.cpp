@@ -5763,8 +5763,9 @@ void codegenPrimOp(PrimOpPtr x,
         bool isVarArg;
         if (!staticToCallingConv(ccObj, cc))
             argumentError(1, "expecting a calling convention attribute");
-        if (!staticToBool(isVarArgObj, isVarArg))
-            argumentError(2, "expecting a static boolean");
+        TypePtr type;
+        if (!staticToBool(isVarArgObj, isVarArg, type))
+            argumentTypeError(2, "static boolean", type);
 
         if (isVarArg)
             argumentError(2, "implementing variadic external functions is not yet supported");

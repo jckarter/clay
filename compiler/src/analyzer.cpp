@@ -158,13 +158,15 @@ static void staticToTypeTuple(MultiStaticPtr x, unsigned index,
         argumentError(index, "expecting zero-or-more types");
 }
 
-static bool staticToInt(ObjectPtr x, int &out)
+static bool staticToInt(ObjectPtr x, int &out, TypePtr &type)
 {
     if (x->objKind != VALUE_HOLDER)
         return false;
     ValueHolderPtr vh = (ValueHolder *)x.ptr();
-    if (vh->type != cIntType)
+    if (vh->type != cIntType) {
+        type = vh->type;
         return false;
+    }
     out = vh->as<int>();
     return true;
 }
@@ -172,18 +174,22 @@ static bool staticToInt(ObjectPtr x, int &out)
 static int staticToInt(MultiStaticPtr x, unsigned index)
 {
     int out = -1;
-    if (!staticToInt(x->values[index], out))
-        argumentError(index, "expecting Int value");
+    TypePtr type;
+    if (!staticToInt(x->values[index], out, type)){
+        argumentTypeError(index, "Int", type);
+    }
     return out;
 }
 
-bool staticToBool(ObjectPtr x, bool &out)
+bool staticToBool(ObjectPtr x, bool &out, TypePtr &type)
 {
     if (x->objKind != VALUE_HOLDER)
         return false;
     ValueHolderPtr vh = (ValueHolder *)x.ptr();
-    if (vh->type != boolType)
+    if (vh->type != boolType) {
+        type = vh->type;
         return false;
+    }
     out = vh->as<bool>();
     return true;
 }
@@ -191,8 +197,9 @@ bool staticToBool(ObjectPtr x, bool &out)
 bool staticToBool(MultiStaticPtr x, unsigned index)
 {
     bool out = false;
-    if (!staticToBool(x->values[index], out))
-        argumentError(index, "expecting Bool value");
+    TypePtr type;
+    if (!staticToBool(x->values[index], out, type))
+        argumentTypeError(index, "Bool", type);
     return out;
 }
 
@@ -2671,8 +2678,9 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 
         ObjectPtr isVarArgObj = unwrapStaticType(args->values[2].type);
         bool isVarArg;
-        if (!staticToBool(isVarArgObj, isVarArg))
-            argumentError(2, "expecting a static Bool");
+        TypePtr type;
+        if (!staticToBool(isVarArgObj, isVarArg, type))
+            argumentTypeError(2, "static Bool", type);
 
         if (isVarArg)
             argumentError(2, "implementation of external variadic functions is not yet supported");

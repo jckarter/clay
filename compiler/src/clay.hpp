@@ -3613,7 +3613,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args);
 
 ObjectPtr unwrapStaticType(TypePtr t);
 
-bool staticToBool(ObjectPtr x, bool &out);
+bool staticToBool(ObjectPtr x, bool &out, TypePtr &type);
 bool staticToBool(MultiStaticPtr x, unsigned index);
 bool staticToCallingConv(ObjectPtr x, CallingConv &out);
 CallingConv staticToCallingConv(MultiStaticPtr x, unsigned index);
