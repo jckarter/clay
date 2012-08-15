@@ -2981,15 +2981,15 @@ void codegenCodeBody(InvokeEntry* entry)
         int line, column;
         Location argLocation = entry->origCode->formalArgs[entry->varArgPosition]->location;
         llvm::DIFile file = getDebugLineCol(argLocation, line, column);
-
-        for (unsigned j = 0; j < entry->varArgTypes.size(); ++j, ++ai, ++argNo) {
+        unsigned j = 0;
+        for (; j < entry->varArgTypes.size(); ++j, ++ai, ++argNo) {
             llvm::Argument *llArgValue = &(*ai);
             llvm::SmallString<128> buf;
             llvm::raw_svector_ostream sout(buf);
             sout << entry->varArgName << ".." << j;
             llArgValue->setName(sout.str());
             CValuePtr cvalue = new CValue(entry->varArgTypes[j], llArgValue);
-            cvalue->forwardedRValue = entry->varArgForwardedRValueFlags[j];
+            cvalue->forwardedRValue = entry->forwardedRValueFlags[i+j];
             varArgs->add(cvalue);
 
             if (llvmDIBuilder != NULL) {
@@ -3021,7 +3021,7 @@ void codegenCodeBody(InvokeEntry* entry)
             llvm::Argument *llArgValue = &(*ai);
             llArgValue->setName(entry->fixedArgNames[i]->str.str());
             CValuePtr cvalue = new CValue(entry->fixedArgTypes[i], llArgValue);
-            cvalue->forwardedRValue = entry->forwardedRValueFlags[i];
+            cvalue->forwardedRValue = entry->forwardedRValueFlags[i+j];
             addLocal(env, entry->fixedArgNames[i], cvalue.ptr());
             if (llvmDIBuilder != NULL) {
                 int line, column;
@@ -3289,14 +3289,14 @@ void codegenCallInline(InvokeEntry* entry,
         for (; j < entry->varArgTypes.size(); ++j) {
             CValuePtr cv = args->values[i+j];
             CValuePtr carg = new CValue(cv->type, cv->llValue);
-            carg->forwardedRValue = entry->varArgForwardedRValueFlags[j];
+            carg->forwardedRValue = entry->forwardedRValueFlags[i+j];
             varArgs->add(carg);
         }
         addLocal(env, entry->varArgName, varArgs.ptr());
         for (; i < entry->fixedArgNames.size(); ++i) {
             CValuePtr cv = args->values[i+j];
             CValuePtr carg = new CValue(cv->type, cv->llValue);
-            carg->forwardedRValue = entry->forwardedRValueFlags[i];
+            carg->forwardedRValue = entry->forwardedRValueFlags[i+j];
             assert(carg->type == entry->argsKey[i+j]);
             addLocal(env, entry->fixedArgNames[i], carg.ptr());
         }
@@ -3390,21 +3390,21 @@ void codegenCallByName(InvokeEntry* entry,
     EnvPtr bodyEnv = new Env(entry->env);
     bodyEnv->callByNameExprHead = callable;
 
-    unsigned i = 0, j = 0;
-    for (; i < entry->varArgPosition; ++i) {
-        ExprPtr expr = foreignExpr(env, args->exprs[i]);
-        addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
+    unsigned k = 0, j = 0;
+    for (; k < entry->varArgPosition; ++k) {
+        ExprPtr expr = foreignExpr(env, args->exprs[k]);
+        addLocal(bodyEnv, entry->fixedArgNames[k], expr.ptr());
     }
     if (entry->varArgName.ptr()) {
         ExprListPtr varArgs = new ExprList();
-        for (; j < args->size()-entry->varArgPosition; ++j) {
-            ExprPtr expr = foreignExpr(env, args->exprs[i+j]);
+        for (; j < args->size() - entry->fixedArgNames.size(); ++j) {
+            ExprPtr expr = foreignExpr(env, args->exprs[k+j]);
             varArgs->add(expr);
         }
         addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
-        for (; i < entry->fixedArgNames.size(); ++i) {
-            ExprPtr expr = foreignExpr(env, args->exprs[i+j]);
-            addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
+        for (; k < entry->fixedArgNames.size(); ++k) {
+            ExprPtr expr = foreignExpr(env, args->exprs[k+j]);
+            addLocal(bodyEnv, entry->fixedArgNames[k], expr.ptr());
         }
     }
 

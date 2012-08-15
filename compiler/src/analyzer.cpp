@@ -1876,7 +1876,7 @@ MultiPValuePtr analyzeCallByName(InvokeEntry* entry,
     }
     if (entry->varArgName.ptr()) {
         ExprListPtr varArgs = new ExprList();
-        for (; j < args->size()-entry->varArgPosition; ++j) {
+        for (; j < args->size() - entry->fixedArgNames.size(); ++j) {
             ExprPtr expr = foreignExpr(env, args->exprs[i+j]);
             varArgs->add(expr);
         }
@@ -1996,21 +1996,21 @@ void analyzeCodeBody(InvokeEntry* entry)
 
     EnvPtr bodyEnv = new Env(entry->env);
     
-    unsigned i = 0;
+    unsigned i = 0, j = 0;
     for (; i < entry->varArgPosition; ++i) {
         bool flag = entry->forwardedRValueFlags[i];
         addLocal(bodyEnv, entry->fixedArgNames[i], new PValue(entry->fixedArgTypes[i], flag));
     }
     if (entry->varArgName.ptr()) {
         MultiPValuePtr varArgs = new MultiPValue();
-        for (unsigned j = 0; j < entry->varArgTypes.size(); ++j) {
-            bool flag = entry->varArgForwardedRValueFlags[j];
+        for (; j < entry->varArgTypes.size(); ++j) {
+            bool flag = entry->forwardedRValueFlags[i+j];
             PVData parg(entry->varArgTypes[j], flag);
             varArgs->values.push_back(parg);
         }
         addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
         for (; i < entry->fixedArgNames.size(); ++i) {
-            bool flag = entry->forwardedRValueFlags[i];
+            bool flag = entry->forwardedRValueFlags[i+j];
             addLocal(bodyEnv, entry->fixedArgNames[i], new PValue(entry->fixedArgTypes[i], flag));
         }
     }

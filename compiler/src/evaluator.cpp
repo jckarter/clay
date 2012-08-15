@@ -1784,27 +1784,27 @@ void evalCallCode(InvokeEntry* entry,
 
     EnvPtr env = new Env(entry->env);
     
-    unsigned i = 0, j = 0;
-    for (; i < entry->varArgPosition; ++i) {
-        EValuePtr ev = args->values[i];
+    unsigned k = 0, j = 0;
+    for (; k < entry->varArgPosition; ++k) {
+        EValuePtr ev = args->values[k];
         EValuePtr earg = new EValue(ev->type, ev->addr);
-        earg->forwardedRValue = entry->forwardedRValueFlags[i];
-        addLocal(env, entry->fixedArgNames[i], earg.ptr());
+        earg->forwardedRValue = entry->forwardedRValueFlags[k];
+        addLocal(env, entry->fixedArgNames[k], earg.ptr());
     }
     if (entry->varArgName.ptr()) {
         MultiEValuePtr varArgs = new MultiEValue();
         for (; j < entry->varArgTypes.size(); ++j) {
-            EValuePtr ev = args->values[i + j];
+            EValuePtr ev = args->values[k + j];
             EValuePtr earg = new EValue(ev->type, ev->addr);
-            earg->forwardedRValue = entry->varArgForwardedRValueFlags[j];
+            earg->forwardedRValue = entry->forwardedRValueFlags[k+j];
             varArgs->add(earg);
         }
         addLocal(env, entry->varArgName, varArgs.ptr());
-        for (; i < entry->fixedArgNames.size(); ++i) {
-            EValuePtr ev = args->values[i+j];
+        for (; k < entry->fixedArgNames.size(); ++k) {
+            EValuePtr ev = args->values[k+j];
             EValuePtr earg = new EValue(ev->type, ev->addr);
-            earg->forwardedRValue = entry->forwardedRValueFlags[i];
-            addLocal(env, entry->fixedArgNames[i], earg.ptr());
+            earg->forwardedRValue = entry->forwardedRValueFlags[k+j];
+            addLocal(env, entry->fixedArgNames[k], earg.ptr());
         }
     }
     
@@ -1922,7 +1922,7 @@ void evalCallByName(InvokeEntry* entry,
     }
     if (entry->varArgName.ptr()) {
         ExprListPtr varArgs = new ExprList();
-        for (; j < args->size()-entry->varArgPosition; ++j) {
+        for (; j < args->size() - entry->fixedArgNames.size(); ++j) {
             ExprPtr expr = foreignExpr(env, args->exprs[i+j]);
             varArgs->add(expr);
         }

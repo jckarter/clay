@@ -241,8 +241,7 @@ static bool matchTempness(CodePtr code,
                           const vector<ValueTempness> &argsTempness,
                           bool callByName,
                           vector<ValueTempness> &tempnessKey,
-                          vector<bool> &forwardedRValueFlags,
-                          vector<bool> &varArgForwardedRValueFlags)
+                          vector<bool> &forwardedRValueFlags)
 {
     const vector<FormalArgPtr> &fargs = code->formalArgs;
     
@@ -253,8 +252,7 @@ static bool matchTempness(CodePtr code,
 
     tempnessKey.clear();
     forwardedRValueFlags.clear();
-    varArgForwardedRValueFlags.clear();
-
+    
     unsigned varArgSize = argsTempness.size()-fargs.size()+1;
     for (unsigned i = 0, j = 0; i < fargs.size(); ++i) {
         if (callByName && (fargs[i]->tempness == TEMPNESS_FORWARD)) {
@@ -271,7 +269,7 @@ static bool matchTempness(CodePtr code,
                 bool forwardedRValue =
                     (fargs[i]->tempness == TEMPNESS_FORWARD) &&
                     (argsTempness[i+j] == TEMPNESS_RVALUE);
-                varArgForwardedRValueFlags.push_back(forwardedRValue);
+                forwardedRValueFlags.push_back(forwardedRValue);
             }
             --j;
         } else {
@@ -338,15 +336,14 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
     MatchSuccessPtr match;
     vector<ValueTempness> tempnessKey;
     vector<bool> forwardedRValueFlags;
-    vector<bool> varArgForwardedRValueFlags;
+    
     unsigned i = 0;
     while ((match = getMatch(invokeSet,i,failures)).ptr() != NULL) {
         if (matchTempness(match->code,
                           argsTempness,
                           match->callByName,
                           tempnessKey,
-                          forwardedRValueFlags,
-                          varArgForwardedRValueFlags))
+                          forwardedRValueFlags))
         {
             break;
         }
@@ -364,8 +361,7 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
     InvokeEntry* entry = newInvokeEntry(invokeSet, match,
         (MatchSuccess*)interfaceResult.ptr());
     entry->forwardedRValueFlags = forwardedRValueFlags;
-    entry->varArgForwardedRValueFlags = varArgForwardedRValueFlags;
-
+    
     invokeSet->tempnessMap2[tempnessKey] = entry;
     invokeSet->tempnessMap[argsTempness] = entry;
 

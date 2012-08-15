@@ -3336,7 +3336,6 @@ struct InvokeEntry {
     ObjectPtr callable;
     vector<TypePtr> argsKey;
     vector<bool> forwardedRValueFlags;
-    vector<bool> varArgForwardedRValueFlags;
 
     bool analyzed;
     bool analyzing;
