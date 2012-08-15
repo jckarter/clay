@@ -7,21 +7,21 @@ import io.directories.*;
 
 import test.*;
 
-define testDirectoryListing(test):;
+define testListDirectory(test):;
 
 [when OSFamily == Unix]
-overload testDirectoryListing(test) {
-    // converted to Vector, because some functions in algorithms module are broken
-    var l = Vector(directoryListing("/"));
+overload testListDirectory(test) {
+    var l = listDirectory("/");
     expectTrue(test, "contains /bin", in?(l, "bin"));
 }
 
-// directoryListing is implemented only on Unices
-[when OSFamily != Unix]
-overload testDirectoryListing(test) {
+[when OSFamily == Windows]
+overload testListDirectory(test) {
+    var l = listDirectory("c:\\");
+    expectTrue(test, "contains 'System Volume Information'", in?(l, "System Volume Information"));
 }
 
 main() = testMain(
     TestSuite("io.directories", array(
-        TestCase("directoryListing", testDirectoryListing),
+        TestCase("listDirectory", testListDirectory),
     )));
