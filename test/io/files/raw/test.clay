@@ -10,4 +10,8 @@ main() = testMain(
             expectTrue(test, "InputStream?", InputStream?(RawFile));
             expectTrue(test, "OutputStream?", OutputStream?(RawFile));
         }),
+        TestCase("*Stream?(RawFilePointer)", test => {
+            expectTrue(test, "InputStream?", InputStream?(RawFilePointer));
+            expectTrue(test, "OutputStream?", OutputStream?(RawFilePointer));
+        }),
     )));

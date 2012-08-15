@@ -1,3 +1,30 @@
+import sharedpointers.*;
+
+import io.streams.*;
+import io.files.api.*;
+
 public import io.files.raw.platform.*;
 
+record RawFilePointer (
+    rawFile: SharedPointer[RawFile],
+);
+
+overload writeBytes(f: RawFilePointer, ..args) = ..writeBytes(f.rawFile^, ..args);
+overload readBytes (f: RawFilePointer, ..args) = ..readBytes (f.rawFile^, ..args);
+overload flush     (f: RawFilePointer, ..args) = ..flush     (f.rawFile^, ..args);
+overload fileSize  (f: RawFilePointer, ..args) = ..fileSize  (f.rawFile^, ..args);
+overload seek      (f: RawFilePointer, ..args) = ..seek      (f.rawFile^, ..args);
+overload fileHandle(f: RawFilePointer, ..args) = ..fileHandle(f.rawFile^, ..args);
+
+overload RawFilePointer(..args) =
+    initializeRecord(RawFilePointer, new(RawFile(..args)));
+
+overload RawFilePointer(rvalue rawFile: RawFile) =
+    initializeRecord(RawFilePointer, new(move(rawFile)));
+
+overload RawFilePointer() =
+    initializeRecord(RawFilePointer);
+
+overload RawFilePointer(original: RawFilePointer) =
+    copyRecord(original);
 
