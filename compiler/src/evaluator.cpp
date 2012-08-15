@@ -1783,28 +1783,31 @@ void evalCallCode(InvokeEntry* entry,
     ensureArity(args, entry->argsKey.size());
 
     EnvPtr env = new Env(entry->env);
-    CodePtr code = entry->code;
-    unsigned varArgSize = args->size() - code->formalArgs.size()+1;
-    for (unsigned i = 0, j = 0; i < code->formalArgs.size(); ++i) {
-        FormalArgPtr y = code->formalArgs[i];    
-        if (y->varArg) {
-            MultiEValuePtr varArgs = new MultiEValue();
-            for (; j < varArgSize; ++j) {
-                EValuePtr ev = args->values[i+j];
-                EValuePtr earg = new EValue(ev->type, ev->addr);
-                earg->forwardedRValue = entry->forwardedRValueFlags[i+j];
-                varArgs->add(earg);
-            }
-            --j;
-            addLocal(env, y->name, varArgs.ptr());
-        } else {
+    
+    unsigned i = 0, j = 0;
+    for (; i < entry->varArgPosition; ++i) {
+        EValuePtr ev = args->values[i];
+        EValuePtr earg = new EValue(ev->type, ev->addr);
+        earg->forwardedRValue = entry->forwardedRValueFlags[i];
+        addLocal(env, entry->fixedArgNames[i], earg.ptr());
+    }
+    if (entry->varArgName.ptr()) {
+        MultiEValuePtr varArgs = new MultiEValue();
+        for (; j < entry->varArgTypes.size(); ++j) {
+            EValuePtr ev = args->values[i + j];
+            EValuePtr earg = new EValue(ev->type, ev->addr);
+            earg->forwardedRValue = entry->varArgForwardedRValueFlags[j];
+            varArgs->add(earg);
+        }
+        addLocal(env, entry->varArgName, varArgs.ptr());
+        for (; i < entry->fixedArgNames.size(); ++i) {
             EValuePtr ev = args->values[i+j];
             EValuePtr earg = new EValue(ev->type, ev->addr);
-            earg->forwardedRValue = entry->forwardedRValueFlags[i+j];
-            addLocal(env, y->name, earg.ptr());
+            earg->forwardedRValue = entry->forwardedRValueFlags[i];
+            addLocal(env, entry->fixedArgNames[i], earg.ptr());
         }
     }
-
+    
     assert(out->size() == entry->returnTypes.size());
     vector<EReturn> returns;
     for (unsigned i = 0; i < entry->returnTypes.size(); ++i) {
@@ -1904,28 +1907,29 @@ void evalCallByName(InvokeEntry* entry,
                     MultiEValuePtr out)
 {
     assert(entry->callByName);
-    CodePtr code = entry->code;
-    if (code->hasVarArg)
-        assert(args->size() >= code->formalArgs.size());
+    if (entry->varArgName.ptr())
+        assert(args->size() >= entry->fixedArgNames.size());
     else
-        assert(args->size() == code->formalArgs.size());
-    
+        assert(args->size() == entry->fixedArgNames.size());
+
     EnvPtr bodyEnv = new Env(entry->env);
     bodyEnv->callByNameExprHead = callable;
-    unsigned varArgSize = args->size() - code->formalArgs.size()+1;
-    for (unsigned i = 0, j = 0; i < code->formalArgs.size(); ++i) {
-        FormalArgPtr y = code->formalArgs[i];    
-        if (y->varArg) {
-            ExprListPtr varArgs = new ExprList();
-            for (; i < varArgSize; ++j) {
-                ExprPtr expr = foreignExpr(env, args->exprs[i+j]);
-                varArgs->add(expr);
-            }
-            --j;
-            addLocal(bodyEnv, y->name, varArgs.ptr());
-        } else {
+ 
+    unsigned i = 0, j = 0;
+    for (; i < entry->varArgPosition; ++i) {
+        ExprPtr expr = foreignExpr(env, args->exprs[i]);
+        addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
+    }
+    if (entry->varArgName.ptr()) {
+        ExprListPtr varArgs = new ExprList();
+        for (; j < args->size()-entry->varArgPosition; ++j) {
             ExprPtr expr = foreignExpr(env, args->exprs[i+j]);
-            addLocal(bodyEnv, y->name, expr.ptr());
+            varArgs->add(expr);
+        }
+        addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
+        for (; i < entry->fixedArgNames.size(); ++i) {
+            ExprPtr expr = foreignExpr(env, args->exprs[i+j]);
+            addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
         }
     }
 

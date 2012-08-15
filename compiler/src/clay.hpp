@@ -3238,12 +3238,18 @@ struct MatchSuccess : public MatchResult {
 
     ObjectPtr callable;
     vector<TypePtr> argsKey;
-    
+
+    vector<TypePtr> fixedArgTypes;
+    vector<IdentifierPtr> fixedArgNames;
+    IdentifierPtr varArgName;
+    vector<TypePtr> varArgTypes;
+    unsigned varArgPosition;
+
     MatchSuccess(bool callByName, InlineAttribute isInline, CodePtr code, EnvPtr env,
                  ObjectPtr callable, const vector<TypePtr> &argsKey)
         : MatchResult(MATCH_SUCCESS), callByName(callByName),
           isInline(isInline), code(code), env(env), callable(callable),
-          argsKey(argsKey) {}
+          argsKey(argsKey), varArgPosition(0) {}
 };
 typedef Pointer<MatchSuccess> MatchSuccessPtr;
 
@@ -3330,6 +3336,7 @@ struct InvokeEntry {
     ObjectPtr callable;
     vector<TypePtr> argsKey;
     vector<bool> forwardedRValueFlags;
+    vector<bool> varArgForwardedRValueFlags;
 
     bool analyzed;
     bool analyzing;
@@ -3338,7 +3345,13 @@ struct InvokeEntry {
     CodePtr code;
     EnvPtr env;
     EnvPtr interfaceEnv;
-    
+
+    vector<TypePtr> fixedArgTypes;
+    vector<IdentifierPtr> fixedArgNames;
+    IdentifierPtr varArgName;
+    vector<TypePtr> varArgTypes;
+    unsigned varArgPosition;
+
     bool callByName; // if callByName the rest of InvokeEntry is not set
     InlineAttribute isInline;
 
@@ -3354,7 +3367,7 @@ struct InvokeEntry {
     InvokeEntry(InvokeSet *parent,
                 ObjectPtr callable,
                 const vector<TypePtr> &argsKey)
-        : parent(parent),
+        : parent(parent), varArgPosition(0),
           callable(callable), argsKey(argsKey),
           analyzed(false), analyzing(false), callByName(false),
           isInline(IGNORE), llvmFunc(NULL), debugInfo(NULL)

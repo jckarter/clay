@@ -44,8 +44,8 @@ static void initializePatterns(OverloadPtr x)
     const vector<FormalArgPtr> &formalArgs = code->formalArgs;
     for (unsigned i = 0; i < formalArgs.size(); ++i) {
         FormalArgPtr y = formalArgs[i];
+        PatternPtr pattern;
         if (y->type.ptr()) {
-            PatternPtr pattern;
             if (y->varArg) {
                 ExprPtr unpack = new Unpack(y->type.ptr());
                 unpack->location = y->type->location;
@@ -54,8 +54,8 @@ static void initializePatterns(OverloadPtr x)
             } else {
                 pattern = evaluateOnePattern(y->type, patternEnv);
             }
-            x->argPatterns.push_back(pattern);
         }
+        x->argPatterns.push_back(pattern);
     }
 
     x->patternsInitializedState = 1;
@@ -104,20 +104,18 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
 
     CodePtr code = overload->code;
     if (code->hasVarArg) {
-        if (argsKey.size() < code->formalArgs.size())
+        if (argsKey.size() < code->formalArgs.size()-1)
             return new MatchArityError(code->formalArgs.size(), argsKey.size(), true);
     }
     else {
         if (code->formalArgs.size() != argsKey.size())
             return new MatchArityError(code->formalArgs.size(), argsKey.size(), false);
     }
-    llvm::errs() << "matchInvoke: "<< overload->target << "\n";
     const vector<FormalArgPtr> &formalArgs = code->formalArgs;
     unsigned varArgSize = argsKey.size()-formalArgs.size()+1;
     for (unsigned i = 0, j = 0; i < formalArgs.size(); ++i) {
         FormalArgPtr x = formalArgs[i];
         if (x->type.ptr()) {
-            llvm::errs() << x->name << "\n";
             if (x->varArg) {
                 MultiStaticPtr types = new MultiStatic();
                 for (; j < varArgSize; ++j)
@@ -133,9 +131,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
             }
         }
     }
-    llvm::errs() << "matchInvoke unified\n";
     
-
     EnvPtr staticEnv = new Env(overload->env);
     const vector<PatternVar> &pvars = code->patternVars;
     for (unsigned i = 0; i < pvars.size(); ++i) {
@@ -149,25 +145,36 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
             ObjectPtr v = derefDeep(overload->cells[i].ptr());
             if (!v)
                 error(pvars[i].name, "unbound pattern variable");
-            llvm::errs() << "addLocal staticEnv: "<< pvars[i].name << ", " << v << "\n";
-    
             addLocal(staticEnv, pvars[i].name, v.ptr());
         }
     }
 
     reseter.reset();
     
-    if (code->predicate.ptr()) {
+    if (code->predicate.ptr())
         if (!evaluateBool(code->predicate, staticEnv))
             return new MatchPredicateError(code->predicate);
-    }
-    llvm::errs() << "matchInvoke predicate true\n";
     
     MatchSuccessPtr result = new MatchSuccess(
         overload->callByName, overload->isInline, code, staticEnv,
         callable, argsKey
     );
     
+    for (unsigned i = 0, j = 0; i < formalArgs.size(); ++i) {
+        FormalArgPtr x = formalArgs[i];
+        if (x->varArg) {
+            result->varArgName = x->name;
+            result->varArgPosition = i;
+            for (; j < varArgSize; ++j) {
+                result->varArgTypes.push_back(argsKey[i+j]);
+            }
+            --j;
+        } else {
+            result->fixedArgNames.push_back(x->name);
+            result->fixedArgTypes.push_back(argsKey[i+j]);
+        }
+    }
+    if(!code->hasVarArg) result->varArgPosition = result->fixedArgNames.size();
     return result.ptr();
 }
 

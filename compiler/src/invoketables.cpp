@@ -241,17 +241,20 @@ static bool matchTempness(CodePtr code,
                           const vector<ValueTempness> &argsTempness,
                           bool callByName,
                           vector<ValueTempness> &tempnessKey,
-                          vector<bool> &forwardedRValueFlags)
+                          vector<bool> &forwardedRValueFlags,
+                          vector<bool> &varArgForwardedRValueFlags)
 {
     const vector<FormalArgPtr> &fargs = code->formalArgs;
     
     if (code->hasVarArg)
-        assert(fargs.size() <= argsTempness.size());
+        assert(fargs.size()-1 <= argsTempness.size());
     else
         assert(fargs.size() == argsTempness.size());
 
     tempnessKey.clear();
     forwardedRValueFlags.clear();
+    varArgForwardedRValueFlags.clear();
+
     unsigned varArgSize = argsTempness.size()-fargs.size()+1;
     for (unsigned i = 0, j = 0; i < fargs.size(); ++i) {
         if (callByName && (fargs[i]->tempness == TEMPNESS_FORWARD)) {
@@ -268,7 +271,7 @@ static bool matchTempness(CodePtr code,
                 bool forwardedRValue =
                     (fargs[i]->tempness == TEMPNESS_FORWARD) &&
                     (argsTempness[i+j] == TEMPNESS_RVALUE);
-                forwardedRValueFlags.push_back(forwardedRValue);
+                varArgForwardedRValueFlags.push_back(forwardedRValue);
             }
             --j;
         } else {
@@ -297,6 +300,11 @@ static InvokeEntry* newInvokeEntry(InvokeSet* parent,
     entry->env = match->env;
     if (interfaceMatch != NULL)
         entry->interfaceEnv = interfaceMatch->env;
+    entry->fixedArgNames = match->fixedArgNames;
+    entry->fixedArgTypes = match->fixedArgTypes;
+    entry->varArgName = match->varArgName;
+    entry->varArgTypes = match->varArgTypes;
+    entry->varArgPosition = match->varArgPosition;
     entry->callByName = match->callByName;
     entry->isInline = match->isInline;
 
@@ -314,7 +322,7 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
         invokeSet->tempnessMap.find(argsTempness);
     if (iter != invokeSet->tempnessMap.end())
         return iter->second;
-
+    
     MatchResultPtr interfaceResult;
     if (invokeSet->interface != NULL) {
         interfaceResult = matchInvoke(invokeSet->interface,
@@ -330,13 +338,15 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
     MatchSuccessPtr match;
     vector<ValueTempness> tempnessKey;
     vector<bool> forwardedRValueFlags;
+    vector<bool> varArgForwardedRValueFlags;
     unsigned i = 0;
     while ((match = getMatch(invokeSet,i,failures)).ptr() != NULL) {
         if (matchTempness(match->code,
                           argsTempness,
                           match->callByName,
                           tempnessKey,
-                          forwardedRValueFlags))
+                          forwardedRValueFlags,
+                          varArgForwardedRValueFlags))
         {
             break;
         }
@@ -354,6 +364,7 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
     InvokeEntry* entry = newInvokeEntry(invokeSet, match,
         (MatchSuccess*)interfaceResult.ptr());
     entry->forwardedRValueFlags = forwardedRValueFlags;
+    entry->varArgForwardedRValueFlags = varArgForwardedRValueFlags;
 
     invokeSet->tempnessMap2[tempnessKey] = entry;
     invokeSet->tempnessMap[argsTempness] = entry;

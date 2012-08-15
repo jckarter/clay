@@ -2694,7 +2694,7 @@ void codegenLLVMBody(InvokeEntry* entry, llvm::StringRef callableName)
         llvm::Type *argType = llvmPointerType(entry->argsKey[i]);
         if (argCount > 0) out << string(", ");
         argType->print(out);
-        out << string(" %\"") << entry->code->formalArgs[i]->name->str << string("\"");
+        out << string(" %\"") << entry->fixedArgNames[i]->str << string("\"");
         argCount ++;
     }
     for (unsigned i = 0; i < entry->returnTypes.size(); ++i) {
@@ -2940,60 +2940,89 @@ void codegenCodeBody(InvokeEntry* entry)
 
     llvm::Function::arg_iterator ai = llFunc->arg_begin();
     unsigned argNo = 1;
-    CodePtr code = entry->code;
-    unsigned varArgSize = entry->argsKey.size() - code->formalArgs.size()+1;
-    for (unsigned i = 0, j = 0; i < code->formalArgs.size(); ++i) {
-        FormalArgPtr y = code->formalArgs[i];    
-        if (y->varArg) {
-            MultiCValuePtr varArgs = new MultiCValue();
-
+    unsigned i = 0;
+    for (; i < entry->varArgPosition; ++i, ++ai, ++argNo) {
+        llvm::Argument *llArgValue = &(*ai);
+        llArgValue->setName(entry->fixedArgNames[i]->str.str());
+        CValuePtr cvalue = new CValue(entry->fixedArgTypes[i], llArgValue);
+        cvalue->forwardedRValue = entry->forwardedRValueFlags[i];
+        addLocal(env, entry->fixedArgNames[i], cvalue.ptr());
+        if (llvmDIBuilder != NULL) {
             int line, column;
             Location argLocation = entry->origCode->formalArgs[i]->location;
             llvm::DIFile file = getDebugLineCol(argLocation, line, column);
+            llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, entry->getDebugInfo());
+            llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
+                llvm::dwarf::DW_TAG_arg_variable, // tag
+                entry->getDebugInfo(), // scope
+                entry->fixedArgNames[i]->str, // name
+                file, // file
+                line, // line
+                llvmDIBuilder->createReferenceType(
+                    llvmTypeDebugInfo(entry->fixedArgTypes[i])), // type
+                true, // alwaysPreserve
+                0, // flags
+                argNo
+                );
+            llvmDIBuilder->insertDeclare(
+                llArgValue,
+                debugVar,
+                initBlock)
+                ->setDebugLoc(debugLoc);
+            llvm::Value *debugAlloca =
+                ctx.initBuilder->CreateAlloca(llArgValue->getType());
+            ctx.initBuilder->CreateStore(llArgValue, debugAlloca);
+        }
+    }
 
-            for (; j < varArgSize; ++j, ++ai, ++argNo) {
-                llvm::Argument *llArgValue = &(*ai);
-                llvm::SmallString<128> buf;
-                llvm::raw_svector_ostream sout(buf);
-                sout << y->name << ".." << i+j;
-                llArgValue->setName(sout.str());
-                CValuePtr cvalue = new CValue(entry->argsKey[i+j], llArgValue);
-                cvalue->forwardedRValue = entry->forwardedRValueFlags[i+j];
-                varArgs->add(cvalue);
+    if (entry->varArgName.ptr()) {
+        MultiCValuePtr varArgs = new MultiCValue();
 
-                if (llvmDIBuilder != NULL) {
-                    llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, entry->getDebugInfo());
-                    llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
-                        llvm::dwarf::DW_TAG_arg_variable, // tag
-                        entry->getDebugInfo(), // scope
-                        sout.str(), // name
-                        file, // file
-                        line, // line
-                        llvmDIBuilder->createReferenceType(
-                            llvmTypeDebugInfo(entry->argsKey[i+j])), // type
-                        true, // alwaysPreserve
-                        0, // flags
-                        argNo
-                        );
-                    llvmDIBuilder->insertDeclare(
-                        llArgValue,
-                        debugVar,
-                        initBlock)
-                        ->setDebugLoc(debugLoc);
-                    llvm::Value *debugAlloca =
-                        ctx.initBuilder->CreateAlloca(llArgValue->getType());
-                    ctx.initBuilder->CreateStore(llArgValue, debugAlloca);
-                }
-            }
-            --j;
-            addLocal(env, y->name, varArgs.ptr());
-        } else {
+        int line, column;
+        Location argLocation = entry->origCode->formalArgs[entry->varArgPosition]->location;
+        llvm::DIFile file = getDebugLineCol(argLocation, line, column);
 
+        for (unsigned j = 0; j < entry->varArgTypes.size(); ++j, ++ai, ++argNo) {
             llvm::Argument *llArgValue = &(*ai);
-            llArgValue->setName(y->name->str.str());
-            CValuePtr cvalue = new CValue(entry->argsKey[i+j], llArgValue);
-            cvalue->forwardedRValue = entry->forwardedRValueFlags[i+j];
-            addLocal(env, y->name, cvalue.ptr());
+            llvm::SmallString<128> buf;
+            llvm::raw_svector_ostream sout(buf);
+            sout << entry->varArgName << ".." << j;
+            llArgValue->setName(sout.str());
+            CValuePtr cvalue = new CValue(entry->varArgTypes[j], llArgValue);
+            cvalue->forwardedRValue = entry->varArgForwardedRValueFlags[j];
+            varArgs->add(cvalue);
+
+            if (llvmDIBuilder != NULL) {
+                llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, entry->getDebugInfo());
+                llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
+                    llvm::dwarf::DW_TAG_arg_variable, // tag
+                    entry->getDebugInfo(), // scope
+                    sout.str(), // name
+                    file, // file
+                    line, // line
+                    llvmDIBuilder->createReferenceType(
+                        llvmTypeDebugInfo(entry->varArgTypes[j])), // type
+                    true, // alwaysPreserve
+                    0, // flags
+                    argNo
+                    );
+                llvmDIBuilder->insertDeclare(
+                    llArgValue,
+                    debugVar,
+                    initBlock)
+                    ->setDebugLoc(debugLoc);
+                llvm::Value *debugAlloca =
+                    ctx.initBuilder->CreateAlloca(llArgValue->getType());
+                ctx.initBuilder->CreateStore(llArgValue, debugAlloca);
+            }
+        }
+        addLocal(env, entry->varArgName, varArgs.ptr());
+        for (; i < entry->fixedArgNames.size(); ++i, ++ai, ++argNo) {
+            llvm::Argument *llArgValue = &(*ai);
+            llArgValue->setName(entry->fixedArgNames[i]->str.str());
+            CValuePtr cvalue = new CValue(entry->fixedArgTypes[i], llArgValue);
+            cvalue->forwardedRValue = entry->forwardedRValueFlags[i];
+            addLocal(env, entry->fixedArgNames[i], cvalue.ptr());
             if (llvmDIBuilder != NULL) {
                 int line, column;
                 Location argLocation = entry->origCode->formalArgs[i]->location;
@@ -3002,11 +3031,11 @@ void codegenCodeBody(InvokeEntry* entry)
                 llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
                     llvm::dwarf::DW_TAG_arg_variable, // tag
                     entry->getDebugInfo(), // scope
-                    y->name->str, // name
+                    entry->fixedArgNames[i]->str, // name
                     file, // file
                     line, // line
                     llvmDIBuilder->createReferenceType(
-                        llvmTypeDebugInfo(entry->argsKey[i+j])), // type
+                        llvmTypeDebugInfo(entry->fixedArgTypes[i])), // type
                     true, // alwaysPreserve
                     0, // flags
                     argNo
@@ -3022,8 +3051,6 @@ void codegenCodeBody(InvokeEntry* entry)
             }
         }
     }
-
-    
 
     // XXX debug info for returns
 
@@ -3248,26 +3275,30 @@ void codegenCallInline(InvokeEntry* entry,
     ensureArity(args, entry->argsKey.size());
 
     EnvPtr env = new Env(entry->env);
-    CodePtr code = entry->code;
-    unsigned varArgSize = entry->argsKey.size() - code->formalArgs.size()+1;
-    for (unsigned i = 0, j = 0; i < code->formalArgs.size(); ++i) {
-        FormalArgPtr y = code->formalArgs[i];    
-        if (y->varArg) {
-            MultiCValuePtr varArgs = new MultiCValue();
-            for (; j < varArgSize; ++j) {
-                CValuePtr cv = args->values[i+j];
-                CValuePtr carg = new CValue(cv->type, cv->llValue);
-                carg->forwardedRValue = entry->forwardedRValueFlags[i+j];
-                varArgs->add(carg);
-            }
-            --j;
-            addLocal(env, y->name, varArgs.ptr());
-        } else {
+    
+    unsigned i = 0, j = 0;
+    for (; i < entry->varArgPosition; ++i) {
+        CValuePtr cv = args->values[i];
+        CValuePtr carg = new CValue(cv->type, cv->llValue);
+        carg->forwardedRValue = entry->forwardedRValueFlags[i];
+        assert(carg->type == entry->argsKey[i]);
+        addLocal(env, entry->fixedArgNames[i], carg.ptr());
+    }
+    if (entry->varArgName.ptr()) {
+        MultiCValuePtr varArgs = new MultiCValue();
+        for (; j < entry->varArgTypes.size(); ++j) {
             CValuePtr cv = args->values[i+j];
             CValuePtr carg = new CValue(cv->type, cv->llValue);
-            carg->forwardedRValue = entry->forwardedRValueFlags[i+j];
+            carg->forwardedRValue = entry->varArgForwardedRValueFlags[j];
+            varArgs->add(carg);
+        }
+        addLocal(env, entry->varArgName, varArgs.ptr());
+        for (; i < entry->fixedArgNames.size(); ++i) {
+            CValuePtr cv = args->values[i+j];
+            CValuePtr carg = new CValue(cv->type, cv->llValue);
+            carg->forwardedRValue = entry->forwardedRValueFlags[i];
             assert(carg->type == entry->argsKey[i+j]);
-            addLocal(env, y->name, carg.ptr());
+            addLocal(env, entry->fixedArgNames[i], carg.ptr());
         }
     }
 
@@ -3348,31 +3379,32 @@ void codegenCallByName(InvokeEntry* entry,
                        MultiCValuePtr out)
 {
     assert(entry->callByName);
-    assert(ctx->inlineDepth >= 0);
-    CodePtr code = entry->code;
-    if (code->hasVarArg)
-        assert(args->size() >= code->formalArgs.size());
+    assert(ctx->inlineDepth >= 0);    
+    if (entry->varArgName.ptr())
+        assert(args->size() >= entry->fixedArgNames.size());
     else
-        assert(args->size() == code->formalArgs.size());
+        assert(args->size() == entry->fixedArgNames.size());
 
     ++ctx->inlineDepth;
 
     EnvPtr bodyEnv = new Env(entry->env);
     bodyEnv->callByNameExprHead = callable;
 
-    unsigned varArgSize = args->size() - code->formalArgs.size()+1;
-    for (unsigned i = 0, j = 0; i < code->formalArgs.size(); ++i) {
-        FormalArgPtr y = code->formalArgs[i];    
-        if (y->varArg) {
-            ExprListPtr varArgs = new ExprList();
-            for (; j < varArgSize; ++j) {
-                ExprPtr expr = foreignExpr(env, args->exprs[i+j]);
-                varArgs->add(expr);
-            }
-            addLocal(bodyEnv, y->name, varArgs.ptr());
-        } else {
+    unsigned i = 0, j = 0;
+    for (; i < entry->varArgPosition; ++i) {
+        ExprPtr expr = foreignExpr(env, args->exprs[i]);
+        addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
+    }
+    if (entry->varArgName.ptr()) {
+        ExprListPtr varArgs = new ExprList();
+        for (; j < args->size()-entry->varArgPosition; ++j) {
             ExprPtr expr = foreignExpr(env, args->exprs[i+j]);
-            addLocal(bodyEnv, y->name, expr.ptr());
+            varArgs->add(expr);
+        }
+        addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
+        for (; i < entry->fixedArgNames.size(); ++i) {
+            ExprPtr expr = foreignExpr(env, args->exprs[i+j]);
+            addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
         }
     }
 

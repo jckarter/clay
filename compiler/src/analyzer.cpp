@@ -1862,31 +1862,31 @@ MultiPValuePtr analyzeCallByName(InvokeEntry* entry,
         return analyzeReturn(returnIsRef, returnTypes);
     }
 
-    if (code->hasVarArg)
-        assert(args->size() >= code->formalArgs.size());
+    if (entry->varArgName.ptr())
+        assert(args->size() >= entry->fixedArgNames.size());
     else
-        assert(args->size() == code->formalArgs.size());
+        assert(args->size() == entry->fixedArgNames.size());
 
     EnvPtr bodyEnv = new Env(entry->env);
     bodyEnv->callByNameExprHead = callable;
-
-    unsigned varArgSize = args->size() - code->formalArgs.size()+1;
-    for (unsigned i = 0, j = 0; i < code->formalArgs.size(); ++i) {
-        FormalArgPtr y = code->formalArgs[i];    
-        if (y->varArg) {
-            ExprListPtr varArgs = new ExprList();
-            for (; j < varArgSize; ++j) {
-                ExprPtr expr = foreignExpr(env, args->exprs[i+j]);
-                varArgs->add(expr);
-            }
-            --j;
-            addLocal(bodyEnv, y->name, varArgs.ptr());
-        } else {
+    unsigned i = 0, j = 0;
+    for (; i < entry->varArgPosition; ++i) {
+        ExprPtr expr = foreignExpr(env, args->exprs[i]);
+        addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
+    }
+    if (entry->varArgName.ptr()) {
+        ExprListPtr varArgs = new ExprList();
+        for (; j < args->size()-entry->varArgPosition; ++j) {
             ExprPtr expr = foreignExpr(env, args->exprs[i+j]);
-            addLocal(bodyEnv, y->name, expr.ptr());
+            varArgs->add(expr);
+        }
+        addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
+        for (; i < entry->fixedArgNames.size(); ++i) {
+            ExprPtr expr = foreignExpr(env, args->exprs[i+j]);
+            addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
         }
     }
-
+    
     AnalysisContext ctx;
     StatementAnalysis sa = analyzeStatement(code->body, bodyEnv, &ctx);
     if ((sa == SA_RECURSIVE) && (!ctx.returnInitialized))
@@ -1995,25 +1995,25 @@ void analyzeCodeBody(InvokeEntry* entry)
     }
 
     EnvPtr bodyEnv = new Env(entry->env);
-    unsigned varArgSize = entry->argsKey.size()-code->formalArgs.size()+1;
-    for (unsigned i = 0, j = 0; i < code->formalArgs.size(); ++i) {
-        FormalArgPtr y = code->formalArgs[i];    
-        if (y->varArg) {
-            MultiPValuePtr varArgs = new MultiPValue();
-            for (; j < varArgSize; ++j) {
-                bool flag = entry->forwardedRValueFlags[i+j];
-                PVData parg(entry->argsKey[i+j], flag);
-                varArgs->values.push_back(parg);
-            }
-            --j;
-            addLocal(bodyEnv, y->name, varArgs.ptr());
-        }else{
-            bool flag = entry->forwardedRValueFlags[i+j];
-            addLocal(bodyEnv, y->name, new PValue(entry->argsKey[i+j], flag));
+    
+    unsigned i = 0;
+    for (; i < entry->varArgPosition; ++i) {
+        bool flag = entry->forwardedRValueFlags[i];
+        addLocal(bodyEnv, entry->fixedArgNames[i], new PValue(entry->fixedArgTypes[i], flag));
+    }
+    if (entry->varArgName.ptr()) {
+        MultiPValuePtr varArgs = new MultiPValue();
+        for (unsigned j = 0; j < entry->varArgTypes.size(); ++j) {
+            bool flag = entry->varArgForwardedRValueFlags[j];
+            PVData parg(entry->varArgTypes[j], flag);
+            varArgs->values.push_back(parg);
+        }
+        addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
+        for (; i < entry->fixedArgNames.size(); ++i) {
+            bool flag = entry->forwardedRValueFlags[i];
+            addLocal(bodyEnv, entry->fixedArgNames[i], new PValue(entry->fixedArgTypes[i], flag));
         }
     }
-
-    
 
     AnalysisContext ctx;
     StatementAnalysis sa = analyzeStatement(code->body, bodyEnv, &ctx);
