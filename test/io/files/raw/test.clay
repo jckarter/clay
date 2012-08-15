@@ -1,0 +1,13 @@
+import io.files.raw.*;
+import io.streams.*;
+
+import test.*;
+
+
+main() = testMain(
+    TestSuite("io.files.raw", array(
+        TestCase("*Stream?(RawFile)", test => {
+            expectTrue(test, "InputStream?", InputStream?(RawFile));
+            expectTrue(test, "OutputStream?", OutputStream?(RawFile));
+        }),
+    )));

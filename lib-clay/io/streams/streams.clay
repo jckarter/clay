@@ -18,6 +18,21 @@ define writeBytes(stream, buf:Pointer[Byte], n:SizeT) : SizeT;
 define flush(stream) :;
 
 
+
+/// @section InputStream, OutputStream types
+
+
+[S]
+InputStream?(#S) = CallDefined?(readBytes, S, Pointer[Byte], SizeT);
+
+[S]
+OutputStream?(#S) = CallDefined?(writeBytes, S, Pointer[Byte], SizeT);
+
+
+
+/// @section misc type functions
+
+
 [T]
 ByteLike?(#T) = ByteSizedInteger?(T) or (T == Char);
 
@@ -31,8 +46,10 @@ ByteBuffer?(#T) = ContiguousSequence?(T) and ByteLike?(SequenceElementType(T));
 
 /// @section  read, write wrappers to readBytes, writeBytes
 
-define read(stream, ..args);
-define write(stream, ..args) :;
+[I when InputStream?(I)]
+define read(stream:I, ..args);
+[O when OutputStream?(O)]
+define write(stream:O, ..args) :;
 
 overload read(stream, buf:Pointer[Byte], n:SizeT) = readBytes(stream, buf, n);
 
