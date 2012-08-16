@@ -186,9 +186,9 @@ literalString(#TokenInput, forward a:A) {
 }
 
 [TokenInput, S when
-    Static?(S) and Sequence?(Type(S)) and (SequenceElementType(Type(S)) == TokenType(TokenInput))]
+    StringLiteral?(S) and Sequence?(Type(S)) and (SequenceElementType(Type(S)) == TokenType(TokenInput))]
 overload literalString(#TokenInput, #S) =
-    literalString(#TokenInput, coordinateRange(begin(S), end(S)));
+    literalString(#TokenInput, StringLiteralRef(S));
     
 
 
