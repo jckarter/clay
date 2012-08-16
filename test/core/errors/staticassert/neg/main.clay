@@ -1,0 +1,3 @@
+main() {
+    StaticAssert(#(TypeSize(Int8) == 9));
+}

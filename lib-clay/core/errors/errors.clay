@@ -74,6 +74,15 @@ alias overload assert[..tags](cond:Bool) {
             assertStringLiteral(__FILE__, #__LINE__, #__COLUMN__, __ARG__ cond));
 }
 
+
+
+/// @section  StaticAssert
+
+// Compile-time assertion. There are no overloads, so if parameter does
+// not evaluate to #true, code cannot be compiled.
+StaticAssert(#true) = true;
+
+
 
 /// @section  sourceLocation(), argAndValue() helpers 
 

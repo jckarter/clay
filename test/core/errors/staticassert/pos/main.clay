@@ -1,0 +1,6 @@
+import printer.*;
+
+main() {
+    StaticAssert(#(TypeSize(Int32) == 4));
+    println("yes");
+}
