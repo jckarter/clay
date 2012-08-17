@@ -20,6 +20,22 @@ alias sliceUpto(..args) = force(slicedUpto(..args));
 alias group(..args) = force(grouped(..args));
 
 
+
+//
+// specializations for Maybe
+//
+
+[M when Maybe?(M)]
+overload map(f, m:M) =
+    maybe(m, v -> Maybe(f(v)), () -> nothing(Type(f(just(m)))));
+
+[T]
+overload filter(f, m:Maybe[T]) =
+    if (just?(m) and f(just(m)))
+        m
+    else
+        nothing(T);
+
 
 // 
 //
