@@ -244,44 +244,43 @@ static bool matchTempness(CodePtr code,
                           vector<bool> &forwardedRValueFlags)
 {
     const vector<FormalArgPtr> &fargs = code->formalArgs;
-    FormalArgPtr fvarArg = code->formalVarArg;
-
-    if (fvarArg.ptr())
-        assert(fargs.size() <= argsTempness.size());
+    
+    if (code->hasVarArg)
+        assert(fargs.size()-1 <= argsTempness.size());
     else
         assert(fargs.size() == argsTempness.size());
 
     tempnessKey.clear();
     forwardedRValueFlags.clear();
-    for (unsigned i = 0; i < fargs.size(); ++i) {
+    
+    unsigned varArgSize = argsTempness.size()-fargs.size()+1;
+    for (unsigned i = 0, j = 0; i < fargs.size(); ++i) {
         if (callByName && (fargs[i]->tempness == TEMPNESS_FORWARD)) {
-            error(fargs[i], "forwarded arguments are not allowed "
-                  "in call-by-name procedures");
+                error(fargs[i], "forwarded arguments are not allowed "
+                      "in call-by-name procedures");
         }
-        if (!tempnessMatches(argsTempness[i], fargs[i]->tempness))
-            return false;
-        tempnessKey.push_back(
-            tempnessKeyItem(fargs[i]->tempness,
-                            argsTempness[i]));
-        bool forwardedRValue = 
-            (fargs[i]->tempness == TEMPNESS_FORWARD) &&
-            (argsTempness[i] == TEMPNESS_RVALUE);
-        forwardedRValueFlags.push_back(forwardedRValue);
-    }
-    if (fvarArg.ptr()) {
-        if (callByName && (fvarArg->tempness == TEMPNESS_FORWARD)) {
-            error(fvarArg, "forwarded arguments are not allowed "
-                  "in call-by-name procedures");
-        }
-        for (size_t i = fargs.size(); i < argsTempness.size(); ++i) {
-            if (!tempnessMatches(argsTempness[i], fvarArg->tempness))
+        if (fargs[i]->varArg) {
+            for (; j < varArgSize; ++j) {
+                if (!tempnessMatches(argsTempness[i+j], fargs[i]->tempness))
+                    return false;
+                tempnessKey.push_back(
+                    tempnessKeyItem(fargs[i]->tempness,
+                                    argsTempness[i+j]));
+                bool forwardedRValue =
+                    (fargs[i]->tempness == TEMPNESS_FORWARD) &&
+                    (argsTempness[i+j] == TEMPNESS_RVALUE);
+                forwardedRValueFlags.push_back(forwardedRValue);
+            }
+            --j;
+        } else {
+            if (!tempnessMatches(argsTempness[i+j], fargs[i]->tempness))
                 return false;
             tempnessKey.push_back(
-                tempnessKeyItem(fvarArg->tempness,
-                                argsTempness[i]));
-            bool forwardedRValue =
-                (fvarArg->tempness == TEMPNESS_FORWARD) &&
-                (argsTempness[i] == TEMPNESS_RVALUE);
+                tempnessKeyItem(fargs[i]->tempness,
+                                argsTempness[i+j]));
+            bool forwardedRValue = 
+                (fargs[i]->tempness == TEMPNESS_FORWARD) &&
+                (argsTempness[i+j] == TEMPNESS_RVALUE);
             forwardedRValueFlags.push_back(forwardedRValue);
         }
     }
@@ -303,6 +302,7 @@ static InvokeEntry* newInvokeEntry(InvokeSet* parent,
     entry->fixedArgTypes = match->fixedArgTypes;
     entry->varArgName = match->varArgName;
     entry->varArgTypes = match->varArgTypes;
+    entry->varArgPosition = match->varArgPosition;
     entry->callByName = match->callByName;
     entry->isInline = match->isInline;
 
@@ -320,7 +320,7 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
         invokeSet->tempnessMap.find(argsTempness);
     if (iter != invokeSet->tempnessMap.end())
         return iter->second;
-
+    
     MatchResultPtr interfaceResult;
     if (invokeSet->interface != NULL) {
         interfaceResult = matchInvoke(invokeSet->interface,
@@ -336,6 +336,7 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
     MatchSuccessPtr match;
     vector<ValueTempness> tempnessKey;
     vector<bool> forwardedRValueFlags;
+    
     unsigned i = 0;
     while ((match = getMatch(invokeSet,i,failures)).ptr() != NULL) {
         if (matchTempness(match->code,
@@ -360,7 +361,7 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
     InvokeEntry* entry = newInvokeEntry(invokeSet, match,
         (MatchSuccess*)interfaceResult.ptr());
     entry->forwardedRValueFlags = forwardedRValueFlags;
-
+    
     invokeSet->tempnessMap2[tempnessKey] = entry;
     invokeSet->tempnessMap[argsTempness] = entry;
 

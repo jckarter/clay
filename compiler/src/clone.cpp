@@ -9,7 +9,7 @@ CodePtr clone(CodePtr x)
     clone(x->patternVars, y->patternVars);
     y->predicate = cloneOpt(x->predicate);
     clone(x->formalArgs, y->formalArgs);
-    y->formalVarArg = cloneOpt(x->formalVarArg);
+    y->hasVarArg = x->hasVarArg;
     y->returnSpecsDeclared = x->returnSpecsDeclared;
     clone(x->returnSpecs, y->returnSpecs);
     y->varReturnSpec = cloneOpt(x->varReturnSpec);
@@ -155,7 +155,7 @@ ExprPtr clone(ExprPtr x)
         Lambda *y = (Lambda *)x.ptr();
         LambdaPtr z = new Lambda(y->captureByRef);
         clone(y->formalArgs, z->formalArgs);
-        z->formalVarArg = y->formalVarArg;
+        z->hasVarArg = y->hasVarArg;
         z->body = clone(y->body);
         out = z.ptr();
         break;
@@ -231,7 +231,7 @@ void clone(const vector<FormalArgPtr> &x, vector<FormalArgPtr> &out)
 
 FormalArgPtr clone(FormalArgPtr x)
 {
-    FormalArgPtr out = new FormalArg(x->name, cloneOpt(x->type), x->tempness);
+    FormalArgPtr out = new FormalArg(x->name, cloneOpt(x->type), x->tempness, x->varArg);
     out->location = x->location;
     return out;
 }
@@ -290,7 +290,7 @@ StatementPtr clone(StatementPtr x)
         clone(y->patternVars, patternVars);
         clone(y->patternTypes, patternTypes);
         out = new Binding(y->bindingKind, patternVars, patternTypes, cloneOpt(y->predicate),
-            args, cloneOpt(y->varg), clone(y->values));
+            args, clone(y->values), y->hasVarArg);
         break;
     }
 

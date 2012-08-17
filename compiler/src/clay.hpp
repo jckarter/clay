@@ -1257,7 +1257,8 @@ struct ProcedureMono {
 struct Lambda : public Expr {
     bool captureByRef;
     vector<FormalArgPtr> formalArgs;
-    FormalArgPtr formalVarArg;
+    bool hasVarArg;
+
     StatementPtr body;
 
     ExprPtr converted;
@@ -1276,13 +1277,12 @@ struct Lambda : public Expr {
 
     Lambda(bool captureByRef) :
         Expr(LAMBDA), captureByRef(captureByRef),
-        initialized(false) {}
+        initialized(false), hasVarArg(false) {}
     Lambda(bool captureByRef,
            const vector<FormalArgPtr> &formalArgs,
-           FormalArgPtr formalVarArg,
-           StatementPtr body)
+           bool hasVarArg, StatementPtr body)
         : Expr(LAMBDA), captureByRef(captureByRef),
-          formalArgs(formalArgs), formalVarArg(formalVarArg),
+          formalArgs(formalArgs), hasVarArg(hasVarArg),
           body(body), initialized(false) {}
 };
 
@@ -1445,26 +1445,23 @@ struct Binding : public Statement {
     vector<ObjectPtr> patternTypes;
     ExprPtr predicate;
     vector<FormalArgPtr> args;
-    FormalArgPtr varg;
     ExprListPtr values;
-    
+    bool hasVarArg;
     Binding(int bindingKind,
         const vector<FormalArgPtr> &args,
         ExprListPtr values)
         : Statement(BINDING), bindingKind(bindingKind),
-          args(args), values(values) {}
+          args(args), values(values), hasVarArg(false) {}
     Binding(int bindingKind,
         const vector<PatternVar> &patternVars,
         const vector<ObjectPtr> &patternTypes,
         ExprPtr predicate,
         const vector<FormalArgPtr> &args,
-        FormalArgPtr varg, 
-        ExprListPtr values)
+        ExprListPtr values, bool hasVarArg)
         : Statement(BINDING), bindingKind(bindingKind),
           patternVars(patternVars),
           predicate(predicate),
-          args(args), varg(varg),
-          values(values) {}
+          args(args), values(values), hasVarArg(hasVarArg) {}
 };
 
 struct Assignment : public Statement {
@@ -1722,12 +1719,16 @@ struct FormalArg : public ANode {
     IdentifierPtr name;
     ExprPtr type;
     ValueTempness tempness;
+    bool varArg;
     FormalArg(IdentifierPtr name, ExprPtr type)
         : ANode(FORMAL_ARG), name(name), type(type),
-          tempness(TEMPNESS_DONTCARE) {}
+          tempness(TEMPNESS_DONTCARE), varArg(false) {}
     FormalArg(IdentifierPtr name, ExprPtr type, ValueTempness tempness)
         : ANode(FORMAL_ARG), name(name), type(type),
-          tempness(tempness) {}
+          tempness(tempness), varArg(false) {}
+    FormalArg(IdentifierPtr name, ExprPtr type, ValueTempness tempness, bool varArg)
+        : ANode(FORMAL_ARG), name(name), type(type),
+          tempness(tempness), varArg(varArg) {}
 };
 
 struct ReturnSpec : public ANode {
@@ -1758,7 +1759,7 @@ struct Code : public ANode {
     vector<PatternVar> patternVars;
     ExprPtr predicate;
     vector<FormalArgPtr> formalArgs;
-    FormalArgPtr formalVarArg;
+    bool hasVarArg;
     bool returnSpecsDeclared;
     vector<ReturnSpecPtr> returnSpecs;
     ReturnSpecPtr varReturnSpec;
@@ -1766,17 +1767,15 @@ struct Code : public ANode {
     LLVMCodePtr llvmBody;
 
     Code()
-        : ANode(CODE), returnSpecsDeclared(false) {}
+        : ANode(CODE),  hasVarArg(false), returnSpecsDeclared(false) {}
     Code(const vector<PatternVar> &patternVars,
          ExprPtr predicate,
          const vector<FormalArgPtr> &formalArgs,
-         FormalArgPtr formalVarArg,
          const vector<ReturnSpecPtr> &returnSpecs,
          ReturnSpecPtr varReturnSpec,
          StatementPtr body)
         : ANode(CODE), patternVars(patternVars), predicate(predicate),
-          formalArgs(formalArgs), formalVarArg(formalVarArg),
-          returnSpecsDeclared(false),
+          formalArgs(formalArgs), hasVarArg(false), returnSpecsDeclared(false),
           returnSpecs(returnSpecs), varReturnSpec(varReturnSpec),
           body(body) {}
 
@@ -1942,7 +1941,7 @@ struct Overload : public TopLevelItem {
     PatternPtr callablePattern;
     vector<PatternPtr> argPatterns;
     MultiPatternPtr varArgPattern;
-
+    
     Overload(ExprPtr target,
              CodePtr code,
              bool callByName,
@@ -2495,7 +2494,7 @@ extern ModulePtr globalMainModule;
 
 void addProcedureOverload(ProcedurePtr proc, EnvPtr Env, OverloadPtr x);
 void getProcedureMonoTypes(ProcedureMono &mono, EnvPtr env,
-    vector<FormalArgPtr> const &formalArgs, FormalArgPtr formalVarArg);
+    vector<FormalArgPtr> const &formalArgs, bool hasVarArg);
 
 void addSearchPath(llvm::StringRef path);
 ModulePtr loadProgram(llvm::StringRef fileName, vector<string> *sourceFiles);
@@ -3244,11 +3243,13 @@ struct MatchSuccess : public MatchResult {
     vector<IdentifierPtr> fixedArgNames;
     IdentifierPtr varArgName;
     vector<TypePtr> varArgTypes;
+    unsigned varArgPosition;
+
     MatchSuccess(bool callByName, InlineAttribute isInline, CodePtr code, EnvPtr env,
                  ObjectPtr callable, const vector<TypePtr> &argsKey)
         : MatchResult(MATCH_SUCCESS), callByName(callByName),
           isInline(isInline), code(code), env(env), callable(callable),
-          argsKey(argsKey) {}
+          argsKey(argsKey), varArgPosition(0) {}
 };
 typedef Pointer<MatchSuccess> MatchSuccessPtr;
 
@@ -3343,10 +3344,12 @@ struct InvokeEntry {
     CodePtr code;
     EnvPtr env;
     EnvPtr interfaceEnv;
+
     vector<TypePtr> fixedArgTypes;
     vector<IdentifierPtr> fixedArgNames;
     IdentifierPtr varArgName;
     vector<TypePtr> varArgTypes;
+    unsigned varArgPosition;
 
     bool callByName; // if callByName the rest of InvokeEntry is not set
     InlineAttribute isInline;
@@ -3363,7 +3366,7 @@ struct InvokeEntry {
     InvokeEntry(InvokeSet *parent,
                 ObjectPtr callable,
                 const vector<TypePtr> &argsKey)
-        : parent(parent),
+        : parent(parent), varArgPosition(0),
           callable(callable), argsKey(argsKey),
           analyzed(false), analyzing(false), callByName(false),
           isInline(IGNORE), llvmFunc(NULL), debugInfo(NULL)
@@ -3610,7 +3613,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args);
 
 ObjectPtr unwrapStaticType(TypePtr t);
 
-bool staticToBool(ObjectPtr x, bool &out);
+bool staticToBool(ObjectPtr x, bool &out, TypePtr &type);
 bool staticToBool(MultiStaticPtr x, unsigned index);
 bool staticToCallingConv(ObjectPtr x, CallingConv &out);
 CallingConv staticToCallingConv(MultiStaticPtr x, unsigned index);

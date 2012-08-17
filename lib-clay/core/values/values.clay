@@ -70,8 +70,7 @@ forceinline firstValue(forward a, ..rest) = forward a;
 
 forceinline restValues(a, forward ..rest) = forward ..rest;
 
-forceinline lastValue(a, forward ..rest) = forward lastValue(..rest);
-overload lastValue(forward a) = forward a;
+forceinline lastValue(..a, forward last) = forward last;
 
 
 

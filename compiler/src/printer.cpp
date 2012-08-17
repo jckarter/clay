@@ -259,7 +259,7 @@ static void printExpr(llvm::raw_ostream &out, const Expr *x) {
     case LAMBDA : {
         const Lambda *y = (const Lambda *)x;
         out << "Lambda(" << y->captureByRef << ", " << y->formalArgs
-            << ", " << y->formalVarArg << ", " << y->body << ")";
+            << ", " << y->hasVarArg << ", " << y->body << ")";
         break;
     }
     case UNPACK : {
@@ -513,7 +513,7 @@ static void print(llvm::raw_ostream &out, const Object *x) {
     case CODE : {
         const Code *y = (const Code *)x;
         out << "Code(" << y->patternVars << ", " << y->predicate;
-        out << ", " << y->formalArgs << ", " << y->formalVarArg;
+        out << ", " << y->formalArgs << ", " << y->hasVarArg;
         out << ", " << y->returnSpecs << ", " << y->varReturnSpec;
         out << ", " << y->body << ")";
         break;
