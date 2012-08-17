@@ -249,16 +249,15 @@ overload StreamSocket(addr: T) --> socket: StreamSocket {
 
 
 /// @section  StreamSocket implementation of stream protocol 
-overload read(s: StreamSocket, buffer: Pointer[Byte], n: SizeT)
+overload readBytes(s: StreamSocket, buffer: Pointer[Byte], n: SizeT)
     = SizeT(socketCall(platform.recv, s.raw,
         platform.DataPointer(buffer), platform.DataSize(n),
         0));
 
-overload write(s: StreamSocket, buffer: Pointer[Byte], n: SizeT) {
-    socketCall(platform.send, s.raw,
+overload writeBytes(s: StreamSocket, buffer: Pointer[Byte], n: SizeT)
+    = SizeT(socketCall(platform.send, s.raw,
         platform.DataPointer(buffer), platform.DataSize(n),
-        0);
-}
+        0));
 
 overload flush(s: StreamSocket) { }
 

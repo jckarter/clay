@@ -1,0 +1,36 @@
+import strings.*;
+
+import io.streams.buffered.*;
+import io.streams.memory.*;
+
+import test.*;
+
+main() = testMain(
+    TestSuite("io.streams.buffered", array(
+        TestCase("BufferedOutputStream", test => {
+            var os = BufferedOutputStream(String());
+            write(os, "a");
+            write(os, "b");
+            write(os, "cde");
+            expectEqual(test, "nothing written yet", "", os.underlying);
+            flush(os);
+            expectEqual(test, "written", "abcde", os.underlying);
+        }),
+        TestCase("BufferedOutputStream flushOnNewlines", test => {
+            var os = BufferedOutputStream(String(), true);
+            write(os, "a");
+            write(os, "b");
+            expectEqual(test, "nothing written yet", "", os.underlying);
+            write(os, "cd\n");
+            expectEqual(test, "written", "abcd\n", os.underlying);
+        }),
+        TestCase("BufferedInputStream", test => {
+            var s = "qwerty";
+            var m = MemoryInputStream(begin(s), end(s));
+            var is = BufferedInputStream(m);
+            expectEqual(test, "first read", "qw", read(is, SizeT(2)));
+            expectEqual(test, "underlying at EOF", 0, is.underlying.end - is.underlying.pos);
+            expectEqual(test, "first rest", "erty", read(is, SizeT(100)));
+            expectEqual(test, "at EOF", "", read(is, SizeT(10)));
+        }),
+    )));

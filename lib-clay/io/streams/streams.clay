@@ -4,17 +4,35 @@ import buffervector.*;
 import strings.*;
 import vectors.*;
 
+public import io.streams.bytevector.*;
+
 
-/// @section  read, write, flush - byte stream operations 
+/// @section  readBytes, writeBytes, flush - byte stream operations 
+///
+/// readBytes and writeBytes are SPI functions, orinary clients don't
+/// need to call these functions directly, bug should use write
+/// overloads instead
 
-// read(stream, buf:Pointer[Byte], n:SizeT) SizeT
-define read;
+define readBytes(stream, buf:Pointer[Byte], n:SizeT) : SizeT;
 
-// write(stream, buf:Pointer[Byte], n:SizeT) Void
-define write;
+define writeBytes(stream, buf:Pointer[Byte], n:SizeT) : SizeT;
 
-// flush(stream) Void
-define flush;
+define flush(stream) :;
+
+
+
+/// @section InputStream, OutputStream types
+
+
+[S]
+InputStream?(#S) = CallDefined?(readBytes, S, Pointer[Byte], SizeT);
+
+[S]
+OutputStream?(#S) = CallDefined?(writeBytes, S, Pointer[Byte], SizeT);
+
+
+
+/// @section misc type functions
 
 
 [T]
@@ -23,18 +41,54 @@ ByteVector?(#T) = Vector?(T) and ByteLike?(SequenceElementType(T));
 [T]
 ByteBuffer?(#T) = ContiguousSequence?(T) and ByteLike?(SequenceElementType(T));
 
-
-/// @section  readByte, readChar 
 
-readByte(stream, b:Byte) : Bool {
-    var result = read(stream, @b, SizeT(1));
-    return result == 1;
+
+/// @section  read, write wrappers to readBytes, writeBytes
+
+[I when InputStream?(I)]
+define read(stream:I, ..args);
+[O when OutputStream?(O)]
+define write(stream:O, ..args) :;
+
+[B, N when ByteLike?(B) and Integer?(N)]
+overload read(stream, buf:Pointer[B], n:N) = readBytes(stream, Pointer[Byte](buf), SizeT(n));
+
+[B, N when ByteLike?(B) and Integer?(N)]
+overload write(stream, buf:Pointer[B], n:N) {
+    var pos = SizeT(0);
+    while (pos < n) {
+        pos +: writeBytes(stream, Pointer[Byte](buf) + pos, SizeT(n) - pos);
+    }
 }
 
-readChar(stream, c:Char) : Bool {
-    var ptr = Pointer[Byte](@c);
-    var result = read(stream, ptr, SizeT(1));
-    return result == 1;
+
+/// @section  readByte, readChar, writeByte, writeChar
+
+readByte(stream) {
+    var b = Byte();
+    var result = read(stream, @b, SizeT(1));
+    if (result == 1)
+        return Maybe(b);
+    else
+        return nothing(Byte);
+}
+
+readChar(stream) {
+    var b = Byte();
+    var result = read(stream, @b, SizeT(1));
+    if (result == 1)
+        return Maybe(Char(b));
+    else
+        return nothing(Char);
+}
+
+[B when ByteLike?(B)]
+writeByte(stream, b: B) {
+    write(stream, @b, 1);
+}
+
+writeChar(stream, c: Char) {
+    writeByte(stream, c);
 }
 
 
@@ -121,9 +175,12 @@ define readUpto;
 [T, V when ByteLike?(T) and ByteVector?(V)]
 overload readUpto(stream, upto:T, buf:V) {
     alias ElementType = SequenceElementType(V);
-    var b = Byte();
     var uptoByte = Byte(upto);
-    while (readByte(stream, b)) {
+    while (true) {
+        var mb = readByte(stream);
+        if (not hasValue?(mb))
+            break;
+        var b = just(mb);
         push(buf, ElementType(b));
         if (b == uptoByte)
             break;
@@ -172,13 +229,33 @@ overload write(stream, x:V) {
 /// @section  write, flush - write to ByteVector 
 
 [V when ByteVector?(V)]
-overload write(stream:V, buf:Pointer[Byte], n:SizeT) {
+overload writeBytes(stream:V, buf:Pointer[Byte], n:SizeT) {
     var currentSize = size(stream);
     resize(stream, currentSize + n);
     var dest = Pointer[Byte](begin(stream)) + currentSize;
     copyNonoverlappingMemory(dest, buf, buf+n);
+    return n;
 }
 
 [V when ByteVector?(V)]
 overload flush(stream:V) {
 }
+
+
+
+/// @section  collection protocols
+
+[I when InputStream?(I)]
+overload nextValue(is:I) = readByte(is);
+
+[O, B when OutputStream?(O) and ByteLike?(B)]
+overload push(os:O, b:B) {
+    writeByte(os, b);
+}
+
+[O, B when OutputStream?(O) and ByteBuffer?(B)]
+overload push(os:O, bs:B) {
+    write(os, bs);
+}
+
+
