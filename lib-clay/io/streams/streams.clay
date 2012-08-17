@@ -51,12 +51,14 @@ define read(stream:I, ..args);
 [O when OutputStream?(O)]
 define write(stream:O, ..args) :;
 
-overload read(stream, buf:Pointer[Byte], n:SizeT) = readBytes(stream, buf, n);
+[B, N when ByteLike?(B) and Integer?(N)]
+overload read(stream, buf:Pointer[B], n:N) = readBytes(stream, Pointer[Byte](buf), SizeT(n));
 
-overload write(stream, buf:Pointer[Byte], n:SizeT) {
+[B, N when ByteLike?(B) and Integer?(N)]
+overload write(stream, buf:Pointer[B], n:N) {
     var pos = SizeT(0);
     while (pos < n) {
-        pos +: writeBytes(stream, buf + pos, n - pos);
+        pos +: writeBytes(stream, Pointer[Byte](buf) + pos, SizeT(n) - pos);
     }
 }
 
