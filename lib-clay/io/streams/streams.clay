@@ -243,3 +243,22 @@ overload writeBytes(stream:V, buf:Pointer[Byte], n:SizeT) {
 [V when ByteVector?(V)]
 overload flush(stream:V) {
 }
+
+
+
+/// @section  collection protocols
+
+[I when InputStream?(I)]
+overload nextValue(is:I) = readByte(is);
+
+[O, B when OutputStream?(O) and ByteLike?(B)]
+overload push(os:O, b:B) {
+    writeByte(os, b);
+}
+
+[O, B when OutputStream?(O) and ByteBuffer?(B)]
+overload push(os:O, bs:B) {
+    write(os, bs);
+}
+
+
