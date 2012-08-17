@@ -120,7 +120,7 @@ overload fileHandle(f:RawFile) = f.handle;
 
 /// @section  read, write, flush 
 
-overload read(f:RawFile, buffer:Pointer[Byte], n:SizeT) : SizeT {
+overload readBytes(f:RawFile, buffer:Pointer[Byte], n:SizeT) : SizeT {
     var nRead = win32.DWORD();
     var result = win32.ReadFile(
         f.handle,
@@ -133,7 +133,7 @@ overload read(f:RawFile, buffer:Pointer[Byte], n:SizeT) : SizeT {
     return SizeT(nRead);
 }
 
-overload write(f:RawFile, buffer:Pointer[Byte], n:SizeT) {
+overload writeBytes(f:RawFile, buffer:Pointer[Byte], n:SizeT) : SizeT {
     var nWritten = win32.DWORD();
     var result = win32.WriteFile(
         f.handle,
@@ -143,7 +143,7 @@ overload write(f:RawFile, buffer:Pointer[Byte], n:SizeT) {
         win32.LPOVERLAPPED(0));
     if (result == 0)
         throw GenericIOError(win32.GetLastError(), "WriteFile");
-    assert(nWritten == n);
+    return SizeT(nWritten);
 }
 
 overload flush(f:RawFile) {

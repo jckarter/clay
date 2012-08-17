@@ -1,0 +1,130 @@
+import algorithms.(in?);
+
+public import io.streams.*;
+
+
+
+/// @section  Buffer
+
+private alias BUFFER_SIZE = 4096;
+
+private record Buffer (
+    data: Array[Byte, BUFFER_SIZE],
+    begin: Pointer[Byte],
+    end: Pointer[Byte],
+);
+
+overload Buffer() --> returned: Buffer {
+    reset(returned);
+}
+
+overload size(buffer: Buffer) = SizeT(buffer.end - buffer.begin);
+private capacity(buffer: Buffer) = size(buffer.data);
+private remaining(buffer: Buffer) = SizeT(begin(buffer.data) + capacity(buffer) - buffer.end);
+
+private reset(buffer: Buffer) {
+    buffer.begin <-- begin(buffer.data);
+    buffer.end <-- begin(buffer.data);
+}
+
+compact(buffer: Buffer) {
+    if (buffer.begin == begin(buffer.data))
+        return;
+    moveMemory(begin(buffer.data), buffer.begin, buffer.end);
+    buffer.end = begin(buffer.data) + (buffer.end - buffer.begin);
+    buffer.begin = begin(buffer.data);
+}
+
+
+
+/// @section  BufferedInputStream, BufferedOutputStream
+
+
+[S when InputStream?(S)]
+record BufferedInputStream[S] (
+    underlying: S,
+    buffer: Buffer,
+);
+
+/// NOTE: BufferedOutputStream does not flush buffer on `destroy`.
+/// `destroy` is to release resources only. This is done because:
+///
+/// * flush exception on close cannot be reliably delivered to client
+///   when flush is called from destroy
+/// * sometimes flush is simply not needed
+/// * flush may unexpectedly block
+/// * if write previously failed, user does not need to write data
+///
+/// Client is responsible for flushing buffer before releasing the
+/// stream.
+
+[S when OutputStream?(S)]
+record BufferedOutputStream[S] (
+    underlying: S,
+    buffer: Buffer,
+    flushOnNewlines?: Bool,
+);
+
+
+[S when InputStream?(S)]
+overload BufferedInputStream(forward underlying: S) =
+    initializeRecord(BufferedInputStream[S], underlying, Buffer());
+
+[S when OutputStream?(S)]
+overload BufferedOutputStream(forward underlying: S, flushOnNewlines?: Bool) =
+    initializeRecord(BufferedOutputStream[S], underlying, Buffer(), flushOnNewlines?);
+
+[S when OutputStream?(S)]
+overload BufferedOutputStream(forward underlying: S) = BufferedOutputStream(underlying, false);
+
+
+[S]
+overload readBytes(is: BufferedInputStream[S], buf: Pointer[Byte], n: SizeT) {
+    if (size(is.buffer) == 0) {
+        reset(is.buffer);
+        var r = readBytes(is.underlying, is.buffer.end, remaining(is.buffer));
+        is.buffer.end +: r;
+    }
+    var copyToOutput = min(size(is.buffer), n);
+    copyNonoverlappingMemory(buf, is.buffer.begin, is.buffer.begin + copyToOutput);
+    is.buffer.begin +: copyToOutput;
+    return copyToOutput;
+}
+
+
+
+[S]
+overload flush(os: BufferedOutputStream[S]) {
+    if (size(os.buffer) != 0) {
+        write(os.underlying, begin(os.buffer.data), SizeT(os.buffer.end - os.buffer.begin));
+        reset(os.buffer);
+    }
+}
+
+
+[S]
+overload writeBytes(os: BufferedOutputStream[S], buf: Pointer[Byte], n: SizeT) {
+    if (os.flushOnNewlines?) {
+        if (in?(coordinateRange(buf, buf + n), Byte('\n'))) {
+            flush(os);
+            write(os.underlying, buf, n);
+            return n;
+        }
+    }
+
+    // optimization
+    if (size(os.buffer) == 0 and n >= capacity(os.buffer)) {
+        return writeBytes(os.underlying, buf, n);
+    }
+
+    compact(os.buffer);
+    var copyToBuffer = min(remaining(os.buffer), n);
+    copyNonoverlappingMemory(os.buffer.end, buf, buf + copyToBuffer);
+    os.buffer.end +: copyToBuffer;
+    if (remaining(os.buffer) == 0) {
+        os.buffer.begin +: writeBytes(os.underlying, os.buffer.begin, size(os.buffer));
+    }
+
+    return copyToBuffer;
+}
+

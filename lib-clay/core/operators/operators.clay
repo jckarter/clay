@@ -114,7 +114,7 @@ define front(s:S);
 define back(s:S);
 
 
-[S when Sequence?(S)]
+[S] // when Sequence?(S)
 define push(s:S, ..vs) :;
 
 [S when Sequence?(S)]

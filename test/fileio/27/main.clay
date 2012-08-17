@@ -1,17 +1,19 @@
 import printer.(println,print,printlnTo);
 import io.files.*;
-import io.streams.(readLine);
+import io.streams.(readLine, flush);
 
 main() {
     { 
         println("Creating..");
         var f = File("tempfile.txt", CREATE);
         printlnTo(f, "Hello World");
+        flush(f);
     }
     {
         println("Appending..");
         var g = File("tempfile.txt", APPEND);
         printlnTo(g, "Hello World!");
+        flush(g);
     }
     {
         println("Reading..");

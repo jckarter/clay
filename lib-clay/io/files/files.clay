@@ -2,7 +2,24 @@
 public import io.files.api.*;
 public import io.files.easy.*;
 public import io.files.lines.*;
+import io.streams.(flush);
+
+private record FlushOnDestroy (
+    file: File,
+);
+
+overload destroy(f: FlushOnDestroy) {
+    // io.files.easy.File (as well as underlying BufferedOutputStream)
+    // does not flush buffers on destroy so we need to flush stdout,
+    // stderr buffers on exit explicitly
+    flush(f.file);
+}
+
+private var stdoutAndFlush = FlushOnDestroy(stdoutFile());
+private var stderrAndFlush = FlushOnDestroy(stderrFile());
 
 var stdin  = stdinFile();
-var stdout = stdoutFile();
-var stderr = stderrFile();
+var stdout = stdoutAndFlush.file;
+var stderr = stderrAndFlush.file;
+
+

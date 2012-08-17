@@ -2,8 +2,10 @@
 import io.files.raw.*;
 import io.files.api.*;
 import io.streams.*;
+import io.streams.buffered.*;
 import sharedpointers.*;
 import strings.*;
+import algorithms.(in?);
 
 
 /// @section  File 
@@ -12,18 +14,11 @@ record File (
     ptr : SharedPointer[FileData],
 );
 
-private alias BUFFER_SIZE = 4096;
-
 private record FileData (
-    file : RawFile,
+    file : RawFilePointer,
 
-    readBuffer : Array[Byte, BUFFER_SIZE],
-    readBegin : Pointer[Byte],
-    readEnd : Pointer[Byte],
-
-    lineBuffered? : Bool,
-    writeBuffer : Array[Byte, BUFFER_SIZE],
-    writeCount : SizeT,
+    inputStream : BufferedInputStream[RawFilePointer],
+    outputStream : BufferedOutputStream[RawFilePointer],
 );
 
 
@@ -42,28 +37,11 @@ overload File(rvalue f:RawFile) =
 
 overload FileData(rvalue file:RawFile) --> returned:FileData {
     var lineBuffered? = terminal?(file);
-    var buf = Array[Byte,BUFFER_SIZE]();
-    return FileData(move(file),
-                    buf, null(Byte), null(Byte),
-                    lineBuffered?, buf, SizeT(0));
-}
-
-
-
-/// @section  destroy 
-
-overload destroy(fd:FileData) {
-    if (fd.writeCount > 0) {
-        try {
-            write(fd.file, begin(fd.writeBuffer), fd.writeCount);
-        }
-        catch (e) {
-            errorWithPrintfNoThrow("caught %s exception while flushing file buffer",
-                cstring(MemberTypeName(e)));
-        }
-        fd.writeCount = 0;
-    }
-    destroy(fd.file);
+    var file = RawFilePointer(move(file));
+    return FileData(
+        file,
+        BufferedInputStream(file),
+        BufferedOutputStream(file, lineBuffered?));
 }
 
 
@@ -74,7 +52,6 @@ stdinFile()  = File(new(FileData(stdinRawFile())));
 stdoutFile() = File(new(FileData(stdoutRawFile())));
 stderrFile() = File(new(FileData(stderrRawFile())));
 
-
 
 /// @section  fileHandle 
 
@@ -84,92 +61,27 @@ overload fileHandle(f:File) = fileHandle(f.ptr^.file);
 
 /// @section  read, write, flush 
 
-overload read(f:File, buffer:Pointer[Byte], _requested:SizeT) {
-    ref fd = f.ptr^;
-    var requested = _requested;
-    var pending = requested;
-    var dest = buffer;
-    ref src = fd.readBegin;
-    ref end = fd.readEnd;
+overload readBytes(f:File, buffer:Pointer[Byte], _requested:SizeT) =
+    readBytes(f.ptr^.inputStream, buffer, _requested);
 
-    while (pending > 0) {
-        var n = min(pending, SizeT(end - src));
-        if (n > 0) {
-            copyNonoverlappingMemory(dest, src, src + n);
-            src +: n;
-            dest +: n;
-            pending -: n;
-        }
-        else {
-            src = begin(fd.readBuffer);
-            end = src; // initialize 'end' too as read may throw
-            var nRead = read(fd.file, src, SizeT(BUFFER_SIZE));
-            end +: nRead;
-            if (nRead == 0)
-                break;
-        }
-    }
-    return requested - pending;
-}
-
-overload write(f:File, buffer:Pointer[Byte], n:SizeT) {
-    ref fd = f.ptr^;
-
-    var src = buffer;
-    var srcEnd = src + n;
-    var dest = begin(fd.writeBuffer) + fd.writeCount;
-    var destEnd = begin(fd.writeBuffer) + BUFFER_SIZE;
-
-    var pendingNewlines = SizeT(0);
-
-    while (src != srcEnd) {
-        if (dest == destEnd) {
-            fd.writeCount = dest - begin(fd.writeBuffer);
-            flushData(fd);
-            dest = begin(fd.writeBuffer);
-            pendingNewlines = 0;
-        }
-
-        pendingNewlines +: SizeT(src^ == Byte('\n'));
-
-        dest^ = src^;
-        inc(dest);
-        inc(src);
-    }
-
-    fd.writeCount = dest - begin(fd.writeBuffer);
-
-    if (fd.lineBuffered? and (pendingNewlines > 0))
-        flushData(fd);
-}
+overload writeBytes(f:File, buffer:Pointer[Byte], n:SizeT) =
+    writeBytes(f.ptr^.outputStream, buffer, n);
 
 overload flush(f:File) {
-    flushData(f.ptr^);
-    flush(f.ptr^.file);
+    flush(f.ptr^.outputStream);
 }
-
-private flushData(fd:FileData) {
-    if (fd.writeCount > 0) {
-        write(fd.file, begin(fd.writeBuffer), fd.writeCount);
-        fd.writeCount = 0;
-    }
-}
-
 
 
 /// @section  fileSize, seek 
 
 overload fileSize(f:File) {
-    flushData(f.ptr^);
+    flush(f);
     return fileSize(f.ptr^.file);
 }
 
 overload seek(f:File, offset, whence) {
-    ref fd = f.ptr^;
-    fd.readBegin = begin(fd.readBuffer);
-    fd.readEnd = fd.readBegin;
-    flushData(fd);
-    return seek(fd.file, offset, whence);
+    flush(f);
+    return seek(f.ptr^.file, offset, whence);
 }
 
 
