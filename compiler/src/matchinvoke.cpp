@@ -45,16 +45,17 @@ static void initializePatterns(OverloadPtr x)
     for (unsigned i = 0; i < formalArgs.size(); ++i) {
         FormalArgPtr y = formalArgs[i];
         PatternPtr pattern;
-        if (y->type.ptr())
-            pattern = evaluateOnePattern(y->type, patternEnv);
+        if (y->type.ptr()) {
+            if (y->varArg) {
+                ExprPtr unpack = new Unpack(y->type.ptr());
+                unpack->location = y->type->location;
+                x->varArgPattern = evaluateMultiPattern(new ExprList(unpack), patternEnv);
+                pattern = NULL;
+            } else {
+                pattern = evaluateOnePattern(y->type, patternEnv);
+            }
+        }
         x->argPatterns.push_back(pattern);
-    }
-
-    if (code->formalVarArg.ptr() && code->formalVarArg->type.ptr()) {
-        ExprPtr unpack = new Unpack(code->formalVarArg->type.ptr());
-        unpack->location = code->formalVarArg->type->location;
-        x->varArgPattern = evaluateMultiPattern(new ExprList(unpack),
-                                                patternEnv);
     }
 
     x->patternsInitializedState = 1;
@@ -102,32 +103,35 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
         return new MatchCallableError(overload->target, callable);
 
     CodePtr code = overload->code;
-    if (code->formalVarArg.ptr()) {
-        if (argsKey.size() < code->formalArgs.size())
+    if (code->hasVarArg) {
+        if (argsKey.size() < code->formalArgs.size()-1)
             return new MatchArityError(code->formalArgs.size(), argsKey.size(), true);
     }
     else {
         if (code->formalArgs.size() != argsKey.size())
             return new MatchArityError(code->formalArgs.size(), argsKey.size(), false);
     }
-
     const vector<FormalArgPtr> &formalArgs = code->formalArgs;
-    for (unsigned i = 0; i < formalArgs.size(); ++i) {
+    unsigned varArgSize = argsKey.size()-formalArgs.size()+1;
+    for (unsigned i = 0, j = 0; i < formalArgs.size(); ++i) {
         FormalArgPtr x = formalArgs[i];
         if (x->type.ptr()) {
-            PatternPtr pattern = overload->argPatterns[i];
-            if (!unifyPatternObj(pattern, argsKey[i].ptr()))
-                return new MatchArgumentError(i, argsKey[i], x);
+            if (x->varArg) {
+                MultiStaticPtr types = new MultiStatic();
+                for (; j < varArgSize; ++j)
+                    types->add(argsKey[i+j].ptr());
+                --j;
+                MultiPatternPtr pattern = overload->varArgPattern;
+                if (!unifyMulti(pattern, types))
+                    return new MatchMultiArgumentError(formalArgs.size(), types, x);
+            } else {
+                PatternPtr pattern = overload->argPatterns[i];
+                if (!unifyPatternObj(pattern, argsKey[i+j].ptr()))
+                    return new MatchArgumentError(i+j, argsKey[i+j], x);
+            }
         }
     }
-    if (code->formalVarArg.ptr() && code->formalVarArg->type.ptr()) {
-        MultiStaticPtr types = new MultiStatic();
-        for (unsigned i = formalArgs.size(); i < argsKey.size(); ++i)
-            types->add(argsKey[i].ptr());
-        if (!unifyMulti(overload->varArgPattern, types))
-            return new MatchMultiArgumentError(formalArgs.size(), types, code->formalVarArg);
-    }
-
+    
     EnvPtr staticEnv = new Env(overload->env);
     const vector<PatternVar> &pvars = code->patternVars;
     for (unsigned i = 0; i < pvars.size(); ++i) {
@@ -147,26 +151,30 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
 
     reseter.reset();
     
-    if (code->predicate.ptr()) {
+    if (code->predicate.ptr())
         if (!evaluateBool(code->predicate, staticEnv))
             return new MatchPredicateError(code->predicate);
-    }
-
+    
     MatchSuccessPtr result = new MatchSuccess(
         overload->callByName, overload->isInline, code, staticEnv,
         callable, argsKey
     );
-    for (unsigned i = 0; i < formalArgs.size(); ++i) {
+    
+    for (unsigned i = 0, j = 0; i < formalArgs.size(); ++i) {
         FormalArgPtr x = formalArgs[i];
-        result->fixedArgNames.push_back(x->name);
-        result->fixedArgTypes.push_back(argsKey[i]);
-    }
-    if (code->formalVarArg.ptr()) {
-        result->varArgName = code->formalVarArg->name;
-        for (unsigned i = formalArgs.size(); i < argsKey.size(); ++i) {
-            result->varArgTypes.push_back(argsKey[i]);
+        if (x->varArg) {
+            result->varArgName = x->name;
+            result->varArgPosition = i;
+            for (; j < varArgSize; ++j) {
+                result->varArgTypes.push_back(argsKey[i+j]);
+            }
+            --j;
+        } else {
+            result->fixedArgNames.push_back(x->name);
+            result->fixedArgTypes.push_back(argsKey[i+j]);
         }
     }
+    if(!code->hasVarArg) result->varArgPosition = result->fixedArgNames.size();
     return result.ptr();
 }
 

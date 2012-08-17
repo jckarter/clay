@@ -1783,26 +1783,31 @@ void evalCallCode(InvokeEntry* entry,
     ensureArity(args, entry->argsKey.size());
 
     EnvPtr env = new Env(entry->env);
-
-    for (unsigned i = 0; i < entry->fixedArgNames.size(); ++i) {
-        EValuePtr ev = args->values[i];
+    
+    unsigned k = 0, j = 0;
+    for (; k < entry->varArgPosition; ++k) {
+        EValuePtr ev = args->values[k];
         EValuePtr earg = new EValue(ev->type, ev->addr);
-        earg->forwardedRValue = entry->forwardedRValueFlags[i];
-        addLocal(env, entry->fixedArgNames[i], earg.ptr());
+        earg->forwardedRValue = entry->forwardedRValueFlags[k];
+        addLocal(env, entry->fixedArgNames[k], earg.ptr());
     }
-
     if (entry->varArgName.ptr()) {
-        unsigned nFixed = entry->fixedArgNames.size();
         MultiEValuePtr varArgs = new MultiEValue();
-        for (unsigned i = 0; i < entry->varArgTypes.size(); ++i) {
-            EValuePtr ev = args->values[i + nFixed];
+        for (; j < entry->varArgTypes.size(); ++j) {
+            EValuePtr ev = args->values[k + j];
             EValuePtr earg = new EValue(ev->type, ev->addr);
-            earg->forwardedRValue = entry->forwardedRValueFlags[i + nFixed];
+            earg->forwardedRValue = entry->forwardedRValueFlags[k+j];
             varArgs->add(earg);
         }
         addLocal(env, entry->varArgName, varArgs.ptr());
+        for (; k < entry->fixedArgNames.size(); ++k) {
+            EValuePtr ev = args->values[k+j];
+            EValuePtr earg = new EValue(ev->type, ev->addr);
+            earg->forwardedRValue = entry->forwardedRValueFlags[k+j];
+            addLocal(env, entry->fixedArgNames[k], earg.ptr());
+        }
     }
-
+    
     assert(out->size() == entry->returnTypes.size());
     vector<EReturn> returns;
     for (unsigned i = 0; i < entry->returnTypes.size(); ++i) {
@@ -1909,19 +1914,23 @@ void evalCallByName(InvokeEntry* entry,
 
     EnvPtr bodyEnv = new Env(entry->env);
     bodyEnv->callByNameExprHead = callable;
-
-    for (unsigned i = 0; i < entry->fixedArgNames.size(); ++i) {
+ 
+    unsigned i = 0, j = 0;
+    for (; i < entry->varArgPosition; ++i) {
         ExprPtr expr = foreignExpr(env, args->exprs[i]);
         addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
     }
-
     if (entry->varArgName.ptr()) {
         ExprListPtr varArgs = new ExprList();
-        for (unsigned i = entry->fixedArgNames.size(); i < args->size(); ++i) {
-            ExprPtr expr = foreignExpr(env, args->exprs[i]);
+        for (; j < args->size() - entry->fixedArgNames.size(); ++j) {
+            ExprPtr expr = foreignExpr(env, args->exprs[i+j]);
             varArgs->add(expr);
         }
         addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
+        for (; i < entry->fixedArgNames.size(); ++i) {
+            ExprPtr expr = foreignExpr(env, args->exprs[i+j]);
+            addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
+        }
     }
 
     MultiPValuePtr mpv = safeAnalyzeCallByName(entry, callable, args, env);
@@ -2390,17 +2399,18 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->patternVars.size(); ++i)
             addLocal(env2, x->patternVars[i].name, x->patternTypes[i]);
-        for (unsigned i = 0; i < x->args.size(); ++i) {
-            addLocal(env2, x->args[i]->name, mev->values[i].ptr());
-        }
-        if (x->varg.ptr()) {
-            unsigned nFixed = x->args.size();
-            MultiEValuePtr varArgs = new MultiEValue();
-            for (unsigned i = nFixed; i < mev->values.size(); ++i) {
-                EValuePtr ev = mev->values[i];
-                varArgs->add(ev);
-            }
-            addLocal(env2, x->varg->name, varArgs.ptr());  
+        unsigned varArgSize = mev->values.size()-x->args.size()+1;
+        for (unsigned i = 0, j = 0; i < x->args.size(); ++i) {
+            if (x->args[i]->varArg) {
+                MultiEValuePtr varArgs = new MultiEValue();
+                for (; j < varArgSize; ++j) {
+                    EValuePtr ev = mev->values[i+j];
+                    varArgs->add(ev);
+                }
+                --j;
+                addLocal(env2, x->args[i]->name, varArgs.ptr());  
+            } else
+                addLocal(env2, x->args[i]->name, mev->values[i+j].ptr());
         }
         return env2;
     }
@@ -2421,19 +2431,22 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->patternVars.size(); ++i)
             addLocal(env2, x->patternVars[i].name, x->patternTypes[i]);
-        for (unsigned i = 0; i < x->args.size(); ++i) {
-            EValuePtr evPtr = mev->values[i];
-            addLocal(env2, x->args[i]->name, derefValue(evPtr).ptr());
-        }
-        if (x->varg.ptr()) {
-            unsigned nFixed = x->args.size();
-            MultiEValuePtr varArgs = new MultiEValue();
-            for (unsigned i = nFixed; i < mev->values.size(); ++i) {
-                EValuePtr ev = derefValue(mev->values[i]);
-                varArgs->add(ev);
+        unsigned varArgSize = mev->values.size()-x->args.size()+1;
+        for (unsigned i = 0, j = 0; i < x->args.size(); ++i) {
+            if (x->args[i]->varArg) {
+                MultiEValuePtr varArgs = new MultiEValue();
+                for (; j < varArgSize; ++j) {
+                    EValuePtr ev = derefValue(mev->values[i+j]);
+                    varArgs->add(ev);
+                }
+                --j;
+                addLocal(env2, x->args[i]->name, varArgs.ptr());  
+            } else {        
+                EValuePtr evPtr = mev->values[i+j];
+                addLocal(env2, x->args[i]->name, derefValue(evPtr).ptr());
             }
-            addLocal(env2, x->varg->name, varArgs.ptr());  
         }
+        
         return env2;
     }
 
@@ -2450,32 +2463,35 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
         EnvPtr env2 = new Env(env);
         for (unsigned i = 0; i < x->patternVars.size(); ++i)
             addLocal(env2, x->patternVars[i].name, x->patternTypes[i]);
-        for (unsigned i = 0; i < x->args.size(); ++i) {
-            if (mpv->values[i].isTemp) {
-                EValuePtr ev = mev->values[i];
-                addLocal(env2, x->args[i]->name, ev.ptr());
-            }
-            else {
-                EValuePtr evPtr = mev->values[i];
-                addLocal(env2, x->args[i]->name, derefValue(evPtr).ptr());
-            }
-        }
-        if (x->varg.ptr()) {
-            unsigned nFixed = x->args.size();
-            MultiEValuePtr varArgs = new MultiEValue();
-            for (unsigned i = nFixed; i < mev->values.size(); ++i) {
-                EValuePtr rev, ev;
-                rev = mev->values[i];
-                if (mpv->values[i].isTemp) {
-                    ev = rev;
+        unsigned varArgSize = mev->values.size()-x->args.size()+1;
+        for (unsigned i = 0, j = 0; i < x->args.size(); ++i) {
+            if (x->args[i]->varArg) {
+                MultiEValuePtr varArgs = new MultiEValue();
+                for (; j < varArgSize; ++j) {
+                    EValuePtr rev, ev;
+                    rev = mev->values[i+j];
+                    if (mpv->values[i+j].isTemp) {
+                        ev = rev;
+                    }
+                    else {
+                        ev = derefValue(rev);
+                    }
+                    varArgs->add(ev);
+                }
+                --j;
+                addLocal(env2, x->args[i]->name, varArgs.ptr());  
+            } else {
+                if (mpv->values[i+j].isTemp) {
+                    EValuePtr ev = mev->values[i+j];
+                    addLocal(env2, x->args[i]->name, ev.ptr());
                 }
                 else {
-                    ev = derefValue(rev);
+                    EValuePtr evPtr = mev->values[i+j];
+                    addLocal(env2, x->args[i]->name, derefValue(evPtr).ptr());
                 }
-                varArgs->add(ev);
             }
-            addLocal(env2, x->varg->name, varArgs.ptr());  
         }
+        
         return env2;
     }
 

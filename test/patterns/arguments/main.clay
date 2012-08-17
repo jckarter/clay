@@ -1,0 +1,17 @@
+import printer.(println);
+
+
+alias bar(u, ..y,  z) = ..y;
+
+foo(a, ..b, c) {
+    var d, ..e, f, g = a, ..b, c;
+    return ..e, g;
+}
+
+main() {
+	
+	var z, ..x, k = integers(#10);
+	println(..bar(z, ..x, k));
+	println(..foo(..x));
+	
+}

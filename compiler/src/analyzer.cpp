@@ -158,13 +158,15 @@ static void staticToTypeTuple(MultiStaticPtr x, unsigned index,
         argumentError(index, "expecting zero-or-more types");
 }
 
-static bool staticToInt(ObjectPtr x, int &out)
+static bool staticToInt(ObjectPtr x, int &out, TypePtr &type)
 {
     if (x->objKind != VALUE_HOLDER)
         return false;
     ValueHolderPtr vh = (ValueHolder *)x.ptr();
-    if (vh->type != cIntType)
+    if (vh->type != cIntType) {
+        type = vh->type;
         return false;
+    }
     out = vh->as<int>();
     return true;
 }
@@ -172,18 +174,22 @@ static bool staticToInt(ObjectPtr x, int &out)
 static int staticToInt(MultiStaticPtr x, unsigned index)
 {
     int out = -1;
-    if (!staticToInt(x->values[index], out))
-        argumentError(index, "expecting Int value");
+    TypePtr type;
+    if (!staticToInt(x->values[index], out, type)){
+        argumentTypeError(index, "Int", type);
+    }
     return out;
 }
 
-bool staticToBool(ObjectPtr x, bool &out)
+bool staticToBool(ObjectPtr x, bool &out, TypePtr &type)
 {
     if (x->objKind != VALUE_HOLDER)
         return false;
     ValueHolderPtr vh = (ValueHolder *)x.ptr();
-    if (vh->type != boolType)
+    if (vh->type != boolType) {
+        type = vh->type;
         return false;
+    }
     out = vh->as<bool>();
     return true;
 }
@@ -191,8 +197,9 @@ bool staticToBool(ObjectPtr x, bool &out)
 bool staticToBool(MultiStaticPtr x, unsigned index)
 {
     bool out = false;
-    if (!staticToBool(x->values[index], out))
-        argumentError(index, "expecting Bool value");
+    TypePtr type;
+    if (!staticToBool(x->values[index], out, type))
+        argumentTypeError(index, "Bool", type);
     return out;
 }
 
@@ -1869,21 +1876,24 @@ MultiPValuePtr analyzeCallByName(InvokeEntry* entry,
 
     EnvPtr bodyEnv = new Env(entry->env);
     bodyEnv->callByNameExprHead = callable;
-
-    for (unsigned i = 0; i < entry->fixedArgNames.size(); ++i) {
+    unsigned i = 0, j = 0;
+    for (; i < entry->varArgPosition; ++i) {
         ExprPtr expr = foreignExpr(env, args->exprs[i]);
         addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
     }
-
     if (entry->varArgName.ptr()) {
         ExprListPtr varArgs = new ExprList();
-        for (unsigned i = entry->fixedArgNames.size(); i < args->size(); ++i) {
-            ExprPtr expr = foreignExpr(env, args->exprs[i]);
+        for (; j < args->size() - entry->fixedArgNames.size(); ++j) {
+            ExprPtr expr = foreignExpr(env, args->exprs[i+j]);
             varArgs->add(expr);
         }
         addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
+        for (; i < entry->fixedArgNames.size(); ++i) {
+            ExprPtr expr = foreignExpr(env, args->exprs[i+j]);
+            addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
+        }
     }
-
+    
     AnalysisContext ctx;
     StatementAnalysis sa = analyzeStatement(code->body, bodyEnv, &ctx);
     if ((sa == SA_RECURSIVE) && (!ctx.returnInitialized))
@@ -1992,21 +2002,24 @@ void analyzeCodeBody(InvokeEntry* entry)
     }
 
     EnvPtr bodyEnv = new Env(entry->env);
-
-    for (size_t i = 0; i < entry->fixedArgNames.size(); ++i) {
+    
+    unsigned i = 0, j = 0;
+    for (; i < entry->varArgPosition; ++i) {
         bool flag = entry->forwardedRValueFlags[i];
         addLocal(bodyEnv, entry->fixedArgNames[i], new PValue(entry->fixedArgTypes[i], flag));
     }
-
     if (entry->varArgName.ptr()) {
-        size_t nFixed = entry->fixedArgNames.size();
         MultiPValuePtr varArgs = new MultiPValue();
-        for (size_t i = 0; i < entry->varArgTypes.size(); ++i) {
-            bool flag = entry->forwardedRValueFlags[i + nFixed];
-            PVData parg(entry->varArgTypes[i], flag);
+        for (; j < entry->varArgTypes.size(); ++j) {
+            bool flag = entry->forwardedRValueFlags[i+j];
+            PVData parg(entry->varArgTypes[j], flag);
             varArgs->values.push_back(parg);
         }
         addLocal(bodyEnv, entry->varArgName, varArgs.ptr());
+        for (; i < entry->fixedArgNames.size(); ++i) {
+            bool flag = entry->forwardedRValueFlags[i+j];
+            addLocal(bodyEnv, entry->fixedArgNames[i], new PValue(entry->fixedArgTypes[i], flag));
+        }
     }
 
     AnalysisContext ctx;
@@ -2303,48 +2316,49 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
     case REF :
     case FORWARD : {
 
-        vector<TypePtr> key;
-        vector<PatternCellPtr> cells;
-        vector<MultiPatternCellPtr> multiCells;
-        
         MultiPValuePtr mpv = analyzeMulti(x->values, env, x->args.size());
         if (!mpv)
-            return NULL; 
+            return NULL;
+        
+        if(x->hasVarArg){
+            if (mpv->values.size() < x->args.size())
+                arityMismatchError(x->args.size(), mpv->values.size());
+        } else
+            if (mpv->values.size() != x->args.size())
+                arityMismatchError(x->args.size(), mpv->values.size());
 
+        vector<TypePtr> key;
         for (unsigned i = 0; i < mpv->size(); ++i) {
             PVData const &pv = mpv->values[i];
             key.push_back(pv.type);
         }
 
-        if (x->varg.ptr()) {
-            if (key.size() < x->args.size())
-                    arityMismatchError(x->args.size(), key.size());
-        }
-        else {
-            if (x->args.size() != key.size())
-                    arityMismatchError(x->args.size(), key.size());
-        }
-
         const vector<PatternVar> &pvars = x->patternVars;
         EnvPtr patternEnv = new Env(env);
+        vector<PatternCellPtr> cells;
+        vector<MultiPatternCellPtr> multiCells;
         initializePatternEnv(patternEnv, pvars, cells, multiCells);
         
         const vector<FormalArgPtr> &formalArgs = x->args;
-        for (unsigned i = 0; i < formalArgs.size(); ++i) {
+        unsigned varArgSize = key.size()-formalArgs.size()+1;
+        for (unsigned i = 0, j = 0; i < formalArgs.size(); ++i) {
             FormalArgPtr y = formalArgs[i];
-            if (y->type.ptr())
-                if (!unifyPatternObj(evaluateOnePattern(y->type, patternEnv), key[i].ptr()))
-                    matchBindingError(new MatchBindingError(i, key[i], y));
-        }
-
-        if (x->varg.ptr() && x->varg->type.ptr()) {
-            ExprPtr unpack = new Unpack(x->varg->type.ptr());
-            unpack->location = x->varg->type->location;
-            MultiStaticPtr types = new MultiStatic();
-            for (unsigned i = formalArgs.size(); i < key.size(); ++i)
-                types->add(key[i].ptr());
-            if (!unifyMulti(evaluateMultiPattern(new ExprList(unpack), patternEnv), types))
-                matchBindingError(new MatchMultiBindingError(formalArgs.size(), types, x->varg));
+            if (y->type.ptr()) {      
+                if(y->varArg){
+                    ExprPtr unpack = new Unpack(y->type.ptr());
+                    unpack->location = y->type->location;
+                    MultiStaticPtr types = new MultiStatic();
+                    for (; j < varArgSize; ++j) {
+                        types->add(key[i+j].ptr());
+                    }
+                    --j;
+                    if (!unifyMulti(evaluateMultiPattern(new ExprList(unpack), patternEnv), types))
+                        matchBindingError(new MatchMultiBindingError(formalArgs.size(), types, y));
+                } else {
+                    if (!unifyPatternObj(evaluateOnePattern(y->type, patternEnv), key[i+j].ptr()))
+                        matchBindingError(new MatchBindingError(i+j, key[i+j], y));
+                }
+            }
         }
               
         EnvPtr staticEnv = new Env(env);
@@ -2368,19 +2382,20 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
         evaluatePredicate(x->patternVars, x->predicate, staticEnv);   
         
         EnvPtr env2 = new Env(staticEnv);
-        for (unsigned i = 0; i < formalArgs.size(); ++i) {
-            FormalArgPtr y = formalArgs[i];
-            addLocal(env2, y->name, new PValue(key[i], false));
-        }
-        if (x->varg.ptr()) {
-            MultiPValuePtr varArgs = new MultiPValue();
-            for (unsigned i = formalArgs.size(); i < key.size(); ++i) {
-                PVData parg(key[i], false);
-                varArgs->values.push_back(parg);
+        for (unsigned i = 0, j = 0; i < formalArgs.size(); ++i) {
+            FormalArgPtr y = formalArgs[i];    
+            if(y->varArg){
+                MultiPValuePtr varArgs = new MultiPValue();
+                for (; j < varArgSize; ++j) {
+                    PVData parg(key[i+j], false);
+                    varArgs->values.push_back(parg);
+                }
+                --j;
+                addLocal(env2, y->name, varArgs.ptr());
+            } else { 
+                addLocal(env2, y->name, new PValue(key[i+j], false));
             }
-            addLocal(env2, x->varg->name, varArgs.ptr());
         }
-        
         return env2;
     }
 
@@ -2663,8 +2678,9 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 
         ObjectPtr isVarArgObj = unwrapStaticType(args->values[2].type);
         bool isVarArg;
-        if (!staticToBool(isVarArgObj, isVarArg))
-            argumentError(2, "expecting a static Bool");
+        TypePtr type;
+        if (!staticToBool(isVarArgObj, isVarArg, type))
+            argumentTypeError(2, "static Bool", type);
 
         if (isVarArg)
             argumentError(2, "implementation of external variadic functions is not yet supported");
@@ -3314,8 +3330,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             code->formalArgs.push_back(new FormalArg((*arg)->name, NULL));
         }
 
-        if (origCode->formalVarArg != NULL)
-            code->formalVarArg = new FormalArg(origCode->formalVarArg->name, NULL);
+        code->hasVarArg = origCode->hasVarArg;
 
         if (origCode->hasNamedReturns()) {
             code->returnSpecsDeclared = true;

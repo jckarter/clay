@@ -406,9 +406,9 @@ static EnvPtr overloadPatternEnv(OverloadPtr x) {
 }
 
 void getProcedureMonoTypes(ProcedureMono &mono, EnvPtr env,
-    vector<FormalArgPtr> const &formalArgs, FormalArgPtr formalVarArg)
+    vector<FormalArgPtr> const &formalArgs, bool hasVarArg)
 {
-    if (mono.monoState == Procedure_NoOverloads && formalVarArg == NULL)
+    if (mono.monoState == Procedure_NoOverloads && !hasVarArg)
     {
         assert(mono.monoTypes.empty());
         mono.monoState = Procedure_MonoOverload;
@@ -439,7 +439,7 @@ void addProcedureOverload(ProcedurePtr proc, EnvPtr env, OverloadPtr x) {
     proc->overloads.insert(proc->overloads.begin(), x);
     getProcedureMonoTypes(proc->mono, env,
         x->code->formalArgs,
-        x->code->formalVarArg);
+        x->code->hasVarArg);
 }
 
 static void initOverload(OverloadPtr x) {
