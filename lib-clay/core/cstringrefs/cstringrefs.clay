@@ -15,15 +15,10 @@ overload ContiguousSequence?(#CStringRef) = true;
 
 /// @section  constructors 
 
-[T when ByteSizedInteger?(T)]
+[T when ByteLike?(T)]
 forceinline overload CStringRef(ptr : Pointer[T]) --> returned:CStringRef {
     returned.ptr = Pointer[Int8](ptr);
 }
-
-forceinline overload CStringRef(ptr : Pointer[Char]) = CStringRef(Pointer[Int8](ptr));
-
-[S when StringLiteral?(S)]
-forceinline overload CStringRef(#S) = CStringRef(cstring(S));
 
 
 
