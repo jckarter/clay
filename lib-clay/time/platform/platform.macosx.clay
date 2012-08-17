@@ -6,7 +6,7 @@ time() {
     var tv = unix.Struct_timeval();
     var r = unix.gettimeofday(@tv, RawPointer(0));
     if (r == Type(r)(-1))
-        throw GenericOSError(unix.errno());
+        throw GenericOSError(unix.errno(), "gettimeofday");
     var secs = Double(tv.tv_sec);
     var usecs = Double(tv.tv_usec);
     return secs + usecs/1e6;

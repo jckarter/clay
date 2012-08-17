@@ -23,7 +23,7 @@ overload DirectoryIterator(dir: S) --> returned: DirectoryIterator {
 
     returned.handle = FindFirstFileA(cstring(pattern), @returned.findData);
     if (returned.handle == INVALID_HANDLE_VALUE) {
-        throw GenericIOError(GetLastError());
+        throw GenericIOError(GetLastError(), "FindFirstFileA");
     }
 }
 
@@ -49,7 +49,7 @@ overload nextValue(it: DirectoryIterator) {
             if (GetLastError() == ERROR_NO_MORE_FILES) {
                 return nothing(DirectoryEntry);
             } else {
-                throw GenericIOError(GetLastError());
+                throw GenericIOError(GetLastError(), "FindNextFileA");
             }
         }
     }

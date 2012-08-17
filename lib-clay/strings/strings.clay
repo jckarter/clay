@@ -61,6 +61,8 @@ forceinline overload String(a:A) = String(mapped(Char, a));
 [T when ByteSizedInteger?(T)]
 forceinline overload String(cstr : Pointer[T]) = String(CStringRef(cstr));
 
+forceinline overload String(cstr : Pointer[Char]) = String(CStringRef(cstr));
+
 
 
 /// @section  convert to c-compatible string 

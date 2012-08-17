@@ -1,0 +1,11 @@
+import io.temp.(tempDirectory);
+import io.paths.(pathExists?);
+
+import test.*;
+
+main() = testMain(
+    TestSuite("io.temp", array(
+        TestCase("tempDirectory", test => {
+            expectTrue(test, "temp directory exists", pathExists?(tempDirectory()));
+        }),
+    )));
