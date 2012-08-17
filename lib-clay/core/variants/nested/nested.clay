@@ -3,14 +3,7 @@
 /// @section  SubVariants 
 
 private SubVariants(V) =
-    ..filterStatics(Variant?, ..VariantMembers(V));
-
-private define filterStatics;
-[F, T] forceinline overload filterStatics(#F, #T, ..rest) =
-    ..filterStatics(F, ..rest);
-[F, T when F(T)] forceinline overload filterStatics(#F, #T, ..rest) =
-    T, ..filterStatics(F, ..rest);
-[F] forceinline overload filterStatics(#F) = ;
+    ..filterValues(Variant?, ..VariantMembers(V));
 
 
 
