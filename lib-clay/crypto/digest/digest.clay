@@ -49,7 +49,7 @@ overload hash(x:H) = bitcast(SizeT, x.digest);
 
 
 [S]
-private MessagePart?(#S) = ContiguousSequence?(S) and TypeSize(SequenceElementType(S)) == 1;
+private MessagePart?(#S) = ContiguousSequence?(S) and ByteLike?(SequenceElementType(S));
 
 
 // generic update code
