@@ -65,7 +65,7 @@ overload FileMapping(f:File, mode:MappingMode, offset:A, length:B) {
         Int64(offset),
     );
     if (address == Type(address)(-1))
-        throw GenericIOError(unix.errno());
+        throw GenericIOError(unix.errno(), "mmap");
     return FileMapping(new(InnerFileMapping(address, SizeT(length))));
 }
 
@@ -91,5 +91,5 @@ mappingLength(fm:FileMapping) = fm.inner^.length;
 flushMapping(fm:FileMapping) {
     var result = unix.msync(fm.inner^.address, fm.inner^.length, unix.MS_SYNC);
     if (result == Type(result)(-1))
-        throw GenericIOError(unix.errno());
+        throw GenericIOError(unix.errno(), "msync");
 }

@@ -14,7 +14,7 @@ readLink(x) {
 
     var size = readlink(cstring(x), Pointer[CChar](begin(buf)), size_t(path_max));
     if (size < 0)
-        throw GenericIOError(errno());
+        throw GenericIOError(errno(), "readlink");
 
     resize(buf, size);
     return move(buf);
@@ -23,12 +23,12 @@ readLink(x) {
 moveFile(fromPath, toPath) {
     var ok = libc.rename(cstring(fromPath), cstring(toPath));
     if (ok != 0)
-        throw GenericIOError(errno());
+        throw GenericIOError(errno(), "rename");
 }
 
 deleteFile(path) {
     var ok = unlink(cstring(path));
     if (ok != 0)
-        throw GenericIOError(errno());
+        throw GenericIOError(errno(), "unlink");
 }
 

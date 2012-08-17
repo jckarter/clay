@@ -83,7 +83,7 @@ overload RawFile(path:S, mode:OpenMode) {
         win32.DWORD(win32.FILE_ATTRIBUTE_NORMAL),
         win32.HANDLE(0));
     if (handle == win32.INVALID_HANDLE_VALUE)
-        throw GenericIOError(win32.GetLastError());
+        throw GenericIOError(win32.GetLastError(), "CreateFileA");
     var f = RawFile(handle, true);
     if (mode == APPEND)
         seek(f, 0, SEEK_END);
@@ -129,7 +129,7 @@ overload read(f:RawFile, buffer:Pointer[Byte], n:SizeT) : SizeT {
         @nRead,
         win32.LPOVERLAPPED(0));
     if (result == 0)
-        throw GenericIOError(win32.GetLastError());
+        throw GenericIOError(win32.GetLastError(), "ReadFile");
     return SizeT(nRead);
 }
 
@@ -142,7 +142,7 @@ overload write(f:RawFile, buffer:Pointer[Byte], n:SizeT) {
         @nWritten,
         win32.LPOVERLAPPED(0));
     if (result == 0)
-        throw GenericIOError(win32.GetLastError());
+        throw GenericIOError(win32.GetLastError(), "WriteFile");
     assert(nWritten == n);
 }
 
@@ -161,7 +161,7 @@ overload fileSize(f:RawFile) {
     var size = Int64();
     var result = win32.GetFileSizeEx(f.handle, @size);
     if (result == 0)
-        throw GenericIOError(win32.GetLastError());
+        throw GenericIOError(win32.GetLastError(), "GetFileSizeEx");
     return size;
 }
 
@@ -184,7 +184,7 @@ overload seek(f:RawFile, offset, whence) {
         @newPos,
         seekMethod(whence));
     if (result == 0)
-        throw GenericIOError(win32.GetLastError());
+        throw GenericIOError(win32.GetLastError(), "SetFilePointerEx");
     return newPos;
 }
 

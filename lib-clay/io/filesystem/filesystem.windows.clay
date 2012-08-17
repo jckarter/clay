@@ -4,12 +4,12 @@ import io.errors.*;
 moveFile(fromPath, toPath) {
     var ok = MoveFileA(cstring(fromPath), cstring(toPath));
     if (ok == 0)
-        throw GenericIOError(GetLastError());
+        throw GenericIOError(GetLastError(), "MoveFileA");
 }
 
 deleteFile(path) {
     var ok = DeleteFileA(cstring(path));
     if (ok == 0)
-        throw GenericIOError(GetLastError());
+        throw GenericIOError(GetLastError(), "DeleteFileA");
 }
 

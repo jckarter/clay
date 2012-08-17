@@ -2,20 +2,22 @@ import os.errors.platform as platform;
 import printer.(printTo,printReprTo);
 import strings.*;
 
-record GenericOSError(code:Int);
+record GenericOSError(code:Int, where:StringLiteralRef);
 
-[I when Integer?(I)]
-overload GenericOSError(code:I) --> returned:GenericOSError {
+[I, S when Integer?(I) and StringLiteral?(S)]
+overload GenericOSError(code:I, #S) --> returned:GenericOSError {
     returned.code = Int(code);
+    returned.where = StringLiteralRef(S);
 }
 
 overload printTo(stream, x:GenericOSError) {
+    printTo(stream, x.where, ": ");
     printTo(stream, "error(", x.code, "): ");
     printErrorMessageTo(stream, x.code);
 }
 
 overload printReprTo(stream, x:GenericOSError) {
-    printTo(stream, "GenericOSError(", errorCodeName(x.code), ")");
+    printTo(stream, "GenericOSError(", errorCodeName(x.code), ", ", repr(x.where), ")");
 }
 
 variant OSError (GenericOSError);

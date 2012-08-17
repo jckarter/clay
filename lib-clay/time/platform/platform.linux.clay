@@ -6,7 +6,7 @@ time() {
     var tv = unix.Struct_timeval();
     var r = unix.gettimeofday(@tv, unix.__timezone_ptr_t(0));
     if (r == Type(r)(-1))
-        throw GenericOSError(unix.errno());
+        throw GenericOSError(unix.errno(), "gettimeofday");
     var secs = Double(tv.tv_sec);
     var usecs = Double(tv.tv_usec);
     return secs + usecs/1e6;
@@ -37,7 +37,7 @@ start(t:Timer) {
     	var tv = unix.Struct_timespec();
     	var r = unix.clock_gettime(t.clock, @tv);
     	if (r == Type(r)(-1))
-        	throw GenericOSError(unix.errno());
+        	throw GenericOSError(unix.errno(), "clock_gettime");
         t.startTicks = tv.tv_sec * 1000000000 + tv.tv_nsec;
     	t.running = true;
     }
@@ -48,7 +48,7 @@ stop(t:Timer) {
     	var tv = unix.Struct_timespec();
     	var r =unix.clock_gettime(t.clock, @tv);
     	if (r == Type(r)(-1))
-        	throw GenericOSError(unix.errno());
+        	throw GenericOSError(unix.errno(), "clock_gettime");
         t.elapsedTicks = tv.tv_sec * 1000000000 + tv.tv_nsec - t.startTicks;
         t.running = false;
     }
