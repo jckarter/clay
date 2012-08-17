@@ -835,12 +835,14 @@ int main2(int argc, char **argv, char const* const* envp) {
         else
             outputFile += exeExtensionForTarget(llvmTriple);
     }
-    bool isDir;
-    if (!llvm::sys::fs::is_directory(outputFile, isDir) && isDir) {
-        llvm::errs() << "error: output file '" << outputFile << "' is a directory\n";
-        return 1;
+    if (!run) {
+        bool isDir;
+        if (!llvm::sys::fs::is_directory(outputFile, isDir) && isDir) {
+            llvm::errs() << "error: output file '" << outputFile << "' is a directory\n";
+            return 1;
+        }
+        llvm::sys::RemoveFileOnSignal(llvm::sys::Path(outputFile));
     }
-    llvm::sys::RemoveFileOnSignal(llvm::sys::Path(outputFile));
 
     if (generateDeps) {
         if (run) {
@@ -854,6 +856,7 @@ int main2(int argc, char **argv, char const* const* envp) {
     }
 
     if (generateDeps) {
+        bool isDir;
         if (!llvm::sys::fs::is_directory(dependenciesOutputFile, isDir) && isDir) {
             llvm::errs() << "error: dependencies output file '" << dependenciesOutputFile << "' is a directory\n";
             return 1;
