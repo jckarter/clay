@@ -1,35 +1,11 @@
 
+public import io.streams.protocol.*;
 public import io.errors.*;
 import buffervector.*;
 import strings.*;
 import vectors.*;
 
 public import io.streams.bytevector.*;
-
-
-/// @section  readBytes, writeBytes, flush - byte stream operations 
-///
-/// readBytes and writeBytes are SPI functions, orinary clients don't
-/// need to call these functions directly, bug should use write
-/// overloads instead
-
-define readBytes(stream, buf:Pointer[Byte], n:SizeT) : SizeT;
-
-define writeBytes(stream, buf:Pointer[Byte], n:SizeT) : SizeT;
-
-define flush(stream) :;
-
-
-
-/// @section InputStream, OutputStream types
-
-
-[S]
-InputStream?(#S) = CallDefined?(readBytes, S, Pointer[Byte], SizeT);
-
-[S]
-OutputStream?(#S) = CallDefined?(writeBytes, S, Pointer[Byte], SizeT);
-
 
 
 /// @section misc type functions
@@ -44,11 +20,6 @@ ByteBuffer?(#T) = ContiguousSequence?(T) and ByteLike?(SequenceElementType(T));
 
 
 /// @section  read, write wrappers to readBytes, writeBytes
-
-[I when InputStream?(I)]
-define read(stream:I, ..args);
-[O when OutputStream?(O)]
-define write(stream:O, ..args) :;
 
 [B, N when ByteLike?(B) and Integer?(N)]
 overload read(stream, buf:Pointer[B], n:N) = readBytes(stream, Pointer[Byte](buf), SizeT(n));

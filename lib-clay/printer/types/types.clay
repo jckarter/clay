@@ -1,0 +1,541 @@
+import printer.protocol.*;
+import io.streams.protocol.*;
+
+import libc;
+import platform;
+import printer.platform.(
+    formatForInt64, formatForUInt64,
+    formatForPartialInt128,
+);
+import numbers.floats.(nan, nan?);
+import strings.*;
+import strings.encodings.utf8.*;
+import vectors.*;
+import sequences.(interleave);
+import simd.(unpackVec);
+
+
+/// @section  printTo 
+
+forceinline overload printTo(stream) {
+}
+
+forceinline overload printTo(stream, a, b, ..rest) {
+    ..for (x in a, b, ..rest)
+        printTo(stream, x);
+}
+
+
+
+/// @section  printTo - Bool 
+
+overload printTo(stream, x:Bool) {
+    if (x)
+        printTo(stream, "true");
+    else
+        printTo(stream, "false");
+}
+
+
+
+/// @section  printTo - integers, floats, pointers 
+
+[I when SignedInteger?(I)]
+overload printTo(stream, x:I) {
+    printWithSprintf(stream, "%d", Int(x));
+}
+
+[I when UnsignedInteger?(I)]
+overload printTo(stream, x:I) {
+    printWithSprintf(stream, "%u", UInt(x));
+}
+
+overload printTo(stream, x:Int64) {
+    printWithSprintf(stream, formatForInt64, x);
+}
+
+overload printTo(stream, x:UInt64) {
+    printWithSprintf(stream, formatForUInt64, x);
+}
+
+overload printTo(stream, x:Int128) {
+    if (x >= Least(Int64) and x <= Greatest(Int64))
+        printTo(stream, Int64(x));
+    else {
+        var lo = Int64(x % 1_000_000_000_000_000_000ll);
+        var loabs = UInt64(if (lo < 0) -lo else lo);
+        var hi = x \ 1_000_000_000_000_000_000ll;
+
+        printTo(stream, hi);
+        printWithSprintf(stream, formatForPartialInt128, loabs);
+    }
+}
+
+overload printTo(stream, x:UInt128) {
+    if (x <= Greatest(UInt64))
+        printTo(stream, UInt64(x));
+    else {
+        var lo = UInt64(x % 1_000_000_000_000_000_000ull);
+        var hi = x \ 1_000_000_000_000_000_000ull;
+
+        printTo(stream, hi);
+        printWithSprintf(stream, formatForPartialInt128, lo);
+    }
+}
+
+overload printTo(stream, x:LongDouble) {
+    printFloatWithSprintf(stream, "nan", "%.19Lg", x);
+}
+
+overload printTo(stream, x:Double) {
+    printFloatWithSprintf(stream, "nan", "%.16g", x);
+}
+overload printTo(stream, x:Float) {
+    printFloatWithSprintf(stream, "nan", "%.8g", Double(x));
+}
+
+private rectValues(T,x) = Pointer[T](@x)^, (Pointer[T](@x)+1)^;
+
+overload printTo(stream, x:Complex80) {
+    printFloatWithSprintf(stream, "nan", "%.19Lg%+.19Lgj", ..rectValues(Float80,x));
+}
+
+overload printTo(stream, x:Complex64) {
+    printFloatWithSprintf(stream, "nan", "%.16g%+.16gj", ..rectValues(Float64,x));
+}
+
+overload printTo(stream, x:Complex32) {
+    printFloatWithSprintf(stream, "nan", "%.16g%+.16gj", ..mapValues(Double, ..rectValues(Float32,x)));
+}
+
+overload printTo(stream, x:Imag80) {
+    printFloatWithSprintf(stream, "nan", "%.19Lgj", x);
+}
+
+overload printTo(stream, x:Imag64) {
+    printFloatWithSprintf(stream, "nan", "%.16gj", x);
+}
+
+overload printTo(stream, x:Imag32) {
+    printFloatWithSprintf(stream, "nan", "%.8gj", Imag64(x));
+}
+
+[T]
+overload printTo(stream, x:Pointer[T]) {
+    printWithSprintf(stream, "%p", x);
+}
+[I, O]
+overload printTo(stream, x:CodePointer[I, O]) {
+    printWithSprintf(stream, "%p", x);
+}
+[C,V,I,O]
+overload printTo(stream, x:ExternalCodePointer[C,V,I,O]) {
+    printWithSprintf(stream, "%p", x);
+}
+
+printWithSprintf(stream, formatString, ..values) {
+    var buf = Array[CChar, 100]();
+    libc.sprintf(begin(buf), cstring(formatString), ..values);
+    var n = libc.strlen(begin(buf));
+    var ptr = Pointer[Byte](begin(buf));
+    write(stream, ptr, SizeT(n));
+}
+
+forceinline printFloatWithSprintf(stream, nanString, formatString, ..values) {
+    ..for (v in values)
+        if (nan?(v)) {
+            printTo(stream, nanString);
+            return;
+        }
+    printWithSprintf(stream, formatString, ..values);
+}
+
+
+/// @section  printTo - statics 
+
+[X]
+overload printTo(stream, x:Static[X]) {
+    printTo(stream, StaticName(x));
+}
+
+[X when StringLiteral?(X)]
+overload printTo(stream, x:Static[X]) {
+    printTo(stream, StaticName(x));
+}
+
+
+/// @section  printTo - enums 
+
+[E when Enum?(E)]
+overload printTo(stream, x:E) {
+    printTo(stream, enumName(x));
+}
+
+
+
+/// @section  printTo - tuples, records, arrays, vectors 
+
+[..T]
+overload printTo(stream, x:Tuple[..T]) {
+    printTo(stream, "[", ..weaveValues(", ", ..unpackTuple(x)), "]");
+}
+
+[T when Record?(T)]
+overload printTo(stream, x:T) {
+    printTo(stream, T, "(", ..weaveValues(", ", ..recordFields(x)), ")");
+}
+
+printSequenceTo(stream, xs) {
+    printTo(stream, "{");
+    interleave(xs,
+        () -> { printTo(stream, ", "); },
+        x  -> { printTo(stream, x);    },
+    );
+    printTo(stream, "}");
+}
+
+[T,n]
+overload printTo(stream, xs:Array[T,n]) {
+    printSequenceTo(stream, xs);
+}
+
+[T]
+overload printTo(stream, xs:Vector[T]) {
+    printSequenceTo(stream, xs);
+}
+
+
+
+/// @section  printTo - variants 
+
+[T when Variant?(T)]
+overload printTo(stream, x:T) {
+    printTo(stream, *x);
+}
+
+
+
+/// @section  printTo - Char, String?, ContiguousString? 
+
+overload printTo(stream, x:Char) {
+    write(stream, Pointer[Byte](@x), SizeT(1));
+}
+
+overload printTo(stream, x:UniChar) {
+    encodeUniChar(x, c -> ..printTo(stream, c));
+}
+
+[S when String?(S)]
+overload printTo(stream, x:S) {
+    for (c in x)
+        write(stream, c);
+}
+
+[S when ContiguousString?(S)]
+overload printTo(stream, x:S) {
+    write(stream, x);
+}
+
+overload printTo(stream, x:CStringRef) {
+    if (null?(x.ptr)) {
+        printTo(stream, "(null)");
+    } else {
+        write(stream, x);
+    }
+}
+
+
+
+/// @section  printReprTo 
+
+// printReprTo - Bool, Numeric?, Pointer[T], Enum
+
+overload printReprTo(stream, x:Bool) {
+    printTo(stream, x);
+}
+
+overload printReprTo(stream, x:Int8) {
+    printTo(stream, x, "ss");
+}
+
+overload printReprTo(stream, x:Int16) {
+    printTo(stream, x, "s");
+}
+
+overload printReprTo(stream, x:Int32) {
+    printTo(stream, x, "i");
+}
+
+overload printReprTo(stream, x:Int64) {
+    printTo(stream, x, "l");
+}
+
+overload printReprTo(stream, x:Int128) {
+    printTo(stream, x, "ll");
+}
+
+overload printReprTo(stream, x:UInt8) {
+    printTo(stream, x, "uss");
+}
+
+overload printReprTo(stream, x:UInt16) {
+    printTo(stream, x, "us");
+}
+
+overload printReprTo(stream, x:UInt32) {
+    printTo(stream, x, "u");
+}
+
+overload printReprTo(stream, x:UInt64) {
+    printTo(stream, x, "ul");
+}
+
+overload printReprTo(stream, x:UInt128) {
+    printTo(stream, x, "ull");
+}
+
+overload printReprTo(stream, x:Float32) {
+    printFloatWithSprintf(stream, "nan(Float32)", "%.6af", Float64(x));
+}
+
+overload printReprTo(stream, x:Float64) {
+    printFloatWithSprintf(stream, "nan(Float64)", "%.13a", x);
+}
+
+// Windows, Linux, and MacOS X printf format %La as `0x8.0000_0000_0000_000`
+// FreeBSD printf formats %La as `0x1.0000_0000_0000_0000`
+overload printReprTo(stream, x:Float80) {
+    printFloatWithSprintf(stream, "nan(Float80)", "%.15Lafl", x);
+}
+
+[when platform.OS == platform.FreeBSD]
+overload printReprTo(stream, x:Float80) {
+    printFloatWithSprintf(stream, "nan(Float80)", "%.16Lafl", x);
+}
+
+
+overload printReprTo(stream, x:Imag32) {
+    printFloatWithSprintf(stream, "nan(Imag32)", "%.6afj", Imag64(x));
+}
+
+overload printReprTo(stream, x:Imag64) {
+    printFloatWithSprintf(stream, "nan(Imag64)", "%.13aj", x);
+}
+
+overload printReprTo(stream, x:Imag80) {
+    printFloatWithSprintf(stream, "nan(Imag80)", "%.15Laflj", x);
+}
+
+[when platform.OS == platform.FreeBSD]
+overload printReprTo(stream, x:Imag80) {
+    printFloatWithSprintf(stream, "nan(Imag80)", "%.16Lafl", x);
+}
+
+overload printReprTo(stream, x:Complex80) {
+    printFloatWithSprintf(stream, "nan(Complex80)", "%.15Lafl%+.15Laflj", ..rectValues(Float80,x));
+}
+
+[when platform.OS == platform.FreeBSD]
+overload printReprTo(stream, x:Complex80) {
+    printFloatWithSprintf(stream, "nan(Complex80)", "%.16Lafl%+.16Laflj", ..rectValues(Float80,x));
+}
+
+overload printReprTo(stream, x:Complex64) {
+    printFloatWithSprintf(stream, "nan(Complex64)", "%.13a%+.13aj", ..rectValues(Float64,x));
+}
+
+overload printReprTo(stream, x:Complex32) {
+    printFloatWithSprintf(stream, "nan(Complex32)", "%.6af%+.6afj", ..mapValues(Double, ..rectValues(Float32,x)));
+}
+
+
+[T]
+overload printReprTo(stream, x:Pointer[T]) {
+    printTo(stream, Pointer[T], "(");
+    printTo(stream, x);
+    printTo(stream, ")");
+}
+
+[E when Enum?(E)]
+overload printReprTo(stream, x:E) {
+    printTo(stream, x);
+}
+
+
+/// @section  printReprTo - statics 
+
+[X]
+overload printReprTo(stream, x:Static[X]) {
+    printTo(stream, "#");
+    printReprTo(stream, unwrapStatic(x));
+}
+
+[S when Symbol?(S)]
+overload printReprTo(stream, #S) {
+    printTo(stream, StaticName(S));
+}
+
+
+/// @section  printReprTo - tuples 
+
+[..T]
+overload printReprTo(stream, x:Tuple[..T]) {
+    printTo(stream, "[");
+    printReprValuesTo(stream, ..tupleElements(x));
+    printTo(stream, "]");
+}
+
+
+/// @section  printReprTo - records 
+
+[T when Record?(T)]
+overload printReprTo(stream, x:T) {
+    printTo(stream, T);
+    printReprArgumentsTo(stream, ..recordFields(x));
+}
+
+
+
+/// @section  printReprValuesTo, printReprArgumentsTo, printReprElementsTo 
+
+printReprValuesTo(stream, value, ..values) {
+    printReprTo(stream, value);
+    ..for (y in values) {
+        printTo(stream, ", ");
+        printReprTo(stream, y);
+    }
+}
+
+overload printReprValuesTo(stream) { }
+
+printReprArgumentsTo(stream, ..values) {
+    printTo(stream, "(");
+    printReprValuesTo(stream, ..values);
+    printTo(stream, ")");
+}
+
+printReprElementsTo(stream, seq) {
+    interleave(seq,
+        () -> { printTo(stream, ", "); },
+        x  -> { printReprTo(stream, x); },
+    );
+}
+
+
+/// @section  printReprTo - arrays, vectors 
+
+[T,n]
+overload printReprTo(stream, a:Array[T,n]) {
+    printTo(stream, Array[T,n], '(');
+    printReprElementsTo(stream, a);
+    printTo(stream, ')');
+}
+
+[T]
+overload printReprTo(stream, a:Vector[T]) {
+    printTo(stream, Vector[T], '(');
+    printReprElementsTo(stream, a);
+    printTo(stream, ')');
+}
+
+
+
+/// @section  printReprTo - variants 
+
+[T when Variant?(T)]
+overload printReprTo(stream, x:T) {
+    printTo(stream, T, "(");
+    printReprTo(stream, *x);
+    printTo(stream, ")");
+}
+
+
+
+/// @section  printReprTo - Char, String 
+
+printCharReprTo(stream, c:Char) {
+    switch (c)
+    case ('\0')
+        printTo(stream, "\\0");
+    case ('\n')
+        printTo(stream, "\\n");
+    case ('\r')
+        printTo(stream, "\\r");
+    case ('\t')
+        printTo(stream, "\\t");
+    case ('\f')
+        printTo(stream, "\\f");
+    case ('\\')
+        printTo(stream, "\\\\");
+    case ('\'')
+        printTo(stream, "\\'");
+    case ('\"')
+        printTo(stream, "\\\"");
+    case ('\$')
+        printTo(stream, "\\\$");
+    else if (c >= '\x20' and c <= '\x7E')
+        printTo(stream, c);
+    else
+        printWithSprintf(stream, "\\x%02X", UInt8(c));
+}
+
+overload printReprTo(stream, c:Char) {
+    printTo(stream, '\'');
+    printCharReprTo(stream, c);
+    printTo(stream, '\'');
+}
+
+[S when String?(S)]
+overload printReprTo(stream, s:S) {
+    printReprTo(stream, S);
+    printTo(stream, '(', '"');
+    for (c in s)
+        printCharReprTo(stream, c);
+    printTo(stream, '"', ')');
+}
+
+overload printReprTo(stream, s:String) {
+    // this overload is needed because String is Vector[Char] now
+    printTo(stream, "String(", '"');
+    for (c in s)
+        printCharReprTo(stream, c);
+    printTo(stream, '"', ')');
+}
+
+overload printReprTo(stream, s:CStringRef) {
+    printTo(stream, "CStringRef(");
+    if (not null?(s.ptr)) {
+        printTo(stream, '"');
+        for (c in s)
+            printCharReprTo(stream, c);
+        printTo(stream, '"');
+    }
+    printTo(stream, ')');
+}
+
+[S when StringLiteral?(S)]
+overload printReprTo(stream, #S) {
+    printTo(stream, '"');
+    for (c in S)
+        printCharReprTo(stream, c);
+    printTo(stream, '"');
+}
+
+
+
+/// @section  simd printing 
+
+[T,n]
+forceinline overload printTo(stream, a:Vec[T,n])
+{
+    printTo(stream, Type(a), "(", ..weaveValues(", ", ..unpackVec(a)), ")");
+}
+
+[T,n]
+forceinline overload printReprTo(stream, a:Vec[T,n])
+{
+    printTo(stream,Type(a),"(");
+    printReprValuesTo(stream, ..unpackVec(a));
+    printTo(stream,")");
+}
+

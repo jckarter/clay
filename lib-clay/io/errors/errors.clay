@@ -1,5 +1,5 @@
 public import os.errors.*;
-import printer.(printTo,printReprTo);
+import printer.protocol.(printTo,printReprTo);
 
 
 record GenericIOError(code:Int, where:StringLiteralRef);
