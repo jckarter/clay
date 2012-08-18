@@ -9,6 +9,8 @@ public import printer.types.*;
 import io.files.raw.(stderrRawFile,stdoutRawFile);
 import io.streams.(write,flush);
 
+import libc;
+import vectors.(moveVectorBuffer);
 import strings.(String);
 
 
