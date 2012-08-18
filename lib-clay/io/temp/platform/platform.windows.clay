@@ -1,4 +1,4 @@
-import win32.(GetTempPathA, LPTSTR, GetLastError);
+import win32.(GetTempPathA, LPTSTR, DWORD, GetLastError);
 import strings.(String);
 import io.errors.(GenericIOError);
 
@@ -7,7 +7,7 @@ private alias MAX_PATH = 260;
 
 tempDirectory() {
     var buffer = Array[Char, MAX_PATH + 1]();
-    var r = GetTempPathA(size(buffer), LPTSTR(@buffer));
+    var r = GetTempPathA(DWORD(size(buffer)), LPTSTR(@buffer));
     if (r == 0) {
         throw GenericIOError(GetLastError(), "GetTempPathA");
     }
@@ -17,7 +17,7 @@ tempDirectory() {
 
     var bigBuffer = String();
     resize(bigBuffer, r + 1);
-    var r2 = GetTempPathA(size(bigBuffer), LPTSTR(begin(bigBuffer)));
+    var r2 = GetTempPathA(DWORD(size(bigBuffer)), LPTSTR(begin(bigBuffer)));
     if (r2 == 0) {
         throw GenericIOError(GetLastError(), "GetTempPathA");
     }
