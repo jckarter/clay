@@ -20,6 +20,9 @@ forceinline overload CStringRef(ptr : Pointer[T]) --> returned:CStringRef {
     returned.ptr = Pointer[Int8](ptr);
 }
 
+[S when StringLiteral?(S)]
+forceinline overload CStringRef(#S) = CStringRef(cstring(S));
+
 
 
 /// @section  size, index 
