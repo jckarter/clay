@@ -1,0 +1,21 @@
+
+
+// test that printTo(stream, IOError) is defined after printTo(stream, record)
+
+
+import printer.*;
+import io.errors.*;
+import algorithms.*;
+import strings.*;
+
+import test.*;
+
+main() = testMain(
+    TestSuite("printer for GenericIOError", array(
+        TestCase("print", test => {
+            var s = str(GenericIOError(2, "close"));
+            // if printTo(stream, record) is defined after, then
+            // str returns "GenericIOError(ESMTH, \"close\")"
+            expectTrue(test, "starts with", beginsWith?(s, String("close: error(2)")));
+        }),
+    )));
