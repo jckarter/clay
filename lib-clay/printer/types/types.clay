@@ -380,6 +380,11 @@ overload printReprTo(stream, #S) {
     printTo(stream, StaticName(S));
 }
 
+[T]
+overload printReprTo(stream, #ArrayRef[T]) {
+    printTo(stream, ArrayRef, "[", T, "]");
+}
+
 overload printReprTo(stream, #String) {
     printTo(stream, "String");
 }

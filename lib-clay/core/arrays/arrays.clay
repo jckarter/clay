@@ -229,3 +229,19 @@ overload assign(ref left: Array[T,n], ref right: Array[U, n]) {
 overload assign(ref left: Array[T,n], rvalue right: Array[U, n]) {
     moveAssignNonoverlappingMemory(begin(left), begin(right), end(right));
 }
+
+
+
+
+
+/// @section  ArrayRef
+/// ArrayRef is a pair of pointers to the begin and to the end of memory area
+
+alias ArrayRef[T] = CoordinateRange[Pointer[T]];
+
+[T]
+overload ArrayRef(begin: Pointer[T], end: Pointer[T]) = CoordinateRange(begin, end);
+
+[T,N]
+overload ArrayRef(a: Array[T,N]) = ArrayRef(begin(a), end(a));
+
