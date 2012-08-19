@@ -113,8 +113,10 @@ main() = testMain(
             testWithEval(test, """"static"""");
             testWithEval(test, """StringLiteralRef("string literal ref")""");
             testWithEval(test, """String("string")""");
-            testWithEval(test, """CStringRef("string ref")""");
+            testWithEval(test, """CStringRef("cstring ref")""");
             testWithEval(test, """CStringRef()""");
+            testWithEval(test, """StringRef("string ref")""");
+            testWithEval(test, """StringRef()""");
         }),
     )));
 

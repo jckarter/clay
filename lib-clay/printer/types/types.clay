@@ -384,6 +384,10 @@ overload printReprTo(stream, #String) {
     printTo(stream, "String");
 }
 
+overload printReprTo(stream, #StringRef) {
+    printTo(stream, "StringRef");
+}
+
 
 /// @section  printReprTo - tuples 
 
@@ -503,9 +507,10 @@ overload printReprTo(stream, s:S) {
     printTo(stream, '"', ')');
 }
 
-overload printReprTo(stream, s:CStringRef) {
-    printTo(stream, "CStringRef(");
-    if (not null?(s.ptr)) {
+[S when S == CStringRef or S == StringRef]
+overload printReprTo(stream, s:S) {
+    printTo(stream, S, "(");
+    if (not null?(begin(s))) {
         printTo(stream, '"');
         for (c in s)
             printCharReprTo(stream, c);
