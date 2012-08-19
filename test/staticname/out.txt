@@ -1,5 +1,5 @@
 +: +
-Vector[Char]: Vector[Char]
+String: Vector[Char]
 Vec: Vec
 hash: hash
 Array: Array

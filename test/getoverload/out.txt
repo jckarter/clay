@@ -1,2 +1,2 @@
 Float 123
-Vector[Char] 123
+String 123

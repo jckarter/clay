@@ -32,7 +32,7 @@ ContiguousSequence?(T) = false
 
 T = LineSequence
 Sequence?(T) = true
-SequenceElementType(T) = Vector[Char]
+SequenceElementType(T) = String
 SizedSequence?(T) = false
 RandomAccessSequence?(T) = false
 LValueSequence?(T) = false
