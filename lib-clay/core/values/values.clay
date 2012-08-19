@@ -111,27 +111,39 @@ private record CapturedLValue[T] (
     ptr : Pointer[T]
 );
 
-define captureValue;
-forceinline overload captureValue(rvalue x) = move(x);
+private record CapturedRValue[T] (
+    value: T
+);
+
+CapturedValue?(a) = false;
+[T]
+overload CapturedValue?(#CapturedLValue[T]) = true;
+[T]
+overload CapturedValue?(#CapturedRValue[T]) = true;
+
+define captureValue(v);
+forceinline overload captureValue(rvalue x) = CapturedRValue(move(x));
 forceinline overload captureValue(ref x) = CapturedLValue(@x);
 
-define forwardValue;
-forceinline overload forwardValue(x) = move(x);
+[V when CapturedValue?(V)]
+define forwardValue(v:V);
+[T] forceinline overload forwardValue(x:CapturedRValue[T]) = move(x.value);
 [T] forceinline overload forwardValue(x:CapturedLValue[T]) = ref x.ptr^;
 
-define capturedRef;
-forceinline overload capturedRef(x) = ref x;
+[V when CapturedValue?(V)]
+define capturedRef(v:V);
+[T] forceinline overload capturedRef(x:CapturedRValue[T]) = ref x.value;
 [T] forceinline overload capturedRef(x:CapturedLValue[T]) = ref x.ptr^;
 
 // captureValues, forwardValues, capturedRefs
 
 forceinline captureValues(forward ..args) = Tuple(..mapValues(captureValue, ..args));
 
-[..T]
+[..T when allValues?(CapturedValue?, ..T)]
 forceinline forwardValues(x:Tuple[..T]) =
     forward ..mapValues(forwardValue, ..unpackTupleRef(x));
 
-[..T]
+[..T when allValues?(CapturedValue?, ..T)]
 forceinline capturedRefs(x:Tuple[..T]) =
     forward ..mapValues(capturedRef, ..unpackTupleRef(x));
 
