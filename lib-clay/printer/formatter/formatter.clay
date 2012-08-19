@@ -147,22 +147,24 @@ overload printedWidth(b: Bool) = if (b) 4 else 5;
 
 /// @section  minimum-width alignment formatter 
 
-private record LeftAlignedFormatter[T] (
-    value: T,
+[..C when allValues?(CapturedValue?, ..C)]
+private record LeftAlignedFormatter[..C] (
+    value: Tuple[..C],
     width: SizeT,
     filledWidth: SizeT,
     pad: Char,
 );
-private record RightAlignedFormatter[T] (
-    value: T,
+[..C when allValues?(CapturedValue?, ..C)]
+private record RightAlignedFormatter[..C] (
+    value: Tuple[..C],
     width: SizeT,
     filledWidth: SizeT,
     pad: Char,
 );
 
 private AlignedFormatter?(T) = false;
-[T] overload AlignedFormatter?(#LeftAlignedFormatter[T]) = true;
-[T] overload AlignedFormatter?(#RightAlignedFormatter[T]) = true;
+[..C] overload AlignedFormatter?(#LeftAlignedFormatter[..C]) = true;
+[..C] overload AlignedFormatter?(#RightAlignedFormatter[..C]) = true;
 [T when AlignedFormatter?(T)] overload Formatter?(#T) = true;
 
 [I when Integer?(I)]
@@ -171,7 +173,7 @@ private alignedFormatter(F, width: I, pad: Char, forward ..values) {
     // and use the width of that
     var s = str(..values);
     var filledWidth = size(s);
-    return formatter(F, Tuple(move(s)), SizeT(width), filledWidth, pad);
+    return F(captureValues(move(s)), SizeT(width), filledWidth, pad);
 }
 
 private filledWidth(..values)
@@ -193,8 +195,8 @@ leftAligned(width, forward ..values)
 rightAligned(width, forward ..values)
     = alignedFormatter(RightAlignedFormatter, width, ' ', ..values);
 
-[T]
-overload printTo(stream, f: LeftAlignedFormatter[T]) {
+[..C]
+overload printTo(stream, f: LeftAlignedFormatter[..C]) {
     printTo(stream, ..forwardValues(f.value));
     var i = f.filledWidth;
     while (i < f.width) {
@@ -202,8 +204,8 @@ overload printTo(stream, f: LeftAlignedFormatter[T]) {
         i +: 1;
     }
 }
-[T]
-overload printTo(stream, f: RightAlignedFormatter[T]) {
+[..C]
+overload printTo(stream, f: RightAlignedFormatter[..C]) {
     var i = f.filledWidth;
     while (i < f.width) {
         printTo(stream, f.pad);
