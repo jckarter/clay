@@ -18,10 +18,10 @@ Testing test test suite:
       1i, 2i, 3i
 
     + isn't callable with the expected argument types:
-      Int32, Vector[Char]
+      Int32, String
 
     ++ shouldn't be callable with the expected argument types:
-      Vector[Char], Vector[Char]
+      String, String
 
     primes iterator is expected to contain:
       1i

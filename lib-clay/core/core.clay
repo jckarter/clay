@@ -23,8 +23,10 @@ public import core.ranges.*;
 
 public import core.bytes.*;
 public import core.characters.*;
-public import core.stringliterals.*;
-public import core.cstringrefs.*;
+public import core.strings.*;
+public import core.strings.stringliterals.*;
+public import core.strings.cstringrefs.*;
+public import core.strings.stringrefs.*;
 
 public import core.errors.*;
 public import core.exceptions.*;

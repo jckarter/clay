@@ -158,6 +158,11 @@ overload printTo(stream, x:Static[X]) {
     printTo(stream, StaticName(x));
 }
 
+[X when Type?(X)]
+overload printTo(stream, #X) {
+    printReprTo(stream, X);
+}
+
 [X when StringLiteral?(X)]
 overload printTo(stream, x:Static[X]) {
     printTo(stream, StaticName(x));
@@ -375,6 +380,14 @@ overload printReprTo(stream, #S) {
     printTo(stream, StaticName(S));
 }
 
+overload printReprTo(stream, #String) {
+    printTo(stream, "String");
+}
+
+overload printReprTo(stream, #StringRef) {
+    printTo(stream, "StringRef");
+}
+
 
 /// @section  printReprTo - tuples 
 
@@ -494,17 +507,10 @@ overload printReprTo(stream, s:S) {
     printTo(stream, '"', ')');
 }
 
-overload printReprTo(stream, s:String) {
-    // this overload is needed because String is Vector[Char] now
-    printTo(stream, "String(", '"');
-    for (c in s)
-        printCharReprTo(stream, c);
-    printTo(stream, '"', ')');
-}
-
-overload printReprTo(stream, s:CStringRef) {
-    printTo(stream, "CStringRef(");
-    if (not null?(s.ptr)) {
+[S when S == CStringRef or S == StringRef]
+overload printReprTo(stream, s:S) {
+    printTo(stream, S, "(");
+    if (not null?(begin(s))) {
         printTo(stream, '"');
         for (c in s)
             printCharReprTo(stream, c);
