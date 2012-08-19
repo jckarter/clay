@@ -171,7 +171,7 @@ private alignedFormatter(F, width: I, pad: Char, forward ..values) {
     // and use the width of that
     var s = str(..values);
     var filledWidth = size(s);
-    return formatter(F, Tuple(move(s)), SizeT(width), filledWidth, pad);
+    return F(captureValues(move(s)), SizeT(width), filledWidth, pad);
 }
 
 private filledWidth(..values)
