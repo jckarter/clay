@@ -34,6 +34,11 @@ if(UNIX)
     )
     set(LLVM_CXXFLAGS "${LLVM_CXXFLAGS}")
 
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        # llvm-config --cxxflags contains -O3
+        set(LLVM_CXXFLAGS "${LLVM_CXXFLAGS} -O0")
+    endif()
+
     execute_process(
         COMMAND ${LLVM_CONFIG} --ldflags
         OUTPUT_VARIABLE LLVM_LDFLAGS
