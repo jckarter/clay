@@ -3,46 +3,6 @@ import sequences.lazy.mapped.*;
 
 
 
-/// @section  String? 
-
-[A]
-String?(#A) = false;
-
-[A when Sequence?(A) and (Char == SequenceElementType(A))]
-overload String?(#A) = true;
-
-
-
-/// @section  SizedString? 
-
-[A]
-SizedString?(#A) = false;
-
-[A when SizedSequence?(A) and (Char == SequenceElementType(A))]
-overload SizedString?(#A) = true;
-
-
-
-/// @section  ContiguousString? 
-
-[A]
-ContiguousString?(#A) = false;
-
-[A when ContiguousSequence?(A) and (Char == SequenceElementType(A))]
-overload ContiguousString?(#A) = true;
-
-
-
-/// @section  CCompatibleString? 
-
-[A]
-CCompatibleString?(#A) = false;
-
-[A when String?(A) and CallDefined?(cstring, A)]
-overload CCompatibleString?(#A) = true;
-
-
-
 /// @section  String 
 
 alias String = Vector[Char];
