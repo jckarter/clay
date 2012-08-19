@@ -5,6 +5,33 @@ import test.*;
 
 even?(x) = x % 2 == 0;
 
+
+// non-copyable, non-constructible record
+record NonConstructibleRecord ();
+
+overload RegularRecord?(#NonConstructibleRecord) = false;
+
+makeNonConstructibleRecord(foo: Int) --> returned: NonConstructibleRecord { }
+
+overload moveUnsafe(src: NonConstructibleRecord) --> returned: NonConstructibleRecord { }
+overload resetUnsafe(foo: NonConstructibleRecord) { }
+overload destroy(foo: NonConstructibleRecord) { }
+
+expectRef(ref a) {}
+expectRValue(rvalue a) {}
+
+testCaptureValue(test) {
+    var capture1 = captureValue(makeNonConstructibleRecord(17));
+    expectRef(capturedRef(capture1));
+    expectRValue(forwardValue(capture1));
+
+    var lva = makeNonConstructibleRecord(19);
+    var capture2 = captureValue(lva);
+    expectRef(capturedRef(capture2));
+    expectRef(forwardValue(capture2));
+}
+
+
 main() = testMain(
     TestSuite("values", array(
         TestCase("eachValue", test => {
@@ -177,4 +204,5 @@ main() = testMain(
                     [..replicateValue('a', #Type(3))]);
             }
         }),
+        TestCase("captureValue", testCaptureValue),
     )));
