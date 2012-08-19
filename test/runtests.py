@@ -384,6 +384,9 @@ def runTests(opt):
         print "cpu:", arch
         print "bits:", bits
         print
+        print "[Compiler]"
+        print "exe:", opt.clayCompiler
+        print
         print "[Tests]"
         for test in testcases:
             res, log = results.next()
