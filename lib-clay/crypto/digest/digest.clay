@@ -61,7 +61,7 @@ digestUpdate(context: C, input: S) {
     var inputEnd   = Pointer[Char](end(input));
     var inputSize  = size(input);
 
-    var left = context.total % BlockSizeBytes(#A);
+    var left = SizeT(context.total % BlockSizeBytes(#A));
     var fill = BlockSizeBytes(#A) - left;
 
     context.total +: inputSize;
