@@ -1,5 +1,5 @@
 +: core.operators
-Vector[Char]: vectors
+String: vectors
 Vec: __primitives__
 hash: hash
 Array: __primitives__

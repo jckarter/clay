@@ -19,7 +19,7 @@ errorNames() {
 private var errorNamesVector = initErrorNamesVector();
 
 private initErrorNamesVector() {
-    var v = Vector[Tuple[Int, CoordinateRange[Pointer[Char]]]]();
+    var v = Vector[Tuple[Int, StringRef]]();
     return move(v);
 }
 
@@ -28,13 +28,12 @@ private findCodeAndName(begin, end) {
     var pos2 = findIf(pos, end, c => c == ',');
     var pos3 = findIf(pos2+1, end, c => asciiSpace?(c));
     begin = pos3;
-    return coordinateRange(pos, pos2), coordinateRange(pos2+1, pos3);
+    return StringRef(pos, pos2), StringRef(pos2+1, pos3);
 }
 
 // this is used to generate win32.errorcodes
 generateAliases() {
-    alias S = CoordinateRange[Pointer[Char]];
-    var entries = Vector[Tuple[S, S]]();
+    var entries = Vector[Tuple[StringRef, StringRef]]();
     var b, e = begin(errorNamesData), end(errorNamesData);
     while (true) {
         var code, name = ..findCodeAndName(b, e);
