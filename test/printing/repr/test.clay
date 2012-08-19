@@ -1,8 +1,9 @@
 import printer.formatter.(repr);
 import numbers.floats.(nan, nan?);
-import printer.(println);
+import printer.(println, str);
 import strings.(String);
 import complex.*;
+import algorithms.*;
 
 import test.*;
 
@@ -117,6 +118,10 @@ main() = testMain(
             testWithEval(test, """CStringRef()""");
             testWithEval(test, """StringRef("string ref")""");
             testWithEval(test, """StringRef()""");
+        }),
+        TestCase("ArrayRef", test => {
+            testWithEval(test, """ArrayRef[Int32]""");
+            // content printing is not tested, because output contains pointers
         }),
     )));
 

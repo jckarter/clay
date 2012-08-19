@@ -1,0 +1,10 @@
+import test.*;
+
+
+main() = testMain(
+    TestSuite("core.arrays.ArrayRef", array(
+        TestCase("constructor", test => {
+            var a = array(3, 5, 8);
+            expectEqual(test, "ArrayRef", ArrayRef(a), a);
+        }),
+    )));

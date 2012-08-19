@@ -1,7 +1,7 @@
-import core.ranges.*;
+import core.arrays.*;
 import core.strings.*;
 
-alias StringRef = CoordinateRange[Pointer[Char]];
+alias StringRef = ArrayRef[Char];
 
 [S when ContiguousString?(S)]
-overload StringRef(s: S) = StringRef(begin(s), end(s));
+overload StringRef(s: S) = ArrayRef(begin(s), end(s));

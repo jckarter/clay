@@ -3,7 +3,7 @@ import core.libc as libc;
 
 private var argc = 0;
 private var argv = Pointer[Pointer[Int8]]();
-private var commandLineArgs = CoordinateRange[Pointer[CStringRef]]();
+private var commandLineArgs = ArrayRef[CStringRef]();
 
 commandLine() = ref commandLineArgs;
 
