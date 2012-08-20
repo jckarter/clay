@@ -13,6 +13,8 @@ import libc;
 import vectors.(moveVectorBuffer);
 import strings.(String);
 
+import printer.exceptions as unused;
+
 
 /// @section  print, println, printlnTo 
 
