@@ -22,6 +22,21 @@ overload Exception() = Exception(NoException());
 
 private exceptionObject(exp:RawPointer) = ref Pointer[Exception](exp)^;
 
+
+
+/// @section  printUnhandledExceptionToStderr
+
+// Print unhandled exception to stderr.
+// This function is called from program bootstrap code (see
+// `core.system.runMain`). Must print at least one line. Last line must
+// be terminated with \n character. This is very simple implementation
+// that depends on nothing but core. `printer.exception` module contains
+// more sophisticated version.
+printUnhandledExceptionToStderr(e) {
+    libc.fprintf(libc.stderr, cstring("unhandled %s exception\n"), cstring(MemberTypeName(e)));
+}
+
+
 
 /// @section  throwValue, continueException 
 
