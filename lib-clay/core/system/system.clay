@@ -22,7 +22,11 @@ private alias runMain(argc_, argv_, f, ..args) {
         return getExitCode(..f(..args));
     }
     catch (e) {
-        libc.fprintf(libc.stderr, cstring("unhandled %s exception"), cstring(MemberTypeName(e)));
+        try {
+            printUnhandledExceptionToStderr(e);
+        } catch (f) {
+            libc.fprintf(libc.stderr, "unhandled exception during unhandled exception printing\n");
+        }
         return -1;
     }
 }

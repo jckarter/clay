@@ -1,0 +1,9 @@
+import printer.*;
+
+record MyException(a: Int);
+
+instance Exception (MyException);
+
+main() {
+    throw MyException(17);
+}
