@@ -33,7 +33,7 @@ forceinline printlnTo(stream, ..x) {
 
 /// @section  str, strln 
 
-str(forward ..x) {
+overload str(forward ..x) {
     var s = String();
     printTo(s, ..x);
     return move(s);

@@ -6,8 +6,6 @@ import io.files.raw.(stderrRawFile);
 
 // simple version that uses default printTo of exception
 overload printUnhandledExceptionToStderr(e) {
-    // TODO: should print to `stderr`
-    // but it causes compilation failure due to import cycles
-    printTo(stderrRawFile(), "unhandled exception: ", e, "\n");
+    printTo(stderrRawFile(), str("unhandled exception: ", e, "\n"));
 }
 
