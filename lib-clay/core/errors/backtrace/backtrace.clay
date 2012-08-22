@@ -1,1 +1,1 @@
-forceinline showBacktrace() { }
+public import core.errors.backtrace.platform.(showBacktrace);
