@@ -1,4 +1,4 @@
-import platform.symbols.(Windows);
+import core.platform.symbols.(Windows);
 
 alias OS = Windows;
 alias OSFamily = Windows;
