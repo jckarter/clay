@@ -3,13 +3,33 @@ import core.platform.*;
 private external backtrace(array:Pointer[RawPointer], size:Int) : Int;
 private external backtrace_symbols_fd(array:Pointer[RawPointer], size:Int, fd:Int) : ;
 
-define showBacktrace();
+alias BacktraceSupported? =
+    OS == Linux or OS == MacOSX or (OS == FreeBSD and Flag?("clay.Use_libexecinfo"));
 
-forceinline overload showBacktrace() { }
+record Backtrace (
+    callstack: Array[RawPointer, 128],
+    size: Int,
+);
 
-[when OS == Linux or OS == MacOSX or (OS == FreeBSD and Flag?("clay.Use_libexecinfo"))]
-forceinline overload showBacktrace() {
-    var callstack = Array[RawPointer,128]();
-    var size = backtrace(begin(callstack), 128);
-    backtrace_symbols_fd(begin(callstack), size, 2);
+define printBacktraceToStderr(backtrace: Backtrace) :;
+
+define captureBacktrace(): Backtrace;
+
+forceinline overload captureBacktrace() --> returned: Backtrace {
+    returned.size = 0;
 }
+
+[when BacktraceSupported?]
+forceinline overload captureBacktrace() --> returned: Backtrace {
+    returned.size = backtrace(
+        begin(returned.callstack),
+        Int(size(returned.callstack)));
+}
+
+forceinline overload printBacktraceToStderr(backtrace: Backtrace) { }
+
+[when BacktraceSupported?]
+overload printBacktraceToStderr(bt: Backtrace) {
+    backtrace_symbols_fd(begin(bt.callstack), bt.size, 2);
+}
+
