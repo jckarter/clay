@@ -4116,6 +4116,12 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
     case VAR : {
 
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, 1);
+        if(x->hasVarArg){
+            if (mpv->values.size() < x->args.size())
+                arityMismatchError(x->args.size(), mpv->values.size());
+        } else
+            if (mpv->values.size() != x->args.size())
+                arityMismatchError(x->args.size(), mpv->values.size());
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < mpv->values.size(); ++i) {
             CValuePtr cv = codegenAllocNewValue(mpv->values[i].type, ctx);
@@ -4175,6 +4181,12 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
     case REF : {
 
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
+        if(x->hasVarArg){
+            if (mpv->values.size() < x->args.size())
+                arityMismatchError(x->args.size(), mpv->values.size());
+        } else
+            if (mpv->values.size() != x->args.size())
+                arityMismatchError(x->args.size(), mpv->values.size());
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < mpv->values.size(); ++i) {
             PVData const &pv = mpv->values[i];
@@ -4237,6 +4249,12 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
     case FORWARD : {
         
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
+        if(x->hasVarArg){
+            if (mpv->values.size() < x->args.size())
+                arityMismatchError(x->args.size(), mpv->values.size());
+        } else
+            if (mpv->values.size() != x->args.size())
+                arityMismatchError(x->args.size(), mpv->values.size());
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < mpv->values.size(); ++i) {
             PVData const &pv = mpv->values[i];
