@@ -1,3 +1,5 @@
+import core.platform.*;
+
 private external backtrace(array:Pointer[RawPointer], size:Int) : Int;
 private external backtrace_symbols_fd(array:Pointer[RawPointer], size:Int, fd:Int) : ;
 
@@ -5,7 +7,7 @@ define showBacktrace();
 
 forceinline overload showBacktrace() { }
 
-[when Flag?("clay.Use_libexecinfo")]
+[when OS == Linux or OS == MacOSX or (OS == FreeBSD and Flag?("clay.Use_libexecinfo"))]
 forceinline overload showBacktrace() {
     var callstack = Array[RawPointer,128]();
     var size = backtrace(begin(callstack), 128);
