@@ -10,7 +10,6 @@ namespace clay {
 static ObjectPtr computeStruct(ObjectPtr head, MultiStaticPtr params)
 {
     if (!head) {
-        const vector<ObjectPtr> &elements = params->values;
         return makeTupleValue(params->values);
     }
     else {
@@ -324,10 +323,6 @@ bool unifyObjPattern(ObjectPtr a, PatternPtr b)
             if (a3->head == b2->head)
                 return unifyMulti(a3->params, b2->params);
         }
-        if (!b2->head) {
-            return unifyMulti(new MultiPatternList(a2),
-                              b2->params);
-        }
         return false;
     }
 }
@@ -364,17 +359,7 @@ bool unify(PatternPtr a, PatternPtr b)
         if (a2->head == b2->head) {
             return unifyMulti(a2->params, b2->params);
         }
-        else if (!a2->head) {
-            return unifyMulti(a2->params,
-                              new MultiPatternList(b));
-        }
-        else if (!b2->head) {
-            return unifyMulti(new MultiPatternList(a),
-                              b2->params);
-        }
-        else {
-            return false;
-        }
+        return false;
     }
 }
 
