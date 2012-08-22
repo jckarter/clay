@@ -13,16 +13,25 @@ include(CheckSymbolExists)
 include(CPack)
 
 if(UNIX)
-    set(LLVM_DIR "/usr/local" CACHE PATH "llvm install path")
-
-    find_program(LLVM_CONFIG llvm-config ${LLVM_DIR}/bin
-        DOC "path to llvm-config")
+    if(DEFINED LLVM_DIR)
+        set(LLVM_CONFIG "${LLVM_DIR}/bin/llvm-config")
+    else()
+        find_program(LLVM_CONFIG llvm-config /usr/local/bin
+            DOC "path to llvm-config")
+    endif()
+    message("-- Using llvm-config: ${LLVM_CONFIG}")
 
     execute_process(
         COMMAND ${LLVM_CONFIG} --version
         OUTPUT_VARIABLE LLVM_VERSION
         OUTPUT_STRIP_TRAILING_WHITESPACE
+        RESULT_VARIABLE LLVM_CONFIG_VERSION_RESULT
     )
+
+    if (NOT ${LLVM_CONFIG_VERSION_RESULT} EQUAL 0)
+        message(FATAL_ERROR "${LLVM_CONFIG} failed")
+    endif()
+
     if(NOT ${LLVM_VERSION} MATCHES "^3.1(svn)?$")
         message(FATAL_ERROR "Clay requires LLVM 3.1.")
     endif()
@@ -59,6 +68,7 @@ if(UNIX)
         OUTPUT_VARIABLE LLVM_DIR
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
+    message("-- Using LLVM: ${LLVM_DIR}")
     set(CMAKE_REQUIRED_INCLUDES ${LLVM_DIR}/include)
     set(CMAKE_REQUIRED_LIBRARIES clang)
     set(CMAKE_REQUIRED_FLAGS "-L${LLVM_LIBDIR}")
