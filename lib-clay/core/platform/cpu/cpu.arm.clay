@@ -1,4 +1,4 @@
-import platform.symbols.(ARM);
+import core.platform.symbols.(ARM);
 
 alias CPU = ARM;
 alias CPUFamily = ARM;

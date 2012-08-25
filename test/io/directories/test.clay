@@ -1,4 +1,4 @@
-import platform.*;
+import core.platform.*;
 import algorithms.*;
 import vectors.*;
 import printer.*;

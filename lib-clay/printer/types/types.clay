@@ -2,7 +2,7 @@ import printer.protocol.*;
 import io.streams.protocol.*;
 
 import libc;
-import platform;
+import core.platform;
 import printer.platform.(
     formatForInt64, formatForUInt64,
     formatForPartialInt128,
@@ -313,7 +313,7 @@ overload printReprTo(stream, x:Float80) {
     printFloatWithSprintf(stream, "nan(Float80)", "%.15Lafl", x);
 }
 
-[when platform.OS == platform.FreeBSD]
+[when core.platform.OS == core.platform.FreeBSD]
 overload printReprTo(stream, x:Float80) {
     printFloatWithSprintf(stream, "nan(Float80)", "%.16Lafl", x);
 }
@@ -331,7 +331,7 @@ overload printReprTo(stream, x:Imag80) {
     printFloatWithSprintf(stream, "nan(Imag80)", "%.15Laflj", x);
 }
 
-[when platform.OS == platform.FreeBSD]
+[when core.platform.OS == core.platform.FreeBSD]
 overload printReprTo(stream, x:Imag80) {
     printFloatWithSprintf(stream, "nan(Imag80)", "%.16Lafl", x);
 }
@@ -340,7 +340,7 @@ overload printReprTo(stream, x:Complex80) {
     printFloatWithSprintf(stream, "nan(Complex80)", "%.15Lafl%+.15Laflj", ..rectValues(Float80,x));
 }
 
-[when platform.OS == platform.FreeBSD]
+[when core.platform.OS == core.platform.FreeBSD]
 overload printReprTo(stream, x:Complex80) {
     printFloatWithSprintf(stream, "nan(Complex80)", "%.16Lafl%+.16Laflj", ..rectValues(Float80,x));
 }
