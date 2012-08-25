@@ -208,19 +208,19 @@ forceinline overload integerConvertWithOverflow(#A, b:B) : A, Bool
 
 private define PrintfFmt;
 [T] overload PrintfFmt(#T) = "%d";
-overload PrintfFmt(UInt32) = "%u";
+overload PrintfFmt(#UInt32) = "%u";
 
-overload PrintfFmt(Int64) = "%lld";
-overload PrintfFmt(UInt64) = "%llu";
+overload PrintfFmt(#Int64) = "%lld";
+overload PrintfFmt(#UInt64) = "%llu";
 
 [when OSFamily == Windows]
-overload PrintfFmt(Int64) = "%I64d";
+overload PrintfFmt(#Int64) = "%I64d";
 [when OSFamily == Windows]
-overload PrintfFmt(UInt64) = "%I64u";
+overload PrintfFmt(#UInt64) = "%I64u";
 
 // XXX
-overload PrintfFmt(Int128) = "<Int128>";
-overload PrintfFmt(UInt128) = "<UInt128>";
+overload PrintfFmt(#Int128) = "<Int128>";
+overload PrintfFmt(#UInt128) = "<UInt128>";
 
 private define checked;
 
