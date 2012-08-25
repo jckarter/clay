@@ -1,3 +1,0 @@
-public import platform.symbols.*;
-public import platform.os.(OS, OSFamily, OSString, OSFamilyString);
-public import platform.cpu.(CPU, CPUFamily, CPUString, CPUBits);

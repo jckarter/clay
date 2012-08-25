@@ -1,0 +1,7 @@
+alias BacktraceSupported? = false;
+
+record Backtrace ();
+
+forceinline captureBacktrace() = Backtrace();
+
+forceinline printBacktraceToStderr(backtrace: Backtrace) { }
