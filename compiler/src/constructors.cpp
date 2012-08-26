@@ -117,7 +117,7 @@ void initBuiltinConstructor(RecordPtr x)
 
     ExprPtr recName = new NameRef(x->name);
     recName->location = x->name->location;
-
+    
     CodePtr code = new Code();
     code->location = x->location;
     for (unsigned i = 0; i < x->params.size(); ++i) {

@@ -404,8 +404,9 @@ enum ObjectKind {
     PRIM_OP,
 
     TYPE,
+    NEW_TYPE, // -- 35
 
-    PATTERN,    // -- 35
+    PATTERN,    
     MULTI_PATTERN,
 
     VALUE_HOLDER,
@@ -506,6 +507,7 @@ struct RecordBody;
 struct RecordField;
 struct Variant;
 struct Instance;
+struct NewType;
 struct Overload;
 struct Procedure;
 struct Enumeration;
@@ -653,6 +655,7 @@ typedef Pointer<RecordBody> RecordBodyPtr;
 typedef Pointer<RecordField> RecordFieldPtr;
 typedef Pointer<Variant> VariantPtr;
 typedef Pointer<Instance> InstancePtr;
+typedef Pointer<NewType> NewTypePtr;
 typedef Pointer<Overload> OverloadPtr;
 typedef Pointer<Procedure> ProcedurePtr;
 typedef Pointer<Enumeration> EnumerationPtr;
@@ -1920,6 +1923,13 @@ struct Instance : public TopLevelItem {
         {}
 };
 
+struct NewType : public TopLevelItem {
+    ExprPtr target;
+    
+    NewType(IdentifierPtr name, Visibility vis, ExprPtr target)
+        : TopLevelItem(NEW_TYPE, name, vis), target(target) {}
+};
+
 enum InlineAttribute {
     IGNORE,
     INLINE,
@@ -2432,7 +2442,9 @@ CaseBlockPtr clone(CaseBlockPtr x);
 void clone(const vector<CaseBlockPtr> &x, vector<CaseBlockPtr> &out);
 CatchPtr clone(CatchPtr x);
 void clone(const vector<CatchPtr> &x, vector<CatchPtr> &out);
-
+RecordPtr clone(RecordPtr x);
+void clone(const vector<TypePtr> &x, vector<TypePtr> &out);
+TypePtr clone(TypePtr x);
 
 
 //
@@ -2792,7 +2804,7 @@ struct Type : public Object {
 
     bool overloadsInitialized;
     vector<OverloadPtr> overloads;
-
+    IdentifierPtr name;
     Type(int typeKind)
         : Object(TYPE), typeKind(typeKind),
           llType(NULL), debugInfo(NULL), defined(false),

@@ -131,7 +131,7 @@ static void initKeywords() {
         {"public", "private", "import", "as",
          "record", "variant", "instance",
          "define", "overload", "external", "alias",
-         "rvalue", "ref", "forward",
+         "rvalue", "ref", "forward", "newtype",
          "inline", "noinline", "forceinline",
          "enum", "var", "and", "or", "not",
          "if", "else", "goto", "return", "while",

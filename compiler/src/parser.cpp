@@ -2281,6 +2281,26 @@ static bool allReturnSpecs(vector<ReturnSpecPtr> &returnSpecs,
     return allReturnSpecsWithFlag(returnSpecs, varReturnSpec, exprRetSpecs);
 }
 
+//
+// newtype
+//
+
+static bool newtype(TopLevelItemPtr &x) {
+    Location location = currentLocation();
+    Visibility vis;
+    if (!topLevelVisibility(vis)) return false;
+    if (!keyword("newtype")) return false;
+    IdentifierPtr name;
+    if (!identifier(name)) return false;
+    if (!opsymbol("=")) return false;
+    ExprPtr target;
+    if (!expression(target)) return false;
+    if (!symbol(";")) return false;
+    x = new NewType(name, vis, target);
+    x->location = location;
+    return true;
+}
+
 
 //
 // define, overload
@@ -2960,6 +2980,7 @@ static bool topLevelItem(vector<TopLevelItemPtr> &x) {
     if (restore(p), procedureWithInterface(x)) goto success2;
     if (restore(p), procedureWithBody(x)) goto success2;
     if (restore(p), llvmProcedure(x)) goto success2;
+    if (restore(p), newtype(y)) goto success;
     if (restore(p), overload(y)) goto success;
     if (restore(p), enumeration(y)) goto success;
     if (restore(p), globalVariable(y)) goto success;
