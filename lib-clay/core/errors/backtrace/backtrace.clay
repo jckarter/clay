@@ -1,1 +1,11 @@
-forceinline showBacktrace() { }
+public import core.errors.backtrace.platform.(
+        Backtrace,
+        captureBacktrace,
+        printBacktraceToStderr,
+    );
+
+// noinline because http://llvm.org/bugs/show_bug.cgi?id=13700
+noinline showBacktrace() {
+    var bt = captureBacktrace();
+    printBacktraceToStderr(bt);
+}
