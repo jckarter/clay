@@ -22,6 +22,7 @@ forceinline overload A(x:U) --> returned:A {
     staticIndex(returned, i) <-- x;
 }
 
+newtype mystatic = Static[Int32];
 
 main() {
 	println(myint == Int32);

@@ -606,6 +606,15 @@ TypePtr clone(TypePtr x)
         break;
     }
     
+    case STATIC_TYPE : {
+        StaticType *t = (StaticType *)x.ptr();
+        if (t->obj->objKind != TYPE)
+            error("can only clone static types when wrapping another type");
+        Type *y = (Type *)t->obj.ptr();
+        out = staticType(clone(y).ptr());
+        break;
+    }
+    
     case ENUM_TYPE : {
         EnumType *t = (EnumType *)x.ptr();
         out = enumType(t->enumeration);
