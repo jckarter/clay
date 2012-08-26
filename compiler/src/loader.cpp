@@ -246,6 +246,8 @@ static void installGlobals(ModulePtr m) {
                 error(nt->target, "not a valid type");
             } else {
                 Type *t = (Type *)obj.ptr();
+                if (t->typeKind == STATIC_TYPE)
+                    error(nt->target, "cloning static types not supported");
                 TypePtr newObj = clone(t);
                 newObj->name = nt->name;
                 addGlobal(m, nt->name, nt->visibility, newObj.ptr());

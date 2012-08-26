@@ -606,12 +606,6 @@ TypePtr clone(TypePtr x)
         break;
     }
     
-    case STATIC_TYPE : {
-        StaticType *t = (StaticType *)x.ptr();
-        out = staticType(t->obj);
-        break;
-    }
-
     case ENUM_TYPE : {
         EnumType *t = (EnumType *)x.ptr();
         out = enumType(t->enumeration);
