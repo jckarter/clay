@@ -1,0 +1,37 @@
+import printer.(println);
+
+
+record foo[T](x:T);
+
+newtype bar = foo[Int32];
+
+newtype myint = Int32;
+overload SignedInteger?(#myint) = true;
+
+newtype myptr = Pointer[bar];
+
+newtype A = Union[UInt64,Int64];
+overload Union?(#A) = true;
+overload UnionMembers(#A) = UInt64,Int64;
+
+forceinline overload A() --> returned:A {}
+
+[U when inValues?(U,..UnionMembers(A))]
+forceinline overload A(x:U) --> returned:A {
+    alias i = #valueIndex(U, ..UnionMembers(A));
+    staticIndex(returned, i) <-- x;
+}
+
+newtype mystatic = Static[Int32];
+
+main() {
+	println(myint == Int32);
+	println(foo[Int32] == bar);
+	var x = bar(2);
+	println(x);
+	println(myptr == Pointer[Int32]);
+	var y = myptr(@x);
+	println(y^.x);
+	println(A == Union[UInt64,Int64]);
+	println(Type(A(42ul).1));
+}

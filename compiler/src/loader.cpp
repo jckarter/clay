@@ -215,6 +215,7 @@ static void initModule(ModulePtr m);
 static ModulePtr makePrimitivesModule();
 static ModulePtr makeOperatorsModule();
 
+
 static void installGlobals(ModulePtr m) {
     m->env = new Env(m);
     vector<TopLevelItemPtr>::iterator i, end;
@@ -234,6 +235,22 @@ static void installGlobals(ModulePtr m) {
                 addGlobal(m, member->name, enumer->visibility, member);
             }
             break;
+        }
+        case NEW_TYPE : {
+            NewType *nt = (NewType *)x;
+            PatternPtr pattern = evaluateOnePattern(nt->target, m->env);
+            ObjectPtr obj = derefDeep(pattern);
+            if (obj == NULL) {
+                error(nt->target, "target type undefined");
+            } else if (obj->objKind != TYPE){
+                error(nt->target, "not a valid type");
+            } else {
+                Type *t = (Type *)obj.ptr();
+                TypePtr newObj = clone(t);
+                newObj->name = nt->name;
+                addGlobal(m, nt->name, nt->visibility, newObj.ptr());
+            } 
+            break;     
         }
         case PROCEDURE : {
             Procedure *proc = (Procedure *)x;

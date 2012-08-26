@@ -482,4 +482,151 @@ void clone(const vector<CatchPtr> &x, vector<CatchPtr> &out)
         out.push_back(clone(x[i]));
 }
 
+void clone(const vector<TypePtr> &x, vector<TypePtr> &out)
+{
+    for (unsigned i = 0; i < x.size(); ++i)
+        out.push_back(clone(x[i]));
+}
+
+void clone(const vector<bool> &x, vector<bool> &out)
+{
+    out = x;
+}
+
+RecordPtr clone(RecordPtr x)
+{
+    RecordPtr r = new Record(x->name, x->visibility, x->patternVars, x->predicate,
+        x->params, x->varParam, x->body);
+    return r;
+}
+
+VariantPtr clone(VariantPtr x)
+{
+    VariantPtr v = new Variant(x->name, x->visibility, x->patternVars, x->predicate,
+            x->params, x->varParam, x->defaultInstances);
+    return v;
+}
+
+TypePtr clone(TypePtr x)
+{
+    TypePtr out;
+
+    switch(x->typeKind) {
+
+    case BOOL_TYPE : {
+        BoolType *t = (BoolType *)x.ptr();
+        out = new BoolType();
+        break;
+    }
+
+    case INTEGER_TYPE : {
+        IntegerType *t = (IntegerType *)x.ptr();
+        out = new IntegerType(t->bits, t->isSigned);
+        break;
+    }
+
+    case FLOAT_TYPE : {
+        FloatType *t = (FloatType *)x.ptr();
+        out = new FloatType(t->bits, t->isImaginary);
+        break;
+    }
+
+    case COMPLEX_TYPE : {
+        ComplexType *t = (ComplexType *)x.ptr();
+        out = new ComplexType(t->bits);
+        break;
+    }
+
+    case POINTER_TYPE : {
+        PointerType *t = (PointerType *)x.ptr();
+        out = pointerType(clone(t->pointeeType));
+        break;
+    }
+
+    case CODE_POINTER_TYPE : {
+        CodePointerType *t = (CodePointerType *)x.ptr();
+        vector<TypePtr> argTypes, returnTypes;
+        vector<bool> returnIsRef;
+        clone(t->argTypes, argTypes);
+        clone(t->returnTypes, returnTypes);
+        clone(t->returnIsRef, returnIsRef);
+        out = codePointerType(argTypes, returnIsRef, returnTypes);
+        break;
+    }
+
+    case CCODE_POINTER_TYPE : {
+        CCodePointerType *t = (CCodePointerType *)x.ptr();
+        vector<TypePtr> argTypes;
+        clone(t->argTypes, argTypes);
+        out = cCodePointerType(t->callingConv, argTypes, t->hasVarArgs, t->returnType);
+        break;
+    }
+
+    case ARRAY_TYPE : {
+        ArrayType *t = (ArrayType *)x.ptr();
+        out = arrayType(clone(t->elementType), t->size);
+        break;
+    }
+
+    case VEC_TYPE : {
+        VecType *t = (VecType *)x.ptr();
+        out = vecType(clone(t->elementType), t->size);
+        break;
+    }
+
+    case TUPLE_TYPE : {
+        TupleType *t = (TupleType *)x.ptr();
+        vector<TypePtr> elementTypes;
+        clone(t->elementTypes, elementTypes);
+        out = tupleType(elementTypes);
+        break;
+    }
+
+    case UNION_TYPE : {
+        UnionType *t = (UnionType *)x.ptr();
+        vector<TypePtr> memberTypes;
+        clone(t->memberTypes, memberTypes);
+        out = unionType(memberTypes);
+        break;
+    }
+
+    case RECORD_TYPE : {
+        RecordType *t = (RecordType *)x.ptr();
+        vector<ObjectPtr> params;
+        clone(t->params, params);
+        out = recordType(clone(t->record), params);
+        break;
+    }
+    
+    case VARIANT_TYPE : {
+        VariantType *t = (VariantType *)x.ptr();
+        vector<ObjectPtr> params;
+        clone(t->params, params);
+        out = variantType(clone(t->variant), params);
+        break;
+    }
+    
+    case STATIC_TYPE : {
+        StaticType *t = (StaticType *)x.ptr();
+        if (t->obj->objKind != TYPE)
+            error("can only clone static types when wrapping another type");
+        Type *y = (Type *)t->obj.ptr();
+        out = staticType(clone(y).ptr());
+        break;
+    }
+    
+    case ENUM_TYPE : {
+        EnumType *t = (EnumType *)x.ptr();
+        out = enumType(t->enumeration);
+        break;
+    }
+
+    default :
+        assert(false);
+
+    }
+
+    return out;
+}
+
 }
