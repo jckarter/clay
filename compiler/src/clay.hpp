@@ -332,8 +332,6 @@ public :
     }
 };
 
-static llvm::BumpPtrAllocator *ObjectAllocator = new llvm::BumpPtrAllocator();
-
 
 //
 // Object
@@ -349,12 +347,6 @@ struct Object {
     void decRef() {
         if (--refCount == 0)
             delete this;
-    }
-    void *operator new(size_t num_bytes) {
-        return ObjectAllocator->Allocate(num_bytes, llvm::AlignOf<Object>::Alignment);
-    }
-    void operator delete(void *p) {
-        ObjectAllocator->Deallocate(p);
     }
 };
 
@@ -1007,10 +999,18 @@ void tokenize(SourcePtr source, size_t offset, size_t length,
 // AST
 //
 
+static llvm::BumpPtrAllocator *ANodeAllocator = new llvm::BumpPtrAllocator();
+
 struct ANode : public Object {
     Location location;
     ANode(int objKind)
         : Object(objKind) {}
+    void *operator new(size_t num_bytes) {
+        return ANodeAllocator->Allocate(num_bytes, llvm::AlignOf<ANode>::Alignment);
+    }
+    void operator delete(void *p) {
+        ANodeAllocator->Deallocate(p);
+    }
 };
 
 struct Identifier : public ANode {
