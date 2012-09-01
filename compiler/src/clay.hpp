@@ -317,7 +317,7 @@ public :
     }
     T &operator*() { return *p; }
     const T &operator*() const { return *p; }
-    T *operator->() { return p; }
+    T *operator->() { return p; } 
     const T *operator->() const { return p; }
     T *ptr() const { return p; }
     bool operator!() const { return p == 0; }
@@ -342,12 +342,14 @@ struct Object {
     int objKind;
     Object(int objKind)
         : refCount(0), objKind(objKind) {}
-    virtual ~Object() {}
     void incRef() { ++refCount; }
     void decRef() {
         if (--refCount == 0)
-            delete this;
+            dealloc();
     }
+    void operator delete(void*) {}
+    virtual void dealloc() { ::operator delete(this); }
+    virtual ~Object() { dealloc(); }
 };
 
 typedef Pointer<Object> ObjectPtr;
@@ -1008,9 +1010,7 @@ struct ANode : public Object {
     void *operator new(size_t num_bytes) {
         return ANodeAllocator->Allocate(num_bytes, llvm::AlignOf<ANode>::Alignment);
     }
-    void operator delete(void *p) {
-        ANodeAllocator->Deallocate(p);
-    }
+    virtual void dealloc() { ANodeAllocator->Deallocate(this); }
 };
 
 struct Identifier : public ANode {
