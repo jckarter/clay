@@ -348,10 +348,13 @@ struct Object {
     void incRef() { ++refCount; }
     void decRef() {
         if (--refCount == 0)
-            ObjectAllocator->Deallocate(this);
+            delete this;
     }
     void *operator new(size_t num_bytes) {
         return ObjectAllocator->Allocate(num_bytes, llvm::AlignOf<Object>::Alignment);
+    }
+    void operator delete(void *p) {
+        ObjectAllocator->Deallocate(p);
     }
 };
 
