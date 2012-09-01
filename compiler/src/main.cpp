@@ -977,7 +977,6 @@ int main2(int argc, char **argv, char const* const* envp) {
         llvm::errs() << "codegen time = " << (size_t)outputTimer.elapsedMillis() << " ms\n";
         llvm::errs().flush();
     }
-    BumpAllocator->Reset();
 
     _exit(0);
 }

@@ -332,8 +332,7 @@ public :
     }
 };
 
-static llvm::BumpPtrAllocator *BumpAllocator = new llvm::BumpPtrAllocator(32768);
-
+static llvm::BumpPtrAllocator *ObjectAllocator = new llvm::BumpPtrAllocator();
 
 
 //
@@ -347,15 +346,14 @@ struct Object {
         : refCount(0), objKind(objKind) {}
     virtual ~Object() {}
     void incRef() { 
-        // ++refCount; 
+        ++refCount; 
     }
     void decRef() {
-        // if (--refCount == 0)
-            // delete this;
+        if (--refCount == 0)
+            ObjectAllocator->Deallocate(this);
     }
-    void *operator new( size_t num_bytes)
-    {
-       return BumpAllocator->Allocate(num_bytes, 8);
+    void *operator new(size_t num_bytes) {
+        return ObjectAllocator->Allocate(num_bytes, llvm::AlignOf<Object>::Alignment);
     }
 };
 
