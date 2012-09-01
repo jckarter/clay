@@ -332,6 +332,8 @@ public :
     }
 };
 
+static llvm::BumpPtrAllocator *BumpAllocator = new llvm::BumpPtrAllocator(32768);
+
 
 
 //
@@ -344,10 +346,16 @@ struct Object {
     Object(int objKind)
         : refCount(0), objKind(objKind) {}
     virtual ~Object() {}
-    void incRef() { ++refCount; }
+    void incRef() { 
+        // ++refCount; 
+    }
     void decRef() {
-        if (--refCount == 0)
-            delete this;
+        // if (--refCount == 0)
+            // delete this;
+    }
+    void *operator new( size_t num_bytes)
+    {
+       return BumpAllocator->Allocate(num_bytes, 8);
     }
 };
 
