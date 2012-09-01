@@ -345,9 +345,7 @@ struct Object {
     Object(int objKind)
         : refCount(0), objKind(objKind) {}
     virtual ~Object() {}
-    void incRef() { 
-        ++refCount; 
-    }
+    void incRef() { ++refCount; }
     void decRef() {
         if (--refCount == 0)
             ObjectAllocator->Deallocate(this);
