@@ -342,8 +342,8 @@ struct Object {
     int objKind;
     Object(int objKind)
         : refCount(0), objKind(objKind) {}
-    void incRef() { ++refCount; }
-    void decRef() {
+    virtual void incRef() { ++refCount; }
+    virtual void decRef() {
         if (--refCount == 0)
             dealloc();
     }
@@ -1007,6 +1007,8 @@ struct ANode : public Object {
     Location location;
     ANode(int objKind)
         : Object(objKind) {}
+    virtual void incRef() {}
+    virtual void decRef() {}
     void *operator new(size_t num_bytes) {
         return ANodeAllocator->Allocate(num_bytes, llvm::AlignOf<ANode>::Alignment);
     }
