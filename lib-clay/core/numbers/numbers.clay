@@ -1,4 +1,4 @@
-import platform.(OSFamily, Unix, CPU, X86_64);
+import core.platform.(OSFamily, Unix, CPU, X86_64);
 
 
 /// @section  numeric type predicates 

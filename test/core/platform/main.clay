@@ -1,4 +1,4 @@
-import platform.(
+import core.platform.(
     OS, OSFamily, CPU, CPUFamily,
     OSString, OSFamilyString, CPUString, CPUBits,
 );
