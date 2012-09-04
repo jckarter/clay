@@ -395,7 +395,7 @@ def runTests(opt):
             if res != "ok" and res != "disabled":
                 logfile.write(log)
             logfile.flush()
-            print "%s in %fs: %s" % (test.name(), (endTime - startTime), res)
+            print "%s: %s (%fs)" % (test.name(), res, (endTime - startTime))
             if res == "disabled":
                 disabled.append(test.name())
             elif res != "ok":

@@ -341,6 +341,24 @@ void ensureArity(MultiCValuePtr args, size_t size) {
         arityError(size, args->size());
 }
 
+void arityMismatchError(int leftArity, int rightArity) {
+    string buf;
+    llvm::raw_string_ostream sout(buf);
+    sout << "left side has " << leftArity << " " << valuesStr(leftArity);
+    sout << ", but right side has " << rightArity
+         << " " << valuesStr(rightArity);
+    error(sout.str());
+}
+
+void arityMismatchError2(int leftArity, int rightArity) {
+    string buf;
+    llvm::raw_string_ostream sout(buf);
+    sout << "left side takes " << leftArity << " or more " << valuesStr(leftArity);
+    sout << ", but right side has " << rightArity
+         << " " << valuesStr(rightArity);
+    error(sout.str());
+}
+
 static string typeErrorMessage(llvm::StringRef expected,
                                TypePtr receivedType) {
     string buf;

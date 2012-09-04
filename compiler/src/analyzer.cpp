@@ -2322,10 +2322,10 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
         
         if(x->hasVarArg){
             if (mpv->values.size() < x->args.size()-1)
-                arityError2(x->args.size()-1, mpv->values.size());
+                arityMismatchError2(x->args.size()-1, mpv->values.size());
         } else
             if (mpv->values.size() != x->args.size())
-                arityError(x->args.size(), mpv->values.size());
+                arityMismatchError(x->args.size(), mpv->values.size());
 
         vector<TypePtr> key;
         for (unsigned i = 0; i < mpv->size(); ++i) {

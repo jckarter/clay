@@ -906,6 +906,9 @@ void ensureArity2(const vector<T> &args, size_t size, bool hasVarArgs)
         arityError2(size, args.size());
 }
 
+void arityMismatchError(int leftArity, int rightArity);
+void arityMismatchError2(int leftArity, int rightArity);
+
 void typeError(llvm::StringRef expected, TypePtr receivedType);
 void typeError(TypePtr expectedType, TypePtr receivedType);
 

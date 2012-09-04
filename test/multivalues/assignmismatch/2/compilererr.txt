@@ -1,1 +1,1 @@
-error: expected 1 value, but received 2 values
+left side has 1 value, but right side has 2 values
