@@ -2085,7 +2085,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
         MultiPValuePtr mpvLeft = safeAnalyzeMulti(x->left, env, 0);
         MultiPValuePtr mpvRight = safeAnalyzeMulti(x->right, env, mpvLeft->size());
         if (mpvLeft->size() != mpvRight->size())
-            arityMismatchError(mpvLeft->size(), mpvRight->size());
+            arityMismatchError(mpvLeft->size(), mpvRight->size(), false);
         for (unsigned i = 0; i < mpvLeft->size(); ++i) {
             if (mpvLeft->values[i].isTemp)
                 argumentError(i, "cannot assign to a temporary");
@@ -2123,7 +2123,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
         MultiPValuePtr mpvLeft = safeAnalyzeMulti(x->left, env, 0);
         MultiPValuePtr mpvRight = safeAnalyzeMulti(x->right, env, mpvLeft->size());
         if (mpvLeft->size() != mpvRight->size())
-            arityMismatchError(mpvLeft->size(), mpvRight->size());
+            arityMismatchError(mpvLeft->size(), mpvRight->size(), false);
         for (unsigned i = 0; i < mpvLeft->size(); ++i) {
             if (mpvLeft->values[i].isTemp)
                 argumentError(i, "cannot assign to a temporary");
