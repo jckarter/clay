@@ -2085,7 +2085,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
         MultiPValuePtr mpvLeft = safeAnalyzeMulti(x->left, env, 0);
         MultiPValuePtr mpvRight = safeAnalyzeMulti(x->right, env, mpvLeft->size());
         if (mpvLeft->size() != mpvRight->size())
-            arityMismatchError(mpvLeft->size(), mpvRight->size());
+            arityError(mpvLeft->size(), mpvRight->size());
         for (unsigned i = 0; i < mpvLeft->size(); ++i) {
             if (mpvLeft->values[i].isTemp)
                 argumentError(i, "cannot assign to a temporary");
@@ -2123,7 +2123,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
         MultiPValuePtr mpvLeft = safeAnalyzeMulti(x->left, env, 0);
         MultiPValuePtr mpvRight = safeAnalyzeMulti(x->right, env, mpvLeft->size());
         if (mpvLeft->size() != mpvRight->size())
-            arityMismatchError(mpvLeft->size(), mpvRight->size());
+            arityError(mpvLeft->size(), mpvRight->size());
         for (unsigned i = 0; i < mpvLeft->size(); ++i) {
             if (mpvLeft->values[i].isTemp)
                 argumentError(i, "cannot assign to a temporary");
@@ -2388,6 +2388,12 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
 
     case VAR : {
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
+        if(x->hasVarArg){
+            if (mpv->values.size() < x->args.size()-1)
+                arityError2(x->args.size()-1, mpv->values.size());
+        } else
+            if (mpv->values.size() != x->args.size())
+                arityError(x->args.size(), mpv->values.size());
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < x->args.size(); ++i) {
             EValuePtr ev = evalAllocValue(mpv->values[i].type);
@@ -2417,6 +2423,12 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
 
     case REF : {
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
+        if(x->hasVarArg){
+            if (mpv->values.size() < x->args.size()-1)
+                arityError2(x->args.size()-1, mpv->values.size());
+        } else
+            if (mpv->values.size() != x->args.size())
+                arityError(x->args.size(), mpv->values.size());
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < x->args.size(); ++i) {
             PVData const &pv = mpv->values[i];
@@ -2452,6 +2464,12 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
 
     case FORWARD : {
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
+        if(x->hasVarArg){
+            if (mpv->values.size() < x->args.size()-1)
+                arityError2(x->args.size()-1, mpv->values.size());
+        } else
+            if (mpv->values.size() != x->args.size())
+                arityError(x->args.size(), mpv->values.size());
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < x->args.size(); ++i) {
             PVData const &pv = mpv->values[i];

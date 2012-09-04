@@ -20,4 +20,8 @@ main() {
 	println(..weaveValues(", ", a, c, d ));	
 	println(..weaveValues(", ", ..b));	
 	println(..weaveValues(", ", ..I));	
+
+	var x, ..y, z = integers(#2);
+	println(..y);
+	println(..weaveValues(", ", x, z));
 }
