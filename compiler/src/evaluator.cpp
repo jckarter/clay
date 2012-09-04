@@ -2390,10 +2390,10 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
         if(x->hasVarArg){
             if (mpv->values.size() < x->args.size()-1)
-                arityMismatchError2(x->args.size()-1, mpv->values.size());
+                arityMismatchError(x->args.size()-1, mpv->values.size(), true);
         } else
             if (mpv->values.size() != x->args.size())
-                arityMismatchError(x->args.size(), mpv->values.size());
+                arityMismatchError(x->args.size(), mpv->values.size(), false);
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < x->args.size(); ++i) {
             EValuePtr ev = evalAllocValue(mpv->values[i].type);
@@ -2425,10 +2425,10 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
         if(x->hasVarArg){
             if (mpv->values.size() < x->args.size()-1)
-                arityError2(x->args.size()-1, mpv->values.size());
+                arityMismatchError(x->args.size()-1, mpv->values.size(), true);
         } else
             if (mpv->values.size() != x->args.size())
-                arityError(x->args.size(), mpv->values.size());
+                arityMismatchError(x->args.size(), mpv->values.size(), false);
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < x->args.size(); ++i) {
             PVData const &pv = mpv->values[i];
@@ -2466,10 +2466,10 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
         if(x->hasVarArg){
             if (mpv->values.size() < x->args.size()-1)
-                arityError2(x->args.size()-1, mpv->values.size());
+                arityMismatchError(x->args.size()-1, mpv->values.size(), true);
         } else
             if (mpv->values.size() != x->args.size())
-                arityError(x->args.size(), mpv->values.size());
+                arityMismatchError(x->args.size(), mpv->values.size(), false);
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < x->args.size(); ++i) {
             PVData const &pv = mpv->values[i];
