@@ -2,53 +2,50 @@ import numbers.floats.*;
 import printer.(error, println);
 
 main() {
-    var orderedComparisons = [
+    var ..orderedComparisons = 
         floatOrderedEquals?,
         floatOrderedGreater?,
         floatOrderedGreaterEquals?,
         floatOrderedLesser?,
         floatOrderedLesserEquals?,
         floatOrderedNotEquals?,
-        floatOrdered?,
-    ];
+        floatOrdered?;
 
-    var unorderedComparisons = [
+    var ..unorderedComparisons = 
         floatUnorderedEquals?,
         floatUnorderedGreater?,
         floatUnorderedGreaterEquals?,
         floatUnorderedLesser?,
         floatUnorderedLesserEquals?,
         floatUnorderedNotEquals?,
-        floatUnordered?,
-    ];
+        floatUnordered?;
 
-    var operators = [
+    var ..operators = 
         equals?,
         notEquals?,
         lesser?,
         lesserEquals?,
         greater?,
         greaterEquals?,
-        ordered?,
-    ];
+        ordered?;
 
     var zero, one = 0.0, 1.0;
     var inf, ninf, nan = infinity(Double), negativeInfinity(Double), nan(Double);
 
     var values = array(zero, one, inf, ninf, nan);
 
-    testFuncs("ORDERED COMPARISONS", orderedComparisons, values);
-    testFuncs("UNORDERED COMPARISONS", unorderedComparisons, values);
-    testFuncs("DEFAULT OPERATORS", operators, values);
+    testFuncs("ORDERED COMPARISONS", ..orderedComparisons, values);
+    testFuncs("UNORDERED COMPARISONS", ..unorderedComparisons, values);
+    testFuncs("DEFAULT OPERATORS", ..operators, values);
 }
 
-testFuncs(title, funcs, values) {
+testFuncs(title, ..funcs, values) {
     println();
     println("#########################");
     println("## ", title);
     println("#########################");
     println();
-    ..for (f in unpack(funcs)) {
+    ..for (f in ..funcs) {
         for (a in values)
             for (b in values)
                 test(f, a, b);
