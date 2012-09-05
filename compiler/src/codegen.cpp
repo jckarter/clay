@@ -3611,7 +3611,7 @@ bool codegenStatement(StatementPtr stmt,
         MultiPValuePtr mpvLeft = safeAnalyzeMulti(x->left, env, 0);
         MultiPValuePtr mpvRight = safeAnalyzeMulti(x->right, env, mpvLeft->size());
         if (mpvLeft->size() != mpvRight->size())
-            arityMismatchError(mpvLeft->size(), mpvRight->size(), false);
+            arityMismatchError(mpvLeft->size(), mpvRight->size(), /*hasVarArg=*/false);
 
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
@@ -3674,7 +3674,7 @@ bool codegenStatement(StatementPtr stmt,
         MultiPValuePtr mpvLeft = safeAnalyzeMulti(x->left, env, 0);
         MultiPValuePtr mpvRight = safeAnalyzeMulti(x->right, env, mpvLeft->size());
         if (mpvLeft->size() != mpvRight->size())
-            arityMismatchError(mpvLeft->size(), mpvRight->size(), false);
+            arityMismatchError(mpvLeft->size(), mpvRight->size(), /*hasVarArg=*/false);
         for (unsigned i = 0; i < mpvLeft->size(); ++i) {
             if (mpvLeft->values[i].isTemp)
                 argumentError(i, "cannot assign to a temporary");
@@ -4118,10 +4118,10 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, 1);
         if(x->hasVarArg){
             if (mpv->values.size() < x->args.size()-1)
-                arityMismatchError(x->args.size()-1, mpv->values.size(), true);
+                arityMismatchError(x->args.size()-1, mpv->values.size(), /*hasVarArg=*/ true);
         } else
             if (mpv->values.size() != x->args.size())
-                arityMismatchError(x->args.size(), mpv->values.size(), false);
+                arityMismatchError(x->args.size(), mpv->values.size(), /*hasVarArg=*/ false);
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < mpv->values.size(); ++i) {
             CValuePtr cv = codegenAllocNewValue(mpv->values[i].type, ctx);
@@ -4183,10 +4183,10 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
         if(x->hasVarArg){
             if (mpv->values.size() < x->args.size())
-                arityMismatchError(x->args.size(), mpv->values.size(), true);
+                arityMismatchError(x->args.size(), mpv->values.size(), /*hasVarArg=*/true);
         } else
             if (mpv->values.size() != x->args.size())
-                arityMismatchError(x->args.size(), mpv->values.size(), false);
+                arityMismatchError(x->args.size(), mpv->values.size(), /*hasVarArg=*/false);
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < mpv->values.size(); ++i) {
             PVData const &pv = mpv->values[i];
@@ -4251,10 +4251,10 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, x->args.size());
         if(x->hasVarArg){
             if (mpv->values.size() < x->args.size())
-                arityMismatchError(x->args.size(), mpv->values.size(), true);
+                arityMismatchError(x->args.size(), mpv->values.size(), /*hasVarArg=*/true);
         } else
             if (mpv->values.size() != x->args.size())
-                arityMismatchError(x->args.size(), mpv->values.size(), false);
+                arityMismatchError(x->args.size(), mpv->values.size(), /*hasVarArg=*/false);
         MultiCValuePtr mcv = new MultiCValue();
         for (unsigned i = 0; i < mpv->values.size(); ++i) {
             PVData const &pv = mpv->values[i];
