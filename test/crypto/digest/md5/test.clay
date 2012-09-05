@@ -1,20 +1,20 @@
 import crypto.digest.md5.*;
-import printer.*;
-import printer.formatter.*;
+import printer.(str);
+import printer.formatter.(repr);
 import test.*;
 
-expectDigest(test, algorithm, hash, string) {
+forceinline expectDigest(test: TestStatus, algorithm, hash, string) {
     expectPrinted(test, algorithm ++ " of string " ++ str(repr(string)),
         hash,
         digest(string, algorithm));
 }
 
-expectMd5(test, hash, string) =
+forceinline expectMd5(test: TestStatus, hash, string) =
     ..expectDigest(test, MD5_NAME, hash, string);
 
 main() = testMain(
     TestSuite("md5", array(
-        TestCase("md5", test => {
+        TestCase("md5", test -> {
             expectMd5(test,
                 "d41d8cd98f00b204e9800998ecf8427e",
                 "");

@@ -23,7 +23,7 @@ main() {
     startSockets();
     var r = testMain(
         TestSuite("socket IPv4 addresses", array(
-            TestCase("numeric addresses", test => {
+            TestCase("numeric addresses", test -> {
                 expectSockaddrIn(test, "0x7F_00_00_01:1234",
                     0x7F_00_00_01u,
                     1234,
@@ -35,14 +35,14 @@ main() {
                     Inet(INADDR_ANY, 1234)
                 );
             }),
-            TestCase("dotted quads", test => {
+            TestCase("dotted quads", test -> {
                 expectSockaddrIn(test, "127.0.0.1:1234",
                     0x7F_00_00_01u,
                     1234,
                     Inet("127.0.0.1", 1234)
                 );
             }),
-            TestCase("hostnames", test => {
+            TestCase("hostnames", test -> {
                 expectSockaddrIn(test, "localhost:1234",
                     0x7F_00_00_01u,
                     1234,

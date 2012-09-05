@@ -11,13 +11,13 @@ record Foo (x:Int, y:StringLiteralRef);
 
 variant Bar (Int, StringLiteralRef);
 
-testWithEval(test, expr) {
+alias testWithEval(test: TestStatus, expr) {
     expectPrinted(test, expr, expr, repr(eval expr));
 }
 
 main() = testMain(
     TestSuite("repr", array(
-        TestCase("numbers", test => {
+        TestCase("numbers", test -> {
             testWithEval(test, "0ss");
             testWithEval(test, "0uss");
             testWithEval(test, "0s");
@@ -63,7 +63,7 @@ main() = testMain(
 
             expectPrinted(test, "nan(Complex64)", "nan(Complex64)", repr(nan(Complex64)));
         }),
-        TestCase("chars, strings", test => {
+        TestCase("chars, strings", test -> {
             testWithEval(test, "'x'");
             testWithEval(test, "' '");
             testWithEval(test, "'~'");
@@ -84,19 +84,19 @@ main() = testMain(
             testWithEval(test, "\"x ~\\x01\\x1F\\x7F\\x80\\xFF\"");
             testWithEval(test, """"\\0\\n\\r\\t\\f\\'\\""""");
         }),
-        TestCase("tuples", test => {
+        TestCase("tuples", test -> {
             testWithEval(test, """[]""");
             testWithEval(test, """[1u]""");
             testWithEval(test, """[1i, "two"]""");
         }),
-        TestCase("records", test => {
+        TestCase("records", test -> {
             testWithEval(test, """Foo(1i, StringLiteralRef("two"))""");
         }),
-        TestCase("variants", test => {
+        TestCase("variants", test -> {
             testWithEval(test, """Bar(1i)""");
             testWithEval(test, """Bar(StringLiteralRef("two"))""");
         }),
-        TestCase("statics", test => {
+        TestCase("statics", test -> {
             testWithEval(test, "#1i");
             testWithEval(test, "#2u");
             testWithEval(test, "#3l");
@@ -110,7 +110,7 @@ main() = testMain(
             testWithEval(test, "TestCase");
             testWithEval(test, "repr");
         }),
-        TestCase("strings", test => {
+        TestCase("strings", test -> {
             testWithEval(test, """"static"""");
             testWithEval(test, """StringLiteralRef("string literal ref")""");
             testWithEval(test, """String("string")""");
@@ -119,7 +119,7 @@ main() = testMain(
             testWithEval(test, """StringRef("string ref")""");
             testWithEval(test, """StringRef()""");
         }),
-        TestCase("ArrayRef", test => {
+        TestCase("ArrayRef", test -> {
             testWithEval(test, """ArrayRef[Int32]""");
             // content printing is not tested, because output contains pointers
         }),

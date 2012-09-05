@@ -5,7 +5,7 @@ import vectors.*;
 
 main() = testMain(
     TestSuite("priority queues", array(
-        TestCase("queue operations", test => {
+        TestCase("queue operations", test -> {
             var q = VectorQueue[Int]();
 
             expectTrue(test, "(0) queue empty", queueEmpty?(q));
@@ -37,7 +37,7 @@ main() = testMain(
             expectTrue (test, "(6) queue empty", queueEmpty?(q));
             expectEqual(test, "(6) queue size", 0, queueSize(q));
         }),
-        TestCase("queue constructors", test => {
+        TestCase("queue constructors", test -> {
             var q1 = VectorQueue[Int](52, 42, 47);
 
             expectEqual(test, "(multi values) (0) queue size", 3, queueSize(q1));

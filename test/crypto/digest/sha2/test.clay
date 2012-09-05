@@ -1,23 +1,23 @@
 import crypto.digest.sha2.*;
-import printer.*;
-import printer.formatter.*;
+import printer.(str);
+import printer.formatter.(repr);
 import test.*;
 
-expectDigest(test, algorithm, hash, string) {
+forceinline expectDigest(test: TestStatus, algorithm, hash, string) {
     expectPrinted(test, algorithm ++ " of string " ++ str(repr(string)),
         hash,
         digest(string, algorithm));
 }
 
-expectSha256(test, hash, string) =
+forceinline expectSha256(test: TestStatus, hash, string) =
     ..expectDigest(test, SHA256_NAME, hash, string);
 
-expectSha512(test, hash, string) =
+forceinline expectSha512(test: TestStatus, hash, string) =
     ..expectDigest(test, SHA512_NAME, hash, string);
 
 main() = testMain(
     TestSuite("sha2", array(
-        TestCase("sha256", test => {
+        TestCase("sha256", test -> {
             expectSha256(test,
                 "b9f195c5cc7ef6afadbfbc42892ad47d3b24c6bc94bb510c4564a90a14e8b799",
                 "swordfish");
@@ -59,7 +59,7 @@ main() = testMain(
                 "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLL123456789");
         }),
 
-        TestCase("sha256 streaming", test => {
+        TestCase("sha256 streaming", test -> {
             var context = SHA256Context();
             digestUpdate(context, "A long time ago in a galaxy far,");
             digestUpdate(context, " far away....");
@@ -87,7 +87,7 @@ main() = testMain(
                 digestFinish(context));
         }),
 
-        TestCase("sha256 on unaligned data", test => {
+        TestCase("sha256 on unaligned data", test -> {
             var context = SHA256Context();
             digestUpdate(context, "a");
             // this array must be long enough to prevent copying data into context.buffer
@@ -97,7 +97,7 @@ main() = testMain(
                 digestFinish(context));
         }),
 
-        TestCase("sha512", test => {
+        TestCase("sha512", test -> {
             expectSha512(test,
                 "9719a6439375c9115e01dceda86e210e5f2d78a6cf3f4872997746832c4c0f58c5ae0923fabe5acfb923dfc94a117a7d444e453622912dfa193fc6636581f159",
                 "swordfish");
@@ -139,7 +139,7 @@ main() = testMain(
                 "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLL123456789");
         }),
 
-        TestCase("sha512 streaming", test => {
+        TestCase("sha512 streaming", test -> {
             var context = SHA512Context();
             digestUpdate(context, "A long time ago in a galaxy far,");
             digestUpdate(context, " far away....");

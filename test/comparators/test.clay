@@ -3,7 +3,7 @@ import comparators.*;
 
 main() = testMain(
   TestSuite("Natural comparators", array(
-    TestCase("should do the same thing as the base operations", test => {
+    TestCase("should do the same thing as the base operations", test -> {
       var c = natural();
     
       expectEqual(test, "1 c.== 2", 1 == 2, equals?(c, 1, 2)); 
@@ -13,14 +13,14 @@ main() = testMain(
     })
   )),
   TestSuite("Reverse comparators", array(
-    TestCase("should do the same thing as the base operations for equality", test => {
+    TestCase("should do the same thing as the base operations for equality", test -> {
       var c = reversed();
     
       expectEqual(test, "1 c.== 2", 1 == 2, equals?(c, 1, 2)); 
       expectEqual(test, "1 c.== 1", 1 == 1, equals?(c, 1, 1)); 
       expectEqual(test, "1 c.!= 1", 1 != 1, notEquals?(c, 1, 1)); 
     }),
-    TestCase("should do the opposite to the base operations for ordering", test => {
+    TestCase("should do the opposite to the base operations for ordering", test -> {
       var c = reversed();
 
       expectEqual(test, "1 r.< 2", false, lesser?(c, 1, 2));
@@ -29,7 +29,7 @@ main() = testMain(
     })
   )),
   TestSuite("Mapped comparators", array(
-    TestCase("should use the provided function for all operations", test => {
+    TestCase("should use the provided function for all operations", test -> {
       var c = comparing(size);
 
       expectEqual(test, "foo c.== bar", true, equals?(c, "foo", "bar"));

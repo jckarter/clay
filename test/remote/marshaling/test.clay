@@ -80,7 +80,7 @@ variant TestVariant (Int, Vector[Int], Char, Double);
 
 main() = testMain(
     TestSuite("marshaling", array(
-        TestCase("POD types", test => {
+        TestCase("POD types", test -> {
             expectMarshalingInvariants(test, "1", 1);
             expectMarshalingInvariants(test, "'a'", 'a');
             expectMarshalingInvariants(test, "0.0", 0.0);
@@ -90,10 +90,10 @@ main() = testMain(
             );
             expectMarshalingInvariants(test, "array(1, 2, 3)", array(1, 2, 3));
         }),
-        TestCase("reference types", test => {
+        TestCase("reference types", test -> {
             expectMarshalingInvariants(test, "ReferenceRecord(3)", ReferenceRecord(3));
         }),
-        TestCase("sequences", test => {
+        TestCase("sequences", test -> {
             expectMarshalingInvariants(test,
                 "Vector[Int](1, 2, 3)", Vector[Int](1, 2, 3)
             );
@@ -114,10 +114,10 @@ main() = testMain(
                 "Vector[String]()", Vector[String](),
             );
         }),
-        TestCase("special sequences", test => {
+        TestCase("special sequences", test -> {
             expectMarshalingInvariants(test, "\"mathers\"", "mathers");
         }),
-        TestCase("composites", test => {
+        TestCase("composites", test -> {
             expectMarshalingInvariants(test,
                 "[1, Vector[Int](1, 2, 3), 'a']",
                 [1, Vector[Int](1, 2, 3), 'a']
@@ -153,7 +153,7 @@ main() = testMain(
             expectNullMarshaling(test, "[]", []);
             expectNullMarshaling(test, "EmptyRecord()", EmptyRecord());
         }),
-        TestCase("variants", test => {
+        TestCase("variants", test -> {
             expectMarshalingInvariants(test,
                 "TestVariant(1)", TestVariant(1)
             );
@@ -167,12 +167,12 @@ main() = testMain(
                 "TestVariant(Vector[Int](1, 2, 3))", TestVariant(Vector[Int](1, 2, 3))
             );
         }),
-        TestCase("statics", test => {
+        TestCase("statics", test -> {
             expectNullMarshaling(test, "#0", #0);
             expectNullMarshaling(test, "add", add);
             expectNullMarshaling(test, "Int", Int);
         }),
-        TestCase("lambdas", test => {
+        TestCase("lambdas", test -> {
             var int = 1;
             var char = 'a';
             var vectorInt = Vector[Int](1, 2, 3);
@@ -191,7 +191,7 @@ main() = testMain(
             );
             expectNullMarshaling(test, "() => {}", () => {});
         }),
-        TestCase("unique pointers", test => {
+        TestCase("unique pointers", test -> {
             expectMarshalingInvariants(test, "UniquePointerRecord()",
                 UniquePointerRecord()
             );
@@ -199,7 +199,7 @@ main() = testMain(
                 UniquePointerRecord(3)
             );
         }),
-        TestCase("shared pointers", test => {
+        TestCase("shared pointers", test -> {
             var a = new(GraphNodeRecord());
             var b = new(GraphNodeRecord());
             var c = new(GraphNodeRecord());
@@ -225,7 +225,7 @@ main() = testMain(
             expectEqual(test, "dd^.left", nullShared(GraphNodeRecord), dd^.left);
             expectEqual(test, "dd^.right", nullShared(GraphNodeRecord), dd^.right);
         }),
-        TestCase("enums", test => {
+        TestCase("enums", test -> {
             expectMarshalingInvariants(test, "FOO", FOO);
         }),
     )),

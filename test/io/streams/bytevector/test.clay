@@ -6,10 +6,10 @@ import test.*;
 
 main() = testMain(
     TestSuite("io.streams.bytevector", array(
-        TestCase("OutputStream?", test => {
+        TestCase("OutputStream?", test -> {
             expectTrue(test, "OutputStream?", OutputStream?(Vector[Char]));
         }),
-        TestCase("write", test => {
+        TestCase("write", test -> {
             var r = Vector[Char]();
             write(r, "aabb");
             write(r, "cc");

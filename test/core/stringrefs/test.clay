@@ -4,11 +4,11 @@ import test.*;
 
 main() = testMain(
     TestSuite("core.stringrefs", array(
-        TestCase("constructors", test => {
+        TestCase("constructors", test -> {
             expectEqual(test, "literal", "literal", StringRef("literal"));
             expectEqual(test, "cstr", "cstr", StringRef(CStringRef("cstr")));
         }),
-        TestCase("constructors from StringRef", test => {
+        TestCase("constructors from StringRef", test -> {
             expectEqual(test, "String", "aabb", String(StringRef("aabb")));
             expectFalse(test, "not cstring", CallDefined?(cstring, StringRef));
             expectFalse(test, "not CStringRef", CallDefined?(CStringRef, StringRef));

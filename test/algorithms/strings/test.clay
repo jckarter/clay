@@ -4,7 +4,7 @@ import algorithms.strings.(trim);
 main() = testMain(
     TestSuite(
         "algorithms.strings", array(
-            TestCase("trim", test => {
+            TestCase("trim", test -> {
                 expectEqual(test, "trim, string",
                     trim("   \t A string,\nthat\tneeds trimming. \n  \n "),
                     "A string,\nthat\tneeds trimming.",

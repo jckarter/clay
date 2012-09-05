@@ -5,14 +5,14 @@ import test.*;
 
 main() = testMain(
     TestSuite("io.streams.memory", array(
-        TestCase("MemoryInputStream", test => {
+        TestCase("MemoryInputStream", test -> {
             var s = "hedgehog";
             var is = MemoryInputStream(begin(s), end(s));
             expectEqual(test, "read first 5", "hedge", read(is, SizeT(5)));
             expectEqual(test, "read rest", "hog", read(is, SizeT(10)));
             expectEqual(test, "read at EOF", "", read(is, SizeT(100)));
         }),
-        TestCase("MemoryOutputStream", test => {
+        TestCase("MemoryOutputStream", test -> {
             var a = Array[Int16, 6]();
             var os = MemoryOutputStream(a);
             write(os, "hair");
