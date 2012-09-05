@@ -11,7 +11,7 @@ record Foo (x:Int, y:StringLiteralRef);
 
 variant Bar (Int, StringLiteralRef);
 
-alias testWithEval(test: TestStatus, expr) {
+forceinline testWithEval(test: TestStatus, expr) {
     expectPrinted(test, expr, expr, repr(eval expr));
 }
 
