@@ -3,7 +3,7 @@ import printer.formatter.*;
 
 main() = testMain(
     TestSuite("formatting", array(
-        TestCase("number base formatters", test => {
+        TestCase("number base formatters", test -> {
             expectPrinted(test, "oct(12345)", "30071",
                 oct(12345)
             );
@@ -23,7 +23,7 @@ main() = testMain(
                 HEX(-12346)
             );
         }),
-        TestCase("printedWidth", test => {
+        TestCase("printedWidth", test -> {
             expectEqual(test, "printedWidth(\"foo\")", 3, printedWidth("foo"));
 
             expectEqual(test, "printedWidth(0)", 1, printedWidth(0));
@@ -96,7 +96,7 @@ main() = testMain(
                 16, printedWidth(hex(-0xfffffffffffffff_l))
             );
         }),
-        TestCase("leftAligned/rightAligned", test => {
+        TestCase("leftAligned/rightAligned", test -> {
             expectPrinted(test, "leftAligned(5, \"foo\")", "foo  ",
                 leftAligned(5, "foo")
             );
@@ -131,14 +131,14 @@ main() = testMain(
                 leftAlignedWith(10, '-', rightAlignedWith(7, '|', hex(0xFFFF)))
             );
         }),
-        TestCase("hexString", test => {
+        TestCase("hexString", test -> {
             expectPrinted(test,
                 "hexString(array(0_uss, 0xFF_uss, 0x0F_uss))",
                 "00ff0f",
                 hexString(array(0_uss, 0xFF_uss, 0x0F_uss)),
             );
         }),
-        TestCase("UniChar is printed as sequence of UTF-8 bytes", test => {
+        TestCase("UniChar is printed as sequence of UTF-8 bytes", test -> {
             expectPrinted(test,
                 "UniChar(0x044f)",
                 "\xD1\x8F",

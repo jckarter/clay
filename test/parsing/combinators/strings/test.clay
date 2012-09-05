@@ -6,7 +6,7 @@ import test.*;
 
 main() = testMain(
     TestSuite("parsing.combinators.strings", array(
-        TestCase("literalString with string constant parameter", test => {
+        TestCase("literalString with string constant parameter", test -> {
             var p = literalString("hi");
 
             {

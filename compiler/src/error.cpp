@@ -341,10 +341,13 @@ void ensureArity(MultiCValuePtr args, size_t size) {
         arityError(size, args->size());
 }
 
-void arityMismatchError(int leftArity, int rightArity) {
+void arityMismatchError(int leftArity, int rightArity, bool hasVarArg) {
     string buf;
     llvm::raw_string_ostream sout(buf);
-    sout << "left side has " << leftArity << " " << valuesStr(leftArity);
+    if (hasVarArg)
+        sout << "left side takes " << leftArity << " or more " << valuesStr(leftArity);
+    else
+        sout << "left side has " << leftArity << " " << valuesStr(leftArity);
     sout << ", but right side has " << rightArity
          << " " << valuesStr(rightArity);
     error(sout.str());

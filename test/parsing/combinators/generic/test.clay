@@ -63,16 +63,16 @@ testSeparatedList(test, #strict, #opt) {
 
 testSuite() =
     TestSuite("parsing.combinators.generic", array(
-        TestCase("separatedList", test => {
+        TestCase("separatedList", test -> {
             testSeparatedList(test, #false, #false);
         }),
-        TestCase("separatedListStrict", test => {
+        TestCase("separatedListStrict", test -> {
             testSeparatedList(test, #true, #false);
         }),
-        TestCase("optSeparatedList", test => {
+        TestCase("optSeparatedList", test -> {
             testSeparatedList(test, #false, #true);
         }),
-        TestCase("optSeparatedListStrict", test => {
+        TestCase("optSeparatedListStrict", test -> {
             testSeparatedList(test, #true, #true);
         }),
     ));

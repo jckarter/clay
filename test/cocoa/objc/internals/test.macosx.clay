@@ -231,7 +231,7 @@ expectSelectorNotCallableWith(test, Class, selector, ..T) {
 }
 
 main() = testMain(TestSuite("Objective-C binding internals", array(
-    TestCase("type encodings", test => {
+    TestCase("type encodings", test -> {
         expectEncoding(test, "");
         expectEncoding(test, "c", Int8);
         expectEncoding(test, "s", Int16);
@@ -269,7 +269,7 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
         expectEncoding(test, "@@:", Id, Id, SelectorHandle);
         expectEncoding(test, "v@:", Void, Id, SelectorHandle);
     }),
-    TestCase("class hierarchy", test => {
+    TestCase("class hierarchy", test -> {
         expectSubclass(test, NSObject, NSObject);
         expectSubclass(test, NSObject, NSString);
         expectSubclass(test, NSObject, NSMutableString);
@@ -284,7 +284,7 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
         expectNotSubclass(test, SubString1, SubString2);
         expectNotSubclass(test, SubString2, SubSubString);
     }),
-    TestCase("ClassName", test => {
+    TestCase("ClassName", test -> {
         expectEqual(test, "class name for externalClass NSObject", "NSObject",
             ClassName(NSObject)
         );
@@ -307,7 +307,7 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
             ClassName(SubSubString)
         );
     }),
-    TestCase("MsgSendCompatible?", test => {
+    TestCase("MsgSendCompatible?", test -> {
         expectMsgSendCompatible(test, Int, Int);
         expectMsgSendCompatible(test, Foo, Foo);
 
@@ -340,10 +340,10 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
         expectMsgSendNotCompatible(test, NSMutableString, NSString);
         expectMsgSendCompatible(test, NSMutableString, NSMutableString);
     }),
-    PendingTestCase("MsgSendCompatible?", test => {
+    PendingTestCase("MsgSendCompatible?", test -> {
         expectMsgSendNotCompatible(test, NSObject, Static[NSObject]);
     }),
-    TestCase("selector type encoding", test => {
+    TestCase("selector type encoding", test -> {
         expectSelectorTypeEncoding(test, Id, "alloc", "@@:");
         expectSelectorTypeEncoding(test, Static[NSObject], "alloc", "@@:");
         expectSelectorTypeEncoding(test, Static[NSString], "alloc", "@@:");
@@ -396,7 +396,7 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
         // typed selector via implementing metaclass defaulting to supermetaclass selector
         expectSelectorTypeEncoding(test, Static[SubSubSubString], "classVersion", "i@:");
     }),
-    TestCase("parameter type conversion", test => {
+    TestCase("parameter type conversion", test -> {
         expectMsgSendParamType(test, Id, ObjectHandle);
         expectMsgSendParamType(test, NSObject, ObjectHandle);
         expectMsgSendParamType(test, Void, #[]);
@@ -406,7 +406,7 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
         // expectMsgSendParamType(test, Selector, SelectorHandle);
         // expectMsgSendParamType(test, Class, ObjectHandle);
     }),
-    TestCase("SelectorCallableWith?", test => {
+    TestCase("SelectorCallableWith?", test -> {
         expectSelectorCallableWith(test, Id, "alloc");
         expectSelectorNotCallableWith(test, Id, "alloc", Id);
 
@@ -427,7 +427,7 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
         expectSelectorCallableWith(test, Id, "stringWithFormat:", NSString, Int);
         expectSelectorCallableWith(test, Id, "stringWithFormat:", NSString, Foo, Char);
     }),
-    TestCase("instance variable types", test => {
+    TestCase("instance variable types", test -> {
         expectEqual(test, "SubString1 ivar \"foo\"", Int, ClassIvarType(SubString1, "foo"));
         expectEqual(test, "SubString2 ivar \"foo\"", Double, ClassIvarType(SubString2, "foo"));
         expectEqual(test, "SubSubString ivar \"foo\"", Int, ClassIvarType(SubSubString, "foo"));
@@ -440,7 +440,7 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
         expectType(test, "SubSubString^.foo", Int, nil(SubSubString)^.foo);
         expectType(test, "SubSubString^.bar", StringLiteralRef, nil(SubSubString)^.bar);
     }),
-    TestCase("special selectors", test => {
+    TestCase("special selectors", test -> {
         expectTrue(test, "alloc", AllocatingSelector?("alloc"));
         expectTrue(test, "allocWithZone:", AllocatingSelector?("allocWithZone:"));
         expectTrue(test, "new", AllocatingSelector?("new"));
@@ -456,7 +456,7 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
 
         expectTrue(test, "autorelease", AutoreleasingSelector?("autorelease"));
     }),
-    TestCase("return types for special selectors", test => {
+    TestCase("return types for special selectors", test -> {
         expectEqual(test, "NSObject +alloc", NSObject,
             SelectorReturnType(Static[NSObject], "alloc")
         );
@@ -496,7 +496,7 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
             SelectorReturnType(Static[NSObject], "init")
         );
     }),
-    TestCase("return types of message expressions", test => {
+    TestCase("return types of message expressions", test -> {
         var id = nil(Id);
         var object = nil(NSObject);
         var string = nil(NSString);
@@ -518,7 +518,7 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
         expectType(test, "object.class().alloc().init().autorelease()", Id,
             object.class().alloc().init());
     }),
-    TestCase("msgSendBox1 type", test => {
+    TestCase("msgSendBox1 type", test -> {
         expectType(test, "Id from ObjectHandle", Id,
             msgSendBox1(Id, nilHandle)
         );
@@ -532,7 +532,7 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
             msgSendBox1(Bool, NO)
         );
     }),
-    TestCase("msgSendUnbox1 type", test => {
+    TestCase("msgSendUnbox1 type", test -> {
         expectType(test, "ObjectHandle from Id", ObjectHandle,
             msgSendUnbox1(Id, nil(Id))
         );
@@ -549,7 +549,7 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
             msgSendUnbox1(Bool, false)
         );
     }),
-    TestCase("msgSendUnbox types", test => {
+    TestCase("msgSendUnbox types", test -> {
         expectEqualValues(test, "alloc", [],
             ..Type(..msgSendUnbox(Id, "alloc"))
         );
@@ -566,7 +566,7 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
             ..Type(..msgSendUnbox(Id, "setEnabled:", false))
         );
     }),
-    TestCase("msgSendBox types", test => {
+    TestCase("msgSendBox types", test -> {
         expectEqualValues(test, "alloc", [],
             ..Type(..msgSendBox(Id, "alloc"))
         );
@@ -577,10 +577,10 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
             ..Type(..msgSendBox(Id, "setEnabled:", NO))
         );
     }),
-    TestCase("object parameter types", test => {
+    TestCase("object parameter types", test -> {
         expectTrue(test, "Id", ObjectParameterType?(Id));
     }),
-    TestCase("identifier-selector conversion", test => {
+    TestCase("identifier-selector conversion", test -> {
         expectEqual(test, "foo()", "foo", identifierSelector("foo", #0));
 
         expectEqual(test, "foo(x)", "foo:", identifierSelector("foo", #1));
@@ -628,7 +628,7 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
             identifierSelector("foo_bar_bas_", #3)
         );
     }),
-    TestCase("constant NSStrings", test => {
+    TestCase("constant NSStrings", test -> {
         expectType(test, "constant string", ObjectHandle, NSSTR("Hello"));
         expectEqual(test, "constant string identity",
             NSSTR("Hello"), NSSTR("Hello")
@@ -649,7 +649,7 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
         expectEqual(test, "string", "Hello", CStringRef(stringFields^.string));
         expectEqual(test, "length", 5, stringFields^.length);
     }),
-    TestCase("Retained memory management", test => {
+    TestCase("Retained memory management", test -> {
         var pool = NSAutoreleasePool.alloc().init();
 
         // construction from unretained reference

@@ -5,7 +5,7 @@ import strings.*;
 
 main() = testMain(
     TestSuite("lazy grouped sequences", array(
-        TestCase("iterator-only sequences", test => {
+        TestCase("iterator-only sequences", test -> {
             var ustr = grouped(UTF8("abc123!!!"), 3);
             var iter = iterator(ustr);
 
@@ -34,7 +34,7 @@ main() = testMain(
 
             expectFalse(test, "fourth hasValue?", hasValue?(v));
         }),
-        TestCase("random access coordinate sequences", test => {
+        TestCase("random access coordinate sequences", test -> {
             var str = grouped(String("abc123!!!"), 3);
             var iter = iterator(str);
 

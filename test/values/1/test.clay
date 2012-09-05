@@ -34,13 +34,13 @@ testCaptureValue(test) {
 
 main() = testMain(
     TestSuite("values", array(
-        TestCase("eachValue", test => {
+        TestCase("eachValue", test -> {
             var r = Vector[String]();
             eachValue(x -> { push(r, str(x)); }, 1, 2.0, "three");
             var expected = Vector[String](String("1"), String("2"), String("three"));
             expectEqual(test, "eachValue", expected, r);
         }),
-        TestCase("eachValue2", test => {
+        TestCase("eachValue2", test -> {
             var r = Vector[Int]();
             eachValue2(
                 (x, y) -> { push(r, x + y); }, #3,
@@ -50,7 +50,7 @@ main() = testMain(
             var expected = Vector[Int](8, 10, 12);
             expectEqual(test, "eachValue2", expected, r);
         }),
-        TestCase("weaveValues", test => {
+        TestCase("weaveValues", test -> {
             expectEqual(test, "weaveValues+mapValues 1",
                 ["threethree"],
                 [..weaveValues(", ", ..mapValues(x => x++x, "three"))]
@@ -70,16 +70,16 @@ main() = testMain(
                 [..weaveValues(":", ..integers(#8))]
             );
         }),
-        TestCase("reverseValues", test => {
+        TestCase("reverseValues", test -> {
             expectEqual(test, "reverseValues empty", [], [..reverseValues()]);
             expectEqual(test, "reverseValues 1", [1], [..reverseValues(1)]);
             expectEqual(test, "reverseValues 2", [1, "a"], [..reverseValues("a", 1)]);
             expectEqual(test, "reverseValues 3", [true, 1, "a"], [..reverseValues("a", 1, true)]);
         }),
-        TestCase("foldValues", test => {
+        TestCase("foldValues", test -> {
             expectEqual(test, "foldValues", 6, foldValues(add, 1, 2, 3));
         }),
-        TestCase("takeValues", test => {
+        TestCase("takeValues", test -> {
             expectEqual(test, "takeValues(#3, (0))",
                 [],
                 [..takeValues(#3)]
@@ -97,7 +97,7 @@ main() = testMain(
                 [..takeValues(#3, "one", "two", "three", "four")]
             );
         }),
-        TestCase("dropValues", test => {
+        TestCase("dropValues", test -> {
             expectEqual(test, "dropValues(#3, (0))",
                 [],
                 [..dropValues(#3)]
@@ -115,16 +115,16 @@ main() = testMain(
                 [..dropValues(#3, "one", "two", "three", "four")]
             );
         }),
-        TestCase("countValues", test => {
+        TestCase("countValues", test -> {
             expectEqual(test, "countValues((0))", 0, countValues());
             expectEqual(test, "countValues((1))", 1, countValues("one"));
             expectEqual(test, "countValues((4))", 4, countValues("one", "two", "three", "four"));
         }),
-        TestCase("equalValues?", test => {
+        TestCase("equalValues?", test -> {
             expectEqual(test, "1, 1, 1", true, equalValues?(1, 1, 1));
             expectEqual(test, "1, 1, 2", false, equalValues?(1, 1, 2));
         }),
-        TestCase("allValues?, anyValues?", test => {
+        TestCase("allValues?, anyValues?", test -> {
             expectEqual(test, "all of 1, 2, 3", false, allValues?(even?, 1, 2, 3));
             expectEqual(test, "any of 1, 2, 3", true,  anyValues?(even?, 1, 2, 3));
             expectEqual(test, "all of 2, 4, 6", true,  allValues?(even?, 2, 4, 6));
@@ -132,19 +132,19 @@ main() = testMain(
             expectEqual(test, "all of 1, 3, 5", false, allValues?(even?, 1, 3, 5));
             expectEqual(test, "any of 1, 3, 5", false, anyValues?(even?, 1, 3, 5));
         }),
-        TestCase("inValues?", test => {
+        TestCase("inValues?", test -> {
             expectEqual(test, "0 inValues", false, inValues?(0, 1, 2));
             expectEqual(test, "1 inValues", true,  inValues?(1, 1, 2));
             expectEqual(test, "2 inValues", true,  inValues?(2, 1, 2));
             expectEqual(test, "3 inValues", false, inValues?(3, 1, 2));
         }),
-        TestCase("sequenceValues", test => {
+        TestCase("sequenceValues", test -> {
             expectEqual(test, "sequenceValues",
                 [3, 7, 15, 1, 292, 1, 1, 1],
                 [..sequenceValues(array(3, 7, 15, 1, 292, 1, 1, 1), #8)]
             );
         }),
-        TestCase("mapValues2", test => {
+        TestCase("mapValues2", test -> {
             expectEqual(test, "mapValues2",
                 [8, 10, 12],
                 [..mapValues2((x, y) => x+y, #3,
@@ -153,7 +153,7 @@ main() = testMain(
                 )]
             );
         }),
-        TestCase("filterValues", test => {
+        TestCase("filterValues", test -> {
             expectEqual(test, "filterValues 2 from 4",
                 [#2, #4],
                 [..filterValues(even?, #1, #2, #3, #4)]
@@ -171,7 +171,7 @@ main() = testMain(
                 [..filterValues(even?)]
             );
         }),
-        TestCase("assocValue", test => {
+        TestCase("assocValue", test -> {
             expectEqual(test, "assocValue? first",
                 true,
                 assocValue?("foo", ["foo", 1, 2, 3], ["bar", 4]));
@@ -191,7 +191,7 @@ main() = testMain(
                 assocValue("bar", ["foo", 1, 2, 3], ["bar", 4])
             );
         }),
-        TestCase("replicateValue", test => {
+        TestCase("replicateValue", test -> {
             ..for (Type in Int, UInt, Int8, UInt8, SizeT) {
                 expectEqual(test, "replicateValue(x, #" ++ StaticName(Type) ++ "(0))",
                     [],

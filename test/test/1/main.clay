@@ -11,7 +11,7 @@ throwNothing() { }
 main() = testMain(
     TestSuite(
         "test test suite", array(
-            TestCase("should pass", test => {
+            TestCase("should pass", test -> {
                 var seq = array(2, 3, 5, 7, 11);
 
                 expectTrue(test, "truth", true);
@@ -29,7 +29,7 @@ main() = testMain(
                 expectExceptionType(test, "throws int", Int, throwInt);
                 expectException(test, "throws 7", 7, throwInt);
             }),
-            TestCase("should fail", test => {
+            TestCase("should fail", test -> {
                 var seq = array(2, 3, 5, 7, 11);
                 var iter = iterator(seq);
 
@@ -60,18 +60,18 @@ main() = testMain(
                 throwInt();
                 expectFalse(test, "unreachable falsehood", true);
             }),
-            PendingTestCase("should pass", test => {
+            PendingTestCase("should pass", test -> {
                 expectTrue(test, "truth", true);
             }),
-            PendingTestCase("should fail", test => {
+            PendingTestCase("should fail", test -> {
                 expectTrue(test, "truth", false);
             }),
-            TestCase("required", test => {
+            TestCase("required", test -> {
                 required(expectTrue, test, "truth", false);
                 // should not be reached
                 expectTrue(test, "truth", true);
             }),
-            TestCase("ifPasses", test => {
+            TestCase("ifPasses", test -> {
                 ifPasses(expectTrue, test, "truth 1", false, () -> {
                     // should not be reached
                     expectTrue(test, "truth 2", true);

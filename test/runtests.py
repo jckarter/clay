@@ -389,11 +389,13 @@ def runTests(opt):
         print
         print "[Tests]"
         for test in testcases:
+            startTime = time.time()
             res, log = results.next()
+            endTime = time.time()
             if res != "ok" and res != "disabled":
                 logfile.write(log)
             logfile.flush()
-            print "%s: %s" % (test.name(), res)
+            print "%s: %s (%fs)" % (test.name(), res, (endTime - startTime))
             if res == "disabled":
                 disabled.append(test.name())
             elif res != "ok":

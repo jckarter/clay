@@ -33,7 +33,7 @@ expectJoinPath(test, parts, expected) {
 
 testSuite() =
     TestSuite("path test suite", array(
-        TestCase("splitPath test cases", test => {
+        TestCase("splitPath test cases", test -> {
             expectSplitPath(test, "", array("", ""));
             expectSplitPath(test, "\\", array("\\", ""));
             expectSplitPath(test, "foo", array("", "foo"));
@@ -52,7 +52,7 @@ testSuite() =
             expectSplitPath(test, "\\\\woof\\foo\\", array("\\\\woof\\foo\\", ""));
             expectSplitPath(test, "\\\\woof\\foo", array("\\\\woof\\foo", ""));
         }),
-        TestCase("pathComponents test cases", test => {
+        TestCase("pathComponents test cases", test -> {
             expectPathComponents(test, "", Vector[String]());
             expectPathComponents(test, "\\", array("\\"));
             expectPathComponents(test, "foo", array("foo"));
@@ -66,7 +66,7 @@ testSuite() =
             expectPathComponents(test, "z:foo\\bar\\baz\\", array("z:", "foo", "bar", "baz"));
             expectPathComponents(test, "\\\\woof\\foo\\bar\\baz\\", array("\\\\woof\\foo", "\\", "bar", "baz"));
         }),
-        TestCase("joinPath test cases", test => {
+        TestCase("joinPath test cases", test -> {
             expectJoinPath(test, Vector[String](), "");
             expectJoinPath(test, array(""), "");
             expectJoinPath(test, array("", ""), "");

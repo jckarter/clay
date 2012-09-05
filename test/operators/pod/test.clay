@@ -19,7 +19,7 @@ enum Enum ( A, B, C );
 expectPOD(test, tf, Type) { expectEqual(test, StaticName(Type), tf, PODType?(Type)); }
 
 main() = testMain(TestSuite("PODType?", array(
-    TestCase("PODType?", test => {
+    TestCase("PODType?", test -> {
         expectPOD(test, false, IrregularRecord);
         expectPOD(test, true,  PODRecord);
         expectPOD(test, false, NonPODRecord);

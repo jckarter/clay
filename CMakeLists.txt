@@ -117,7 +117,7 @@ if(PYTHONINTERP_FOUND)
     endif()
 
     if(DEFINED PYTHON_EXECUTABLE)
-        add_custom_target(test ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/test/runtests.py")
+        add_custom_target(test ${PYTHON_EXECUTABLE} "${PROJECT_SOURCE_DIR}/test/runtests.py" --buildflags="-Dtest.minimal")
         add_dependencies(test clay)
     else()
         message("-- Python 2.x not found. You will not be able to run tests")

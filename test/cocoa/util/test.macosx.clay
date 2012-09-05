@@ -85,7 +85,7 @@ record RegularTest = regularClass(["foo", String], ["bar", Char]);
 record RegularCanary = regularClass(["foo", Canary], ["bar", Canary]);
 
 main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
-    TestCase("constructor overloads", test => {
+    TestCase("constructor overloads", test -> {
         expectEqual(test, "NSNumber(bool)", true, NSNumber(true).boolValue());
         expectEqual(test, "NSNumber(integer)", 5, NSNumber(5).intValue());
         expectEqual(test, "NSNumber(double)", 5.5, NSNumber(5.5).doubleValue());
@@ -116,7 +116,7 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
             fromNSValue(Foo, makeNSValue(Foo(14, 92.0)))
         );
     }),
-    TestCase("boxing of clay primitives", test => {
+    TestCase("boxing of clay primitives", test -> {
         expectEqual(test, "integer", 5, Id(5).intValue());
         expectEqual(test, "double", 5.5, Id(5.5).doubleValue());
         expectEqual(test, "64-bit integer", 0x1_0000_0000_ul,
@@ -142,7 +142,7 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
             fromNSValue(Foo, Id(Foo(7, 11.0)))
         );
     }),
-    TestCase("equality, hashing and comparison", test => {
+    TestCase("equality, hashing and comparison", test -> {
         var x = NSString("foo");
         var y = NSString("foo");
         var z = x;
@@ -172,7 +172,7 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
 
         expectEqual(test, "hashing", x.hash(), hash(x));
     }),
-    TestCase("array", test => {
+    TestCase("array", test -> {
         var array = NSMutableArray.alloc().init();
 
         array.addObject(9);
@@ -196,7 +196,7 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
 
         array.release();
     }),
-    TestCase("dictionary", test => {
+    TestCase("dictionary", test -> {
         var dict = NSMutableDictionary.alloc().init();
 
         dict.setObject_forKey(9, "zim");
@@ -209,7 +209,7 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
 
         dict.release();
     }),
-    TestCase("array, dictionary constructors", test => {
+    TestCase("array, dictionary constructors", test -> {
         var array = makeNSArray(1, "foo", 2.0, NSNull.null());
         var dict = makeNSDictionary(
             "zim", 9,
@@ -230,7 +230,7 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
         expectEqual(test, "dict key zang", "bar", dict["zang"]);
         expectEqual(test, "dict key zung", false, dict["zung"]);
     }),
-    TestCase("lifecycle methods", test => {
+    TestCase("lifecycle methods", test -> {
         expectCanariesDestroyed(test, "lifecycle methods on clay objc class", () => {
             withAutoreleasePool(() => {
                 var autoreleased1 = LifecycleTest.lifecycleTest();
@@ -258,12 +258,12 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
             });
         });
     }),
-    TestCase("printing objects", test => {
+    TestCase("printing objects", test -> {
         expectEqual(test, "print NSString", "whisky", str(NSString("whisky")));
         expectEqual(test, "print NSNumber", "2020", str(NSNumber(2020)));
         expectEqual(test, "print nil", "(nil)", str(nil(NSString)));
     }),
-    TestCase("property accessor methods", test => {
+    TestCase("property accessor methods", test -> {
         var x = Retained(PropertyTest.alloc().init());
         {
             var s = Retained(NSString.alloc().initWithFormat(NSSTR("catch-%d"), 22));
@@ -278,7 +278,7 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
         expectEqual(test, "bar", "catch-22", x.bar());
         expectEqual(test, "isBas", true, x.isBas());
     }),
-    TestCase("regularClass method signatures", test => {
+    TestCase("regularClass method signatures", test -> {
         expectEqual(test, "SelectorReturnType(RegularTest, #foo)", String,
             SelectorReturnType(RegularTest, "foo")
         );
@@ -308,7 +308,7 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
             ..SelectorArgumentTypes(RegularCanary, "initWithFoo:bar:")
         );
     }),
-    TestCase("regularClass usage", test => {
+    TestCase("regularClass usage", test -> {
         var defaultObject = Retained(RegularTest.alloc().init());
 
         expectEqual(test, "defaultObject.foo()", "", defaultObject.foo());
@@ -329,7 +329,7 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
         expectEqual(test, "copy.foo()", "zed", copy.foo());
         expectEqual(test, "copy.bar()", 'w', copy.bar());
     }),
-    TestCase("regularClass memory management", test => {
+    TestCase("regularClass memory management", test -> {
         expectCanariesDestroyed(test, "regularClass memory management", () => {
             var foo = Retained(RegularCanary.alloc().init());
             var bar = Retained(foo.copy());
@@ -337,7 +337,7 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
             var bas = Retained(RegularCanary.alloc().initWithFoo_bar(Canary(), Canary()));
         });
     }),
-    TestCase("indexSetIndices", test => {
+    TestCase("indexSetIndices", test -> {
         expectSequence(test, "indexSetIndices(empty index set)",
             indexSetIndices(NSIndexSet.indexSet()),
         );

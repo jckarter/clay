@@ -1,10 +1,9 @@
 import byteorder.*;
-import printer.formatter.*;
-import printer.*;
+import printer.(str);
 import test.*;
 
 [IntType]
-testNetworkToHost(test, #IntType, function, expectReversed?) {
+testNetworkToHost(test: TestStatus, #IntType, function, expectReversed?) {
     alias S = #TypeSize(IntType);
     var digits = array(..mapValues(i -> UInt8(250 - i), ..integers(S)));
     var digitsReversed = array(..reverseValues(..arrayElements(digits)));
@@ -15,12 +14,12 @@ testNetworkToHost(test, #IntType, function, expectReversed?) {
 }
 
 [IntType when not IntegerAvailable?(IntType)]
-overload testNetworkToHost(test, #IntType, function) {
+overload testNetworkToHost(test: TestStatus, #IntType, function) {
 }
 
 main() = testMain(
     TestSuite("byteorder", array(
-        TestCase("networkToHost, hostToNetwork", test => {
+        TestCase("networkToHost, hostToNetwork", test -> {
             ..for (IntType in UInt8, Int8, UInt16, Int16, UInt32, Int32, UInt64, Int64, UInt128, Int128) {
                 testNetworkToHost(test, IntType, networkToHost, LittleEndian?);
                 testNetworkToHost(test, IntType, hostToNetwork, LittleEndian?);

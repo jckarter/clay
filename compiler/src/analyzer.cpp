@@ -2321,11 +2321,11 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
             return NULL;
         
         if(x->hasVarArg){
-            if (mpv->values.size() < x->args.size())
-                arityMismatchError(x->args.size(), mpv->values.size());
+            if (mpv->values.size() < x->args.size()-1)
+                arityMismatchError(x->args.size()-1, mpv->values.size(), /*hasVarArg=*/ true);
         } else
             if (mpv->values.size() != x->args.size())
-                arityMismatchError(x->args.size(), mpv->values.size());
+                arityMismatchError(x->args.size(), mpv->values.size(), /*hasVarArg=*/ false);
 
         vector<TypePtr> key;
         for (unsigned i = 0; i < mpv->size(); ++i) {

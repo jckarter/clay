@@ -7,7 +7,7 @@ import test.*;
 
 main() = testMain(
     TestSuite("io.streams.buffered", array(
-        TestCase("BufferedOutputStream", test => {
+        TestCase("BufferedOutputStream", test -> {
             var os = BufferedOutputStream(String());
             write(os, "a");
             write(os, "b");
@@ -16,7 +16,7 @@ main() = testMain(
             flush(os);
             expectEqual(test, "written", "abcde", os.underlying);
         }),
-        TestCase("BufferedOutputStream flushOnNewlines", test => {
+        TestCase("BufferedOutputStream flushOnNewlines", test -> {
             var os = BufferedOutputStream(String(), true);
             write(os, "a");
             write(os, "b");
@@ -24,7 +24,7 @@ main() = testMain(
             write(os, "cd\n");
             expectEqual(test, "written", "abcd\n", os.underlying);
         }),
-        TestCase("BufferedInputStream", test => {
+        TestCase("BufferedInputStream", test -> {
             var s = "qwerty";
             var m = MemoryInputStream(begin(s), end(s));
             var is = BufferedInputStream(m);
