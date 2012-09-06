@@ -1,11 +1,12 @@
 
 import math.native.kernel.ieee754.*;
-import numbers.floats.(nan?,nan,infinity);
+import numbers.floats.(nan?,nan,infinity, infinity?, signbit);
 import math.native.fpclassify.(fpclassify,FP_INFINITE,FP_NAN,FP_ZERO);
 import math.native.copysign.(copysign);
 import math.native.abs.(abs);
 import complex.(Complex?,Complex,ComplexBaseType, real,imagValue);
 import math.native.hypot.(hypot);
+import math.native.(fma);
 
 private var inroot = array(
   1.40872145012100,  1.39792649065766,  1.38737595123859,  1.37706074531819,
@@ -50,6 +51,10 @@ private var big = 134217728.0;
 private var t512 = 0x1.p512;
 private var tm256 = 0x1.p-256;
 
+[T] inline Mul12(u:T,v:T) --> rh:T,rl:T {
+    rh <-- u*v;
+    rl <-- fma(u,v,-rh);
+}
 
 sqrt(x:Double) {
 
@@ -101,12 +106,11 @@ overload sqrt(x:Float) {
 
     var ix = GET_FLOAT_SIGNED(x);
 
-      // take care of Inf and NaN 
+    // take care of Inf and NaN 
     if(bitand(ix,0x7f800000)==0x7f800000) {
-        return x*x+x;   // sqrt(NaN)=NaN, sqrt(+inf)=+inf
-               sqrt(-inf)=sNaN;
+        return x*x+x;   // sqrt(NaN)=NaN, sqrt(+inf)=+inf, sqrt(-inf)=sNaN;
     }
-      // take care of zero 
+    // take care of zero 
     if(ix<=0) {
         if(bitandc(ix,SM)==0) return x;// sqrt(+-0) = +-0 
         else if(ix<0)
@@ -124,7 +128,7 @@ overload sqrt(x:Float) {
     }
     m -: 127; // unbias exponent 
     ix = bitor(bitand(ix,0x007fffff),0x00800000);
-    if(bitand(m,1)) // odd m, double x to make it even 
+    if(bitand(m,1) != 0) // odd m, double x to make it even 
         ix +: ix;
     m = bitshr(m,1);  // m = [m/2] 
 
