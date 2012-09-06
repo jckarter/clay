@@ -32,6 +32,7 @@
 #include <llvm/ADT/Triple.h>
 #include <llvm/Analysis/DebugInfo.h>
 #include <llvm/Analysis/DIBuilder.h>
+#include <llvm/Analysis/Passes.h>
 #include <llvm/Assembly/Writer.h>
 #include <llvm/Assembly/Parser.h>
 #include <llvm/Assembly/PrintModulePass.h>
@@ -67,6 +68,8 @@
 #include <llvm/Target/TargetOptions.h>
 #include <llvm/Transforms/IPO/PassManagerBuilder.h>
 #include <llvm/Transforms/IPO.h>
+#include <llvm/Transforms/Scalar.h>
+#include <llvm/Transforms/Vectorize.h>
 #include <llvm/Type.h>
 
 #ifdef _MSC_VER

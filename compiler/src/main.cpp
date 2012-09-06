@@ -43,12 +43,92 @@ static void addOptimizationPasses(llvm::PassManager &passes,
     builder.Inliner = inliningPass;
 
     builder.populateFunctionPassManager(fpasses);
-    builder.populateModulePassManager(passes);
+
+    // If all optimizations are disabled, just run the always-inline pass.
+    if (optLevel == 0) {
+        if (builder.Inliner) {
+            passes.add(builder.Inliner);
+            builder.Inliner = 0;
+        }
+    } else {
+        passes.add(llvm::createTypeBasedAliasAnalysisPass());
+        passes.add(llvm::createBasicAliasAnalysisPass());
+        
+        passes.add(llvm::createGlobalOptimizerPass());     // Optimize out global vars
+
+        passes.add(llvm::createIPSCCPPass());              // IP SCCP
+        passes.add(llvm::createDeadArgEliminationPass());  // Dead argument elimination
+
+        passes.add(llvm::createInstructionCombiningPass());// Clean up after IPCP & DAE
+        passes.add(llvm::createCFGSimplificationPass());   // Clean up after IPCP & DAE
+        
+        // Start of CallGraph SCC passes.
+        if (builder.Inliner) {
+            passes.add(builder.Inliner);
+            builder.Inliner = 0;
+        }
+        if (optLevel > 2)
+            passes.add(llvm::createArgumentPromotionPass());   // Scalarize uninlined fn args
+
+        // Start of function pass.
+        // Break up aggregate allocas, using SSAUpdater.
+        passes.add(llvm::createScalarReplAggregatesPass(-1, false));
+        passes.add(llvm::createEarlyCSEPass());              // Catch trivial redundancies
+        
+        passes.add(llvm::createJumpThreadingPass());         // Thread jumps.
+        // Disable Value Propagation pass until fixed LLVM bug #12503
+        // passes.add(llvm::createCorrelatedValuePropagationPass()); // Propagate conditionals
+        passes.add(llvm::createCFGSimplificationPass());     // Merge & remove BBs
+        passes.add(llvm::createInstructionCombiningPass());  // Combine silly seq's
+
+        passes.add(llvm::createTailCallEliminationPass());   // Eliminate tail calls
+        passes.add(llvm::createCFGSimplificationPass());     // Merge & remove BBs
+        passes.add(llvm::createReassociatePass());           // Reassociate expressions
+        passes.add(llvm::createLoopRotatePass());            // Rotate Loop
+        passes.add(llvm::createLICMPass());                  // Hoist loop invariants
+        passes.add(llvm::createLoopUnswitchPass(builder.SizeLevel || optLevel < 3));
+        passes.add(llvm::createInstructionCombiningPass());
+        passes.add(llvm::createIndVarSimplifyPass());        // Canonicalize indvars
+        passes.add(llvm::createLoopIdiomPass());             // Recognize idioms like memset.
+        passes.add(llvm::createLoopDeletionPass());          // Delete dead loops
+        
+        if (optLevel > 1)
+            passes.add(llvm::createGVNPass());                 // Remove redundancies
+        passes.add(llvm::createMemCpyOptPass());             // Remove memcpy / form memset
+        passes.add(llvm::createSCCPPass());                  // Constant prop with SCCP
+
+        // Run instcombine after redundancy elimination to exploit opportunities
+        // opened up by them.
+        passes.add(llvm::createInstructionCombiningPass());
+        passes.add(llvm::createJumpThreadingPass());         // Thread jumps
+        // Disable Value Propagation pass until fixed LLVM bug #12503
+        // passes.add(llvm::createCorrelatedValuePropagationPass());
+        passes.add(llvm::createDeadStoreEliminationPass());  // Delete dead stores
+
+        if (builder.Vectorize) {
+            passes.add(llvm::createBBVectorizePass());
+            passes.add(llvm::createInstructionCombiningPass());
+            if (optLevel > 1)
+                passes.add(llvm::createGVNPass());                 // Remove redundancies
+        }
+
+        passes.add(llvm::createAggressiveDCEPass());         // Delete dead instructions
+        passes.add(llvm::createCFGSimplificationPass());     // Merge & remove BBs
+        passes.add(llvm::createInstructionCombiningPass());  // Clean up after everything.
+
+        // GlobalOpt already deletes dead functions and globals, at -O3 try a
+        // late pass of GlobalDCE.  It is capable of deleting dead cycles.
+        if (optLevel > 2)
+            passes.add(llvm::createGlobalDCEPass());         // Remove dead fns and globals.
+
+        if (optLevel > 1)
+            passes.add(llvm::createConstantMergePass());     // Merge dup global constants
+    }
+
     if (optLevel > 2) {
         if (internalize) {
             vector<const char*> do_not_internalize;
             do_not_internalize.push_back("main");
-
             passes.add(llvm::createInternalizePass(do_not_internalize));
         }
         builder.populateLTOPassManager(passes, false, true);
