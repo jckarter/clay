@@ -16,7 +16,7 @@ if(UNIX)
     if(DEFINED LLVM_DIR)
         set(LLVM_CONFIG "${LLVM_DIR}/bin/llvm-config")
     else()
-        find_program(LLVM_CONFIG llvm-config /usr/bin
+        find_program(LLVM_CONFIG llvm-config /usr/local/bin
             DOC "path to llvm-config")
     endif()
     message("-- Using llvm-config: ${LLVM_CONFIG}")
