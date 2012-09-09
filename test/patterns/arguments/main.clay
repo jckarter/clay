@@ -8,10 +8,14 @@ foo(a, ..b, c) {
     return ..e, g;
 }
 
+[d]
+goo(a, b, ..c, #d) = d;
+
 main() {
 	
 	var z, ..x, k = integers(#10);
 	println(..bar(z, ..x, k));
 	println(..foo(..x));
 	
+	println(goo(z, k, z, #7, ..x, #9)); // result = 9
 }
