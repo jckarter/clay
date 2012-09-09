@@ -414,7 +414,8 @@ alias bitnot = (~);
 define operatorPrecedence;
 define operatorAssociativity;
 
-[T] overload operatorPrecedence(#T) = 10000;
+
+[T] overload operatorPrecedence(#T) = 0;
 [T] overload operatorAssociativity(#T) = LEFT;
 
 overload operatorPrecedence(#(*))   = 1000;
