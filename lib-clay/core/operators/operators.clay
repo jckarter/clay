@@ -441,21 +441,10 @@ overload operatorPrecedence(#(>))   = 100000;
 overload operatorPrecedence(#(<=))  = 100000;
 overload operatorPrecedence(#(>=))  = 100000;
 
-
-overload operatorAssociativity(#(*))    = LEFT;
-overload operatorAssociativity(#(/))    = LEFT;
-overload operatorAssociativity(#(\))    = LEFT;
-overload operatorAssociativity(#(%))    = LEFT;
-overload operatorAssociativity(#(-))    = LEFT;
-overload operatorAssociativity(#(+))    = LEFT;
-
-overload operatorAssociativity(#(<<))   = LEFT;
-overload operatorAssociativity(#(>>))   = LEFT;
-overload operatorAssociativity(#(&))    = LEFT;
-overload operatorAssociativity(#(~))    = LEFT;
-overload operatorAssociativity(#(|))    = LEFT;
-
-overload operatorAssociativity(#(++))   = LEFT;
+//
+// Default operatorAssociativity covers the standard 
+// operators:  *, /, \, %, -, +, <<, >>, &, ~, |, ++
+//
 
 overload operatorAssociativity(#(==))   = BOOLEAN;
 overload operatorAssociativity(#(!=))   = BOOLEAN;
