@@ -2002,14 +2002,15 @@ void analyzeCodeBody(InvokeEntry* entry)
     }
 
     EnvPtr bodyEnv = new Env(entry->env);
-    
-    unsigned i = 0, j = 0;
+
+    unsigned i = 0;
     for (; i < entry->varArgPosition; ++i) {
         bool flag = entry->forwardedRValueFlags[i];
         addLocal(bodyEnv, entry->fixedArgNames[i], new PValue(entry->fixedArgTypes[i], flag));
     }
     if (entry->varArgName.ptr()) {
         MultiPValuePtr varArgs = new MultiPValue();
+        unsigned j = 0;
         for (; j < entry->varArgTypes.size(); ++j) {
             bool flag = entry->forwardedRValueFlags[i+j];
             PVData parg(entry->varArgTypes[j], flag);
@@ -2343,8 +2344,8 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
         unsigned varArgSize = key.size()-formalArgs.size()+1;
         for (unsigned i = 0, j = 0; i < formalArgs.size(); ++i) {
             FormalArgPtr y = formalArgs[i];
-            if (y->type.ptr()) {      
-                if(y->varArg){
+            if(y->varArg){
+                if (y->type.ptr()) {      
                     ExprPtr unpack = new Unpack(y->type.ptr());
                     unpack->location = y->type->location;
                     MultiStaticPtr types = new MultiStatic();
@@ -2355,6 +2356,10 @@ EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
                     if (!unifyMulti(evaluateMultiPattern(new ExprList(unpack), patternEnv), types))
                         matchBindingError(new MatchMultiBindingError(formalArgs.size(), types, y));
                 } else {
+                    j = varArgSize-1;
+                }
+            } else {
+                if (y->type.ptr()) {      
                     if (!unifyPatternObj(evaluateOnePattern(y->type, patternEnv), key[i+j].ptr()))
                         matchBindingError(new MatchBindingError(i+j, key[i+j], y));
                 }
