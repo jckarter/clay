@@ -28,3 +28,7 @@ overload RawFilePointer() =
 overload RawFilePointer(original: RawFilePointer) =
     copyRecord(original);
 
+staticassert(OutputStream?(RawFile));
+staticassert( InputStream?(RawFile));
+staticassert(OutputStream?(RawFilePointer));
+staticassert( InputStream?(RawFilePointer));
