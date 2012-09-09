@@ -1784,7 +1784,7 @@ void evalCallCode(InvokeEntry* entry,
 
     EnvPtr env = new Env(entry->env);
     
-    unsigned k = 0, j = 0;
+    unsigned k = 0;
     for (; k < entry->varArgPosition; ++k) {
         EValuePtr ev = args->values[k];
         EValuePtr earg = new EValue(ev->type, ev->addr);
@@ -1793,6 +1793,7 @@ void evalCallCode(InvokeEntry* entry,
     }
     if (entry->varArgName.ptr()) {
         MultiEValuePtr varArgs = new MultiEValue();
+        unsigned j = 0;
         for (; j < entry->varArgTypes.size(); ++j) {
             EValuePtr ev = args->values[k + j];
             EValuePtr earg = new EValue(ev->type, ev->addr);

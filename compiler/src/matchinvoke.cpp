@@ -21,8 +21,6 @@ void initializePatternEnv(EnvPtr patternEnv, const vector<PatternVar> &pvars,
             addLocal(patternEnv, pvars[i].name, cell.ptr());
         }
     }
-
-
 }
 
 static void initializePatterns(OverloadPtr x)
@@ -115,16 +113,20 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
     unsigned varArgSize = argsKey.size()-formalArgs.size()+1;
     for (unsigned i = 0, j = 0; i < formalArgs.size(); ++i) {
         FormalArgPtr x = formalArgs[i];
-        if (x->type.ptr()) {
-            if (x->varArg) {
+        if (x->varArg) {
+            if (x->type.ptr()) {
                 MultiStaticPtr types = new MultiStatic();
                 for (; j < varArgSize; ++j)
                     types->add(argsKey[i+j].ptr());
                 --j;
                 MultiPatternPtr pattern = overload->varArgPattern;
                 if (!unifyMulti(pattern, types))
-                    return new MatchMultiArgumentError(formalArgs.size(), types, x);
+                    return new MatchMultiArgumentError(formalArgs.size(), types, x);                
             } else {
+                j = varArgSize-1;
+            }
+        } else {
+            if (x->type.ptr()) {
                 PatternPtr pattern = overload->argPatterns[i];
                 if (!unifyPatternObj(pattern, argsKey[i+j].ptr()))
                     return new MatchArgumentError(i+j, argsKey[i+j], x);
