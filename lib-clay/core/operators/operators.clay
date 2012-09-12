@@ -383,9 +383,9 @@ define (<<)(a, b);
 define (>>)(a, b);
 define (+)(a, ..b);
 define (-)(a, ..b);
-define (%)(a, b);
-define (\)(a, b);
-define (/)(a, b);
+define (%)(a, b, ..cs);
+define (\)(a, b, ..cs);
+define (/)(a, b, ..cs);
 define (*)(a, b, ..cs);
 
 alias equals? = (==);
@@ -414,7 +414,8 @@ alias bitnot = (~);
 define operatorPrecedence;
 define operatorAssociativity;
 
-[T] overload operatorPrecedence(#T) = 10000;
+
+[T] overload operatorPrecedence(#T) = 0;
 [T] overload operatorAssociativity(#T) = LEFT;
 
 overload operatorPrecedence(#(*))   = 1000;
@@ -453,14 +454,21 @@ overload operatorAssociativity(#(>))    = BOOLEAN;
 overload operatorAssociativity(#(<=))   = BOOLEAN;
 overload operatorAssociativity(#(>=))   = BOOLEAN;
 
+forceinline Operator?(..x) = false;
+[OP] forceinline overload Operator?(#OP) 
+    = Symbol?(OP) and operatorPrecedence(OP) > 0;
 
-[OP] forceinline BoolAssoc?(#OP) = integerEquals?(operatorAssociativity(OP),BOOLEAN);
+forceinline BoolAssoc?(..x) = false;
+forceinline LeftAssoc?(..x) = false;
+forceinline RightAssoc?(..x) = false;
+
+[OP] forceinline overload BoolAssoc?(#OP) = integerEquals?(operatorAssociativity(OP),BOOLEAN);
 [OP1,OP2] forceinline overload BoolAssoc?(#OP1,#OP2) = BoolAssoc?(OP1) and BoolAssoc?(OP2);
 
-[OP] forceinline LeftAssoc?(#OP) = integerEquals?(operatorAssociativity(OP),LEFT);
+[OP] forceinline overload LeftAssoc?(#OP) = integerEquals?(operatorAssociativity(OP),LEFT);
 [OP1,OP2] forceinline overload LeftAssoc?(#OP1,#OP2) = LeftAssoc?(OP1) and LeftAssoc?(OP2);
 
-[OP] forceinline RightAssoc?(#OP) = integerEquals?(operatorAssociativity(OP),RIGHT);
+[OP] forceinline overload RightAssoc?(#OP) = integerEquals?(operatorAssociativity(OP),RIGHT);
 [OP1,OP2] forceinline overload RightAssoc?(#OP1,#OP2) = RightAssoc?(OP1) and RightAssoc?(OP2);
 
 [OP1,OP2] forceinline GreaterPrec?(#OP1,#OP2) 
@@ -468,44 +476,59 @@ overload operatorAssociativity(#(>=))   = BOOLEAN;
 [OP1,OP2] forceinline LowerPrec?(#OP1,#OP2) = GreaterPrec?(OP2,OP1);
 
 
-private define binaryOp;
+private define infixToPolish;
 
-forceinline overload binaryOp(forward ..args) = forward ..args;
+forceinline overload infixToPolish(#0, #0,  ..y) = ;
 
-[OP,NX when RightAssoc?(OP)]
-forceinline overload binaryOp(forward a, #OP, forward b, #NX, forward ..args) 
-    = forward ..binaryOp(a, OP, ..binaryOp(b, NX, ..args));
+[s, v, p, T when s>0 and Operator?(T)]
+forceinline overload infixToPolish(#0, #s, #v, forward ..y, #p, #T) 
+    = forward ..infixToPolish(#0, #(s-1), #1, ..y), T, #(p+v);
 
-[OP,NX when LeftAssoc?(OP)]
-forceinline overload binaryOp(forward a, #OP, forward b, #NX, forward ..args) 
-    = forward ..binaryOp(OP(a,b), NX, ..args);
+[n, s, v when n>0]
+forceinline overload infixToPolish(#n, #s, #v,forward x, forward ..y) 
+    = forward ..infixToPolish(#(n-1), #s, #(v+1), ..y), x;
 
-[OP,NX when (LeftAssoc?(NX) or RightAssoc?(NX)) and LowerPrec?(OP,NX)]
-forceinline overload binaryOp(forward a, #OP, forward b, #NX, forward ..args) 
-    = forward ..binaryOp(a, OP, ..binaryOp(b, NX, ..args));
+[n, s, v, OP when n>0 and Operator?(OP)]
+forceinline overload infixToPolish(#n, #s, #v, #OP, forward ..y) 
+    = forward ..infixToPolish(#(n-1), #(s+1), #0, ..y, #v, #OP);
 
-[OP,NX when (LeftAssoc?(OP) or RightAssoc?(OP)) and GreaterPrec?(OP,NX)]
-forceinline overload binaryOp(forward a, #OP, forward b, #NX, forward ..args) 
-    = forward ..binaryOp(OP(a,b), NX, ..args);
+[n, s, v, OP, p, T when n>0 and s>0 
+    and ((LeftAssoc?(OP) and LowerPrec?(OP, T)) 
+        or (RightAssoc?(OP) and not GreaterPrec?(OP, T)) or BoolAssoc?(OP))] 
+forceinline overload infixToPolish(#n, #s, #v, #OP, forward ..y, #p, #T) 
+    = forward  ..infixToPolish(#n, #(s-1), #1, #OP, ..y), T,#(p+v);
 
-[OP when LeftAssoc?(OP) or RightAssoc?(OP)]
-forceinline overload binaryOp(forward a, #OP, forward b) = forward ..OP(a,b);
 
+private define evalPolish;
+forceinline overload evalPolish() = ;
 
-private define boolOp;
+forceinline overload evalPolish(x, ..y) = x, ..evalPolish(..y);
 
-forceinline overload boolOp(forward ..args) = forward ..args;
+[OP, v when Operator?(OP)]
+forceinline overload evalPolish(#OP, #v, ..x) 
+    = OP(..takeValues(#v, ..evalPolish(..x))), ..dropValues(#v, ..evalPolish(..x));
 
-[OP,NX when BoolAssoc?(OP,NX)]
-forceinline overload boolOp(forward a, #OP, forward b, #NX, forward ..args) = forward OP(a,b) and boolOp(b,NX,..args);
+[OP, v when BoolAssoc?(OP)]
+forceinline overload evalPolish(#OP, #v, ..x) = OP, ..evalPolish(..x);
+
+private define evalBool;
+forceinline overload evalBool(..x) = ..x;
+
+[OP, OP2 when BoolAssoc?(OP, OP2)]
+forceinline overload evalBool(#OP, y, #OP2, z, ..x) 
+    = OP(y, z) and evalBool(#OP2, z, ..x);
 
 [OP when BoolAssoc?(OP)]
-forceinline overload boolOp(forward a, #OP, forward b) = forward ..OP(a,b);
+forceinline overload evalBool(#OP, x, y) = OP(x, y);
 
+[..T]
+forceinline overload infixOperator(forward ..args:T) 
+    = forward ..evalBool(..evalPolish(
+        ..infixToPolish(#countValues(..T), #0, #0, ..reverseValues(..args))));
 
-forceinline overload infixOperator(forward ..args) = forward boolOp(..binaryOp(..args));
 [OP]
-forceinline overload infixOperator(forward a, #OP, forward b) = forward ..OP(a,b);
+forceinline overload infixOperator(forward a, #OP, forward b) 
+    = forward ..OP(a,b);
 
 
 /// @section  swap 
