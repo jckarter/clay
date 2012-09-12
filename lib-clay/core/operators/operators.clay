@@ -523,7 +523,7 @@ forceinline overload evalBool(#OP, #v, x, y) = OP(x, y);
 
 [..T]
 forceinline overload infixOperator(forward ..args:T) 
-    = forward ..evalBool(..evalPrefix(
+    = forward ..evalBool(..evalPolish(
         ..infixToPolish(#countValues(..T), #0, #0, ..reverseValues(..args))));
 
 [OP]
