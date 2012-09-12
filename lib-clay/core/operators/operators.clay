@@ -509,17 +509,17 @@ forceinline overload evalPolish(#OP, #v, ..x)
     = OP(..takeValues(#v, ..evalPolish(..x))), ..dropValues(#v, ..evalPolish(..x));
 
 [OP, v when BoolAssoc?(OP)]
-forceinline overload evalPolish(#OP, #v, ..x) = OP, #v, ..evalPolish(..x);
+forceinline overload evalPolish(#OP, #v, ..x) = OP, ..evalPolish(..x);
 
 private define evalBool;
 forceinline overload evalBool(..x) = ..x;
 
-[OP, v, OP2, w when BoolAssoc?(OP, OP2)]
-forceinline overload evalBool(#OP, #v, y, #OP2, #w, z, ..x) 
-    = OP(y, z) and evalBool(#OP2, #w, z, ..x);
+[OP, OP2 when BoolAssoc?(OP, OP2)]
+forceinline overload evalBool(#OP, y, #OP2, z, ..x) 
+    = OP(y, z) and evalBool(#OP2, z, ..x);
 
-[OP, v when BoolAssoc?(OP)]
-forceinline overload evalBool(#OP, #v, x, y) = OP(x, y);
+[OP when BoolAssoc?(OP)]
+forceinline overload evalBool(#OP, x, y) = OP(x, y);
 
 [..T]
 forceinline overload infixOperator(forward ..args:T) 
