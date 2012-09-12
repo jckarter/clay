@@ -3,5 +3,5 @@
 /// @section ByteLike?
 
 [T when Type?(T)]
-ByteLike?(#T) = TypeSize(T) == 1 and PODType?(T);
+ByteLike?(#T) : Bool = TypeSize(T) == 1 and PODType?(T);
 
