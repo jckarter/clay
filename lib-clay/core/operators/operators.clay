@@ -476,32 +476,27 @@ forceinline RightAssoc?(..x) = false;
 [OP1,OP2] forceinline LowerPrec?(#OP1,#OP2) = GreaterPrec?(OP2,OP1);
 
 
-private define _infixToPolish;
+private define infixToPolish;
 
-forceinline overload _infixToPolish(#0, #0,  ..y) = ;
+forceinline overload infixToPolish(#0, #0,  ..y) = ;
 
 [s, v, p, T when s>0 and Operator?(T)]
-forceinline overload _infixToPolish(#0, #s, #v, forward ..y, #p, #T) 
-    = forward .._infixToPolish(#0, #(s-1), #1, ..y), T, #(p+v);
+forceinline overload infixToPolish(#0, #s, #v, forward ..y, #p, #T) 
+    = forward ..infixToPolish(#0, #(s-1), #1, ..y), T, #(p+v);
 
 [n, s, v when n>0]
-forceinline overload _infixToPolish(#n, #s, #v,forward x, forward ..y) 
-    = forward .._infixToPolish(#(n-1), #s, #(v+1), ..y), x;
+forceinline overload infixToPolish(#n, #s, #v,forward x, forward ..y) 
+    = forward ..infixToPolish(#(n-1), #s, #(v+1), ..y), x;
 
 [n, s, v, OP when n>0 and Operator?(OP)]
-forceinline overload _infixToPolish(#n, #s, #v, #OP, forward ..y) 
-    = forward .._infixToPolish(#(n-1), #(s+1), #0, ..y, #v, #OP);
+forceinline overload infixToPolish(#n, #s, #v, #OP, forward ..y) 
+    = forward ..infixToPolish(#(n-1), #(s+1), #0, ..y, #v, #OP);
 
 [n, s, v, OP, p, T when n>0 and s>0 
     and ((LeftAssoc?(OP) and LowerPrec?(OP, T)) 
         or (RightAssoc?(OP) and not GreaterPrec?(OP, T)) or BoolAssoc?(OP))] 
-forceinline overload _infixToPolish(#n, #s, #v, #OP, forward ..y, #p, #T) 
-    = forward  .._infixToPolish(#n, #(s-1), #1, #OP, ..y), T,#(p+v);
-
-
-[..T]
-private forceinline infixToPolish(forward ..x:T) 
-    = forward .._infixToPolish(#countValues(..T), #0, #0, ..reverseValues(..x));
+forceinline overload infixToPolish(#n, #s, #v, #OP, forward ..y, #p, #T) 
+    = forward  ..infixToPolish(#n, #(s-1), #1, #OP, ..y), T,#(p+v);
 
 
 private define evalPolish;
@@ -519,15 +514,17 @@ forceinline overload evalPolish(#OP, #v, ..x) = OP, #v, ..evalPolish(..x);
 private define evalBool;
 forceinline overload evalBool(..x) = ..x;
 
-[OP, v when BoolAssoc?(OP)]
-forceinline overload evalBool(#OP, #v, x, y) = OP(x, y);
-
 [OP, v, OP2, w when BoolAssoc?(OP, OP2)]
 forceinline overload evalBool(#OP, #v, y, #OP2, #w, z, ..x) 
     = OP(y, z) and evalBool(#OP2, #w, z, ..x);
 
-forceinline overload infixOperator(forward ..args) 
-    = forward ..evalBool(..evalPrefix(..infixToPolish(..args)));
+[OP, v when BoolAssoc?(OP)]
+forceinline overload evalBool(#OP, #v, x, y) = OP(x, y);
+
+[..T]
+forceinline overload infixOperator(forward ..args:T) 
+    = forward ..evalBool(..evalPrefix(
+        ..infixToPolish(#countValues(..T), #0, #0, ..reverseValues(..args))));
 
 [OP]
 forceinline overload infixOperator(forward a, #OP, forward b) 
