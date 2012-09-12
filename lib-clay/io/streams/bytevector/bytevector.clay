@@ -1,3 +1,5 @@
+import vectors.*;
+
 public import io.streams.*;
 
 
@@ -15,4 +17,7 @@ overload writeBytes(stream:V, buf:Pointer[Byte], n:SizeT) {
 [V when ByteVector?(V)]
 overload flush(stream:V) {
 }
+
+// TODO: fails because of cyclic dependencies
+//staticassert(OutputStream?(Vector[Char]));
 

@@ -1,0 +1,7 @@
+import printer.*;
+
+main() {
+    var i = 17s;
+    staticassert(TypeSize(Type(i)) == 2);
+    println("$");
+}

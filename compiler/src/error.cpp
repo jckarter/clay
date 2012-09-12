@@ -281,6 +281,12 @@ void error(llvm::Twine const &msg) {
         exit(-1);
 }
 
+void error(Location const &location, llvm::Twine const &msg) {
+    if (location.ok())
+        pushLocation(location);
+    error(msg);
+}
+
 void fmtError(const char *fmt, ...) {
     va_list ap;
     char s[256];

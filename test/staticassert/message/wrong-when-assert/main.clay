@@ -1,0 +1,3 @@
+main() {
+    staticassert(1 < 0, "type not found here", Asdfgh);
+}

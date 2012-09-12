@@ -335,6 +335,34 @@ void evaluatePredicate(const vector<PatternVar> &patternVars,
     }
 }
 
+void evaluateStaticAssert(Location const& location,
+        const ExprPtr& cond, const ExprListPtr& message, EnvPtr env)
+{
+    bool r = evaluateBool(cond, env);
+
+    // Note, message is evaluated even if assert does not fail.
+    // It is slower, but results is better code.
+    MultiStaticPtr str = evaluateMultiStatic(message, env);
+
+    if (!r) {
+        std::string s;
+        llvm::raw_string_ostream ss(s);
+
+        for (int i = 0; i < str->size(); ++i) {
+            printStaticName(ss, str->values[i]);
+        }
+
+        ss.flush();
+
+        if (!s.empty()) {
+            error(location, "static assert failed: " + s);
+        } else {
+            error(location, "static assert failed");
+        }
+
+    }
+}
+
 ValueHolderPtr intToValueHolder(int x)
 {
     ValueHolderPtr v = new ValueHolder(cIntType);
@@ -2339,6 +2367,12 @@ whileContinue:
     case WITH :
         error("unexpected with statement");
         return NULL;
+
+    case STATIC_ASSERT_STATEMENT : {
+        StaticAssertStatement *x = (StaticAssertStatement *)stmt.ptr();
+        evaluateStaticAssert(x->location, x->cond, x->message, env);
+        return NULL;
+    }
 
     default :
         assert(false);

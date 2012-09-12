@@ -451,6 +451,16 @@ static void printStatement(llvm::raw_ostream &out, const Statement *x) {
     case EVAL_STATEMENT : {
         const EvalStatement *eval = (const EvalStatement *)x;
         out << "EvalStatement(" << eval->args << ")";
+        break;
+    }
+    case STATIC_ASSERT_STATEMENT : {
+        const StaticAssertStatement *staticAssert = (const StaticAssertStatement*)x;
+        out << "StaticAssertStatement(" << staticAssert->cond;
+        for (size_t i = 0; i < staticAssert->message->size(); ++i) {
+            out << ", " << staticAssert->message->exprs[i];
+        }
+        out << ")";
+        break;
     }
     }
 }
@@ -651,6 +661,16 @@ static void print(llvm::raw_ostream &out, const Object *x) {
     case EVAL_TOPLEVEL : {
         const EvalTopLevel *eval = (const EvalTopLevel *)x;
         out << "EvalTopLevel(" << eval->args << ")";
+        break;
+    }
+
+    case STATIC_ASSERT_TOP_LEVEL : {
+        const StaticAssertTopLevel *staticAssert = (const StaticAssertTopLevel*)x;
+        out << "StaticAssertTopLevel(" << staticAssert->cond;
+        for (size_t i = 0; i < staticAssert->message->size(); ++i) {
+            out << ", " << staticAssert->message->exprs[i];
+        }
+        out << ")";
         break;
     }
 

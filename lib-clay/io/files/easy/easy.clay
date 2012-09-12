@@ -89,3 +89,10 @@ overload seek(f:File, offset, whence) {
 /// @section  terminal? 
 
 overload terminal?(f:File) = terminal?(f.ptr^.file);
+
+
+
+/// @section  asserts
+
+staticassert(OutputStream?(File));
+staticassert( InputStream?(File));

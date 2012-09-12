@@ -1524,6 +1524,33 @@ static bool evalStatement(StatementPtr &x) {
     return true;
 }
 
+// parse staticassert top level or statement
+template <typename S, typename T>
+static bool staticAssert(S &x) {
+    Location location = currentLocation();
+    if (!keyword("staticassert")) return false;
+    if (!symbol("(")) return false;
+    ExprPtr cond;
+    if (!expression(cond)) return false;
+
+    ExprListPtr message = new ExprList();
+
+    int s = save();
+    while (symbol(",")) {
+        ExprPtr expr;
+        if (!expression(expr)) return false;
+        message->add(expr);
+        s = save();
+    }
+    restore(s);
+
+    if (!symbol(")")) return false;
+    if (!symbol(";")) return false;
+    x = new T(cond, message);
+    x->location = location;
+    return true;
+}
+
 static bool statement(StatementPtr &x) {
     int p = save();
     if (block(x)) return true;
@@ -1536,6 +1563,7 @@ static bool statement(StatementPtr &x) {
     if (restore(p), switchStatement(x)) return true;
     if (restore(p), returnStatement(x)) return true;
     if (restore(p), evalStatement(x)) return true;
+    if (restore(p), staticAssert<StatementPtr, StaticAssertStatement>(x)) return true;
     if (restore(p), exprStatement(x)) return true;
     if (restore(p), whileStatement(x)) return true;
     if (restore(p), breakStatement(x)) return true;
@@ -2967,6 +2995,7 @@ static bool topLevelItem(vector<TopLevelItemPtr> &x) {
     if (restore(p), externalVariable(y)) goto success;
     if (restore(p), globalAlias(y)) goto success;
     if (restore(p), evalTopLevel(y)) goto success;
+    if (restore(p), staticAssert<TopLevelItemPtr, StaticAssertTopLevel>(y)) goto success;
     return false;
 success :
     assert(y.ptr());

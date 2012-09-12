@@ -54,3 +54,6 @@ overload readBytes(is: MemoryInputStream, buf: Pointer[Byte], n: SizeT) {
 }
 
 
+staticassert(OutputStream?(MemoryOutputStream));
+staticassert(InputStream?(MemoryInputStream));
+
