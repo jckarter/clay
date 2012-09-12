@@ -1,0 +1,9 @@
+import printer.(println);
+
+record Foo ();
+
+staticassert(Record?(Foo));
+
+main() {
+    println("$");
+}

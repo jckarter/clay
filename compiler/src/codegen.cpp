@@ -4061,6 +4061,12 @@ bool codegenStatement(StatementPtr stmt,
         return true;
     }
 
+    case STATIC_ASSERT_STATEMENT : {
+        StaticAssertStatement *x = (StaticAssertStatement *)stmt.ptr();
+        evaluateStaticAssert(x->location, x->cond, x->message, env);
+        return false;
+    }
+
     default :
         assert(false);
         return false;

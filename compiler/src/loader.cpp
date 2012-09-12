@@ -528,6 +528,10 @@ static void initVariantInstance(InstancePtr x) {
     }
 }
 
+static void checkStaticAssert(StaticAssertTopLevelPtr a) {
+    evaluateStaticAssert(a->location, a->cond, a->message, a->env);
+}
+
 static void initModule(ModulePtr m) {
     if (m->initialized) return;
     m->initialized = true;
@@ -558,6 +562,9 @@ static void initModule(ModulePtr m) {
             break;
         case INSTANCE :
             initVariantInstance((Instance *)obj);
+            break;
+        case STATIC_ASSERT_TOP_LEVEL:
+            checkStaticAssert((StaticAssertTopLevel *)obj);
             break;
         }
     }

@@ -460,6 +460,9 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
     case UNREACHABLE :
         break;
 
+    case STATIC_ASSERT_STATEMENT :
+        break;
+
     default :
         assert(false);
 

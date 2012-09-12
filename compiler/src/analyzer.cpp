@@ -2287,6 +2287,9 @@ StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContex
     case UNREACHABLE :
         return SA_TERMINATED;
 
+    case STATIC_ASSERT_STATEMENT:
+        return SA_FALLTHROUGH;
+
     default :
         assert(false);
         return SA_FALLTHROUGH;

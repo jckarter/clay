@@ -1,0 +1,6 @@
+import printer.*;
+
+main() {
+    var i = 17s;
+    println((() -> { staticassert(Type(i) == Int16); return "$"; })());
+}
