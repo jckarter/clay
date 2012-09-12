@@ -1,0 +1,7 @@
+import printer.*;
+
+record Foo ();
+
+staticassert(Variant?(Foo));
+
+main() {}

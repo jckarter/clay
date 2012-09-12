@@ -137,7 +137,7 @@ static void initKeywords() {
          "if", "else", "goto", "return", "while",
          "switch", "case", "break", "continue", "for", "in",
          "true", "false", "try", "catch", "throw",
-         "finally", "onerror",
+         "finally", "onerror", "staticassert",
          "eval", "with", "when",
          "__FILE__", "__LINE__", "__COLUMN__", "__ARG__", NULL};
     keywords = new std::set<llvm::StringRef>();

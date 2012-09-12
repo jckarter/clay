@@ -1,0 +1,9 @@
+
+[T, N]
+foo(t: T, #N) {
+    staticassert(TypeSize(T) < N, "T should be smaller than ", #N, " bytes but is ", #TypeSize(T), " bytes");
+}
+
+main() {
+    foo(17l, #5);
+}

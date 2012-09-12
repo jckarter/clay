@@ -426,6 +426,8 @@ enum ObjectKind {
 
     DOCUMENTATION,
 
+    STATIC_ASSERT_TOP_LEVEL,
+
     DONT_CARE
 };
 
@@ -498,6 +500,7 @@ struct OnError;
 struct Unreachable;
 struct EvalStatement;
 struct WithStatement;
+struct StaticAssertStatement;
 
 struct FormalArg;
 struct ReturnSpec;
@@ -520,6 +523,7 @@ struct ExternalProcedure;
 struct ExternalArg;
 struct ExternalVariable;
 struct EvalTopLevel;
+struct StaticAssertTopLevel;
 struct Documentation;
 
 struct GlobalAlias;
@@ -645,6 +649,7 @@ typedef Pointer<OnError> OnErrorPtr;
 typedef Pointer<Unreachable> UnreachablePtr;
 typedef Pointer<EvalStatement> EvalStatementPtr;
 typedef Pointer<WithStatement> WithStatementPtr;
+typedef Pointer<StaticAssertStatement> StaticAssertStatementPtr;
 
 typedef Pointer<FormalArg> FormalArgPtr;
 typedef Pointer<ReturnSpec> ReturnSpecPtr;
@@ -667,6 +672,7 @@ typedef Pointer<ExternalProcedure> ExternalProcedurePtr;
 typedef Pointer<ExternalArg> ExternalArgPtr;
 typedef Pointer<ExternalVariable> ExternalVariablePtr;
 typedef Pointer<EvalTopLevel> EvalTopLevelPtr;
+typedef Pointer<StaticAssertTopLevel> StaticAssertTopLevelPtr;
 typedef Pointer<Documentation> DocumentationPtr;
 
 typedef Pointer<GlobalAlias> GlobalAliasPtr;
@@ -727,7 +733,10 @@ typedef Pointer<ObjectTable> ObjectTablePtr;
 // Source, Location
 //
 
+struct Location;
+
 void error(llvm::Twine const &msg);
+void error(Location const& location, llvm::Twine const &msg);
 
 struct Source : public Object {
     string fileName;
@@ -862,9 +871,7 @@ void error(Pointer<T> context, llvm::Twine const &msg)
 template <class T>
 void error(T const *context, llvm::Twine const &msg)
 {
-    if (context->location.ok())
-        pushLocation(context->location);
-    error(msg);
+    error(context->location, msg);
 }
 
 void argumentError(unsigned int index, llvm::StringRef msg);
@@ -1365,7 +1372,7 @@ struct ExprList : public Object {
     }
     ExprList(const vector<ExprPtr> &exprs)
         : Object(EXPR_LIST), exprs(exprs) {}
-    size_t size() { return exprs.size(); }
+    size_t size() const { return exprs.size(); }
     void add(ExprPtr x) { exprs.push_back(x); }
     void add(ExprListPtr x) {
         exprs.insert(exprs.end(), x->exprs.begin(), x->exprs.end());
@@ -1416,7 +1423,8 @@ enum StatementKind {
     ONERROR,
     UNREACHABLE,
     EVAL_STATEMENT,
-    WITH
+    WITH,
+    STATIC_ASSERT_STATEMENT
 };
 
 struct Statement : public ANode {
@@ -1712,6 +1720,16 @@ struct WithStatement : public Statement {
     Location withLocation;
     WithStatement( vector<IdentifierPtr> i, ExprPtr r, Location const &l)
         : Statement(WITH), lhs(i), rhs(r), withLocation(l) {}
+};
+
+
+struct StaticAssertStatement : public Statement {
+    ExprPtr cond;
+    ExprListPtr message;
+
+    StaticAssertStatement(ExprPtr cond, ExprListPtr message)
+        : Statement(STATIC_ASSERT_STATEMENT), cond(cond), message(message)
+    {}
 };
 
 //
@@ -2140,6 +2158,15 @@ struct EvalTopLevel : public TopLevelItem {
     EvalTopLevel(ExprListPtr args)
         : TopLevelItem(EVAL_TOPLEVEL), args(args), evaled(false)
         {}
+};
+
+struct StaticAssertTopLevel : public TopLevelItem {
+    ExprPtr cond;
+    ExprListPtr message;
+
+    StaticAssertTopLevel(ExprPtr cond, ExprListPtr message)
+    : TopLevelItem(STATIC_ASSERT_TOP_LEVEL), cond(cond), message(message)
+    {}
 };
 
 
@@ -3652,6 +3679,8 @@ IdentifierPtr evaluateIdentifier(ExprPtr expr, EnvPtr env);
 bool evaluateBool(ExprPtr expr, EnvPtr env);
 void evaluatePredicate(const vector<PatternVar> &patternVars,
     ExprPtr expr, EnvPtr env);
+void evaluateStaticAssert(Location const& location,
+        const ExprPtr& cond, const ExprListPtr& message, EnvPtr env);
 
 ValueHolderPtr intToValueHolder(int x);
 ValueHolderPtr sizeTToValueHolder(size_t x);

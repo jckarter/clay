@@ -432,6 +432,12 @@ StatementPtr clone(StatementPtr x)
         break;
     }
 
+    case STATIC_ASSERT_STATEMENT : {
+        StaticAssertStatement *staticAssert = (StaticAssertStatement *)x.ptr();
+        out = new StaticAssertStatement(clone(staticAssert->cond), clone(staticAssert->message));
+        break;
+    }
+
     default :
         assert(false);
 

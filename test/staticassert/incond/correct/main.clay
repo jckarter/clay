@@ -1,0 +1,13 @@
+import printer.*;
+
+bar() {
+    staticassert(true);
+    return true;
+}
+
+[when bar()]
+foo() = "$";
+
+main() {
+    println(foo());
+}
