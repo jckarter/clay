@@ -383,9 +383,9 @@ define (<<)(a, b);
 define (>>)(a, b);
 define (+)(a, ..b);
 define (-)(a, ..b);
-define (%)(a, b);
-define (\)(a, b);
-define (/)(a, b);
+define (%)(a, b, ..cs);
+define (\)(a, b, ..cs);
+define (/)(a, b, ..cs);
 define (*)(a, b, ..cs);
 
 alias equals? = (==);
