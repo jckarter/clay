@@ -7,4 +7,7 @@ main(){
     println(22.0 - 12.0 / 2.0);
     println(3 + 4 > 6);
     println(2 <= 3 * 4 > 6);
+    var zero, ..x = integers(#10);
+    println(2 + (..x) * 2);
+    println((..x) * 2 > 9 < 1000000);
 }
