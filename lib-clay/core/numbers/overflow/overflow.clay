@@ -103,6 +103,28 @@ forceinline overload integerMultiplyWithOverflow(x:UInt8, y:UInt8) : UInt8, Bool
     return numericConvert(UInt8, out), overflow?(UInt8, out);
 }
 
+// XXX LLVM *mul.with.overflow.i64 intrinsics are broken on 32-bit systems
+// see jckarter/clay#377, llvm pr13839
+[when TypeSize(RawPointer) < 8]
+forceinline overload integerMultiplyWithOverflow(x:Int64, y:Int64) : Int64, Bool
+    = numericMultiply(x, y), false;
+[when TypeSize(RawPointer) < 8]
+forceinline overload integerMultiplyWithOverflow(x:UInt64, y:UInt64) : UInt64, Bool
+    = numericMultiply(x, y), false;
+
+forceinline overload integerAddWithOverflow(x:Int128, y:Int128) : Int128, Bool
+    = numericAdd(x, y), false;
+forceinline overload integerSubtractWithOverflow(x:Int128, y:Int128) : Int128, Bool
+    = numericSubtract(x, y), false;
+forceinline overload integerMultiplyWithOverflow(x:Int128, y:Int128) : Int128, Bool
+    = numericMultiply(x, y), false;
+forceinline overload integerAddWithOverflow(x:UInt128, y:UInt128) : UInt128, Bool
+    = numericAdd(x, y), false;
+forceinline overload integerSubtractWithOverflow(x:UInt128, y:UInt128) : UInt128, Bool
+    = numericSubtract(x, y), false;
+forceinline overload integerMultiplyWithOverflow(x:UInt128, y:UInt128) : UInt128, Bool
+    = numericMultiply(x, y), false;
+
 // XXX need to do int128 overflow checking properly
 
 forceinline overload integerAddWithOverflow(x:Int128, y:Int128) : Int128, Bool

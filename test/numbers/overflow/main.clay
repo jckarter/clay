@@ -107,4 +107,7 @@ main() {
     println(didOverflow?(..integerConvertWithOverflow(UInt32, 0x1_0000_0000l)));
     println(didOverflow?(..integerConvertWithOverflow(UInt32, 0x0l)));
     println(didOverflow?(..integerConvertWithOverflow(UInt32, -0x1l)));
+    println();
+    // jckarter/clay#377
+    println(didOverflow?(..integerMultiplyWithOverflow(9ul, 8ul)));
 }
