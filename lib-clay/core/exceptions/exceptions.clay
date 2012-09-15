@@ -32,7 +32,7 @@ private exceptionObject(exp:RawPointer) = ref Pointer[Exception](exp)^;
 // be terminated with \n character. This is very simple implementation
 // that depends on nothing but core. `printer.exception` module contains
 // more sophisticated version.
-printUnhandledExceptionToStderr(e) {
+printUnhandledExceptionToStderr(e) : {
     libc.fprintf(libc.stderr, cstring("unhandled %s exception\n"), cstring(MemberTypeName(e)));
 }
 
@@ -40,18 +40,18 @@ printUnhandledExceptionToStderr(e) {
 
 /// @section  throwValue, continueException 
 
-[T]
-overload throwValue(x:T) {
+[T when Type?(T)]
+overload throwValue(x:T) : {
     errorWithPrintfNoThrow(stringLiteralConcat("exception of type ", StaticName(T)," thrown with exceptions disabled"));
 }
 
 [ when ExceptionsEnabled?]
-overload throwValue(forward x) {
+overload throwValue(forward x) : {
     var exp = allocateObject(Exception(x));
     signalException(RawPointer(exp));
 }
 
-overload continueException(exp:RawPointer) {
+overload continueException(exp:RawPointer) : {
     signalException(exp);
 }
 
@@ -83,7 +83,7 @@ alias throwButPropagateLike(ex, ..expr) {
 /// @section  exceptionIs?, exceptionAs, exceptionAsAny 
 
 [T]
-overload exceptionIs?(#T, exp:RawPointer) = nestedVariantIs?(exceptionObject(exp), T);
+overload exceptionIs?(#T, exp:RawPointer) : Bool = nestedVariantIs?(exceptionObject(exp), T);
 
 [T]
 overload exceptionAs(#T, exp:RawPointer) --> ex:T {
@@ -101,22 +101,22 @@ overload exceptionAsAny(exp:RawPointer) --> ex:Exception {
 /// @section  unhandledExceptionInExternal 
 //
 
-private forceinline errorMsg(msg) {
+private forceinline errorMsg(msg) : {
     libc.fprintf(libc.stderr, cstring(msg));
     showBacktrace();
 }
 
-overload unhandledExceptionInExternal() {
+overload unhandledExceptionInExternal() : {
     errorMsg("unhandled exception in external procedure\n");
     libc.abort();
 }
 
-overload exceptionInInitializer() {
+overload exceptionInInitializer() : {
     errorMsg("exception when initializing globals\n");
     libc.abort();
 }
 
-overload exceptionInFinalizer() {
+overload exceptionInFinalizer() : {
     errorMsg("exception when destroying globals\n");
     libc.abort();
 }

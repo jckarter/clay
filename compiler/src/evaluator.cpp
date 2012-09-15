@@ -440,26 +440,6 @@ ObjectPtr makeTupleValue(const vector<ObjectPtr> &elements)
     return evaluateOneStatic(tupleExpr, new Env());
 }
 
-
-
-//
-// extractTupleElements
-//
-
-void extractTupleElements(EValuePtr ev,
-                          vector<ObjectPtr> &elements)
-{
-    assert(ev->type->typeKind == TUPLE_TYPE);
-    TupleType *tt = (TupleType *)ev->type.ptr();
-    const llvm::StructLayout *layout = tupleTypeLayout(tt);
-    for (unsigned i = 0; i < tt->elementTypes.size(); ++i) {
-        char *addr = ev->addr + layout->getElementOffset(i);
-        EValuePtr evElement = new EValue(tt->elementTypes[i], addr);
-        elements.push_back(evalueToStatic(evElement));
-    }
-}
-
-
 
 //
 // evalueToStatic
@@ -740,10 +720,8 @@ MultiEValuePtr evalForwardExprAsRef(ExprPtr expr, EnvPtr env)
     MultiEValuePtr out = new MultiEValue();
     for (unsigned i = 0; i < mpv->size(); ++i) {
         if (mpv->values[i].isTemp) {
-            EValuePtr ev = mev->values[i];
-            EValuePtr ev2 = new EValue(ev->type, ev->addr);
-            ev2->forwardedRValue = true;
-            out->add(ev2);
+            mev->values[i]->forwardedRValue = true;
+            out->add(mev->values[i]);
         }
         else {
             out->add(derefValue(mev->values[i]));

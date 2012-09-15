@@ -3,33 +3,33 @@
 /// @section  constructor 
 
 [E when Enum?(E)]
-forceinline overload E() = E(0);
+forceinline overload E() : E = E(0);
 
 
 
 /// @section  convert to/from integers 
 
 [E,I when Enum?(E) and Integer?(I)]
-forceinline overload I(a:E) = I(enumToInt(a));
+forceinline overload I(a:E) : I = I(enumToInt(a));
 
 [E when Enum?(E)]
-forceinline overload Int(a:E) = enumToInt(a);
+forceinline overload Int(a:E) : Int = enumToInt(a);
 
 [E,I when Enum?(E) and Integer?(I)]
-forceinline overload E(a:I) = intToEnum(E, Int(a));
+forceinline overload E(a:I) : E = intToEnum(E, Int(a));
 
 [E when Enum?(E)]
-forceinline overload E(a:Int) = intToEnum(E, a);
+forceinline overload E(a:Int) : E = intToEnum(E, a);
 
 
 
 /// @section  equals?, lesser? 
 
 [E when Enum?(E)]
-forceinline overload equals?(a:E, b:E) = (enumToInt(a) == enumToInt(b));
+forceinline overload equals?(a:E, b:E) : Bool = (enumToInt(a) == enumToInt(b));
 
 [E when Enum?(E)]
-forceinline overload lesser?(a:E, b:E) = (enumToInt(a) < enumToInt(b));
+forceinline overload lesser?(a:E, b:E) : Bool = (enumToInt(a) < enumToInt(b));
 
 
 

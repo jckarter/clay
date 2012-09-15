@@ -8,12 +8,12 @@ record ValueCoordinate[T] (hasValue? : Bool, value : T);
 [T] overload ValueCoordinate(value:T) = ValueCoordinate[T](true, value);
 
 [T]
-forceinline overload dereference(c:ValueCoordinate[T]) = c.value;
+forceinline overload dereference(c:ValueCoordinate[T]) : T = c.value;
 
 [T]
-forceinline overload getValue(c:ValueCoordinate[T]) = c.value;
+forceinline overload getValue(c:ValueCoordinate[T]) : T = c.value;
 [T]
-forceinline overload hasValue?(c:ValueCoordinate[T]) = c.hasValue?;
+forceinline overload hasValue?(c:ValueCoordinate[T]) : Bool = c.hasValue?;
 
 [T,I when CallDefined?(add, T, I)]
 forceinline overload add(c:ValueCoordinate[T], i:I) =
@@ -24,16 +24,16 @@ forceinline overload subtract(c:ValueCoordinate[T], i:I) =
     ValueCoordinate(T(c.value - i));
 
 [T when CallDefined?(subtract, T, T)]
-forceinline overload subtract(c1:ValueCoordinate[T], c2:ValueCoordinate[T]) =
+forceinline overload subtract(c1:ValueCoordinate[T], c2:ValueCoordinate[T]) : T =
     c1.value - c2.value;
 
 [T]
-forceinline overload inc(ref c:ValueCoordinate[T]) {
+forceinline overload inc(ref c:ValueCoordinate[T]) : {
     inc(c.value);
 }
 
 [T]
-forceinline overload dec(ref c:ValueCoordinate[T]) {
+forceinline overload dec(ref c:ValueCoordinate[T]) : {
     dec(c.value);
 }
 
@@ -44,7 +44,7 @@ forceinline overload dec(ref c:ValueCoordinate[T]) {
 record ValueReverseCoordinate[T] (value : T);
 
 [T]
-forceinline overload dereference(c:ValueReverseCoordinate[T]) = (c.value - 1);
+forceinline overload dereference(c:ValueReverseCoordinate[T]) : T = (c.value - 1);
 
 [T,I when CallDefined?(subtract, T, I)]
 forceinline overload add(c:ValueReverseCoordinate[T], i:I) =
@@ -55,16 +55,16 @@ forceinline overload subtract(c:ValueReverseCoordinate[T], i:I) =
     ValueReverseCoordinate(T(c.value + i));
 
 [T when CallDefined?(subtract, T, T)]
-forceinline overload subtract(c1:ValueReverseCoordinate[T], c2:ValueReverseCoordinate[T]) =
+forceinline overload subtract(c1:ValueReverseCoordinate[T], c2:ValueReverseCoordinate[T]) : T =
     c2.value - c1.value;
 
 [T]
-forceinline overload inc(ref c:ValueReverseCoordinate[T]) {
+forceinline overload inc(ref c:ValueReverseCoordinate[T]) : {
     dec(c.value);
 }
 
 [T]
-forceinline overload dec(ref c:ValueReverseCoordinate[T]) {
+forceinline overload dec(ref c:ValueReverseCoordinate[T]) : {
     inc(c.value);
 }
 
@@ -78,9 +78,9 @@ record ReverseCoordinate[T] (coord : T);
 forceinline overload dereference(c:ReverseCoordinate[T]) = forward ..(c.coord - 1)^;
 
 [T]
-forceinline overload getValue(c:ReverseCoordinate[T]) = forward ..getValue(c.coord - 1);
+forceinline overload getValue(c:ReverseCoordinate[T]) : T = forward ..getValue(c.coord - 1);
 [T]
-forceinline overload hasValue?(c:ReverseCoordinate[T]) = hasValue?(c.coord);
+forceinline overload hasValue?(c:ReverseCoordinate[T]) : Bool = hasValue?(c.coord);
 
 [T,I when CallDefined?(subtract, T, I)]
 forceinline overload add(c:ReverseCoordinate[T], i:I) =
@@ -91,15 +91,15 @@ forceinline overload subtract(c:ReverseCoordinate[T], i:I) =
     ReverseCoordinate(T(c.coord + i));
 
 [T when CallDefined?(subtract, T, T)]
-forceinline overload subtract(c1:ReverseCoordinate[T], c2:ReverseCoordinate[T]) =
+forceinline overload subtract(c1:ReverseCoordinate[T], c2:ReverseCoordinate[T]) : T =
     c2.coord - c1.coord;
 
 [T]
-forceinline overload inc(ref c:ReverseCoordinate[T]) {
+forceinline overload inc(ref c:ReverseCoordinate[T]) : {
     dec(c.coord);
 }
 
 [T]
-forceinline overload dec(ref c:ReverseCoordinate[T]) {
+forceinline overload dec(ref c:ReverseCoordinate[T]) : {
     inc(c.coord);
 }
