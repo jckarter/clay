@@ -18,13 +18,13 @@ forceinline overload Maybe[T]() = Maybe[T](Nothing());
 forceinline nothing(T) = Maybe[T]();
 
 Maybe?(T) = false;
-[T] overload Maybe?(#Maybe[T]) = true;
+[T] overload Maybe?(#Maybe[T]) : Bool = true;
 
 
 /// @section  nothing? 
 
-forceinline nothing?(x) = variantIs?(x, Nothing);
-forceinline just?(x) = variantIs?(x, Type(just(x)));
+forceinline nothing?(x) : Bool = variantIs?(x, Nothing);
+forceinline just?(x) : Bool = variantIs?(x, Type(just(x)));
 
 [T]
 forceinline just(forward m: Maybe[T]) = forward variantAs(m, T);
@@ -74,7 +74,7 @@ forceinline overload require(forward m:Maybe[T]) {
 
 /// @section  maybe as iterator value 
 
-[T] forceinline overload hasValue?(m:Maybe[T]) = just?(m);
+[T] forceinline overload hasValue?(m:Maybe[T]) : Bool = just?(m);
 [T] forceinline overload getValue(forward m:Maybe[T]) = forward just(m);
 
 forceinline getMaybeValue(v) {

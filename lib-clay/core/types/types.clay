@@ -59,7 +59,7 @@ forceinline overload typesToRValues(..a) = ..mapValues(typeToRValue, ..a);
 
 /// @section  ByRef[T] - return-by-reference type helper from __primitives__ 
 
-[T] overload RegularRecord?(#ByRef[T]) = false;
+[T] overload RegularRecord?(#ByRef[T]) : Bool = false;
 
 
 
