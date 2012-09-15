@@ -5,7 +5,7 @@ import core.libc as libc;
 /// @section  error (exceptions disabled) 
 
 [fmt]
-errorWithPrintfNoThrow(#fmt, ..e) {
+errorWithPrintfNoThrow(#fmt, ..e) : {
     libc.fprintf(libc.stderr, cstring(strl("error: ", fmt, "\n")), ..e);
     showBacktrace();
     libc.abort();
@@ -14,7 +14,7 @@ errorWithPrintfNoThrow(#fmt, ..e) {
 define errorWithPrintf;
 
 [fmt when not ExceptionsEnabled?]
-overload errorWithPrintf(#fmt, ..e) {
+overload errorWithPrintf(#fmt, ..e) : {
     errorWithPrintfNoThrow(fmt, ..e);
 }
 
@@ -22,21 +22,21 @@ overload errorWithPrintf(#fmt, ..e) {
 /// @section  error (exceptions enabled) 
 
 record Error (msg : CStringRef);
-overload RegularRecord?(#Error) = false;
-overload BitwiseMovedType?(#Error) = true;
-overload Error(e:Error) {
+overload RegularRecord?(#Error) : Bool = false;
+overload BitwiseMovedType?(#Error) : Bool = true;
+overload Error(e:Error) --> ret:Error {
     if (null?(e.msg.ptr))
-        return Error(CStringRef());
+        ret <-- Error(CStringRef());
     else
-        return Error(CStringRef(libc.strdup(e.msg.ptr)));
+        ret <-- Error(CStringRef(libc.strdup(e.msg.ptr)));
 }
-overload resetUnsafe(e:Error) { e.msg.ptr = Pointer[Int8](); }
-overload destroy(e:Error) { libc.free(e.msg.ptr); }
+overload resetUnsafe(e:Error) : { e.msg.ptr = Pointer[Int8](); }
+overload destroy(e:Error) : { libc.free(e.msg.ptr); }
 
 instance Exception (Error);
 
 [fmt when ExceptionsEnabled?]
-overload errorWithPrintf(#fmt, ..e) {
+overload errorWithPrintf(#fmt, ..e) : {
     var bufp = Pointer[CChar]();
     libc.asprintf(@bufp, fmt, ..e);
     throw Error(CStringRef(bufp));
@@ -45,8 +45,8 @@ overload errorWithPrintf(#fmt, ..e) {
 
 /// @section  assert 
 
-AllAssertionsEnabled?() = not Flag?("clay.DisableAssertions");
-AssertionEnabled?(tag) = not Flag?(stringLiteralConcat("clay.DisableAssertions.",tag));
+AllAssertionsEnabled?() : Bool = not Flag?("clay.DisableAssertions");
+AssertionEnabled?(tag) : Bool = not Flag?(stringLiteralConcat("clay.DisableAssertions.",tag));
 
 [..tags when allValues?(StringLiteral?, ..tags)]
 record assert[..tags] ();
@@ -61,14 +61,14 @@ private assertStringLiteral(#file, #line, #column, #cond, ..etc)
     = strl(#file, "(", #line, ",", #column, "): assertion ", #cond, " failed", ..etc);
 
 [when AllAssertionsEnabled?()]
-alias overload assert(cond:Bool) {
+alias overload assert(cond:Bool) : {
     if (not cond)
         errorWithPrintfNoThrow(
             assertStringLiteral(__FILE__, #__LINE__, #__COLUMN__, __ARG__ cond));
 }
 
 [..tags when AllAssertionsEnabled?() and allValues?(AssertionEnabled?, ..tags)]
-alias overload assert[..tags](cond:Bool) {
+alias overload assert[..tags](cond:Bool) : {
     if (not cond)
         errorWithPrintfNoThrow(
             assertStringLiteral(__FILE__, #__LINE__, #__COLUMN__, __ARG__ cond));

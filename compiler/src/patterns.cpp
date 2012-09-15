@@ -95,12 +95,13 @@ static PatternPtr objectToPattern(ObjectPtr obj)
     case VALUE_HOLDER : {
         ValueHolder *x = (ValueHolder *)obj.ptr();
         if (x->type->typeKind == TUPLE_TYPE) {
-            vector<ObjectPtr> elements;
-            EValuePtr y = new EValue(x->type, x->buf);
-            extractTupleElements(y, elements);
+            TupleType *tt = (TupleType *)x->type.ptr();
+            const llvm::StructLayout *layout = tupleTypeLayout(tt);
             MultiPatternListPtr params = new MultiPatternList();
-            for (unsigned i = 0; i < elements.size(); ++i) {
-                PatternPtr y = objectToPattern(elements[i]);
+            for (unsigned i = 0; i < tt->elementTypes.size(); ++i) {
+                char *addr = x->buf + layout->getElementOffset(i);
+                EValuePtr evElement = new EValue(tt->elementTypes[i], addr);
+                PatternPtr y = objectToPattern(evalueToStatic(evElement));
                 params->items.push_back(y);
             }
             return new PatternStruct(NULL, params.ptr());

@@ -3,7 +3,7 @@
 /// @section  Union? 
 
 Union?(x) = false;
-[..T] overload Union?(#Union[..T]) = true;
+[..T] overload Union?(#Union[..T]) : Bool = true;
 
 
 /// @section  UnionMembers 

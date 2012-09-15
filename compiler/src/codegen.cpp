@@ -3738,10 +3738,9 @@ bool codegenStatement(StatementPtr stmt,
         }
         CallPtr call;
         if (x->op == PREFIX_OP)
-            call = new Call(operator_expr_prefixUpdateAssign(), new ExprList());
+            call = new Call(operator_expr_prefixUpdateAssign(), x->exprs);
         else
-            call = new Call(operator_expr_updateAssign(), new ExprList());        
-        call->parenArgs->add(x->exprs);
+            call = new Call(operator_expr_updateAssign(), x->exprs);        
         return codegenStatement(new ExprStatement(call.ptr()), env, ctx);
     }
 

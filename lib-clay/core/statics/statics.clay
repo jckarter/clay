@@ -5,8 +5,8 @@ public import __primitives__.(Static);
 
 /// @section  Static? predicate 
 
-Static?(x) = false;
-[T] overload Static?(#T) = true;
+Static?(x) : Bool = false;
+[T] overload Static?(#T) : Bool = true;
 
 
 
@@ -29,13 +29,13 @@ forceinline overload moveUnsafe(src:Static[A]) --> returned:Static[A] {
 /// @section  equals?, lesser? 
 
 [A, B]
-forceinline overload equals?(a:Static[A], b:Static[B]) = false;
+forceinline overload equals?(a:Static[A], b:Static[B]) : Bool = false;
 
 [A]
-forceinline overload equals?(a:Static[A], b:Static[A]) = true;
+forceinline overload equals?(a:Static[A], b:Static[A]) : Bool = true;
 
 [A]
-forceinline overload lesser?(a:Static[A], b:Static[A]) = false;
+forceinline overload lesser?(a:Static[A], b:Static[A]) : Bool = false;
 
 
 
