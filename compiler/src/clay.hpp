@@ -3690,8 +3690,6 @@ ValueHolderPtr boolToValueHolder(bool x);
 size_t valueHolderToSizeT(ValueHolderPtr vh);
 
 ObjectPtr makeTupleValue(const vector<ObjectPtr> &elements);
-void extractTupleElements(EValuePtr ev,
-                          vector<ObjectPtr> &elements);
 ObjectPtr evalueToStatic(EValuePtr ev);
 
 struct EValue : public Object {
