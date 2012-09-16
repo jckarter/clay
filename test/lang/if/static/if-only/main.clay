@@ -1,0 +1,18 @@
+import printer.*;
+
+[I when Integer?(I)]
+printInteger(i: I) {
+    println("it is integer");
+}
+
+foo(t) {
+    if (#Integer?(Type(t))) {
+        printInteger(t);
+    }
+}
+
+main() {
+    foo(1);
+    foo(1.0);
+    foo("aa");
+}

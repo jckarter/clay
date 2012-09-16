@@ -3655,6 +3655,15 @@ bool staticToBool(MultiStaticPtr x, unsigned index);
 bool staticToCallingConv(ObjectPtr x, CallingConv &out);
 CallingConv staticToCallingConv(MultiStaticPtr x, unsigned index);
 
+
+enum BoolKind {
+    BOOL_EXPR,
+    BOOL_STATIC_TRUE,
+    BOOL_STATIC_FALSE,
+};
+
+BoolKind typeBoolKind(TypePtr type);
+
 
 //
 // evaluator
@@ -3730,7 +3739,7 @@ void evalValueCopy(EValuePtr dest, EValuePtr src);
 void evalValueMove(EValuePtr dest, EValuePtr src);
 void evalValueAssign(EValuePtr dest, EValuePtr src);
 void evalValueMoveAssign(EValuePtr dest, EValuePtr src);
-bool evalToBoolFlag(EValuePtr a);
+bool evalToBoolFlag(EValuePtr a, bool acceptStatics);
 
 int evalMarkStack();
 void evalDestroyStack(int marker);
