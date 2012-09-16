@@ -1,0 +1,14 @@
+import printer.*;
+
+foo(t) {
+    if (#(Type(t) == Int)) {
+        return 0 + t;
+    } else {
+        return false or t;
+    }
+}
+
+main() {
+    println(#foo(1));
+    println(#foo(true));
+}

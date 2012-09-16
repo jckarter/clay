@@ -1,0 +1,22 @@
+import printer.*;
+
+printInt(i: Int) {
+    println(i);
+}
+
+printFloat(f: Float) {
+    println(f);
+}
+
+printNumber(n) {
+    if (#(Type(n) == Int)) {
+        printInt(n);
+    } else {
+        printFloat(n);
+    }
+}
+
+main() {
+    printNumber(17);
+    printNumber(19.0f);
+}

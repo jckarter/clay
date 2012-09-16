@@ -3817,34 +3817,56 @@ bool codegenStatement(StatementPtr stmt,
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
         CValuePtr cv = codegenOneAsRef(x->condition, env2, ctx);
-        llvm::Value *cond = codegenToBoolFlag(cv, ctx);
+        BoolKind condBoolKind = typeBoolKind(cv->type);
+        llvm::Value *cond;
+        if (condBoolKind == BOOL_EXPR) {
+            cond = codegenToBoolFlag(cv, ctx);
+        }
         cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
 
-        llvm::BasicBlock *trueBlock = newBasicBlock("ifTrue", ctx);
-        llvm::BasicBlock *falseBlock = newBasicBlock("ifFalse", ctx);
+        llvm::BasicBlock *trueBlock = NULL;
+        llvm::BasicBlock *falseBlock = NULL;
         llvm::BasicBlock *mergeBlock = NULL;
+        if (condBoolKind == BOOL_EXPR || condBoolKind == BOOL_STATIC_TRUE) {
+            trueBlock = newBasicBlock("ifTrue", ctx);
+        }
+        if (condBoolKind == BOOL_EXPR || condBoolKind == BOOL_STATIC_FALSE) {
+            falseBlock = newBasicBlock("ifFalse", ctx);
+        }
 
-        ctx->builder->CreateCondBr(cond, trueBlock, falseBlock);
+        if (condBoolKind == BOOL_EXPR) {
+            ctx->builder->CreateCondBr(cond, trueBlock, falseBlock);
+        } else {
+            ctx->builder->CreateBr(condBoolKind == BOOL_STATIC_TRUE ? trueBlock : falseBlock);
+        }
 
         bool terminated1 = false;
         bool terminated2 = false;
 
-        ctx->builder->SetInsertPoint(trueBlock);
-        terminated1 = codegenStatement(x->thenPart, env2, ctx);
-        if (!terminated1) {
-            if (!mergeBlock)
-                mergeBlock = newBasicBlock("ifMerge", ctx);
-            ctx->builder->CreateBr(mergeBlock);
+        if (condBoolKind == BOOL_EXPR || condBoolKind == BOOL_STATIC_TRUE) {
+            ctx->builder->SetInsertPoint(trueBlock);
+            terminated1 = codegenStatement(x->thenPart, env2, ctx);
+            if (!terminated1) {
+                if (!mergeBlock)
+                    mergeBlock = newBasicBlock("ifMerge", ctx);
+                ctx->builder->CreateBr(mergeBlock);
+            }
+        } else {
+            terminated1 = true;
         }
 
-        ctx->builder->SetInsertPoint(falseBlock);
-        if (x->elsePart.ptr())
-            terminated2 = codegenStatement(x->elsePart, env2, ctx);
-        if (!terminated2) {
-            if (!mergeBlock)
-                mergeBlock = newBasicBlock("ifMerge", ctx);
-            ctx->builder->CreateBr(mergeBlock);
+        if (condBoolKind == BOOL_EXPR || condBoolKind == BOOL_STATIC_FALSE) {
+            ctx->builder->SetInsertPoint(falseBlock);
+            if (x->elsePart.ptr())
+                terminated2 = codegenStatement(x->elsePart, env2, ctx);
+            if (!terminated2) {
+                if (!mergeBlock)
+                    mergeBlock = newBasicBlock("ifMerge", ctx);
+                ctx->builder->CreateBr(mergeBlock);
+            }
+        } else {
+            terminated2 = true;
         }
 
         if (!terminated1 || !terminated2)

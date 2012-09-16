@@ -577,10 +577,18 @@ void evalValueMoveAssign(EValuePtr dest, EValuePtr src)
                   new MultiEValue());
 }
 
-bool evalToBoolFlag(EValuePtr a)
+bool evalToBoolFlag(EValuePtr a, bool acceptStatics)
 {
-    if (a->type != boolType)
-        typeError(boolType, a->type);
+    BoolKind boolKind = typeBoolKind(a->type);
+
+    if (boolKind == BOOL_EXPR) {
+        return a->as<bool>();
+    } else {
+        if (!acceptStatics) {
+            typeError(boolType, a->type);
+        }
+        return boolKind == BOOL_STATIC_TRUE;
+    }
     return a->as<bool>();
 }
 
@@ -1097,9 +1105,9 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         And *x = (And *)expr.ptr();
         EValuePtr ev1 = evalOneAsRef(x->expr1, env);
         bool result = false;
-        if (evalToBoolFlag(ev1)) {
+        if (evalToBoolFlag(ev1, false)) {
             EValuePtr ev2 = evalOneAsRef(x->expr2, env);
-            result = evalToBoolFlag(ev2);
+            result = evalToBoolFlag(ev2, false);
         }
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
@@ -1112,9 +1120,9 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         Or *x = (Or *)expr.ptr();
         EValuePtr ev1 = evalOneAsRef(x->expr1, env);
         bool result = true;
-        if (!evalToBoolFlag(ev1)) {
+        if (!evalToBoolFlag(ev1, false)) {
             EValuePtr ev2 = evalOneAsRef(x->expr2, env);
-            result = evalToBoolFlag(ev2);
+            result = evalToBoolFlag(ev2, false);
         }
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
@@ -2218,7 +2226,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
         int tempMarker = evalMarkStack();
         EValuePtr ev = evalOneAsRef(x->condition, env2);
-        bool flag = evalToBoolFlag(ev);
+        bool flag = evalToBoolFlag(ev, true);
         evalDestroyAndPopStack(tempMarker);
         if (flag)
             return evalStatement(x->thenPart, env2, ctx);
@@ -2267,7 +2275,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
             int tempMarker = evalMarkStack();
             EValuePtr ev = evalOneAsRef(x->condition, env2);
-            bool flag = evalToBoolFlag(ev);
+            bool flag = evalToBoolFlag(ev, false);
             evalDestroyAndPopStack(tempMarker);
 
             if (!flag) break;
