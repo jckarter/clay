@@ -2189,10 +2189,21 @@ StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContex
             return SA_RECURSIVE;
         }
 
-        StatementAnalysis thenResult, elseResult;
-        thenResult = analyzeStatement(x->thenPart, env2, ctx);
-        elseResult = SA_FALLTHROUGH;
-        if (x->elsePart.ptr())
+        MultiPValue *cond = analyzeExpr(x->condition, env2).ptr();
+
+        if (cond->values.size() != 1) {
+            arityError(1, cond->values.size());
+        }
+
+        PVData& condPvData = cond->values[0];
+
+        BoolKind condKind = typeBoolKind(condPvData.type);
+
+        StatementAnalysis thenResult = SA_FALLTHROUGH;
+        StatementAnalysis elseResult = SA_FALLTHROUGH;
+        if (condKind == BOOL_EXPR || condKind == BOOL_STATIC_TRUE)
+            thenResult = analyzeStatement(x->thenPart, env2, ctx);
+        if ((condKind == BOOL_EXPR || condKind == BOOL_STATIC_FALSE) && x->elsePart.ptr())
             elseResult = analyzeStatement(x->elsePart, env2, ctx);
         return combineStatementAnalysis(thenResult, elseResult);
     }
@@ -3364,6 +3375,27 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         assert(false);
         return NULL;
 
+    }
+}
+
+BoolKind typeBoolKind(TypePtr type) {
+    if (type == boolType) {
+        return BOOL_EXPR;
+    } else if (type->typeKind == STATIC_TYPE) {
+        bool staticValue;
+        StaticType * staticType = (StaticType *) type.ptr();
+        if (staticType->obj->objKind != VALUE_HOLDER) {
+            error("expecting value holder");
+        }
+        ValueHolder* valueHolder = (ValueHolder *) staticType->obj.ptr();
+        if (valueHolder->type != boolType) {
+            typeError(boolType, valueHolder->type);
+        }
+        staticValue = valueHolder->as<bool>();
+        return staticValue ? BOOL_STATIC_TRUE : BOOL_STATIC_FALSE;
+    } else {
+        typeError("Bool or static Bool", type);
+        return BOOL_STATIC_TRUE;
     }
 }
 
