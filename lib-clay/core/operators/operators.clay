@@ -602,6 +602,10 @@ alias overload ifExpression(condition, ref consequent:T, ref alternate:T) : ByRe
         return ref alternate;
 }
 
+alias overload ifExpression(#true, consequent, alternate) = forward consequent;
+alias overload ifExpression(#false, consequent, alternate) = forward alternate;
+
+
 [consequent, alternate when StringLiteral?(consequent) and StringLiteral?(alternate)]
 alias overload ifExpression(condition, #consequent, #alternate) --> ret:StringLiteralRef {
     if (condition)
