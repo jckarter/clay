@@ -1,0 +1,2 @@
+4 Int32
+not float Static["not float"]

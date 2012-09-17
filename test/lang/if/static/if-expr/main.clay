@@ -1,0 +1,8 @@
+import printer.*;
+
+main() {
+    var a = if (#(TypeSize(Int32) == 4)) 4 else "something wrong";
+    println(a, " ", Type(a));
+    var b = if (#(Type(a) == Float)) true else "not float";
+    println(b, " ", Type(b));
+}
