@@ -13,7 +13,7 @@ main() {
     }
     {
         var bv = BufferVector(begin(buf), begin(buf) + 11);
-        push(bv, "Hello World");
+        pushAll(bv, "Hello World");
         println(size(bv));
         println(bv);
     }

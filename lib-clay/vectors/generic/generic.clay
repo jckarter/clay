@@ -68,8 +68,8 @@ forceinline overload front(a:V) = ref a[0];
 forceinline overload back(a:V) = ref a[size(a) - 1];
 
 [V, S when Vector?(V) and Sequence?(S) and (SequenceElementType(S) == SequenceElementType(V))]
-overload push(a:V, forward seq:S) {
-    insert(a, size(a), seq);
+overload pushAll(a:V, forward seq:S) {
+    insertAll(a, size(a), seq);
 }
 
 [V, T when Vector?(V) and (SequenceElementType(V) == T)]
@@ -147,7 +147,7 @@ overload insertLocationsUnsafe(a, pos:SizeT, n:SizeT) {
 
 [V,I,S when Vector?(V) and Integer?(I) and Sequence?(S) and
          (SequenceElementType(S) == SequenceElementType(V))]
-overload insert(a:V, i:I, seq:S) {
+overload insertAll(a:V, i:I, seq:S) {
     assert(i >= 0 and i <= size(a), "invalid position for insert into ", V);
     var pos = SizeT(i);
     for (x in seq) {
@@ -158,7 +158,7 @@ overload insert(a:V, i:I, seq:S) {
 
 [V,I,S when Vector?(V) and Integer?(I) and SizedSequence?(S) and
          (SequenceElementType(S) == SequenceElementType(V))]
-overload insert(a:V, i:I, seq:S) {
+overload insertAll(a:V, i:I, seq:S) {
     assert(i >= 0 and i <= size(a), "invalid position for insert into ", V);
     var first, last = ..insertLocationsUnsafe(a, i, size(seq));
     try {
@@ -176,7 +176,7 @@ overload insert(a:V, i:I, seq:S) {
 [V,I,S when Vector?(V) and Integer?(I)
          and SizedSequence?(S) and ContiguousSequence?(S)
          and (SequenceElementType(S) == SequenceElementType(V))]
-overload insert(a:V, i:I, seq:S) {
+overload insertAll(a:V, i:I, seq:S) {
     assert(i >= 0 and i <= size(a), "invalid position for insert into ", V);
     var first, last = ..insertLocationsUnsafe(a, i, size(seq));
     try {
@@ -192,7 +192,7 @@ overload insert(a:V, i:I, seq:S) {
 [V,I,S when Vector?(V) and Integer?(I)
          and SequenceContainer?(S) and SizedSequence?(S)
          and (SequenceElementType(S) == SequenceElementType(V))]
-overload insert(a:V, i:I, rvalue seq:S) {
+overload insertAll(a:V, i:I, rvalue seq:S) {
     assert(i >= 0 and i <= size(a), "invalid position for insert into ", V);
     var first, last = ..insertLocationsUnsafe(a, i, size(seq));
     for (x in seq) {
@@ -204,7 +204,7 @@ overload insert(a:V, i:I, rvalue seq:S) {
 [V,I,S when Vector?(V) and Integer?(I)
          and SequenceContainer?(S) and ContiguousSequence?(S)
          and (SequenceElementType(S) == SequenceElementType(V))]
-overload insert(a:V, i:I, rvalue seq:S) {
+overload insertAll(a:V, i:I, rvalue seq:S) {
     assert(i >= 0 and i <= size(a), "invalid position for insert into ", V);
     var first, last = ..insertLocationsUnsafe(a, i, size(seq));
     var src = begin(seq);
@@ -226,7 +226,7 @@ overload insert(a:V, i:I, rvalue x:T) {
 
 [V,T,S when Vector?(V) and (SequenceElementType(V) == T) and
          Sequence?(S) and (SequenceElementType(S) == T)]
-overload insert(a:V, i:VectorCoordinate[T], forward seq:S) {
+overload insertAll(a:V, i:VectorCoordinate[T], forward seq:S) {
     insert(a, i-begin(a), seq);
 }
 

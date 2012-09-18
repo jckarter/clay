@@ -234,14 +234,16 @@ overload Deque(forward from:A) = Deque(mapped(Tuple, from));
         pushFrontDeque1(deque, value);
 }
 
+define pushFrontAll(s, vs);
+
 [T, S when Sequence?(S) and SequenceElementType(S) == T]
-overload pushFront(deque: Deque[T], forward seq: S) {
+overload pushFrontAll(deque: Deque[T], forward seq: S) {
     for (x in reversed(seq))
         pushFront(deque, x);
 }
 
 [T, S when SizedSequence?(S) and SequenceElementType(S) == T]
-overload pushFront(deque: Deque[T], forward seq: S) {
+overload pushFrontAll(deque: Deque[T], forward seq: S) {
     var seqSize = size(seq);
     deque.begin = reserveDequeFrontElements(deque, seqSize);
     var i = deque.begin + seqSize;
@@ -257,7 +259,7 @@ overload pushFront(deque: Deque[T], forward seq: S) {
     }
 }
 
-[T] overload push(deque: Deque[T], forward value) {
+[T] overload push(deque: Deque[T], forward value: T) {
     if (deque.end.current != deque.end.last - 1) {
         deque.end.current^ <-- value;
         deque.end.current +: 1;
@@ -265,14 +267,8 @@ overload pushFront(deque: Deque[T], forward seq: S) {
         pushDeque1(deque, value);
 }
 
-[T, S when Sequence?(S) and SequenceElementType(S) == T]
-overload push(deque: Deque[T], forward seq: S) {
-    for (x in seq)
-        push(deque, x);
-}
-
 [T, S when SizedSequence?(S) and SequenceElementType(S) == T]
-overload push(deque: Deque[T], forward seq: S) {
+overload pushAll(deque: Deque[T], forward seq: S) {
     var seqSize = size(seq);
     deque.end = reserveDequeBackElements(deque, seqSize);
     var i = deque.end - seqSize;
@@ -311,11 +307,11 @@ overload push(deque: Deque[T], forward seq: S) {
 }
 
 [T, I when Integer?(I)]
-overload insert(deque: Deque[T], n: I, forward value) {
+overload insert(deque: Deque[T], n: I, forward value: T) {
     insert(deque, deque.begin + n, value);
 }
 
-[T] overload insert(deque: Deque[T], i: DequeCoordinate[T], forward value) {
+[T] overload insert(deque: Deque[T], i: DequeCoordinate[T], forward value: T) {
     assert["boundsChecks"](validDequeCoordinate?(deque, i),
         "invalid insert coordinate into ", Deque[T]);
     if (i.current == deque.begin.current)
@@ -332,13 +328,13 @@ overload insert(deque: Deque[T], n: I, forward seq: S) {
 }
 
 [T, S when Sequence?(S) and SequenceElementType(S) == T]
-overload insert(deque: Deque[T], i: DequeCoordinate[T], forward seq: S) {
+overload insertAll(deque: Deque[T], i: DequeCoordinate[T], forward seq: S) {
     assert["boundsChecks"](validDequeCoordinate?(deque, i),
         "invalid insert coordinate into ", Deque[T]);
     if (i.current == deque.begin.current)
-        pushFront(deque, seq);
+        pushFrontAll(deque, seq);
     else if (i.current == deque.end.current)
-        push(deque, seq);
+        pushAll(deque, seq);
     else
         insertDequeSequence(deque, i, seq);
 }

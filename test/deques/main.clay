@@ -263,25 +263,25 @@ main() {
     for (x in d7) print(x, " ");
     println();
 
-    insert(d7, begin(d7), range(5));
+    insertAll(d7, begin(d7), range(5));
     println("Insert sequence front size ", size(d7));
     print("Contents: ");
     for (x in d7) print(x, " ");
     println();
 
-    insert(d7, end(d7), range(36, 41));
+    insertAll(d7, end(d7), range(36, 41));
     println("Insert sequence back size ", size(d7));
     print("Contents: ");
     for (x in d7) print(x, " ");
     println();
 
-    insert(d7, begin(d7) + 6, range(6, 10));
+    insertAll(d7, begin(d7) + 6, range(6, 10));
     println("Insert sequence front half size ", size(d7));
     print("Contents: ");
     for (x in d7) print(x, " ");
     println();
 
-    insert(d7, end(d7) - 6, range(31, 35));
+    insertAll(d7, end(d7) - 6, range(31, 35));
     println("Insert sequence back half size ", size(d7));
     print("Contents: ");
     for (x in d7) print(x, " ");

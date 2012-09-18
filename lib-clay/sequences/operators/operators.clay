@@ -70,7 +70,7 @@ forceinline overload reduceToScalar(forward i) = ;
             ..mapValues(SequenceElementType,..B)) and not StringLiteralType?(A,..B)]
 overload (++)(forward a:A, forward ..b:B) {
     var result = Vector(a);
-    push(result, ..b);
+    pushAll(result, ..b);
     return move(result);
 }
 
@@ -90,8 +90,10 @@ overload removeCatFromList(forward a, #cat, forward ..args) = forward a, ..remov
 overload removeCatFromList(forward a) = forward a;
 
 [A, ..B when Sequence?(A)]
-overload updateAssign(#(++), forward a:A, forward ..b:B) {
-    push(a, ..removeCatFromList(..b));
+overload updateAssign(#(++), forward a:A, forward ..bs:B) {
+    ..for (b in ..removeCatFromList(..bs)) {
+        pushAll(a, b);
+    }
 }
 
 [A, T when Sequence?(A) and (SequenceElementType(A) == T)]

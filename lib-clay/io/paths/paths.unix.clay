@@ -84,7 +84,7 @@ private appendPath(path:String, part) {
     else {
         if ((not empty?(path)) and (not endsWith?(path, '/')))
             push(path, '/');
-        push(path, part);
+        pushAll(path, part);
     }
 }
 

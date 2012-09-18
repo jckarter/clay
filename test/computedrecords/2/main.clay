@@ -31,7 +31,7 @@ alias VPoint = Vectorized[Point];
 
 main() {
     var a = VPoint();
-    push(a.x, array(1, 2, 3));
-    push(a.y, array(4, 5, 6));
+    pushAll(a.x, array(1, 2, 3));
+    pushAll(a.y, array(4, 5, 6));
     println(a);
 }

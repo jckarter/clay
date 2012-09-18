@@ -117,6 +117,9 @@ define back(s:S);
 [S] // when Sequence?(S)
 define push(s:S, ..vs) :;
 
+[S, Vs when Sequence?(S) and Sequence?(Vs)]
+define pushAll(s:S, vs:Vs) :;
+
 [S when Sequence?(S)]
 define pop(s:S);
 
@@ -125,6 +128,9 @@ define clear(s) :;
 
 [S when Sequence?(S)]
 define insert(s:S, coord, v) :;
+
+[S, Vs when Sequence?(S) and Sequence?(Vs)]
+define insertAll(s:S, coord, vs:Vs) :;
 
 // defined for collections
 define remove;
@@ -144,6 +150,24 @@ define pushFront(s:S, v) :;
 
 [S when Sequence?(S)]
 define popFront(s:S);
+
+
+
+// default implementation using `push`
+overload pushAll(s, vs) {
+    for (v in vs) {
+        push(s, v);
+    }
+}
+
+// default implementation using `insert`
+overload insertAll(s, coord, vs) {
+    var insertPoint = coord;
+    for (v in vs) {
+        insert(v, insertPoint, vs);
+        insertPoint +: 1;
+    }
+}
 
 
 // defined for statically sized sequences like Array[T,n]
