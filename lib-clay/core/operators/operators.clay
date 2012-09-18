@@ -151,6 +151,15 @@ define popFront(s:S);
 define StaticSize(#S);
 
 
+overload push(s) {}
+
+overload push(s, forward v1, forward v2, forward ..vs) {
+    ..for (v in v1, v2, ..vs) {
+        push(s, v);
+    }
+}
+
+
 
 /// @section  sequence type predicates 
 
