@@ -16,7 +16,7 @@ bar(str, throw?) {
     println("--> bar");
 
     var s = String("abc");
-    push(s, str);
+    pushAll(s, str);
     onerror println("<-- threw, s = ", s);
 
     println("lalala");

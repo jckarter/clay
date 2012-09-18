@@ -215,7 +215,7 @@ forceinline expectCallUndefined(test: TestStatus, Proc, ..Types) {
 inline expectIterator(test: TestStatus, name, iter:I, ..expected) {
     var expectedV = Vector[IteratorTargetType(I)](..expected);
     var resultV = Vector[IteratorTargetType(I)]();
-    push(resultV, iter);
+    pushAll(resultV, iter);
     var msg = str(name, " is expected to contain:\n");
     for (expectedX in expectedV)
         push(msg, TEST_FAIL_CASE_INDENT, str(repr(expectedX)),"\n");
