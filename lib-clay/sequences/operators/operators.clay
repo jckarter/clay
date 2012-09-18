@@ -94,11 +94,6 @@ overload updateAssign(#(++), forward a:A, forward ..b:B) {
     push(a, ..removeCatFromList(..b));
 }
 
-[A, ..T when Sequence?(A)]
-overload updateAssign(#(++), forward a:A, forward ..x:T) {
-    push(a, ..removeCatFromList(..x));
-}
-
 [A, T when Sequence?(A) and (SequenceElementType(A) == T)]
 overload updateAssign(#(++), forward x:T, forward a:A) {
     insert(a,0,x);
