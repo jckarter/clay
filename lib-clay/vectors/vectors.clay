@@ -41,7 +41,7 @@ overload Vector[T]() = Vector[T](SizeT(0), SizeT(0), null(T));
 [T,A when Sequence?(A) and (T == SequenceElementType(A))]
 overload Vector[T](forward a:A) {
     var v = Vector[T]();
-    push(v, a);
+    pushAll(v, a);
     return move(v);
 }
 

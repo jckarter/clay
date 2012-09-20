@@ -15,7 +15,7 @@ bar(str, throw?) {
     println("--> bar");
 
     var s = String("abc");
-    push(s, str);
+    pushAll(s, str);
     finally println("<-- ", s);
 
     println("lalala");

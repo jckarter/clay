@@ -157,16 +157,16 @@ test() {
     var d10 = Deque[Canary](Canary(), Canary(), Canary());
 
     println("inserting d10 into d9 front");
-    insert(d9, begin(d9), d10);
+    insertAll(d9, begin(d9), d10);
 
     println("inserting d10 into d9 back");
-    insert(d9, end(d9), d10);
+    insertAll(d9, end(d9), d10);
 
     println("inserting d10 into d9 front half sequence");
-    insert(d9, begin(d9) + 2, d10);
+    insertAll(d9, begin(d9) + 2, d10);
 
     println("inserting d10 into d9 back half sequence");
-    insert(d9, end(d9) - 2, d10);
+    insertAll(d9, end(d9) - 2, d10);
 
     println("making deque d11");
     var d11 = Deque[Canary](Canary(), Canary(), Canary(), Canary());
@@ -193,7 +193,7 @@ test() {
         var d14 = d11;
 
         println("inserting into d14 front half sequence with throw");
-        insert(d14, begin(d14) + 1, throwerDeque);
+        insertAll(d14, begin(d14) + 1, throwerDeque);
     } catch(x) {}
 
     try {
@@ -201,7 +201,7 @@ test() {
         var d15 = d11;
 
         println("inserting into d15 back half sequence with throw");
-        insert(d15, end(d15) - 1, throwerDeque);
+        insertAll(d15, end(d15) - 1, throwerDeque);
     } catch(x) {}
 
     try {
@@ -209,7 +209,7 @@ test() {
         var d16 = d11;
 
         println("pushing sequence onto deque d16 with throw");
-        push(d16, throwerDeque);
+        pushAll(d16, throwerDeque);
     } catch(x) {}
 
     try {
@@ -217,7 +217,7 @@ test() {
         var d17 = d11;
 
         println("pushing sequence onto front of deque d17 with throw");
-        pushFront(d17, throwerDeque);
+        pushFrontAll(d17, throwerDeque);
     } catch(x) {}
 
     println("d1, d7, d8, d9, d10, d11 leaving scope");

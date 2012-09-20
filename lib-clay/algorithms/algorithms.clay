@@ -287,23 +287,27 @@ overload advancePast(pos:C, x:T) {
 
 /// @section  join 
 
+define join(sep, seq);
+
 [S, A when Sequence?(A) and Sequence?(SequenceElementType(A))
-        and ((S == SequenceElementType(SequenceElementType(A)))
-             or (Sequence?(S)
-                 and (SequenceElementType(S) == SequenceElementType(SequenceElementType(A)))))]
-join(sep:S, a:A) {
+    and Sequence?(S) and (SequenceElementType(S) == SequenceElementType(SequenceElementType(A)))]
+overload join(sep:S, a:A) {
     alias T = SequenceElementType(SequenceElementType(A));
     var result = Vector[T]();
     var first = true;
     for (x in a) {
         if (not first)
-            push(result, sep);
+            pushAll(result, sep);
         else
             first = false;
-        push(result, x);
+        pushAll(result, x);
     }
     return move(result);
 }
+
+[S, A when Sequence?(A) and Sequence?(SequenceElementType(A))
+        and S == SequenceElementType(SequenceElementType(A))]
+overload join(sep:S, a:A) = ..join(array(sep), a);
 
 
 
