@@ -47,6 +47,7 @@
 #include <llvm/Function.h>
 #include <llvm/Intrinsics.h>
 #include <llvm/LinkAllVMCore.h>
+#include <llvm/Linker.h>
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
 #include <llvm/PassManager.h>
