@@ -47,6 +47,7 @@
 #include <llvm/Function.h>
 #include <llvm/Intrinsics.h>
 #include <llvm/LinkAllVMCore.h>
+#include <llvm/Linker.h>
 #include <llvm/LLVMContext.h>
 #include <llvm/Module.h>
 #include <llvm/PassManager.h>
@@ -749,9 +750,17 @@ struct Source : public Object {
             error("unable to open file: " + fileName);
     }
 
+
+
     Source(llvm::StringRef fileName, llvm::MemoryBuffer *buffer)
         : Object(SOURCE), fileName(fileName), buffer(buffer), debugInfo(NULL)
     { }
+
+    Source(llvm::StringRef lineOfCode, int loc, int loc1)
+        : Object(SOURCE), debugInfo(NULL)
+    {
+                buffer.reset(llvm::MemoryBuffer::getMemBufferCopy(lineOfCode));
+    }
 
     const char *data() const { return buffer->getBufferStart(); }
     const char *endData() const { return buffer->getBufferEnd(); }
@@ -2407,7 +2416,7 @@ void parseStatements(SourcePtr source, int offset, int length,
     vector<StatementPtr> &statements);
 void parseTopLevelItems(SourcePtr source, int offset, int length,
     vector<TopLevelItemPtr> &topLevels);
-
+vector<StatementPtr> parseInteractive(SourcePtr source, int offset, int length);
 
 
 //
@@ -3953,6 +3962,10 @@ void codegenCWrapper(InvokeEntry* entry);
 
 void codegenEntryPoints(ModulePtr module, bool importedExternals);
 void codegenMain(ModulePtr module);
+
+bool codegenStatement(StatementPtr stmt,
+                      EnvPtr env,
+                      CodegenContext* ctx);
 
 static ExprPtr implicitUnpackExpr(unsigned wantCount, ExprListPtr exprs) {
     if (wantCount >= 1 && exprs->size() == 1 && exprs->exprs[0]->exprKind != UNPACK)

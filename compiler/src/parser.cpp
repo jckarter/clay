@@ -3082,7 +3082,7 @@ static bool module(llvm::StringRef moduleName, ModulePtr &x) {
 //
 
 template<typename Parser, typename Node>
-void applyParser(SourcePtr source, int offset, int length, Parser parser, Node &node)
+bool applyParser(SourcePtr source, int offset, int length, Parser parser, Node &node, bool raiseError = true)
 {
     vector<Token> t;
     tokenize(source, offset, length, t);
@@ -3091,17 +3091,24 @@ void applyParser(SourcePtr source, int offset, int length, Parser parser, Node &
     position = maxPosition = 0;
 
     if (!parser(node) || (position < (int)t.size())) {
-        Location location;
-        if (maxPosition == (int)t.size())
-            location = Location(source.ptr(), source->size());
-        else
-            location = t[maxPosition].location;
-        pushLocation(location);
-        error("parse error");
+		{
+			if (raiseError)
+			{
+				Location location;
+				if (maxPosition == (int)t.size())
+					location = Location(source.ptr(), source->size());
+				else
+					location = t[maxPosition].location;
+				pushLocation(location);
+				error("parse error");
+			}
+		}
+		return false;
     }
 
     tokens = NULL;
     position = maxPosition = 0;
+	return true;
 }
 
 struct ModuleParser {
@@ -3161,6 +3168,27 @@ void parseTopLevelItems(SourcePtr source, int offset, int length,
         vector<TopLevelItemPtr> &topLevels)
 {
     applyParser(source, offset, length, topLevelItems, topLevels);
+}
+
+vector<StatementPtr> parseInteractive(SourcePtr source, int offset, int length)
+{
+
+    vector<StatementPtr> stmts;
+
+    ModulePtr m;
+    ModuleParser p = { "" };
+
+        //if(applyParser(source, offset, length, p, m, false))
+        //{
+        //	llvm::errs() << "module parsed";
+        //	return;
+        //}
+        if(applyParser(source, offset, length, blockItems, stmts, false))
+        {
+                //llvm::errs() << "statements parsed";
+                return stmts;
+        }
+        return vector<StatementPtr>();
 }
 
 }
