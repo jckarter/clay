@@ -4,6 +4,7 @@ import printer.(print,println,printTo,printlnTo,str);
 import hashmaps.*;
 import algorithms.(in?);
 import io.files.*;
+import io.streams.*;
 import strings.*;
 import vectors.*;
 import sequences.operators.*;
@@ -686,5 +687,6 @@ main(argc, argv)
         if (b)
             visitUnnamedDecl(c, CXClientData(@options));
 
+    flush(g_bindingsOut);
     return 0;
 }
