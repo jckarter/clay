@@ -154,37 +154,37 @@ convertTypeFromDeclaration(declaration:CXCursor) : String {
 convertType(type:CXType, refCursor:CXCursor) : String {
     switch (type.kind)
     case (CXType_Bool)
-        return str("Bool");
+        return str("CBool");
     case (CXType_SChar, CXType_Char_S)
         return str("CChar");
     case (CXType_UChar, CXType_Char_U)
         return str("CUChar");
     case (CXType_UShort)
-        return str("UShort");
+        return str("CUShort");
     case (CXType_UInt)
-        return str("UInt");
+        return str("CUInt");
     case (CXType_ULong)
         return str("CULong");
     case (CXType_ULongLong)
-        return str("UInt64");
+        return str("CULongLong");
     case (CXType_UInt128)
         return str("UInt128");
     case (CXType_Short)
-        return str("Short");
+        return str("CShort");
     case (CXType_Int)
-        return str("Int");
+        return str("CInt");
     case (CXType_Long)
         return str("CLong");
     case (CXType_LongLong)
-        return str("Int64");
+        return str("CLongLong");
     case (CXType_Int128)
         return str("Int128");
     case (CXType_Float)
-        return str("Float");
+        return str("CFloat");
     case (CXType_Double)
-        return str("Double");
+        return str("CDouble");
     case (CXType_LongDouble)
-        return str("LongDouble");
+        return str("CLongDouble");
     case (CXType_Complex) {
         var elementType = clang_getElementType(type);
         switch (elementType.kind)

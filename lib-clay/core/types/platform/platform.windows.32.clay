@@ -8,4 +8,5 @@ alias UPtrInt = UInt32;
 alias CLong = Int32;
 alias CULong = UInt32;
 
-alias CLongDouble = Float128;
+// http://msdn.microsoft.com/en-us/library/9cx8xs15.aspx
+alias CLongDouble = Float64;
