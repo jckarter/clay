@@ -1,4 +1,4 @@
-import printer.(printTo);
+import printer.protocol.(printTo);
 import strings.*;
 import vectors.*;
 import sequences.*;

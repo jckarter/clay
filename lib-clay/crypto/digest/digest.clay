@@ -1,4 +1,4 @@
-import printer.(printTo);
+import printer.protocol.(printTo);
 import printer.formatter.(hexString);
 import hash.(hash);
 
