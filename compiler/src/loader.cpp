@@ -1,3 +1,5 @@
+#include <sstream>
+
 #include "clay.hpp"
 
 namespace clay {
@@ -538,12 +540,21 @@ static void checkStaticAssert(StaticAssertTopLevelPtr a) {
     evaluateStaticAssert(a->location, a->cond, a->message, a->env);
 }
 
-static void initModule(ModulePtr m) {
-    if (m->initialized) return;
-    m->initialized = true;
-    vector<ImportPtr>::iterator ii, iend;
-    for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii)
-        initModule((*ii)->module);
+static string joinCsv(const vector<string>& strings) {
+    stringstream ss;
+    bool first = true;
+    for (vector<string>::const_iterator it = strings.begin(); it != strings.end(); ++it) {
+        if (!first) {
+            ss << ", ";
+        }
+        first = false;
+        ss << *it;
+    }
+    return ss.str();
+}
+
+static void initModule(ModulePtr m, const vector<string>& importChain) {
+    if (m->initState == Module::DONE) return;
 
     if (m->declaration != NULL) {
         if (m->moduleName == "")
@@ -555,6 +566,29 @@ static void initModule(ModulePtr m) {
             );
     } else if (m->moduleName == "")
         m->moduleName = "__main__";
+
+
+    if (m->initState == Module::RUNNING && !importChain.empty()) {
+        // allow prelude to import self
+        if (importChain.back() == m->moduleName) {
+            return;
+        }
+    }
+
+    vector<string> importChainNext = importChain;
+    importChainNext.push_back(m->moduleName);
+
+    if (m->initState == Module::RUNNING) {
+        error("import loop: " + joinCsv(importChainNext));
+    }
+
+    m->initState = Module::RUNNING;
+
+    vector<ImportPtr>::iterator ii, iend;
+    for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii)
+        initModule((*ii)->module, importChainNext);
+
+    m->initState = Module::DONE;
 
     verifyAttributes(m);
 
@@ -588,6 +622,9 @@ static void initModule(ModulePtr m) {
     }
 }
 
+static void initModule(ModulePtr m) {
+    initModule(m, vector<string>());
+}
 
 
 //
