@@ -2335,6 +2335,12 @@ struct ImportSet {
 };
 
 struct Module : public ANode {
+    enum InitState {
+        BEFORE,
+        RUNNING,
+        DONE
+    };
+
     SourcePtr source;
     string moduleName;
     vector<ImportPtr> imports;
@@ -2351,7 +2357,7 @@ struct Module : public ANode {
     ModuleHolderPtr selfHolder;
 
     EnvPtr env;
-    bool initialized;
+    InitState initState;
     bool attributesVerified;
     vector<llvm::SmallString<16> > attrBuildFlags;
     IntegerTypePtr attrDefaultIntegerType;
@@ -2372,7 +2378,7 @@ struct Module : public ANode {
 
     Module(llvm::StringRef moduleName)
         : ANode(MODULE), moduleName(moduleName),
-          initialized(false),
+          initState(BEFORE),
           attributesVerified(false),
           publicSymbolsLoaded(false), publicSymbolsLoading(0),
           allSymbolsLoaded(false), allSymbolsLoading(0),
@@ -2387,7 +2393,7 @@ struct Module : public ANode {
         : ANode(MODULE), moduleName(moduleName), imports(imports),
           declaration(declaration),
           topLevelLLVM(topLevelLLVM), topLevelItems(topLevelItems),
-          initialized(false),
+          initState(BEFORE),
           attributesVerified(false),
           publicSymbolsLoaded(false), publicSymbolsLoading(0),
           allSymbolsLoaded(false), allSymbolsLoading(0),
