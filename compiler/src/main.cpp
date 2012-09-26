@@ -446,7 +446,7 @@ static void usage(char *argv0)
     llvm::errs() << "  -deps                 keep track of the dependencies of the currently\n";
     llvm::errs() << "                        compiling file and write them to the file\n";
     llvm::errs() << "                        specified by -o-deps\n";
-    llvm::errs() << " libs -no-deps              don't generate dependencies file\n";
+    llvm::errs() << "  -no-deps              don't generate dependencies file\n";
     llvm::errs() << "  -o-deps <file>        write the dependencies to this file\n";
     llvm::errs() << "                        (defaults to <compilation output file>.d)\n";
     llvm::errs() << "  -e <source>           compile and run <source> (implies -run)\n";
