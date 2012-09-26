@@ -11,6 +11,9 @@ const char* replAnonymousFunctionName = "__replAnonymousFunction__";
 
 void runInteractive(llvm::Module *llvmModule, ModulePtr module)
 {
+    std::cout << "Clay interpreter\n";
+    std::cout << ":q to exit\n";
+
     setExitOnError(false);
     llvm::EngineBuilder eb(llvmModule);
     llvm::ExecutionEngine *engine = eb.create();
@@ -18,20 +21,20 @@ void runInteractive(llvm::Module *llvmModule, ModulePtr module)
     string line;
     int lineNum = 0;
     while(true) {
+        std::cout.flush();
         std::cout << "clay>";
-        std::cin >> line;
-        SourcePtr source = new Source(line, 0);
-        vector<Token> tokens;
-        tokenize(source, 0, source->size(), tokens);
+        getline (std::cin, line);
+        if (line == ":q")
+            break;
 
-        vector<StatementPtr> statements;
+        SourcePtr source = new Source(line, 0);
+        vector<StatementPtr> statements;    
         try {
             parseInteractive(source, 0, source->size(), statements);
         }
         catch (std::exception) {
             continue;
         }
-
         ostringstream funName;
         funName << replAnonymousFunctionName << lineNum;
         IdentifierPtr fun = Identifier::get(funName.str());
@@ -57,7 +60,9 @@ void runInteractive(llvm::Module *llvmModule, ModulePtr module)
 
         void* fPtr = engine->getPointerToFunction(entryProc->llvmFunc);
         void (*f)() = (void (*)())fPtr;
+
         f();
+
     }
     engine->runStaticConstructorsDestructors(true);
 }
