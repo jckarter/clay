@@ -750,6 +750,12 @@ struct Source : public Object {
             error("unable to open file: " + fileName);
     }
 
+    Source(llvm::StringRef lineOfCode, int dummy)
+        : Object(SOURCE), debugInfo(NULL)
+    {
+                buffer.reset(llvm::MemoryBuffer::getMemBufferCopy(lineOfCode));
+    }
+
     Source(llvm::StringRef fileName, llvm::MemoryBuffer *buffer)
         : Object(SOURCE), fileName(fileName), buffer(buffer), debugInfo(NULL)
     { }
@@ -857,6 +863,7 @@ private :
 };
 
 void setAbortOnError(bool flag);
+void setExitOnError(bool flag);
 void warning(llvm::Twine const &msg);
 
 void fmtError(const char *fmt, ...);
@@ -2406,6 +2413,8 @@ ExprPtr parseExpr(SourcePtr source, int offset, int length);
 ExprListPtr parseExprList(SourcePtr source, int offset, int length);
 void parseStatements(SourcePtr source, int offset, int length,
     vector<StatementPtr> &statements);
+void parseInteractive(SourcePtr source, int offset, int length,
+    vector<StatementPtr> &statements);
 void parseTopLevelItems(SourcePtr source, int offset, int length,
     vector<TopLevelItemPtr> &topLevels);
 
@@ -2520,6 +2529,11 @@ ExprPtr foreignExpr(EnvPtr env, ExprPtr expr);
 ExprPtr lookupCallByNameExprHead(EnvPtr env);
 Location safeLookupCallByNameLocation(EnvPtr env);
 
+//
+// interactive module
+//
+
+void runInteractive(llvm::Module *llvmModule, ModulePtr module);
 
 
 //

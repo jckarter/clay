@@ -6,7 +6,7 @@
 #else
 # include <unistd.h>
 #endif
-
+#include <iostream>
 namespace clay {
 
 #ifdef WIN32
@@ -201,8 +201,7 @@ static bool runModule(llvm::Module *module,
                       const vector<string>& libSearchPaths,
                       const vector<string>& libs)
 {
-    if(!linkLibraries(module, libSearchPaths, libs))
-    {
+    if (!linkLibraries(module, libSearchPaths, libs)) {
         return false;
     }
     llvm::EngineBuilder eb(llvmModule);
@@ -447,7 +446,7 @@ static void usage(char *argv0)
     llvm::errs() << "  -deps                 keep track of the dependencies of the currently\n";
     llvm::errs() << "                        compiling file and write them to the file\n";
     llvm::errs() << "                        specified by -o-deps\n";
-    llvm::errs() << "  -no-deps              don't generate dependencies file\n";
+    llvm::errs() << " libs -no-deps              don't generate dependencies file\n";
     llvm::errs() << "  -o-deps <file>        write the dependencies to this file\n";
     llvm::errs() << "                        (defaults to <compilation output file>.d)\n";
     llvm::errs() << "  -e <source>           compile and run <source> (implies -run)\n";
@@ -1060,8 +1059,12 @@ int main2(int argc, char **argv, char const* const* envp) {
         internalize = false;
 
     optTimer.start();
-    if (optLevel > 0)
-        optimizeLLVM(llvmModule, optLevel, internalize);
+
+    if (!repl)
+    {
+        if (optLevel > 0)
+            optimizeLLVM(llvmModule, optLevel, internalize);
+    }
     optTimer.stop();
 
     if (run) {
@@ -1069,9 +1072,9 @@ int main2(int argc, char **argv, char const* const* envp) {
         argv.push_back(clayFile);
         runModule(llvmModule, argv, envp, libSearchPath, libraries);
     }
-    else if (repl)
-    {
-
+    else if (repl) {
+        linkLibraries(llvmModule, libSearchPath, libraries);
+        runInteractive(llvmModule, m);
     }
     else if (emitLLVM || emitAsm || emitObject) {
         string errorInfo;

@@ -3097,7 +3097,6 @@ void applyParser(SourcePtr source, int offset, int length, Parser parser, Node &
         else
             location = t[maxPosition].location;
         pushLocation(location);
-        error("parse error");
     }
 
     tokens = NULL;
@@ -3162,5 +3161,16 @@ void parseTopLevelItems(SourcePtr source, int offset, int length,
 {
     applyParser(source, offset, length, topLevelItems, topLevels);
 }
+
+//
+// parseInteractive
+//
+
+void parseInteractive(SourcePtr source, int offset, int length,
+        vector<StatementPtr> &stmts)
+{
+    applyParser(source, offset, length, blockItems, stmts);
+}
+
 
 }
