@@ -897,7 +897,7 @@ static void verifyRecursionCorrectness(TypePtr t,
                                        set<TypePtr> &visited) {
     pair<set<TypePtr>::iterator, bool>
         result = visited.insert(t);
-   if (!result.second) {
+    if (!result.second) {
         string buf;
         llvm::raw_string_ostream sout(buf);
         sout << "invalid recursion in type: " << t;
