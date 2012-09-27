@@ -1,4 +1,4 @@
-import unix.*;
+import unix.generated.*;
 
 errno() = __errno_location()^;
 

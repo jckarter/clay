@@ -1,4 +1,7 @@
-import printer.(printTo);
+import printer.protocol.(printTo);
+
+// to make sure this printTo overload has higher priority than printTo for generic string
+import printer.types;
 
 record UTF8Decoder[Iterator] (
     iter: Iterator

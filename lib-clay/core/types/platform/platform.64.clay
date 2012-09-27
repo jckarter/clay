@@ -7,3 +7,6 @@ alias UPtrInt = UInt64;
 
 alias CLong = Int64;
 alias CULong = UInt64;
+
+alias CLongDouble = Float80;
+alias CComplexLongDouble = Complex80;
