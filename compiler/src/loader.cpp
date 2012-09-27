@@ -235,6 +235,12 @@ static void installGlobals(ModulePtr m) {
             }
             break;
         }
+        case NEWTYPE : {
+            NewType *nt = (NewType *)x;
+            TypePtr t = newType(nt);
+            addGlobal(m, nt->name, nt->visibility, t.ptr());
+            break;
+        }
         case PROCEDURE : {
             Procedure *proc = (Procedure *)x;
             if (proc->interface != NULL)
@@ -629,6 +635,10 @@ static ModulePtr typeModule(TypePtr t) {
         EnumType *et = (EnumType *)t.ptr();
         return envModule(et->enumeration->env);
     }
+    case NEW_TYPE : {
+        NewTypeType *et = (NewTypeType *)t.ptr();
+        return envModule(et->newtype->env);
+    }
     default :
         return NULL;
     }
@@ -897,6 +907,8 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(VariantMemberCount);
     PRIMITIVE(VariantMembers);
     PRIMITIVE(variantRepr);
+
+    PRIMITIVE(baseType);
 
     PRIMITIVE(Static);
     PRIMITIVE(StaticName);
