@@ -6,38 +6,38 @@ import io.files.*;
 import complex.*;
 
 record Struct_x86_1 (
-    a : Float80,
-    b : Float80,
+    a : CLongDouble,
+    b : CLongDouble,
 );
 
 record Struct_x86_8 (
-    a : Float80,
+    a : CLongDouble,
 );
 
 record Struct_x86_9 (
-    a : Complex80,
+    a : CComplexLongDouble,
 );
 
 alias Union_x86_12 = Union[
     /* a */ Int32,
-    /* b */ Float80,
+    /* b */ CLongDouble,
 ];
 
 alias Union_x86_13 = Union[
     /* a */ Int32,
-    /* b */ Complex80,
+    /* b */ CComplexLongDouble,
 ];
 
-external (cdecl) c_x86_long_double(x:Float80);
-external (cdecl) c_x86_complex_long_double(x:Complex80);
+external (cdecl) c_x86_long_double(x:CLongDouble);
+external (cdecl) c_x86_complex_long_double(x:CComplexLongDouble);
 external (cdecl) c_x86_1(x:Struct_x86_1);
 external (cdecl) c_x86_8(x:Struct_x86_8);
 external (cdecl) c_x86_9(x:Struct_x86_9);
 external (cdecl) c_x86_12(x:Union_x86_12, tag:Int);
 external (cdecl) c_x86_13(x:Union_x86_13, tag:Int);
 
-external (cdecl) c_x86_return_long_double() : Float80;
-external (cdecl) c_x86_return_complex_long_double() : Complex80;
+external (cdecl) c_x86_return_long_double() : CLongDouble;
+external (cdecl) c_x86_return_complex_long_double() : CComplexLongDouble;
 external (cdecl) c_x86_return_1() : Struct_x86_1;
 external (cdecl) c_x86_return_8() : Struct_x86_8;
 external (cdecl) c_x86_return_9() : Struct_x86_9;
@@ -49,11 +49,11 @@ external (cdecl) c_to_clay_x86();
 // clay implementations
 //
 
-external (cdecl) clay_x86_long_double(x:Float80) : {
+external (cdecl) clay_x86_long_double(x:CLongDouble) : {
     println(repr(x));
     flush(stdout);
 }
-external (cdecl) clay_x86_complex_long_double(x:Complex80) : {
+external (cdecl) clay_x86_complex_long_double(x:CComplexLongDouble) : {
     println(repr(x));
     flush(stdout);
 }
@@ -90,9 +90,9 @@ external (cdecl) clay_x86_13(x:Union_x86_13, tag:Int) : {
     flush(stdout);
 }
 
-external (cdecl) clay_x86_return_long_double() : Float80
+external (cdecl) clay_x86_return_long_double() : CLongDouble
     = 0x8.001122334455667p999l;
-external (cdecl) clay_x86_return_complex_long_double() : Complex80
+external (cdecl) clay_x86_return_complex_long_double() : CComplexLongDouble
     = 0x8.001122334455667p999l+0x8.112233445566778p888lj;
 external (cdecl) clay_x86_return_1() : Struct_x86_1
     = Struct_x86_1(0x8.001122334455667p999l, 0x8.112233445566778p888l);

@@ -4,6 +4,8 @@ public import __operators__.(typeToRValue, typesToRValues);
 
 /// @section  types 
 
+alias CBool = Bool;
+
 alias Byte = UInt8;
 
 alias CChar = Int8;
@@ -11,20 +13,35 @@ alias CUChar = UInt8;
 
 alias Short = Int16;
 alias UShort = UInt16;
+alias CShort = Int16;
+alias CUShort = UInt16;
 
 alias Int = Int32;
 alias UInt = UInt32;
+alias CInt = Int32;
+alias CUInt = UInt32;
 
 alias Long = Int64;
 alias ULong = UInt64;
+// CLong and CULong are different on different platforms
+
+alias CLongLong = Int64;
+alias CULongLong = UInt64;
 
 alias Float = Float32;
 alias Double = Float64;
 alias LongDouble = Float80;
+alias CFloat = Float32;
+alias CDouble = Float64;
+
+// CLongDouble is different on different platforms
 
 alias ComplexFloat = Complex32;
 alias ComplexDouble = Complex64;
 alias ComplexLongDouble = Complex80;
+
+alias CComplexFloat = ComplexFloat;
+alias CComplexDouble = ComplexDouble;
 
 alias IFloat = Imag32;
 alias IDouble = Imag64;
