@@ -2679,7 +2679,7 @@ enum PrimOpCode {
     PRIM_VariantMembers,
     PRIM_variantRepr,
 
-    PRIM_baseType,
+    PRIM_BaseType,
 
     PRIM_Static,
     PRIM_StaticName,

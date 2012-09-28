@@ -6153,7 +6153,7 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
-    case PRIM_baseType :
+    case PRIM_BaseType :
         break;
 
     case PRIM_Static :

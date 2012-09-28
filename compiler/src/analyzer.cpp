@@ -2918,7 +2918,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return new MultiPValue(PVData(reprType, false));
     }
 
-    case PRIM_baseType : {
+    case PRIM_BaseType : {
         ensureArity(args, 1);
         ObjectPtr obj = unwrapStaticType(args->values[0].type);
         if (!obj && obj->objKind != TYPE)

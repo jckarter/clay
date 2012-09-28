@@ -4475,7 +4475,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
-    case PRIM_baseType :
+    case PRIM_BaseType :
         break;
         
     case PRIM_Static :

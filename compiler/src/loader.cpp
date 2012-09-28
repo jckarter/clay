@@ -908,7 +908,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(VariantMembers);
     PRIMITIVE(variantRepr);
 
-    PRIMITIVE(baseType);
+    PRIMITIVE(BaseType);
 
     PRIMITIVE(Static);
     PRIMITIVE(StaticName);

@@ -194,3 +194,9 @@ forceinline overload GreatestPositiveFinite(#Imag80) : Imag80
 
 [T] alias valueSize(x:T) = TypeSize(T);
 
+
+/// @section  newtypes
+
+[T] NewType?(#T) = (!=)(Type(T), BaseType(T));
+
+[T] baseCast(x:T) = bitcast(BaseType(T), x);
