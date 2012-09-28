@@ -2004,10 +2004,12 @@ struct NewType : public TopLevelItem {
     ExprPtr expr;
     TypePtr type;
     TypePtr baseType;
+    bool initialized;
     NewType(IdentifierPtr name,
             Visibility visibility,
             ExprPtr expr)
-        : TopLevelItem(NEWTYPE, name, visibility), expr(expr) {}
+        : TopLevelItem(NEWTYPE, name, visibility), expr(expr),
+        initialized(false) {}
 };
 
 struct Enumeration : public TopLevelItem {
@@ -3024,9 +3026,8 @@ struct EnumType : public Type {
 
 struct NewTypeType : public Type {
     NewTypePtr newtype;
-    bool initialized;
     NewTypeType(NewTypePtr newtype)
-        : Type(NEW_TYPE), newtype(newtype), initialized(false) {}
+        : Type(NEW_TYPE), newtype(newtype) {}
 };
 
 extern TypePtr boolType;

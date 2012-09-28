@@ -398,11 +398,11 @@ TypePtr enumType(EnumerationPtr enumeration)
 
 void initializeNewType(NewTypeTypePtr t) 
 {
-    if (t->initialized)
+    if (t->newtype->initialized)
         return;
     CompileContextPusher pusher(t.ptr());
     t->newtype->baseType = evaluateType(t->newtype->expr, t->newtype->env);
-    t->initialized = true;
+    t->newtype->initialized = true;
 }
 
 TypePtr newType(NewTypePtr newtype)
@@ -414,7 +414,7 @@ TypePtr newType(NewTypePtr newtype)
 
 TypePtr newtypeReprType(NewTypeTypePtr t)
 {
-    if (!t->initialized)
+    if (!t->newtype->initialized)
         initializeNewType(t);
     return t->newtype->baseType;
 }
