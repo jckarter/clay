@@ -1,0 +1,11 @@
+import printer.*;
+
+newtype Foo = Tuple[Int32, Int64];
+
+main() {
+
+	println("Type: ",Type(Foo));
+	println("TypeSize: ",TypeSize(Foo)); 
+	println("Base Type: ", baseType(Foo));
+	
+}

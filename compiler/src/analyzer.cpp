@@ -826,6 +826,14 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
 {
     switch (x->objKind) {
 
+    case NEWTYPE : {
+        NewType *y = (NewType *)x.ptr();
+        assert(y->type->typeKind == NEW_TYPE);
+        initializeNewType((NewTypeType*)y->type.ptr());
+
+        return new MultiPValue(PVData(y->type, true));
+    }
+
     case ENUM_MEMBER : {
         EnumMember *y = (EnumMember *)x.ptr();
         assert(y->type->typeKind == ENUM_TYPE);
@@ -2908,6 +2916,22 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         VariantTypePtr t = variantTypeOfValue(args, 0);
         TypePtr reprType = variantReprType(t);
         return new MultiPValue(PVData(reprType, false));
+    }
+
+    case PRIM_baseType : {
+        ensureArity(args, 1);
+        ObjectPtr obj = unwrapStaticType(args->values[0].type);
+        if (!obj && obj->objKind != TYPE)
+            argumentError(0, "static type expected");
+        Type *type = (Type *)obj.ptr(); 
+        MultiPValuePtr mpv = new MultiPValue();
+        if(type->typeKind == NEW_TYPE) {
+            NewTypeType *nt = (NewTypeType*)type;
+            mpv->add(staticPValue(nt->newtype->baseType.ptr()));
+        } else {
+            mpv->add(staticPValue(type));
+        }
+        return mpv;
     }
 
     case PRIM_Static :

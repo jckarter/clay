@@ -6153,6 +6153,9 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
+    case PRIM_baseType :
+        break;
+
     case PRIM_Static :
         error("no Static primitive overload found");
 
