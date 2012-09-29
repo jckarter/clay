@@ -2,19 +2,11 @@
 
 import math.native.kernel.ieee754.*;
 import math.native.kernel.k_exp.*;
-import math.native.expm1.(expm1);
-import math.native.abs.(abs);
-import math.native.tan.(tan);
-import math.native.sinh.(sinh);
-import math.native.sqrt.(sqrt);
-import math.native.exp.(exp);
-import math.native.sin.(sin);
-import math.native.cos.(cos);
-import math.native.copysign.(copysign);
+import math.native.protocol.*;
 import numbers.floats.(infinity?);
 import complex.*;
 
-tanh(x:Float) = Float(tanh(Double(x)));
+overload tanh(x:Float) = Float(tanh(Double(x)));
 
 overload tanh(x:Double) {
 	alias ONE = 1.;

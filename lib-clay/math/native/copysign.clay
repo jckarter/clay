@@ -1,8 +1,9 @@
 
 import numbers.floats.*;
+import math.native.protocol.*;
 
 [T,U when Float?(T,U) ]
-copysign(a:T,b:U) = floatFromBits(bitor(floatBitsUnsigned(a),
+overload copysign(a:T,b:U) = floatFromBits(bitor(floatBitsUnsigned(a),
     bitand(floatBits(b),signMask(T))));
 
 [T when Float?(T) ]

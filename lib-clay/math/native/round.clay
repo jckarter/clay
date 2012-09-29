@@ -1,6 +1,6 @@
 import math.native.kernel.ieee754.*;
 import numbers.floats.(finite?);
-import math.native.floor.(floor);
+import math.native.protocol.*;
 
 private alias DHUGE = GreatestPositiveFinite(Double);
 private alias FHUGE = GreatestPositiveFinite(Float);

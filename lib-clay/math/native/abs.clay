@@ -1,10 +1,10 @@
 
 import numbers.floats.(imagFromBits,floatFromBits,floatBitsUnsigned);
-import math.native.hypot.(hypot);
 import complex.(real,imagValue,Complex?);
+import math.native.protocol.*;
 
 [I when Integer?(I) ]
-forceinline abs(x:I) = if(x >= 0) x else -x;
+forceinline overload abs(x:I) = if(x >= 0) x else -x;
 
 [T when Imaginary?(T) ]
 forceinline overload abs(x:T) = imagFromBits(floatBitsUnsigned(x));

@@ -1,8 +1,9 @@
 // log1p
 
 import math.native.kernel.ieee754.*;
+import math.native.protocol.*;
 
-log1p(x:Float) = Float(log1p(Double(x)));
+overload log1p(x:Float) = Float(log1p(Double(x)));
 
 overload log1p(x:Double) {
 	alias ZERO = 0.;

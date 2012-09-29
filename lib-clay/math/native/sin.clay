@@ -2,11 +2,11 @@
 import math.native.kernel.ieee754.*;
 import math.native.rem_pio2.*;
 import math.native.kernel.k_trig.*;
-import math.native.sinh.(sinh);
+import math.native.protocol.*;
 import complex.*;
 
 
-sin(x:Double) {
+overload sin(x:Double) {
 	var y = Array[Double,2]();
 	
     // High word of x. 

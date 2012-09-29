@@ -1,5 +1,6 @@
+import math.native.protocol.*;
 
-forceinline sign(x:Int64) = bitor(bitshr(x,63),Int64(bitshr(wrapCast(UInt64,wrapSubtract(x)),63)));
+forceinline overload sign(x:Int64) = bitor(bitshr(x,63),Int64(bitshr(wrapCast(UInt64,wrapSubtract(x)),63)));
 
 forceinline overload sign(x:Int32) = bitor(bitshr(x,31),Int32(bitshr(wrapCast(UInt32,wrapSubtract(x)),31)));
 
