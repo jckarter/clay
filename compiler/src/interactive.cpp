@@ -2,7 +2,11 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <setjmp.h>
 #include <signal.h>
+
+#include <llvm/Target/TargetOptions.h>
+
 
 namespace clay {
 
@@ -13,8 +17,10 @@ namespace clay {
     static ModulePtr module;
     static llvm::ExecutionEngine *engine;
 
+    jmp_buf recovery;
     static void interactiveLoop()
     {
+        setjmp(recovery);
         string line;
         static int lineNum = 0;
         while(true) {
@@ -62,13 +68,11 @@ namespace clay {
 
     static void exceptionHandler(int i)
     {
-        sigrelse(SIGABRT);
-        interactiveLoop();
+        longjmp(recovery, 1);
     }
 
     void runInteractive(llvm::Module *llvmModule_, ModulePtr module_)
     {
-
         signal(SIGABRT, exceptionHandler);
 
         llvmModule = llvmModule_;
