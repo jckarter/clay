@@ -8,17 +8,6 @@ import vectors.*;
 public import io.streams.bytevector.*;
 
 
-/// @section misc type functions
-
-
-[T]
-ByteVector?(#T) = Vector?(T) and ByteLike?(SequenceElementType(T));
-
-[T]
-ByteBuffer?(#T) = ContiguousSequence?(T) and ByteLike?(SequenceElementType(T));
-
-
-
 /// @section  read, write wrappers to readBytes, writeBytes
 
 [B, N when ByteLike?(B) and Integer?(N)]
