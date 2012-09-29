@@ -1,8 +1,7 @@
 
 import math.native.kernel.ieee754.*;
 import math.native.kernel.k_exp.(__frexp_exp);
-import math.native.cos.(cos);
-import math.native.sin.(sin);
+import math.native.protocol.(sin, cos);
 import complex.*;
 
 

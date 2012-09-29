@@ -1,17 +1,13 @@
 // asinh
 
 import math.native.kernel.ieee754.*;
-import math.native.sqrt.(sqrt);
-import math.native.abs.(abs);
-import math.native.log.(log);
-import math.native.log1p.(log1p);
+import math.native.protocol.*;
 import math.native.constants.(M_LN2,M_PI_2,M_PI_4);
 import math.native.fpclassify.(fpclassify,FP_INFINITE,FP_ZERO,FP_NAN);
-import math.native.copysign.(copysign);
 import numbers.floats.(nan,infinity);
 import complex.*;
 
-asinh(x:Float) = Float(asinh(Double(x)));
+overload asinh(x:Float) = Float(asinh(Double(x)));
 
 overload asinh(x:Double) {
 	alias ONE = 1.;

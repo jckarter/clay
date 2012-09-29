@@ -1,6 +1,6 @@
-import math.native.scalbn.(scalbn);
+import math.native.protocol.*;
 import numbers.floats.(finite?);
 
 [T,I when Float?(T) and Integer?(I)]
-ldexp(value:T, i:I)
+overload ldexp(value:T, i:I)
     = if(not finite?(value) or value==0.) value else scalbn(value,i);

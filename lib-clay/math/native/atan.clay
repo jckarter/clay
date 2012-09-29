@@ -1,14 +1,11 @@
 // atan
 
 import math.native.kernel.ieee754.*;
-import math.native.abs.(abs);
 import numbers.floats.(nan);
 import complex.*;
 import math.native.fpclassify.(fpclassify,FP_INFINITE,FP_ZERO);
-import math.native.copysign.(copysign);
+import math.native.protocol.*;
 import math.native.constants.(M_PI_2);
-import math.native.atan2.(atan2);
-import math.native.log.(log);
 
 private var atanhi = array(
   4.63647609000806093515e-01, // atan(0.5)hi 0x3FDDAC67, 0x0561BB4F 
@@ -39,7 +36,7 @@ private var aT = array(
 );
 
 
-atan(a:Double){
+overload atan(a:Double){
 	alias ONE = 1.;
 	alias HUGE = GreatestPositiveFinite(Double);
 	var id,x = 0,a;

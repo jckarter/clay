@@ -2,10 +2,8 @@
 import math.native.kernel.ieee754.*;
 import numbers.floats.(nan?,nan,infinity, infinity?, signbit);
 import math.native.fpclassify.(fpclassify,FP_INFINITE,FP_NAN,FP_ZERO);
-import math.native.copysign.(copysign);
-import math.native.abs.(abs);
+import math.native.protocol.*;
 import complex.(Complex?,Complex,ComplexBaseType, real,imagValue);
-import math.native.hypot.(hypot);
 import math.native.(fma);
 
 private var inroot = array(
@@ -56,7 +54,7 @@ private var tm256 = 0x1.p-256;
     rl <-- fma(u,v,-rh);
 }
 
-sqrt(x:Double) {
+overload sqrt(x:Double) {
 
     var a = MAKE_IEEE(x);
     var k = GET_IEEE_HIGH(a);

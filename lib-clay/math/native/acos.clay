@@ -1,10 +1,9 @@
 // acos function adapted from openlibm
 
 import math.native.kernel.ieee754.*;
-import math.native.sqrt.(sqrt);
 import numbers.floats.(nan);
 import math.native.constants.(M_PI,M_PI_2);
-import math.native.asin.(asin);
+import math.native.protocol.*;
 import complex.*;
 
 alias pio2_hi =  1.57079632679489655800e+00; // 0x3FF921FB, 0x54442D18 
@@ -22,7 +21,7 @@ alias qS3 = -6.88283971605453293030e-01; // 0xBFE6066C, 0x1B8D0159
 alias qS4 =  7.70381505559019352791e-02; // 0x3FB3B8C5, 0xB12E9282 
 
 
-acos(x:Double) {
+overload acos(x:Double) {
 	alias ONE = 1.;
 	var hx = GET_IEEE_HIGH(x);
 	var ix = bitand(hx,MM);

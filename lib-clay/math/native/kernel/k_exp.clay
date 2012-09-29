@@ -1,6 +1,6 @@
 
 import math.native.kernel.ieee754.*;
-import math.native.exp.(exp);
+import math.native.protocol.(exp);
 
 alias k = 1799u;		// constant for reduction 
 alias kln2 = 1246.97177782734161156;	// k * ln2 

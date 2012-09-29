@@ -1,5 +1,6 @@
 
 import math.native.kernel.ieee754.*;
+import math.native.protocol.*;
 
 private alias DHUGE = GreatestPositiveFinite(Double);
 private alias FHUGE = GreatestPositiveFinite(Float);
@@ -7,7 +8,7 @@ private alias DZERO = 0.ff;
 private alias FZERO = 0.f;
 
 
-ceil(x:Double) {
+overload ceil(x:Double) {
 	var ix = MAKE_IEEE(x);
 	var j0 = bitand(bitshr(GET_IEEE_HIGH(ix),20),0x7ff)-0x3ff;
 	if(j0<20) {

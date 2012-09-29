@@ -1,3 +1,6 @@
+public import math.native.protocol.*;
+
+public import math.native.copysign.*;
 public import math.native.ldexp.*;
 public import math.native.frexp.*;
 public import math.native.scalbn.*;
@@ -11,6 +14,7 @@ public import math.native.modf.*;
 public import math.native.fmod.*;
 public import math.native.nextafter.*;
 public import math.native.abs.*;
+public import math.native.abscomplex.*;
 public import math.native.sign.*;
 public import math.native.hypot.*;
 public import math.native.sqrt.*;
@@ -45,6 +49,7 @@ public import math.native.atan2.*;
 public import math.native.cot.*;
 public import math.native.arg.*;
 public import math.native.proj.*;
+
 public import complex.*;
 
 import math.native.constants.(M_PI);

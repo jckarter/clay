@@ -2,10 +2,7 @@
 
 import math.native.kernel.ieee754.*;
 import numbers.floats.*;
-import math.native.sqrt.(sqrt);
-import math.native.abs.(abs);
-import math.native.asinh.(asinh); 
-import math.native.copysign.(copysign);
+import math.native.protocol.*;
 import complex.*;
 
 alias pio2_hi =  1.57079632679489655800e+00; // 0x3FF921FB, 0x54442D18 
@@ -24,7 +21,7 @@ alias qS3 = -6.88283971605453293030e-01; // 0xBFE6066C, 0x1B8D0159
 alias qS4 =  7.70381505559019352791e-02; // 0x3FB3B8C5, 0xB12E9282 
 
 
-asin(x:Double) {
+overload asin(x:Double) {
 	alias ONE = 1.;
 	alias HUGE = GreatestPositiveFinite(Double);
 	var t=0.;
