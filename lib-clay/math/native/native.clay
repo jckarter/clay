@@ -14,6 +14,7 @@ public import math.native.modf.*;
 public import math.native.fmod.*;
 public import math.native.nextafter.*;
 public import math.native.abs.*;
+public import math.native.abscomplex.*;
 public import math.native.sign.*;
 public import math.native.hypot.*;
 public import math.native.sqrt.*;
