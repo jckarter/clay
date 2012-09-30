@@ -29,7 +29,6 @@ namespace clay {
             getline (std::cin, line);
             if (line == ":q")
                 break;
-
             SourcePtr source = new Source(line, 0);
             vector<StatementPtr> statements;
             try {
@@ -68,6 +67,7 @@ namespace clay {
 
     static void exceptionHandler(int i)
     {
+        std::cout << "SIGABRT called\n";
         longjmp(recovery, 1);
     }
 
@@ -83,6 +83,9 @@ namespace clay {
 
         setExitOnError(false);
         llvm::EngineBuilder eb(llvmModule);
+        llvm::TargetOptions targetOptions;
+        targetOptions.JITExceptionHandling = true;
+        eb.setTargetOptions(targetOptions);
         engine = eb.create();
         engine->runStaticConstructorsDestructors(false);
 
