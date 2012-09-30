@@ -249,6 +249,11 @@ overload printTo(stream, x:CStringRef) {
     }
 }
 
+[T]
+overload printTo(stream, s: UTF8[T]) {
+    printTo(stream, s.encoded);
+}
+
 
 
 /// @section  printReprTo 

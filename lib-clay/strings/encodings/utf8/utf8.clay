@@ -1,8 +1,5 @@
 import printer.protocol.(printTo);
 
-// to make sure this printTo overload has higher priority than printTo for generic string
-import printer.types;
-
 record UTF8Decoder[Iterator] (
     iter: Iterator
 );
@@ -148,10 +145,5 @@ encodeUniChar(c, callback) {
 
 [T] overload push(u: UTF8[T], uc) {
     encodeUniChar(uc, c -> ..push(u.encoded, c));
-}
-
-[T]
-overload printTo(stream, s: UTF8[T]) {
-    printTo(stream, s.encoded);
 }
 

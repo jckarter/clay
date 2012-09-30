@@ -1,5 +1,5 @@
 import vectors.generic.*;
-import io.streams.(ByteBuffer?);
+import io.streams.protocol.(ByteBuffer?);
 import printer.protocol.(printTo);
 
 /// @section  BufferVector[T] 

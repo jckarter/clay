@@ -4,8 +4,39 @@
 
 import byteorder.*;
 
-import crypto.digest.*;
 
+// true iff A is digest algorithm name
+[A]
+Algorithm?(#A) = #false;
+
+// true iff T is digest output
+[T]
+Digest?(#T) = false;
+
+// algorithm name by digest or by digest context
+[T when Digest?(T) or DigestContext?(T)]
+define Algorithm(#T);
+
+// hash size in bytes
+[A when Algorithm?(A)]
+define DigestSize(#A): UInt;
+
+// true iff T is digest compute context
+[T]
+DigestContext?(#T) = false;
+
+// Hash function input block size. This function is a part of public API
+// because some algorithms (like HMAC) need to know it
+[A when Algorithm?(A)]
+define BlockSizeBytes(#A): UInt;
+
+// digest type by algorithm name
+[A when Algorithm?(A)]
+define Digest(#A);
+
+// digest context type by algorithm name
+[A when Algorithm?(A)]
+define DigestContext(#A);
 
 // digest internal word
 [A when Algorithm?(A)]
@@ -178,6 +209,51 @@ private define hostToByteOrder(n:I, #B): I;
 
 overload hostToByteOrder(n, #true) = hostToBig(n);
 overload hostToByteOrder(n, #false) = hostToLittle(n);
+
+
+[S]
+MessagePart?(#S) = ContiguousSequence?(S) and ByteLike?(SequenceElementType(S));
+
+
+// generic update code
+[C, S when DigestContext?(C) and MessagePart?(S)]
+digestUpdate(context: C, input: S) {
+    alias A = Algorithm(#C);
+
+    var inputBegin = Pointer[Char](begin(input));
+    var inputEnd   = Pointer[Char](end(input));
+    var inputSize  = size(input);
+
+    var left = SizeT(context.total % BlockSizeBytes(#A));
+    var fill = BlockSizeBytes(#A) - left;
+
+    context.total +: inputSize;
+
+    if (left > 0 and inputSize >= fill) {
+        copyNonoverlappingMemory(
+            Pointer[Char](@context.buffer) + left,
+            inputBegin,
+            inputBegin + fill);
+        processBlock(#A, context.state, context.buffer);
+        inputSize  -: fill;
+        inputBegin +: fill;
+        left        = 0;
+    }
+
+    while (inputSize >= BlockSizeBytes(#A)) {
+        processBlock(#A, context.state, Pointer[BlockBytes(#A)](inputBegin)^);
+        inputSize  -: BlockSizeBytes(#A);
+        inputBegin +: BlockSizeBytes(#A);
+    }
+
+    if (inputSize >= 0) {
+        copyNonoverlappingMemory(
+            Pointer[Char](@context.buffer) + left,
+            inputBegin,
+            inputBegin + inputSize);
+    }
+}
+
 
 // finish and return computed sum
 // context cannot be reused after computation
