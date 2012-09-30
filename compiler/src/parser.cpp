@@ -2355,6 +2355,17 @@ static bool optCallByName(bool &callByName) {
     return true;
 }
 
+static bool optFinal(bool &final) {
+    int p = save();
+    if (!keyword("final")) {
+        restore(p);
+        final = false;
+        return true;
+    }
+    final = true;
+    return true;
+}
+
 static bool llvmCode(LLVMCodePtr &b) {
     Token* t;
     if (!next(t) || (t->tokenKind != T_LLVM))
@@ -2372,6 +2383,8 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x) {
     if (!topLevelVisibility(vis)) return false;
     InlineAttribute isInline;
     if (!optInline(isInline)) return false;
+    bool final;
+    if (!optFinal(final)) return false;
     IdentifierPtr z;
     Location targetStartLocation = currentLocation();
     if (!identifier(z)) return false;
@@ -2389,7 +2402,7 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x) {
     target->location = location;
     target->startLocation = targetStartLocation;
     target->endLocation = targetEndLocation;
-    OverloadPtr v = new Overload(target, y, false, isInline);
+    OverloadPtr v = new Overload(target, y, false, final, isInline);
     v->location = location;
     x.push_back(v.ptr());
 
@@ -2416,7 +2429,7 @@ static bool procedureWithInterface(vector<TopLevelItemPtr> &x) {
     target->location = location;
     target->startLocation = targetStartLocation;
     target->endLocation = targetEndLocation;
-    OverloadPtr interface = new Overload(target, interfaceCode, false, IGNORE);
+    OverloadPtr interface = new Overload(target, interfaceCode, false, false, IGNORE);
     interface->location = location;
 
     ProcedurePtr proc = new Procedure(name, vis, interface);
@@ -2436,6 +2449,8 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
     if (!optInline(isInline)) return false;
     bool callByName;
     if (!optCallByName(callByName)) return false;
+    bool final;
+    if (!optFinal(final)) return false;
     IdentifierPtr name;
     Location targetStartLocation = currentLocation();
     if (!identifier(name)) return false;
@@ -2459,7 +2474,7 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
     target->location = location;
     target->startLocation = targetStartLocation;
     target->endLocation = targetEndLocation;
-    OverloadPtr oload = new Overload(target, code, callByName, isInline);
+    OverloadPtr oload = new Overload(target, code, callByName, final, isInline);
     oload->location = location;
     x.push_back(oload.ptr());
     return true;
@@ -2486,6 +2501,8 @@ static bool overload(TopLevelItemPtr &x) {
     if (!optInline(isInline)) return false;
     bool callByName;
     if (!optCallByName(callByName)) return false;
+    bool final;
+    if (!optFinal(final)) return false;
     if (!keyword("overload")) return false;
     ExprPtr target;
     Location targetStartLocation = currentLocation();
@@ -2509,9 +2526,8 @@ static bool overload(TopLevelItemPtr &x) {
     target->startLocation = targetStartLocation;
     target->endLocation = targetEndLocation;
     code->location = location;
-    x = new Overload(target, code, callByName, isInline);
+    x = new Overload(target, code, callByName, final, isInline);
     x->location = location;
-    NameRefPtr name = (NameRef *)target.ptr();
     return true;
 }
 

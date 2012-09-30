@@ -1,0 +1,10 @@
+import printer.(println);
+
+define foo;
+final overload foo(x) = 0;
+final overload foo(x:Int) = 1;
+
+main() {
+    println(foo('1')); // ok, only foo(x) matches Char
+    println(foo(1)); // error, both foo(x) and foo(x:Int) match Int
+}

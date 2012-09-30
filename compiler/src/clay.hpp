@@ -344,8 +344,9 @@ public :
 struct Object {
     int refCount;
     int objKind;
+    bool finalCheck;
     Object(int objKind)
-        : refCount(0), objKind(objKind) {}
+        : refCount(0), objKind(objKind), finalCheck(true) {}
     void incRef() { ++refCount; }
     void decRef() {
         if (--refCount == 0)
@@ -1975,13 +1976,13 @@ struct Overload : public TopLevelItem {
     PatternPtr callablePattern;
     vector<PatternPtr> argPatterns;
     MultiPatternPtr varArgPattern;
-    
+    bool final;
     Overload(ExprPtr target,
              CodePtr code,
-             bool callByName,
+             bool callByName, bool final,
              InlineAttribute isInline)
         : TopLevelItem(OVERLOAD), target(target), code(code),
-          callByName(callByName), isInline(isInline),
+          callByName(callByName), final(final), isInline(isInline),
           patternsInitializedState(0), nameIsPattern(false) {}
 };
 
@@ -3299,6 +3300,7 @@ typedef Pointer<MatchResult> MatchResultPtr;
 
 struct MatchSuccess : public MatchResult {
     bool callByName;
+    bool final;
     InlineAttribute isInline;
     CodePtr code;
     EnvPtr env;
@@ -3312,9 +3314,9 @@ struct MatchSuccess : public MatchResult {
     vector<TypePtr> varArgTypes;
     unsigned varArgPosition;
 
-    MatchSuccess(bool callByName, InlineAttribute isInline, CodePtr code, EnvPtr env,
+    MatchSuccess(bool callByName, bool final, InlineAttribute isInline, CodePtr code, EnvPtr env,
                  ObjectPtr callable, const vector<TypePtr> &argsKey)
-        : MatchResult(MATCH_SUCCESS), callByName(callByName),
+        : MatchResult(MATCH_SUCCESS), callByName(callByName), final(final),
           isInline(isInline), code(code), env(env), callable(callable),
           argsKey(argsKey), varArgPosition(0) {}
 };
@@ -3419,6 +3421,7 @@ struct InvokeEntry {
     unsigned varArgPosition;
 
     bool callByName; // if callByName the rest of InvokeEntry is not set
+    bool final;
     InlineAttribute isInline;
 
     ObjectPtr analysis;
@@ -3436,6 +3439,7 @@ struct InvokeEntry {
         : parent(parent), varArgPosition(0),
           callable(callable), argsKey(argsKey),
           analyzed(false), analyzing(false), callByName(false),
+          final(false),
           isInline(IGNORE), llvmFunc(NULL), debugInfo(NULL)
     {
         for (size_t i = 0; i < CC_Count; ++i)
@@ -3452,7 +3456,7 @@ struct InvokeSet {
     vector<TypePtr> argsKey;
     OverloadPtr interface;
     vector<OverloadPtr> overloads;
-
+    
     vector<MatchSuccessPtr> matches;
     unsigned nextOverloadIndex;
 
@@ -3460,7 +3464,8 @@ struct InvokeSet {
 
     map<vector<ValueTempness>, InvokeEntry*> tempnessMap;
     map<vector<ValueTempness>, InvokeEntry*> tempnessMap2;
-
+    map<vector<ValueTempness>, InvokeEntry*> tempnessMapFinal;
+    
     InvokeSet(ObjectPtr callable,
               const vector<TypePtr> &argsKey,
               OverloadPtr symbolInterface,
@@ -3493,7 +3498,7 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
 void matchBindingError(MatchResultPtr result);
 void matchFailureLog(MatchFailureError const &err);
 void matchFailureError(MatchFailureError const &err);
-
+void matchFinalError(MatchFailureError const &err);
 
 
 //
