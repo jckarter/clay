@@ -1,14 +1,7 @@
 // pow function adapted from openlibm
 
 import math.native.kernel.ieee754.*;
-import math.native.sqrt.(sqrt);
-import math.native.abs.(abs);
-import math.native.scalbn.(scalbn);
-import math.native.exp.(exp);
-import math.native.sin.(sin);
-import math.native.cos.(cos);
-import math.native.log.(log);
-import math.native.arg.(arg);
+import math.native.protocol.*;
 import complex.*;
 
 
@@ -17,7 +10,7 @@ private var dp_h = array( 0.0, 5.84962487220764160156e-01); // 0x3FE2B803, 0x400
 private var dp_l = array( 0.0, 1.35003920212974897128e-08); // 0x3E4CFDEB, 0x43CFD006 
 	
 
-pow(x:Double, y:Double) : Double {
+overload pow(x:Double, y:Double) : Double {
 
 	alias two53	=  9007199254740992.0;	// 0x43400000, 0x00000000 
 

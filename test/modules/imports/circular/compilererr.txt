@@ -1,0 +1,5 @@
+import loop:
+    __main__
+    foo
+    bar
+    foo

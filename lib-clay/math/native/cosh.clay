@@ -1,18 +1,11 @@
 
 import math.native.kernel.ieee754.*;
-import math.native.exp.(exp);
-import math.native.expm1.(expm1);
-import math.native.abs.(abs);
-import math.native.ldexp.(ldexp);
+import math.native.protocol.*;
 import math.native.kernel.k_cexp.(__ldexp_cexp);
-import math.native.sin.(sin);
-import math.native.sinh.(sinh);
-import math.native.cos.(cos);
-import math.native.copysign.(copysign);
 import complex.*;
 
 
-cosh(x:Float) = Float(cosh(Double(x)));
+overload cosh(x:Float) = Float(cosh(Double(x)));
 
 overload cosh(x:Double) {
 	alias ONE = 1.;

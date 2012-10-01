@@ -2,8 +2,7 @@
 
 import math.native.kernel.ieee754.*;
 import math.native.kernel.k_cexp.(__ldexp_cexp);
-import math.native.cos.(cos);
-import math.native.sin.(sin);
+import math.native.protocol.*;
 import complex.*;
 
 
@@ -12,7 +11,7 @@ private var ln2HI = array(6.93147180369123816490e-01,-6.93147180369123816490e-01
 private var ln2LO = array(1.90821492927058770002e-10,-1.90821492927058770002e-10);// 0x3dea39ef, 0x35793c76 
 
 
-exp(a:Double) : Double { // default IEEE double exp 
+overload exp(a:Double) : Double { // default IEEE double exp 
 	alias o_threshold	= 7.09782712893383973096e+02;// 0x40862E42, 0xFEFA39EF 
 	alias u_threshold 	= -7.45133219101941108420e+02;  // 0xc0874910, 0xD52D3051 
 	alias TWOM1000 = 9.33263618503218878990e-302;     // 2**-1000=0x01700000,0
