@@ -582,7 +582,7 @@ static void setProperty(TypePtr type,
     code->body = new Return(RETURN_VALUE, returnExprs);
 
     ExprPtr target = new ObjectExpr(proc.ptr());
-    OverloadPtr overload = new Overload(target, code, false, IGNORE);
+    OverloadPtr overload = new Overload(target, code, false, false, IGNORE);
     overload->env = new Env();
     proc->overloads.insert(proc->overloads.begin(), overload);
 }

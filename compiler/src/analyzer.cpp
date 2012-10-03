@@ -1832,6 +1832,14 @@ InvokeEntry* analyzeCallable(ObjectPtr x,
         matchFailureError(failures);
     }
 
+    if (x->finalCheck) {//Check final overload
+        x->finalCheck = false;
+        InvokeEntry* entry2 = lookupInvokeEntry(x, argsKey, argsTempness, failures);
+        if (entry2 != NULL)
+            matchFinalError(failures);
+        x->finalCheck = true;
+    }
+
     if (entry->parent->shouldLog)
         matchFailureLog(failures);
 
@@ -3390,6 +3398,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             new ObjectExpr(proc.ptr()),
             code,
             entry.second->callByName,
+            entry.second->final,
             entry.second->isInline);
         overload->env = entry.second->env;
         addProcedureOverload(proc, entry.second->env, overload);

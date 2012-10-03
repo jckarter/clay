@@ -483,6 +483,13 @@ void matchFailureError(MatchFailureError const &err)
     error(buf);
 }
 
+void matchFinalError(MatchFailureError const &err)
+{
+    string buf = "matched final overload";
+    matchFailureMessage(err, buf);
+    error(buf);
+}
+
 void matchFailureLog(MatchFailureError const &err)
 {
     if (err.failures.empty())

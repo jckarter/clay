@@ -165,14 +165,17 @@ MatchSuccessPtr findMatchingInvoke(const vector<OverloadPtr> &overloads,
                                    unsigned &overloadIndex,
                                    ObjectPtr callable,
                                    const vector<TypePtr> &argsKey,
-                                   MatchFailureError &failures)
+                                   MatchFailureError &failures,
+                                   bool findFinal)
 {
     while (overloadIndex < overloads.size()) {
         OverloadPtr x = overloads[overloadIndex++];
+        if (findFinal && !x->final) continue;
         MatchResultPtr result = matchInvoke(x, callable, argsKey);
         failures.failures.push_back(make_pair(x, result));
         if (result->matchCode == MATCH_SUCCESS) {
             MatchSuccess *y = (MatchSuccess *)result.ptr();
+            y->final = x->final;
             return y;
         }
     }
@@ -181,18 +184,19 @@ MatchSuccessPtr findMatchingInvoke(const vector<OverloadPtr> &overloads,
 
 static MatchSuccessPtr getMatch(InvokeSet* invokeSet,
                                 unsigned entryIndex,
-                                MatchFailureError &failures)
+                                MatchFailureError &failures,
+                                bool findFinal)
 {
     if (entryIndex < invokeSet->matches.size())
         return invokeSet->matches[entryIndex];
     assert(entryIndex == invokeSet->matches.size());
-
     unsigned nextOverloadIndex = invokeSet->nextOverloadIndex;
     MatchSuccessPtr match = findMatchingInvoke(invokeSet->overloads,
                                                nextOverloadIndex,
                                                invokeSet->callable,
                                                invokeSet->argsKey,
-                                               failures);
+                                               failures,
+                                               findFinal);
     if (!match)
         return NULL;
     invokeSet->matches.push_back(match);
@@ -304,6 +308,7 @@ static InvokeEntry* newInvokeEntry(InvokeSet* parent,
     entry->varArgTypes = match->varArgTypes;
     entry->varArgPosition = match->varArgPosition;
     entry->callByName = match->callByName;
+    entry->final = match->final;
     entry->isInline = match->isInline;
 
     return entry;
@@ -315,12 +320,16 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
                                MatchFailureError &failures)
 {
     InvokeSet* invokeSet = lookupInvokeSet(callable, argsKey);
-
-    map<vector<ValueTempness>,InvokeEntry*>::iterator iter =
-        invokeSet->tempnessMap.find(argsTempness);
-    if (iter != invokeSet->tempnessMap.end())
-        return iter->second;
-    
+    map<vector<ValueTempness>,InvokeEntry*>::iterator iter;
+    if (!callable->finalCheck) {
+        iter = invokeSet->tempnessMapFinal.find(argsTempness);
+        if (iter != invokeSet->tempnessMapFinal.end())
+            return iter->second;
+    } else {
+        iter = invokeSet->tempnessMap.find(argsTempness);
+        if (iter != invokeSet->tempnessMap.end())
+            return iter->second;    
+    }
     MatchResultPtr interfaceResult;
     if (invokeSet->interface != NULL) {
         interfaceResult = matchInvoke(invokeSet->interface,
@@ -336,9 +345,8 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
     MatchSuccessPtr match;
     vector<ValueTempness> tempnessKey;
     vector<bool> forwardedRValueFlags;
-    
-    unsigned i = 0;
-    while ((match = getMatch(invokeSet,i,failures)).ptr() != NULL) {
+    unsigned i = (!callable->finalCheck) ? invokeSet->nextOverloadIndex : 0;
+    while ((match = getMatch(invokeSet,i,failures,!callable->finalCheck)).ptr() != NULL) {
         if (matchTempness(match->code,
                           argsTempness,
                           match->callByName,
@@ -351,7 +359,7 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
     }
     if (!match)
         return NULL;
-
+    
     iter = invokeSet->tempnessMap2.find(tempnessKey);
     if (iter != invokeSet->tempnessMap2.end()) {
         invokeSet->tempnessMap[argsTempness] = iter->second;
@@ -364,6 +372,8 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
     
     invokeSet->tempnessMap2[tempnessKey] = entry;
     invokeSet->tempnessMap[argsTempness] = entry;
+    if (!callable->finalCheck)
+        invokeSet->tempnessMapFinal[argsTempness] = entry;
 
     return entry;
 }

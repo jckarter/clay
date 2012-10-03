@@ -158,7 +158,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
             return new MatchPredicateError(code->predicate);
     
     MatchSuccessPtr result = new MatchSuccess(
-        overload->callByName, overload->isInline, code, staticEnv,
+        overload->callByName, overload->final, overload->isInline, code, staticEnv,
         callable, argsKey
     );
     

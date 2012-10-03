@@ -23,7 +23,7 @@ overload ContiguousSequence?(#BufferVector[T]) = true;
 
 // disable all constructors
 [T] overload BufferVector[T](..args);
-[T] overload BufferVector(..args);
+overload BufferVector(..args);
 
 [T when PODType?(T)]
 overload BufferVector[T](begin:Pointer[T], end:Pointer[T], current:Pointer[T]) --> returned:BufferVector[T] {
