@@ -25,8 +25,8 @@ private alias runMain(argc_, argv_, f, ..args) {
     catch (e) {
         try {
             printUnhandledExceptionToStderr(e);
-            libc.fprintf(libc.stderr, "at %s:%d\n", cstring(__exc_file), UInt(__exc_line));
-            printBacktraceToStderr(__exc_bt);
+            libc.fprintf(libc.stderr, "at %s:%d\n", cstring(__exc_context.file), UInt(__exc_context.line));
+            printBacktraceToStderr(__exc_context.backtrace);
         } catch (f) {
             libc.fprintf(libc.stderr, "unhandled exception during unhandled exception printing\n");
         }

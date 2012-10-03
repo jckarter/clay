@@ -20,11 +20,15 @@ record NoException ();
 
 overload Exception() = Exception(NoException());
 
-private record ExceptionData (
-    exception: Exception,
+record ExceptionContext (
     backtrace: Backtrace,
     file: StringLiteralRef,
     line: UInt,
+);
+
+private record ExceptionData (
+    exception: Exception,
+    context: ExceptionContext,
 );
 
 private exceptionObject(exp:RawPointer) = ref Pointer[ExceptionData](exp)^;
@@ -52,14 +56,15 @@ overload throwValue(x:T) : {
     errorWithPrintfNoThrow(stringLiteralConcat("exception of type ", StaticName(T)," thrown with exceptions disabled"));
 }
 
-private allocateExceptionData(forward x, file, line) = allocateObject(ExceptionData(Exception(x), Backtrace(), file, line));
+private allocateExceptionData(forward x, file, line) =
+    allocateObject(ExceptionData(Exception(x), ExceptionContext(Backtrace(), file, line)));
 
 [ when ExceptionsEnabled?]
 alias overload throwValue(x) : {
     // allocateExceptionData cannot be inlined, because allocateExceptionData is also an alias function that throws
     var exp = allocateExceptionData(x, StringLiteralRef(__FILE__), UInt(__LINE__));
     if (not Flag?("clay.DisableBacktraceOnThrow")) {
-        exp^.backtrace = captureBacktrace();
+        exp^.context.backtrace = captureBacktrace();
     }
     signalException(RawPointer(exp));
 }
@@ -99,22 +104,18 @@ alias throwButPropagateLike(ex, ..expr) {
 overload exceptionIs?(#T, exp:RawPointer) : Bool = nestedVariantIs?(exceptionObject(exp).exception, T);
 
 [T]
-overload exceptionAs(#T, exp:RawPointer) : T, Backtrace, StringLiteralRef, UInt {
+overload exceptionAs(#T, exp:RawPointer) : T, ExceptionContext {
     finally freeRawMemory(exp);
     return
         moveUnsafe(nestedVariantAs(exceptionObject(exp).exception, T)),
-        moveUnsafe(exceptionObject(exp).backtrace),
-        exceptionObject(exp).file,
-        exceptionObject(exp).line;
+        moveUnsafe(exceptionObject(exp).context);
 }
 
-overload exceptionAsAny(exp:RawPointer) : Exception, Backtrace, StringLiteralRef, UInt {
+overload exceptionAsAny(exp:RawPointer) : Exception, ExceptionContext {
     finally freeRawMemory(exp);
     return
         moveUnsafe(exceptionObject(exp).exception),
-        moveUnsafe(exceptionObject(exp).backtrace),
-        exceptionObject(exp).file,
-        exceptionObject(exp).line;
+        moveUnsafe(exceptionObject(exp).context);
 }
 
 
