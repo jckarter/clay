@@ -146,7 +146,10 @@ StatementPtr desugarForStatement(ForPtr x) {
 
 static void makeExceptionVars(vector<IdentifierPtr>& identifiers, CatchPtr x) {
     identifiers.push_back(x->exceptionVar);
-    identifiers.push_back(Identifier::get("__exc_context", x->location));
+    identifiers.push_back(
+            !!x->contextVar ?
+                    x->contextVar :
+                    Identifier::get("%context", x->location));
 }
 
 StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {

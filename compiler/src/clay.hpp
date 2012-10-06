@@ -1663,13 +1663,15 @@ struct Try : public Statement {
 struct Catch : public ANode {
     IdentifierPtr exceptionVar;
     ExprPtr exceptionType; // optional
+    IdentifierPtr contextVar;
     StatementPtr body;
 
     Catch(IdentifierPtr exceptionVar,
           ExprPtr exceptionType,
+          IdentifierPtr contextVar,
           StatementPtr body)
         : ANode(CATCH), exceptionVar(exceptionVar),
-          exceptionType(exceptionType), body(body) {}
+          exceptionType(exceptionType), contextVar(contextVar), body(body) {}
 };
 
 struct Throw : public Statement {

@@ -1,0 +1,26 @@
+import printer.*;
+
+record MyException();
+
+instance Exception (MyException);
+
+foo() {
+    try {
+        throw MyException();
+    } catch (e in ctx) {
+        println("foo: ", ctx.line);
+    }
+}
+
+bar() {
+    try {
+        throw MyException();
+    } catch (e: MyException in ctx) {
+        println("bar: ", ctx.line);
+    }
+}
+
+main() {
+    foo();
+    bar();
+}
