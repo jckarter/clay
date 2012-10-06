@@ -43,7 +43,7 @@ record ExampleController = newClass("ExampleController", NSObject,
             case (2)
                 _performMath(self, multiply);
             case (3)
-                _performMath(self, divide);
+                _performMath(self, quotient);
             else {}
         })],
     ),

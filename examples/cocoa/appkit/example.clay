@@ -28,7 +28,7 @@ record ExampleController = newClass("ExampleController", NSObject,
         ["performAdd:", IBAction((self, sender) => { _performMath(self, add); })],
         ["performSubtract:", IBAction((self, sender) => { _performMath(self, subtract); })],
         ["performMultiply:", IBAction((self, sender) => { _performMath(self, multiply); })],
-        ["performDivide:", IBAction((self, sender) => { _performMath(self, divide); })],
+        ["performDivide:", IBAction((self, sender) => { _performMath(self, quotient); })],
         ["performClear:", IBAction((self, sender) => {
             self^.leftField.setStringValue(NSSTR(""));
             self^.rightField.setStringValue(NSSTR(""));
