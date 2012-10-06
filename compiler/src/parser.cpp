@@ -3179,4 +3179,15 @@ void parseTopLevelItems(SourcePtr source, int offset, int length,
     applyParser(source, offset, length, topLevelItems, topLevels);
 }
 
+//
+// parseInteractive
+//
+
+void parseInteractive(SourcePtr source, int offset, int length,
+        vector<StatementPtr> &stmts)
+{
+    applyParser(source, offset, length, blockItems, stmts);
+}
+
+
 }

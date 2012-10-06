@@ -11,6 +11,7 @@ set(SOURCES
     evaluator.cpp
     externals.cpp
     hirestimer.cpp
+    interactive.cpp
     invoketables.cpp
     lambdas.cpp
     lexer.cpp
@@ -50,9 +51,9 @@ if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CLAY_CXXFLAGS "${LLVM_CXXFLAGS} -UNDEBUG")
+    set(CLAY_CXXFLAGS "${LLVM_CXXFLAGS} -UNDEBUG -fexceptions")
 else()
-    set(CLAY_CXXFLAGS "${LLVM_CXXFLAGS} -DNDEBUG")
+    set(CLAY_CXXFLAGS "${LLVM_CXXFLAGS} -DNDEBUG -fexceptions")
 endif()
 
 set(ENABLE_PCH False CACHE BOOL

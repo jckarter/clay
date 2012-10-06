@@ -1,5 +1,3 @@
-#include <sstream>
-
 #include "clay.hpp"
 
 namespace clay {
@@ -1262,5 +1260,44 @@ DEFINE_OPERATOR_ACCESSOR(doIntegerRemainderChecked);
 DEFINE_OPERATOR_ACCESSOR(doIntegerShiftLeftChecked);
 DEFINE_OPERATOR_ACCESSOR(doIntegerNegateChecked);
 DEFINE_OPERATOR_ACCESSOR(doIntegerConvertChecked);
+
+//this doesn't work
+void addGlobals(ModulePtr m, const vector<TopLevelItemPtr>& toplevels) {
+    vector<TopLevelItemPtr>::const_iterator i, end;
+    for (i = toplevels.begin(), end = toplevels.end();
+         i != end; ++i) {
+		TopLevelItem* topLevelItem = new TopLevelItem(*i->ptr());
+		m->topLevelItems.push_back(TopLevelItemPtr(topLevelItem));
+		TopLevelItem *x = m->topLevelItems[m->topLevelItems.size() - 1].ptr();
+        x->env = m->env;
+        switch (x->objKind) {
+        case ENUMERATION : {
+            Enumeration *enumer = (Enumeration *)x;
+            TypePtr t = enumType(enumer);
+            addGlobal(m, enumer->name, enumer->visibility, t.ptr());
+            for (unsigned i = 0 ; i < enumer->members.size(); ++i) {
+                EnumMember *member = enumer->members[i].ptr();
+                member->index = (int)i;
+                member->type = t;
+                addGlobal(m, member->name, enumer->visibility, member);
+            }
+            break;
+        }
+        case PROCEDURE : {
+            Procedure *proc = (Procedure *)x;
+            if (proc->interface != NULL)
+                proc->interface->env = m->env;
+            // fallthrough
+        }
+        default :
+            if (x->name.ptr())
+                addGlobal(m, x->name, x->visibility, x);
+            break;
+        }
+
+    }
+
+
+}
 
 }
