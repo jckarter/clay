@@ -6,7 +6,7 @@
 #else
 # include <unistd.h>
 #endif
-#include <iostream>
+
 namespace clay {
 
 #ifdef WIN32
@@ -961,7 +961,6 @@ int main2(int argc, char **argv, char const* const* envp) {
         }
         while (*end);
     }
-	addSearchPath("d:/c/clay/");
     // Add the relative path from the executable
     PathString clayExe(llvm::sys::Path::GetMainExecutable(argv[0], (void *)&usage).c_str());
     llvm::StringRef clayDir = llvm::sys::path::parent_path(clayExe);
@@ -1023,29 +1022,7 @@ int main2(int argc, char **argv, char const* const* envp) {
         llvm::sys::RemoveFileOnSignal(llvm::sys::Path(dependenciesOutputFile));
     }
 
-
     HiResTimer loadTimer, compileTimer, optTimer, outputTimer;
-
-#ifdef CLAY_INTERACTIVE
-
-    string s = "var x = 5+1;";
-    SourcePtr source = new Source(s, 1, 1);
-
-    vector<StatementPtr>  statements( parseInteractive(source, 0, source->size()) );
-    for (int i = 0; i < statements.size(); i++)
-    {
-        llvm::errs() << statements[i] << "\n";
-    }
-
-    //Здесь мы делаем контекст
-
-    codegenStatement(StatementPtr statements[0], EnvPtr env, CodegenContext* ctx);
-
-
-    optimizeLLVM(llvmModule, optLevel, internalize);
-    runModule(llvmModule, argv, envp);
-    return 0;
-#endif
 
 
 	//compiler
