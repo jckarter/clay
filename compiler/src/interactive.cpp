@@ -28,60 +28,61 @@ namespace clay {
         return funName.str();
     }
 
-	string stripSpaces(const string& s) {
-		size_t i;
-		for (i = 0; i < s.size(); ++i) {
-			if (!isSpace(s[i]))
-				break;
-		}
-		return s.substr(i, s.length());
-	}
-
-	static void replCommand(const string& line)
-	{
-		typedef llvm::SmallString<16U> Str;
-		SourcePtr source = new Source(line, 0);
-		vector<Token> tokens;
-		tokenize(source, 0, line.length(), tokens);
-		Str cmd = tokens[0].str; 
-		if (cmd == "q") {
-			exit(0);
-		} else if (cmd == "print") {
-			for (size_t i = 1; i < tokens.size(); ++i) {
-				if (tokens[i].tokenKind == T_IDENTIFIER) {
-					Str identifier = tokens[i].str;
-					llvm::StringMap<ImportSet>::const_iterator iter = module->allSymbols.find(identifier);
-					if (iter == module->allSymbols.end()) {
-						std::cout << "Can't find identifier " << identifier.c_str();
-					} else {
-						for (size_t i = 0; i < iter->second.size(); ++i) {
-							llvm::errs() << iter->second[i] << "\n";
-						}
-					}
-				}
-			}
-		}
-		else {
-			std::cout << "Unknown interactive mode command: " << cmd.c_str() << "\n";
-		}
-	}
-
-    static void jitTopLevel(const string& line)
+    string stripSpaces(string const& s)
     {
-		SourcePtr source = new Source(line, 0);
-		vector<TopLevelItemPtr> toplevels;
-		parseTopLevelItems(source, 0, line.length(), toplevels);
-		for (size_t i = 0; i < toplevels.size(); ++i) {
-			llvm::errs() << i << ": " << toplevels[i] << "\n";
-		}
-
-		//this doesn't work
-		addGlobals(module, toplevels);
-		//module->initialized = false;
-		//initModule(module);
+        size_t i;
+        for (i = 0; i < s.size(); ++i) {
+            if (!isSpace(s[i]))
+                break;
+        }
+        return s.substr(i, s.length());
     }
 
-    static void jitStatements(const string& line)
+    static void replCommand(string const& line)
+    {
+        typedef llvm::SmallString<16U> Str;
+        SourcePtr source = new Source(line, 0);
+        vector<Token> tokens;
+        tokenize(source, 0, line.length(), tokens);
+        Str cmd = tokens[0].str;
+        if (cmd == "q") {
+            exit(0);
+        } else if (cmd == "print") {
+            for (size_t i = 1; i < tokens.size(); ++i) {
+                if (tokens[i].tokenKind == T_IDENTIFIER) {
+                    Str identifier = tokens[i].str;
+                    llvm::StringMap<ImportSet>::const_iterator iter = module->allSymbols.find(identifier);
+                    if (iter == module->allSymbols.end()) {
+                        std::cout << "Can't find identifier " << identifier.c_str();
+                    } else {
+                        for (size_t i = 0; i < iter->second.size(); ++i) {
+                            llvm::errs() << iter->second[i] << "\n";
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            std::cout << "Unknown interactive mode command: " << cmd.c_str() << "\n";
+        }
+    }
+
+    static void jitTopLevel(string const& line)
+    {
+        SourcePtr source = new Source(line, 0);
+        vector<TopLevelItemPtr> toplevels;
+        parseTopLevelItems(source, 0, line.length(), toplevels);
+        for (size_t i = 0; i < toplevels.size(); ++i) {
+                    llvm::errs() << i << ": " << toplevels[i] << "\n";
+        }
+
+        //this doesn't work
+        addGlobals(module, toplevels);
+        //module->initialized = false;
+        //initModule(module);
+    }
+
+    static void jitStatements(string const& line)
     {
         SourcePtr source = new Source(line, 0);
         vector<StatementPtr> statements;
@@ -93,21 +94,21 @@ namespace clay {
             return;
         }
 
-		for (size_t i = 0; i < statements.size(); ++i) {
-			llvm::errs() << statements[i] << "\n";
-		}
+        for (size_t i = 0; i < statements.size(); ++i) {
+            llvm::errs() << statements[i] << "\n";
+        }
 
         IdentifierPtr fun = Identifier::get(newFunctionName());
 
         BlockPtr funBody = new Block(statements);
         ExternalProcedurePtr entryProc =
-            new ExternalProcedure(fun,
-            PRIVATE,
-            vector<ExternalArgPtr>(),
-            false,
-            NULL,
-            funBody.ptr(),
-            new ExprList());
+                new ExternalProcedure(fun,
+                                      PRIVATE,
+                                      vector<ExternalArgPtr>(),
+                                      false,
+                                      NULL,
+                                      funBody.ptr(),
+                                      new ExprList());
 
         entryProc->env = module->env;
 
@@ -129,11 +130,11 @@ namespace clay {
             std::cout.flush();
             std::cout << "clay>";
             getline (std::cin, line);
-			line = stripSpaces(line);
+            line = stripSpaces(line);
             if (line[0] == ':') {
                 replCommand(line.substr(1, line.size() - 1));
-			}else if (line[0] == '^')	{
-				jitTopLevel(line.substr(1, line.size() - 1));
+            }else if (line[0] == '^')	{
+                jitTopLevel(line.substr(1, line.size() - 1));
             }
             else {
                 jitStatements(line);
@@ -159,7 +160,7 @@ namespace clay {
 
         llvm::errs() << "Clay interpreter\n";
         llvm::errs() << ":q to exit\n";
-		llvm::errs() << ":print {identifier} to print an identifier\n";
+        llvm::errs() << ":print {identifier} to print an identifier\n";
 
         setExitOnError(false);
         llvm::EngineBuilder eb(llvmModule);
@@ -169,7 +170,7 @@ namespace clay {
         engine = eb.create();
         engine->runStaticConstructorsDestructors(false);
 
-		interactiveLoop();
+        interactiveLoop();
     }
 
 }
