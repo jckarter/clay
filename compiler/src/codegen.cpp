@@ -6736,7 +6736,7 @@ static void finalizeSimpleContext(CodegenContext* ctx,
     ctx->initBuilder->CreateBr(&(*bbi));
 }
 
-static void initializeCtorsDtors()
+void initializeCtorsDtors()
 {
     setUpSimpleContext(constructorsCtx, "clayglobals_init");
     setUpSimpleContext(destructorsCtx, "clayglobals_destroy");

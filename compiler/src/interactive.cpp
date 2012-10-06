@@ -18,58 +18,137 @@ namespace clay {
     static llvm::ExecutionEngine *engine;
 
     jmp_buf recovery;
+
+    string newFunctionName()
+    {
+        static int funNum = 0;
+        ostringstream funName;
+        funName << replAnonymousFunctionName << funNum;
+        ++funNum;
+        return funName.str();
+    }
+
+	string stripSpaces(const string& s) {
+		size_t i;
+		for (i = 0; i < s.size(); ++i) {
+			if (!isSpace(s[i]))
+				break;
+		}
+		return s.substr(i, s.length());
+	}
+
+	static void replCommand(const string& line)
+	{
+		typedef llvm::SmallString<16U> Str;
+		SourcePtr source = new Source(line, 0);
+		vector<Token> tokens;
+		tokenize(source, 0, line.length(), tokens);
+		Str cmd = tokens[0].str; 
+		if (cmd == "q") {
+			exit(0);
+		} else if (cmd == "print") {
+			for (size_t i = 1; i < tokens.size(); ++i) {
+				if (tokens[i].tokenKind == T_IDENTIFIER) {
+					Str identifier = tokens[i].str;
+					llvm::StringMap<ImportSet>::const_iterator iter = module->allSymbols.find(identifier);
+					if (iter == module->allSymbols.end()) {
+						std::cout << "Can't find identifier " << identifier.c_str();
+					} else {
+						for (size_t i = 0; i < iter->second.size(); ++i) {
+							llvm::errs() << iter->second[i] << "\n";
+						}
+					}
+				}
+			}
+		}
+		else {
+			std::cout << "Unknown interactive mode command: " << cmd.c_str() << "\n";
+		}
+	}
+
+    static void jitTopLevel(const string& line)
+    {
+		SourcePtr source = new Source(line, 0);
+		vector<TopLevelItemPtr> toplevels;
+		parseTopLevelItems(source, 0, line.length(), toplevels);
+		for (size_t i = 0; i < toplevels.size(); ++i) {
+			llvm::errs() << i << ": " << toplevels[i] << "\n";
+		}
+
+		//this doesn't work
+		addGlobals(module, toplevels);
+		//module->initialized = false;
+		//initModule(module);
+    }
+
+    static void jitStatements(const string& line)
+    {
+        SourcePtr source = new Source(line, 0);
+        vector<StatementPtr> statements;
+
+        try {
+            parseInteractive(source, 0, source->size(), statements);
+        }
+        catch (std::exception) {
+            return;
+        }
+
+		for (size_t i = 0; i < statements.size(); ++i) {
+			llvm::errs() << statements[i] << "\n";
+		}
+
+        IdentifierPtr fun = Identifier::get(newFunctionName());
+
+        BlockPtr funBody = new Block(statements);
+        ExternalProcedurePtr entryProc =
+            new ExternalProcedure(fun,
+            PRIVATE,
+            vector<ExternalArgPtr>(),
+            false,
+            NULL,
+            funBody.ptr(),
+            new ExprList());
+
+        entryProc->env = module->env;
+
+        try {
+            codegenExternalProcedure(entryProc, true);
+        }
+        catch (std::exception) {
+            return;
+        }
+
+        engine->runFunction(entryProc->llvmFunc, std::vector<llvm::GenericValue>());
+    }
+
     static void interactiveLoop()
     {
         setjmp(recovery);
         string line;
-        static int lineNum = 0;
         while(true) {
             std::cout.flush();
             std::cout << "clay>";
             getline (std::cin, line);
-            if (line == ":q")
-                break;
-            SourcePtr source = new Source(line, 0);
-            vector<StatementPtr> statements;
-            try {
-                parseInteractive(source, 0, source->size(), statements);
+			line = stripSpaces(line);
+            if (line[0] == ':') {
+                replCommand(line.substr(1, line.size() - 1));
+			}else if (line[0] == '^')	{
+				jitTopLevel(line.substr(1, line.size() - 1));
             }
-            catch (std::exception) {
-                continue;
+            else {
+                jitStatements(line);
             }
-            ostringstream funName;
-            funName << replAnonymousFunctionName << lineNum;
-            IdentifierPtr fun = Identifier::get(funName.str());
-            ++lineNum ;
-
-            BlockPtr funBody = new Block(statements);
-            ExternalProcedurePtr entryProc =
-                    new ExternalProcedure(fun,
-                                          PRIVATE,
-                                          vector<ExternalArgPtr>(),
-                                          false,
-                                          NULL,
-                                          funBody.ptr(),
-                                          new ExprList());
-
-            entryProc->env = module->env;
-            try {
-                codegenExternalProcedure(entryProc, true);
-            }
-            catch (std::exception) {
-                continue;
-            }
-
-            engine->runFunction(entryProc->llvmFunc, std::vector<llvm::GenericValue>());
         }
         engine->runStaticConstructorsDestructors(true);
     }
 
     static void exceptionHandler(int i)
     {
-        std::cout << "SIGABRT called\n";
+        llvm::errs() << "SIGABRT called\n";
         longjmp(recovery, 1);
     }
+
+
 
     void runInteractive(llvm::Module *llvmModule_, ModulePtr module_)
     {
@@ -78,8 +157,9 @@ namespace clay {
         llvmModule = llvmModule_;
         module = module_;
 
-        std::cout << "Clay interpreter\n";
-        std::cout << ":q to exit\n";
+        llvm::errs() << "Clay interpreter\n";
+        llvm::errs() << ":q to exit\n";
+		llvm::errs() << ":print {identifier} to print an identifier\n";
 
         setExitOnError(false);
         llvm::EngineBuilder eb(llvmModule);
@@ -89,7 +169,7 @@ namespace clay {
         engine = eb.create();
         engine->runStaticConstructorsDestructors(false);
 
-        interactiveLoop();
+		interactiveLoop();
     }
 
 }

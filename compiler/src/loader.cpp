@@ -211,7 +211,7 @@ static SourcePtr loadFile(llvm::StringRef fileName, vector<string> *sourceFiles)
 //
 
 static void loadDependents(ModulePtr m, vector<string> *sourceFiles);
-static void initModule(ModulePtr m);
+void initModule(ModulePtr m);
 static ModulePtr makePrimitivesModule();
 static ModulePtr makeOperatorsModule();
 
@@ -221,6 +221,8 @@ static void installGlobals(ModulePtr m) {
     for (i = m->topLevelItems.begin(), end = m->topLevelItems.end();
          i != end; ++i) {
         TopLevelItem *x = i->ptr();
+		printName(llvm::errs(), x);
+		llvm::errs() << "\n";
         x->env = m->env;
         switch (x->objKind) {
         case ENUMERATION : {
@@ -444,7 +446,7 @@ void addProcedureOverload(ProcedurePtr proc, EnvPtr env, OverloadPtr x) {
 
 static void initOverload(OverloadPtr x) {
     EnvPtr env = overloadPatternEnv(x);
-    PatternPtr pattern = evaluateOnePattern(x->target, env);
+	PatternPtr pattern = evaluateOnePattern(x->target, env);
     ObjectPtr obj = derefDeep(pattern);
     if (obj == NULL) {
         x->nameIsPattern = true;
@@ -454,6 +456,7 @@ static void initOverload(OverloadPtr x) {
         switch (obj->objKind) {
         case PROCEDURE : {
             Procedure *proc = (Procedure *)obj.ptr();
+
             addProcedureOverload(proc, env, x);
             break;
         }
@@ -532,7 +535,7 @@ static void checkStaticAssert(StaticAssertTopLevelPtr a) {
     evaluateStaticAssert(a->location, a->cond, a->message, a->env);
 }
 
-static void initModule(ModulePtr m) {
+void initModule(ModulePtr m) {
     if (m->initialized) return;
     m->initialized = true;
     vector<ImportPtr>::iterator ii, iend;
@@ -1212,5 +1215,44 @@ DEFINE_OPERATOR_ACCESSOR(doIntegerRemainderChecked);
 DEFINE_OPERATOR_ACCESSOR(doIntegerShiftLeftChecked);
 DEFINE_OPERATOR_ACCESSOR(doIntegerNegateChecked);
 DEFINE_OPERATOR_ACCESSOR(doIntegerConvertChecked);
+
+//this doesn't work
+void addGlobals(ModulePtr m, const vector<TopLevelItemPtr>& toplevels) {
+    vector<TopLevelItemPtr>::const_iterator i, end;
+    for (i = toplevels.begin(), end = toplevels.end();
+         i != end; ++i) {
+		TopLevelItem* topLevelItem = new TopLevelItem(*i->ptr());
+		m->topLevelItems.push_back(TopLevelItemPtr(topLevelItem));
+		TopLevelItem *x = m->topLevelItems[m->topLevelItems.size() - 1].ptr();
+        x->env = m->env;
+        switch (x->objKind) {
+        case ENUMERATION : {
+            Enumeration *enumer = (Enumeration *)x;
+            TypePtr t = enumType(enumer);
+            addGlobal(m, enumer->name, enumer->visibility, t.ptr());
+            for (unsigned i = 0 ; i < enumer->members.size(); ++i) {
+                EnumMember *member = enumer->members[i].ptr();
+                member->index = (int)i;
+                member->type = t;
+                addGlobal(m, member->name, enumer->visibility, member);
+            }
+            break;
+        }
+        case PROCEDURE : {
+            Procedure *proc = (Procedure *)x;
+            if (proc->interface != NULL)
+                proc->interface->env = m->env;
+            // fallthrough
+        }
+        default :
+            if (x->name.ptr())
+                addGlobal(m, x->name, x->visibility, x);
+            break;
+        }
+
+    }
+
+
+}
 
 }

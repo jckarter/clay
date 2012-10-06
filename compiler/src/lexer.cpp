@@ -529,7 +529,7 @@ static bool floatToken(Token &x) {
 // space
 //
 
-static bool isSpace(char c) {
+bool isSpace(char c) {
     return ((c == ' ') || (c == '\t') || (c == '\n') || (c == '\r') ||
             (c == '\f') || (c == '\v'));
 }

@@ -958,6 +958,7 @@ int main2(int argc, char **argv, char const* const* envp) {
         }
         while (*end);
     }
+	addSearchPath("d:/c/clay/");
     // Add the relative path from the executable
     PathString clayExe(llvm::sys::Path::GetMainExecutable(argv[0], (void *)&usage).c_str());
     llvm::StringRef clayDir = llvm::sys::path::parent_path(clayExe);

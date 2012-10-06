@@ -1013,7 +1013,7 @@ void tokenize(SourcePtr source, vector<Token> &tokens);
 void tokenize(SourcePtr source, size_t offset, size_t length,
               vector<Token> &tokens);
 
-
+bool isSpace(char c);
 
 //
 // AST
@@ -2558,7 +2558,8 @@ ModulePtr primitivesModule();
 ModulePtr operatorsModule();
 ModulePtr staticModule(ObjectPtr x);
 
-
+void addGlobals(ModulePtr m, const vector<TopLevelItemPtr>& toplevels);
+void initModule(ModulePtr m);
 
 //
 // PrimOp
@@ -3768,6 +3769,8 @@ EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env);
 //
 // codegen
 //
+
+void initializeCtorsDtors();
 
 static const unsigned short DW_LANG_user_CLAY = 0xC1A4;
 
