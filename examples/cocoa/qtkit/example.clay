@@ -1,6 +1,6 @@
 import cocoa.*;
 import cocoa.qtkit.*;
-import printer.(println);
+import printer.(error, println);
 import unix.(sleep);
 
 main(args) {
@@ -19,7 +19,7 @@ main(args) {
         movie.play();
 
         var duration = movie.duration();
-        sleep(UInt(duration.timeValue / duration.timeScale + 1));
+        sleep(UInt(duration.timeValue \ duration.timeScale + 1));
         println("Done");
     }
 }
