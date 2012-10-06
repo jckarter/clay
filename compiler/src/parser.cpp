@@ -1426,10 +1426,17 @@ static bool catchBlock(CatchPtr &x) {
     if (!identifier(evar)) return false;
     ExprPtr etype;
     if (!optExprTypeSpec(etype)) return false;
+    IdentifierPtr contextVar;
+    int p = save();
+    if (symbol(";") || (restore(p), keyword("in"))) {
+        if (!identifier(contextVar)) return false;
+    } else {
+        restore(p);
+    }
     if (!symbol(")")) return false;
     StatementPtr body;
     if (!block(body)) return false;
-    x = new Catch(evar, etype, body);
+    x = new Catch(evar, etype, contextVar, body);
     x->location = location;
     return true;
 }

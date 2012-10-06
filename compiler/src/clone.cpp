@@ -477,6 +477,7 @@ CatchPtr clone(CatchPtr x)
 {
     CatchPtr y = new Catch(x->exceptionVar,
                            cloneOpt(x->exceptionType),
+                           x->contextVar,
                            clone(x->body));
     y->location = x->location;
     return y;
