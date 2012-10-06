@@ -1,12 +1,11 @@
 // log
 
 import math.native.kernel.ieee754.*;
-import math.native.abs.(abs);
-import math.native.atan2.(atan2);
+import math.native.protocol.*;
 import complex.(Complex,Complex?,imagValue,real);
 
 
-log(x:Double) : Double {
+overload log(x:Double) : Double {
 	alias ZERO = 0.;
 	alias HALF = 0.5;
 	alias ONE = 1.;

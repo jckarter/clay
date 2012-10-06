@@ -1,1 +1,4 @@
-unhandled exception: MyException(17)
+(re)
+unhandled exception: MyException\(17\)
+at .*main.clay:8
+.*

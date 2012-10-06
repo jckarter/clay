@@ -1,5 +1,5 @@
 import core.libc as libc;
-import core.errors.backtrace.(showBacktrace);
+import core.errors.backtrace.*;
 import __operators__.(
     throwValue,
     continueException,
@@ -20,7 +20,18 @@ record NoException ();
 
 overload Exception() = Exception(NoException());
 
-private exceptionObject(exp:RawPointer) = ref Pointer[Exception](exp)^;
+record ExceptionContext (
+    backtrace: Backtrace,
+    file: StringLiteralRef,
+    line: UInt,
+);
+
+private record ExceptionData (
+    exception: Exception,
+    context: ExceptionContext,
+);
+
+private exceptionObject(exp:RawPointer) = ref Pointer[ExceptionData](exp)^;
 
 
 
@@ -45,9 +56,16 @@ overload throwValue(x:T) : {
     errorWithPrintfNoThrow(stringLiteralConcat("exception of type ", StaticName(T)," thrown with exceptions disabled"));
 }
 
+private allocateExceptionData(forward x, file, line) =
+    allocateObject(ExceptionData(Exception(x), ExceptionContext(Backtrace(), file, line)));
+
 [ when ExceptionsEnabled?]
-overload throwValue(forward x) : {
-    var exp = allocateObject(Exception(x));
+alias overload throwValue(x) : {
+    // allocateExceptionData cannot be inlined, because allocateExceptionData is also an alias function that throws
+    var exp = allocateExceptionData(x, StringLiteralRef(__FILE__), UInt(__LINE__));
+    if (not Flag?("clay.DisableBacktraceOnThrow")) {
+        exp^.context.backtrace = captureBacktrace();
+    }
     signalException(RawPointer(exp));
 }
 
@@ -83,17 +101,21 @@ alias throwButPropagateLike(ex, ..expr) {
 /// @section  exceptionIs?, exceptionAs, exceptionAsAny 
 
 [T]
-overload exceptionIs?(#T, exp:RawPointer) : Bool = nestedVariantIs?(exceptionObject(exp), T);
+overload exceptionIs?(#T, exp:RawPointer) : Bool = nestedVariantIs?(exceptionObject(exp).exception, T);
 
 [T]
-overload exceptionAs(#T, exp:RawPointer) --> ex:T {
-    ex <-- moveUnsafe(nestedVariantAs(exceptionObject(exp), T));
-    freeRawMemory(exp);
+overload exceptionAs(#T, exp:RawPointer) : T, ExceptionContext {
+    finally freeRawMemory(exp);
+    return
+        moveUnsafe(nestedVariantAs(exceptionObject(exp).exception, T)),
+        moveUnsafe(exceptionObject(exp).context);
 }
 
-overload exceptionAsAny(exp:RawPointer) --> ex:Exception {
-    ex <-- moveUnsafe(exceptionObject(exp));
-    freeRawMemory(exp);
+overload exceptionAsAny(exp:RawPointer) : Exception, ExceptionContext {
+    finally freeRawMemory(exp);
+    return
+        moveUnsafe(exceptionObject(exp).exception),
+        moveUnsafe(exceptionObject(exp).context);
 }
 
 

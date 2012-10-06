@@ -1,7 +1,7 @@
 
 import complex.*;
 import numbers.floats.(infinity?,infinity);
-import math.native.copysign.(copysign);
+import math.native.protocol.*;
 
 
 [T when Complex?(T) ]

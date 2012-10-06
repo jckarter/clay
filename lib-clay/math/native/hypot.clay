@@ -1,11 +1,10 @@
 // hypot adapted from openlibm
 
 import math.native.kernel.ieee754.*;
-import math.native.sqrt.(sqrt);
-import math.native.abs.(abs);
+import math.native.protocol.*;
 import numbers.floats.(nan?,nan,infinity);
 
-hypot(x:Double, y:Double) : Double {
+overload hypot(x:Double, y:Double) : Double {
 	alias ZERO = 0.;
 	alias ONE = 1.;
 	var ha = GET_IEEE_HIGH(x);

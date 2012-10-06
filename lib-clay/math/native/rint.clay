@@ -1,5 +1,6 @@
 
 import math.native.kernel.ieee754.*;
+import math.native.protocol.*;
 
 private alias DHUGE = GreatestPositiveFinite(Double);
 private alias FHUGE = GreatestPositiveFinite(Float);
@@ -12,7 +13,7 @@ private var TWO52 = array(
 );
 
 
-rint(a:Float) = Float(rint(Double(a)));
+overload rint(a:Float) = Float(rint(Double(a)));
 
 
 overload rint(a:Double){

@@ -377,7 +377,8 @@ TypePtr staticType(ObjectPtr obj)
     return t.ptr();
 }
 
-void initializeEnumType(EnumTypePtr t) {
+void initializeEnumType(EnumTypePtr t) 
+{
     if (t->initialized)
         return;
 
@@ -393,6 +394,29 @@ TypePtr enumType(EnumerationPtr enumeration)
     if (!enumeration->type)
         enumeration->type = new EnumType(enumeration);
     return enumeration->type;
+}
+
+void initializeNewType(NewTypeTypePtr t) 
+{
+    if (t->newtype->initialized)
+        return;
+    CompileContextPusher pusher(t.ptr());
+    t->newtype->baseType = evaluateType(t->newtype->expr, t->newtype->env);
+    t->newtype->initialized = true;
+}
+
+TypePtr newType(NewTypePtr newtype)
+{
+    if (!newtype->type)
+        newtype->type = new NewTypeType(newtype);
+    return newtype->type;
+}
+
+TypePtr newtypeReprType(NewTypeTypePtr t)
+{
+    if (!t->newtype->initialized)
+        initializeNewType(t);
+    return t->newtype->baseType;
 }
 
 
@@ -413,6 +437,7 @@ bool isPrimitiveType(TypePtr t)
     case CCODE_POINTER_TYPE :
     case STATIC_TYPE :
     case ENUM_TYPE :
+    case NEW_TYPE :
         return true;
     default :
         return false;
@@ -431,6 +456,7 @@ bool isPrimitiveAggregateType(TypePtr t)
     case CCODE_POINTER_TYPE :
     case STATIC_TYPE :
     case ENUM_TYPE :
+    case NEW_TYPE :
         return true;
     case TUPLE_TYPE : {
         TupleType *tt = (TupleType *)t.ptr();
@@ -461,6 +487,7 @@ bool isPrimitiveAggregateTooLarge(TypePtr t)
     case CCODE_POINTER_TYPE :
     case STATIC_TYPE :
     case ENUM_TYPE :
+    case NEW_TYPE :
         return false;
     case TUPLE_TYPE : {
         TupleType *tt = (TupleType *)t.ptr();
@@ -914,6 +941,11 @@ static void verifyRecursionCorrectness(TypePtr t,
             verifyRecursionCorrectness(memberTypes[i], visited);
         break;
     }
+    case NEW_TYPE : {
+        NewTypeType *nt = (NewTypeType *)t.ptr();
+        verifyRecursionCorrectness(nt->newtype->baseType, visited);
+        break;
+    }
     default :
         break;
     }
@@ -996,8 +1028,8 @@ llvm::Type *CCodePointerType::getCallType() {
 
 static void makeLLVMType(TypePtr t) {
     if (t->llType == NULL) {
-        verifyRecursionCorrectness(t);
         declareLLVMType(t);
+        verifyRecursionCorrectness(t);
     }
     if (!t->defined) {
         defineLLVMType(t);
@@ -1290,6 +1322,16 @@ static void declareLLVMType(TypePtr t) {
         }
         break;
     }
+    case NEW_TYPE : {
+        NewTypeType *x = (NewTypeType *)t.ptr();
+        TypePtr reprType = newtypeReprType(x);
+        if (!reprType->llType)
+            declareLLVMType(reprType);
+        t->llType = reprType->llType;
+        if (llvmDIBuilder != NULL)
+            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createTemporaryType();
+        break;
+    }
     default :
         assert(false);
     }
@@ -1524,6 +1566,21 @@ static void defineLLVMType(TypePtr t) {
     case VARIANT_TYPE : {
         VariantType *x = (VariantType *)t.ptr();
         TypePtr reprType = variantReprType(x);
+        if (!reprType->llType)
+            declareLLVMType(reprType);
+        if (!reprType->defined)
+            defineLLVMType(reprType);
+
+        if (llvmDIBuilder != NULL) {
+            llvm::TrackingVH<llvm::MDNode> placeholderNode = (llvm::MDNode*)x->getDebugInfo();
+            
+            llvm::DIType(placeholderNode).replaceAllUsesWith(llvmTypeDebugInfo(reprType));
+        }
+        break;
+    }
+    case NEW_TYPE : {
+        NewTypeType *x = (NewTypeType *)t.ptr();
+        TypePtr reprType = newtypeReprType(x);
         if (!reprType->llType)
             declareLLVMType(reprType);
         if (!reprType->defined)

@@ -4036,6 +4036,7 @@ bool codegenStatement(StatementPtr stmt,
         if (!x->expr)
             error("throw statements need an argument");
         ExprPtr callable = operator_expr_throwValue();
+        callable->location = stmt->location;
         ExprListPtr args = new ExprList(x->expr);
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
@@ -6151,6 +6152,9 @@ void codegenPrimOp(PrimOpPtr x,
         ctx->builder->CreateStore(vvar, out0->llValue);
         break;
     }
+
+    case PRIM_BaseType :
+        break;
 
     case PRIM_Static :
         error("no Static primitive overload found");

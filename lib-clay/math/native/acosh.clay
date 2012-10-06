@@ -1,16 +1,13 @@
 // acosh
 
 import math.native.kernel.ieee754.*;
-import math.native.log.(log);
-import math.native.log1p.(log1p);
-import math.native.sqrt.(sqrt);
+import math.native.protocol.*;
 import math.native.constants.(M_LN2,M_PI_4,M_PI_2,M_PI);
 import math.native.fpclassify.(fpclassify,FP_NAN,FP_ZERO,FP_INFINITE);
-import math.native.copysign.(copysign);
 import numbers.floats.(nan,signbit,infinity);
 import complex.*;
 
-acosh(x:Float) = Float(acosh(Double(x)));
+overload acosh(x:Float) = Float(acosh(Double(x)));
 
 overload acosh(x:Double) {
 	alias ONE = 1.;

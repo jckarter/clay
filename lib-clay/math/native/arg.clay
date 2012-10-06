@@ -1,6 +1,6 @@
 
-import math.native.atan2.(atan2);
+import math.native.protocol.*;
 import complex.(Complex?,imagValue,real);
 
 [T when Complex?(T) ]
-forceinline arg(x:T) = atan2(imagValue(x),real(x));
+arg(x:T) = atan2(imagValue(x),real(x));

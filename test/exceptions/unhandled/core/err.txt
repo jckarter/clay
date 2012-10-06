@@ -1,1 +1,4 @@
+(re)
 unhandled MyException exception
+at .*main.clay:6
+.*

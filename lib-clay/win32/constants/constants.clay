@@ -1,4 +1,4 @@
-import win32.*;
+import win32.generated.*;
 
 alias STD_INPUT_HANDLE  = wrapCast(DWORD, -10);
 alias STD_OUTPUT_HANDLE = wrapCast(DWORD, -11);

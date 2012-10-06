@@ -1,15 +1,10 @@
-import math.native.tan.(tan);
-import math.native.sin.(sin);
-import math.native.sinh.(sinh);
-import math.native.cos.(cos);
-import math.native.cosh.(cosh);
-import math.native.abs.(abs);
+import math.native.protocol.*;
 import complex.*;
 import numbers.floats.(infinity);
 import math.native.constants.(M_PI);
 
 [T when Float?(T)] 
-forceinline cot(z:T) = T(1)/tan(z);
+forceinline overload cot(z:T) = T(1)/tan(z);
 
 
 // Complex circular cotangent

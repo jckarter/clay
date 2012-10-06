@@ -132,6 +132,63 @@ def fileForPlatform(opt, folder, name, ext):
 
 
 #
+# RefText
+#
+
+
+def normalize(text):
+    text = text.replace('\r', '')
+    if not text or text.endswith('\n'):
+        return text
+    else:
+        return text + '\n'
+
+
+class RefText(object):
+    def __init__(self, name, text):
+        self.name = name
+        text = normalize(text)
+        self.text = text
+        self.re = None
+        xx = text.split('\n', 1)
+        if len(xx) == 2 and xx[0] == '(re)':
+            self.re = re.compile(xx[1] + '$', re.DOTALL)
+        else:
+            self.re = None
+
+    @staticmethod
+    def load(name, path):
+        text = open(path).read().replace('\r', '')
+        return RefText(name=name, text=text)
+
+    @staticmethod
+    def empty(name):
+        return RefText(name=name, text="")
+
+    def compare(self, actual):
+        actual = normalize(actual)
+        if self.re is not None:
+            if self.re.match(actual):
+                return None
+            r = ""
+            r += "expecting to match regexp:\n"
+            r += indented(self.re.pattern)
+            r += self.name + ":\n"
+            r += indented(actual)
+            return r
+        else:
+            if actual == self.text:
+                return None
+            r = ""
+            for line in difflib.unified_diff(
+                self.text.splitlines(True), actual.splitlines(True),
+                fromfile=self.name, tofile="stdout"
+            ):
+                r += indented(line)
+            return r
+
+
+#
 # TestCase
 #
 
@@ -222,48 +279,33 @@ class TestCase(object):
                 self.testLogBuffer.write("Stderr:\n")
                 self.testLogBuffer.write(indented(resulterr))
                 return "out.txt missing"
-            refout = open(outfile).read()
-            referr = ""
+            refout = RefText.load("out.txt", outfile)
+            referr = RefText.empty("err.txt")
             if os.path.isfile(errfile):
-                referr = open(errfile).read()
-            resultout = resultout.replace('\r', '')
-            refout    = refout.replace('\r', '')
-            resulterr = resulterr.replace('\r', '')
-            referr    = referr.replace('\r', '')
-            if resultout == refout and resulterr == referr:
+                referr = RefText.load("err.txt", errfile)
+            outcompare = refout.compare(resultout)
+            errcompare = referr.compare(resulterr)
+            if not outcompare and not errcompare:
                 return "ok"
-            elif resultout != refout and resulterr != referr:
+            elif outcompare and errcompare:
                 self.testLogBuffer.write("Failure: out.txt and err.txt mismatch\n")
                 self.testLogBuffer.write("Diff-Stdout:\n")
-                for line in difflib.unified_diff(
-                    refout.splitlines(True), resultout.splitlines(True),
-                    fromfile="out.txt", tofile="stdout"
-                ):
-                    self.testLogBuffer.write(indented(line))
+                self.testLogBuffer.write(outcompare)
                 self.testLogBuffer.write("Diff-Stderr:\n")
-                for line in difflib.unified_diff(
-                    referr.splitlines(True), resulterr.splitlines(True),
-                    fromfile="err.txt", tofile="stderr"
-                ):
-                    self.testLogBuffer.write(indented(line))
+                self.testLogBuffer.write(errcompare)
                 return "out.txt and err.txt mismatch"
-            elif resultout != refout:
+            elif outcompare:
                 self.testLogBuffer.write("Failure: out.txt mismatch\n")
                 self.testLogBuffer.write("Diff-Stdout:\n")
-                for line in difflib.unified_diff(
-                    refout.splitlines(True), resultout.splitlines(True),
-                    fromfile="out.txt", tofile="stdout"
-                ):
-                    self.testLogBuffer.write(indented(line))
+                self.testLogBuffer.write(outcompare)
                 return "out.txt mismatch"
-            elif resulterr != referr:
+            elif errcompare:
+                self.testLogBuffer.write("Failure: err.txt mismatch\n")
                 self.testLogBuffer.write("Diff-Stderr:\n")
-                for line in difflib.unified_diff(
-                    referr.splitlines(True), resulterr.splitlines(True),
-                    fromfile="err.txt", tofile="stderr"
-                ):
-                    self.testLogBuffer.write(indented(line))
+                self.testLogBuffer.write(errcompare)
                 return "err.txt mismatch"
+            else:
+                raise Exception, "impossible"
 
     def run(self):
         self.testLogBuffer = StringIO()

@@ -1,5 +1,5 @@
 import win32.*;
-import printer.(printTo);
+import printer.protocol.(printTo);
 
 printErrorMessageTo(stream, errorCode) {
     var buf = Array[Byte, 1024]();

@@ -144,6 +144,11 @@ StatementPtr desugarForStatement(ForPtr x) {
     return block.ptr();
 }
 
+static void makeExceptionVars(vector<IdentifierPtr>& identifiers, CatchPtr x) {
+    identifiers.push_back(x->exceptionVar);
+    identifiers.push_back(Identifier::get("__exc_context", x->location));
+}
+
 StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
     assert(!catchBlocks.empty());
     Location firstCatchLocation = catchBlocks.front()->location;
@@ -175,11 +180,15 @@ StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
 
             BlockPtr block = new Block();
             block->location = x->location;
+
+            vector<IdentifierPtr> identifiers;
+            makeExceptionVars(identifiers, x);
+
             CallPtr getter = new Call(operator_expr_exceptionAs(), asTypeArgs);
             getter->location = x->exceptionVar->location;
             BindingPtr binding =
                 new Binding(VAR,
-                            identVtoFormalV(vector<IdentifierPtr>(1, x->exceptionVar)),
+                            identVtoFormalV(identifiers),
                             new ExprList(getter.ptr()));
             binding->location = x->exceptionVar->location;
 
@@ -197,13 +206,17 @@ StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
         else {
             BlockPtr block = new Block();
             block->location = x->location;
+
+            vector<IdentifierPtr> identifiers;
+            makeExceptionVars(identifiers, x);
+
             ExprListPtr asAnyArgs = new ExprList(new NameRef(expVar));
             CallPtr getter = new Call(operator_expr_exceptionAsAny(),
                                       asAnyArgs);
             getter->location = x->exceptionVar->location;
             BindingPtr binding =
                 new Binding(VAR,
-                            identVtoFormalV(vector<IdentifierPtr>(1, x->exceptionVar)),
+                            identVtoFormalV(identifiers),
                             new ExprList(getter.ptr()));
             binding->location = x->exceptionVar->location;
             block->statements.push_back(binding.ptr());

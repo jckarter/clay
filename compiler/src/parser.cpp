@@ -2153,6 +2153,21 @@ static bool instance(TopLevelItemPtr &x) {
     return true;
 }
 
+static bool newtype(TopLevelItemPtr &x) {
+    Location location = currentLocation();
+    Visibility vis;
+    if (!topLevelVisibility(vis)) return false;
+    if (!keyword("newtype")) return false;
+    IdentifierPtr name;
+    if (!identifier(name)) return false;
+    if (!opsymbol("=")) return false;
+    ExprPtr expr;
+    if (!expression(expr)) return false;
+    if (!symbol(";")) return false;
+    x = new NewType(name, vis, expr);
+    x->location = location;
+    return true;
+}
 
 
 //
@@ -2994,6 +3009,7 @@ static bool topLevelItem(vector<TopLevelItemPtr> &x) {
     if (restore(p), external(y)) goto success;
     if (restore(p), externalVariable(y)) goto success;
     if (restore(p), globalAlias(y)) goto success;
+    if (restore(p), newtype(y)) goto success;
     if (restore(p), evalTopLevel(y)) goto success;
     if (restore(p), staticAssert<TopLevelItemPtr, StaticAssertTopLevel>(y)) goto success;
     return false;

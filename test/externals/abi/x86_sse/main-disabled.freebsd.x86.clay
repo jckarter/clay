@@ -55,8 +55,8 @@ external (cdecl) c_x86_10(x:Union_x86_10, tag:Int);
 external (cdecl) c_x86_11(x:Union_x86_11, tag:Int);
 
 external (cdecl) c_x86_return_int_vector() : Vec[Int64,2];
-external (cdecl) c_x86_return_float_vector() : Vec[Float,4];
-external (cdecl) c_x86_return_double_vector() : Vec[Double,2];
+external (cdecl) c_x86_return_float_vector() : Vec[CFloat,4];
+external (cdecl) c_x86_return_double_vector() : Vec[CDouble,2];
 external (cdecl) c_x86_return_2() : Struct_x86_2;
 external (cdecl) c_x86_return_3() : Struct_x86_3;
 external (cdecl) c_x86_return_4() : Struct_x86_4;
@@ -79,7 +79,7 @@ external (cdecl) clay_x86_long_double(x:Float80) : {
     println(repr(x));
     flush(stdout);
 }
-external (cdecl) clay_x86_complex_long_double(x:Complex80) : {
+external (cdecl) clay_x86_complex_long_double(x:CComplexLongDouble) : {
     println(repr(x));
     flush(stdout);
 }
@@ -130,10 +130,10 @@ external (cdecl) clay_x86_11(x:Union_x86_11, tag:Int) : {
 
 external (cdecl) clay_x86_return_int_vector() : Vec[Int64,2]
     = Vec[Int64,2](0x1122334455667788l, 0x33445566778899AAl);
-external (cdecl) clay_x86_return_float_vector() : Vec[Float,4]
-    = Vec[Float,4](0x1.112232p99f, 0x1.223344p88f, 0x1.334454p77f, 0x1.445566p66f);
-external (cdecl) clay_x86_return_double_vector() : Vec[Double,2]
-    = Vec[Double,2](0x1.1122334455667p99, 0x1.2233445566778p88);
+external (cdecl) clay_x86_return_float_vector() : Vec[CFloat,4]
+    = Vec[CFloat,4](0x1.112232p99f, 0x1.223344p88f, 0x1.334454p77f, 0x1.445566p66f);
+external (cdecl) clay_x86_return_double_vector() : Vec[CDouble,2]
+    = Vec[CDouble,2](0x1.1122334455667p99, 0x1.2233445566778p88);
 external (cdecl) clay_x86_return_2() : Struct_x86_2
     = Struct_x86_2(Vec[Int64,2](0x1122334455667788l, 0x33445566778899AAl));
 external (cdecl) clay_x86_return_3() : Struct_x86_3
@@ -143,21 +143,21 @@ external (cdecl) clay_x86_return_3() : Struct_x86_3
     );
 external (cdecl) clay_x86_return_4() : Struct_x86_4
     = Struct_x86_4(
-        Vec[Float,4](0x1.112232p99f, 0x1.223344p88f, 0x1.334454p77f, 0x1.445566p66f),
+        Vec[CFloat,4](0x1.112232p99f, 0x1.223344p88f, 0x1.334454p77f, 0x1.445566p66f),
     );
 external (cdecl) clay_x86_return_5() : Struct_x86_5
     = Struct_x86_5(
-        Vec[Float,4](0x1.112232p99f, 0x1.223344p88f, 0x1.334454p77f, 0x1.445566p66f),
-        Vec[Float,4](0x1.556676p55f, 0x1.667788p44f, 0x1.778898p33f, 0x1.8899AAp22f),
+        Vec[CFloat,4](0x1.112232p99f, 0x1.223344p88f, 0x1.334454p77f, 0x1.445566p66f),
+        Vec[CFloat,4](0x1.556676p55f, 0x1.667788p44f, 0x1.778898p33f, 0x1.8899AAp22f),
     );
 external (cdecl) clay_x86_return_6() : Struct_x86_6
     = Struct_x86_6(
-        Vec[Double,2](0x1.1122334455667p99, 0x1.2233445566778p88)
+        Vec[CDouble,2](0x1.1122334455667p99, 0x1.2233445566778p88)
     );
 external (cdecl) clay_x86_return_7() : Struct_x86_7
     = Struct_x86_7(
-        Vec[Double,2](0x1.1122334455667p99, 0x1.2233445566778p88),
-        Vec[Double,2](0x1.3344556677889p77, 0x1.445566778899Ap66),
+        Vec[CDouble,2](0x1.1122334455667p99, 0x1.2233445566778p88),
+        Vec[CDouble,2](0x1.3344556677889p77, 0x1.445566778899Ap66),
     );
 external (cdecl) clay_x86_return_10(tag:Int) : Union_x86_10 {
     var ret = Union_x86_10();
@@ -165,7 +165,7 @@ external (cdecl) clay_x86_return_10(tag:Int) : Union_x86_10 {
     case (0)
         ret.0 <-- 0x11223344;
     case (1)
-        ret.1 <-- Vec[Double,2](0x1.1122334455667p99, 0x1.2233445566778p88);
+        ret.1 <-- Vec[CDouble,2](0x1.1122334455667p99, 0x1.2233445566778p88);
     else
         assert(false);
     return ret;
@@ -176,7 +176,7 @@ external (cdecl) clay_x86_return_11(tag:Int) : Union_x86_11 {
     case (0)
         ret.0 <-- 0x1122334455667788l;
     case (1)
-        ret.1 <-- Vec[Double,2](0x1.1122334455667p99, 0x1.2233445566778p88);
+        ret.1 <-- Vec[CDouble,2](0x1.1122334455667p99, 0x1.2233445566778p88);
     else
         assert(false);
     return ret;

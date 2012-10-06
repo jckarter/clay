@@ -1,0 +1,24 @@
+import printer.(println);
+
+record Bar (x:Int32, y:UInt64, z:UInt32);
+
+newtype Foo = Bar;
+
+main() {
+
+	println("Type(Foo) = ",Type(Foo));
+	println("TypeSize(Foo) = ",TypeSize(Foo)); 
+	println("BaseType(Foo) = ", BaseType(Foo));
+	println("NewType?(Foo) = ", NewType?(Foo));
+	
+	var b = Bar(123, 456ul, 789u);
+	var a:Foo = bitcast(Foo, b);
+	println("Type(a) = ", Type(a));
+	
+	var c = Pointer[Int32](@a);
+	println(c^, ", ",  (c+4)^);
+	
+	var d = baseCast(a);
+	println(Type(d), ", ", d);
+
+}

@@ -1,4 +1,3 @@
-import paged.*;
 import paged.misc.*;
 
 import strings;
