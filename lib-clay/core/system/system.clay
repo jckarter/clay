@@ -22,11 +22,11 @@ private alias runMain(argc_, argv_, f, ..args) {
     try {
         return getExitCode(..f(..args));
     }
-    catch (e) {
+    catch (e; ctx) {
         try {
             printUnhandledExceptionToStderr(e);
-            libc.fprintf(libc.stderr, "at %s:%d\n", cstring(__exc_context.file), UInt(__exc_context.line));
-            printBacktraceToStderr(__exc_context.backtrace);
+            libc.fprintf(libc.stderr, "at %s:%d\n", cstring(ctx.file), UInt(ctx.line));
+            printBacktraceToStderr(ctx.backtrace);
         } catch (f) {
             libc.fprintf(libc.stderr, "unhandled exception during unhandled exception printing\n");
         }
