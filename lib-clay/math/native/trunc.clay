@@ -7,9 +7,9 @@
 //	Inexact flag raised if x not equal to trunc(x).
 
 import math.native.kernel.ieee754.*;
-import math.native.sign.(sign);
+import math.native.protocol.*;
 
-trunc(x:Float) = Float(trunc(Double(x)));
+overload trunc(x:Float) = Float(trunc(Double(x)));
 
 overload trunc(x:Double) {
 	alias HUGE = GreatestPositiveFinite(Double);

@@ -211,7 +211,7 @@ static SourcePtr loadFile(llvm::StringRef fileName, vector<string> *sourceFiles)
 //
 
 static void loadDependents(ModulePtr m, vector<string> *sourceFiles);
-void initModule(ModulePtr m);
+static void initModule(ModulePtr m);
 static ModulePtr makePrimitivesModule();
 static ModulePtr makeOperatorsModule();
 
@@ -221,8 +221,6 @@ static void installGlobals(ModulePtr m) {
     for (i = m->topLevelItems.begin(), end = m->topLevelItems.end();
          i != end; ++i) {
         TopLevelItem *x = i->ptr();
-		printName(llvm::errs(), x);
-		llvm::errs() << "\n";
         x->env = m->env;
         switch (x->objKind) {
         case ENUMERATION : {
@@ -235,6 +233,12 @@ static void installGlobals(ModulePtr m) {
                 member->type = t;
                 addGlobal(m, member->name, enumer->visibility, member);
             }
+            break;
+        }
+        case NEWTYPE : {
+            NewType *nt = (NewType *)x;
+            TypePtr t = newType(nt);
+            addGlobal(m, nt->name, nt->visibility, t.ptr());
             break;
         }
         case PROCEDURE : {
@@ -446,7 +450,7 @@ void addProcedureOverload(ProcedurePtr proc, EnvPtr env, OverloadPtr x) {
 
 static void initOverload(OverloadPtr x) {
     EnvPtr env = overloadPatternEnv(x);
-	PatternPtr pattern = evaluateOnePattern(x->target, env);
+    PatternPtr pattern = evaluateOnePattern(x->target, env);
     ObjectPtr obj = derefDeep(pattern);
     if (obj == NULL) {
         x->nameIsPattern = true;
@@ -456,7 +460,6 @@ static void initOverload(OverloadPtr x) {
         switch (obj->objKind) {
         case PROCEDURE : {
             Procedure *proc = (Procedure *)obj.ptr();
-
             addProcedureOverload(proc, env, x);
             break;
         }
@@ -535,12 +538,22 @@ static void checkStaticAssert(StaticAssertTopLevelPtr a) {
     evaluateStaticAssert(a->location, a->cond, a->message, a->env);
 }
 
-void initModule(ModulePtr m) {
-    if (m->initialized) return;
-    m->initialized = true;
-    vector<ImportPtr>::iterator ii, iend;
-    for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii)
-        initModule((*ii)->module);
+static void circularImportsError(const vector<string>& modules) {
+    string s;
+    llvm::raw_string_ostream ss(s);
+    ss << "import loop:\n";
+    for (vector<string>::const_iterator it = modules.begin(); it != modules.end(); ++it) {
+        ss << "    " << *it;
+        if (it + 1 != modules.end()) {
+            // because error() function adds trailing newline
+            ss << "\n";
+        }
+    }
+    return error(ss.str());
+}
+
+static void initModule(ModulePtr m, const vector<string>& importChain) {
+    if (m->initState == Module::DONE) return;
 
     if (m->declaration != NULL) {
         if (m->moduleName == "")
@@ -552,6 +565,29 @@ void initModule(ModulePtr m) {
             );
     } else if (m->moduleName == "")
         m->moduleName = "__main__";
+
+
+    if (m->initState == Module::RUNNING && !importChain.empty()) {
+        // allow prelude to import self
+        if (importChain.back() == m->moduleName) {
+            return;
+        }
+    }
+
+    vector<string> importChainNext = importChain;
+    importChainNext.push_back(m->moduleName);
+
+    if (m->initState == Module::RUNNING) {
+        circularImportsError(importChainNext);
+    }
+
+    m->initState = Module::RUNNING;
+
+    vector<ImportPtr>::iterator ii, iend;
+    for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii)
+        initModule((*ii)->module, importChainNext);
+
+    m->initState = Module::DONE;
 
     verifyAttributes(m);
 
@@ -585,6 +621,9 @@ void initModule(ModulePtr m) {
     }
 }
 
+static void initModule(ModulePtr m) {
+    initModule(m, vector<string>());
+}
 
 
 //
@@ -631,6 +670,10 @@ static ModulePtr typeModule(TypePtr t) {
     case ENUM_TYPE : {
         EnumType *et = (EnumType *)t.ptr();
         return envModule(et->enumeration->env);
+    }
+    case NEW_TYPE : {
+        NewTypeType *et = (NewTypeType *)t.ptr();
+        return envModule(et->newtype->env);
     }
     default :
         return NULL;
@@ -900,6 +943,8 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(VariantMemberCount);
     PRIMITIVE(VariantMembers);
     PRIMITIVE(variantRepr);
+
+    PRIMITIVE(BaseType);
 
     PRIMITIVE(Static);
     PRIMITIVE(StaticName);

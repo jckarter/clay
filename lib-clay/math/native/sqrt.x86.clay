@@ -1,16 +1,14 @@
 import simd.*;
 
-import math.native.copysign.(copysign);
-import math.native.abs.(abs);
+import math.native.protocol.*;
 import complex.*;
 import numbers.floats.(nan,infinity,infinity?,nan?,signbit);
-import math.native.hypot.(hypot);
 
 private external ("llvm.x86.sse2.sqrt.sd", llvm)
     x86_sqrtsd(a:Vec[Double,2]) : Vec[Double,2];
 
 [T when Float?(T) ]
-forceinline sqrt(x:T) = T(x86_sqrtsd(Vec[Double,2](Double(x),0.))[0]);
+forceinline overload sqrt(x:T) = T(x86_sqrtsd(Vec[Double,2](Double(x),0.))[0]);
 
 forceinline overload sqrt(x:Double) = x86_sqrtsd(Vec[Double,2](x,0.))[0];
 

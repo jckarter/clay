@@ -1,4 +1,5 @@
-import paged.*;
+import paged.vectors.*;
+
 import strings;
 
 

@@ -1,5 +1,4 @@
 
-import paged.*;
 import paged.misc.*;
 import vectors.generic.*;
 import strings;

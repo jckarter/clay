@@ -1,42 +1,18 @@
-import printer.(printTo);
+import printer.protocol.(printTo);
 import printer.formatter.(hexString);
 import hash.(hash);
 
 import crypto.digest.internal.*;
+public import crypto.digest.internal.(
+        Digest,
+        Digest?,
+        Algorithm?,
+        DigestContext,
+        DigestContext?,
+        BlockSizeBytes,
+        digestUpdate,
+    );
 
-
-// true iff A is digest algorithm name
-[A]
-Algorithm?(#A) = #false;
-
-// true iff T is digest output
-[T]
-Digest?(#T) = false;
-
-// true iff T is digest compute context
-[T]
-DigestContext?(#T) = false;
-
-// algorithm name by digest or by digest context
-[T when Digest?(T) or DigestContext?(T)]
-define Algorithm(#T);
-
-// digest type by algorithm name
-[A when Algorithm?(A)]
-define Digest(#A);
-
-// digest context type by algorithm name
-[A when Algorithm?(A)]
-define DigestContext(#A);
-
-// hash size in bytes
-[A when Algorithm?(A)]
-define DigestSize(#A): UInt;
-
-// Hash function input block size. This function is a part of public API
-// because some algorithms (like HMAC) need to know it
-[A when Algorithm?(A)]
-define BlockSizeBytes(#A): UInt;
 
 // print digest as hex
 [H when Digest?(H)]
@@ -47,49 +23,6 @@ overload printTo(stream, forward sha:H) {
 [H when Digest?(H)]
 overload hash(x:H) = bitcast(SizeT, x.digest);
 
-
-[S]
-private MessagePart?(#S) = ContiguousSequence?(S) and ByteLike?(SequenceElementType(S));
-
-
-// generic update code
-[C, S when DigestContext?(C) and MessagePart?(S)]
-digestUpdate(context: C, input: S) {
-    alias A = Algorithm(#C);
-
-    var inputBegin = Pointer[Char](begin(input));
-    var inputEnd   = Pointer[Char](end(input));
-    var inputSize  = size(input);
-
-    var left = SizeT(context.total % BlockSizeBytes(#A));
-    var fill = BlockSizeBytes(#A) - left;
-
-    context.total +: inputSize;
-
-    if (left > 0 and inputSize >= fill) {
-        copyNonoverlappingMemory(
-            Pointer[Char](@context.buffer) + left,
-            inputBegin,
-            inputBegin + fill);
-        processBlock(#A, context.state, context.buffer);
-        inputSize  -: fill;
-        inputBegin +: fill;
-        left        = 0;
-    }
-
-    while (inputSize >= BlockSizeBytes(#A)) {
-        processBlock(#A, context.state, Pointer[BlockBytes(#A)](inputBegin)^);
-        inputSize  -: BlockSizeBytes(#A);
-        inputBegin +: BlockSizeBytes(#A);
-    }
-
-    if (inputSize >= 0) {
-        copyNonoverlappingMemory(
-            Pointer[Char](@context.buffer) + left,
-            inputBegin,
-            inputBegin + inputSize);
-    }
-}
 
 // complete digest computation and return the digest of type Digest(..)
 [C when DigestContext?(C)]

@@ -1,6 +1,7 @@
 // fmod
 
 import math.native.kernel.ieee754.*;
+import math.native.protocol.*;
 
 fmod(a:Double, b:Double) {
 

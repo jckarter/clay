@@ -212,7 +212,6 @@ static bool runModule(llvm::Module *module,
         delete engine;
         return false;
     }
-
     engine->runStaticConstructorsDestructors(false);
     engine->runFunctionAsMain(mainFunc, argv, envp);
     engine->runStaticConstructorsDestructors(true);
@@ -484,6 +483,8 @@ static string exeExtensionForTarget(llvm::Triple const &triple) {
     }
 }
 
+
+
 int main2(int argc, char **argv, char const* const* envp) {
     if (argc == 1) {
         usage(argv[0]);
@@ -582,6 +583,8 @@ int main2(int argc, char **argv, char const* const* envp) {
             exceptions = true;
         }
         else if (strcmp(argv[i], "-no-exceptions") == 0) {
+
+
             exceptions = false;
         }
         else if (strcmp(argv[i], "-pic") == 0) {
@@ -1020,7 +1023,32 @@ int main2(int argc, char **argv, char const* const* envp) {
         llvm::sys::RemoveFileOnSignal(llvm::sys::Path(dependenciesOutputFile));
     }
 
+
     HiResTimer loadTimer, compileTimer, optTimer, outputTimer;
+
+#ifdef CLAY_INTERACTIVE
+
+    string s = "var x = 5+1;";
+    SourcePtr source = new Source(s, 1, 1);
+
+    vector<StatementPtr>  statements( parseInteractive(source, 0, source->size()) );
+    for (int i = 0; i < statements.size(); i++)
+    {
+        llvm::errs() << statements[i] << "\n";
+    }
+
+    //Здесь мы делаем контекст
+
+    codegenStatement(StatementPtr statements[0], EnvPtr env, CodegenContext* ctx);
+
+
+    optimizeLLVM(llvmModule, optLevel, internalize);
+    runModule(llvmModule, argv, envp);
+    return 0;
+#endif
+
+
+	//compiler
 
     loadTimer.start();
     ModulePtr m;
@@ -1033,6 +1061,7 @@ int main2(int argc, char **argv, char const* const* envp) {
         m = loadProgram(clayFile, &sourceFiles);
     else
         m = loadProgram(clayFile, NULL);
+
     loadTimer.stop();
     compileTimer.start();
     codegenEntryPoints(m, codegenExternals);

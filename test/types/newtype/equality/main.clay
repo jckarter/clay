@@ -1,0 +1,8 @@
+// base type inequality
+import printer.(println);
+
+newtype Foo = Int32;
+
+main() {
+	println(Type(Foo) == BaseType(Foo));
+}

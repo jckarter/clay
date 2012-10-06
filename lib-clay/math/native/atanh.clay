@@ -1,10 +1,8 @@
 // atanh
 
 import math.native.kernel.ieee754.*;
-import math.native.log1p.(log1p);
 import math.native.fpclassify.(fpclassify,FP_ZERO,FP_INFINITE);
-import math.native.atan.(atan);
-import math.native.copysign.(copysign);
+import math.native.protocol.*;
 import math.native.constants.(M_PI_2);
 import numbers.floats.(nan);
 import complex.*;
@@ -13,7 +11,7 @@ alias ONE = 1.0;
 alias HUGE = GreatestPositiveFinite(Double);
 alias ZERO = 0.0;
 
-atanh(x:Float) = Float(atanh(Double(x)));
+overload atanh(x:Float) = Float(atanh(Double(x)));
 
 overload atanh(a:Double) {
 	var x,t = a,0.;

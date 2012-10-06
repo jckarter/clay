@@ -4475,6 +4475,9 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
+    case PRIM_BaseType :
+        break;
+        
     case PRIM_Static :
         error("Static type constructor cannot be called");
 

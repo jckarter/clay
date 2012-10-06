@@ -1,0 +1,7 @@
+Type(Foo) = Static[Foo]
+TypeSize(Foo) = 24
+BaseType(Foo) = Bar
+NewType?(Foo) = true
+Type(a) = Foo
+123, 789
+Bar, Bar(123, 456, 789)

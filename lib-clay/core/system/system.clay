@@ -1,5 +1,6 @@
 import __operators__;
 import core.libc as libc;
+import core.errors.backtrace.(printBacktraceToStderr);
 
 private var argc = 0;
 private var argv = Pointer[Pointer[Int8]]();
@@ -24,6 +25,8 @@ private alias runMain(argc_, argv_, f, ..args) {
     catch (e) {
         try {
             printUnhandledExceptionToStderr(e);
+            libc.fprintf(libc.stderr, "at %s:%d\n", cstring(__exc_context.file), UInt(__exc_context.line));
+            printBacktraceToStderr(__exc_context.backtrace);
         } catch (f) {
             libc.fprintf(libc.stderr, "unhandled exception during unhandled exception printing\n");
         }

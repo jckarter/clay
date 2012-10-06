@@ -387,30 +387,31 @@ enum ObjectKind {
     RECORD_FIELD, // -- 15
     VARIANT,
     INSTANCE,
+    NEWTYPE,
     OVERLOAD,
-    PROCEDURE,
-    ENUMERATION,    // -- 20
+    PROCEDURE,   // -- 20
+    ENUMERATION,   
     ENUM_MEMBER,
     GLOBAL_VARIABLE,
     EXTERNAL_PROCEDURE,
-    EXTERNAL_ARG,
-    EXTERNAL_VARIABLE,  // -- 25
+    EXTERNAL_ARG, // -- 25
+    EXTERNAL_VARIABLE,  
     EVAL_TOPLEVEL,
 
     GLOBAL_ALIAS,
 
     IMPORT,
-    MODULE_DECLARATION,
-    MODULE_HOLDER,  // -- 30
+    MODULE_DECLARATION,  // -- 30
+    MODULE_HOLDER, 
     MODULE,
 
     ENV,
 
     PRIM_OP,
 
-    TYPE,
+    TYPE, // -- 35
 
-    PATTERN,    // -- 35
+    PATTERN,    
     MULTI_PATTERN,
 
     VALUE_HOLDER,
@@ -514,6 +515,7 @@ struct RecordBody;
 struct RecordField;
 struct Variant;
 struct Instance;
+struct NewType;
 struct Overload;
 struct Procedure;
 struct Enumeration;
@@ -557,6 +559,7 @@ struct RecordType;
 struct VariantType;
 struct StaticType;
 struct EnumType;
+struct NewTypeType;
 
 struct Pattern;
 struct PatternCell;
@@ -663,6 +666,7 @@ typedef Pointer<RecordBody> RecordBodyPtr;
 typedef Pointer<RecordField> RecordFieldPtr;
 typedef Pointer<Variant> VariantPtr;
 typedef Pointer<Instance> InstancePtr;
+typedef Pointer<NewType> NewTypePtr;
 typedef Pointer<Overload> OverloadPtr;
 typedef Pointer<Procedure> ProcedurePtr;
 typedef Pointer<Enumeration> EnumerationPtr;
@@ -706,6 +710,7 @@ typedef Pointer<RecordType> RecordTypePtr;
 typedef Pointer<VariantType> VariantTypePtr;
 typedef Pointer<StaticType> StaticTypePtr;
 typedef Pointer<EnumType> EnumTypePtr;
+typedef Pointer<NewTypeType> NewTypeTypePtr;
 
 typedef Pointer<Pattern> PatternPtr;
 typedef Pointer<PatternCell> PatternCellPtr;
@@ -2001,6 +2006,19 @@ struct Procedure : public TopLevelItem {
         : TopLevelItem(PROCEDURE, name, visibility), interface(interface) {}
 };
 
+
+struct NewType : public TopLevelItem {
+    ExprPtr expr;
+    TypePtr type;
+    TypePtr baseType;
+    bool initialized;
+    NewType(IdentifierPtr name,
+            Visibility visibility,
+            ExprPtr expr)
+        : TopLevelItem(NEWTYPE, name, visibility), expr(expr),
+        initialized(false) {}
+};
+
 struct Enumeration : public TopLevelItem {
     vector<PatternVar> patternVars;
     ExprPtr predicate;
@@ -2324,6 +2342,12 @@ struct ImportSet {
 };
 
 struct Module : public ANode {
+    enum InitState {
+        BEFORE,
+        RUNNING,
+        DONE
+    };
+
     SourcePtr source;
     string moduleName;
     vector<ImportPtr> imports;
@@ -2340,7 +2364,7 @@ struct Module : public ANode {
     ModuleHolderPtr selfHolder;
 
     EnvPtr env;
-    bool initialized;
+    InitState initState;
     bool attributesVerified;
     vector<llvm::SmallString<16> > attrBuildFlags;
     IntegerTypePtr attrDefaultIntegerType;
@@ -2361,7 +2385,7 @@ struct Module : public ANode {
 
     Module(llvm::StringRef moduleName)
         : ANode(MODULE), moduleName(moduleName),
-          initialized(false),
+          initState(BEFORE),
           attributesVerified(false),
           publicSymbolsLoaded(false), publicSymbolsLoading(0),
           allSymbolsLoaded(false), allSymbolsLoading(0),
@@ -2376,7 +2400,7 @@ struct Module : public ANode {
         : ANode(MODULE), moduleName(moduleName), imports(imports),
           declaration(declaration),
           topLevelLLVM(topLevelLLVM), topLevelItems(topLevelItems),
-          initialized(false),
+          initState(BEFORE),
           attributesVerified(false),
           publicSymbolsLoaded(false), publicSymbolsLoading(0),
           allSymbolsLoaded(false), allSymbolsLoading(0),
@@ -2417,7 +2441,6 @@ void parseInteractive(SourcePtr source, int offset, int length,
     vector<StatementPtr> &statements);
 void parseTopLevelItems(SourcePtr source, int offset, int length,
     vector<TopLevelItemPtr> &topLevels);
-
 
 
 //
@@ -2559,7 +2582,7 @@ ModulePtr operatorsModule();
 ModulePtr staticModule(ObjectPtr x);
 
 void addGlobals(ModulePtr m, const vector<TopLevelItemPtr>& toplevels);
-void initModule(ModulePtr m);
+
 
 //
 // PrimOp
@@ -2677,6 +2700,8 @@ enum PrimOpCode {
     PRIM_VariantMemberCount,
     PRIM_VariantMembers,
     PRIM_variantRepr,
+
+    PRIM_BaseType,
 
     PRIM_Static,
     PRIM_StaticName,
@@ -2869,7 +2894,8 @@ enum TypeKind {
     RECORD_TYPE,
     VARIANT_TYPE,
     STATIC_TYPE,
-    ENUM_TYPE
+    ENUM_TYPE,
+    NEW_TYPE
 };
 
 struct BoolType : public Type {
@@ -3018,6 +3044,11 @@ struct EnumType : public Type {
         : Type(ENUM_TYPE), enumeration(enumeration), initialized(false) {}
 };
 
+struct NewTypeType : public Type {
+    NewTypePtr newtype;
+    NewTypeType(NewTypePtr newtype)
+        : Type(NEW_TYPE), newtype(newtype) {}
+};
 
 extern TypePtr boolType;
 extern TypePtr int8Type;
@@ -3069,6 +3100,7 @@ TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params);
 TypePtr variantType(VariantPtr variant, const vector<ObjectPtr> &params);
 TypePtr staticType(ObjectPtr obj);
 TypePtr enumType(EnumerationPtr enumeration);
+TypePtr newType(NewTypePtr newtype);
 
 bool isPrimitiveType(TypePtr t);
 bool isPrimitiveAggregateType(TypePtr t);
@@ -3084,8 +3116,10 @@ const llvm::StringMap<size_t> &recordFieldIndexMap(RecordTypePtr t);
 const vector<TypePtr> &variantMemberTypes(VariantTypePtr t);
 TypePtr variantReprType(VariantTypePtr t);
 int dispatchTagCount(TypePtr t);
+TypePtr newtypeReprType(NewTypeTypePtr t);
 
 void initializeEnumType(EnumTypePtr t);
+void initializeNewType(NewTypeTypePtr t);
 
 const llvm::StructLayout *tupleTypeLayout(TupleType *t);
 const llvm::StructLayout *complexTypeLayout(ComplexType *t);
@@ -3971,6 +4005,10 @@ void codegenCWrapper(InvokeEntry* entry);
 
 void codegenEntryPoints(ModulePtr module, bool importedExternals);
 void codegenMain(ModulePtr module);
+
+bool codegenStatement(StatementPtr stmt,
+                      EnvPtr env,
+                      CodegenContext* ctx);
 
 static ExprPtr implicitUnpackExpr(unsigned wantCount, ExprListPtr exprs) {
     if (wantCount >= 1 && exprs->size() == 1 && exprs->exprs[0]->exprKind != UNPACK)

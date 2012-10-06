@@ -3,19 +3,12 @@
 import math.native.kernel.ieee754.*;
 import math.native.kernel.k_exp.*;
 import math.native.kernel.k_cexp.*;
-import math.native.log.(log);
-import math.native.abs.(abs);
-import math.native.exp.(exp);
-import math.native.expm1.(expm1);
-import math.native.sin.(sin);
-import math.native.cos.(cos);
-import math.native.copysign.(copysign);
-import math.native.cosh.(cosh);
+import math.native.protocol.*;
 import numbers.floats.(infinity);
 import complex.*;
 
 
-sinh(x:Float) = Float(sinh(Double(x)));
+overload sinh(x:Float) = Float(sinh(Double(x)));
 
 
 overload sinh(x:Double) {

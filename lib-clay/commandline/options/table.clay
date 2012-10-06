@@ -1,6 +1,6 @@
 public import commandline.options.spec.*;
 import commandline.options.parser.*;
-import printer.(printTo);
+import printer.protocol.(printTo);
 import strings.*;
 import vectors.*;
 import sequences.(sliceFrom);

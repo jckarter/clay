@@ -1,9 +1,9 @@
 import llvm.libclang.*;
-import printer.formatter.(repr);
-import printer.(print,println,printTo,printlnTo,str);
+import printer.(print,println,printTo,printlnTo,str,printCharReprTo);
 import hashmaps.*;
 import algorithms.(in?);
 import io.files.*;
+import io.streams.*;
 import strings.*;
 import vectors.*;
 import sequences.operators.*;
@@ -153,46 +153,46 @@ convertTypeFromDeclaration(declaration:CXCursor) : String {
 convertType(type:CXType, refCursor:CXCursor) : String {
     switch (type.kind)
     case (CXType_Bool)
-        return str("Bool");
+        return str("CBool");
     case (CXType_SChar, CXType_Char_S)
         return str("CChar");
     case (CXType_UChar, CXType_Char_U)
         return str("CUChar");
     case (CXType_UShort)
-        return str("UShort");
+        return str("CUShort");
     case (CXType_UInt)
-        return str("UInt");
+        return str("CUInt");
     case (CXType_ULong)
         return str("CULong");
     case (CXType_ULongLong)
-        return str("UInt64");
+        return str("CULongLong");
     case (CXType_UInt128)
         return str("UInt128");
     case (CXType_Short)
-        return str("Short");
+        return str("CShort");
     case (CXType_Int)
-        return str("Int");
+        return str("CInt");
     case (CXType_Long)
         return str("CLong");
     case (CXType_LongLong)
-        return str("Int64");
+        return str("CLongLong");
     case (CXType_Int128)
         return str("Int128");
     case (CXType_Float)
-        return str("Float");
+        return str("CFloat");
     case (CXType_Double)
-        return str("Double");
+        return str("CDouble");
     case (CXType_LongDouble)
-        return str("LongDouble");
+        return str("CLongDouble");
     case (CXType_Complex) {
         var elementType = clang_getElementType(type);
         switch (elementType.kind)
         case (CXType_Float)
-            return str("Complex32");
+            return str("CComplexFloat");
         case (CXType_LongDouble)
-            return str("ComplexLongDouble");
+            return str("CComplexLongDouble");
         case (CXType_Double)
-            return str("Complex64");
+            return str("CComplexDouble");
         else
             return str("Opaque /* unsupported complex type ",
                 clang_getTypeKindSpelling(elementType.kind), " */");
@@ -372,6 +372,18 @@ enumDefinition(cursor:CXCursor, name:String, data:CXClientData) : {
     }
 }
 
+quote(string) {
+    var r = String();
+    printTo(r, '"');
+    for (c in string) {
+        // TODO: make this function private
+        // and implement something like escapeForClay
+        printCharReprTo(r, c);
+    }
+    printTo(r, '"');
+    return r;
+}
+
 visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
 {
     ref options = Pointer[BindgenOptions](data)^;
@@ -416,10 +428,10 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
             printTo(g_bindingsOut, "cdecl");
 
         maybe(attributes.asmLabel): asmLabel -> {
-            printTo(g_bindingsOut, ", ", repr(asmLabel));
+            printTo(g_bindingsOut, ", ", quote(asmLabel));
         } :: () -> {
             if (clayKeyword?(name))
-                printTo(g_bindingsOut, ", ", repr(name));
+                printTo(g_bindingsOut, ", ", quote(name));
         }
 
         printTo(g_bindingsOut, ") ", clayIdentifier(name), "(");
@@ -451,7 +463,7 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
             return CXChildVisit_Continue;
 
         if (clayKeyword?(name))
-            printlnTo(g_bindingsOut, "external (", repr(name), ")",
+            printlnTo(g_bindingsOut, "external (", quote(name), ")",
                 clayIdentifier(name), " : ",
                 convertType(clang_getCursorType(cursor), cursor), ";\n");
         else
@@ -686,5 +698,6 @@ main(argc, argv)
         if (b)
             visitUnnamedDecl(c, CXClientData(@options));
 
+    flush(g_bindingsOut);
     return 0;
 }

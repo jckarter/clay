@@ -1,11 +1,7 @@
 // l_gamma_r from openlibm
 
 import math.native.kernel.ieee754.*;
-import math.native.log.(log);
-import math.native.exp.(exp);
-import math.native.abs.(abs);
-import math.native.sinpi.(sinpi);
-import math.native.rint.(rint);
+import math.native.protocol.*;
 import math.native.constants.(M_PI);
 
 maxGamma(#Float) = 35.04f;
@@ -247,7 +243,7 @@ gamma_r (x:Double, signgamp:Pointer[Int]) {
 }
 
 
-lgamma(x:Double) = lgamma_r(x,@signgam);
+overload lgamma(x:Double) = lgamma_r(x,@signgam);
 
 tgamma(x:Double) = gamma_r(x,@signgam);
 

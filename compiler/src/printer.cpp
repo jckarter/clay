@@ -594,6 +594,12 @@ static void print(llvm::raw_ostream &out, const Object *x) {
         break;
     }
 
+    case NEWTYPE : {
+        const NewType *y = (const NewType *)x;
+        out << "NewType(" << y->name << ")";
+        break;
+    }
+    
     case GLOBAL_VARIABLE : {
         const GlobalVariable *y = (const GlobalVariable *)x;
         out << "GlobalVariable(" << y->name << ", " << y->params
@@ -1294,6 +1300,11 @@ void typePrint(llvm::raw_ostream &out, TypePtr t) {
     case ENUM_TYPE : {
         EnumType *x = (EnumType *)t.ptr();
         out << x->enumeration->name->str;
+        break;
+    }
+    case NEW_TYPE : {
+        NewTypeType *x = (NewTypeType *)t.ptr();
+        out << x->newtype->name->str;
         break;
     }
     default :
