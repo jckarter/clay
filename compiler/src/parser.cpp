@@ -839,7 +839,8 @@ static bool lambdaArgs(vector<FormalArgPtr> &formalArgs,
         return true;
     }
     restore(p);
-    if (!arguments(formalArgs, hasVarArg)) return false;
+    if (arguments(formalArgs, hasVarArg)) return true;
+    restore(p);
     return true;
 }
 
