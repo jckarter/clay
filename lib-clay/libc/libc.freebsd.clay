@@ -1,0 +1,8 @@
+public import libc.generated.*;
+
+var stdin = __stdinp;
+var stdout = __stdoutp;
+var stderr = __stderrp;
+
+alias log2(x:Float64) = log(x)/log(2.);
+alias log2f(x:Float32) = logf(x)/logf(2.f);
