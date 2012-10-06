@@ -131,6 +131,7 @@ namespace clay {
             std::cout << "clay>";
             getline (std::cin, line);
             line = stripSpaces(line);
+//            line = "^foo(){println(\"x\");}";
             if (line[0] == ':') {
                 replCommand(line.substr(1, line.size() - 1));
             }else if (line[0] == '^')	{
