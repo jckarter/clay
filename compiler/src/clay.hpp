@@ -2437,10 +2437,12 @@ ExprPtr parseExpr(SourcePtr source, int offset, int length);
 ExprListPtr parseExprList(SourcePtr source, int offset, int length);
 void parseStatements(SourcePtr source, int offset, int length,
     vector<StatementPtr> &statements);
-void parseInteractive(SourcePtr source, int offset, int length,
-    vector<StatementPtr> &statements);
 void parseTopLevelItems(SourcePtr source, int offset, int length,
-    vector<TopLevelItemPtr> &topLevels);
+        vector<TopLevelItemPtr> &topLevels);
+void parseInteractive(SourcePtr source, int offset, int length,
+                      vector<TopLevelItemPtr>& toplevels,
+                      vector<ImportPtr>& imports,
+                      vector<StatementPtr>& stmts);
 
 
 //
@@ -2581,8 +2583,10 @@ ModulePtr primitivesModule();
 ModulePtr operatorsModule();
 ModulePtr staticModule(ObjectPtr x);
 
+void installGlobals(ModulePtr m);
 void addGlobals(ModulePtr m, const vector<TopLevelItemPtr>& toplevels);
-
+void loadDependent(ModulePtr m, vector<string> *sourceFiles, ImportPtr dependent);
+void initModule(ModulePtr m);
 
 //
 // PrimOp

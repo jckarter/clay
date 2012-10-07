@@ -19,6 +19,8 @@ namespace clay {
 
     jmp_buf recovery;
 
+    static bool printAST = true;
+
     string newFunctionName()
     {
         static int funNum = 0;
@@ -61,41 +63,48 @@ namespace clay {
                     }
                 }
             }
+        } else if (cmd == "ast_on") {
+            printAST = true;
+        } else if (cmd == "ast_off") {
+            printAST = false;
         }
         else {
             std::cout << "Unknown interactive mode command: " << cmd.c_str() << "\n";
         }
     }
 
-    static void jitTopLevel(string const& line)
+    static void loadImports(vector<ImportPtr> const& imports)
     {
-        SourcePtr source = new Source(line, 0);
-        vector<TopLevelItemPtr> toplevels;
-        parseTopLevelItems(source, 0, line.length(), toplevels);
-        for (size_t i = 0; i < toplevels.size(); ++i) {
-                    llvm::errs() << i << ": " << toplevels[i] << "\n";
+        for (size_t i = 0; i < imports.size(); ++i) {
+            module->imports.push_back(imports[i]);
+            loadDependent(module, NULL, imports[i]);
+            initModule(imports[i]->module);
         }
-
-        //this doesn't work
-        addGlobals(module, toplevels);
-        //module->initialized = false;
-        //initModule(module);
     }
 
-    static void jitStatements(string const& line)
+    static void jitTopLevel(vector<TopLevelItemPtr> const& toplevels)
     {
-        SourcePtr source = new Source(line, 0);
-        vector<StatementPtr> statements;
-
-        try {
-            parseInteractive(source, 0, source->size(), statements);
+        if (toplevels.empty()) {
+            return;
         }
-        catch (std::exception) {
+        if (printAST) {
+            for (size_t i = 0; i < toplevels.size(); ++i) {
+                llvm::errs() << i << ": " << toplevels[i] << "\n";
+            }
+        }
+        addGlobals(module, toplevels);
+    }
+
+    static void jitStatements(vector<StatementPtr> const& statements)
+    {
+        if (statements.empty()) {
             return;
         }
 
-        for (size_t i = 0; i < statements.size(); ++i) {
-            llvm::errs() << statements[i] << "\n";
+        if (printAST) {
+            for (size_t i = 0; i < statements.size(); ++i) {
+                llvm::errs() << statements[i] << "\n";
+            }
         }
 
         IdentifierPtr fun = Identifier::get(newFunctionName());
@@ -131,14 +140,22 @@ namespace clay {
             std::cout << "clay>";
             getline (std::cin, line);
             line = stripSpaces(line);
-//            line = "^foo(){println(\"x\");}";
             if (line[0] == ':') {
                 replCommand(line.substr(1, line.size() - 1));
-            }else if (line[0] == '^')	{
-                jitTopLevel(line.substr(1, line.size() - 1));
-            }
-            else {
-                jitStatements(line);
+            } else {
+                SourcePtr source = new Source(line, 0);
+                vector<StatementPtr> stmts;
+                vector<TopLevelItemPtr> toplevels;
+                vector<ImportPtr> imports;
+                try {
+                    parseInteractive(source, 0, source->size(), toplevels, imports, stmts);
+                }
+                catch (std::exception) {
+                    continue;
+                }
+                loadImports(imports);
+                jitTopLevel(toplevels);
+                jitStatements(stmts);
             }
         }
         engine->runStaticConstructorsDestructors(true);

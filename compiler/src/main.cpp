@@ -886,13 +886,18 @@ int main2(int argc, char **argv, char const* const* envp) {
         }
     }
 
-    if (clayScript.empty() && clayFile.empty()) {
-        llvm::errs() << "error: clay file not specified\n";
-        return 1;
+    if (repl && clayScript.empty() && clayFile.empty()) {
+        clayScript = "/*empty module if file not specified*/";
     }
-    if (!clayScript.empty() && !clayFile.empty()) {
-        llvm::errs() << "error: -e cannot be specified with input file\n";
-        return 1;
+    else {
+        if (clayScript.empty() && clayFile.empty()) {
+            llvm::errs() << "error: clay file not specified\n";
+            return 1;
+        }
+        if (!clayScript.empty() && !clayFile.empty()) {
+            llvm::errs() << "error: -e cannot be specified with input file\n";
+            return 1;
+        }
     }
 
     if (!clayScriptImports.empty() && clayScript.empty()) {
