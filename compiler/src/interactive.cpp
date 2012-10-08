@@ -77,7 +77,11 @@ namespace clay {
     {
         for (size_t i = 0; i < imports.size(); ++i) {
             module->imports.push_back(imports[i]);
+        }
+        for (size_t i = 0; i < imports.size(); ++i) {
             loadDependent(module, NULL, imports[i]);
+        }
+        for (size_t i = 0; i < imports.size(); ++i) {
             initModule(imports[i]->module);
         }
     }
