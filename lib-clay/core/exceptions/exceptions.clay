@@ -14,9 +14,10 @@ import __operators__.(
 
 /// @section  Exception, NoException, currentException 
 
-variant Exception (NoException);
+variant Exception;
 
 record NoException ();
+instance Exception (NoException);
 
 overload Exception() = Exception(NoException());
 
