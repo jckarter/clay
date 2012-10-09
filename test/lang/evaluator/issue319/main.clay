@@ -15,6 +15,6 @@ main() {
     println(#(Bbb == Bbb));
     println(#(Aaa == Aaa));
     println(#(Aaa == Bbb));
-    //println(foo(#Bbb));
-    //println(foo(#Aaa));
+    println(foo(#Bbb));
+    println(foo(#Aaa));
 }

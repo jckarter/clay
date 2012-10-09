@@ -567,6 +567,12 @@ static PatternPtr namedToPattern(ObjectPtr x)
             z = y;
         return new PatternCell(z);
     }
+    case ENUM_MEMBER : {
+        EnumMember *member = (EnumMember *)x.ptr();
+        ValueHolderPtr vh = new ValueHolder(member->type);
+        vh->as<int>() = member->index;
+        return new PatternCell(vh.ptr());
+    }
 
     default :
         return new PatternCell(x);
