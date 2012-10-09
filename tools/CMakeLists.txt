@@ -29,5 +29,3 @@ if(BUILD_BINDGEN)
     install(PROGRAMS ${clay_BINARY_DIR}/tools/clay-bindgen${CMAKE_EXECUTABLE_SUFFIX}
         DESTINATION bin)
 endif(BUILD_BINDGEN)
-
-add_subdirectory(claydoc)

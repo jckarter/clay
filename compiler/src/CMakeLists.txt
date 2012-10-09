@@ -1,6 +1,6 @@
 include(PCHsupport)
 
-set(SOURCES
+set(COMPILER_SOURCES
     analyzer.cpp
     clone.cpp
     codegen.cpp
@@ -16,7 +16,6 @@ set(SOURCES
     lexer.cpp
     literals.cpp
     loader.cpp
-    main.cpp
     matchinvoke.cpp
     objects.cpp
     parachute.cpp
@@ -25,6 +24,15 @@ set(SOURCES
     printer.cpp
     profiler.cpp
     types.cpp
+)
+
+set(CLAY_SOURCES
+    clay.cpp
+)
+
+set(CLAYDOC_SOURCES
+    claydoc.cpp
+    html.cpp
 )
 
 # version info is only updated when cmake is run
@@ -62,19 +70,30 @@ if(ENABLE_PCH)
 precompile_header(clay.hpp SOURCES pch.cpp "${CLAY_CXXFLAGS}")
 endif(ENABLE_PCH)
 
-add_executable(clay ${SOURCES})
+add_library(compiler STATIC ${COMPILER_SOURCES})
+add_executable(clay ${CLAY_SOURCES})
+add_executable(claydoc ${CLAYDOC_SOURCES})
+set_target_properties(compiler PROPERTIES COMPILE_FLAGS "${CLAY_CXXFLAGS}")
 set_target_properties(clay PROPERTIES COMPILE_FLAGS "${CLAY_CXXFLAGS}")
+set_target_properties(claydoc PROPERTIES COMPILE_FLAGS "${CLAY_CXXFLAGS}")
 
 if (UNIX)
+    set_target_properties(compiler PROPERTIES LINK_FLAGS "${LLVM_LDFLAGS}")
     set_target_properties(clay PROPERTIES LINK_FLAGS "${LLVM_LDFLAGS}")
+    set_target_properties(claydoc PROPERTIES LINK_FLAGS "${LLVM_LDFLAGS}")
 endif(UNIX)
 
 install(TARGETS clay RUNTIME DESTINATION bin)
+install(TARGETS claydoc RUNTIME DESTINATION bin)
 
-target_link_libraries(clay ${LLVM_LIBS})
+target_link_libraries(clay compiler ${LLVM_LIBS})
+target_link_libraries(claydoc compiler ${LLVM_LIBS})
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_link_libraries(clay "rt")
     target_link_libraries(clay "dl")
     target_link_libraries(clay "pthread")
+    target_link_libraries(claydoc "rt")
+    target_link_libraries(claydoc "dl")
+    target_link_libraries(claydoc "pthread")
 endif()
