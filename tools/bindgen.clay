@@ -1,5 +1,6 @@
 import llvm.libclang.*;
-import printer.(print,println,printTo,printlnTo,str,printCharReprTo);
+import printer.(print,println,printTo,printlnTo,str);
+import printer.formatter.(stringRepr);
 import hashmaps.*;
 import algorithms.(in?);
 import io.files.*;
@@ -372,18 +373,6 @@ enumDefinition(cursor:CXCursor, name:String, data:CXClientData) : {
     }
 }
 
-quote(string) {
-    var r = String();
-    printTo(r, '"');
-    for (c in string) {
-        // TODO: make this function private
-        // and implement something like escapeForClay
-        printCharReprTo(r, c);
-    }
-    printTo(r, '"');
-    return r;
-}
-
 visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
 {
     ref options = Pointer[BindgenOptions](data)^;
@@ -428,10 +417,10 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
             printTo(g_bindingsOut, "cdecl");
 
         maybe(attributes.asmLabel): asmLabel -> {
-            printTo(g_bindingsOut, ", ", quote(asmLabel));
+            printTo(g_bindingsOut, ", ", stringRepr(asmLabel));
         } :: () -> {
             if (clayKeyword?(name))
-                printTo(g_bindingsOut, ", ", quote(name));
+                printTo(g_bindingsOut, ", ", stringRepr(name));
         }
 
         printTo(g_bindingsOut, ") ", clayIdentifier(name), "(");
@@ -463,7 +452,7 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
             return CXChildVisit_Continue;
 
         if (clayKeyword?(name))
-            printlnTo(g_bindingsOut, "external (", quote(name), ")",
+            printlnTo(g_bindingsOut, "external (", stringRepr(name), ")",
                 clayIdentifier(name), " : ",
                 convertType(clang_getCursorType(cursor), cursor), ";\n");
         else
