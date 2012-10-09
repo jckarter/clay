@@ -1,0 +1,5 @@
+import printer.(println);
+
+main() {
+    println("Hello World");
+}
