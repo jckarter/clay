@@ -6920,7 +6920,7 @@ void codegenEntryPoints(ModulePtr module, bool importedExternals)
     generateLLVMCtorsAndDtors();
     codegenModuleEntryPoints(module, importedExternals);
 
-    ObjectPtr mainProc = lookupPublic(module, Identifier::get("main"));
+   ObjectPtr mainProc = lookupPublic(module, Identifier::get("main"));
     
     if (mainProc != NULL)
         codegenMain(module);
@@ -6989,6 +6989,23 @@ llvm::TargetMachine *initLLVM(llvm::StringRef targetTriple,
     }
 
     return targetMachine;
+}
+
+void codegenBeforeReplToplevel(ModulePtr module) {
+    CodegenContext* theConstructorCtx = new CodegenContext();
+    CodegenContext* theDestructorCtx = new CodegenContext();
+    constructorsCtx = theConstructorCtx;
+    destructorsCtx = theDestructorCtx;
+    //codegenTopLevelLLVM(module);
+    codegenTopLevelLLVMRecursive(module);
+    initializeCtorsDtors();
+    generateLLVMCtorsAndDtors();
+    codegenModuleEntryPoints(module, false);
+}
+
+llvm::Function* codegenAfterReplToplevel() {
+    finalizeCtorsDtors();
+    return constructorsCtx->llvmFunc;
 }
 
 }

@@ -84,6 +84,10 @@ namespace clay {
         for (size_t i = 0; i < imports.size(); ++i) {
             initModule(imports[i]->module);
         }
+        for (size_t i = 0; i < imports.size(); ++i) {
+            codegenEntryPoints(imports[i]->module, true);
+        }
+
     }
 
     static void jitTopLevel(vector<TopLevelItemPtr> const& toplevels)
@@ -125,12 +129,15 @@ namespace clay {
 
         entryProc->env = module->env;
 
+        codegenBeforeReplToplevel(module);
         try {
             codegenExternalProcedure(entryProc, true);
         }
         catch (std::exception) {
             return;
         }
+        llvm::Function* f = codegenAfterReplToplevel();
+        engine->runFunction(f, std::vector<llvm::GenericValue>());
 
         engine->runFunction(entryProc->llvmFunc, std::vector<llvm::GenericValue>());
     }
@@ -179,7 +186,6 @@ namespace clay {
 
         llvmModule = llvmModule_;
         module = module_;
-
         llvm::errs() << "Clay interpreter\n";
         llvm::errs() << ":q to exit\n";
         llvm::errs() << ":print {identifier} to print an identifier\n";
