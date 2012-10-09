@@ -30,7 +30,12 @@ static llvm::StringRef getOS(llvm::Triple const &triple) {
     case llvm::Triple::Solaris : return "solaris";
     case llvm::Triple::Haiku : return "haiku";
     case llvm::Triple::Minix : return "minix";
-    default : return triple.getOSName();
+    default : {
+        llvm::StringRef os = triple.getOSName();
+        if (os.empty())
+            error("cannot initialize os name");
+        return os;
+    }
     }
 }
 
@@ -59,7 +64,12 @@ static llvm::StringRef getCPU(llvm::Triple const &triple) {
     case llvm::Triple::sparcv9 : return "sparc";
     case llvm::Triple::x86 :
     case llvm::Triple::x86_64 : return "x86";
-    default : return triple.getArchName();
+    default : {
+        llvm::StringRef archName = triple.getArchName();
+        if (archName.empty())
+            error("cannot initialize cpu name");
+        return archName;
+    }
     }
 }
 
@@ -68,7 +78,7 @@ static llvm::StringRef getPtrSize(const llvm::TargetData *targetData) {
     case 16 : return "16";
     case 32 : return "32";
     case 64 : return "64";
-    default : assert(false); return "";
+    default : error("cannot initialize ptr size"); return "";
     }
 }
 
@@ -104,6 +114,9 @@ static void initModuleSuffixes() {
     moduleSuffixes.push_back(llvm::StringRef(".clay"));
 }
 
+void initLoader() {
+    initModuleSuffixes();
+}
 
 
 //
@@ -133,8 +146,6 @@ void addSearchPath(llvm::StringRef path) {
 
 static bool locateFile(llvm::StringRef relativePath, PathString &path) {
     // relativePath has no suffix
-    if (moduleSuffixes.empty())
-        initModuleSuffixes();
     for (unsigned i = 0; i < searchPath.size(); ++i) {
         PathString pathWOSuffix(searchPath[i]);
         llvm::sys::path::append(pathWOSuffix, relativePath);

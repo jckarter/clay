@@ -2562,6 +2562,7 @@ void addProcedureOverload(ProcedurePtr proc, EnvPtr Env, OverloadPtr x);
 void getProcedureMonoTypes(ProcedureMono &mono, EnvPtr env,
     vector<FormalArgPtr> const &formalArgs, bool hasVarArg);
 
+void initLoader();
 void addSearchPath(llvm::StringRef path);
 ModulePtr loadProgram(llvm::StringRef fileName, vector<string> *sourceFiles);
 ModulePtr loadProgramSource(llvm::StringRef name, llvm::StringRef source);

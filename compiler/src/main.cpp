@@ -1011,6 +1011,9 @@ int main2(int argc, char **argv, char const* const* envp) {
     HiResTimer loadTimer, compileTimer, optTimer, outputTimer;
 
     loadTimer.start();
+
+    initLoader();
+
     ModulePtr m;
     string clayScriptSource;
     vector<string> sourceFiles;
