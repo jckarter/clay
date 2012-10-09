@@ -1922,6 +1922,7 @@ struct Variant : public TopLevelItem {
     vector<IdentifierPtr> params;
     IdentifierPtr varParam;
 
+    bool open;
     ExprListPtr defaultInstances;
 
     vector<InstancePtr> instances;
@@ -1934,11 +1935,12 @@ struct Variant : public TopLevelItem {
             ExprPtr predicate,
             const vector<IdentifierPtr> &params,
             IdentifierPtr varParam,
+            bool open,
             ExprListPtr defaultInstances)
         : TopLevelItem(VARIANT, name, visibility),
           patternVars(patternVars), predicate(predicate),
           params(params), varParam(varParam),
-          defaultInstances(defaultInstances) {}
+          open(open), defaultInstances(defaultInstances) {}
 };
 
 struct Instance : public TopLevelItem {

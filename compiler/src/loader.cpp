@@ -523,6 +523,8 @@ static void initVariantInstance(InstancePtr x) {
         if (z->typeKind != VARIANT_TYPE)
             error(x->target, "not a variant type");
         VariantType *vt = (VariantType *)z;
+        if (!vt->variant->open)
+            error(x->target, "cannot add instances to closed variant");
         vt->variant->instances.push_back(x);
     }
     else {
