@@ -169,17 +169,42 @@ static PathString toRelativePath2(DottedNamePtr name) {
 }
 
 static PathString locateModule(DottedNamePtr name) {
-    PathString path, relativePath;
+    PathString path;
 
-    relativePath = toRelativePath1(name);
-    if (locateFile(relativePath, path))
+    PathString relativePath1 = toRelativePath1(name);
+    if (locateFile(relativePath1, path))
         return path;
 
-    relativePath = toRelativePath2(name);
-    if (locateFile(relativePath, path))
+    PathString relativePath2 = toRelativePath2(name);
+    if (locateFile(relativePath2, path))
         return path;
 
-    error(name, "module not found: " + toKey(name));
+    string s;
+    llvm::raw_string_ostream ss(s);
+
+    ss << "module not found: " + toKey(name) << "\n";
+
+    ss << "tried relative paths:\n";
+    ss << "    " << relativePath1 << "\n";
+    ss << "    " << relativePath2 << "\n";
+
+    ss << "with suffixes:\n";
+    for (vector<llvm::SmallString<32> >::const_iterator entry = moduleSuffixes.begin();
+            entry != moduleSuffixes.end(); ++entry)
+    {
+        ss << "    " << *entry << "\n";
+    }
+
+    ss << "in search path:\n";
+    for (vector<PathString>::const_iterator entry = searchPath.begin();
+            entry != searchPath.end(); ++entry)
+    {
+        ss << "    " << *entry << "\n";
+    }
+
+    ss.flush();
+
+    error(name, s);
     llvm_unreachable("module not found");
 }
 
