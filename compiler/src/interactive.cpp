@@ -84,10 +84,6 @@ namespace clay {
         for (size_t i = 0; i < imports.size(); ++i) {
             initModule(imports[i]->module);
         }
-        for (size_t i = 0; i < imports.size(); ++i) {
-            codegenEntryPoints(imports[i]->module, true);
-        }
-
     }
 
     static void jitTopLevel(vector<TopLevelItemPtr> const& toplevels)
@@ -129,15 +125,23 @@ namespace clay {
 
         entryProc->env = module->env;
 
-        codegenBeforeReplToplevel(module);
+        codegenBeforeRepl(module);
         try {
             codegenExternalProcedure(entryProc, true);
         }
         catch (std::exception) {
             return;
         }
-        llvm::Function* f = codegenAfterReplToplevel();
-        engine->runFunction(f, std::vector<llvm::GenericValue>());
+
+        llvm::Function* ctor;
+        llvm::Function* dtor;
+        codegenAfterRepl(ctor, dtor);
+
+        engine->runFunction(ctor, std::vector<llvm::GenericValue>());
+
+        void* dtorLlvmFun = engine->getPointerToFunction(dtor);
+        typedef void (*PFN)();
+        atexit(reinterpret_cast<PFN>(dtorLlvmFun));
 
         engine->runFunction(entryProc->llvmFunc, std::vector<llvm::GenericValue>());
     }

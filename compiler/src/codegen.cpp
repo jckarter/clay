@@ -6991,9 +6991,11 @@ llvm::TargetMachine *initLLVM(llvm::StringRef targetTriple,
     return targetMachine;
 }
 
-void codegenBeforeReplToplevel(ModulePtr module) {
+void codegenBeforeRepl(ModulePtr module) {
     CodegenContext* theConstructorCtx = new CodegenContext();
     CodegenContext* theDestructorCtx = new CodegenContext();
+    delete constructorsCtx;
+    delete destructorsCtx;
     constructorsCtx = theConstructorCtx;
     destructorsCtx = theDestructorCtx;
     //codegenTopLevelLLVM(module);
@@ -7003,9 +7005,10 @@ void codegenBeforeReplToplevel(ModulePtr module) {
     codegenModuleEntryPoints(module, false);
 }
 
-llvm::Function* codegenAfterReplToplevel() {
+void codegenAfterRepl(llvm::Function*& ctor, llvm::Function*& dtor) {
     finalizeCtorsDtors();
-    return constructorsCtx->llvmFunc;
+    ctor = constructorsCtx->llvmFunc;
+    dtor = destructorsCtx->llvmFunc;
 }
 
 }

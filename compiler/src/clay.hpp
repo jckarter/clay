@@ -3809,8 +3809,8 @@ EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env);
 //
 
 void initializeCtorsDtors();
-void codegenBeforeReplToplevel(ModulePtr module);
-llvm::Function* codegenAfterReplToplevel();
+void codegenBeforeRepl(ModulePtr module);
+void codegenAfterRepl(llvm::Function*& ctor, llvm::Function*& dtor);
 
 static const unsigned short DW_LANG_user_CLAY = 0xC1A4;
 
