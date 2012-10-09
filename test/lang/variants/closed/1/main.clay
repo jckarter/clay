@@ -1,0 +1,9 @@
+record Bar ();
+record Baz ();
+
+variant Foo (Bar);
+
+instance Foo (Baz);
+
+main() {
+}

@@ -20,9 +20,11 @@ overload printReprTo(stream, x:GenericOSError) {
     printTo(stream, "GenericOSError(", errorCodeName(x.code), ", ", repr(x.where), ")");
 }
 
-variant OSError (GenericOSError);
+variant OSError;
 
 instance Exception (OSError);
+
+instance OSError (GenericOSError);
 
 [T when VariantMember?(OSError, T)]
 overload Exception(forward x:T) = Exception(OSError(x));

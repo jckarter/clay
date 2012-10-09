@@ -28,9 +28,11 @@ public import io.sockets.platform.(
 
 record GenericSocketError (code: Int);
 
-variant SocketError (GenericSocketError);
+variant SocketError;
 
 instance IOError (SocketError);
+
+instance SocketError (GenericSocketError);
 
 [T when VariantMember?(SocketError, T)]
 overload Exception(forward x:T) = Exception(SocketError(x));

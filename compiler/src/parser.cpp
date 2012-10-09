@@ -2113,11 +2113,13 @@ static bool instances(ExprListPtr &x) {
     return symbol("(") && optExpressionList(x) && symbol(")");
 }
 
-static bool optInstances(ExprListPtr &x) {
+static bool optInstances(ExprListPtr &x, bool &open) {
     int p = save();
     if (symbol("(")) {
+        open = false;
         return optExpressionList(x) && symbol(")");
     } else {
+        open = true;
         restore(p);
         x = new ExprList();
         return true;
@@ -2138,9 +2140,10 @@ static bool variant(TopLevelItemPtr &x) {
     IdentifierPtr varParam;
     if (!optStaticParams(params, varParam)) return false;
     ExprListPtr defaultInstances;
-    if (!optInstances(defaultInstances)) return false;
+    bool open;
+    if (!optInstances(defaultInstances, open)) return false;
     if (!symbol(";")) return false;
-    x = new Variant(name, vis, patternVars, predicate, params, varParam, defaultInstances);
+    x = new Variant(name, vis, patternVars, predicate, params, varParam, open, defaultInstances);
     x->location = location;
     return true;
 }

@@ -5,7 +5,8 @@ record Human ();
 
 record Dog ();
 
-variant Animal (Human, Dog);
+variant Animal;
+instance Animal (Human, Dog);
 
 define what;
 overload what(x:Human) = "Human";
