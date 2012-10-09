@@ -31,6 +31,17 @@ repr(forward ..values) = ReprFormatter(captureValues(..values));
 }
 
 
+/// @section  stringRepr formatter 
+
+private record StringReprFormatter[T] (value: T);
+
+stringRepr(forward value) = StringReprFormatter(captureValue(value));
+
+[T] overload printTo(stream, f:StringReprFormatter[T]) {
+    printStringReprTo(stream, forwardValue(f.value));
+}
+
+
 /// @section  Number base formatters 
 
 private record HexFormatter[T] (value: T);

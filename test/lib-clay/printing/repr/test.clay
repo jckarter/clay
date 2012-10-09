@@ -1,4 +1,4 @@
-import printer.formatter.(repr);
+import printer.formatter.(repr, stringRepr);
 import numbers.floats.(nan, nan?);
 import printer.(println, str);
 import strings.(String);
@@ -102,10 +102,6 @@ main() = testMain(
             testWithEval(test, "#3l");
             testWithEval(test, "#true");
 
-            // static strings are the same as string constants
-            // see https://groups.google.com/forum/#!topic/clay-language/mR4AFJzSafE
-            expectPrinted(test, "static string", "\"st\"", repr(#"st"));
-
             // symbols
             testWithEval(test, "TestCase");
             testWithEval(test, "repr");
@@ -118,6 +114,14 @@ main() = testMain(
             testWithEval(test, """CStringRef()""");
             testWithEval(test, """StringRef("string ref")""");
             testWithEval(test, """StringRef()""");
+        }),
+        TestCase("stringRepr", test -> {
+            expectPrinted(test, "string literal",
+                          """"abc\\r\\n\\""""", stringRepr("abc\r\n\""));
+            expectPrinted(test, "String",
+                          """"abc\\r\\n\\""""", stringRepr(String"abc\r\n\""));
+            expectPrinted(test, "StringLiteralRef",
+                          """"abc\\r\\n\\""""", stringRepr(StringLiteralRef"abc\r\n\""));
         }),
         TestCase("ArrayRef", test -> {
             testWithEval(test, """ArrayRef[Int32]""");
