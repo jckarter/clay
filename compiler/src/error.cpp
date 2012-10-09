@@ -250,18 +250,22 @@ void setAbortOnError(bool flag) {
 }
 
 void displayError(llvm::Twine const &msg, llvm::StringRef kind) {
+    string msgString = msg.str();
+    if (msgString.empty() || msgString[msgString.length() - 1] != '\n')
+        msgString += '\n';
+
     Location location = topLocation();
     if (location.ok()) {
         int line, column;
         displayLocation(location, line, column);
         llvm::errs() << location.source->fileName
-            << '(' << line+1 << ',' << column << "): " << kind << ": " << msg << '\n';
+            << '(' << line+1 << ',' << column << "): " << kind << ": " << msgString;
         llvm::errs().flush();
         displayCompileContext();
         displayDebugStack();
     }
     else {
-        llvm::errs() << kind << ": " << msg << '\n';
+        llvm::errs() << kind << ": " << msgString;
     }
 }
 
