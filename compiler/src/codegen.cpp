@@ -6985,6 +6985,9 @@ llvm::TargetMachine *initLLVM(llvm::StringRef targetTriple,
 
     if (targetMachine != NULL) {
         llvmTargetData = targetMachine->getTargetData();
+        if (llvmTargetData == NULL) {
+            return NULL;
+        }
         llvmModule->setDataLayout(llvmTargetData->getStringRepresentation());
     }
 
