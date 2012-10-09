@@ -1391,6 +1391,7 @@ void evalValueHolder(ValueHolderPtr x, MultiEValuePtr out)
     case INTEGER_TYPE :
     case FLOAT_TYPE :
     case COMPLEX_TYPE :
+    case ENUM_TYPE :
         memcpy(out0->addr, x->buf, typeSize(x->type));
         break;
 

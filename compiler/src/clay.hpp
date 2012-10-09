@@ -3748,6 +3748,9 @@ struct EValue : public Object {
     EValue(TypePtr type, char *addr)
         : Object(EVALUE), type(type), addr(addr),
           forwardedRValue(false) {}
+    EValue(TypePtr type, char *addr, bool forwardedRValue)
+        : Object(EVALUE), type(type), addr(addr),
+          forwardedRValue(forwardedRValue) {}
 
     template<typename T>
     T &as() { return *(T*)addr; }

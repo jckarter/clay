@@ -1024,7 +1024,7 @@ void printValue(llvm::raw_ostream &out, EValuePtr ev)
         if (t->isSigned) {
             switch (t->bits) {
             case 8 :
-                out << int(ev->as<char>());
+                out << int(ev->as<signed char>());
                 break;
             case 16 :
                 out << ev->as<short>();
@@ -1090,6 +1090,19 @@ void printValue(llvm::raw_ostream &out, EValuePtr ev)
             break;
         default :
             assert(false);
+        }
+        break;
+    }
+    case ENUM_TYPE : {
+        EnumType *t = (EnumType *)ev->type.ptr();
+        vector<EnumMemberPtr> const &members = t->enumeration->members;
+        int member = ev->as<int>();
+
+        if (member >= 0 && member < members.size()) {
+            out << members[member]->name->str;
+        } else {
+            printName(out, t);
+            out << '(' << member << ')';
         }
         break;
     }

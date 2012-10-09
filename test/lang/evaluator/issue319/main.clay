@@ -1,0 +1,20 @@
+import printer.*;
+
+enum Eee (Aaa, Bbb);
+
+[E] define foo(#E);
+
+overload foo(#Aaa) = 1;
+overload foo(#Bbb) = 2;
+
+main() {
+    println(StaticName(#Aaa));
+    println(StaticName(#Bbb));
+    println(StaticName(#Eee(-1)));
+    println(StaticName(#Eee(2)));
+    println(#(Bbb == Bbb));
+    println(#(Aaa == Aaa));
+    println(#(Aaa == Bbb));
+    //println(foo(#Bbb));
+    //println(foo(#Aaa));
+}
