@@ -1,5 +1,3 @@
-#include <sstream>
-
 #include "clay.hpp"
 
 namespace clay {
