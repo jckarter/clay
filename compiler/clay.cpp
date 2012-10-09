@@ -955,7 +955,7 @@ int main2(int argc, char **argv, char const* const* envp) {
     PathString libDirProduction1(clayDir);
     PathString libDirProduction2(clayDir);
 
-    llvm::sys::path::append(libDirDevelopment, "../../../lib-clay");
+    llvm::sys::path::append(libDirDevelopment, "../../lib-clay");
     llvm::sys::path::append(libDirProduction1, "../lib/lib-clay");
     llvm::sys::path::append(libDirProduction2, "lib-clay");
 

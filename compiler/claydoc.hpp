@@ -3,7 +3,7 @@
 #include <iostream>
 #include <map>
 
-#include "../../compiler/src/clay.hpp"
+#include "clay.hpp"
 
 
 struct DocObject

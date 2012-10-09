@@ -53,7 +53,7 @@ def which(program):
     return None
 
 def getClayCompiler(opt) :
-    buildPath = ["..", "build", "compiler", "src"]
+    buildPath = ["..", "build", "compiler"]
     clayexe = None
     if sys.platform == "win32" :
         clayexe = "clay.exe"
