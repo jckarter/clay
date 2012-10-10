@@ -907,6 +907,9 @@ int main2(int argc, char **argv, char const* const* envp) {
     if (!codegenExternalsSet)
         codegenExternals = !(emitLLVM || emitAsm || emitObject);
 
+    if ((emitLLVM || emitAsm || emitObject) && run)
+        run = false;
+
     setInlineEnabled(inlineEnabled);
     setExceptionsEnabled(exceptions);
 
