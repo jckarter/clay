@@ -464,6 +464,7 @@ void getProcedureMonoTypes(ProcedureMono &mono, EnvPtr env,
         for (size_t i = 0; i < formalArgs.size(); ++i) {
             if (formalArgs[i]->type == NULL)
                 goto poly;
+            LocationContext loc(formalArgs[i]->type->location);
             PatternPtr argPattern =
                 evaluateOnePattern(formalArgs[i]->type, env);
             ObjectPtr argType = derefDeep(argPattern);
