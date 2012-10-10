@@ -470,6 +470,8 @@ forceinline overload A(b:B) : A
 /// @section  never-checked wrap-on-overflow math 
 
 [A when Integer?(A)]
+forceinline wrapNegate(a:A) : A = numericNegate(a);
+[A when Integer?(A)]
 forceinline wrapAdd(a:A, b:A) : A = numericAdd(a, b);
 [A when Integer?(A)]
 forceinline wrapSubtract(a:A, b:A) : A = numericSubtract(a, b);
