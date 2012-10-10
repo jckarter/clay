@@ -408,8 +408,15 @@ ModulePtr loadProgram(llvm::StringRef fileName, vector<string> *sourceFiles) {
 }
 
 ModulePtr loadProgramSource(llvm::StringRef name, llvm::StringRef source) {
-    globalMainModule = parse("", new Source(name,
-        llvm::MemoryBuffer::getMemBufferCopy(source)));
+    SourcePtr mainSource = new Source(name,
+        llvm::MemoryBuffer::getMemBufferCopy(source));
+    if (llvmDIBuilder != NULL) {
+        mainSource->debugInfo = (llvm::MDNode*)llvmDIBuilder->createFile(
+            "-e",
+            "");
+    }
+
+    globalMainModule = parse("", mainSource);
     // Don't keep track of source files for -e script
     ModulePtr prelude = loadPrelude(NULL);
     loadDependents(globalMainModule, NULL);

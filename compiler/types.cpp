@@ -1056,7 +1056,9 @@ llvm::DIType llvmTypeDebugInfo(TypePtr t) {
     if (t->llType == NULL)
         declareLLVMType(t);
 
-    return t->getDebugInfo();
+    llvm::DIType r = t->getDebugInfo();
+    assert(r.Verify());
+    return r;
 }
 
 llvm::DIType llvmVoidTypeDebugInfo() {
