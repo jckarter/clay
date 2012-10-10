@@ -1,4 +1,5 @@
 import printer.(println);
+import printer.formatter.(hex);
 
 main() {
     println(0ll);
@@ -22,4 +23,23 @@ main() {
     println(Greatest(Int128));
     println(Least(UInt128));
     println(Greatest(UInt128));
+
+    println(hex(0ull));
+    println(hex(1ull));
+    println(hex(UInt128(Greatest(UInt64))));
+    println(hex(UInt128(Greatest(UInt64)) + 1));
+    println(hex(Greatest(UInt128)));
+
+    println(hex(0ll));
+    println(hex(1ll));
+    println(hex(Int128(Greatest(Int64))));
+    println(hex(Int128(Greatest(Int64)) + 1));
+    println(hex(Int128(Greatest(UInt64))));
+    println(hex(Int128(Greatest(UInt64)) + 1));
+    println(hex(Greatest(Int128)));
+    println(hex(-1ll));
+    println(hex(Int128(Least(Int64))));
+    println(hex(-Int128(Greatest(UInt64))));
+    println(hex(-Int128(Greatest(UInt64)) - 1));
+    println(hex(Least(Int128)));
 }

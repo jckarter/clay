@@ -61,8 +61,7 @@ oct(forward x: I) = formatter(OctFormatter, x);
 
 private _formatBase(stream, value, fmt) {
     if (value < 0) {
-        printTo(stream, '-');
-        printWithSprintf(stream, fmt, -value);
+        printWithSprintf(stream, strl("-", fmt), wrapNegate(value));
     } else {
         printWithSprintf(stream, fmt, value);
     }
@@ -86,6 +85,53 @@ overload formatBase(stream, value: UInt64, fmt, fmt64) {
 [T] overload formatTo(stream, f: HexFormatter[T], value) {
     formatBase(stream, value, "%x", formatForHexInt64);
 }
+
+private define formatBase128(stream, value, wideFormat, narrowFormat) :;
+overload formatBase128(stream, value: UInt128, wideFormat, narrowFormat)
+{
+    var hi = UInt64(bitshr(value,64));
+    if (hi != 0)
+        printWithSprintf(stream, wideFormat, hi, wrapCast(UInt64, value));
+    else
+        printWithSprintf(stream, narrowFormat, wrapCast(UInt64, value));
+}
+
+overload formatBase128(stream, value: Int128, wideFormat, narrowFormat)
+{
+    if (value < -Int128(Greatest(UInt64))) {
+        var neg = wrapNegate(value);
+        printWithSprintf(stream, strl("-", wideFormat),
+            Int64(bitshr(neg, 64)), wrapCast(UInt64, neg));
+    } else if (value < 0) {
+        printWithSprintf(stream, strl("-", narrowFormat), UInt64(-value));
+    } else if (value <= Int128(Greatest(UInt64))) {
+        printWithSprintf(stream, narrowFormat, UInt64(value));
+    } else {
+        printWithSprintf(stream, wideFormat,
+            Int64(bitshr(value, 64)), wrapCast(UInt64, value));
+    }
+}
+
+// FIXME should use formatForHexInt64 instead of hardcoding %llx
+// Not really a priority since LLVM doesn't support i128 types on windows yet
+[T] overload formatTo(stream, f: HexFormatter[T], value: UInt128) {
+    formatBase128(stream, value, "%llx%016llx", "%llx");
+}
+[T] overload formatTo(stream, f: HexFormatter[T], value: Int128) {
+    formatBase128(stream, value, "%llx%016llx", "%llx");
+}
+
+[T] overload formatTo(stream, f: HEXFormatter[T], value: UInt128) {
+    formatBase128(stream, value, "%llX%016llX", "%llX");
+}
+[T] overload formatTo(stream, f: HEXFormatter[T], value: Int128) {
+    formatBase128(stream, value, "%llX%016llX", "%llX");
+}
+
+// FIXME implement octal printing for Int128
+// Not really a priority because nobody uses octal
+[T] overload formatTo(stream, f: OctFormatter[T], value: Int128);
+[T] overload formatTo(stream, f: OctFormatter[T], value: UInt128);
 
 [T] overload formatTo(stream, f: HEXFormatter[T], value) {
     formatBase(stream, value, "%X", formatForHEXInt64);
