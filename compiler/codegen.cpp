@@ -175,8 +175,7 @@ void codegenCallCode(InvokeEntry* entry,
                      CodegenContext* ctx,
                      MultiCValuePtr out);
 void codegenLowlevelCall(llvm::Value *llCallable,
-                         vector<llvm::Value *>::iterator argBegin,
-                         vector<llvm::Value *>::iterator argEnd,
+                         llvm::ArrayRef<llvm::Value *> args,
                          CodegenContext* ctx);
 void codegenCallInline(InvokeEntry* entry,
                        MultiCValuePtr args,
@@ -2378,7 +2377,7 @@ void codegenCallPointer(CValuePtr x,
             assert(cv->type == t->returnTypes[i]);
         llArgs.push_back(cv->llValue);
     }
-    codegenLowlevelCall(llCallable, llArgs.begin(), llArgs.end(), ctx);
+    codegenLowlevelCall(llCallable, llArgs, ctx);
 }
 
 
@@ -2477,7 +2476,7 @@ void codegenCallCode(InvokeEntry* entry,
             assert(cv->type == entry->returnTypes[i]);
         llArgs.push_back(cv->llValue);
     }
-    codegenLowlevelCall(entry->llvmFunc, llArgs.begin(), llArgs.end(), ctx);
+    codegenLowlevelCall(entry->llvmFunc, llArgs, ctx);
 }
 
 
@@ -2487,13 +2486,10 @@ void codegenCallCode(InvokeEntry* entry,
 //
 
 void codegenLowlevelCall(llvm::Value *llCallable,
-                         vector<llvm::Value *>::iterator argBegin,
-                         vector<llvm::Value *>::iterator argEnd,
+                         llvm::ArrayRef<llvm::Value *> args,
                          CodegenContext* ctx)
 {
-    llvm::Value *result =
-        ctx->builder->CreateCall(llCallable,
-            llvm::makeArrayRef(&*argBegin, &*argEnd));
+    llvm::Value *result = ctx->builder->CreateCall(llCallable, args);
     if (!exceptionsEnabled())
         return;
     if (!ctx->checkExceptions)
