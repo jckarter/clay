@@ -4,7 +4,9 @@ import sequences.lazy.*;
 // It may be used whenever you might want to naturally be able to redefine
 // operators such as equality or ordering for use in a specific operation
 
-Comparator?(T) = false;
+define Comparator?;
+
+overload Comparator?(T) = false;
 
 forceinline overload notEquals?(comparator, a, b) = not equals?(comparator, a, b);
 forceinline overload ordered?(comparator, a, b) = (a <= b) or (b <= a);
@@ -44,7 +46,8 @@ comparing(f) = Comparing(f);
 record Reversed[C](original : C);
 [C when Comparator?(C)] overload Comparator?(#Reversed[C]) = true;
 
-[C when Comparator?(C)] reversed(c : C) = Reversed(c);
+define reversed;
+[C when Comparator?(C)] overload reversed(c : C) = Reversed(c);
 [C when Comparator?(C)] overload reversed(c : Reversed[C]) = c.original;
 overload reversed() = reversed(natural());
 

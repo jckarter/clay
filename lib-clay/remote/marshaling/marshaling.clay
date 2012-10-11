@@ -55,12 +55,16 @@ define marshalTo;
 define unmarshalFrom;
 // [T] UnmarshaledType(#T) T2
 // -- type that value of type T should be unmarshaled into
-UnmarshaledType(T) = T;
+define UnmarshaledType;
+
+overload UnmarshaledType(T) = T;
 
 record UnmarshalUnexpectedEOF ();
 instance Exception (UnmarshalUnexpectedEOF);
 
-Marshalable?(T)
+define Marshalable?;
+
+overload Marshalable?(T)
     =     CallDefined?(marshaledSize, MarshalContext, T)
       and CallDefined?(marshalTo, MarshalContext, Pointer[Byte], T)
       and CallDefined?(unmarshalFrom,
@@ -75,7 +79,9 @@ overload Marshalable?(#UnmarshalContext) = false;
 //
 // bitwise-marshalable implementation
 //
-BitwiseMarshalable?(T) = false;
+define BitwiseMarshalable?;
+
+overload BitwiseMarshalable?(T) = false;
 
 [T when BitwiseMarshalable?(T)]
 overload marshaledSize(context, x: T) = MarshalSize(TypeSize(T));
@@ -137,8 +143,10 @@ overload marshalTo(context, buffer_: Pointer[Byte], forward r: R) --> buffer: Po
     marshalMemberwise(context, buffer, ..recordFields(r));
 }
 
+define unmarshalMemberwise;
+
 [FieldT]
-unmarshalMemberwise(
+overload unmarshalMemberwise(
     context,
     begin: Pointer[Byte],
     end: Pointer[Byte],
@@ -217,8 +225,10 @@ overload marshalTo(context, buffer_: Pointer[Byte], v: V) --> buffer: Pointer[By
 record UnmarshalInvalidVariantTag (tag: Int);
 instance Exception (UnmarshalInvalidVariantTag);
 
+private define unmarshalVariantMember;
+
 [..T, n]
-private unmarshalVariantMember(
+overload unmarshalVariantMember(
     context,
     begin: Pointer[Byte],
     end: Pointer[Byte],
@@ -262,7 +272,9 @@ overload unmarshalFrom(context, begin_: Pointer[Byte], end: Pointer[Byte], #V)
 //
 // general sequence marshaling
 //
-private MarshalableSequence?(S)
+private define MarshalableSequence?;
+
+overload MarshalableSequence?(S)
     = SequenceContainer?(S) and Marshalable?(SequenceElementType(S));
 
 overload MarshalableSequence?(#StringLiteralRef) = true;
@@ -519,8 +531,12 @@ overload UnmarshaledType(#SharedPointer[T]) = SharedPointer[UnmarshaledType(T)];
 //
 // high-level interface
 //
-[T when T != MarshalContext] marshal(forward value:T, forward ..values)
+define marshal;
+
+[T when T != MarshalContext]
+overload marshal(forward value:T, forward ..values)
     = marshal(MarshalContext(), value, ..values);
+
 overload marshal() = Vector[Byte]();
 
 overload marshal(context: MarshalContext, forward ..values) --> returned: Vector[Byte] {
@@ -537,7 +553,9 @@ overload marshal(context: MarshalContext, forward ..values) --> returned: Vector
 
 overload marshal(context: MarshalContext) = Vector[Byte]();
 
-unmarshal(data: Vector[Byte], ..Types)
+define unmarshal;
+
+overload unmarshal(data: Vector[Byte], ..Types)
     = ..unmarshal(UnmarshalContext(), data, ..Types);
 overload unmarshal(context: UnmarshalContext, data: Vector[Byte], ..Types) {
     var b = begin(data);

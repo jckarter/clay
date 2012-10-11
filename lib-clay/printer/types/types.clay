@@ -421,7 +421,9 @@ overload printReprTo(stream, x:T) {
 
 /// @section  printReprValuesTo, printReprArgumentsTo, printReprElementsTo 
 
-printReprValuesTo(stream, value, ..values) {
+define printReprValuesTo;
+
+overload printReprValuesTo(stream, value, ..values) {
     printReprTo(stream, value);
     ..for (y in values) {
         printTo(stream, ", ");

@@ -175,7 +175,8 @@ __expectMsgSendCompatible(expectTF, test, ParamType, ValueType) {
     );
 }
 
-_expectMsgSendCompatible(expectTF, test, ParamType, ValueType) {
+define _expectMsgSendCompatible;
+overload _expectMsgSendCompatible(expectTF, test, ParamType, ValueType) {
     __expectMsgSendCompatible(expectTF, test, ParamType, ValueType);
 }
 [ParamType when ObjectType?(ParamType)]

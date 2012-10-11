@@ -65,7 +65,9 @@ forceinline overload destroyMemory(begin:Pointer[P], end:Pointer[P]) : { }
 
 /// @section  value semantics for POD 
 
-[P] forceinline copyPOD(x: P) --> returned: P { memcpy(@returned, @x, TypeSize(P)); }
+define copyPOD;
+
+[P] forceinline overload copyPOD(x: P) --> returned: P { memcpy(@returned, @x, TypeSize(P)); }
 forceinline overload copyPOD(x: Bool) --> returned: Bool { bitcopy(returned, x); }
 [N when Numeric?(N)]
 forceinline overload copyPOD(x: N) --> returned: N { bitcopy(returned, x); }

@@ -56,7 +56,9 @@ forceinline overload staticIndex(#s, #n) {
 
 /// @section  cstring 
 
-forceinline cstring(a:StringLiteralRef) = Pointer[Int8](begin(a));
+define cstring(a) : Pointer[Int8];
+
+forceinline overload cstring(a:StringLiteralRef) = Pointer[Int8](begin(a));
 
 [s when StringLiteral?(s)]
 forceinline overload cstring(#s) = Pointer[Int8](begin(s));
@@ -77,7 +79,8 @@ forceinline overload reverseIterator(#s) =
 
 /// @section  string literal concatenation 
 
-private StringLiteralStatic?(S) = false;
+private define StringLiteralStatic?(s) : Bool;
+overload StringLiteralStatic?(s) = false;
 [s]
 overload StringLiteralStatic?(#Static[s]) = StringLiteral?(s);
 
@@ -91,7 +94,10 @@ forceinline overload (++)(..ss:SS) = stringLiteralConcat(..ss);
 
 // stringLiteralStartsWith?
 
-stringLiteralStartsWith?(identifier, startsWith) = false;
+define stringLiteralStartsWith?;
+
+overload stringLiteralStartsWith?(a, b) = false;
+
 [identifier, startsWith when size(identifier) >= size(startsWith)]
 overload stringLiteralStartsWith?(#identifier, #startsWith)
       = stringLiteralByteSlice(identifier, #0, #size(startsWith))
@@ -99,7 +105,10 @@ overload stringLiteralStartsWith?(#identifier, #startsWith)
 
 // stringLiteralEndsWith?
 
-stringLiteralEndsWith?(identifier, endsWith) = false;
+define stringLiteralEndsWith?;
+
+overload stringLiteralEndsWith?(a, b) = false;
+
 [identifier, endsWith when size(identifier) >= size(endsWith)]
 overload stringLiteralEndsWith?(#identifier, #endsWith)
     = stringLiteralByteSlice(identifier,
@@ -109,10 +118,12 @@ overload stringLiteralEndsWith?(#identifier, #endsWith)
 
 // stringLiteralFind
 
+define stringLiteralFind;
+
 [identifier, sub, start when
     StringLiteral?(identifier) and StringLiteral?(sub)
 ]
-stringLiteralFind(#identifier, #sub, #start)
+overload stringLiteralFind(#identifier, #sub, #start)
     = stringLiteralFind(identifier, sub, #(start + 1));
 
 [identifier, sub, start when
@@ -146,12 +157,15 @@ overload strl() = "";
 
 // stringLiteralCapitalize, stringLiteralDecapitalize
 
-stringLiteralCapitalize("") = "";
+define stringLiteralCapitalize;
+define stringLiteralDecapitalize;
+
+overload stringLiteralCapitalize("") = "";
 [s when StringLiteral?(s) and size(s) >= 1]
 overload stringLiteralCapitalize(#s)
     = stringLiteralConcat(stringLiteralFromBytes(#(Int(asciiUpper(s.0)))), stringLiteralByteSlice(s, #1, #size(s)));
 
-stringLiteralDecapitalize("") = "";
+overload stringLiteralDecapitalize("") = "";
 [s when StringLiteral?(s) and size(s) >= 1]
 overload stringLiteralDecapitalize(#s)
     = stringLiteralConcat(stringLiteralFromBytes(#(Int(asciiLower(s.0)))), stringLiteralByteSlice(s, #1, #size(s)));

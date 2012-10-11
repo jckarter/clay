@@ -6,7 +6,10 @@ forceinline overload __operators__.charLiteral(code) = Char(code);
 
 record UniChar (code:UInt32);
 
-Character?(x) : Bool = false;
+[T]
+define Character?(#T) : Bool;
+
+overload Character?(x) : Bool = false;
 overload Character?(#Char) : Bool = true;
 overload Character?(#UniChar) : Bool = true;
 

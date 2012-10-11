@@ -38,8 +38,10 @@ private usage(..commandTuples) {
 }
 
 
+private define commandName;
+
 [fn when CallDefined?(fn, Vector[String])]
-private commandName(#fn) = StaticName(fn);
+overload commandName(#fn) = StaticName(fn);
 
 [fn, ..Description when CallDefined?(fn, Vector[String])]
 overload commandName(commandTuple: Tuple[Static[fn], ..Description])
@@ -53,8 +55,10 @@ overload commandName(commandTuple: Tuple[Static[fn], ..Description])
 overload commandName(commandTuple: Tuple[Name, Callable, ..Description])
     = commandTuple.0;
 
+private define commandFunction;
+
 [fn when CallDefined?(fn, Vector[String])]
-private commandFunction(#fn) = fn;
+overload commandFunction(#fn) = fn;
 
 [fn, ..Description when CallDefined?(fn, Vector[String])]
 overload commandFunction(commandTuple: Tuple[Static[fn], ..Description])
@@ -68,8 +72,10 @@ overload commandFunction(commandTuple: Tuple[Static[fn], ..Description])
 overload commandFunction(commandTuple: Tuple[Name, Callable, ..Description])
     = commandTuple.1;
 
+private define commandDescription;
+
 [fn when CallDefined?(fn, Vector[String])]
-private commandDescription(#fn)
+overload commandDescription(#fn)
     = ;
 
 [fn, ..Description when CallDefined?(fn, Vector[String])]
@@ -87,8 +93,10 @@ overload commandDescription(commandTuple: Tuple[Name, Callable, ..Description])
 private commandTypeReturnCount(T)
     = countValues(..Type(..commandFunction(typeToRValue(T))(Vector[String]())));
 
+private define invokeCommand;
+
 [CommandTuple when commandTypeReturnCount(CommandTuple) == 1]
-private invokeCommand(commandTuple: CommandTuple, args)
+overload invokeCommand(commandTuple: CommandTuple, args)
     = commandFunction(commandTuple)(args);
 
 [CommandTuple when commandTypeReturnCount(CommandTuple) == 0]

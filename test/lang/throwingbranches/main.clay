@@ -2,7 +2,8 @@ import printer.(println);
 record FooException ();
 instance Exception (FooException);
 
-foo(x: Int) : Int { throw FooException(); }
+define foo;
+overload foo(x: Int) : Int { throw FooException(); }
 overload foo(x: Float) : Int { return 5; }
 
 variant Foo (Int, Float);

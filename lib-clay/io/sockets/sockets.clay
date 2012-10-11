@@ -149,7 +149,10 @@ overload lookupInetHostname(hostname: S) {
 
 
 /// @section  socket objects 
-Socket?(X) = false;
+
+define Socket?;
+
+overload Socket?(X) = false;
 
 record ListenSocket[Addr] (raw: platform.RawSocket);
 record StreamSocket (raw: platform.RawSocket);

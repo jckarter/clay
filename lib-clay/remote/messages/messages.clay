@@ -54,8 +54,10 @@ private var remoteCode[Protocol, ..Args] = createRemoteCode(Protocol, ..Args);
 
 
 /// @section  client interface 
+define remoteMessage;
+
 [Protocol, ..Args when CallDefined?(Protocol, ..Args)]
-remoteMessage(#Protocol, outstream, forward ..args: Args) {
+overload remoteMessage(#Protocol, outstream, forward ..args: Args) {
     var mArgs = marshal(..args);
     var mArgsSize = MarshalSize(size(mArgs));
     writeMarshalSize(outstream, remoteCode[Protocol, ..Args]);
@@ -87,8 +89,10 @@ private consume(stream, bytes_) {
     }
 }
 
+define answerRemoteMessage;
+
 [Protocol]
-answerRemoteMessage(#Protocol, instream, code: MarshalSize) {
+overload answerRemoteMessage(#Protocol, instream, code: MarshalSize) {
     if (code < size(remoteEntryPoints[Protocol])) {
         var mArgsSize = readMarshalSize(instream);
 
@@ -118,8 +122,10 @@ overload answerRemoteMessage(instream) {
     answerRemoteMessage(DefaultProtocol, instream);
 }
 
+define answerLoop;
+
 [Protocol]
-answerLoop(#Protocol, instream) {
+overload answerLoop(#Protocol, instream) {
     var code = maybeReadMarshalSize(instream);
     while(just?(code)) {
         answerRemoteMessage(instream, just(code));

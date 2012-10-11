@@ -5,7 +5,9 @@ import sequences.lazy.zipped.*;
 
 /// @section  filtered 
 
-forceinline filtered(predicate, forward ..seqs) = Filtered(predicate, zipped(..seqs));
+define filtered(predicate, ..seqs);
+
+forceinline overload filtered(predicate, forward ..seqs) = Filtered(predicate, zipped(..seqs));
 
 forceinline overload filtered(predicate, forward seq) =
     Filtered(predicate, wrapSequence(seq));

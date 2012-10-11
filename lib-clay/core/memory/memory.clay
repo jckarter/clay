@@ -83,8 +83,10 @@ freeRawMemoryAligned(ptr:Pointer[T]) {
 
 /// @section  allocateRawMemory, freeRawMemory 
 
+define allocateRawMemory;
+
 [T,I when Integer?(I)]
-allocateRawMemory(#T, count:I) {
+overload allocateRawMemory(#T, count:I) {
     var ptr = libc.malloc(TypeSize(T) * SizeT(count));
     return Pointer[T](ptr);
 }
@@ -95,8 +97,10 @@ reallocateRawMemory(ptr:Pointer[T], count:I) {
     return Pointer[T](newptr);
 }
 
+define freeRawMemory;
+
 [T]
-freeRawMemory(ptr:Pointer[T]) {
+overload freeRawMemory(ptr:Pointer[T]) {
     libc.free(RawPointer(ptr));
 }
 
@@ -123,8 +127,10 @@ initializeMemory(begin:Pointer[T], end:Pointer[T]) {
 
 /// @section  destroyMemory 
 
+define destroyMemory;
+
 [T when not PODType?(T)]
-destroyMemory(begin:Pointer[T], end:Pointer[T]) {
+overload destroyMemory(begin:Pointer[T], end:Pointer[T]) {
     eachLocation(begin, end, destroy);
 }
 
@@ -132,8 +138,10 @@ destroyMemory(begin:Pointer[T], end:Pointer[T]) {
 
 /// @section  copyNonoverlappingMemory 
 
+define copyNonoverlappingMemory;
+
 [T when not PODType?(T)]
-copyNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
+overload copyNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
     var srcPtr = srcBegin;
     eachLocationWithCleanup(destBegin, destBegin+(srcEnd-srcBegin), x => {
         x <-- srcPtr^;
@@ -144,8 +152,13 @@ copyNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Point
 
 /// @section  move*Memory* 
 
+define moveMemory;
+define moveMemoryUnsafe;
+define moveNonoverlappingMemory;
+define moveNonoverlappingMemoryUnsafe;
+
 [T when not PODType?(T)]
-moveMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
+overload moveMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
     if (destBegin <= srcBegin) {
         moveMemoryForwardsUnsafe(destBegin, srcBegin, srcEnd);
         var destEnd = destBegin + (srcEnd - srcBegin);
@@ -158,7 +171,7 @@ moveMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
 }
 
 [T when not PODType?(T)]
-moveMemoryUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
+overload moveMemoryUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
     if (destBegin <= srcBegin)
         moveMemoryForwardsUnsafe(destBegin, srcBegin, srcEnd);
     else
@@ -184,7 +197,7 @@ private moveMemoryBackwardsUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], src
 }
 
 [T when not PODType?(T)]
-moveNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
+overload moveNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
     var srcPtr = srcBegin;
     eachLocation(destBegin, destBegin+(srcEnd-srcBegin), x => {
         x <-- move(srcPtr^);
@@ -193,7 +206,7 @@ moveNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Point
 }
 
 [T when not PODType?(T)]
-moveNonoverlappingMemoryUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
+overload moveNonoverlappingMemoryUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) {
     moveMemoryForwardsUnsafe(destBegin, srcBegin, srcEnd);
 }
 
@@ -201,8 +214,10 @@ moveNonoverlappingMemoryUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd
 
 /// @section  resetMemoryUnsafe 
 
+define resetMemoryUnsafe;
+
 [T when not PODType?(T)]
-resetMemoryUnsafe(begin:Pointer[T], end:Pointer[T]) {
+overload resetMemoryUnsafe(begin:Pointer[T], end:Pointer[T]) {
     eachLocation(begin, end, resetUnsafe);
 }
 
@@ -226,8 +241,10 @@ zeroObject(o) { zeroMemory(Pointer[UInt8](@o), Pointer[UInt8](@o + 1)); }
 
 /// @section  assignNonoverlappingMemory, moveAssignNonoverlappingMemory 
 
+define assignNonoverlappingMemory;
+
 [T, U when not (T == U and PODType?(T)) and CallDefined?(assign, T, U)]
-assignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd:Pointer[U]) {
+overload assignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd:Pointer[U]) {
     var srcPtr = srcBegin;
     eachLocation(destBegin, destBegin+(srcEnd-srcBegin), x => {
         x = srcPtr^;
@@ -235,8 +252,10 @@ assignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd:Poi
     });
 }
 
+define moveAssignNonoverlappingMemory;
+
 [T, U when not (T == U and PODType?(T)) and CallDefined?(assign, T, U)]
-moveAssignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd:Pointer[U]) {
+overload moveAssignNonoverlappingMemory(destBegin:Pointer[T], srcBegin:Pointer[U], srcEnd:Pointer[U]) {
     var srcPtr = srcBegin;
     eachLocation(destBegin, destBegin+(srcEnd-srcBegin), x => {
         x = move(srcPtr^);

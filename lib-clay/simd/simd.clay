@@ -213,7 +213,8 @@ forceinline overload bitnot(a:Vec[T,n]) = bitxor(Vec[T,n](componentMask(T)), a);
 
 /// @section  casting 
 
-CompatibleVectorTypes?(X, Y) = false;
+define CompatibleVectorTypes?(X, Y) : Bool;
+overload CompatibleVectorTypes?(X, Y) = false;
 [T,n, U,m when TypeSize(Vec[T,n]) == TypeSize(Vec[U,m])]
 overload CompatibleVectorTypes?(#Vec[T,n], #Vec[U,m]) = true;
 
@@ -224,7 +225,8 @@ forceinline overload Vec[T,n](v: Vec[U,m]) = bitcast(Vec[T,n], v);
 
 /// @section  boolean masks 
 
+define componentMask;
 [T when Integer?(T)]
-forceinline componentMask(#T) = wrapCast(T, -1);
+forceinline overload componentMask(#T) = wrapCast(T, -1);
 forceinline overload componentMask(#Float32) = bitcast(Float32, -1_i);
 forceinline overload componentMask(#Float64) = bitcast(Float64, -1_l);

@@ -43,7 +43,8 @@ overload SimpleParser?(#TokenInput, #Parser) {
     return MaybeType?(..ReturnType(..parser(input)));
 }
 
-private MaybeType?(..args) = false;
+private define MaybeType?;
+overload MaybeType?(..args) = false;
 [T] overload MaybeType?(#Maybe[T]) = true;
 
 
@@ -167,8 +168,10 @@ literal(#TokenInput, expected:Token) =
 
 /// @section  literalString 
 
+define literalString;
+
 [TokenInput, A when Sequence?(A) and (SequenceElementType(A) == TokenType(TokenInput))]
-literalString(#TokenInput, forward a:A) {
+overload literalString(#TokenInput, forward a:A) {
     return input => {
         var saved = input;
         for (item in a) {

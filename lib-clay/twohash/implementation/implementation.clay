@@ -44,8 +44,10 @@ record TwoHash[E]
 [E]
 overload EntryType(#TwoHash[E]) = E;
 
+define TwoHash?;
+
 [T]
-TwoHash?(#T) = false;
+overload TwoHash?(#T) = false;
 
 [E]
 overload TwoHash?(#TwoHash[E]) = true;
@@ -209,11 +211,13 @@ retry:
 // freeEntry
 //
 
+define inside;
+
 [P]
 overload inside(v, p: P) = (SizeT(p) >= SizeT(@v) and SizeT(p) < SizeT(@v+1));
 
 [R, P when CallDefined?(begin, R)]
-inside(range: R, p: P) = (SizeT(p) >= SizeT(begin(range)) and SizeT(p) < SizeT(end(range)));
+overload inside(range: R, p: P) = (SizeT(p) >= SizeT(begin(range)) and SizeT(p) < SizeT(end(range)));
 
 [E]
 freeEntry(th: TwoHash[E], pEntry: Pointer[E])
@@ -340,7 +344,9 @@ largeHash(x)
     return wrapAdd(e, wrapBitshl(e, 32));
 }
 
-baseSplitHash(hash: UInt64)
+define baseSplitHash;
+
+overload baseSplitHash(hash: UInt64)
 {
     var lowHash = wrapCast(SizeT, bitand(hash, 127));
     var hash1 = wrapCast(SizeT, bitshr(hash, 8));
@@ -370,7 +376,9 @@ overload splitHash(th: TwoHash[E], entry: E) = baseSplitHash(th, entryHash(entry
 // helpers
 //
 
-moveEntry(entry, th) = move(entry);
+define moveEntry;
+
+overload moveEntry(entry, th) = move(entry);
 
 [E]
 allocateInBucket(th, b: Bucket[E], entry: E, hashByte)

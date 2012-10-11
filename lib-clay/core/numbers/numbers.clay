@@ -3,7 +3,9 @@ import core.platform.(OSFamily, Unix, CPU, X86_64);
 
 /// @section  numeric type predicates 
 
-[T] SignedInteger?(#T) = false;
+[T]
+define SignedInteger?(#T) : Bool;
+overload SignedInteger?(T) = false;
 overload SignedInteger?(#Int8) : Bool = true;
 overload SignedInteger?(#Int16) : Bool = true;
 overload SignedInteger?(#Int32) : Bool = true;
@@ -11,15 +13,17 @@ overload SignedInteger?(#Int64) : Bool = true;
 overload SignedInteger?(#Int128) : Bool = true;
 
 
-[T] UnsignedInteger?(#T) = false;
+[T]
+define UnsignedInteger?(#T) : Bool;
+overload UnsignedInteger?(T) = false;
 overload UnsignedInteger?(#UInt8) : Bool = true;
 overload UnsignedInteger?(#UInt16) : Bool = true;
 overload UnsignedInteger?(#UInt32) : Bool = true;
 overload UnsignedInteger?(#UInt64) : Bool = true;
 overload UnsignedInteger?(#UInt128) : Bool = true;
 
-
-[T] Integer?(#T) : Bool = SignedInteger?(T) or UnsignedInteger?(T);
+define Integer?(..T) : Bool;
+[T] overload Integer?(#T) : Bool = SignedInteger?(T) or UnsignedInteger?(T);
 [A, B] overload Integer?(#A, #B) : Bool = Integer?(A) and Integer?(B);
 
 
@@ -64,11 +68,13 @@ SignedInteger(#I) = SignedIntegerOfSize(#Int(TypeSize(I)));
 UnsignedInteger(#I) = UnsignedIntegerOfSize(#Int(TypeSize(I)));
 
 
-[T] ByteSizedInteger?(#T) : Bool = false;
+[T] define ByteSizedInteger?(#T) : Bool;
+overload ByteSizedInteger?(T) : Bool = false;
 overload ByteSizedInteger?(#Int8) : Bool  = true;
 overload ByteSizedInteger?(#UInt8) : Bool  = true;
 
-[T] Float?(#T) : Bool = false;
+define Float?(..T) : Bool;
+overload Float?(T) : Bool = false;
 overload Float?(#Float32) : Bool  = true;
 overload Float?(#Float64) : Bool  = true;
 overload Float?(#Float80) : Bool  = true;
@@ -79,7 +85,8 @@ overload Float?(#Float80) : Bool  = true;
 BuiltinFloatTypes() = Float32, Float64, Float80;
 
 
-[T] Imaginary?(#T) : Bool = false;
+define Imaginary?(..T) : Bool;
+overload Imaginary?(T) : Bool = false;
 overload Imaginary?(#Imag32) : Bool = true;
 overload Imaginary?(#Imag64) : Bool = true;
 overload Imaginary?(#Imag80) : Bool = true;
@@ -90,7 +97,8 @@ overload Imaginary?(#Imag80) : Bool = true;
 BuiltinImaginaryTypes() = Imag32, Imag64, Imag80;
 
 
-[T] Numeric?(#T) : Bool = Integer?(T) or Float?(T) or Imaginary?(T);
+define Numeric?(..T) : Bool;
+[T] overload Numeric?(#T) : Bool = Integer?(T) or Float?(T) or Imaginary?(T);
 [A, B] overload Numeric?(#A, #B) : Bool = Numeric?(A) and Numeric?(B);
 
 
@@ -156,7 +164,8 @@ forceinline overload wrapToBiggerNumericType(#A, #B, v) : A = wrapCast(A, v);
 [A,B when Numeric?(A,B) and BiggerNumeric?(B,A)]
 forceinline overload wrapToBiggerNumericType(#A, #B, v) : B = wrapCast(B, v);
 
-ImagBaseType(#Imag32) = Float;
+define ImagBaseType;
+overload ImagBaseType(#Imag32) = Float;
 overload ImagBaseType(#Imag64) = Double;
 overload ImagBaseType(#Imag80) = LongDouble;
 
@@ -263,8 +272,10 @@ forceinline inRange?(x,l,u) : Bool =  (<)(x,u) and (<=)(l,x);
 
 forceinline inRangeEquals?(x,l,u) : Bool  =  (<=)(x,u) and (<=)(l,x);
 
-[T when Numeric?(T)]
-forceinline zero?(x:T) : Bool = (==)(x, T(0));
+define zero?;
+
+[T]
+forceinline overload zero?(x:T) : Bool = (==)(x, T(0));
 
 
 
@@ -469,18 +480,25 @@ forceinline overload A(b:B) : A
 
 /// @section  never-checked wrap-on-overflow math 
 
+define wrapAdd;
+define wrapNegate;
+define wrapSubtract;
+define wrapMultiply;
+define wrapQuotient;
+define wrapRemainder;
+
 [A when Integer?(A)]
-forceinline wrapNegate(a:A) : A = numericNegate(a);
+forceinline overload wrapNegate(a:A) : A = numericNegate(a);
 [A when Integer?(A)]
-forceinline wrapAdd(a:A, b:A) : A = numericAdd(a, b);
+forceinline overload wrapAdd(a:A, b:A) : A = numericAdd(a, b);
 [A when Integer?(A)]
-forceinline wrapSubtract(a:A, b:A) : A = numericSubtract(a, b);
+forceinline overload wrapSubtract(a:A, b:A) : A = numericSubtract(a, b);
 [A when Integer?(A)]
-forceinline wrapMultiply(a:A, b:A) : A = numericMultiply(a, b);
+forceinline overload wrapMultiply(a:A, b:A) : A = numericMultiply(a, b);
 [A when Integer?(A)]
-forceinline wrapQuotient(a:A, b:A) : A =  integerQuotient(a, b);
+forceinline overload wrapQuotient(a:A, b:A) : A =  integerQuotient(a, b);
 [A when Integer?(A)]
-forceinline wrapRemainder(a:A, b:A) : A = integerRemainder(a, b);
+forceinline overload wrapRemainder(a:A, b:A) : A = integerRemainder(a, b);
 
 [A, ..AA when equalValues?(A,..AA) and countValues(..AA) != 1]
 forceinline overload wrapAdd(a:A, ..aa:AA) : A = foldValues(wrapAdd, a, ..aa);

@@ -76,8 +76,11 @@ forceinline lastValue(..a, forward last) = forward last;
 
 /// @section  replicateValue, allValues?, anyValues?, equalValues?, inValues? 
 
+[n when n >= 0]
+define replicateValue(a, #n);
+
 [n when n > 0]
-forceinline replicateValue(a, #n) = a, ..replicateValue(a, #(n-1));
+forceinline overload replicateValue(a, #n) = a, ..replicateValue(a, #(n-1));
 [n when n == 0]
 forceinline overload replicateValue(a, #n) = ;
 
@@ -115,7 +118,9 @@ private record CapturedRValue[T] (
     value: T
 );
 
-CapturedValue?(a) = false;
+define CapturedValue?(a) : Bool;
+
+overload CapturedValue?(a) = false;
 [T]
 overload CapturedValue?(#CapturedLValue[T]) = true;
 [T]
@@ -153,10 +158,12 @@ forceinline capturedRefs(x:Tuple[..T]) =
 [S, n when Sequence?(S)]
 sequenceValues(seq: S, #n) = forward ..iteratorValues(iterator(seq), #n);
 
-[I when Iterator?(I)]
-iteratorValues(iter: I, #0) = ;
-[I, n when Iterator?(I) and n > 0]
-overload iteratorValues(iter: I, #n) {
+[I, n when Iterator?(I)]
+define iteratorValues(iter:I, #n);
+
+overload iteratorValues(iter, #0) = ;
+[n when n > 0]
+overload iteratorValues(iter, #n) {
     var v = nextValue(iter);
     assert["boundsChecks"](hasValue?(v));
     return forward ..getValue(v), ..iteratorValues(iter, #(n-1));
@@ -165,13 +172,18 @@ overload iteratorValues(iter: I, #n) {
 
 
 /// @section  iterate over two sets of values in tandem 
-[n when n > 0] eachValue2(fn, #n, forward x, forward ..xs) {
+define eachValue2;
+
+[n when n > 0]
+overload eachValue2(fn, #n, forward x, forward ..xs) {
     fn(x, nthValue(#(n-1), ..xs));
     return ..eachValue2(fn, #(n-1), ..withoutNthValue(#(n-1), ..xs));
 }
 overload eachValue2(fn, #0, forward ..xs) { }
 
-[n when n > 0] mapValues2(fn, #n, forward x, forward ..xs)
+define mapValues2;
+[n when n > 0]
+overload mapValues2(fn, #n, forward x, forward ..xs)
     = forward fn(x, nthValue(#(n-1), ..xs)),
       ..mapValues2(fn, #(n-1), ..withoutNthValue(#(n-1), ..xs));
 overload mapValues2(fn, #0, forward ..xs) = ;
@@ -180,22 +192,28 @@ overload mapValues2(fn, #0, forward ..xs) = ;
 
 /// @section  treat multiple #tuple values as key-values pairs 
 
+define assocValue;
+
 [key]
-assocValue(#key, kv, forward ..kvs) = forward ..assocValue(#key, ..kvs);
+overload assocValue(#key, kv, forward ..kvs) = forward ..assocValue(#key, ..kvs);
 
 [key, ..T]
 overload assocValue(#key, forward kv: Tuple[Static[key], ..T], ..kvs)
     = forward ..restValues(..unpack(kv));
 
+
 [key]
-assocValue?(#key) = false;
+define assocValue?(#key, ..kvs) : Bool;
+[key]
+overload assocValue?(#key) = false;
 [key]
 overload assocValue?(#key, kv, ..kvs) = assocValue?(key, ..kvs);
 [key, ..T]
 overload assocValue?(#key, kv: Tuple[Static[key], ..T], ..kvs) = true;
 
+define assocCountValues;
 [key]
-assocCountValues(#key) = -1;
+overload assocCountValues(#key) = -1;
 [key]
 overload assocCountValues(#key, kv, ..kvs) = assocCountValues(key, ..kvs);
 [key, ..T]
@@ -205,8 +223,9 @@ overload assocCountValues(#key, kv: Tuple[Static[key], ..T], ..kvs) = countValue
 
 /// @section  find the index of a value within a value list 
 
+private define _valueIndex;
 [n, value, other]
-private _valueIndex(#n, #value, #other, ..etc)
+overload _valueIndex(#n, #value, #other, ..etc)
     = _valueIndex(#(n+1), #value, ..etc);
 [n, value]
 overload _valueIndex(#n, #value, #value, ..etc) = n;
