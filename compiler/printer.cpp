@@ -1098,7 +1098,7 @@ void printValue(llvm::raw_ostream &out, EValuePtr ev)
         vector<EnumMemberPtr> const &members = t->enumeration->members;
         int member = ev->as<int>();
 
-        if (member >= 0 && member < members.size()) {
+        if (member >= 0 && size_t(member) < members.size()) {
             out << members[member]->name->str;
         } else {
             printName(out, t);

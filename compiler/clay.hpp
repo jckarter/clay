@@ -751,7 +751,7 @@ struct Source : public Object {
     Source(llvm::StringRef fileName)
         : Object(SOURCE), fileName(fileName), debugInfo(NULL)
     {
-        if (llvm::error_code ec = llvm::MemoryBuffer::getFileOrSTDIN(fileName, buffer))
+        if (llvm::MemoryBuffer::getFileOrSTDIN(fileName, buffer))
             error("unable to open file: " + fileName);
     }
 
@@ -909,7 +909,7 @@ void ensureArity(MultiCValuePtr args, size_t size);
 template <class T>
 void ensureArity(const vector<T> &args, size_t size)
 {
-    if ((int)args.size() != size)
+    if (args.size() != size)
         arityError(size, args.size());
 }
 
@@ -988,7 +988,7 @@ enum TokenKind {
     T_DOC_START,
     T_DOC_PROPERTY,
     T_DOC_TEXT,
-    T_DOC_END,
+    T_DOC_END
 };
 
 struct Token {
@@ -997,7 +997,7 @@ struct Token {
     int tokenKind;
     Token() : tokenKind(T_NONE) {}
     explicit Token(int tokenKind) : tokenKind(tokenKind) {}
-    explicit Token(int tokenKind, llvm::StringRef str) : tokenKind(tokenKind), str(str) {}
+    explicit Token(int tokenKind, llvm::StringRef str) : str(str), tokenKind(tokenKind) {}
 };
 
 
@@ -1241,7 +1241,7 @@ enum VariadicOpKind {
     NOT,
     PREFIX_OP,
     INFIX_OP,
-    IF_EXPR,
+    IF_EXPR
 };
 
 struct VariadicOp : public Expr {
@@ -1267,7 +1267,7 @@ struct Or : public Expr {
 enum ProcedureMonoState {
     Procedure_NoOverloads,
     Procedure_MonoOverload,
-    Procedure_PolyOverload,
+    Procedure_PolyOverload
 };
 
 struct ProcedureMono {
@@ -1300,7 +1300,7 @@ struct Lambda : public Expr {
 
     Lambda(bool captureByRef) :
         Expr(LAMBDA), captureByRef(captureByRef),
-        initialized(false), hasVarArg(false) {}
+        hasVarArg(false), initialized(false) {}
     Lambda(bool captureByRef,
            const vector<FormalArgPtr> &formalArgs,
            bool hasVarArg, StatementPtr body)
@@ -3444,9 +3444,10 @@ struct InvokeEntry {
     InvokeEntry(InvokeSet *parent,
                 ObjectPtr callable,
                 const vector<TypePtr> &argsKey)
-        : parent(parent), varArgPosition(0),
-          callable(callable), argsKey(argsKey),
-          analyzed(false), analyzing(false), callByName(false),
+        : parent(parent), callable(callable),
+          argsKey(argsKey), analyzed(false),
+          analyzing(false), varArgPosition(0),
+          callByName(false),
           isInline(IGNORE), llvmFunc(NULL), debugInfo(NULL)
     {
         for (size_t i = 0; i < CC_Count; ++i)
@@ -3700,7 +3701,7 @@ CallingConv staticToCallingConv(MultiStaticPtr x, unsigned index);
 enum BoolKind {
     BOOL_EXPR,
     BOOL_STATIC_TRUE,
-    BOOL_STATIC_FALSE,
+    BOOL_STATIC_FALSE
 };
 
 BoolKind typeBoolKind(TypePtr type);
@@ -3875,7 +3876,7 @@ struct StackSlot {
 enum ValueStackEntryType {
     LOCAL_VALUE,
     FINALLY_STATEMENT,
-    ONERROR_STATEMENT,
+    ONERROR_STATEMENT
 };
 
 struct ValueStackEntry {
