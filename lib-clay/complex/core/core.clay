@@ -1,4 +1,6 @@
-[T] Complex?(#T) = false;
+define Complex?;
+
+overload Complex?(T) = false;
 overload Complex?(#Complex32) = true;
 overload Complex?(#Complex64) = true;
 overload Complex?(#Complex80) = true;
@@ -18,10 +20,14 @@ forceinline overload im(z:Complex80) = (Pointer[ILongDouble](@z)+1);
 [C when Complex?(C)]
 forceinline real(z:C) = re(z)^;
 
+
+define imag;
+define imagValue;
+
 [C when Complex?(C)]
-forceinline imag(z:C) = im(z)^;
+forceinline overload imag(z:C) = im(z)^;
 [C when Complex?(C)]
-forceinline imagValue(z:C) = numericConvert(ComplexBaseType(C),im(z)^);
+forceinline overload imagValue(z:C) = numericConvert(ComplexBaseType(C),im(z)^);
 
 [I when Imaginary?(I)]
 forceinline overload imag(z:I) = z;
@@ -29,7 +35,8 @@ forceinline overload imagValue(z:Imag32) = numericConvert(Float32, z);
 forceinline overload imagValue(z:Imag64) = numericConvert(Float64, z);
 forceinline overload imagValue(z:Imag80) = numericConvert(Float80, z);
 
-forceinline Complex(a:Float,b:IFloat) --> r:Complex32 { re(r)^ = a; im(r)^ = b;}
+define Complex;
+forceinline overload Complex(a:Float,b:IFloat) --> r:Complex32 { re(r)^ = a; im(r)^ = b;}
 forceinline overload Complex(a:Double,b:IDouble) --> r:Complex64 { re(r)^ = a; im(r)^ = b;}
 forceinline overload Complex(a:LongDouble,b:ILongDouble) --> r:Complex80 { re(r)^ = a; im(r)^ = b;}
 forceinline overload Complex(a:Float,b:IDouble) --> r:Complex64 { re(r)^ = Double(a); im(r)^ = b;}
@@ -54,16 +61,22 @@ forceinline overload Complex(a:T) = Complex(a,0.f);
 [T when Imaginary?(T)]
 forceinline overload Complex(a:T) = Complex(0.f,a);
 
-ComplexBaseType(#Complex32) = Float;
+[C when Complex?(C)]
+define ComplexBaseType(#C);
+overload ComplexBaseType(#Complex32) = Float;
 overload ComplexBaseType(#Complex64) = Double;
 overload ComplexBaseType(#Complex80) = LongDouble;
 
-[T when Complex?(T)]
-ComplexRealType(#T) = ComplexBaseType(T);
-
-ComplexImagType(#Complex32) = IFloat;
+[C when Complex?(C)]
+define ComplexImagType(#C);
+overload ComplexImagType(#Complex32) = IFloat;
 overload ComplexImagType(#Complex64) = IDouble;
 overload ComplexImagType(#Complex80) = ILongDouble;
+
+define ComplexRealType;
+
+[T when Complex?(T)]
+overload ComplexRealType(#T) = ComplexBaseType(T);
 
 [T when Complex?(T)]
 overload ComplexRealType(z:T) = Type(real(z));
@@ -71,8 +84,10 @@ overload ComplexRealType(z:T) = Type(real(z));
 [T when Complex?(T)]
 overload ComplexImagType(z:T) = Type(imag(z));
 
+define ComplexType;
+
 [T when Complex?(T)]
-ComplexType(#T) = T;
+overload ComplexType(#T) = T;
 
 [T when Float?(T)]
 overload ComplexType(#T) = Type(Complex(T()));

@@ -5,8 +5,9 @@ import math.native.kernel.ieee754.*;
 // return the next machine floating-point number of x in the
 // direction toward y.
 
+define nextafter;
 
-nextafter(x:Double, y:Double){
+overload nextafter(x:Double, y:Double){
     alias MIN_SUB = LeastPositive(Double);
     var xdb,ydb = MAKE_IEEE(x),MAKE_IEEE(y);
 

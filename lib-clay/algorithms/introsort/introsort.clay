@@ -1,6 +1,8 @@
 import algorithms.heaps.*;
 
-introSort(a, compareLess?) {
+define introSort;
+
+overload introSort(a, compareLess?) {
     introSort(begin(a), end(a), compareLess?);
 }
 
@@ -91,7 +93,9 @@ finalInsertionSort(first_, last_, compareLess?) {
     }
 }
 
-insertionSort(a, compareLess?) {
+define insertionSort;
+
+overload insertionSort(a, compareLess?) {
     insertionSort(begin(a), end(a), compareLess?);
 }
 
@@ -145,7 +149,9 @@ moveBackward(first_, last_, newLast_) {
     }
 }
 
-heapSort(a) {
+define heapSort;
+
+overload heapSort(a) {
     heapSort(begin(a), end(a));
 }
 

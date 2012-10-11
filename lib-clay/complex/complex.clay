@@ -72,7 +72,9 @@ forceinline overload (-)(z:T) = Complex(-real(z),-imag(z));
 forceinline overload (+)(z:T) = z;
 
 [T when Complex?(T)]
-forceinline conj(z:T) = Complex(real(z),-imag(z));
+define conj(z:T);
+
+forceinline overload conj(z) = Complex(real(z),-imag(z));
 
 [T when Imaginary?(T)]
 forceinline overload conj(z:T) = -z;

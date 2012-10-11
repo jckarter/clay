@@ -16,8 +16,10 @@ private getNext(iter) {
     return forward ..getValue(move(value));
 }
 
+define reduce;
+
 [F, A when Sequence?(A)]
-reduce(f:F, a:A) {
+overload reduce(f:F, a:A) {
     var iter = iterator(a);
     var result = getNext(iter);
     for (x in iter)
@@ -114,7 +116,9 @@ overload max(a:A) = forward select(a, greaterEquals?);
 
 /// @section  findIf, reverseFindIf 
 
-findIf(seq, pred) {
+define findIf;
+
+overload findIf(seq, pred) {
     return findIf(begin(seq), end(seq), pred);
 }
 
@@ -125,7 +129,9 @@ overload findIf(_first, _last, pred) {
     return cur;
 }
 
-reverseFindIf(seq, pred) {
+define reverseFindIf;
+
+overload reverseFindIf(seq, pred) {
     return reverseFindIf(begin(seq), end(seq), pred);
 }
 
@@ -222,8 +228,11 @@ in?(seq, elem) = find(seq, elem) != end(seq);
 
 /// @section  beginsWith?, endsWith? 
 
+define beginsWith?;
+define endsWith?;
+
 [A, B when Sequence?(A) and Sequence?(B) and (SequenceElementType(A) == SequenceElementType(B))]
-beginsWith?(seq:A, prefix:B) =
+overload beginsWith?(seq:A, prefix:B) =
     (size(seq) >= size(prefix)) and (slicedUpto(seq, size(prefix)) == prefix);
 
 [A, T when Sequence?(A) and (T == SequenceElementType(A))]
@@ -232,7 +241,7 @@ overload beginsWith?(seq:A, x:T) =
 
 
 [A, B when Sequence?(A) and Sequence?(B) and (SequenceElementType(A) == SequenceElementType(B))]
-endsWith?(seq:A, suffix:B) =
+overload endsWith?(seq:A, suffix:B) =
     (size(seq) >= size(suffix))
     and (slicedFrom(seq, size(seq)-size(suffix)) == suffix);
 
@@ -313,18 +322,22 @@ overload join(sep:S, a:A) = ..join(array(sep), a);
 
 /// @section  binarySearch, binarySearchLowerBound, binarySearchUpperBound 
 
+define binarySearch;
+define binarySearchLowerBound;
+define binarySearchUpperBound;
+
 [A when Sequence?(A)]
-binarySearch(a:A, x) {
+overload binarySearch(a:A, x) {
     return ..binarySearch(begin(a), end(a), x);
 }
 
 [A when Sequence?(A)]
-binarySearchLowerBound(a:A, x) {
+overload binarySearchLowerBound(a:A, x) {
     return binarySearchLowerBound(begin(a), end(a), x);
 }
 
 [A when Sequence?(A)]
-binarySearchUpperBound(a:A, x) {
+overload binarySearchUpperBound(a:A, x) {
     return binarySearchUpperBound(begin(a), end(a), x);
 }
 
@@ -366,7 +379,9 @@ sortBy(a, comparator : C) {
     introsort.introSort(a, (x, y) -> lesser?(comparator, x, y));
 }
 
-sort(a){
+define sort;
+
+overload sort(a){
   sortBy(a, natural());
 }
 

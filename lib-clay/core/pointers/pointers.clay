@@ -100,10 +100,12 @@ forceinline overload index(p:Pointer[T], i:I) = ref (p + i)^;
 
 /// @section  CodePointer?, ExternalCodePointer? 
 
-CodePointer?(x) = false;
+define CodePointer?(x) : Bool;
+overload CodePointer?(x) = false;
 [In,Out] overload CodePointer?(#CodePointer[In,Out]) = true;
 
-ExternalCodePointer?(x) = false;
+define ExternalCodePointer?(x) : Bool;
+overload ExternalCodePointer?(x) = false;
 [CC,V?,In,Out] overload ExternalCodePointer?(#ExternalCodePointer[CC,V?,In,Out]) = true;
 
 
@@ -204,8 +206,10 @@ forceinline overload null?(p:ExternalCodePointer[C,V,I,O]) {
 
 /// @section  ExternalCodePointer - call 
 
-[F, T]
-private CCastable?(#F, #T) = false;
+private define CCastable?;
+
+[F, T when Type?(F) and Type?(T)]
+overload CCastable?(#F, #T) = false;
 
 [F, T when Integer?(F) and Integer?(T) and TypeSize(T) >= TypeSize(F)]
 overload CCastable?(#F, #T) = true;
@@ -216,8 +220,11 @@ overload CCastable?(#Pointer[F], #Pointer[T]) = true;
 [F]
 overload CCastable?(#Pointer[F], #RawPointer) = true;
 
+[From, To]
+private define cCast(from:From, #To) : To;
+
 [F, T when CCastable?(F, T)]
-private cCast(from:F, #T) = T(from);
+overload cCast(from:F, #T) = T(from);
 
 [S when Sequence?(S) and (Char == SequenceElementType(S))]
 overload cCast(s:S, #Pointer[CChar]) = cstring(s);

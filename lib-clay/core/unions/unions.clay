@@ -2,7 +2,10 @@
 
 /// @section  Union? 
 
-Union?(x) = false;
+[T]
+define Union?(#T) : Bool;
+
+overload Union?(x) = false;
 [..T] overload Union?(#Union[..T]) : Bool = true;
 
 

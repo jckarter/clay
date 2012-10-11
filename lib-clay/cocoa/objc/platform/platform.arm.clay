@@ -1,7 +1,10 @@
 import cocoa.objc.runtime.(Class);
 
-FpRet?(type) = false;
-StRet?(type) = false;
+define FpRet?;
+deinfe StRet?;
+
+overload FpRet?(type) = false;
+overload StRet?(type) = false;
 //Fp2Ret?(type) = false;
 
 // XXX not tested!

@@ -428,7 +428,9 @@ overload remove(deque: Deque[T], i: DequeCoordinate[T]) {
 private alias DEQUE_TARGET_BUFFER_SIZE = SizeT(512);
 private alias DEQUE_INITIAL_MAP_SIZE = SizeT(8);
 
-DequeBufferSize(T) {
+define DequeBufferSize;
+
+overload DequeBufferSize(T) {
     if (TypeSize(T) < DEQUE_TARGET_BUFFER_SIZE)
         return DEQUE_TARGET_BUFFER_SIZE \ TypeSize(T);
     else
@@ -650,8 +652,10 @@ private printMap(deque) {
     }
 }
 
+private define insertDequeSequence;
+
 [T, S when Sequence?(S)]
-private insertDequeSequence(deque: Deque[T], i: DequeCoordinate[T], forward seq: S) {
+overload insertDequeSequence(deque: Deque[T], i: DequeCoordinate[T], forward seq: S) {
     for (x in reversed(seq))
         insertDequeValue(deque, i, seq);
 }

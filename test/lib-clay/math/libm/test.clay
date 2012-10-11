@@ -17,7 +17,9 @@ var idata[T] = array(T(0),T(1),T(-1),T(3),T(38),Least(T)+T(1),Greatest(T));
 alias C1[T] = CodePointer[[T],[T]];
 alias C2[T] = CodePointer[[T,T],[T]];
 
-oneArgFuncs(T) = array(T(abs),T(sqrt),T(cbrt),T(trunc),T(round),
+define oneArgFuncs;
+
+overload oneArgFuncs(T) = array(T(abs),T(sqrt),T(cbrt),T(trunc),T(round),
                             T(ceil),T(floor),T(rint),T(sin),
                             T(cos),T(tan),T(asin),T(acos),T(atan),T(sinh),
                             T(cosh),T(tanh),T(exp),T(expm1),

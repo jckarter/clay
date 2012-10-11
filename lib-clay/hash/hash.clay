@@ -61,7 +61,9 @@ forceinline overload hash(a:Array[T,n]) = hashSequence(a);
 
 /// @section  tuples 
 
-forceinline hashValues(..values) {
+define hashValues;
+
+forceinline overload hashValues(..values) {
     var h = SizeT(0);
     ..for (x in values)
         h = wrapAdd(wrapMultiply(SizeT(7), h), wrapMultiply(SizeT(13), hash(x)));

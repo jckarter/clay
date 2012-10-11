@@ -55,9 +55,10 @@ public import complex.*;
 import math.native.constants.(M_PI);
 import numbers.floats.(floatFromBits,floatExponent,mantissaSize);
 
+define recip;
 
 [T when Integer?(T)]
-forceinline recip(x:T) = T(0);
+forceinline overload recip(x:T) = T(0);
 [T when Float?(T)]
 forceinline overload recip(x:T) = T(1) / x;
 
@@ -118,7 +119,8 @@ forceinline rsqrt(x:T) = recip(sqrt(x));
 [T when Float?(T)] 
 forceinline sigmoid (x:T) = T(1) / (T(1) + exp (-x));
 
-forceinline normcoeff(#LongDouble) = floatFromBits(UInt128(0x4035ul));
+define normcoeff;
+forceinline overload normcoeff(#LongDouble) = floatFromBits(UInt128(0x4035ul));
 forceinline overload normcoeff(#Double) = floatFromBits(0x435ul);
 forceinline overload normcoeff(#Float) = floatFromBits(0x4Cu);
 

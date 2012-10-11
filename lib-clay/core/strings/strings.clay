@@ -6,8 +6,11 @@
 
 /// @section  String? 
 
+[T]
+define String?(#T) : Bool;
+
 [A]
-String?(#A) = false;
+overload String?(#A) = false;
 
 [A when Sequence?(A) and (Char == SequenceElementType(A))]
 overload String?(#A) = true;
@@ -17,7 +20,10 @@ overload String?(#A) = true;
 /// @section  SizedString? 
 
 [A]
-SizedString?(#A) = false;
+define SizedString?(#A) : Bool;
+
+[A]
+overload SizedString?(#A) = false;
 
 [A when SizedSequence?(A) and (Char == SequenceElementType(A))]
 overload SizedString?(#A) = true;
@@ -27,7 +33,10 @@ overload SizedString?(#A) = true;
 /// @section  ContiguousString? 
 
 [A]
-ContiguousString?(#A) = false;
+define ContiguousString?(#A) : Bool;
+
+[A]
+overload ContiguousString?(#A) = false;
 
 [A when ContiguousSequence?(A) and (Char == SequenceElementType(A))]
 overload ContiguousString?(#A) = true;
@@ -37,9 +46,5 @@ overload ContiguousString?(#A) = true;
 /// @section  CCompatibleString? 
 
 [A]
-CCompatibleString?(#A) = false;
-
-[A when String?(A) and CallDefined?(cstring, A)]
-overload CCompatibleString?(#A) = true;
-
+CCompatibleString?(#A) = String?(A) and CallDefined?(cstring, A);
 

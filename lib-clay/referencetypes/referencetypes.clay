@@ -63,8 +63,10 @@ overload staticIndex(x:T, i);
 private fieldNameIndex(#T, #Field) =
     findField(#0, #Field, ..ReferenceTypeFieldNames(T));
 
+private define findField;
+
 [pos]
-private findField(#pos, field, first, ..rest) =
+overload findField(#pos, field, first, ..rest) =
     findField(#pos+1, field, ..rest);
 
 [pos, F]

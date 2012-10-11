@@ -486,6 +486,10 @@ poly:
 }
 
 void addProcedureOverload(ProcedurePtr proc, EnvPtr env, OverloadPtr x) {
+    if (!!proc->singleOverload && proc->singleOverload != x) {
+        // TODO: points to wrong line
+        error(x->location, "standalone functions cannot be overloaded");
+    }
     proc->overloads.insert(proc->overloads.begin(), x);
     getProcedureMonoTypes(proc->mono, env,
         x->code->formalArgs,

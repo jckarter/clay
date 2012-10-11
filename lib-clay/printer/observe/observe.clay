@@ -5,7 +5,9 @@ import io.files.raw.(stderrRawFile);
 
 /// @section  observe, observeTo, observeCall -- log intermediate values and forward them 
 
-observeTo(stream, forward ..x) {
+define observeTo;
+
+overload observeTo(stream, forward ..x) {
     var captured = captureValues(..x);
     printlnTo(stream, "[observed: ", ..weaveValues(", ", ..capturedRefs(captured)), "]");
     flush(stream);

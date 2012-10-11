@@ -2,7 +2,8 @@ import libc;
 public import complex.*;
 public import numbers.floats.*;
 
-forceinline pow(x:Double,y:Double) = libc.pow(x,y);
+define pow;
+forceinline overload pow(x:Double,y:Double) = libc.pow(x,y);
 forceinline overload pow(x:Float,y:Float) = libc.powf(x,y);
 forceinline overload pow(x:LongDouble,y:LongDouble) = libc.powl(x,y);
 forceinline overload pow(x:Double,y:Float) = libc.pow(x,Double(y));
@@ -16,33 +17,40 @@ forceinline overload pow(x:LongDouble,y:Float) = libc.powl(x,LongDouble(y));
 [T when Integer?(T)] forceinline overload pow(x:Float,y:T) = libc.powf(x,Float(y));
 [T when Integer?(T)] forceinline overload pow(x:LongDouble,y:T) = libc.powl(x,LongDouble(y));
 
-forceinline abs(x:Double) = libc.fabs(x);
+define abs;
+forceinline overload abs(x:Double) = libc.fabs(x);
 forceinline overload abs(x:Float) = libc.fabsf(x);
 forceinline overload abs(x:LongDouble) = libc.fabsl(x);
 forceinline overload abs(x:Int) = libc.abs(x);
 forceinline overload abs(x:Long) = libc.llabs(x);
 
-forceinline exp(x:Double) = libc.exp(x);
+define exp;
+forceinline overload exp(x:Double) = libc.exp(x);
 forceinline overload exp(x:Float) = libc.expf(x);
 forceinline overload exp(x:LongDouble) = libc.expl(x);
 
-forceinline log(x:Double) = libc.log(x);
+define log;
+forceinline overload log(x:Double) = libc.log(x);
 forceinline overload log(x:Float) = libc.logf(x);
 forceinline overload log(x:LongDouble) = libc.logl(x);
 
-forceinline acos(x:Double) = libc.acos(x);
+define acos;
+forceinline overload acos(x:Double) = libc.acos(x);
 forceinline overload acos(x:Float) = libc.acosf(x);
 forceinline overload acos(x:LongDouble) = libc.acosl(x);
 
-forceinline asin(x:Double) = libc.asin(x);
+define asin;
+forceinline overload asin(x:Double) = libc.asin(x);
 forceinline overload asin(x:Float) = libc.asinf(x);
 forceinline overload asin(x:LongDouble) = libc.asinl(x);
 
-forceinline atan(x:Double) = libc.atan(x);
+define atan;
+forceinline overload atan(x:Double) = libc.atan(x);
 forceinline overload atan(x:Float) = libc.atanf(x);
 forceinline overload atan(x:LongDouble) = libc.atanl(x);
 
-forceinline atan2(x:Double,y:Double) = libc.atan2(x,y);
+define atan2;
+forceinline overload atan2(x:Double,y:Double) = libc.atan2(x,y);
 forceinline overload atan2(x:Float,y:Float) = libc.atan2f(x,y);
 forceinline overload atan2(x:LongDouble,y:LongDouble) = libc.atan2l(x,y);
 forceinline overload atan2(x:Double,y:Float) = libc.atan2(x,Double(y));
@@ -52,59 +60,73 @@ forceinline overload atan2(x:LongDouble,y:Double) = libc.atan2l(x,LongDouble(y))
 forceinline overload atan2(x:Float,y:LongDouble) = libc.atan2l(LongDouble(x),y);
 forceinline overload atan2(x:LongDouble,y:Float) = libc.atan2l(x,LongDouble(y));
 
-forceinline cos(x:Double) = libc.cos(x);
+define cos;
+forceinline overload cos(x:Double) = libc.cos(x);
 forceinline overload cos(x:Float) = libc.cosf(x);
 forceinline overload cos(x:LongDouble) = libc.cosl(x);
 
-forceinline sin(x:Double) = libc.sin(x);
+define sin;
+forceinline overload sin(x:Double) = libc.sin(x);
 forceinline overload sin(x:Float) = libc.sinf(x);
 forceinline overload sin(x:LongDouble) = libc.sinl(x);
 
-forceinline tan(x:Double) = libc.tan(x);
+define tan;
+forceinline overload tan(x:Double) = libc.tan(x);
 forceinline overload tan(x:Float) = libc.tanf(x);
 forceinline overload tan(x:LongDouble) = libc.tanl(x);
 
-forceinline cosh(x:Double) = libc.cosh(x);
+define cosh;
+forceinline overload cosh(x:Double) = libc.cosh(x);
 forceinline overload cosh(x:Float) = libc.coshf(x);
 forceinline overload cosh(x:LongDouble) = libc.coshl(x);
 
-forceinline sinh(x:Double) = libc.sinh(x);
+define sinh;
+forceinline overload sinh(x:Double) = libc.sinh(x);
 forceinline overload sinh(x:Float) = libc.sinhf(x);
 forceinline overload sinh(x:LongDouble) = libc.sinhl(x);
 
-forceinline tanh(x:Double) = libc.tanh(x);
+define tanh;
+forceinline overload tanh(x:Double) = libc.tanh(x);
 forceinline overload tanh(x:Float) = libc.tanhf(x);
 forceinline overload tanh(x:LongDouble) = libc.tanhl(x);
 
-forceinline acosh(x:Double) = libc.acosh(x);
+define acosh;
+forceinline overload acosh(x:Double) = libc.acosh(x);
 forceinline overload acosh(x:Float) = libc.acoshf(x);
 forceinline overload acosh(x:LongDouble) = libc.acoshl(x);
 
-forceinline asinh(x:Double) = libc.asinh(x);
+define asinh;
+forceinline overload asinh(x:Double) = libc.asinh(x);
 forceinline overload asinh(x:Float) = libc.asinhf(x);
 forceinline overload asinh(x:LongDouble) = libc.asinhl(x);
 
-forceinline atanh(x:Double) = libc.atanh(x);
+define atanh;
+forceinline overload atanh(x:Double) = libc.atanh(x);
 forceinline overload atanh(x:Float) = libc.atanhf(x);
 forceinline overload atanh(x:LongDouble) = libc.atanhl(x);
 
-forceinline log10(x:Double) = libc.log10(x);
+define log10;
+forceinline overload log10(x:Double) = libc.log10(x);
 forceinline overload log10(x:Float) = libc.log10f(x);
 forceinline overload log10(x:LongDouble) = libc.log10l(x);
 
-forceinline frexp(x:Double, ex:Pointer[Int]) = libc.frexp(x,ex);
+define frexp;
+forceinline overload frexp(x:Double, ex:Pointer[Int]) = libc.frexp(x,ex);
 forceinline overload frexp(x:Float, ex:Pointer[Int]) = libc.frexpf(x,ex);
 forceinline overload frexp(x:LongDouble, ex:Pointer[Int]) = libc.frexpl(x,ex);
 
-forceinline ldexp(x:Double,y:Int) = libc.ldexp(x,y);
+define ldexp;
+forceinline overload ldexp(x:Double,y:Int) = libc.ldexp(x,y);
 forceinline overload ldexp(x:Float,y:Int) = libc.ldexpf(x,y);
 forceinline overload ldexp(x:LongDouble,y:Int) = libc.ldexpl(x,y);
 
-forceinline modf(x:Double,iptr:Pointer[Int]) = libc.modf(x,iptr);
+define modf;
+forceinline overload modf(x:Double,iptr:Pointer[Int]) = libc.modf(x,iptr);
 forceinline overload modf(x:Float,iptr:Pointer[Int]) = libc.modff(x,iptr);
 forceinline overload modf(x:LongDouble,iptr:Pointer[Int]) = libc.modfl(x,iptr);
 
-forceinline hypot(x:Double,y:Double) = libc.hypot(x,y);
+define hypot;
+forceinline overload hypot(x:Double,y:Double) = libc.hypot(x,y);
 forceinline overload hypot(x:Float,y:Float) = libc.hypotf(x,y);
 forceinline overload hypot(x:LongDouble,y:LongDouble) = libc.hypotl(x,y);
 forceinline overload hypot(x:Double,y:Float) = libc.hypot(x,Double(y));
@@ -114,47 +136,58 @@ forceinline overload hypot(x:LongDouble,y:Double) = libc.hypotl(x,LongDouble(y))
 forceinline overload hypot(x:Float,y:LongDouble) = libc.hypotl(LongDouble(x),y);
 forceinline overload hypot(x:LongDouble,y:Float) = libc.hypotl(x,LongDouble(y));
 
-forceinline expm1(x:Double) = libc.expm1(x);
+define expm1;
+forceinline overload expm1(x:Double) = libc.expm1(x);
 forceinline overload expm1(x:Float) = libc.expm1f(x);
 forceinline overload expm1(x:LongDouble) = libc.expm1l(x);
 
-forceinline log1p(x:Double) = libc.log1p(x);
+define log1p;
+forceinline overload log1p(x:Double) = libc.log1p(x);
 forceinline overload log1p(x:Float) = libc.log1pf(x);
 forceinline overload log1p(x:LongDouble) = libc.log1pl(x);
 
-forceinline logb(x:Double) = libc.logb(x);
+define logb;
+forceinline overload logb(x:Double) = libc.logb(x);
 forceinline overload logb(x:Float) = libc.logbf(x);
 forceinline overload logb(x:LongDouble) = libc.logbl(x);
 
-forceinline exp2(x:Double) = libc.exp2(x);
+define exp2;
+forceinline overload exp2(x:Double) = libc.exp2(x);
 forceinline overload exp2(x:Float) = libc.exp2f(x);
 forceinline overload exp2(x:LongDouble) = libc.exp2l(x);
 
-forceinline log2(x:Double) = libc.log2(x);
+define log2;
+forceinline overload log2(x:Double) = libc.log2(x);
 forceinline overload log2(x:Float) = libc.log2f(x);
 forceinline overload log2(x:LongDouble) = libc.log2l(x);
 
-forceinline sqrt(x:Double) = libc.sqrt(x);
+define sqrt;
+forceinline overload sqrt(x:Double) = libc.sqrt(x);
 forceinline overload sqrt(x:Float) = libc.sqrtf(x);
 forceinline overload sqrt(x:LongDouble) = libc.sqrtl(x);
 
-forceinline cbrt(x:Double) = libc.cbrt(x);
+define cbrt;
+forceinline overload cbrt(x:Double) = libc.cbrt(x);
 forceinline overload cbrt(x:Float) = libc.cbrtf(x);
 forceinline overload cbrt(x:LongDouble) = libc.cbrtl(x);
 
-forceinline floor(x:Double) = libc.floor(x);
+define floor;
+forceinline overload floor(x:Double) = libc.floor(x);
 forceinline overload floor(x:Float) = libc.floorf(x);
 forceinline overload floor(x:LongDouble) = libc.floorl(x);
 
-forceinline ceil(x:Double) = libc.ceil(x);
+define ceil;
+forceinline overload ceil(x:Double) = libc.ceil(x);
 forceinline overload ceil(x:Float) = libc.ceilf(x);
 forceinline overload ceil(x:LongDouble) = libc.ceill(x);
 
-forceinline round(x:Double) = libc.round(x);
+define round;
+forceinline overload round(x:Double) = libc.round(x);
 forceinline overload round(x:Float) = libc.roundf(x);
 forceinline overload round(x:LongDouble) = libc.roundl(x);
 
-forceinline fmod(x:Double,y:Double) = libc.fmod(x,y);
+define fmod;
+forceinline overload fmod(x:Double,y:Double) = libc.fmod(x,y);
 forceinline overload fmod(x:Float,y:Float) = libc.fmodf(x,y);
 forceinline overload fmod(x:LongDouble,y:LongDouble) = libc.fmodl(x,y);
 forceinline overload fmod(x:Double,y:Float) = libc.fmod(x,Double(y));
@@ -175,11 +208,13 @@ forceinline infinity?(x:T) = if(_isinf(x)==1) true else false;
 [T when Float?(T)] 
 forceinline negativeInfinity?(x:T) = if(_isinf(x)==-1) true else false;
 
-forceinline finite?(x:Double) = Bool(libc.finite(x));
+define finite?;
+forceinline overload finite?(x:Double) = Bool(libc.finite(x));
 forceinline overload finite?(x:Float) = Bool(libc.finitef(x));
 forceinline overload finite?(x:LongDouble) = Bool(libc.finitel(x));
 
-forceinline drem(x:Double,y:Double) = libc.drem(x,y);
+define drem;
+forceinline overload drem(x:Double,y:Double) = libc.drem(x,y);
 forceinline overload drem(x:Float,y:Float) = libc.dremf(x,y);
 forceinline overload drem(x:LongDouble,y:LongDouble) = libc.dreml(x,y);
 forceinline overload drem(x:Double,y:Float) = libc.drem(x,Double(y));
@@ -189,35 +224,43 @@ forceinline overload drem(x:LongDouble,y:Double) = libc.dreml(x,LongDouble(y));
 forceinline overload drem(x:Float,y:LongDouble) = libc.dreml(LongDouble(x),y);
 forceinline overload drem(x:LongDouble,y:Float) = libc.dreml(x,LongDouble(y));
 
-forceinline nan?(x:Double) = Bool(libc.isnan(x));
+define nan?;
+forceinline overload nan?(x:Double) = Bool(libc.isnan(x));
 forceinline overload nan?(x:Float) = Bool(libc.isnanf(x));
 forceinline overload nan?(x:LongDouble) = Bool(libc.isnanl(x));
 
-forceinline jn(x:Int,y:Double) = libc.jn(x,y);
+define jn;
+forceinline overload jn(x:Int,y:Double) = libc.jn(x,y);
 forceinline overload jn(x:Int,y:Float) = libc.jnf(x,y);
 forceinline overload jn(x:Int,y:LongDouble) = libc.jnl(x,y);
 
-forceinline j0(x:Double) = libc.j0(x);
+define j0;
+forceinline overload j0(x:Double) = libc.j0(x);
 forceinline overload j0(x:Float) = libc.j0f(x);
 forceinline overload j0(x:LongDouble) = libc.j0l(x);
 
-forceinline j1(x:Double) = libc.j1(x);
+define j1;
+forceinline overload j1(x:Double) = libc.j1(x);
 forceinline overload j1(x:Float) = libc.j1f(x);
 forceinline overload j1(x:LongDouble) = libc.j1l(x);
 
-forceinline y0(x:Double) = libc.y0(x);
+define y0;
+forceinline overload y0(x:Double) = libc.y0(x);
 forceinline overload y0(x:Float) = libc.y0f(x);
 forceinline overload y0(x:LongDouble) = libc.y0l(x);
 
-forceinline y1(x:Double) = libc.y1(x);
+define y1;
+forceinline overload y1(x:Double) = libc.y1(x);
 forceinline overload y1(x:Float) = libc.y1f(x);
 forceinline overload y1(x:LongDouble) = libc.y1l(x);
 
-forceinline yn(x:Int,y:Double) = libc.yn(x,y);
+define yn;
+forceinline overload yn(x:Int,y:Double) = libc.yn(x,y);
 forceinline overload yn(x:Int,y:Float) = libc.ynf(x,y);
 forceinline overload yn(x:Int,y:LongDouble) = libc.ynl(x,y);
 
-forceinline copysign(x:Double,y:Double) = libc.copysign(x,y);
+define copysign;
+forceinline overload copysign(x:Double,y:Double) = libc.copysign(x,y);
 forceinline overload copysign(x:Float,y:Float) = libc.copysignf(x,y);
 forceinline overload copysign(x:LongDouble,y:LongDouble) = libc.copysignl(x,y);
 forceinline overload copysign(x:Double,y:Float) = libc.copysign(x,Double(y));
@@ -227,37 +270,45 @@ forceinline overload copysign(x:LongDouble,y:Double) = libc.copysignl(x,LongDoub
 forceinline overload copysign(x:Float,y:LongDouble) = libc.copysignl(LongDouble(x),y);
 forceinline overload copysign(x:LongDouble,y:Float) = libc.copysignl(x,LongDouble(y));
 
-forceinline erf(x:Double) = libc.erf(x);
+define erf;
+forceinline overload erf(x:Double) = libc.erf(x);
 forceinline overload erf(x:Float) = libc.erff(x);
 forceinline overload erf(x:LongDouble) = libc.erfl(x);
 
-forceinline erfc(x:Double) = libc.erfc(x);
+define erfc;
+forceinline overload erfc(x:Double) = libc.erfc(x);
 forceinline overload erfc(x:Float) = libc.erfcf(x);
 forceinline overload erfc(x:LongDouble) = libc.erfcl(x);
 
-forceinline lgamma(x:Double) = libc.lgamma(x);
+define lgamma;
+forceinline overload lgamma(x:Double) = libc.lgamma(x);
 forceinline overload lgamma(x:Float) = libc.lgammaf(x);
 forceinline overload lgamma(x:LongDouble) = libc.lgammal(x);
 
-forceinline tgamma(x:Double) = libc.tgamma(x);
+define tgamma;
+forceinline overload tgamma(x:Double) = libc.tgamma(x);
 forceinline overload tgamma(x:Float) = libc.tgammaf(x);
 forceinline overload tgamma(x:LongDouble) = libc.tgammal(x);
 
 alias gamma = tgamma;
 
-forceinline gamma_r(x:Double,signgamp:Pointer[Int]) = libc.gamma_r(x,signgamp);
+define gamma_r;
+forceinline overload gamma_r(x:Double,signgamp:Pointer[Int]) = libc.gamma_r(x,signgamp);
 forceinline overload gamma_r(x:Float,signgamp:Pointer[Int]) = libc.gammaf_r(x,signgamp);
 forceinline overload gamma_r(x:LongDouble,signgamp:Pointer[Int]) = libc.gammal_r(x,signgamp);
 
-forceinline lgamma_r(x:Double,signgamp:Pointer[Int]) = libc.lgamma_r(x,signgamp);
+define lgamma_r;
+forceinline overload lgamma_r(x:Double,signgamp:Pointer[Int]) = libc.lgamma_r(x,signgamp);
 forceinline overload lgamma_r(x:Float,signgamp:Pointer[Int]) = libc.lgammaf_r(x,signgamp);
 forceinline overload lgamma_r(x:LongDouble,signgamp:Pointer[Int]) = libc.lgammal_r(x,signgamp);
 
-forceinline rint(x:Double) = libc.rint(x);
+define rint;
+forceinline overload rint(x:Double) = libc.rint(x);
 forceinline overload rint(x:Float) = libc.rintf(x);
 forceinline overload rint(x:LongDouble) = libc.rintl(x);
 
-forceinline nextafter(x:Double,y:Double) = libc.nextafter(x,y);
+define nextafter;
+forceinline overload nextafter(x:Double,y:Double) = libc.nextafter(x,y);
 forceinline overload nextafter(x:Float,y:Float) = libc.nextafterf(x,y);
 forceinline overload nextafter(x:LongDouble,y:LongDouble) = libc.nextafterl(x,y);
 forceinline overload nextafter(x:Double,y:Float) = libc.nextafter(x,Double(y));
@@ -267,7 +318,8 @@ forceinline overload nextafter(x:LongDouble,y:Double) = libc.nextafterl(x,LongDo
 forceinline overload nextafter(x:Float,y:LongDouble) = libc.nextafterl(LongDouble(x),y);
 forceinline overload nextafter(x:LongDouble,y:Float) = libc.nextafterl(x,LongDouble(y));
 
-forceinline remainder(x:Double,y:Double) = libc.remainder(x,y);
+define remainder;
+forceinline overload remainder(x:Double,y:Double) = libc.remainder(x,y);
 forceinline overload remainder(x:Float,y:Float) = libc.remainderf(x,y);
 forceinline overload remainder(x:LongDouble,y:LongDouble) = libc.remainderl(x,y);
 forceinline overload remainder(x:Double,y:Float) = libc.remainder(x,Double(y));
@@ -277,27 +329,33 @@ forceinline overload remainder(x:LongDouble,y:Double) = libc.remainderl(x,LongDo
 forceinline overload remainder(x:Float,y:LongDouble) = libc.remainderl(LongDouble(x),y);
 forceinline overload remainder(x:LongDouble,y:Float) = libc.remainderl(x,LongDouble(y));
 
-forceinline scalbn(x:Double,y:Int) = libc.scalbn(x,y);
+define scalbn;
+forceinline overload scalbn(x:Double,y:Int) = libc.scalbn(x,y);
 forceinline overload scalbn(x:Float,y:Int) = libc.scalbnf(x,y);
 forceinline overload scalbn(x:LongDouble,y:Int) = libc.scalbnl(x,y);
 
-forceinline scalbln(x:Double,y:Long) = libc.scalbln(x,y);
+define scalbln;
+forceinline overload scalbln(x:Double,y:Long) = libc.scalbln(x,y);
 forceinline overload scalbln(x:Float,y:Long) = libc.scalblnf(x,y);
 forceinline overload scalbln(x:LongDouble,y:Long) = libc.scalblnl(x,y);
 
-forceinline ilogb(x:Double) = libc.ilogb(x);
+define ilogb;
+forceinline overload ilogb(x:Double) = libc.ilogb(x);
 forceinline overload ilogb(x:Float) = libc.ilogbf(x);
 forceinline overload ilogb(x:LongDouble) = libc.ilogbl(x);
 
-forceinline nearbyint(x:Double) = libc.nearbyint(x);
+define nearbyint;
+forceinline overload nearbyint(x:Double) = libc.nearbyint(x);
 forceinline overload nearbyint(x:Float) = libc.nearbyintf(x);
 forceinline overload nearbyint(x:LongDouble) = libc.nearbyintl(x);
 
-forceinline trunc(x:Double) = libc.trunc(x);
+define trunc;
+forceinline overload trunc(x:Double) = libc.trunc(x);
 forceinline overload trunc(x:Float) = libc.truncf(x);
 forceinline overload trunc(x:LongDouble) = libc.truncl(x);
 
-forceinline remquo(x:Double,y:Double) {
+define remquo;
+forceinline overload remquo(x:Double,y:Double) {
     var quo = Pointer[Int]();
     var res = libc.remquo(x,y,quo);
     return res,quo[0];
@@ -313,8 +371,8 @@ forceinline overload remquo(x:LongDouble,y:LongDouble) {
     return res,quo[0];
 }
 
-
-forceinline fdim(x:Double,y:Double) = libc.fdim(x,y);
+define fdim;
+forceinline overload fdim(x:Double,y:Double) = libc.fdim(x,y);
 forceinline overload fdim(x:Float,y:Float) = libc.fdimf(x,y);
 forceinline overload fdim(x:LongDouble,y:LongDouble) = libc.fdiml(x,y);
 forceinline overload fdim(x:Double,y:Float) = libc.fdim(x,Double(y));
@@ -324,23 +382,28 @@ forceinline overload fdim(x:LongDouble,y:Double) = libc.fdiml(x,LongDouble(y));
 forceinline overload fdim(x:Float,y:LongDouble) = libc.fdiml(LongDouble(x),y);
 forceinline overload fdim(x:LongDouble,y:Float) = libc.fdiml(x,LongDouble(y));
 
-forceinline fpclassify(value:Double) = libc.__fpclassify(value);
+define fpclassify;
+forceinline overload fpclassify(value:Double) = libc.__fpclassify(value);
 forceinline overload fpclassify(value:Float) = libc.__fpclassifyf(value);
 forceinline overload fpclassify(value:LongDouble) = libc.__fpclassifyl(value);
 
-forceinline llrint(x:Double) = libc.llrint(x);
+define llrint;
+forceinline overload llrint(x:Double) = libc.llrint(x);
 forceinline overload llrint(x:Float) = libc.llrintf(x);
 forceinline overload llrint(x:LongDouble) = libc.llrintl(x);
 
-forceinline llround(x:Double) = libc.llround(x);
+define llround;
+forceinline overload llround(x:Double) = libc.llround(x);
 forceinline overload llround(x:Float) = libc.llroundf(x);
 forceinline overload llround(x:LongDouble) = libc.llroundl(x);
 
-forceinline signbit(value:Double) = libc.signbit(value);
+define signbit;
+forceinline overload signbit(value:Double) = libc.signbit(value);
 forceinline overload signbit(value:Float) = libc.signbitf(value);
 forceinline overload signbit(value:LongDouble) = libc.signbitl(value);
 
-forceinline fma(x:Double,y:Double,z:Double) = libc.fma(x,y,z);
+define fma;
+forceinline overload fma(x:Double,y:Double,z:Double) = libc.fma(x,y,z);
 forceinline overload fma(x:Float,y:Float,z:Float) = libc.fmaf(x,y,z);
 forceinline overload fma(x:LongDouble,y:LongDouble,z:LongDouble) = libc.fmal(x,y,z);
 
@@ -348,7 +411,8 @@ forceinline overload abs(z:Complex64) = libc.cabs(z);
 forceinline overload abs(z:Complex32) = libc.cabsf(z);
 forceinline overload abs(z:Complex80) = libc.cabsl(z);
 
-forceinline arg(z:Complex64) = libc.carg(z);
+define arg;
+forceinline overload arg(z:Complex64) = libc.carg(z);
 forceinline overload arg(z:Complex32) = libc.cargf(z);
 forceinline overload arg(z:Complex80) = libc.cargl(z);
 
@@ -423,7 +487,8 @@ forceinline overload sqrt(z:Complex64) = libc.csqrt(z);
 forceinline overload sqrt(z:Complex32) = libc.csqrtf(z);
 forceinline overload sqrt(z:Complex80) = libc.csqrtl(z);
 
-forceinline proj(z:Complex64) = libc.cproj(z);
+define proj;
+forceinline overload proj(z:Complex64) = libc.cproj(z);
 forceinline overload proj(z:Complex32) = libc.cprojf(z);
 forceinline overload proj(z:Complex80) = libc.cprojl(z);
 

@@ -29,7 +29,10 @@ overload permissiveAssign(dest:T, src:T) {
 // permissive record constructor
 //
 
-PermissiveRecordConstructor?(x) = false;
+[R]
+define PermissiveRecordConstructor?(#R) : Bool;
+
+overload PermissiveRecordConstructor?(x) = false;
 
 [T, ..A when Record?(T)
            and PermissiveRecordConstructor?(T)
