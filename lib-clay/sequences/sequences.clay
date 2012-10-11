@@ -9,15 +9,25 @@ import vectors.*;
 // strict wrappers around lazy sequences
 //
 
-alias zip(..args) = force(zipped(..args));
-alias map(..args) = force(mapped(..args));
-alias filter(..args) = force(filtered(..args));
-alias enumerate(..args) = force(enumerated(..args));
-alias reverse(..args) = force(reversed(..args));
-alias slice(..args) = force(sliced(..args));
-alias sliceFrom(..args) = force(slicedFrom(..args));
-alias sliceUpto(..args) = force(slicedUpto(..args));
-alias group(..args) = force(grouped(..args));
+define zip;
+define map;
+define filter;
+define enumerate;
+define reverse;
+define slice;
+define sliceFrom;
+define sliceUpto;
+define group;
+
+alias overload zip(..args) = force(zipped(..args));
+alias overload map(..args) = force(mapped(..args));
+alias overload filter(..args) = force(filtered(..args));
+alias overload enumerate(..args) = force(enumerated(..args));
+alias overload reverse(..args) = force(reversed(..args));
+alias overload slice(..args) = force(sliced(..args));
+alias overload sliceFrom(..args) = force(slicedFrom(..args));
+alias overload sliceUpto(..args) = force(slicedUpto(..args));
+alias overload group(..args) = force(grouped(..args));
 
 
 

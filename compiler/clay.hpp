@@ -1991,6 +1991,8 @@ struct Overload : public TopLevelItem {
 
 struct Procedure : public TopLevelItem {
     OverloadPtr interface;
+
+    OverloadPtr singleOverload;
     vector<OverloadPtr> overloads;
     ObjectTablePtr evaluatorCache; // HACK: used only for predicates
     ProcedureMono mono;

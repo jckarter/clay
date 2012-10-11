@@ -13,8 +13,11 @@ private SubVariants(V) =
 VariantNestingPaths(#V, #M) =
     ..VariantNestingPaths2(V, M, []);
 
+
+private define VariantNestingPaths2;
+
 [V,M]
-private VariantNestingPaths2(#V, #M, Prefix) {
+overload VariantNestingPaths2(#V, #M, Prefix) {
     alias SubV = Tuple(..SubVariants(V));
     return ..VariantNestingPaths3(SubV, M, Prefix, #0);
 }
@@ -26,8 +29,10 @@ overload VariantNestingPaths2(#V, #M, Prefix) {
            ..VariantNestingPaths3(SubV, M, Prefix, #0);
 }
 
+private define VariantNestingPaths3;
+
 [i]
-private VariantNestingPaths3(Vs, M, Prefix, #i) {
+overload VariantNestingPaths3(Vs, M, Prefix, #i) {
     alias V = staticIndex(Vs, #i);
     alias NewPrefix = Tuple(..unpack(Prefix), V);
     return ..VariantNestingPaths2(V, M, NewPrefix),
@@ -52,7 +57,10 @@ forceinline nestedVariantIs?(x:V, #T) {
 /// @section  nestedVariantAs 
 
 [V, T when Variant?(V)]
-forceinline nestedVariantAs(ref x:V, #T) {
+define nestedVariantAs(x:V, #T);
+
+[V, T when Variant?(V)]
+forceinline overload nestedVariantAs(ref x:V, #T) {
     var ptr = nestedVariantAsPtr(x, T);
     assert(not null?(ptr));
     return ref ptr^;
@@ -74,7 +82,9 @@ nestedVariantAsPtr(x:V, #Target) {
     return unboxAlongPaths(x, Target, ..VariantNestingPaths(V, Target));
 }
 
-private forceinline unboxAlongPaths(x, Target, firstPath, ..rest) {
+private define unboxAlongPaths;
+
+forceinline overload unboxAlongPaths(x, Target, firstPath, ..rest) {
     var ptr = unboxAlong(x, Target, ..unpack(firstPath));
     if (not null?(ptr))
         return ptr;
@@ -83,7 +93,9 @@ private forceinline unboxAlongPaths(x, Target, firstPath, ..rest) {
 
 forceinline overload unboxAlongPaths(x, Target) = null(Target);
 
-private forceinline unboxAlong(x, Target, first, ..rest) {
+private define unboxAlong;
+
+forceinline overload unboxAlong(x, Target, first, ..rest) {
     var ptr = variantAsPtr(x, first);
     if (null?(ptr))
         return null(Target);

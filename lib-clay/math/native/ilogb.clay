@@ -12,7 +12,9 @@ alias FP_ILOGBNAN = Least(Int32);
 
 alias logb = ilogb;
 
-ilogb(x:Float) = ilogb(Double(x));
+define ilogb;
+
+overload ilogb(x:Float) = ilogb(Double(x));
 
 overload ilogb(x:Double) {
 	

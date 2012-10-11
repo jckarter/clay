@@ -2,7 +2,9 @@
 
 import math.native.kernel.ieee754.*;
 
-llround(x:Float) {
+define llround;
+
+overload llround(x:Float) {
     var result = 0l;
     var i = floatBits(x);
     var j0 = bitand(bitshr(i,23),0xffu) - 0x7fu;

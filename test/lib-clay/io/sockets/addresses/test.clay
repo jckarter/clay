@@ -5,7 +5,9 @@ import byteorder.*;
 import vectors.*;
 import sequences.*;
 
-_expectSockaddrIn(test, name, expectedHost, expectedPort, sockaddr) {}
+define _expectSockaddrIn;
+
+overload _expectSockaddrIn(test, name, expectedHost, expectedPort, sockaddr) {}
 overload _expectSockaddrIn(test, name, expectedHost, expectedPort, sockaddr: Sockaddr_in)
 {
     expectEqual(test, "family of " ++ name, AF_INET, sockaddr.sin_family);

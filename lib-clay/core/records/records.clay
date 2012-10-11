@@ -41,7 +41,10 @@ RecordFieldNames(R) = ..mapValues(
 //
 
 [T]
-RegularRecord?(#T) = false;
+define RegularRecord?(#T): Bool;
+
+[T]
+overload RegularRecord?(#T) = false;
 
 [T when Record?(T)]
 overload RegularRecord?(#T) = true;
@@ -50,8 +53,11 @@ overload RegularRecord?(#T) = true;
 
 /// @section  basic constructor 
 
+[T, ..A when Record?(T)]
+define initializeRecord(#T, ..args:A): T;
+
 [T, ..A when Record?(T) and (Tuple[..RecordFieldTypes(T)] == Tuple[..A])]
-alias initializeRecord(#T, ..args:A) --> returned:T {
+alias overload initializeRecord(#T, ..args:A) --> returned:T {
     ..recordFields(returned) <-- ..args;
 }
 

@@ -65,8 +65,10 @@ private record SetVectorEntry[K]
     prev: Pointer[SetVectorEntry[K]],
 );
 
+private define Entry?;
+
 [T]
-private Entry?(#T) = false;
+overload Entry?(#T) = false;
 
 [K]
 overload Entry?(#SetEntry[K]) = true;
@@ -77,8 +79,10 @@ overload Entry?(#MapEntry[K, V]) = true;
 [K]
 overload Entry?(#SetVectorEntry[K]) = true;
 
+private define HashSetLike?;
+
 [T, K]
-private HashSetLike?(#T, #K) = false;
+overload HashSetLike?(#T, #K) = false;
 
 [K]
 overload HashSetLike?(#HashSet[K], #K) = true;
@@ -90,8 +94,10 @@ overload HashSetLike?(#SetVector[K], #K) = true;
 // Type predicates
 //
 
+private define Hashtable?;
+
 [T]
-private Hashtable?(#T) = false;
+overload Hashtable?(#T) = false;
 
 [T when RecordWithField?(T, "data") and TwoHash?(Type(typeToLValue(T).data))]
 overload Hashtable?(#T) = true;

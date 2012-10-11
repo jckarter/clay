@@ -5,7 +5,8 @@ import strings.*;
 
 /// @section  Formatter types 
 
-Formatter?(X) = false;
+define Formatter?;
+overload Formatter?(X) = false;
 
 formatter(F, forward x, forward ..params)
     = F[Type(captureValue(x))](captureValue(x), ..params);
@@ -59,7 +60,9 @@ HEX(forward x: I) = formatter(HEXFormatter, x);
 [I when Integer?(I)]
 oct(forward x: I) = formatter(OctFormatter, x);
 
-private _formatBase(stream, value, fmt) {
+private define _formatBase;
+
+overload _formatBase(stream, value, fmt) {
     if (value < 0) {
         printWithSprintf(stream, strl("-", fmt), wrapNegate(value));
     } else {
@@ -72,7 +75,9 @@ overload _formatBase(stream, value:U, fmt) {
     printWithSprintf(stream, fmt, value);
 }
 
-private formatBase(stream, value, fmt, fmt64) {
+private define formatBase;
+
+overload formatBase(stream, value, fmt, fmt64) {
     _formatBase(stream, value, fmt);
 }
 overload formatBase(stream, value: Int64, fmt, fmt64) {
@@ -219,13 +224,16 @@ private record RightAlignedFormatter[..C] (
     pad: Char,
 );
 
-private AlignedFormatter?(T) = false;
+private define AlignedFormatter?;
+overload AlignedFormatter?(T) = false;
 [..C] overload AlignedFormatter?(#LeftAlignedFormatter[..C]) = true;
 [..C] overload AlignedFormatter?(#RightAlignedFormatter[..C]) = true;
 [T when AlignedFormatter?(T)] overload Formatter?(#T) = true;
 
+private define alignedFormatter;
+
 [I when Integer?(I)]
-private alignedFormatter(F, width: I, pad: Char, forward ..values) {
+overload alignedFormatter(F, width: I, pad: Char, forward ..values) {
     // If printedWidth isn't available for all objects, print them to a string
     // and use the width of that
     var s = str(..values);

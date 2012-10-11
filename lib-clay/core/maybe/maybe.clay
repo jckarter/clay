@@ -17,7 +17,9 @@ forceinline overload Maybe[T]() = Maybe[T](Nothing());
 
 forceinline nothing(T) = Maybe[T]();
 
-Maybe?(T) = false;
+[T]
+define Maybe?(#T) : Bool;
+overload Maybe?(T) = false;
 [T] overload Maybe?(#Maybe[T]) : Bool = true;
 
 
@@ -26,8 +28,9 @@ Maybe?(T) = false;
 forceinline nothing?(x) : Bool = variantIs?(x, Nothing);
 forceinline just?(x) : Bool = variantIs?(x, Type(just(x)));
 
+define just;
 [T]
-forceinline just(forward m: Maybe[T]) = forward variantAs(m, T);
+forceinline overload just(forward m: Maybe[T]) = forward variantAs(m, T);
 [T]
 forceinline overload just(m: Maybe[T], dflt: T) = maybe(m, v => v, () => dflt);
 

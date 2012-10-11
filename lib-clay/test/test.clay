@@ -72,7 +72,9 @@ runTestSuite(suite: TestSuite) : TestStatus {
 pendingMessage(pending?: Bool) : String = 
     String(if (pending?) "(pending) " else "");
 
-printFailure(..xs) {
+define printFailure;
+
+overload printFailure(..xs) {
     printlnColored(Red, TEST_FAILURE_INDENT, ..xs);
 }
 [when Flag?("test.minimal")]
@@ -123,8 +125,10 @@ runTestCase(_case: TestCase) : TestStatus {
 passed(test: TestStatus) { test.passed +: 1; }
 failed(test: TestStatus) { test.failed +: 1; }
 
+define expect;
+
 // primitive assertion function
-expect(test: TestStatus, passed?: Bool, failReportFn) {
+overload expect(test: TestStatus, passed?: Bool, failReportFn) {
     if (passed?) {
         passed(test);
     } else {

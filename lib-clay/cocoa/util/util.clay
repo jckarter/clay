@@ -64,8 +64,9 @@ overload cstring(o: O) = o.UTF8String();
 
 
 /// @section  NSValue overloads 
+define makeNSValue;
 [T]
-makeNSValue(value: T)
+overload makeNSValue(value: T)
     = NSValue.valueWithBytes_objCType(RawPointer(@value), cstring(encode(T)));
 [T when ObjectRef?(T)]
 overload makeNSValue(obj: T) = NSValue.valueWithNonretainedObject(obj);
@@ -81,8 +82,10 @@ fromNSValue(#T, o: O) {
         return fromNSValueUnsafe(T, o);
 }
 
+define fromNSValueUnsafe;
+
 [T, O when ObjectRef?(O)]
-fromNSValueUnsafe(#T, o: O) --> returned: T {
+overload fromNSValueUnsafe(#T, o: O) --> returned: T {
     o.getValue(RawPointer(@returned));
 }
 
@@ -209,7 +212,8 @@ makeNSArray(forward ..elements: E)
 makeNSMutableArray(forward ..elements: E)
     = makeArrayOfClass(NSMutableArray, ..elements);
 
-private swapValuePairs() = ;
+private define swapValuePairs;
+overload swapValuePairs() = ;
 overload swapValuePairs(forward x, forward y, forward ..xys)
     = forward y, x, ..swapValuePairs(..xys);
 
@@ -288,7 +292,9 @@ initObjectWith(
     return self;
 }
 
-initObject(self) = initObjectWith(self, "init", self => self);
+define initObject;
+
+overload initObject(self) = initObjectWith(self, "init", self => self);
 
 overload initObject(self, superSelector, forward ..args)
     = initObjectWith(self, superSelector, initObjectMembers, ..args);
@@ -297,8 +303,10 @@ overload initObject(self, superSelector, forward ..args)
 private objectMembers(self: O)
     = ref ..mapValues(ivar => ref fieldRef(self^, ivar.0), ..ClassInstanceVars(O));
 
+define initObjectMembers;
+
 [O when Class?(O)]
-initObjectMembers(self: O) {
+overload initObjectMembers(self: O) {
     ..for (member in objectMembers(self))
         member <-- Type(member)();
     return self;
@@ -337,8 +345,10 @@ deallocObject(self: O) {
 
 /// @section  templates to define lifecycle methods 
 
+define AutoreleasedClassMethod;
+
 [selector when Selector?(selector)]
-AutoreleasedClassMethod(#selector)
+overload AutoreleasedClassMethod(#selector)
     = [selector, class => class.alloc().init().autorelease()];
 
 [selector, instanceSelector when Selector?(selector) and Selector?(instanceSelector)]
@@ -347,8 +357,10 @@ overload AutoreleasedClassMethod(#selector, #instanceSelector)
         callMethod(class.alloc(), instanceSelector, ..args).autorelease()
     ];
 
+define InitInstanceMethod;
+
 [selector, superSelector when Selector?(selector) and Selector?(superSelector)]
-InitInstanceMethod(#selector, #superSelector, ..Types)
+overload InitInstanceMethod(#selector, #superSelector, ..Types)
     = [selector, (self, ..args) => initObject(self, superSelector, ..args), ..Types];
 
 overload InitInstanceMethod(selector) = InitInstanceMethod(selector, "init");
@@ -359,8 +371,10 @@ define CopyRoot;
 define CopyInheriting;
 define CopyImmutable;
 
+define CopyInstanceMethod;
+
 [selector when Selector?(selector)]
-CopyInstanceMethod(#selector, #CopyRoot)
+overload CopyInstanceMethod(#selector, #CopyRoot)
     = [selector, copyRootObject];
 [selector when Selector?(selector)]
 overload CopyInstanceMethod(#selector, #CopyInheriting)
@@ -373,14 +387,18 @@ overload CopyInstanceMethod(#selector, #CopyImmutable)
 overload CopyInstanceMethod(#Flag)
     = CopyInstanceMethod("copyWithZone:", Flag);
 
+define DeallocInstanceMethod;
+
 [selector when Selector?(selector)]
-DeallocInstanceMethod(#selector) = [selector, deallocObject];
+overload DeallocInstanceMethod(#selector) = [selector, deallocObject];
 
 overload DeallocInstanceMethod() = DeallocInstanceMethod("dealloc");
 
 
+define ReaderInstanceMethod;
+
 [ivarName, readerSelector when StringLiteral?(ivarName) and Selector?(readerSelector)]
-ReaderInstanceMethod(#ivarName, #readerSelector, T)
+overload ReaderInstanceMethod(#ivarName, #readerSelector, T)
     = [readerSelector, self => T(fieldRef(self^, ivarName)), T];
 
 [ivarName when StringLiteral?(ivarName) and Selector?(ivarName)]
@@ -399,8 +417,10 @@ overload ReaderInstanceMethod(#ivarName)
 defaultWriterSelector(ivarName)
     = "set" ++ stringLiteralCapitalize(ivarName) ++ ":";
 
+define WriterInstanceMethod;
+
 [ivarName, writerSelector when StringLiteral?(ivarName) and Selector?(writerSelector)]
-WriterInstanceMethod(#ivarName, #writerSelector, T)
+overload WriterInstanceMethod(#ivarName, #writerSelector, T)
     = [writerSelector, (self, value) => { fieldRef(self^, ivarName) = value; }, Void, T];
 
 [ivarName when StringLiteral?(ivarName) and Selector?(defaultWriterSelector(ivarName))]
@@ -416,12 +436,14 @@ overload WriterInstanceMethod(#ivarName)
     = WriterInstanceMethod(ivarName, defaultWriterSelector(ivarName));
 
 
+define PropertyInstanceMethods;
+
 [ivarName, readerSelector, writerSelector when
     StringLiteral?(ivarName)
     and Selector?(readerSelector)
     and Selector?(writerSelector)
 ]
-PropertyInstanceMethods(#ivarName, #readerSelector, #writerSelector, T)
+overload PropertyInstanceMethods(#ivarName, #readerSelector, #writerSelector, T)
     = ReaderInstanceMethod(ivarName, readerSelector, T),
       WriterInstanceMethod(ivarName, writerSelector, T);
 
@@ -501,7 +523,8 @@ private regularClassInstanceMethods(..fields)
       DeallocInstanceMethod(),
       ..regularClassPropertyMethods(..fields);
 
-private regularClassInitMethod() = ;
+private define regularClassInitMethod;
+overload regularClassInitMethod() = ;
 overload regularClassInitMethod(..fields)
     = InitInstanceMethod(regularClassInitMethodName(..fields), "init",
         Id, ..mapValues(x => x.1, ..fields)

@@ -16,7 +16,8 @@ forceinline overload sqrt(x:Double) = x86_sqrtsd(Vec[Double,2](x,0.))[0];
 forceinline overload sqrt(z:I) = sqrt(Complex(z));
 
 
-alias thresh(#LongDouble) = 0xd.413cccfe77997ffp+16379fl;
+define thresh;
+alias overload thresh(#LongDouble) = 0xd.413cccfe77997ffp+16379fl;
 alias overload thresh(#Float)  = 0x1.a82797f7a7599p+126f;
 alias overload thresh(#Double) = 0x1.a827999fcef32p+1022;
 

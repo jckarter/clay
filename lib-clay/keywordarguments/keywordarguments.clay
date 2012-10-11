@@ -6,8 +6,10 @@ keywordArguments(names, forward ..keywords)
         ..unpack(names)
     );
 
+define getKeywordArgument;
+
 [I when StringLiteral?(I)]
-getKeywordArgument(#I, forward ..keywords)
+overload getKeywordArgument(#I, forward ..keywords)
     = forward assocValue(I, ..keywords);
 
 [I, T when StringLiteral?(I)]

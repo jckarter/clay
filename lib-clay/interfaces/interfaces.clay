@@ -9,7 +9,9 @@ private VtblSlotFunction(memFun) = memFun.0;
 private VtblSlotInputTypes(memFun) = ..unpack(memFun.1);
 private VtblSlotOutputTypes(memFun) = ..unpack(memFun.2);
 
-InterfaceMember?(I, fn) = false;
+define InterfaceMember?;
+
+overload InterfaceMember?(I, fn) = false;
 
 [I, fn when InterfaceType?(I)]
 overload InterfaceMember?(#I, #fn)

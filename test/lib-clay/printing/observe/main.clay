@@ -2,10 +2,12 @@ import printer.(println);
 import printer.observe.*;
 import strings.*;
 
-tellRvalue(ref x) = 0;
+define tellRvalue;
+overload tellRvalue(ref x) = 0;
 overload tellRvalue(rvalue x) = 1;
 
-tellRvalueString(ref x) = "ref";
+define tellRvalueString;
+overload tellRvalueString(ref x) = "ref";
 overload tellRvalueString(rvalue x) = "rvalue";
 
 record AnException ();

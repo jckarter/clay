@@ -132,8 +132,10 @@ private forceinline ensureSpace(a, space:SizeT) {
 
 /// @section insert
 
+private define insertLocationsUnsafe;
+
 [I, J when Integer?(I) and Integer?(J)]
-private insertLocationsUnsafe(a, pos:I, n:J) {
+overload insertLocationsUnsafe(a, pos:I, n:J) {
     return ..insertLocationsUnsafe(a, SizeT(pos), SizeT(n));
 }
 

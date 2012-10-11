@@ -119,8 +119,10 @@ overload vectorRequestCapacity(a:Vector[T], capacity:SizeT) {
     reallocVector(a, n);
 }
 
+private define reallocVector;
+
 [T]
-private reallocVector(a:Vector[T], capacity:SizeT) {
+overload reallocVector(a:Vector[T], capacity:SizeT) {
     var data = allocateRawMemory(T, capacity);
     moveNonoverlappingMemoryUnsafe(data, a.data, a.data + a.size);
     freeRawMemory(a.data);

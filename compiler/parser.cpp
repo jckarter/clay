@@ -2404,6 +2404,8 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x) {
     v->location = location;
     x.push_back(v.ptr());
 
+    u->singleOverload = v;
+
     return true;
 }
 
@@ -2473,6 +2475,9 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
     OverloadPtr oload = new Overload(target, code, callByName, isInline);
     oload->location = location;
     x.push_back(oload.ptr());
+
+    proc->singleOverload = oload;
+
     return true;
 }
 
