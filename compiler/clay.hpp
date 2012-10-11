@@ -751,8 +751,8 @@ struct Source : public Object {
     Source(llvm::StringRef fileName)
         : Object(SOURCE), fileName(fileName), debugInfo(NULL)
     {
-        if (llvm::MemoryBuffer::getFileOrSTDIN(fileName, buffer))
-            error("unable to open file: " + fileName);
+        if (llvm::error_code ec = llvm::MemoryBuffer::getFileOrSTDIN(fileName, buffer))
+            error("unable to open file " + fileName + ": " + ec.message());
     }
 
     Source(llvm::StringRef fileName, llvm::MemoryBuffer *buffer)
