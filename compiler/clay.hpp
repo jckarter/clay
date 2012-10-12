@@ -402,7 +402,6 @@ enum ObjectKind {
 
     IMPORT,
     MODULE_DECLARATION,  // -- 30
-    MODULE_HOLDER, 
     MODULE,
 
     ENV,
@@ -535,7 +534,6 @@ struct Import;
 struct ImportModule;
 struct ImportStar;
 struct ImportMembers;
-struct ModuleHolder;
 struct Module;
 struct ModuleDeclaration;
 
@@ -686,7 +684,6 @@ typedef Pointer<Import> ImportPtr;
 typedef Pointer<ImportModule> ImportModulePtr;
 typedef Pointer<ImportStar> ImportStarPtr;
 typedef Pointer<ImportMembers> ImportMembersPtr;
-typedef Pointer<ModuleHolder> ModuleHolderPtr;
 typedef Pointer<Module> ModulePtr;
 typedef Pointer<ModuleDeclaration> ModuleDeclarationPtr;
 
@@ -1223,8 +1220,9 @@ struct FieldRef : public Expr {
     ExprPtr expr;
     IdentifierPtr name;
     ExprPtr desugared;
+    bool isDottedModuleName;
     FieldRef(ExprPtr expr, IdentifierPtr name)
-        : Expr(FIELD_REF), expr(expr), name(name) {}
+        : Expr(FIELD_REF), expr(expr), name(name), isDottedModuleName(false) {}
 };
 
 struct StaticIndexing : public Expr {
@@ -2301,15 +2299,6 @@ struct ImportMembers : public Import {
 // Module
 //
 
-struct ModuleHolder : public Object {
-    Module *module;
-    llvm::StringMap<ModuleHolderPtr> children;
-    ModuleHolder()
-        : Object(MODULE_HOLDER), module(NULL) {}
-
-    static ModuleHolderPtr get(ModulePtr module);
-};
-
 struct ModuleDeclaration : public ANode {
     DottedNamePtr name;
     ExprListPtr attributes;
@@ -2337,6 +2326,14 @@ struct ImportSet {
 
     void clear() { values.clear(); }
 };
+    
+struct ModuleLookup {
+    ModulePtr module;
+    llvm::StringMap<ModuleLookup> parents;
+    
+    ModuleLookup() : module(NULL), parents() {}
+    ModuleLookup(Module *m) : module(m), parents() {}
+};
 
 struct Module : public ANode {
     enum InitState {
@@ -2352,13 +2349,10 @@ struct Module : public ANode {
     LLVMCodePtr topLevelLLVM;
     vector<TopLevelItemPtr> topLevelItems;
 
-    ModuleHolderPtr rootHolder;
     llvm::StringMap<ObjectPtr> globals;
-
-    ModuleHolderPtr publicRootHolder;
     llvm::StringMap<ObjectPtr> publicGlobals;
-
-    ModuleHolderPtr selfHolder;
+    
+    llvm::StringMap<ModuleLookup> importedModuleNames;
 
     EnvPtr env;
     InitState initState;
@@ -2407,15 +2401,6 @@ struct Module : public ANode {
 
     llvm::DINameSpace getDebugInfo() { return llvm::DINameSpace(debugInfo); }
 };
-
-inline ModuleHolderPtr ModuleHolder::get(ModulePtr module)
-{
-    if (module->selfHolder == NULL) {
-        module->selfHolder = new ModuleHolder();
-        module->selfHolder->module = module.ptr();
-    }
-    return module->selfHolder;
-}
 
 
 //
@@ -2527,8 +2512,6 @@ void addGlobal(ModulePtr module,
                IdentifierPtr name,
                Visibility visibility,
                ObjectPtr value);
-ObjectPtr lookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name);
-ObjectPtr safeLookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name);
 ObjectPtr lookupPrivate(ModulePtr module, IdentifierPtr name);
 ObjectPtr lookupPublic(ModulePtr module, IdentifierPtr name);
 ObjectPtr safeLookupPublic(ModulePtr module, IdentifierPtr name);
@@ -3227,14 +3210,12 @@ struct MultiStatic : public Object {
     }
 };
 
-
-
 //
 // desugar
 //
 
 ExprPtr desugarCharLiteral(char c);
-ExprPtr desugarFieldRef(FieldRefPtr x);
+void desugarFieldRef(FieldRefPtr x, ModulePtr module);
 ExprPtr desugarStaticIndexing(StaticIndexingPtr x);
 ExprPtr desugarVariadicOp(VariadicOpPtr x);
 ExprListPtr desugarVariadicAssignmentRight(VariadicAssignment *x);

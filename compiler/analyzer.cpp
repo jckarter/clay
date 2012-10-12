@@ -54,7 +54,7 @@ static TypePtr objectType(ObjectPtr x)
     case GLOBAL_ALIAS :
     case RECORD :
     case VARIANT :
-    case MODULE_HOLDER :
+    case MODULE :
     case IDENTIFIER :
         return staticType(x);
 
@@ -723,19 +723,23 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
 
     case FIELD_REF : {
         FieldRef *x = (FieldRef *)expr.ptr();
+        if (!x->desugared)
+            desugarFieldRef(x, safeLookupModule(env));
+        if (x->isDottedModuleName)
+            return analyzeExpr(x->desugared, env);
+        
         PVData pv = analyzeOne(x->expr, env);
         if (!pv.ok())
             return NULL;
         if (pv.type->typeKind == STATIC_TYPE) {
             StaticType *st = (StaticType *)pv.type.ptr();
-            if (st->obj->objKind == MODULE_HOLDER) {
-                ModuleHolder *mh = (ModuleHolder *)st->obj.ptr();
-                ObjectPtr obj = safeLookupModuleHolder(mh, x->name);
+            if (st->obj->objKind == MODULE) {
+                Module *m = (Module *)st->obj.ptr();
+                ObjectPtr obj = safeLookupPublic(m, x->name);
                 return analyzeStaticObject(obj);
             }
         }
-        if (!x->desugared)
-            x->desugared = desugarFieldRef(x);
+        
         return analyzeExpr(x->desugared, env);
     }
 
@@ -911,7 +915,7 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
     case TYPE :
     case PRIM_OP :
     case PROCEDURE :
-    case MODULE_HOLDER :
+    case MODULE :
     case IDENTIFIER : {
         TypePtr t = staticType(x);
         return new MultiPValue(PVData(t, true));
@@ -2495,11 +2499,6 @@ invokeEntryForCallableArguments(MultiPValuePtr args, size_t callableIndex, size_
         analyzeCallable(callable, argsKey, argsTempness));
 }
 
-MultiPValuePtr analyzeStaticModule(ModulePtr module)
-{
-    return analyzeStaticObject(ModuleHolder::get(module).ptr());
-}
-
 MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 {
     switch (x->primOpCode) {
@@ -2996,14 +2995,14 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_staticFieldRef : {
         ensureArity(args, 2);
         ObjectPtr moduleObj = unwrapStaticType(args->values[0].type);
-        if (!moduleObj || (moduleObj->objKind != MODULE_HOLDER))
+        if (!moduleObj || (moduleObj->objKind != MODULE))
             argumentError(0, "expecting a module");
         ObjectPtr identObj = unwrapStaticType(args->values[1].type);
         if (!identObj || (identObj->objKind != IDENTIFIER))
             argumentError(1, "expecting a string literal value");
-        ModuleHolder *module = (ModuleHolder *)moduleObj.ptr();
+        Module *module = (Module *)moduleObj.ptr();
         Identifier *ident = (Identifier *)identObj.ptr();
-        ObjectPtr obj = safeLookupModuleHolder(module, ident);
+        ObjectPtr obj = safeLookupPublic(module, ident);
         return analyzeStaticObject(obj);
     }
 
@@ -3131,7 +3130,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_MainModule : {
         ensureArity(args, 0);
         assert(globalMainModule != NULL);
-        return analyzeStaticModule(globalMainModule);
+        return analyzeStaticObject(globalMainModule.ptr());
     }
 
     case PRIM_StaticModule : {
@@ -3142,7 +3141,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         ModulePtr m = staticModule(obj);
         if (!m)
             argumentError(0, "value has no associated module");
-        return analyzeStaticModule(m);
+        return analyzeStaticObject(m.ptr());
     }
 
     case PRIM_ModuleName : {
@@ -3159,7 +3158,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_ModuleMemberNames : {
         ensureArity(args, 1);
         ObjectPtr moduleObj = unwrapStaticType(args->values[0].type);
-        if (!moduleObj || (moduleObj->objKind != MODULE_HOLDER))
+        if (!moduleObj || (moduleObj->objKind != MODULE))
             argumentError(0, "expecting a module");
         ModulePtr m = staticModule(moduleObj);
         assert(m != NULL);

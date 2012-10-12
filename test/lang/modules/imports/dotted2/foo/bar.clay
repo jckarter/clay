@@ -1,0 +1,2 @@
+import printer.(println);
+a() { println("ok"); }

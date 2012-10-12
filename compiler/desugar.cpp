@@ -11,13 +11,45 @@ ExprPtr desugarCharLiteral(char c) {
     call->parenArgs->add(new IntLiteral(out.str(), "ss"));
     return call.ptr();
 }
+    
+static ModulePtr dottedImportedModule(FieldRef *x, Module *module) {
+    llvm::StringMap<ModuleLookup> *moduleNode = &module->importedModuleNames;
+    FieldRef *fieldRefNode = x;
+    for (;;) {
+        llvm::StringMap<ModuleLookup>::iterator parent = moduleNode->find(fieldRefNode->name->str);
+        if (parent == moduleNode->end())
+            return NULL;
+        moduleNode = &parent->getValue().parents;
+        if (fieldRefNode->expr->exprKind == FIELD_REF)
+            fieldRefNode = (FieldRef*)fieldRefNode->expr.ptr();
+        else
+            break;
+    }
+    if (fieldRefNode->expr->exprKind == NAME_REF) {
+        NameRef *nameNode = (NameRef*)fieldRefNode->expr.ptr();
+        llvm::StringMap<ModuleLookup>::iterator parent = moduleNode->find(nameNode->name->str);
+        if (parent == moduleNode->end())
+            return NULL;
+        return parent->getValue().module;
+    }
+    return NULL;
+}
 
-ExprPtr desugarFieldRef(FieldRefPtr x) {
+void desugarFieldRef(FieldRefPtr x, ModulePtr module) {
+    if (x->expr->exprKind == FIELD_REF || x->expr->exprKind == NAME_REF) {
+        ModulePtr m = dottedImportedModule(x.ptr(), module.ptr());
+        if (m.ptr()) {
+            x->isDottedModuleName = true;
+            x->desugared = new ObjectExpr(m.ptr());
+            return;
+        }
+    }
+    
     ExprListPtr args = new ExprList(x->expr);
     args->add(new ObjectExpr(x->name.ptr()));
     CallPtr call = new Call(operator_expr_fieldRef(), args);
     call->location = x->location;
-    return call.ptr();
+    x->desugared = call.ptr();
 }
 
 ExprPtr desugarStaticIndexing(StaticIndexingPtr x) {
