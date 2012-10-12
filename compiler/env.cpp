@@ -31,7 +31,7 @@ void addGlobal(ModulePtr module,
 
 
 //
-// lookupModuleHolder, safeLookupModuleHolder
+// module errors
 //
 
 static void suggestModules(llvm::raw_ostream &err, set<string> const &moduleNames, IdentifierPtr name) {
@@ -83,35 +83,6 @@ static void undefinedNameError(IdentifierPtr name) {
 
 }
 
-ObjectPtr lookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name) {
-    ObjectPtr result1, result2;
-    llvm::StringMap<ModuleHolderPtr>::iterator i = mh->children.find(name->str);
-    if (i != mh->children.end())
-        result1 = i->second.ptr();
-    if (mh->module != NULL)
-        result2 = lookupPublic(mh->module, name);
-    if (result1.ptr()) {
-        if (result2.ptr() && (result1 != result2)) {
-            ImportSet candidates;
-            candidates.insert(result1);
-            candidates.insert(result2);
-            ambiguousImportError(name, candidates);
-        }
-        return result1;
-    }
-    else {
-        return result2;
-    }
-}
-
-ObjectPtr safeLookupModuleHolder(ModuleHolderPtr mh, IdentifierPtr name) {
-    ObjectPtr x = lookupModuleHolder(mh, name);
-    if (!x)
-        undefinedNameError(name);
-    return x;
-}
-
-
 
 //
 // getPublicSymbols, getAllSymbols
@@ -130,7 +101,7 @@ static const llvm::StringMap<ImportSet> &getPublicSymbols(ModulePtr module)
     if (module->publicSymbolsLoading >= 1)
         return module->publicSymbols;
     module->publicSymbolsLoading += 1;
-    addImportedSymbols(module, true);
+    addImportedSymbols(module, /*publicOnly=*/ true);
     module->publicSymbolsLoading -= 1;
     return module->publicSymbols;
 }
@@ -143,7 +114,7 @@ static const llvm::StringMap<ImportSet> &getAllSymbols(ModulePtr module)
         return module->allSymbols;
     module->allSymbolsLoading += 1;
 
-    addImportedSymbols(module, false);
+    addImportedSymbols(module, /*publicOnly=*/ false);
 
     module->allSymbolsLoading -= 1;
     return module->allSymbols;
@@ -191,22 +162,22 @@ static void addImportedSymbols(ModulePtr module,
             continue;
         if (x->importKind == IMPORT_MODULE) {
             ImportModule *y = (ImportModule *)x;
+            IdentifierPtr name = NULL;
             if (y->alias.ptr()) {
-                IdentifierPtr name = y->alias;
-                ModuleHolderPtr holder =
-                    publicOnly ?
-                    module->publicRootHolder->children[name->str] :
-                    module->rootHolder->children[name->str];
-                insertImported(name, holder.ptr(), globals, result, specificImported, true);
+                name = y->alias;
             }
             else {
-                IdentifierPtr name = y->dottedName->parts[0];
-                ModuleHolderPtr holder =
-                    publicOnly ?
-                    module->publicRootHolder->children[name->str] :
-                    module->rootHolder->children[name->str];
-                insertImported(name, holder.ptr(), globals, result, 
-                    specificImported, y->dottedName->parts.size()==1 ? true : false);
+                if (y->dottedName->parts.size() == 1)
+                    name = y->dottedName->parts[0];
+            }
+            if (name.ptr()) {
+                // Module imports are set up by loadDependents, so don't alter them here;
+                // only add them to specificImported so they catch conflicts with other imports
+                string nameStr(name->str.begin(), name->str.end());
+                if (specificImported.count(nameStr)) {
+                    error(name, "name imported already: " + nameStr);
+                }
+                specificImported.insert(nameStr);
             }
         }
         else if (x->importKind == IMPORT_STAR) {

@@ -320,71 +320,62 @@ static ModulePtr loadModuleByName(DottedNamePtr name, vector<string> *sourceFile
     return module;
 }
 
-static ModuleHolderPtr installHolder(ModuleHolderPtr mh, IdentifierPtr name) {
-    ModuleHolderPtr holder;
-    llvm::StringMap<ModuleHolderPtr>::iterator i = mh->children.find(name->str);
-    if (i != mh->children.end())
-        return i->second;
-    holder = new ModuleHolder();
-    mh->children[name->str] = holder;
-    return holder;
-}
-
 static void loadDependents(ModulePtr m, vector<string> *sourceFiles, bool verbose) {
-    m->rootHolder = new ModuleHolder();
-    m->publicRootHolder = new ModuleHolder();
+    set<string> importedNames;
     vector<ImportPtr>::iterator ii, iend;
     for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii) {
         ImportPtr x = *ii;
         x->module = loadModuleByName(x->dottedName, sourceFiles, verbose);
         switch (x->importKind) {
         case IMPORT_MODULE : {
-            ImportModule *y = (ImportModule *)x.ptr();
-            {
-                ModuleHolderPtr holder = m->rootHolder;
-                if (y->alias.ptr()) {
-                    holder = installHolder(holder, y->alias);
+            ImportModule *im = (ImportModule *)x.ptr();
+            IdentifierPtr name = NULL;
+            if (im->alias.ptr()) {
+                name = im->alias;
+                m->importedModuleNames[im->alias->str].module = x->module;
+            } else {
+                vector<IdentifierPtr> const &parts = im->dottedName->parts;
+                if (parts.size() == 1)
+                    name = parts[0];
+                else if (x->visibility == PUBLIC)
+                    error(x->location,
+                          "public imports of dotted module paths must have an \"as <name>\" alias");
+                llvm::StringMap<ModuleLookup> *node = &m->importedModuleNames;
+                for (vector<IdentifierPtr>::const_reverse_iterator i = parts.rbegin(),
+                         end = parts.rend() - 1;
+                     i != end;
+                     ++i)
+                {
+                    node = &(*node)[(*i)->str].parents;
                 }
-                else {
-                    llvm::ArrayRef<IdentifierPtr> parts(y->dottedName->parts);
-                    for (IdentifierPtr const *i = parts.begin(); i < parts.end(); ++i) {
-                        holder = installHolder(holder, *i);
-                    }
-                }
-                if (holder->module != NULL)
-                    error(x, "module already imported");
-                holder->module = y->module.ptr();
+                (*node)[parts[0]->str].module = x->module;
             }
-            if (y->visibility == PUBLIC) {
-                ModuleHolderPtr holder = m->publicRootHolder;
-                if (y->alias.ptr()) {
-                    holder = installHolder(holder, y->alias);
-                }
-                else {
-                    llvm::ArrayRef<IdentifierPtr> parts(y->dottedName->parts);
-                    for (IdentifierPtr const *i = parts.begin(); i < parts.end(); ++i) {
-                        holder = installHolder(holder, *i);
-                    }
-                }
-                if (holder->module != NULL)
-                    error(x, "module already imported");
-                holder->module = y->module.ptr();
+            
+            if (name.ptr()) {
+                string nameStr(name->str.begin(), name->str.end());
+                if (importedNames.count(nameStr))
+                    error(name, "name imported already: " + nameStr);
+                importedNames.insert(nameStr);
+                m->allSymbols[nameStr].insert(x->module.ptr());
+                if (x->visibility == PUBLIC)
+                    m->publicSymbols[nameStr].insert(x->module.ptr());
             }
+            
             break;
         }
-        case IMPORT_STAR : {
+        case IMPORT_STAR :
             break;
-        }
         case IMPORT_MEMBERS : {
             ImportMembers *y = (ImportMembers *)x.ptr();
             for (unsigned i = 0; i < y->members.size(); ++i) {
                 ImportedMember &z = y->members[i];
-                IdentifierPtr alias = z.alias;
-                if (!alias)
-                    alias = z.name;
-                if (y->aliasMap.count(alias->str))
-                    error(alias, "name imported already: " + alias->str);
-                y->aliasMap[alias->str] = z.name;
+                IdentifierPtr alias = z.alias.ptr() ? z.alias : z.name;
+                string aliasStr(alias->str.begin(), alias->str.end());
+                if (importedNames.count(aliasStr))
+                    error(alias, "name imported already: " + aliasStr);
+                assert(y->aliasMap.count(aliasStr) == 0);
+                importedNames.insert(aliasStr);
+                y->aliasMap[aliasStr] = z.name;
             }
             break;
         }
@@ -742,9 +733,8 @@ ModulePtr staticModule(ObjectPtr x) {
     case PRIM_OP : {
         return primitivesModule();
     }
-    case MODULE_HOLDER : {
-        ModuleHolder *mh = (ModuleHolder *)x.ptr();
-        return mh->module;
+    case MODULE : {
+        return (Module*)x.ptr();
     }
     case GLOBAL_VARIABLE :
     case GLOBAL_ALIAS :

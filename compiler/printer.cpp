@@ -680,10 +680,6 @@ static void print(llvm::raw_ostream &out, const Object *x) {
         break;
     }
 
-    case MODULE_HOLDER : {
-        out << "ModuleHolder()";
-        break;
-    }
     case MODULE_DECLARATION : {
         const ModuleDeclaration *y = (const ModuleDeclaration *)x;
         out << "ModuleDeclaration(" << y->name << ", " << y->attributes << ")";
@@ -767,6 +763,12 @@ static void print(llvm::raw_ostream &out, const Object *x) {
     case MULTI_CVALUE : {
         const MultiCValue *y = (const MultiCValue *)x;
         out << "MultiCValue(" << y->values << ")";
+        break;
+    }
+            
+    case DOCUMENTATION : {
+        const Documentation *d = (const Documentation *)x;
+        out << "Documentation(" << d->text << ")";
         break;
     }
 
@@ -956,14 +958,9 @@ void printName(llvm::raw_ostream &out, ObjectPtr x)
         out << y->name->str;
         break;
     }
-    case MODULE_HOLDER : {
-        ModuleHolder *y = (ModuleHolder *)x.ptr();
-        if (y->module != NULL) {
-            out << y->module->moduleName;
-        }
-        else {
-            out << "ModuleHolder()";
-        }
+    case MODULE : {
+        Module *m = (Module *)x.ptr();
+        out << m->moduleName;
         break;
     }
     case PRIM_OP : {

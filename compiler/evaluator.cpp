@@ -416,7 +416,7 @@ ObjectPtr makeTupleValue(const vector<ObjectPtr> &elements)
         case GLOBAL_ALIAS :
         case RECORD :
         case VARIANT :
-        case MODULE_HOLDER :
+        case MODULE :
         case IDENTIFIER :
             break;
         default :
@@ -1056,18 +1056,22 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
 
     case FIELD_REF : {
         FieldRef *x = (FieldRef *)expr.ptr();
+        if (!x->desugared)
+            desugarFieldRef(x, safeLookupModule(env));
+        if (x->isDottedModuleName) {
+            evalExpr(x->desugared, env, out);
+            break;
+        }
         PVData pv = safeAnalyzeOne(x->expr, env);
         if (pv.type->typeKind == STATIC_TYPE) {
             StaticType *st = (StaticType *)pv.type.ptr();
-            if (st->obj->objKind == MODULE_HOLDER) {
-                ModuleHolder *mh = (ModuleHolder *)st->obj.ptr();
-                ObjectPtr obj = safeLookupModuleHolder(mh, x->name);
+            if (st->obj->objKind == MODULE) {
+                Module *m = (Module *)st->obj.ptr();
+                ObjectPtr obj = safeLookupPublic(m, x->name);
                 evalStaticObject(obj, out);
                 break;
             }
         }
-        if (!x->desugared)
-            x->desugared = desugarFieldRef(x);
         evalExpr(x->desugared, env, out);
         break;
     }
@@ -1274,7 +1278,7 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
     case TYPE :
     case PRIM_OP :
     case PROCEDURE :
-    case MODULE_HOLDER :
+    case MODULE :
     case IDENTIFIER : {
         assert(out->size() == 1);
         assert(out->values[0]->type == staticType(x));
@@ -4522,11 +4526,11 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
     case PRIM_staticFieldRef : {
         ensureArity(args, 2);
         ObjectPtr moduleObj = valueToStatic(args, 0);
-        if (moduleObj->objKind != MODULE_HOLDER)
+        if (moduleObj->objKind != MODULE)
             argumentError(0, "expecting a module");
-        ModuleHolder *module = (ModuleHolder *)moduleObj.ptr();
+        Module *module = (Module *)moduleObj.ptr();
         IdentifierPtr ident = valueToIdentifier(args, 1);
-        ObjectPtr obj = safeLookupModuleHolder(module, ident);
+        ObjectPtr obj = safeLookupPublic(module, ident);
         evalStaticObject(obj, out);
         break;
     }

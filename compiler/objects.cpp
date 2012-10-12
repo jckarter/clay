@@ -57,12 +57,6 @@ bool _objectValueEquals(ObjectPtr a, ObjectPtr b)
         return a1->data == b1->data;
     }
 
-    case MODULE_HOLDER : {
-        ModuleHolder *a1 = (ModuleHolder*)a.ptr();
-        ModuleHolder *b1 = (ModuleHolder*)b.ptr();
-        return a1->module == b1->module;
-    }
-
     default :
         return false;
     }
@@ -110,13 +104,6 @@ int objectHash(ObjectPtr a)
         h *= b->data.isTemp ? 11 : 23;
         return h;
     }
-
-/* XXX
-    case MODULE_HOLDER : {
-        ModuleHolder *b = (ModuleHolder*)a.ptr();
-        return identityHash(b->module);
-    }
-*/
 
     default : {
         return identityHash(a.ptr());
