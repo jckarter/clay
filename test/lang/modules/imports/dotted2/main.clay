@@ -1,0 +1,4 @@
+import foo;
+import foo.bar;
+
+main() { foo.bar.a(); }

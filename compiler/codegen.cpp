@@ -903,7 +903,6 @@ void codegenMulti(ExprListPtr exprs,
             j += mpv->size();
         }
         else if (x->exprKind == PAREN) {
-            Unpack *y = (Unpack *)x.ptr();
             MultiPValuePtr mpv = safeAnalyzeExpr(x, env);
             assert(j + mpv->size() <= out->size());
             MultiCValuePtr out2 = new MultiCValue();
@@ -1046,18 +1045,23 @@ void codegenExpr(ExprPtr expr,
 
     case FIELD_REF : {
         FieldRef *x = (FieldRef *)expr.ptr();
+        if (!x->desugared)
+            desugarFieldRef(x, safeLookupModule(env));
+        if (x->isDottedModuleName) {
+            codegenExpr(x->desugared, env, ctx, out);
+            break;
+        }
+        
         PVData pv = safeAnalyzeOne(x->expr, env);
         if (pv.type->typeKind == STATIC_TYPE) {
             StaticType *st = (StaticType *)pv.type.ptr();
-            if (st->obj->objKind == MODULE_HOLDER) {
-                ModuleHolder *mh = (ModuleHolder *)st->obj.ptr();
-                ObjectPtr obj = safeLookupModuleHolder(mh, x->name);
+            if (st->obj->objKind == MODULE) {
+                Module *m = (Module *)st->obj.ptr();
+                ObjectPtr obj = safeLookupPublic(m, x->name);
                 codegenStaticObject(obj, ctx, out);
                 break;
             }
         }
-        if (!x->desugared)
-            x->desugared = desugarFieldRef(x);
         codegenExpr(x->desugared, env, ctx, out);
         break;
     }
@@ -1311,7 +1315,7 @@ void codegenStaticObject(ObjectPtr x,
     case TYPE :
     case PRIM_OP :
     case PROCEDURE :
-    case MODULE_HOLDER :
+    case MODULE :
     case IDENTIFIER : {
         assert(out->size() == 1);
         assert(out->values[0]->type == staticType(x));
@@ -1452,10 +1456,9 @@ void codegenGVarInstance(GVarInstancePtr x)
     assert(!result);
 
     // generate destructor procedure body
-    InvokeEntry* entry =
-        codegenCallable(operator_destroy(),
-                        vector<TypePtr>(1, y.type),
-                        vector<ValueTempness>(1, TEMPNESS_LVALUE));
+    codegenCallable(operator_destroy(),
+                    vector<TypePtr>(1, y.type),
+                    vector<ValueTempness>(1, TEMPNESS_LVALUE));
 
     initializedGlobals.push_back(new CValue(y.type, x->llGlobal));
 }
@@ -2018,7 +2021,6 @@ void codegenCallExpr(ExprPtr callable,
     if ((pv.type->typeKind == CCODE_POINTER_TYPE)
         && (callable->exprKind == NAME_REF))
     {
-        CCodePointerType *t = (CCodePointerType *)pv.type.ptr();
         NameRef *x = (NameRef *)callable.ptr();
         ObjectPtr y = safeLookupEnv(env, x->name);
         if (y->objKind == EXTERNAL_PROCEDURE) {
@@ -6205,11 +6207,11 @@ void codegenPrimOp(PrimOpPtr x,
     case PRIM_staticFieldRef : {
         ensureArity(args, 2);
         ObjectPtr moduleObj = valueToStatic(args, 0);
-        if (moduleObj->objKind != MODULE_HOLDER)
+        if (moduleObj->objKind != MODULE)
             argumentError(0, "expecting a module");
-        ModuleHolder *module = (ModuleHolder *)moduleObj.ptr();
+        Module *module = (Module *)moduleObj.ptr();
         IdentifierPtr ident = valueToIdentifier(args, 1);
-        ObjectPtr obj = safeLookupModuleHolder(module, ident);
+        ObjectPtr obj = safeLookupPublic(module, ident);
         codegenStaticObject(obj, ctx, out);
         break;
     }

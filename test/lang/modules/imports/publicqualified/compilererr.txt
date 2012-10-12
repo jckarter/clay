@@ -1,0 +1,1 @@
+public imports of dotted module paths must have an "as <name>" alias
