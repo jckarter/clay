@@ -1,0 +1,12 @@
+import threads.future.*;
+import test.*;
+
+main() = testMain(
+    TestSuite("threads.future", array(
+        TestCase("futureGet", test -> {
+            var x = 1;
+            var future = async(-> x + 3);
+            var r = futureGet(future);
+            expectEqual(test, "futureGet", 4, r);
+        }),
+    )));

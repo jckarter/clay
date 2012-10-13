@@ -1,0 +1,23 @@
+import threads.core.platform.*;
+import lambdas.*;
+
+record Thread (
+    handle: ThreadHandle,
+    joined: Bool,
+);
+
+overload RegularRecord?(#Thread) = false;
+
+startThread(proc) = Thread(startThreadImpl(allocateObject(FunctionBody[[], []](proc))), false);
+
+joinThread(thread: Thread) {
+    // TODO: lock
+    if (not thread.joined) {
+        joinThreadImpl(thread.handle);
+        thread.joined = false;
+    }
+}
+
+overload destroy(thread: Thread) {
+    joinThread(thread);
+}
