@@ -1326,3 +1326,18 @@ void typePrint(llvm::raw_ostream &out, TypePtr t) {
 }
 
 }
+
+
+std::string clay::DottedName::join() const {
+    std::string s;
+    llvm::raw_string_ostream ss(s);
+    for (std::vector<clay::IdentifierPtr>::const_iterator part = parts.begin();
+            part != parts.end(); ++part)
+    {
+        if (part != parts.begin())
+            ss << ".";
+        ss << (*part)->str;
+    }
+    ss.flush();
+    return s;
+}
