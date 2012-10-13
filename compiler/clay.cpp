@@ -1010,12 +1010,14 @@ int main2(int argc, char **argv, char const* const* envp) {
     searchPath.push_back(libDirProduction2);
     searchPath.push_back(PathString("."));
 
-    llvm::errs() << "using search path:\n";
+    if (verbose) {
+        llvm::errs() << "using search path:\n";
 
-    for (std::vector<PathString>::const_iterator it = searchPath.begin();
-            it != searchPath.end(); ++it)
-    {
-        llvm::errs() << "    " << *it << "\n";
+        for (std::vector<PathString>::const_iterator it = searchPath.begin();
+                it != searchPath.end(); ++it)
+        {
+            llvm::errs() << "    " << *it << "\n";
+        }
     }
 
     setSearchPath(searchPath);
