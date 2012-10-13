@@ -293,6 +293,24 @@ static void generateAssembly(llvm::Module *module,
     fpasses.doFinalization();
 }
 
+static string joinCmdArgs(const std::vector<const char*>& args) {
+    string s;
+    llvm::raw_string_ostream ss(s);
+    for (std::vector<const char*>::const_iterator arg = args.begin();
+            arg != args.end(); ++arg)
+    {
+        if (arg != args.begin()) {
+            ss << " ";
+        }
+        if (*arg == 0 && arg + 1 == args.end()) {
+            continue;
+        }
+        ss << *arg;
+    }
+    ss.flush();
+    return s;
+}
+
 static bool generateBinary(llvm::Module *module,
                            llvm::TargetMachine *targetMachine,
                            llvm::Twine const &outputFilePath,
@@ -302,7 +320,8 @@ static bool generateBinary(llvm::Module *module,
                            bool sharedLib,
                            bool genPIC,
                            bool debug,
-                           const vector<string> &arguments)
+                           const vector<string> &arguments,
+                           bool verbose)
 {
     int fd;
     PathString tempObj;
@@ -362,6 +381,11 @@ static bool generateBinary(llvm::Module *module,
         clangArgs.push_back(arguments[i].c_str());
     clangArgs.push_back(NULL);
 
+    if (verbose) {
+        llvm::errs() << "executing clang to generate binary:\n";
+        llvm::errs() << "    " << joinCmdArgs(clangArgs) << "\n";
+    }
+
     int result = llvm::sys::Program::ExecuteAndWait(clangPath, &clangArgs[0]);
 
     if (debug && triple.getOS() == llvm::Triple::Darwin) {
@@ -376,6 +400,11 @@ static bool generateBinary(llvm::Module *module,
             dsymutilArgs.push_back(outputDSYMPath.c_str());
             dsymutilArgs.push_back(outputFilePathStr.c_str());
             dsymutilArgs.push_back(NULL);
+
+            if (verbose) {
+                llvm::errs() << "executing dsymutil:";
+                llvm::errs() << "    " << joinCmdArgs(dsymutilArgs) << "\n";
+            }
 
             int dsymResult = llvm::sys::Program::ExecuteAndWait(dsymutilPath,
                 &dsymutilArgs[0]);
@@ -423,6 +452,7 @@ static void usage(char *argv0)
     llvm::errs() << "  -abort                abort on error (to get stacktrace in gdb)\n";
     llvm::errs() << "  -run                  execute the program without writing to disk\n";
     llvm::errs() << "  -timing               show timing information\n";
+    llvm::errs() << "  -verbose              be verbose\n";
     llvm::errs() << "  -full-match-errors    show universal patterns in match failure errors\n";
     llvm::errs() << "  -log-match <module.symbol>\n"
         << "                         log overload matching behavior for calls to <symbol>\n"
@@ -444,7 +474,7 @@ static void usage(char *argv0)
     llvm::errs() << "                        (defaults to <compilation output file>.d)\n";
     llvm::errs() << "  -e <source>           compile and run <source> (implies -run)\n";
     llvm::errs() << "  -M<module>            \"import <module>.*;\" for -e\n";
-    llvm::errs() << "  -v                    display version info\n";
+    llvm::errs() << "  -version              display version info\n";
 }
 
 static string sharedExtensionForTarget(llvm::Triple const &triple) {
@@ -477,6 +507,21 @@ static string exeExtensionForTarget(llvm::Triple const &triple) {
     }
 }
 
+static void printVersion() {
+    llvm::errs() << "clay compiler version " CLAY_COMPILER_VERSION
+            ", language version " CLAY_LANGUAGE_VERSION " ("
+#ifdef GIT_ID
+         << "git id " << GIT_ID << ", "
+#endif
+#ifdef HG_ID
+         << "hg id " << HG_ID << ", "
+#endif
+#ifdef SVN_REVISION
+         << "llvm r" << SVN_REVISION << ", "
+#endif
+         << __DATE__ << ")\n";
+}
+
 int main2(int argc, char **argv, char const* const* envp) {
     if (argc == 1) {
         usage(argv[0]);
@@ -492,6 +537,7 @@ int main2(int argc, char **argv, char const* const* envp) {
     bool exceptions = true;
     bool abortOnError = false;
     bool run = false;
+    bool verbose = false;
     bool crossCompiling = false;
     bool showTiming = false;
     bool codegenExternals = false;
@@ -520,6 +566,7 @@ int main2(int argc, char **argv, char const* const* envp) {
     string linkerFlags;
     vector<string> librariesArgs;
     vector<string> libraries;
+    vector<PathString> searchPath;
 
     string dependenciesOutputFile;
 #ifdef __APPLE__
@@ -581,6 +628,9 @@ int main2(int argc, char **argv, char const* const* envp) {
         }
         else if (strcmp(argv[i], "-abort") == 0) {
             abortOnError = true;
+        }
+        else if (strcmp(argv[i], "-verbose") == 0 || strcmp(argv[i], "-v") == 0) {
+            verbose = true;
         }
         else if (strcmp(argv[i], "-run") == 0) {
             run = true;
@@ -789,22 +839,11 @@ int main2(int argc, char **argv, char const* const* envp) {
                     return 1;
                 }
             }
-            addSearchPath(path);
+            searchPath.push_back(PathString(path));
         }
-        else if (strstr(argv[i], "-v") == argv[i]
+        else if (strstr(argv[i], "-version") == argv[i]
                  || strcmp(argv[i], "--version") == 0) {
-            llvm::errs() << "clay compiler version " CLAY_COMPILER_VERSION
-                    ", language version " CLAY_LANGUAGE_VERSION " ("
-#ifdef GIT_ID
-                 << "git id " << GIT_ID << ", "
-#endif
-#ifdef HG_ID
-                 << "hg id " << HG_ID << ", "
-#endif
-#ifdef SVN_REVISION
-                 << "llvm r" << SVN_REVISION << ", "
-#endif
-                 << __DATE__ << ")\n";
+            printVersion();
             return 0;
         }
         else if (strcmp(argv[i], "-import-externals") == 0) {
@@ -870,6 +909,10 @@ int main2(int argc, char **argv, char const* const* envp) {
             llvm::errs() << "error: unrecognized option " << argv[i] << '\n';
             return 1;
         }
+    }
+
+    if (verbose) {
+        printVersion();
     }
 
     if (clayScript.empty() && clayFile.empty()) {
@@ -945,7 +988,7 @@ int main2(int argc, char **argv, char const* const* envp) {
             end = begin;
             while (*end && (*end != ENV_SEPARATOR))
                 ++end;
-            addSearchPath(llvm::StringRef(begin, end-begin));
+            searchPath.push_back(llvm::StringRef(begin, end-begin));
             begin = end + 1;
         }
         while (*end);
@@ -962,10 +1005,21 @@ int main2(int argc, char **argv, char const* const* envp) {
     llvm::sys::path::append(libDirProduction1, "../lib/lib-clay");
     llvm::sys::path::append(libDirProduction2, "lib-clay");
 
-    addSearchPath(libDirDevelopment);
-    addSearchPath(libDirProduction1);
-    addSearchPath(libDirProduction2);
-    addSearchPath(".");
+    searchPath.push_back(libDirDevelopment);
+    searchPath.push_back(libDirProduction1);
+    searchPath.push_back(libDirProduction2);
+    searchPath.push_back(PathString("."));
+
+    llvm::errs() << "using search path:\n";
+
+    for (std::vector<PathString>::const_iterator it = searchPath.begin();
+            it != searchPath.end(); ++it)
+    {
+        llvm::errs() << "    " << *it << "\n";
+    }
+
+    setSearchPath(searchPath);
+
 
     if (outputFile.empty()) {
         llvm::StringRef clayFileBasename = llvm::sys::path::stem(clayFile);
@@ -1022,11 +1076,11 @@ int main2(int argc, char **argv, char const* const* envp) {
     vector<string> sourceFiles;
     if (!clayScript.empty()) {
         clayScriptSource = clayScriptImports + "main() {\n" + clayScript + "}";
-        m = loadProgramSource("-e", clayScriptSource);
+        m = loadProgramSource("-e", clayScriptSource, verbose);
     } else if (generateDeps)
-        m = loadProgram(clayFile, &sourceFiles);
+        m = loadProgram(clayFile, &sourceFiles, verbose);
     else
-        m = loadProgram(clayFile, NULL);
+        m = loadProgram(clayFile, NULL, verbose);
     loadTimer.stop();
     compileTimer.start();
     codegenEntryPoints(m, codegenExternals);
@@ -1034,6 +1088,11 @@ int main2(int argc, char **argv, char const* const* envp) {
 
     if (generateDeps) {
         string errorInfo;
+
+        if (verbose) {
+            llvm::errs() << "generating dependencies into " << dependenciesOutputFile << "\n";
+        }
+
         llvm::raw_fd_ostream dependenciesOut(dependenciesOutputFile.c_str(),
                                              errorInfo,
                                              llvm::raw_fd_ostream::F_Binary);
@@ -1114,7 +1173,7 @@ int main2(int argc, char **argv, char const* const* envp) {
         outputTimer.start();
         result = generateBinary(llvmModule, targetMachine, outputFile, clangPath,
                                 optLevel, exceptions, sharedLib, genPIC, debug,
-                                arguments);
+                                arguments, verbose);
         outputTimer.stop();
         if (!result)
             return 1;

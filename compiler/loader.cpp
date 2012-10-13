@@ -140,8 +140,8 @@ static string toKey(DottedNamePtr name) {
 // locateModule
 //
 
-void addSearchPath(llvm::StringRef path) {
-    searchPath.push_back(path);
+void setSearchPath(const std::vector<PathString>& path) {
+    searchPath = path;
 }
 
 static bool locateFile(llvm::StringRef relativePath, PathString &path) {
@@ -246,7 +246,7 @@ static SourcePtr loadFile(llvm::StringRef fileName, vector<string> *sourceFiles)
 // loadModuleByName, loadDependents, loadProgram
 //
 
-static void loadDependents(ModulePtr m, vector<string> *sourceFiles);
+static void loadDependents(ModulePtr m, vector<string> *sourceFiles, bool verbose);
 static void initModule(ModulePtr m);
 static ModulePtr makePrimitivesModule();
 static ModulePtr makeOperatorsModule();
@@ -291,7 +291,7 @@ static void installGlobals(ModulePtr m) {
     }
 }
 
-static ModulePtr loadModuleByName(DottedNamePtr name, vector<string> *sourceFiles) {
+static ModulePtr loadModuleByName(DottedNamePtr name, vector<string> *sourceFiles, bool verbose) {
     string key = toKey(name);
 
     llvm::StringMap<ModulePtr>::iterator i = globalModules.find(key);
@@ -307,11 +307,14 @@ static ModulePtr loadModuleByName(DottedNamePtr name, vector<string> *sourceFile
     }
     else {
         PathString path = locateModule(name);
+        if (verbose) {
+            llvm::errs() << "loading module " << name->join() << " from " << path << "\n";
+        }
         module = parse(key, loadFile(path, sourceFiles));
     }
 
     globalModules[key] = module;
-    loadDependents(module, sourceFiles);
+    loadDependents(module, sourceFiles, verbose);
     installGlobals(module);
 
     return module;
@@ -327,13 +330,13 @@ static ModuleHolderPtr installHolder(ModuleHolderPtr mh, IdentifierPtr name) {
     return holder;
 }
 
-static void loadDependents(ModulePtr m, vector<string> *sourceFiles) {
+static void loadDependents(ModulePtr m, vector<string> *sourceFiles, bool verbose) {
     m->rootHolder = new ModuleHolder();
     m->publicRootHolder = new ModuleHolder();
     vector<ImportPtr>::iterator ii, iend;
     for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii) {
         ImportPtr x = *ii;
-        x->module = loadModuleByName(x->dottedName, sourceFiles);
+        x->module = loadModuleByName(x->dottedName, sourceFiles, verbose);
         switch (x->importKind) {
         case IMPORT_MODULE : {
             ImportModule *y = (ImportModule *)x.ptr();
@@ -391,23 +394,23 @@ static void loadDependents(ModulePtr m, vector<string> *sourceFiles) {
     }
 }
 
-static ModulePtr loadPrelude(vector<string> *sourceFiles) {
+static ModulePtr loadPrelude(vector<string> *sourceFiles, bool verbose) {
     DottedNamePtr dottedName = new DottedName();
     dottedName->parts.push_back(Identifier::get("prelude"));
-    return loadModuleByName(dottedName, sourceFiles);
+    return loadModuleByName(dottedName, sourceFiles, verbose);
 }
 
-ModulePtr loadProgram(llvm::StringRef fileName, vector<string> *sourceFiles) {
+ModulePtr loadProgram(llvm::StringRef fileName, vector<string> *sourceFiles, bool verbose) {
     globalMainModule = parse("", loadFile(fileName, sourceFiles));
-    ModulePtr prelude = loadPrelude(sourceFiles);
-    loadDependents(globalMainModule, sourceFiles);
+    ModulePtr prelude = loadPrelude(sourceFiles, verbose);
+    loadDependents(globalMainModule, sourceFiles, verbose);
     installGlobals(globalMainModule);
     initModule(prelude);
     initModule(globalMainModule);
     return globalMainModule;
 }
 
-ModulePtr loadProgramSource(llvm::StringRef name, llvm::StringRef source) {
+ModulePtr loadProgramSource(llvm::StringRef name, llvm::StringRef source, bool verbose) {
     SourcePtr mainSource = new Source(name,
         llvm::MemoryBuffer::getMemBufferCopy(source));
     if (llvmDIBuilder != NULL) {
@@ -418,8 +421,8 @@ ModulePtr loadProgramSource(llvm::StringRef name, llvm::StringRef source) {
 
     globalMainModule = parse("", mainSource);
     // Don't keep track of source files for -e script
-    ModulePtr prelude = loadPrelude(NULL);
-    loadDependents(globalMainModule, NULL);
+    ModulePtr prelude = loadPrelude(NULL, verbose);
+    loadDependents(globalMainModule, NULL, verbose);
     installGlobals(globalMainModule);
     initModule(prelude);
     initModule(globalMainModule);
