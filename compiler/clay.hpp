@@ -1059,6 +1059,8 @@ struct DottedName : public ANode {
         : ANode(DOTTED_NAME) {}
     DottedName(llvm::ArrayRef<IdentifierPtr> parts)
         : ANode(DOTTED_NAME), parts(parts.begin(), parts.end()) {}
+
+    string join() const;
 };
 
 
@@ -2565,9 +2567,9 @@ void getProcedureMonoTypes(ProcedureMono &mono, EnvPtr env,
     vector<FormalArgPtr> const &formalArgs, bool hasVarArg);
 
 void initLoader();
-void addSearchPath(llvm::StringRef path);
-ModulePtr loadProgram(llvm::StringRef fileName, vector<string> *sourceFiles);
-ModulePtr loadProgramSource(llvm::StringRef name, llvm::StringRef source);
+void setSearchPath(const std::vector<PathString>& path);
+ModulePtr loadProgram(llvm::StringRef fileName, vector<string> *sourceFiles, bool verbose);
+ModulePtr loadProgramSource(llvm::StringRef name, llvm::StringRef source, bool verbose);
 ModulePtr loadedModule(llvm::StringRef module);
 llvm::StringRef primOpName(PrimOpPtr x);
 ModulePtr preludeModule();
