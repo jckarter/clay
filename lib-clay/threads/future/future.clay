@@ -4,19 +4,34 @@ import uniquepointers.*;
 record Future[..T] (
     thread: Thread,
     result: Maybe[Tuple[..T]],
+    exception: Maybe[Exception],
 );
 
 private FunctionResultType(F) = ..Type(..(null(F)^)());
 
+[T]
+private asyncImpl(#T, f) --> future: Future[T] {
+    future.result <-- Maybe[T]();
+}
+
 [F]
 async(f: F) --> future: Future[..FunctionResultType(F)] {
     future.result <-- Type(future.result)();
-    var resultPtr = @future.result;
-    future.thread <-- startThread(=> { resultPtr^ = Maybe([..f()]); });
+    var futurePtr = @future;
+    var launcher = => {
+        try {
+            futurePtr^.result = Maybe([..f()]);
+        } catch (e) {
+            futurePtr^.exception = Maybe(e);
+        }
+    };
+    future.thread <-- startThread(launcher);
 }
 
 [..T]
 futureGet(future: Future[..T]): ..T {
     joinThread(future.thread);
+    if (just?(future.exception))
+        throw just(future.exception);
     return ..unpack(just(future.result));
 }
