@@ -1,5 +1,6 @@
 import threads.core.platform.*;
 import lambdas.*;
+import libc.(abort);
 
 record Thread (
     handle: ThreadHandle,
@@ -8,7 +9,17 @@ record Thread (
 
 overload RegularRecord?(#Thread) = false;
 
-startThread(proc) = Thread(startThreadImpl(allocateObject(FunctionBody[[], []](proc))), false);
+startThread(proc): Thread {
+    var launcher = => {
+        try {
+            proc();
+        } catch (e) {
+            printUnhandledExceptionToStderr(e);
+            abort();
+        }
+    };
+    return Thread(startThreadImpl(allocateObject(FunctionBody[[], []](launcher))), false);
+}
 
 joinThread(thread: Thread) {
     // TODO: lock

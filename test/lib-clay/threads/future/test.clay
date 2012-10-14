@@ -1,12 +1,25 @@
 import threads.future.*;
 import test.*;
 
+record MyException ();
+
+instance Exception (MyException);
+
 main() = testMain(
     TestSuite("threads.future", array(
-        TestCase("futureGet", test -> {
+        TestCase("normal single result", test -> {
             var x = 1;
             var future = async(-> x + 3);
             var r = futureGet(future);
             expectEqual(test, "futureGet", 4, r);
+        }),
+        TestCase("normal multiple results", test -> {
+            var future = async(-> { return 1, true, 'a'; });
+            var one, yes, a = futureGet(future);
+            expectEqual(test, "futureGet", [1, true, 'a'], [one, yes, a]);
+        }),
+        TestCase("exception", test -> {
+            var future = async(-> { throw MyException(); });
+            expectExceptionType(test, "futureGet", MyException, -> ..futureGet(future));
         }),
     )));

@@ -13,11 +13,7 @@ tags
 *.pyc
 *.out
 bin/
-build/
-build32/
-build64/
-build-debug/
-build-release/
+build*/
 /clay
 compiler/src/*.o
 compiler/src/*.dep

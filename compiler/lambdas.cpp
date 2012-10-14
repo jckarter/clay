@@ -585,7 +585,10 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
 
     case FIELD_REF : {
         FieldRef *y = (FieldRef *)x.ptr();
-        convertFreeVars(y->expr, env, ctx);
+        if (y->desugared == NULL)
+            desugarFieldRef(y, safeLookupModule(env));
+        if (!y->isDottedModuleName)
+            convertFreeVars(y->expr, env, ctx);
         break;
     }
 

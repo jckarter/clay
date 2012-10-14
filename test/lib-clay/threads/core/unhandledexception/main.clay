@@ -1,0 +1,9 @@
+import threads.core.*;
+
+record MyException ();
+
+instance Exception (MyException);
+
+main() {
+    var t = startThread(-> { throw MyException(); });
+}
