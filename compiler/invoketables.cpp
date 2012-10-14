@@ -113,6 +113,9 @@ static void initInvokeTables() {
 
 static bool shouldLogCallable(ObjectPtr callable)
 {
+    if (logMatchSymbols.empty())
+        return false;
+
     ModulePtr m = staticModule(callable);
     if (!m)
         return false;
@@ -124,8 +127,10 @@ static bool shouldLogCallable(ObjectPtr callable)
 
     pair<string,string> specificKey = make_pair(m->moduleName, name);
     pair<string,string> moduleGlobKey = make_pair(m->moduleName, string("*"));
+    pair<string,string> anyModuleKey = make_pair(string("*"), name);
     return logMatchSymbols.find(specificKey) != logMatchSymbols.end()
-        || logMatchSymbols.find(moduleGlobKey) != logMatchSymbols.end();
+        || logMatchSymbols.find(moduleGlobKey) != logMatchSymbols.end()
+        || logMatchSymbols.find(anyModuleKey) != logMatchSymbols.end();
 }
 
 InvokeSet* lookupInvokeSet(ObjectPtr callable,

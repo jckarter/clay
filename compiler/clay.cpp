@@ -649,10 +649,10 @@ int main2(int argc, char **argv, char const* const* envp) {
             ++i;
             char const *dot = strrchr(argv[i], '.');
             if (dot == NULL) {
-                llvm::errs() << "error: symbol name for -log-match must be in the form module.symbol\n";
-                return 1;
+                logMatchSymbols.insert(make_pair(string("*"), argv[i]));
+            } else {
+                logMatchSymbols.insert(make_pair(string((char const*)argv[i], dot), string(dot+1)));
             }
-            logMatchSymbols.insert(make_pair(string((char const*)argv[i], dot), string(dot+1)));
         }
         else if (strcmp(argv[i], "-e") == 0) {
             if (i+1 == argc) {
