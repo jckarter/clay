@@ -41,6 +41,7 @@
 #include <llvm/Bitcode/ReaderWriter.h>
 #include <llvm/CodeGen/LinkAllAsmWriterComponents.h>
 #include <llvm/CodeGen/LinkAllCodegenComponents.h>
+#include <llvm/CodeGen/ValueTypes.h>
 #include <llvm/DerivedTypes.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/GenericValue.h>
@@ -518,9 +519,8 @@ struct InstanceDecl;
 struct NewTypeDecl;
 struct Overload;
 struct Procedure;
-struct Intrinsic;
+struct IntrinsicSymbol;
 struct EnumDecl;
-struct Enumeration;
 struct EnumMember;
 struct GlobalVariable;
 struct GVarInstance;
@@ -673,7 +673,7 @@ typedef Pointer<InstanceDecl> InstanceDeclPtr;
 typedef Pointer<NewTypeDecl> NewTypeDeclPtr;
 typedef Pointer<Overload> OverloadPtr;
 typedef Pointer<Procedure> ProcedurePtr;
-typedef Pointer<Intrinsic> IntrinsicPtr;
+typedef Pointer<IntrinsicSymbol> IntrinsicPtr;
 typedef Pointer<EnumDecl> EnumDeclPtr;
 typedef Pointer<EnumMember> EnumMemberPtr;
 typedef Pointer<GlobalVariable> GlobalVariablePtr;
@@ -1981,10 +1981,17 @@ struct Procedure : public TopLevelItem {
     {}
 };
 
-struct Intrinsic : public TopLevelItem {
+struct IntrinsicInstance {
+    llvm::Function *function;
+    MultiPValuePtr outputTypes;
+    std::string error;
+};
+
+struct IntrinsicSymbol : public TopLevelItem {
     llvm::Intrinsic::ID id;
+    map<vector<TypePtr>, IntrinsicInstance> instances;
     
-    Intrinsic(IdentifierPtr name, llvm::Intrinsic::ID id)
+    IntrinsicSymbol(IdentifierPtr name, llvm::Intrinsic::ID id)
         : TopLevelItem(INTRINSIC, name, PUBLIC), id(id) {}
 };
 

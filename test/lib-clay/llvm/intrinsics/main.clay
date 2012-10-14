@@ -8,6 +8,15 @@ main() {
     println(ctlz);
     println(StaticModule(ctlz));
     println();
+    println(Type(leadingZeros (0x10ul)));
+    println(Type(trailingZeros(0x10ul)));
+    println(Type(leadingZeros (0x10u)));
+    println(Type(trailingZeros(0x10u)));
+    println(Type(leadingZeros (0x10us)));
+    println(Type(trailingZeros(0x10us)));
+    println(Type(leadingZeros (0x10uss)));
+    println(Type(trailingZeros(0x10uss)));
+    println();
     /*
     println(leadingZeros (0x10l));
     println(trailingZeros(0x10l));

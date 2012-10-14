@@ -2021,7 +2021,7 @@ void codegenAliasIndexing(GlobalAliasPtr x,
 //
 // codegenIntrinsic
 //
-static void codegenIntrinsic(Intrinsic *intrin, MultiCValue *args,
+static void codegenIntrinsic(IntrinsicSymbol *intrin, MultiCValue *args,
                              CodegenContext *ctx, MultiCValuePtr out)
 {
     error("intrinsic calls not yet supported");
@@ -2116,7 +2116,7 @@ void codegenCallExpr(ExprPtr callable,
     }
             
     case INTRINSIC : {
-        Intrinsic *intrin = (Intrinsic *)obj.ptr();
+        IntrinsicSymbol *intrin = (IntrinsicSymbol *)obj.ptr();
         MultiCValuePtr mcv = codegenMultiAsRef(args, env, ctx);
         codegenIntrinsic(intrin, mcv.ptr(), ctx, out);
         break;
@@ -2333,7 +2333,7 @@ void codegenCallValue(CValuePtr callable,
     }
             
     case INTRINSIC : {
-        Intrinsic *intrin = (Intrinsic *)obj.ptr();
+        IntrinsicSymbol *intrin = (IntrinsicSymbol *)obj.ptr();
         codegenIntrinsic(intrin, args.ptr(), ctx, out);
         break;
     }

@@ -123,8 +123,8 @@ static void getIntrinsicSymbols(ModulePtr module)
     {
         llvm::SmallString<64> identifier;
         getIntrinsicIdentifier(&identifier, intrinsicNames[id]);
-        module->publicSymbols[identifier].insert(new Intrinsic(Identifier::get(identifier), id));
-        module->allSymbols[identifier].insert(new Intrinsic(Identifier::get(identifier), id));
+        module->publicSymbols[identifier].insert(new IntrinsicSymbol(Identifier::get(identifier), id));
+        module->allSymbols[identifier].insert(new IntrinsicSymbol(Identifier::get(identifier), id));
     }
     module->publicSymbolsLoaded = 1;
     module->allSymbolsLoaded = 1;

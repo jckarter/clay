@@ -592,8 +592,8 @@ static void print(llvm::raw_ostream &out, const Object *x) {
         break;
     }
     case INTRINSIC : {
-        const Intrinsic *intrin = (const Intrinsic *)intrin;
-        out << "Intrinsic(" << intrin->name << ", " << intrin->id << ")";
+        const IntrinsicSymbol *intrin = (const IntrinsicSymbol *)intrin;
+        out << "IntrinsicSymbol(" << intrin->name << ", " << intrin->id << ")";
         break;
     }
 
@@ -978,7 +978,7 @@ void printName(llvm::raw_ostream &out, ObjectPtr x)
         break;
     }
     case INTRINSIC : {
-        Intrinsic *intrin = (Intrinsic *)x.ptr();
+        IntrinsicSymbol *intrin = (IntrinsicSymbol *)x.ptr();
         out << intrin->name->str;
         break;
     }
