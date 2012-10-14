@@ -247,7 +247,8 @@ static SourcePtr loadFile(llvm::StringRef fileName, vector<string> *sourceFiles)
 //
 
 static void loadDependents(ModulePtr m, vector<string> *sourceFiles, bool verbose);
-static void initModule(ModulePtr m);
+void initModule(ModulePtr m);
+
 static ModulePtr makePrimitivesModule();
 static ModulePtr makeOperatorsModule();
 
@@ -320,14 +321,11 @@ static ModulePtr loadModuleByName(DottedNamePtr name, vector<string> *sourceFile
     return module;
 }
 
-static void loadDependents(ModulePtr m, vector<string> *sourceFiles, bool verbose) {
-    set<string> importedNames;
-    vector<ImportPtr>::iterator ii, iend;
-    for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii) {
-        ImportPtr x = *ii;
-        x->module = loadModuleByName(x->dottedName, sourceFiles, verbose);
-        switch (x->importKind) {
-        case IMPORT_MODULE : {
+void loadDependent(ModulePtr m, vector<string> *sourceFiles, ImportPtr dependent, bool verbose) {
+    ImportPtr x = dependent;
+    x->module = loadModuleByName(x->dottedName, sourceFiles, verbose);
+    switch (x->importKind) {
+    case IMPORT_MODULE : {
             ImportModule *im = (ImportModule *)x.ptr();
             IdentifierPtr name = NULL;
             if (im->alias.ptr()) {
@@ -342,9 +340,9 @@ static void loadDependents(ModulePtr m, vector<string> *sourceFiles, bool verbos
                           "public imports of dotted module paths must have an \"as <name>\" alias");
                 llvm::StringMap<ModuleLookup> *node = &m->importedModuleNames;
                 for (vector<IdentifierPtr>::const_reverse_iterator i = parts.rbegin(),
-                         end = parts.rend() - 1;
-                     i != end;
-                     ++i)
+                     end = parts.rend() - 1;
+                i != end;
+                ++i)
                 {
                     node = &(*node)[(*i)->str].parents;
                 }
@@ -353,9 +351,9 @@ static void loadDependents(ModulePtr m, vector<string> *sourceFiles, bool verbos
             
             if (name.ptr()) {
                 string nameStr(name->str.begin(), name->str.end());
-                if (importedNames.count(nameStr))
+                if (m->importedNames.count(nameStr))
                     error(name, "name imported already: " + nameStr);
-                importedNames.insert(nameStr);
+                m->importedNames.insert(nameStr);
                 m->allSymbols[nameStr].insert(x->module.ptr());
                 if (x->visibility == PUBLIC)
                     m->publicSymbols[nameStr].insert(x->module.ptr());
@@ -363,25 +361,31 @@ static void loadDependents(ModulePtr m, vector<string> *sourceFiles, bool verbos
             
             break;
         }
-        case IMPORT_STAR :
-            break;
-        case IMPORT_MEMBERS : {
+    case IMPORT_STAR :
+        break;
+    case IMPORT_MEMBERS : {
             ImportMembers *y = (ImportMembers *)x.ptr();
             for (unsigned i = 0; i < y->members.size(); ++i) {
                 ImportedMember &z = y->members[i];
                 IdentifierPtr alias = z.alias.ptr() ? z.alias : z.name;
                 string aliasStr(alias->str.begin(), alias->str.end());
-                if (importedNames.count(aliasStr))
+                if (m->importedNames.count(aliasStr))
                     error(alias, "name imported already: " + aliasStr);
                 assert(y->aliasMap.count(aliasStr) == 0);
-                importedNames.insert(aliasStr);
+                m->importedNames.insert(aliasStr);
                 y->aliasMap[aliasStr] = z.name;
             }
             break;
         }
-        default :
+    default :
             assert(false);
-        }
+}
+}
+
+static void loadDependents(ModulePtr m, vector<string> *sourceFiles, bool verbose) {
+    vector<ImportPtr>::iterator ii, iend;
+    for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii) {
+        loadDependent(m, sourceFiles, *ii, verbose);
     }
 }
 
@@ -665,7 +669,7 @@ static void initModule(ModulePtr m, const vector<string>& importChain) {
     }
 }
 
-static void initModule(ModulePtr m) {
+void initModule(ModulePtr m) {
     initModule(m, vector<string>());
 }
 
@@ -1303,5 +1307,57 @@ DEFINE_OPERATOR_ACCESSOR(doIntegerRemainderChecked);
 DEFINE_OPERATOR_ACCESSOR(doIntegerShiftLeftChecked);
 DEFINE_OPERATOR_ACCESSOR(doIntegerNegateChecked);
 DEFINE_OPERATOR_ACCESSOR(doIntegerConvertChecked);
+
+void addGlobals(ModulePtr m, const vector<TopLevelItemPtr>& toplevels) {
+    vector<TopLevelItemPtr>::const_iterator i, end;
+    for (i = toplevels.begin(), end = toplevels.end();
+    i != end; ++i) {
+        m->topLevelItems.push_back(*i);
+        TopLevelItem *x = i->ptr();
+        x->env = m->env;
+        switch (x->objKind) {
+        case ENUMERATION : {
+                Enumeration *enumer = (Enumeration *)x;
+                TypePtr t = enumType(enumer);
+                addGlobal(m, enumer->name, enumer->visibility, t.ptr());
+                for (unsigned i = 0 ; i < enumer->members.size(); ++i) {
+                    EnumMember *member = enumer->members[i].ptr();
+                    member->index = (int)i;
+                    member->type = t;
+                    addGlobal(m, member->name, enumer->visibility, member);
+                }
+                break;
+            }
+        case PROCEDURE : {
+                Procedure *proc = (Procedure *)x;
+                if (proc->interface != NULL)
+                    proc->interface->env = m->env;
+                // fallthrough
+            }
+        default :
+                if (x->name.ptr())
+                    addGlobal(m, x->name, x->visibility, x);
+        break;
+    }
+
+    }
+
+    const vector<TopLevelItemPtr> &items = m->topLevelItems;
+    for (size_t i = items.size() - toplevels.size(); i < items.size(); ++i) {
+        Object *obj = items[i].ptr();
+        switch (obj->objKind) {
+        case OVERLOAD :
+            initOverload((Overload *)obj);
+            break;
+        case INSTANCE :
+            initVariantInstance((Instance *)obj);
+            break;
+        case STATIC_ASSERT_TOP_LEVEL:
+            checkStaticAssert((StaticAssertTopLevel *)obj);
+            break;
+        }
+    }
+
+}
 
 }
