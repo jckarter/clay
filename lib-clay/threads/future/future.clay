@@ -9,11 +9,6 @@ record Future[..T] (
 
 private FunctionResultType(F) = ..Type(..(null(F)^)());
 
-[T]
-private asyncImpl(#T, f) --> future: Future[T] {
-    future.result <-- Maybe[T]();
-}
-
 [F]
 async(f: F) --> future: Future[..FunctionResultType(F)] {
     future.result <-- Type(future.result)();
