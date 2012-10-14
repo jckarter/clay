@@ -22,6 +22,7 @@ ModulePtr loadedModule(llvm::StringRef module);
 ModulePtr preludeModule();
 ModulePtr primitivesModule();
 ModulePtr operatorsModule();
+ModulePtr intrinsicsModule();
 ModulePtr staticModule(ObjectPtr x);
 
 void addGlobals(ModulePtr m, llvm::ArrayRef<TopLevelItemPtr> toplevels);

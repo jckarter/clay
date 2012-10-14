@@ -343,50 +343,51 @@ public :
 //
 
 enum ObjectKind {
-    SOURCE,       // -- 0
+    SOURCE,
     LOCATION,
 
     IDENTIFIER,
     DOTTED_NAME,
 
     EXPRESSION,
-    EXPR_LIST,    // -- 5
+    EXPR_LIST,
     STATEMENT,
     CASE_BLOCK,
     CATCH,
 
     FORMAL_ARG,
-    RETURN_SPEC, // -- 10
+    RETURN_SPEC,
     LLVM_CODE,
     CODE,
 
     RECORD_DECL,
     RECORD_BODY,
-    RECORD_FIELD, // -- 15
+    RECORD_FIELD,
     VARIANT_DECL,
     INSTANCE_DECL,
     NEW_TYPE_DECL,
     OVERLOAD,
-    PROCEDURE,   // -- 20
+    PROCEDURE,
+    INTRINSIC,
     ENUM_DECL,   
     ENUM_MEMBER,
     GLOBAL_VARIABLE,
     EXTERNAL_PROCEDURE,
-    EXTERNAL_ARG, // -- 25
+    EXTERNAL_ARG,
     EXTERNAL_VARIABLE,  
     EVAL_TOPLEVEL,
 
     GLOBAL_ALIAS,
 
     IMPORT,
-    MODULE_DECLARATION,  // -- 30
+    MODULE_DECLARATION,
     MODULE,
 
     ENV,
 
     PRIM_OP,
 
-    TYPE, // -- 35
+    TYPE,
 
     PATTERN,    
     MULTI_PATTERN,
@@ -517,7 +518,9 @@ struct InstanceDecl;
 struct NewTypeDecl;
 struct Overload;
 struct Procedure;
+struct Intrinsic;
 struct EnumDecl;
+struct Enumeration;
 struct EnumMember;
 struct GlobalVariable;
 struct GVarInstance;
@@ -670,6 +673,7 @@ typedef Pointer<InstanceDecl> InstanceDeclPtr;
 typedef Pointer<NewTypeDecl> NewTypeDeclPtr;
 typedef Pointer<Overload> OverloadPtr;
 typedef Pointer<Procedure> ProcedurePtr;
+typedef Pointer<Intrinsic> IntrinsicPtr;
 typedef Pointer<EnumDecl> EnumDeclPtr;
 typedef Pointer<EnumMember> EnumMemberPtr;
 typedef Pointer<GlobalVariable> GlobalVariablePtr;
@@ -1977,6 +1981,12 @@ struct Procedure : public TopLevelItem {
     {}
 };
 
+struct Intrinsic : public TopLevelItem {
+    llvm::Intrinsic::ID id;
+    
+    Intrinsic(IdentifierPtr name, llvm::Intrinsic::ID id)
+        : TopLevelItem(INTRINSIC, name, PUBLIC), id(id) {}
+};
 
 struct NewTypeDecl : public TopLevelItem {
     ExprPtr expr;
@@ -2351,6 +2361,7 @@ struct Module : public ANode {
 
     bool topLevelLLVMGenerated;
     bool externalsGenerated;
+    bool isIntrinsicsModule;
 
     llvm::TrackingVH<llvm::MDNode> debugInfo;
 
@@ -2362,6 +2373,7 @@ struct Module : public ANode {
           allSymbolsLoaded(false), allSymbolsLoading(0),
           topLevelLLVMGenerated(false),
           externalsGenerated(false),
+          isIntrinsicsModule(false),
           debugInfo(NULL) {}
     Module(llvm::StringRef moduleName,
            llvm::ArrayRef<ImportPtr> imports,
@@ -2377,6 +2389,7 @@ struct Module : public ANode {
           allSymbolsLoaded(false), allSymbolsLoading(0),
           topLevelLLVMGenerated(false),
           externalsGenerated(false),
+          isIntrinsicsModule(false),
           debugInfo(NULL) {}
 
     llvm::DINameSpace getDebugInfo() { return llvm::DINameSpace(debugInfo); }

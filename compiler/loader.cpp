@@ -250,8 +250,6 @@ static SourcePtr loadFile(llvm::StringRef fileName, vector<string> *sourceFiles)
     return src;
 }
 
-
-
 //
 // loadModuleByName, loadDependents, loadProgram
 //
@@ -261,6 +259,7 @@ void initModule(ModulePtr m);
 
 static ModulePtr makePrimitivesModule();
 static ModulePtr makeOperatorsModule();
+static ModulePtr makeIntrinsicsModule();
 
 static void installGlobals(ModulePtr m) {
     m->env = new Env(m);
@@ -315,6 +314,8 @@ static ModulePtr loadModuleByName(DottedNamePtr name, vector<string> *sourceFile
         module = makePrimitivesModule();
     } else if (key == "__operators__") {
         module = makeOperatorsModule();
+    } else if (key == "__intrinsics__") {
+        module = makeIntrinsicsModule();
     }
     else {
         PathString path = locateModule(name);
@@ -608,6 +609,9 @@ static void initOverload(OverloadPtr x) {
             a->overloads.insert(a->overloads.begin(), x);
             break;
         }
+        case INTRINSIC : {
+            error(x->target, "invalid overload target");
+        }
         default : {
             error(x->target, "invalid overload target");
         }
@@ -812,6 +816,9 @@ ModulePtr staticModule(ObjectPtr x) {
     }
     case MODULE : {
         return (Module*)x.ptr();
+    }
+    case INTRINSIC : {
+        return intrinsicsModule();
     }
     case GLOBAL_VARIABLE :
     case GLOBAL_ALIAS :
@@ -1224,7 +1231,12 @@ static ModulePtr makeOperatorsModule() {
     return operators;
 }
 
-
+ModulePtr makeIntrinsicsModule() {
+    ModulePtr intrinsics = new Module("__intrinsics__");
+    intrinsics->isIntrinsicsModule = true;
+    return intrinsics;
+}
+
 //
 // access names from other modules
 //
@@ -1233,6 +1245,13 @@ ModulePtr primitivesModule() {
     static ModulePtr cached;
     if (!cached)
         cached = loadedModule("__primitives__");
+    return cached;
+}
+
+ModulePtr intrinsicsModule() {
+    static ModulePtr cached;
+    if (!cached)
+        cached = loadedModule("__intrinsics__");
     return cached;
 }
 

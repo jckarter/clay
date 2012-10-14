@@ -96,12 +96,50 @@ static const llvm::StringMap<ImportSet> &getAllSymbols(ModulePtr module);
 
 static void addImportedSymbols(ModulePtr module, bool publicOnly);
 
+static void getIntrinsicIdentifier(llvm::SmallVectorImpl<char> *out, llvm::StringRef in)
+{
+    // + 5 because all intrinsic names start with "llvm."
+    for (char const *i = in.begin() + 5, *end = in.end(); i != end; ++i)
+        if (*i == '.')
+            out->push_back('_');
+        else
+            out->push_back(*i);
+}
+
+static void getIntrinsicSymbols(ModulePtr module)
+{
+    assert(module->isIntrinsicsModule);
+    module->publicSymbols.clear();
+    module->allSymbols.clear();
+    static const char * const intrinsicNames[] = {
+        "",
+#define GET_INTRINSIC_NAME_TABLE
+#include "llvm/Intrinsics.gen"
+#undef GET_INTRINSIC_NAME_TABLE
+    };
+    for (llvm::Intrinsic::ID id = llvm::Intrinsic::ID(1);
+         id < llvm::Intrinsic::num_intrinsics;
+         ++id)
+    {
+        llvm::SmallString<64> identifier;
+        getIntrinsicIdentifier(&identifier, intrinsicNames[id]);
+        module->publicSymbols[identifier].insert(new Intrinsic(Identifier::get(identifier), id));
+        module->allSymbols[identifier].insert(new Intrinsic(Identifier::get(identifier), id));
+    }
+    module->publicSymbolsLoaded = 1;
+    module->allSymbolsLoaded = 1;
+}
+
 static const llvm::StringMap<ImportSet> &getPublicSymbols(ModulePtr module)
 {
     if (module->publicSymbolsLoaded)
         return module->publicSymbols;
     if (module->publicSymbolsLoading >= 1)
         return module->publicSymbols;
+    if (module->isIntrinsicsModule) {
+        getIntrinsicSymbols(module);
+        return module->publicSymbols;
+    }
     module->publicSymbolsLoading += 1;
     addImportedSymbols(module, /*publicOnly=*/ true);
     module->publicSymbolsLoading -= 1;
@@ -114,6 +152,10 @@ static const llvm::StringMap<ImportSet> &getAllSymbols(ModulePtr module)
         return module->allSymbols;
     if (module->allSymbolsLoading >= 1)
         return module->allSymbols;
+    if (module->isIntrinsicsModule) {
+        getIntrinsicSymbols(module);
+        return module->allSymbols;
+    }
     module->allSymbolsLoading += 1;
 
     addImportedSymbols(module, /*publicOnly=*/ false);
@@ -266,6 +308,7 @@ retry:
     llvm::StringMap<ImportSet>::const_iterator i =
         module->publicSymbols.find(name->str);
     if ((i == module->publicSymbols.end()) || (i->second.empty())) {
+        
         if (!module->publicSymbolsLoaded) {
             getPublicSymbols(module);
             module->publicSymbolsLoaded = true;

@@ -1,0 +1,21 @@
+import printer.(println);
+import __intrinsics__.(ctlz, cttz);
+
+leadingZeros(x) = ctlz(x, #false);
+trailingZeros(x) = cttz(x, #false);
+
+main() {
+    println(ctlz);
+    println(StaticModule(ctlz));
+    println();
+    /*
+    println(leadingZeros (0x10l));
+    println(trailingZeros(0x10l));
+    println(leadingZeros (0x10));
+    println(trailingZeros(0x10));
+    println(leadingZeros (0x10s));
+    println(trailingZeros(0x10s));
+    println(leadingZeros (0x10ss));
+    println(trailingZeros(0x10ss));
+    */
+}

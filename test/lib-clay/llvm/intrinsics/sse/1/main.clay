@@ -1,8 +1,7 @@
 import printer.(println);
 import simd.*;
 import libc.(printf);
-
-external ("llvm.x86.sse2.sqrt.pd",llvm) x86_sqrtpd(a: Vec[Double, 2]) : Vec[Double, 2];
+import __intrinsics__.(x86_sse2_sqrt_pd as x86_sqrtpd);
 
 main() {
     println(x86_sqrtpd(Vec[Double,2](4.0)));

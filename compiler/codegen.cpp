@@ -1336,6 +1336,7 @@ void codegenStaticObject(ObjectPtr x,
     case PRIM_OP :
     case PROCEDURE :
     case MODULE :
+    case INTRINSIC :
     case IDENTIFIER : {
         assert(out->size() == 1);
         assert(out->values[0]->type == staticType(x));
@@ -2017,6 +2018,14 @@ void codegenAliasIndexing(GlobalAliasPtr x,
 }
 
 
+//
+// codegenIntrinsic
+//
+static void codegenIntrinsic(Intrinsic *intrin, MultiCValue *args,
+                             CodegenContext *ctx, MultiCValuePtr out)
+{
+    error("intrinsic calls not yet supported");
+}
 
 //
 // codegenCallExpr
@@ -2103,6 +2112,13 @@ void codegenCallExpr(ExprPtr callable,
             MultiCValuePtr mcv = codegenMultiAsRef(args, env, ctx);
             codegenCallCode(entry, mcv, ctx, out);
         }
+        break;
+    }
+            
+    case INTRINSIC : {
+        Intrinsic *intrin = (Intrinsic *)obj.ptr();
+        MultiCValuePtr mcv = codegenMultiAsRef(args, env, ctx);
+        codegenIntrinsic(intrin, mcv.ptr(), ctx, out);
         break;
     }
 
@@ -2313,6 +2329,12 @@ void codegenCallValue(CValuePtr callable,
             assert(entry->analyzed);
             codegenCallCode(entry, args, ctx, out);
         }
+        break;
+    }
+            
+    case INTRINSIC : {
+        Intrinsic *intrin = (Intrinsic *)obj.ptr();
+        codegenIntrinsic(intrin, args.ptr(), ctx, out);
         break;
     }
 
@@ -5017,6 +5039,7 @@ void codegenPrimOp(PrimOpPtr x,
             case RECORD_DECL :
             case VARIANT_DECL :
             case PROCEDURE :
+            case INTRINSIC :
             case GLOBAL_ALIAS:
                 isSymbol = true;
                 break;
@@ -5041,6 +5064,7 @@ void codegenPrimOp(PrimOpPtr x,
         case RECORD_DECL :
         case VARIANT_DECL :
         case PROCEDURE :
+        case INTRINSIC :
         case GLOBAL_ALIAS:
             break;
         default :
@@ -5746,7 +5770,10 @@ void codegenPrimOp(PrimOpPtr x,
             break;
         case PRIM_OP :
             if (!isOverloadablePrimOp(callable))
-                argumentError(0, "invalid callable");
+                argumentError(0, "pointer to primitive cannot be taken");
+            break;
+        case INTRINSIC :
+            argumentError(0, "pointer to LLVM intrinsic cannot be taken");
             break;
         default :
             argumentError(0, "invalid callable");
@@ -5795,7 +5822,10 @@ void codegenPrimOp(PrimOpPtr x,
             break;
         case PRIM_OP :
             if (!isOverloadablePrimOp(callable))
-                argumentError(0, "invalid callable");
+                argumentError(0, "pointer to primitive cannot be taken");
+            break;
+        case INTRINSIC :
+            argumentError(0, "pointer to intrinsic cannot be taken");
             break;
         default :
             argumentError(0, "invalid callable");

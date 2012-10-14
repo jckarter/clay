@@ -428,6 +428,7 @@ ObjectPtr makeTupleValue(llvm::ArrayRef<ObjectPtr> elements)
         case TYPE :
         case PRIM_OP :
         case PROCEDURE :
+        case INTRINSIC :
         case GLOBAL_ALIAS :
         case RECORD_DECL :
         case VARIANT_DECL :
@@ -1297,6 +1298,7 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
     case PRIM_OP :
     case PROCEDURE :
     case MODULE :
+    case INTRINSIC :
     case IDENTIFIER : {
         assert(out->size() == 1);
         assert(out->values[0]->type == staticType(x));
@@ -1616,6 +1618,11 @@ void evalCallExpr(ExprPtr callable,
         }
         break;
     }
+            
+    case INTRINSIC : {
+        error(callable, "compile-time calls to LLVM intrinsics are not supported");
+        break;
+    }
 
     default :
         error("invalid call expression");
@@ -1782,6 +1789,11 @@ void evalCallValue(EValuePtr callable,
             assert(entry->analyzed);
             evalCallCode(entry, args, out);
         }
+        break;
+    }
+    
+    case INTRINSIC : {
+        error("compile-time calls to LLVM intrinsics are not supported");
         break;
     }
 
@@ -3658,6 +3670,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
             case RECORD_DECL :
             case VARIANT_DECL :
             case PROCEDURE :
+            case INTRINSIC :
             case GLOBAL_ALIAS:
                 isSymbol = true;
                 break;
@@ -3684,6 +3697,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         case RECORD_DECL :
         case VARIANT_DECL :
         case PROCEDURE :
+        case INTRINSIC :
         case GLOBAL_ALIAS :
             break;
         default :

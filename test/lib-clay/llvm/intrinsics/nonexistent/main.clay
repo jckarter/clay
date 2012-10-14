@@ -1,0 +1,3 @@
+import __intrinsics__.(ventcore_frogblast);
+
+main() { println(ventcore_frogblast); }

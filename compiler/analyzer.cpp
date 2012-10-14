@@ -69,6 +69,7 @@ static TypePtr objectType(ObjectPtr x)
     case TYPE :
     case PRIM_OP :
     case PROCEDURE :
+    case INTRINSIC :
     case GLOBAL_ALIAS :
     case RECORD_DECL :
     case VARIANT_DECL :
@@ -951,6 +952,7 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
     case PRIM_OP :
     case PROCEDURE :
     case MODULE :
+    case INTRINSIC :
     case IDENTIFIER : {
         TypePtr t = staticType(x);
         return new MultiPValue(PVData(t, true));
@@ -1581,6 +1583,15 @@ MultiPValuePtr analyzeReturn(llvm::ArrayRef<uint8_t> returnIsRef,
 }
 
 
+//
+// analyzeIntrinsic
+//
+
+static MultiPValuePtr analyzeIntrinsic(Intrinsic *intrin, MultiPValue *args)
+{
+    error("intrinsic calls not yet supported");
+    return NULL;
+}
 
 //
 // analyzeCallExpr
@@ -1643,6 +1654,14 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
         if (!entry->analyzed)
             return NULL;
         return analyzeReturn(entry->returnIsRef, entry->returnTypes);
+    }
+            
+    case INTRINSIC : {
+        Intrinsic *intrin = (Intrinsic*)obj.ptr();
+        MultiPValuePtr mpv = analyzeMulti(args, env, 0);
+        if (!mpv)
+            return NULL;
+        return analyzeIntrinsic(intrin, mpv.ptr());
     }
 
     default :
@@ -1817,6 +1836,11 @@ MultiPValuePtr analyzeCallValue(PVData const &callable,
             return analyzeReturn(entry->returnIsRef, entry->returnTypes);
     }
 
+    case INTRINSIC : {
+        Intrinsic *intrin = (Intrinsic*)obj.ptr();
+        return analyzeIntrinsic(intrin, args.ptr());
+    }
+        
     default :
         error("invalid call expression");
         return NULL;

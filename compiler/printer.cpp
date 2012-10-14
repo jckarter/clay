@@ -591,6 +591,11 @@ static void print(llvm::raw_ostream &out, const Object *x) {
         out << "Procedure(" << y->name << ")";
         break;
     }
+    case INTRINSIC : {
+        const Intrinsic *intrin = (const Intrinsic *)intrin;
+        out << "Intrinsic(" << intrin->name << ", " << intrin->id << ")";
+        break;
+    }
 
     case ENUM_DECL : {
         const EnumDecl *y = (const EnumDecl *)x;
@@ -970,6 +975,11 @@ void printName(llvm::raw_ostream &out, ObjectPtr x)
     case MODULE : {
         Module *m = (Module *)x.ptr();
         out << m->moduleName;
+        break;
+    }
+    case INTRINSIC : {
+        Intrinsic *intrin = (Intrinsic *)x.ptr();
+        out << intrin->name->str;
         break;
     }
     case PRIM_OP : {
