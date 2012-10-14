@@ -3,6 +3,6 @@ import numbers.parser.*;
 import complex.*;
 
 main() {
-    println(Float80("4.5"));
-    println(Imag80("7.75"));
+    println(parse(Float80, "4.5"));
+    println(parse(Imag80, "7.75"));
 }

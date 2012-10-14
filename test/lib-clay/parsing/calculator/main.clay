@@ -17,7 +17,7 @@ expr(input) : Maybe[Int] = expr2(input);
 
 var bracketed = modify(x => x.1, ['(', expr, ')']);
 var digit = condition(c => ((c >= '0') and (c <= '9')));
-var number = modify(Int, oneOrMore(digit));
+var number = modify(x -> parse(Int, x), oneOrMore(digit));
 var factor = choice(number, bracketed);
 var term = modify(foldTail, [factor, zeroOrMore([choice('*', '\\'), factor])]);
 var expr2 = modify(foldTail, [term, zeroOrMore([choice('+','-'), term])]);

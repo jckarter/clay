@@ -8,7 +8,7 @@ import parsing.combinators.wrapper.*;
 import printer.*;
 
 var digit = condition(c -> (c >= '0') and (c <= '9'));
-var number = modify(Int, oneOrMore(digit));
+var number = modify(x -> parse(Int, x), oneOrMore(digit));
 
 // (strict, opt)
 define makeSeparatedListParser;
