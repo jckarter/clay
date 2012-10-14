@@ -21,6 +21,16 @@ instance Exception (NoException);
 
 overload Exception() = Exception(NoException());
 
+record GenericException (
+    message: StringLiteralRef,
+);
+[S when StringLiteral?(S)]
+overload GenericException(#S) = GenericException(StringLiteralRef(S));
+
+instance Exception (GenericException);
+
+
+
 record ExceptionContext (
     backtrace: Backtrace,
     file: StringLiteralRef,

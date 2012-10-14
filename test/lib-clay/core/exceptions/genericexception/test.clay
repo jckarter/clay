@@ -1,0 +1,9 @@
+import test.*;
+
+main() = testMain(
+    TestSuite("core.exceptions", array(
+        TestCase("GenericException", test -> {
+            var f = -> { throw GenericException("hi there"); };
+            expectExceptionType(test, "GenericException", GenericException, f);
+        }),
+    )));
