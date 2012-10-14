@@ -322,12 +322,10 @@ static ModulePtr loadModuleByName(DottedNamePtr name, vector<string> *sourceFile
 }
 
 void loadDependent(ModulePtr m, vector<string> *sourceFiles, ImportPtr dependent, bool verbose) {
-    vector<ImportPtr>::iterator ii, iend;
-    for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii) {
-        ImportPtr x = *ii;
-        x->module = loadModuleByName(x->dottedName, sourceFiles, verbose);
-        switch (x->importKind) {
-        case IMPORT_MODULE : {
+    ImportPtr x = dependent;
+    x->module = loadModuleByName(x->dottedName, sourceFiles, verbose);
+    switch (x->importKind) {
+    case IMPORT_MODULE : {
             ImportModule *im = (ImportModule *)x.ptr();
             IdentifierPtr name = NULL;
             if (im->alias.ptr()) {
@@ -342,9 +340,9 @@ void loadDependent(ModulePtr m, vector<string> *sourceFiles, ImportPtr dependent
                           "public imports of dotted module paths must have an \"as <name>\" alias");
                 llvm::StringMap<ModuleLookup> *node = &m->importedModuleNames;
                 for (vector<IdentifierPtr>::const_reverse_iterator i = parts.rbegin(),
-                         end = parts.rend() - 1;
-                     i != end;
-                     ++i)
+                     end = parts.rend() - 1;
+                i != end;
+                ++i)
                 {
                     node = &(*node)[(*i)->str].parents;
                 }
@@ -363,9 +361,9 @@ void loadDependent(ModulePtr m, vector<string> *sourceFiles, ImportPtr dependent
             
             break;
         }
-        case IMPORT_STAR :
-            break;
-        case IMPORT_MEMBERS : {
+    case IMPORT_STAR :
+        break;
+    case IMPORT_MEMBERS : {
             ImportMembers *y = (ImportMembers *)x.ptr();
             for (unsigned i = 0; i < y->members.size(); ++i) {
                 ImportedMember &z = y->members[i];
@@ -379,10 +377,9 @@ void loadDependent(ModulePtr m, vector<string> *sourceFiles, ImportPtr dependent
             }
             break;
         }
-        default :
+    default :
             assert(false);
-        }
-    }
+}
 }
 
 static void loadDependents(ModulePtr m, vector<string> *sourceFiles, bool verbose) {
