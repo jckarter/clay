@@ -104,13 +104,13 @@ overload select(a:A, f) {
 
 
 
-/// @section  min, max for sequences 
+/// @section  selectMin, selectMax for sequences 
 
 [A when Sequence?(A)]
-overload min(a:A) = forward select(a, lesser?);
+selectMin(a:A) = forward select(a, lesser?);
 
 [A when Sequence?(A)]
-overload max(a:A) = forward select(a, greaterEquals?);
+selectMax(a:A) = forward select(a, greaterEquals?);
 
 
 

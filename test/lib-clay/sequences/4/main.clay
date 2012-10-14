@@ -1,4 +1,4 @@
-import algorithms.(find,reduce,reduceBy,sum,product,binarySearch);
+import algorithms.(find,reduce,reduceBy,sum,product,binarySearch,selectMin,selectMax);
 import printer.(println,print,printTo);
 import sharedpointers.*;
 import sequences.*;
@@ -74,11 +74,11 @@ main() {
     }
 
     {
-        // test sum, product, min, max
+        // test sum, product, selectMin, selectMax
         var a = Vector(range(1, 11));
         println(sum(a));
         println(product(a));
-        swap(min(a), max(a));
+        swap(selectMin(a), selectMax(a));
         printList(a);
     }
 
