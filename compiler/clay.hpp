@@ -2378,6 +2378,8 @@ struct Module : public ANode {
     bool allSymbolsLoaded;
     int allSymbolsLoading;
 
+    set<string> importedNames;
+
     bool topLevelLLVMGenerated;
     bool externalsGenerated;
 

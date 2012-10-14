@@ -322,7 +322,6 @@ static ModulePtr loadModuleByName(DottedNamePtr name, vector<string> *sourceFile
 }
 
 void loadDependent(ModulePtr m, vector<string> *sourceFiles, ImportPtr dependent, bool verbose) {
-    set<string> importedNames;
     vector<ImportPtr>::iterator ii, iend;
     for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii) {
         ImportPtr x = *ii;
@@ -354,9 +353,9 @@ void loadDependent(ModulePtr m, vector<string> *sourceFiles, ImportPtr dependent
             
             if (name.ptr()) {
                 string nameStr(name->str.begin(), name->str.end());
-                if (importedNames.count(nameStr))
+                if (m->importedNames.count(nameStr))
                     error(name, "name imported already: " + nameStr);
-                importedNames.insert(nameStr);
+                m->importedNames.insert(nameStr);
                 m->allSymbols[nameStr].insert(x->module.ptr());
                 if (x->visibility == PUBLIC)
                     m->publicSymbols[nameStr].insert(x->module.ptr());
@@ -372,10 +371,10 @@ void loadDependent(ModulePtr m, vector<string> *sourceFiles, ImportPtr dependent
                 ImportedMember &z = y->members[i];
                 IdentifierPtr alias = z.alias.ptr() ? z.alias : z.name;
                 string aliasStr(alias->str.begin(), alias->str.end());
-                if (importedNames.count(aliasStr))
+                if (m->importedNames.count(aliasStr))
                     error(alias, "name imported already: " + aliasStr);
                 assert(y->aliasMap.count(aliasStr) == 0);
-                importedNames.insert(aliasStr);
+                m->importedNames.insert(aliasStr);
                 y->aliasMap[aliasStr] = z.name;
             }
             break;
