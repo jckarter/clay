@@ -63,7 +63,7 @@ makeFunction(forward x:T, ..In) {
 
 [..I, ..O]
 overload call(x:Function[[..I], [..O]], forward ..args:I) : ..O {
-    return forward ..x.body^.code(x.body^.obj^, ..args);
+    return forward call(x.body^, ..args);
 }
 
 [..I, ..O]
@@ -72,11 +72,16 @@ alias overload MonoInputTypes(x:Function[[..I], [..O]]) = ..I;
 
 /// @section  FunctionBody 
 
-private record FunctionBody[In, Out] (
+record FunctionBody[In, Out] (
     obj : Pointer[Opaque],
     code : CodePointer[[Opaque, ..unpack(In)], Out],
     destructor : CodePointer[[Opaque],[]],
 );
+
+[..I, ..O]
+overload call(x:FunctionBody[[..I], [..O]], forward ..args:I) : ..O {
+    return forward ..x.code(x.obj^, ..args);
+}
 
 [..I, ..O, T]
 alias overload FunctionBody[[..I],[..O]](x:T) --> returned:FunctionBody[[..I],[..O]] {
