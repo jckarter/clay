@@ -755,6 +755,12 @@ struct Source : public Object {
             error("unable to open file " + fileName + ": " + ec.message());
     }
 
+    Source(llvm::StringRef lineOfCode, int dummy)
+        : Object(SOURCE), debugInfo(NULL)
+    {
+                buffer.reset(llvm::MemoryBuffer::getMemBufferCopy(lineOfCode));
+    }
+
     Source(llvm::StringRef fileName, llvm::MemoryBuffer *buffer)
         : Object(SOURCE), fileName(fileName), buffer(buffer), debugInfo(NULL)
     { }
@@ -862,6 +868,7 @@ private :
 };
 
 void setAbortOnError(bool flag);
+void setExitOnError(bool flag);
 void warning(llvm::Twine const &msg);
 
 void fmtError(const char *fmt, ...);
@@ -1011,7 +1018,7 @@ void tokenize(SourcePtr source, vector<Token> &tokens);
 void tokenize(SourcePtr source, size_t offset, size_t length,
               vector<Token> &tokens);
 
-
+bool isSpace(char c);
 
 //
 // AST
@@ -2440,7 +2447,10 @@ void parseStatements(SourcePtr source, int offset, int length,
     vector<StatementPtr> &statements);
 void parseTopLevelItems(SourcePtr source, int offset, int length,
     vector<TopLevelItemPtr> &topLevels);
-
+void parseInteractive(SourcePtr source, int offset, int length,
+                      vector<TopLevelItemPtr>& toplevels,
+                      vector<ImportPtr>& imports,
+                      vector<StatementPtr>& stmts);
 
 
 //
@@ -2552,6 +2562,11 @@ ExprPtr foreignExpr(EnvPtr env, ExprPtr expr);
 ExprPtr lookupCallByNameExprHead(EnvPtr env);
 Location safeLookupCallByNameLocation(EnvPtr env);
 
+//
+// interactive module
+//
+
+void runInteractive(llvm::Module *llvmModule, ModulePtr module);
 
 
 //
@@ -2577,7 +2592,9 @@ ModulePtr primitivesModule();
 ModulePtr operatorsModule();
 ModulePtr staticModule(ObjectPtr x);
 
-
+void addGlobals(ModulePtr m, const vector<TopLevelItemPtr>& toplevels);
+void loadDependent(ModulePtr m, vector<string> *sourceFiles, ImportPtr dependent, bool verbose);
+void initModule(ModulePtr m);
 
 //
 // PrimOp
@@ -3802,6 +3819,9 @@ EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env);
 //
 // codegen
 //
+
+void codegenBeforeRepl(ModulePtr module);
+void codegenAfterRepl(llvm::Function*& ctor, llvm::Function*& dtor);
 
 static const unsigned short DW_LANG_user_CLAY = 0xC1A4;
 

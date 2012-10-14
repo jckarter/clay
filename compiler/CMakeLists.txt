@@ -11,6 +11,7 @@ set(COMPILER_SOURCES
     evaluator.cpp
     externals.cpp
     hirestimer.cpp
+    interactive.cpp
     invoketables.cpp
     lambdas.cpp
     lexer.cpp
@@ -62,6 +63,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 else()
     set(CLAY_CXXFLAGS "${LLVM_CXXFLAGS} -DNDEBUG")
 endif()
+set(CLAY_CXXFLAGS "${CLAY_CXXFLAGS} -fexceptions")
 
 set(ENABLE_PCH False CACHE BOOL
     "Use precompiled headers when building the compiler. (experimental)")

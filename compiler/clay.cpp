@@ -135,77 +135,83 @@ static void addOptimizationPasses(llvm::PassManager &passes,
     }
 }
 
+static bool linkLibraries(llvm::Module *module, const vector<string>& libSearchPaths, const vector<string>& libs)
+{
+    if (libs.empty())
+        return true;
+    llvm::Linker linker("clay", llvmModule, llvm::Linker::Verbose);
+    linker.addSystemPaths();
+    linker.addPaths(libSearchPaths);
+    for (size_t i = 0; i < libs.size(); ++i){
+        string lib = libs[i];
+        llvmModule->addLibrary(lib);
+        //as in cling/lib/Interpreter/Interpreter.cpp
+        bool isNative = true;
+        if (linker.LinkInLibrary(lib, isNative)) {
+            // that didn't work, try bitcode:
+            llvm::sys::Path FilePath(lib);
+            std::string Magic;
+            if (!FilePath.getMagicNumber(Magic, 64)) {
+                // filename doesn't exist...
+                linker.releaseModule();
+                return false;
+            }
+            if (llvm::sys::IdentifyFileType(Magic.c_str(), 64)
+                == llvm::sys::Bitcode_FileType) {
+                // We are promised a bitcode file, complain if it fails
+                linker.setFlags(0);
+                if (linker.LinkInFile(llvm::sys::Path(lib), isNative)) {
+                    linker.releaseModule();
+                    return false;
+                }
+            } else {
+                // Nothing the linker can handle
+                linker.releaseModule();
+                return false;
+            }
+        } else if (isNative) {
+            // native shared library, load it!
+            llvm::sys::Path SoFile = linker.FindLib(lib);
+            if (SoFile.isEmpty())
+            {
+                llvm::errs() << "Couldn't find shared library " << lib << "\n";
+                linker.releaseModule();
+                return false;
+            }
+            std::string errMsg;
+            bool hasError = llvm::sys::DynamicLibrary
+                            ::LoadLibraryPermanently(SoFile.str().c_str(), &errMsg);
+            if (hasError) {
+                if (hasError) {
+                    llvm::errs() << "Couldn't load shared library " << lib << "\n" << errMsg.c_str();
+                    linker.releaseModule();
+                    return false;
+                }
+
+            }
+        }
+    }
+    linker.releaseModule();
+    return true;
+}
+
 static bool runModule(llvm::Module *module,
                       vector<string> &argv,
                       char const* const* envp,
                       const vector<string>& libSearchPaths,
                       const vector<string>& libs)
 {
-    if (libs.size() > 0){
-        llvm::Linker linker("clay", llvmModule, llvm::Linker::Verbose);
-        linker.addSystemPaths();
-        linker.addPaths(libSearchPaths);
-        for (size_t i = 0; i < libs.size(); ++i){
-            string lib = libs[i];
-            llvmModule->addLibrary(lib);
-            //as in cling/lib/Interpreter/Interpreter.cpp
-            bool isNative = true;
-            if (linker.LinkInLibrary(lib, isNative)) {
-                // that didn't work, try bitcode:
-                llvm::sys::Path FilePath(lib);
-                std::string Magic;
-                if (!FilePath.getMagicNumber(Magic, 64)) {
-                    // filename doesn't exist...
-                    linker.releaseModule();
-                    return false;
-                }
-                if (llvm::sys::IdentifyFileType(Magic.c_str(), 64)
-                    == llvm::sys::Bitcode_FileType) {
-                    // We are promised a bitcode file, complain if it fails
-                    linker.setFlags(0);
-                    if (linker.LinkInFile(llvm::sys::Path(lib), isNative)) {
-                        linker.releaseModule();
-                        return false;
-                    }
-                } else {
-                    // Nothing the linker can handle
-                    linker.releaseModule();
-                    return false;
-                }
-            } else if (isNative) {
-                // native shared library, load it!
-                llvm::sys::Path SoFile = linker.FindLib(lib);
-                if (SoFile.isEmpty())
-                {
-                    llvm::errs() << "Couldn't find shared library " << lib << "\n";
-                    linker.releaseModule();
-                    return false;
-                }
-                std::string errMsg;
-                bool hasError = llvm::sys::DynamicLibrary
-                                ::LoadLibraryPermanently(SoFile.str().c_str(), &errMsg);
-                if (hasError) {
-                    if (hasError) {
-                        llvm::errs() << "Couldn't load shared library " << lib << "\n" << errMsg.c_str();
-                        linker.releaseModule();
-                        return false;
-                    }
-
-                }
-            }
-        }
-        linker.releaseModule();
+    if (!linkLibraries(module, libSearchPaths, libs)) {
+        return false;
     }
     llvm::EngineBuilder eb(llvmModule);
     llvm::ExecutionEngine *engine = eb.create();
     llvm::Function *mainFunc = module->getFunction("main");
-
     if (!mainFunc) {
         llvm::errs() << "no main function to -run\n";
         delete engine;
         return false;
     }
-
     engine->runStaticConstructorsDestructors(false);
     engine->runFunctionAsMain(mainFunc, argv, envp);
     engine->runStaticConstructorsDestructors(true);
@@ -537,6 +543,7 @@ int main2(int argc, char **argv, char const* const* envp) {
     bool exceptions = true;
     bool abortOnError = false;
     bool run = false;
+    bool repl = false;
     bool verbose = false;
     bool crossCompiling = false;
     bool showTiming = false;
@@ -621,6 +628,8 @@ int main2(int argc, char **argv, char const* const* envp) {
             exceptions = true;
         }
         else if (strcmp(argv[i], "-no-exceptions") == 0) {
+
+
             exceptions = false;
         }
         else if (strcmp(argv[i], "-pic") == 0) {
@@ -634,6 +643,9 @@ int main2(int argc, char **argv, char const* const* envp) {
         }
         else if (strcmp(argv[i], "-run") == 0) {
             run = true;
+        }
+        else if (strcmp(argv[i], "-repl") == 0) {
+            repl = true;
         }
         else if (strcmp(argv[i], "-timing") == 0) {
             showTiming = true;
@@ -896,7 +908,7 @@ int main2(int argc, char **argv, char const* const* envp) {
                  || strcmp(argv[i], "/?") == 0) {
             usage(argv[0]);
             return 2;
-        }
+        }       
         else if (strstr(argv[i], "-") != argv[i]) {
             if (!clayFile.empty()) {
                 llvm::errs() << "error: clay file already specified: " << clayFile
@@ -915,13 +927,18 @@ int main2(int argc, char **argv, char const* const* envp) {
         printVersion();
     }
 
-    if (clayScript.empty() && clayFile.empty()) {
-        llvm::errs() << "error: clay file not specified\n";
-        return 1;
+    if (repl && clayScript.empty() && clayFile.empty()) {
+        clayScript = "/*empty module if file not specified*/";
     }
-    if (!clayScript.empty() && !clayFile.empty()) {
-        llvm::errs() << "error: -e cannot be specified with input file\n";
-        return 1;
+    else {
+        if (clayScript.empty() && clayFile.empty()) {
+            llvm::errs() << "error: clay file not specified\n";
+            return 1;
+        }
+        if (!clayScript.empty() && !clayFile.empty()) {
+            llvm::errs() << "error: -e cannot be specified with input file\n";
+            return 1;
+        }
     }
 
     if (!clayScriptImports.empty() && clayScript.empty()) {
@@ -1069,6 +1086,9 @@ int main2(int argc, char **argv, char const* const* envp) {
 
     HiResTimer loadTimer, compileTimer, optTimer, outputTimer;
 
+
+	//compiler
+
     loadTimer.start();
 
     initLoader();
@@ -1083,6 +1103,7 @@ int main2(int argc, char **argv, char const* const* envp) {
         m = loadProgram(clayFile, &sourceFiles, verbose);
     else
         m = loadProgram(clayFile, NULL, verbose);
+
     loadTimer.stop();
     compileTimer.start();
     codegenEntryPoints(m, codegenExternals);
@@ -1115,14 +1136,22 @@ int main2(int argc, char **argv, char const* const* envp) {
         internalize = false;
 
     optTimer.start();
-    if (optLevel > 0)
-        optimizeLLVM(llvmModule, optLevel, internalize);
+
+    if (!repl)
+    {
+        if (optLevel > 0)
+            optimizeLLVM(llvmModule, optLevel, internalize);
+    }
     optTimer.stop();
 
     if (run) {
         vector<string> argv;
         argv.push_back(clayFile);
         runModule(llvmModule, argv, envp, libSearchPath, libraries);
+    }
+    else if (repl) {
+        linkLibraries(llvmModule, libSearchPath, libraries);
+        runInteractive(llvmModule, m);
     }
     else if (emitLLVM || emitAsm || emitObject) {
         string errorInfo;
