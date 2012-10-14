@@ -1,26 +1,22 @@
 import threads.core.*;
 import uniquepointers.*;
 
-record Future[T] (
+record Future[..T] (
     thread: Thread,
-    result: Maybe[T],
+    result: Maybe[Tuple[..T]],
 );
 
-[T]
-private asyncImpl(#T, f) --> future: Future[T] {
-    future.result <-- Maybe[T]();
+private FunctionResultType(F) = ..Type(..(null(F)^)());
+
+[F]
+async(f: F) --> future: Future[..FunctionResultType(F)] {
+    future.result <-- Type(future.result)();
     var resultPtr = @future.result;
-    future.thread <-- startThread(=> { resultPtr^ = Maybe(f()); });
+    future.thread <-- startThread(=> { resultPtr^ = Maybe([..f()]); });
 }
 
-async(f) {
-    alias T = Type(f());
-    // type inference hack
-    return asyncImpl(#T, f);
-}
-
-[T]
-futureGet(future: Future[T]): T {
+[..T]
+futureGet(future: Future[..T]): ..T {
     joinThread(future.thread);
-    return just(future.result);
+    return ..unpack(just(future.result));
 }
