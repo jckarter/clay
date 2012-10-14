@@ -31,182 +31,54 @@ overload ConvFuncForType(#T) = ConvFuncForType(ImagBaseType(T));
 
 
 
+[T, S when Numeric?(T) and String?(S)]
+define parse(#T, s:S): T;
 
 
-private define parseInt;
-private define parseFloat;
-private define parseImag;
+[T when Integer?(T) or Float?(T) or Imaginary?(T)]
+overload parse(T, s) =
+    parse(T, String(s));
 
 
-[S when String?(S)]
-overload parseInt(s:S, intType) =
-    parseInt(String(s), intType);
-
-[S when String?(S)]
-overload parseFloat(s:S, floatType) =
-    parseFloat(String(s), floatType);
-
-[S when String?(S)]
-overload parseImag(s:S, imagType) =
-    parseImag(String(s), imagType);
-
-
-[S when CCompatibleString?(S)]
-overload parseInt(s:S, intType) {
-    alias convFunc = ConvFuncForType(intType);
+[S, IntType when CCompatibleString?(S) and Integer?(IntType)]
+overload parse(#IntType, s:S) {
+    alias convFunc = ConvFuncForType(IntType);
     var p = cstring(s);
     var end = null(CChar);
     var value = convFunc(p, @end, 0);
-    var typeName = StaticName(intType);
+    var typeName = StaticName(IntType);
     if (end^ != 0)
         error("invalid " ++ typeName ++ ": ", repr(s));
-    if ((errno() == ERANGE) or value < Least(intType) or value > Greatest(intType))
+    if ((errno() == ERANGE) or value < Least(IntType) or value > Greatest(IntType))
         error(typeName ++ " out of range: ", repr(s));
-    return intType(value);
+    return IntType(value);
 }
 
-[S when CCompatibleString?(S)]
-overload parseFloat(s:S, floatType) {
-    alias convFunc = ConvFuncForType(floatType);
+[S, FloatType when CCompatibleString?(S) and Float?(FloatType)]
+overload parse(#FloatType, s:S) {
+    alias convFunc = ConvFuncForType(FloatType);
     var p = cstring(s);
     var end = null(CChar);
     var value = convFunc(p, @end);
-    var typeName = StaticName(floatType);
+    var typeName = StaticName(FloatType);
     if (end^ != 0)
         error("invalid " ++ typeName ++ ": ", repr(s));
     if (errno() == ERANGE)
         error(typeName ++ " out of range: ", repr(s));
-    return floatType(value);
+    return FloatType(value);
 }
 
-[S when CCompatibleString?(S)]
-overload parseImag(s:S, imagType) {
-    alias convFunc = ConvFuncForType(imagType);
+[S, ImagType when CCompatibleString?(S) and Imaginary?(ImagType)]
+overload parse(#ImagType, s:S) {
+    alias convFunc = ConvFuncForType(ImagType);
     var p = cstring(s);
     var end = null(CChar);
     var value = convFunc(p, @end);
-    var typeName = StaticName(imagType);
+    var typeName = StaticName(ImagType);
     if (end^ != 0)
         error("invalid " ++ typeName ++ ": ", repr(s));
     if (errno() == ERANGE)
         error(typeName ++ " out of range: ", repr(s));
-    return numericConvert(imagType,value);
+    return numericConvert(ImagType,value);
 }
-
-/// @section  parseInt8, parseUInt8 
-
-[S when String?(S)]
-parseInt8(s:S) = parseInt(s, Int8);
-
-[S when String?(S)]
-parseUInt8(s:S) = parseInt(s, UInt8);
-
-
-/// @section  parseInt16, parseUInt16 
-
-[S when String?(S)]
-parseInt16(s:S) = parseInt(s, Int16);
-
-[S when String?(S)]
-parseUInt16(s:S) =  parseInt(s, UInt16);
-
-
-/// @section  parseInt32, parseUInt32 
-
-[S when String?(S)]
-parseInt32(s:S) = parseInt(s, Int32);
-
-[S when String?(S)]
-parseUInt32(s:S) = parseInt(s, UInt32);
-
-
-/// @section  parseInt64, parseUInt64 
-
-[S when String?(S)]
-parseInt64(s:S) = parseInt(s, Int64);
-
-[S when String?(S)]
-parseUInt64(s:S) = parseInt(s, UInt64);
-
-
-/// @section  parseFloat32 
-
-[S when String?(S)]
-parseFloat32(s:S) = parseFloat(s, Float32);
-
-
-/// @section  parseFloat64 
-
-[S when String?(S)]
-parseFloat64(s:S) = parseFloat(s, Float64);
-
-/// @section  parseFloat80 
-
-[S when String?(S)]
-parseFloat80(s:S) = parseFloat(s, Float80);
-
-
-/// @section  parseImag32 
-
-[S when String?(S)]
-parseImag32(s:S) = parseImag(s, Imag32);
-
-
-/// @section  parseImag64 
-
-[S when String?(S)]
-parseImag64(s:S) = parseImag(s, Imag64);
-
-/// @section  parseComplex80 
-
-[S when String?(S)]
-parseImag80(s:S) = parseImag(s, Imag80);
-
-
-
-
-
-/// @section  parse numbers from strings 
-
-[S when String?(S)]
-forceinline overload Int8(s:S)  = parseInt8(s);
-
-[S when String?(S)]
-forceinline overload Int16(s:S) = parseInt16(s);
-
-[S when String?(S)]
-forceinline overload Int32(s:S) = parseInt32(s);
-
-[S when String?(S)]
-forceinline overload Int64(s:S) = parseInt64(s);
-
-[S when String?(S)]
-forceinline overload UInt8(s:S)  = parseUInt8(s);
-
-[S when String?(S)]
-forceinline overload UInt16(s:S) = parseUInt16(s);
-
-[S when String?(S)]
-forceinline overload UInt32(s:S) = parseUInt32(s);
-
-[S when String?(S)]
-forceinline overload UInt64(s:S) = parseUInt64(s);
-
-[S when String?(S)]
-forceinline overload Float32(s:S) = parseFloat32(s);
-
-[S when String?(S)]
-forceinline overload Float64(s:S) = parseFloat64(s);
-
-[S when String?(S)]
-forceinline overload Float80(s:S) = parseFloat80(s);
-
-[S when String?(S)]
-forceinline overload Imag32(s:S) = parseImag32(s);
-
-[S when String?(S)]
-forceinline overload Imag64(s:S) = parseImag64(s);
-
-[S when String?(S)]
-forceinline overload Imag80(s:S) = parseImag80(s);
 

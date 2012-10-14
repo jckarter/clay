@@ -2,7 +2,7 @@ import printer.(println);
 import numbers.parser.*;
 
 main(args) {
-    var x = Float("1000"); // optimization barrier
+    var x = parse(Float, "1000"); // optimization barrier
     println(x, ' ', ULong(0.009f*x), ' ', 0.009f*x);
     return 0;
 }

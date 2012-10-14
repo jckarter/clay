@@ -5,12 +5,12 @@ import test.*;
 import libc;
 
 testParseAndPrint(test, type, string) {
-    expectEqual(test, string, string, str(type(string)));
+    expectEqual(test, string, string, str(parse(type, string)));
 }
 
 testParseInvalid(test, type, string) {
     try {
-        type(string);
+        parse(type, string);
         error();
     } catch (e: Error) {
         // expected
@@ -37,8 +37,8 @@ main() = testMain(
             }
         }),
         TestCase("imag", test -> {
-            expectEqual(test, "Imag32", 5.5j, Imag32("5.5"));
-            expectEqual(test, "Imag64", 6.7j, Imag64("6.7"));
+            expectEqual(test, "Imag32", 5.5j, parse(Imag32, "5.5"));
+            expectEqual(test, "Imag64", 6.7j, parse(Imag64, "6.7"));
         }),
         TestCase("out of range", test -> {
             testParseInvalid(test, Int8, "128");
