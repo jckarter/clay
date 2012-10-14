@@ -1,0 +1,52 @@
+import printer.*;
+import numbers.parser.*;
+import complex.*;
+import test.*;
+import libc;
+
+testParseAndPrint(test, type, string) {
+    expectEqual(test, string, string, str(parse(type, string)));
+}
+
+testParseInvalid(test, type, string) {
+    try {
+        parse(type, string);
+        error();
+    } catch (e: Error) {
+        // expected
+    }
+}
+
+main() = testMain(
+    TestSuite("numbers.parser", array(
+        TestCase("simple", test -> {
+            testParseAndPrint(test, Int8, "111");
+            testParseAndPrint(test, Int16, "222");
+            testParseAndPrint(test, Int32, "333");
+            testParseAndPrint(test, Int64, "444");
+            testParseAndPrint(test, Float32, "1.2");
+            testParseAndPrint(test, Float64, "3.4");
+        }),
+        TestCase("all types", test -> {
+            ..for (type in ..BuiltinIntegerTypes()) {
+                if (#(type != Int128 and type != UInt128)) {
+                    testParseAndPrint(test, type, "12");
+                    testParseAndPrint(test, type, str(Greatest(type)));
+                    testParseAndPrint(test, type, str(Least(type)));
+                }
+            }
+        }),
+        TestCase("imag", test -> {
+            expectEqual(test, "Imag32", 5.5j, parse(Imag32, "5.5"));
+            expectEqual(test, "Imag64", 6.7j, parse(Imag64, "6.7"));
+        }),
+        TestCase("out of range", test -> {
+            testParseInvalid(test, Int8, "128");
+            testParseInvalid(test, UInt16, "-2");
+        }),
+        TestCase("not a number", test -> {
+            testParseInvalid(test, Int32, "abc9");
+            testParseInvalid(test, Int32, "9ab");
+            testParseInvalid(test, Float, "abc1.2");
+        }),
+    )));

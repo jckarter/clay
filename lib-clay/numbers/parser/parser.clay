@@ -9,229 +9,76 @@ import sequences.*;
 
 
 /// @section  Generic parsers 
-[S when CCompatibleString?(S)]
-parseIntWith(s:S, intType, convFunc) {
+
+
+[T when Type?(T)]
+private define ConvFuncForType(#T);
+
+overload ConvFuncForType(#CLongLong) = libc.strtoll;
+overload ConvFuncForType(#CULongLong) = libc.strtoull;
+
+[T when SignedInteger?(T) and TypeSize(T) <= TypeSize(CLong)]
+overload ConvFuncForType(#T) = libc.strtol;
+[T when UnsignedInteger?(T) and TypeSize(T) <= TypeSize(CULong)]
+overload ConvFuncForType(#T) = libc.strtoul;
+
+overload ConvFuncForType(#CLongDouble) = libc.strtold;
+overload ConvFuncForType(#CDouble) = libc.strtod;
+overload ConvFuncForType(#CFloat) = libc.strtof;
+
+[T when Imaginary?(T)]
+overload ConvFuncForType(#T) = ConvFuncForType(ImagBaseType(T));
+
+
+
+[T, S when Numeric?(T) and String?(S)]
+define parse(#T, s:S): T;
+
+
+[T when Integer?(T) or Float?(T) or Imaginary?(T)]
+overload parse(T, s) =
+    parse(T, String(s));
+
+
+[S, IntType when CCompatibleString?(S) and Integer?(IntType)]
+overload parse(#IntType, s:S) {
+    alias convFunc = ConvFuncForType(IntType);
     var p = cstring(s);
     var end = null(CChar);
     var value = convFunc(p, @end, 0);
-    var typeName = StaticName(intType);
+    var typeName = StaticName(IntType);
     if (end^ != 0)
         error("invalid " ++ typeName ++ ": ", repr(s));
-    if ((errno() == ERANGE) or value < Least(intType) or value > Greatest(intType))
+    if ((errno() == ERANGE) or value < Least(IntType) or value > Greatest(IntType))
         error(typeName ++ " out of range: ", repr(s));
-    return intType(value);
+    return IntType(value);
 }
 
-[S when CCompatibleString?(S)]
-parseFloatWith(s:S, floatType, convFunc) {
+[S, FloatType when CCompatibleString?(S) and Float?(FloatType)]
+overload parse(#FloatType, s:S) {
+    alias convFunc = ConvFuncForType(FloatType);
     var p = cstring(s);
     var end = null(CChar);
     var value = convFunc(p, @end);
-    var typeName = StaticName(floatType);
+    var typeName = StaticName(FloatType);
     if (end^ != 0)
         error("invalid " ++ typeName ++ ": ", repr(s));
     if (errno() == ERANGE)
         error(typeName ++ " out of range: ", repr(s));
-    return floatType(value);
+    return FloatType(value);
 }
 
-[S when CCompatibleString?(S)]
-parseImagWith(s:S, imagType, convFunc) {
+[S, ImagType when CCompatibleString?(S) and Imaginary?(ImagType)]
+overload parse(#ImagType, s:S) {
+    alias convFunc = ConvFuncForType(ImagType);
     var p = cstring(s);
     var end = null(CChar);
     var value = convFunc(p, @end);
-    var typeName = StaticName(imagType);
+    var typeName = StaticName(ImagType);
     if (end^ != 0)
         error("invalid " ++ typeName ++ ": ", repr(s));
     if (errno() == ERANGE)
         error(typeName ++ " out of range: ", repr(s));
-    return numericConvert(imagType,value);
+    return numericConvert(ImagType,value);
 }
-
-/// @section  parseInt8, parseUInt8 
-
-define parseInt8;
-
-[S when String?(S)]
-overload parseInt8(s:S) = parseInt8(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseInt8(s:S) = parseIntWith(s, Int8, libc.strtol);
-
-define parseUInt8;
-
-[S when String?(S)]
-overload parseUInt8(s:S) = parseUInt8(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseUInt8(s:S) = parseIntWith(s, UInt8, libc.strtoul);
-
-
-/// @section  parseInt16, parseUInt16 
-
-define parseInt16;
-
-[S when String?(S)]
-overload parseInt16(s:S) = parseInt16(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseInt16(s:S) = parseIntWith(s, Int16, libc.strtol);
-
-define parseUInt16;
-
-[S when String?(S)]
-overload parseUInt16(s:S) = parseUInt16(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseUInt16(s:S) =  parseIntWith(s, UInt16, libc.strtoul);
-
-
-/// @section  parseInt32, parseUInt32 
-
-define parseInt32;
-
-[S when String?(S)]
-overload parseInt32(s:S) = parseInt32(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseInt32(s:S) = parseIntWith(s, Int32, libc.strtol);
-
-define parseUInt32;
-
-[S when String?(S)]
-overload parseUInt32(s:S) = parseUInt32(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseUInt32(s:S) = parseIntWith(s, UInt32, libc.strtoul);
-
-
-/// @section  parseInt64, parseUInt64 
-
-define parseInt64;
-
-[S when String?(S)]
-overload parseInt64(s:S) = parseInt64(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseInt64(s:S) = parseIntWith(s, Int64, libc.strtoll);
-
-define parseUInt64;
-
-[S when String?(S)]
-overload parseUInt64(s:S) = parseUInt64(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseUInt64(s:S) = parseIntWith(s, UInt64, libc.strtoull);
-
-
-/// @section  parseFloat32 
-
-define parseFloat32;
-
-[S when String?(S)]
-overload parseFloat32(s:S) = parseFloat32(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseFloat32(s:S) = parseFloatWith(s, Float32, libc.strtod);
-
-
-/// @section  parseFloat64 
-
-define parseFloat64;
-
-[S when String?(S)]
-overload parseFloat64(s:S) = parseFloat64(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseFloat64(s:S) = parseFloatWith(s, Float64, libc.strtod);
-
-/// @section  parseFloat80 
-
-define parseFloat80;
-
-[S when String?(S)]
-overload parseFloat80(s:S) = parseFloat80(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseFloat80(s:S) = parseFloatWith(s, Float80, libc.strtold);
-
-
-/// @section  parseImag32 
-
-define parseImag32;
-
-[S when String?(S)]
-overload parseImag32(s:S) = parseImag32(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseImag32(s:S) = parseImagWith(s, Imag32, libc.strtod);
-
-
-/// @section  parseImag64 
-
-define parseImag64;
-
-[S when String?(S)]
-overload parseImag64(s:S) = parseImag64(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseImag64(s:S) = parseImagWith(s, Imag64, libc.strtod);
-
-/// @section  parseComplex80 
-
-define parseImag80;
-
-[S when String?(S)]
-overload parseImag80(s:S) = parseImag80(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseImag80(s:S) = parseImagWith(s, Imag80, libc.strtold);
-
-
-
-
-
-/// @section  parse numbers from strings 
-
-[S when String?(S)]
-forceinline overload Int8(s:S)  = parseInt8(s);
-
-[S when String?(S)]
-forceinline overload Int16(s:S) = parseInt16(s);
-
-[S when String?(S)]
-forceinline overload Int32(s:S) = parseInt32(s);
-
-[S when String?(S)]
-forceinline overload Int64(s:S) = parseInt64(s);
-
-[S when String?(S)]
-forceinline overload UInt8(s:S)  = parseUInt8(s);
-
-[S when String?(S)]
-forceinline overload UInt16(s:S) = parseUInt16(s);
-
-[S when String?(S)]
-forceinline overload UInt32(s:S) = parseUInt32(s);
-
-[S when String?(S)]
-forceinline overload UInt64(s:S) = parseUInt64(s);
-
-[S when String?(S)]
-forceinline overload Float32(s:S) = parseFloat32(s);
-
-[S when String?(S)]
-forceinline overload Float64(s:S) = parseFloat64(s);
-
-[S when String?(S)]
-forceinline overload Float80(s:S) = parseFloat80(s);
-
-[S when String?(S)]
-forceinline overload Imag32(s:S) = parseImag32(s);
-
-[S when String?(S)]
-forceinline overload Imag64(s:S) = parseImag64(s);
-
-[S when String?(S)]
-forceinline overload Imag80(s:S) = parseImag80(s);
 
