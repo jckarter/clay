@@ -9,8 +9,27 @@ import sequences.*;
 
 
 /// @section  Generic parsers 
+
+private define parseIntWith;
+private define parseFloatWith;
+private define parseImagWith;
+
+
+[S when String?(S)]
+overload parseIntWith(s:S, intType, convFunc) =
+    parseIntWith(String(s), intType, convFunc);
+
+[S when String?(S)]
+overload parseFloatWith(s:S, floatType, convFunc) =
+    parseIntWith(String(s), floatType, convFunc);
+
+[S when String?(S)]
+overload parseImagWith(s:S, imagType, convFunc) =
+    parseImagWith(String(s), imagType, convFunc);
+
+
 [S when CCompatibleString?(S)]
-parseIntWith(s:S, intType, convFunc) {
+overload parseIntWith(s:S, intType, convFunc) {
     var p = cstring(s);
     var end = null(CChar);
     var value = convFunc(p, @end, 0);
@@ -23,7 +42,7 @@ parseIntWith(s:S, intType, convFunc) {
 }
 
 [S when CCompatibleString?(S)]
-parseFloatWith(s:S, floatType, convFunc) {
+overload parseFloatWith(s:S, floatType, convFunc) {
     var p = cstring(s);
     var end = null(CChar);
     var value = convFunc(p, @end);
@@ -36,7 +55,7 @@ parseFloatWith(s:S, floatType, convFunc) {
 }
 
 [S when CCompatibleString?(S)]
-parseImagWith(s:S, imagType, convFunc) {
+overload parseImagWith(s:S, imagType, convFunc) {
     var p = cstring(s);
     var end = null(CChar);
     var value = convFunc(p, @end);
@@ -50,142 +69,72 @@ parseImagWith(s:S, imagType, convFunc) {
 
 /// @section  parseInt8, parseUInt8 
 
-define parseInt8;
+[S when String?(S)]
+parseInt8(s:S) = parseIntWith(s, Int8, libc.strtol);
 
 [S when String?(S)]
-overload parseInt8(s:S) = parseInt8(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseInt8(s:S) = parseIntWith(s, Int8, libc.strtol);
-
-define parseUInt8;
-
-[S when String?(S)]
-overload parseUInt8(s:S) = parseUInt8(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseUInt8(s:S) = parseIntWith(s, UInt8, libc.strtoul);
+parseUInt8(s:S) = parseIntWith(s, UInt8, libc.strtoul);
 
 
 /// @section  parseInt16, parseUInt16 
 
-define parseInt16;
+[S when String?(S)]
+parseInt16(s:S) = parseIntWith(s, Int16, libc.strtol);
 
 [S when String?(S)]
-overload parseInt16(s:S) = parseInt16(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseInt16(s:S) = parseIntWith(s, Int16, libc.strtol);
-
-define parseUInt16;
-
-[S when String?(S)]
-overload parseUInt16(s:S) = parseUInt16(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseUInt16(s:S) =  parseIntWith(s, UInt16, libc.strtoul);
+parseUInt16(s:S) =  parseIntWith(s, UInt16, libc.strtoul);
 
 
 /// @section  parseInt32, parseUInt32 
 
-define parseInt32;
+[S when String?(S)]
+parseInt32(s:S) = parseIntWith(s, Int32, libc.strtol);
 
 [S when String?(S)]
-overload parseInt32(s:S) = parseInt32(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseInt32(s:S) = parseIntWith(s, Int32, libc.strtol);
-
-define parseUInt32;
-
-[S when String?(S)]
-overload parseUInt32(s:S) = parseUInt32(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseUInt32(s:S) = parseIntWith(s, UInt32, libc.strtoul);
+parseUInt32(s:S) = parseIntWith(s, UInt32, libc.strtoul);
 
 
 /// @section  parseInt64, parseUInt64 
 
-define parseInt64;
+[S when String?(S)]
+parseInt64(s:S) = parseIntWith(s, Int64, libc.strtoll);
 
 [S when String?(S)]
-overload parseInt64(s:S) = parseInt64(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseInt64(s:S) = parseIntWith(s, Int64, libc.strtoll);
-
-define parseUInt64;
-
-[S when String?(S)]
-overload parseUInt64(s:S) = parseUInt64(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseUInt64(s:S) = parseIntWith(s, UInt64, libc.strtoull);
+parseUInt64(s:S) = parseIntWith(s, UInt64, libc.strtoull);
 
 
 /// @section  parseFloat32 
 
-define parseFloat32;
-
 [S when String?(S)]
-overload parseFloat32(s:S) = parseFloat32(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseFloat32(s:S) = parseFloatWith(s, Float32, libc.strtod);
+parseFloat32(s:S) = parseFloatWith(s, Float32, libc.strtod);
 
 
 /// @section  parseFloat64 
 
-define parseFloat64;
-
 [S when String?(S)]
-overload parseFloat64(s:S) = parseFloat64(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseFloat64(s:S) = parseFloatWith(s, Float64, libc.strtod);
+parseFloat64(s:S) = parseFloatWith(s, Float64, libc.strtod);
 
 /// @section  parseFloat80 
 
-define parseFloat80;
-
 [S when String?(S)]
-overload parseFloat80(s:S) = parseFloat80(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseFloat80(s:S) = parseFloatWith(s, Float80, libc.strtold);
+parseFloat80(s:S) = parseFloatWith(s, Float80, libc.strtold);
 
 
 /// @section  parseImag32 
 
-define parseImag32;
-
 [S when String?(S)]
-overload parseImag32(s:S) = parseImag32(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseImag32(s:S) = parseImagWith(s, Imag32, libc.strtod);
+parseImag32(s:S) = parseImagWith(s, Imag32, libc.strtod);
 
 
 /// @section  parseImag64 
 
-define parseImag64;
-
 [S when String?(S)]
-overload parseImag64(s:S) = parseImag64(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseImag64(s:S) = parseImagWith(s, Imag64, libc.strtod);
+parseImag64(s:S) = parseImagWith(s, Imag64, libc.strtod);
 
 /// @section  parseComplex80 
 
-define parseImag80;
-
 [S when String?(S)]
-overload parseImag80(s:S) = parseImag80(String(s));
-
-[S when CCompatibleString?(S)]
-overload parseImag80(s:S) = parseImagWith(s, Imag80, libc.strtold);
+parseImag80(s:S) = parseImagWith(s, Imag80, libc.strtold);
 
 
 
