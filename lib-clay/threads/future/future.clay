@@ -7,10 +7,8 @@ record Future[..T] (
     exception: Maybe[Exception],
 );
 
-private FunctionResultType(F) = ..Type(..(null(F)^)());
-
 [F]
-async(f: F) --> future: Future[..FunctionResultType(F)] {
+async(f: F) --> future: Future[..CallOutputTypes(call, F)] {
     future.result <-- Type(future.result)();
     var futurePtr = @future;
     var launcher = => {
