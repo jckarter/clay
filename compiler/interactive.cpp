@@ -1,9 +1,8 @@
 #include "clay.hpp"
-#include <iostream>
-#include <string>
-#include <sstream>
+
 #include <setjmp.h>
 #include <signal.h>
+#include <stdio.h>
 
 #include <llvm/Target/TargetOptions.h>
 
@@ -24,7 +23,8 @@ namespace clay {
     string newFunctionName()
     {
         static int funNum = 0;
-        ostringstream funName;
+        string buf;
+        llvm::raw_string_ostream funName(buf);
         funName << replAnonymousFunctionName << funNum;
         ++funNum;
         return funName.str();
@@ -55,7 +55,7 @@ namespace clay {
                     Str identifier = tokens[i].str;
                     llvm::StringMap<ImportSet>::const_iterator iter = module->allSymbols.find(identifier);
                     if (iter == module->allSymbols.end()) {
-                        std::cout << "Can't find identifier " << identifier.c_str();
+                        llvm::errs() << "Can't find identifier " << identifier.c_str();
                     } else {
                         for (size_t i = 0; i < iter->second.size(); ++i) {
                             llvm::errs() << iter->second[i] << "\n";
@@ -71,7 +71,7 @@ namespace clay {
             //TODO : this command should re-codegen everything
         }
         else {
-            std::cout << "Unknown interactive mode command: " << cmd.c_str() << "\n";
+            llvm::errs() << "Unknown interactive mode command: " << cmd.c_str() << "\n";
         }
     }
 
@@ -153,9 +153,10 @@ namespace clay {
         setjmp(recovery);
         string line;
         while(true) {
-            std::cout.flush();
-            std::cout << "clay>";
-            getline (std::cin, line);
+            llvm::errs().flush();
+            llvm::errs() << "clay>";
+            char buf[255];
+            line = fgets(buf, 255, stdin);
             line = stripSpaces(line);
             if (line[0] == ':') {
                 replCommand(line.substr(1, line.size() - 1));
@@ -196,7 +197,6 @@ namespace clay {
         llvm::errs() << ":q to exit\n";
         llvm::errs() << ":print {identifier} to print an identifier\n";
 
-        setExitOnError(false);
         llvm::EngineBuilder eb(llvmModule);
         llvm::TargetOptions targetOptions;
         targetOptions.JITExceptionHandling = true;

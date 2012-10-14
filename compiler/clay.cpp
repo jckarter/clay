@@ -989,8 +989,6 @@ int main2(int argc, char **argv, char const* const* envp) {
     initTypes();
     initExternalTarget(targetTriple);
 
-    setAbortOnError(abortOnError);
-
     // Try environment variables first
     char* libclayPath = getenv("CLAY_PATH");
     if( libclayPath )

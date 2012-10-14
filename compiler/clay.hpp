@@ -867,8 +867,6 @@ private :
     void operator=(const LocationContext &) {}
 };
 
-void setAbortOnError(bool flag);
-void setExitOnError(bool flag);
 void warning(llvm::Twine const &msg);
 
 void fmtError(const char *fmt, ...);
