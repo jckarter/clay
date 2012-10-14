@@ -1,0 +1,29 @@
+import win32.*;
+import os.errors.*;
+import lambdas.*;
+
+alias ThreadHandle = HANDLE;
+
+private threadProc(param: RawPointer): DWORD {
+    ref proc = bitcast(Pointer[FunctionBody[[], []]], param);
+    finally freeObject(proc);
+    proc^();
+    return DWORD();
+}
+
+startThreadImpl(proc: Pointer[FunctionBody[[], []]]) {
+    var thread = CreateThread(LPSECURITY_ATTRIBUTES(), SIZE_T(0), StdCallCodePointer(threadProc), bitcast(LPVOID, proc), DWORD(0), LPDWORD());
+    if (null?(thread)) {
+        freeObject(proc);
+        throw GenericOSError(GetLastError(), "CreateThread");
+    }
+    return thread;
+}
+
+joinThreadImpl(handle: HANDLE) {
+    var ok = WaitForSingleObject(handle, Greatest(DWORD));
+    if (ok != 0) {
+        throw GenericOSError(GetLastError(), "WaitForSingleObject");
+    }
+}
+

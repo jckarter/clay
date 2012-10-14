@@ -1,0 +1,26 @@
+import threads.core.*;
+import uniquepointers.*;
+
+record Future[T] (
+    thread: Thread,
+    result: Maybe[T],
+);
+
+[T]
+private asyncImpl(#T, f) --> future: Future[T] {
+    future.result <-- Maybe[T]();
+    var resultPtr = @future.result;
+    future.thread <-- startThread(=> { resultPtr^ = Maybe(f()); });
+}
+
+async(f) {
+    alias T = Type(f());
+    // type inference hack
+    return asyncImpl(#T, f);
+}
+
+[T]
+futureGet(future: Future[T]): T {
+    joinThread(future.thread);
+    return just(future.result);
+}

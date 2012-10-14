@@ -1,0 +1,30 @@
+import unix.*;
+import os.errors.*;
+import lambdas.*;
+
+alias ThreadHandle = pthread_t;
+
+private threadProc(param: RawPointer): RawPointer {
+    ref proc = bitcast(Pointer[FunctionBody[[], []]], param);
+    finally freeObject(proc);
+    proc^();
+    return RawPointer();
+}
+
+startThreadImpl(proc: Pointer[FunctionBody[[], []]]) {
+    var thread = pthread_t();
+    var ok = pthread_create(@thread, null(pthread_attr_t), CCodePointer(threadProc), bitcast(RawPointer, proc));
+    if (ok != 0) {
+        freeObject(proc);
+        throw GenericOSError(ok, "pthread_create");
+    }
+    return thread;
+}
+
+joinThreadImpl(handle: pthread_t) {
+    var r = Pointer[RawPointer]();
+    var ok = pthread_join(handle, r);
+    if (ok != 0) {
+        throw GenericOSError(ok, "pthread_join");
+    }
+}

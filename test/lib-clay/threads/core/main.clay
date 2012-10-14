@@ -1,0 +1,7 @@
+import printer.*;
+import threads.core.*;
+
+main() {
+    var x = 12;
+    var t = startThread(=> { println(x + 13); });
+}
