@@ -6,4 +6,8 @@ main() = testMain(
             var f = -> { throw GenericException("hi there"); };
             expectExceptionType(test, "GenericException", GenericException, f);
         }),
+        TestCase("throw string", test -> {
+            var f = -> { throw "hi there"; };
+            expectException(test, "GenericException", GenericException("hi there"), f);
+        }),
     )));

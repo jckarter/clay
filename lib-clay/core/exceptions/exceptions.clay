@@ -82,6 +82,11 @@ alias overload throwValue(x) : {
     signalException(RawPointer(exp));
 }
 
+[S when StringLiteral?(S)]
+alias overload throwValue(#S) {
+    throwValue(GenericException(S));
+}
+
 overload continueException(exp:RawPointer) : {
     signalException(exp);
 }
