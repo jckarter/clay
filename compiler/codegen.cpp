@@ -6992,4 +6992,24 @@ llvm::TargetMachine *initLLVM(llvm::StringRef targetTriple,
     return targetMachine;
 }
 
+void codegenBeforeRepl(ModulePtr module) {
+    CodegenContext* theConstructorCtx = new CodegenContext();
+    CodegenContext* theDestructorCtx = new CodegenContext();
+    delete constructorsCtx;
+    delete destructorsCtx;
+    constructorsCtx = theConstructorCtx;
+    destructorsCtx = theDestructorCtx;
+    //codegenTopLevelLLVM(module);
+    codegenTopLevelLLVMRecursive(module);
+    initializeCtorsDtors();
+    generateLLVMCtorsAndDtors();
+    codegenModuleEntryPoints(module, false);
+}
+
+void codegenAfterRepl(llvm::Function*& ctor, llvm::Function*& dtor) {
+    finalizeCtorsDtors();
+    ctor = constructorsCtx->llvmFunc;
+    dtor = destructorsCtx->llvmFunc;
+}
+
 }

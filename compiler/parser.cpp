@@ -3107,6 +3107,44 @@ static bool module(llvm::StringRef moduleName, ModulePtr &x) {
     return true;
 }
 
+//
+// REPL
+//
+
+struct REPLitem {
+    vector<TopLevelItemPtr> toplevels;
+    vector<ImportPtr> imports;
+    vector<StatementPtr> stmts;
+};
+
+static bool replItems(REPLitem& x ) {
+    x.toplevels.clear();
+    x.imports.clear();
+    x.stmts.clear();
+    ImportPtr importItem;
+    StatementPtr stmtItem;
+    while (true) {
+        int p = save();
+        if (!topLevelItem(x.toplevels)) {
+            restore(p);
+        } else {
+            continue;
+        }
+        if (!import(importItem)) {
+            restore(p);
+        } else {
+            x.imports.push_back(importItem);
+            continue;
+        }
+        if (!blockItem(stmtItem)) {
+            restore(p);
+            break;
+        } else {
+            x.stmts.push_back(stmtItem);
+        }
+    }
+    return true;
+}
 
 
 //
@@ -3193,6 +3231,22 @@ void parseTopLevelItems(SourcePtr source, int offset, int length,
         vector<TopLevelItemPtr> &topLevels)
 {
     applyParser(source, offset, length, topLevelItems, topLevels);
+}
+
+//
+// parseInteractive
+//
+
+void parseInteractive(SourcePtr source, int offset, int length,
+                      vector<TopLevelItemPtr>& toplevels,
+                      vector<ImportPtr>& imports,
+                      vector<StatementPtr>& stmts)
+{
+    REPLitem x;
+    applyParser(source, offset, length, replItems, x);
+    toplevels = x.toplevels;
+    imports = x.imports;
+    stmts = x.stmts;
 }
 
 }

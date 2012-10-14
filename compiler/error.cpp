@@ -243,12 +243,6 @@ static void displayDebugStack() {
     }
 }
 
-static bool abortOnError = false;
-
-void setAbortOnError(bool flag) {
-    abortOnError = flag;
-}
-
 void displayError(llvm::Twine const &msg, llvm::StringRef kind) {
     string msgString = msg.str();
     if (msgString.empty() || msgString[msgString.length() - 1] != '\n')
@@ -279,10 +273,7 @@ void note(llvm::Twine const &msg) {
 
 void error(llvm::Twine const &msg) {
     displayError(msg, "error");
-    if (abortOnError)
-        abort();
-    else
-        exit(-1);
+    throw(std::exception());
 }
 
 void error(Location const &location, llvm::Twine const &msg) {
