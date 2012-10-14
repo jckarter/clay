@@ -606,8 +606,10 @@ forceinline overload swap(a:T, b:T) : {
 
 /// @section  min, max 
 
-define min;
-define max;
+[T]
+define min(a:T, b:T) : T;
+[T]
+define max(a:T, b:T) : T;
 
 [T]
 forceinline overload min(a:T, b:T) --> c:T {
