@@ -1,0 +1,5 @@
+define foo(a): Int, Int;
+
+overload foo(a): {}
+
+main() {}

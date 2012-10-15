@@ -1,0 +1,5 @@
+define foo(a, b, ..c);
+
+overload foo() = 1;
+
+main() {}
