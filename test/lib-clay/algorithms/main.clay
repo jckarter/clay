@@ -1,4 +1,4 @@
-import algorithms.(find,endsWith?,beginsWith?,split,join);
+import algorithms.(find,endsWith?,beginsWith?,split,concat,join);
 import printer.(println);
 import strings.*;
 import sequences.*;
@@ -23,7 +23,8 @@ main() {
         println("find(", s, ", ", x, ") = ", find(s, x) - begin(s));
         println("split(", s, ", ", x, ") = ", split(s, x));
     }
-
+	
+    println(concat(a));
     println(join("", a));
     println(join(".", a));
     println(join('/', a));
