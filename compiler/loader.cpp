@@ -483,11 +483,69 @@ poly:
     return;
 }
 
+static size_t maxParamCount(const CodePtr& code) {
+    if (code->hasVarArg)
+        return std::numeric_limits<size_t>::max();
+    else
+        return code->formalArgs.size();
+}
+
+static size_t minParamCount(const CodePtr& code) {
+    if (code->hasVarArg)
+        return code->formalArgs.size() - 1;
+    else
+        return code->formalArgs.size();
+}
+
+static string paramCountString(const CodePtr& code) {
+    string s;
+    llvm::raw_string_ostream ss(s);
+    if (code->hasVarArg) {
+        ss << (code->formalArgs.size() - 1) << "+";
+    } else {
+        ss << code->formalArgs.size();
+    }
+    ss.flush();
+    return s;
+}
+
+template <typename T>
+static string toString(const T& t) {
+    string s;
+    llvm::raw_string_ostream ss(s);
+    ss << t;
+    ss.flush();
+    return s;
+}
+
 void addProcedureOverload(ProcedurePtr proc, EnvPtr env, OverloadPtr x) {
     if (!!proc->singleOverload && proc->singleOverload != x) {
         // TODO: points to wrong line
         error(x->location, "standalone functions cannot be overloaded");
     }
+
+    if (proc->interface != NULL) {
+        if (maxParamCount(proc->interface->code) < minParamCount(x->code)) {
+            error(x->location,
+                    "overload has more parameters (" + paramCountString(x->code) +  ")"
+                    " than declaration (" + paramCountString(proc->interface->code) + ")");
+        }
+
+        if (maxParamCount(x->code) < minParamCount(proc->interface->code)) {
+            error(x->location,
+                    "overload has fewer parameters (" + paramCountString(x->code) +  ")"
+                    " than declaration (" + paramCountString(proc->interface->code) + ")");
+        }
+
+        if (proc->interface->code->returnSpecsDeclared && x->code->returnSpecsDeclared) {
+            if (x->code->returnSpecs.size() != proc->interface->code->returnSpecs.size()) {
+                error(x->location, string() +
+                        "overload return count (" + toString(x->code->returnSpecs.size())  + ")"
+                        " must be equal to define return count (" + toString(proc->interface->code->returnSpecs.size()) + ")");
+            }
+        }
+    }
+
     proc->overloads.insert(proc->overloads.begin(), x);
     getProcedureMonoTypes(proc->mono, env,
         x->code->formalArgs,
