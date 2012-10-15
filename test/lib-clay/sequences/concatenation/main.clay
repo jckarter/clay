@@ -2,6 +2,7 @@ import printer.(println);
 import strings.*;
 import sequences.*;
 import sequences.operators.*;
+import vectors.(Vector);
 
 main(){
 
@@ -20,4 +21,6 @@ main(){
     b ++: "def";
     b ++: "ghi" ++ "jkl";
     println(b);
+
+    println(cat(Vector[Int](1,2,3), Vector[Int](4), Vector[Int](5,6)));
 }

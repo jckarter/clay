@@ -68,9 +68,10 @@ forceinline overload reduceToScalar(forward i) = ;
 [A, ..B when Sequence?(A) and allValues?(Sequence?,..B)
         and equalValues?(SequenceElementType(A),
             ..mapValues(SequenceElementType,..B)) and not StringLiteralType?(A,..B)]
-overload (++)(forward a:A, forward ..b:B) {
+overload (++)(forward a:A, forward ..bs:B) {
     var result = Vector(a);
-    pushAll(result, ..b);
+    ..for (b in bs)
+        pushAll(result, b);
     return move(result);
 }
 
