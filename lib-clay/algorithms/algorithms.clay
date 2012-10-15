@@ -296,6 +296,18 @@ overload advancePast(pos:C, x:T) {
 
 /// @section  join 
 
+define concat(seq);
+
+[A when Sequence?(A) and Sequence?(SequenceElementType(A))]
+overload concat(a:A) {
+    alias T = SequenceElementType(SequenceElementType(A));
+    var result = Vector[T]();
+    for (x in a) {
+        pushAll(result, x);
+    }
+    return move(result);
+}
+
 define join(sep, seq);
 
 [S, A when Sequence?(A) and Sequence?(SequenceElementType(A))
