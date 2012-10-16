@@ -8,6 +8,7 @@
 
 #include <string>
 #include <vector>
+#include <exception>
 #include <map>
 #include <set>
 #include <iomanip>
@@ -4078,6 +4079,10 @@ typedef Pointer<ExternalTarget> ExternalTargetPtr;
 
 void initExternalTarget(string target);
 ExternalTargetPtr getExternalTarget();
+
+
+class CompilerError : std::exception {
+};
 
 //
 // parachute

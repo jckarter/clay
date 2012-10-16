@@ -1202,7 +1202,7 @@ int main2(int argc, char **argv, char const* const* envp) {
             if (!result)
                 return 1;
         }
-    } catch (std::exception) {
+    } catch (const CompilerError&) {
         return 1;
     }
     if (showTiming) {

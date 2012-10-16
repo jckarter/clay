@@ -273,7 +273,7 @@ void note(llvm::Twine const &msg) {
 
 void error(llvm::Twine const &msg) {
     displayError(msg, "error");
-    throw(std::exception());
+    throw CompilerError();
 }
 
 void error(Location const &location, llvm::Twine const &msg) {
