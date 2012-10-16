@@ -3114,7 +3114,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     }
 
     case PRIM_stringTableConstant :
-        return new MultiPValue(PVData(pointerType(cSizeTType), true));;
+        return new MultiPValue(PVData(pointerType(cSizeTType), true));
 
     case PRIM_StaticName : {
         ensureArity(args, 1);
