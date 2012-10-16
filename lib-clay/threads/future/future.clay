@@ -10,6 +10,7 @@ record Future[..T] (
 [F]
 async(f: F) --> future: Future[..CallOutputTypes(call, F)] {
     future.result <-- Type(future.result)();
+    future.exception <-- Type(future.exception)();
     var futurePtr = @future;
     var launcher = => {
         try {
