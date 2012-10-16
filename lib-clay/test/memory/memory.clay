@@ -114,37 +114,39 @@ overload assign(ref x: Canary, y: Canary) { }
 
 overload equals?(x: Canary, y: Canary) { return true; }
 
-checkCanariesDestroyed() --> r: Bool {
-    r <-- true;
+checkCanariesDestroyed() : Bool {
+    var r = true;
     for (n in range(size(canaryTracker))) {
         if (canaryTracker[n] == ALIVE) {
-            r <-- false;
+            r = false;
             println("!! still alive: ", n);
         } else if (canaryTracker[n] == INVALID) {
-            r <-- false;
+            r = false;
             println("!! invalid    : ", n);
         }
     }
+    return r;
 }
 
 [S when Sequence?(S) and SequenceElementType(S) == Canary]
-checkCanariesLiveInSequence(seq: S) --> r: Bool {
-    r <-- true;
+checkCanariesLiveInSequence(seq: S) : Bool {
+    var r = true;
     for (x in seq) {
         if (x.id >= size(canaryTracker)) {
-            r <-- false;
+            r = false;
             println("!! uninitialized in sequence");
         } else if (canaryTracker[x.id] == DESTROYED) {
-            r <-- false;
+            r = false;
             println("!! destroyed   in sequence: ", x.id);
         } else if (canaryTracker[x.id] == MOVED) {
-            r <-- false;
+            r = false;
             println("!! moved       in sequence: ", x.id);
         } else if (canaryTracker[x.id] == INVALID) {
-            r <-- false;
+            r = false;
             println("!! invalid     in sequence: ", x.id);
         }
     }
+    return r;
 }
 
 expectCanariesDestroyed(test, name, fn) {
