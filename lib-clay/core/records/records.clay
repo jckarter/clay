@@ -109,7 +109,7 @@ moveRecordUnsafe(src:T) --> returned:T {
 }
 
 [T when RegularRecord?(T) and not BitwiseMovedType?(T)]
-overload moveUnsafe(src:T) = moveRecordUnsave(src);
+overload moveUnsafe(src:T) = moveRecordUnsafe(src);
 
 [T when Record?(T)]
 resetRecordUnsafe(a:T) {
