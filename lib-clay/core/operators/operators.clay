@@ -258,15 +258,19 @@ alias RValue?(x) : Bool = not LValue?(x);
 /// @section  defaults 
 
 define initialize;
+[T] define ImplicitlyCopyable?(#T) : Bool;
 
-forceinline overload initialize(a) : {
-    a <-- Type(a)();
+overload ImplicitlyCopyable?(T) = true;
+
+[T]
+forceinline overload initialize(a:T) : {
+    a <-- T();
 }
 
-[T]
+[T when CallDefined?(T, T) and ImplicitlyCopyable?(T)]
 forceinline overload copy(a:T) : T = T(a);
 
-[T]
+[T when CallDefined?(moveUnsafe, T) and CallDefined?(resetUnsafe, T)]
 forceinline overload move(src:T) --> returned:T {
     returned <-- moveUnsafe(src);
     resetUnsafe(src);
@@ -276,6 +280,30 @@ forceinline overload move(src:T) --> returned:T {
 forceinline overload assign(ref dest:T, rvalue src:T) : {
     swap(dest, src);
 }
+
+[T when
+    not BitwiseAssignedType?(T)
+    and CallDefined?(copy, T)
+    and CallDefined?(move, T)
+    and not CopyDoesNotThrowType?(T)]
+forceinline overload assign(ref dest:T, ref src:T) : {
+    var tmp = moveUnsafe(dest);
+    onerror dest <-- move(tmp);
+    dest <-- copy(src);
+}
+
+[T when
+    not BitwiseAssignedType?(T)
+    and CallDefined?(copy, T)
+    and CallDefined?(move, T)
+    and CopyDoesNotThrowType?(T)]
+forceinline overload assign(ref dest:T, ref src:T) : {
+    destroy(dest);
+    dest <-- copy(src);
+}
+
+[T when CallDefined?(T) and InitializeDoesNotThrowType?(T)]
+forceinline overload resetUnsafe(src:T) { src <-- T(); }
 
 [F]
 forceinline overload updateAssign(#F, ref dest, forward ..src) : {
@@ -777,6 +805,8 @@ define NotDestroyedType?(#T) : Bool;
 [T]
 define NotResetType?(#T) : Bool;
 [T]
+define InitializeDoesNotThrowType?(#T) : Bool;
+[T]
 define CopyDoesNotThrowType?(#T) : Bool;
 [T]
 define AssignDoesNotThrowType?(#T) : Bool;
@@ -789,6 +819,7 @@ overload BitwiseCopiedType?(T) = PODType?(T);
 overload BitwiseMovedType?(T) = PODType?(T);
 overload NotDestroyedType?(T) = PODType?(T);
 overload NotResetType?(T) = PODType?(T);
+overload InitializeDoesNotThrowType?(T) = PODType?(T);
 overload CopyDoesNotThrowType?(T) = PODType?(T);
 overload AssignDoesNotThrowType?(T) = PODType?(T);
 overload BitwiseAssignedType?(T) = BitwiseCopiedType?(T) and NotDestroyedType?(T);
@@ -806,6 +837,9 @@ overload NotDestroyedType?(#T) : Bool
 [T when PrimitiveCompoundType?(T)]
 overload NotResetType?(#T) : Bool
     = allValues?(NotResetType?, ..PrimitiveCompoundMemberTypes(T));
+[T when PrimitiveCompoundType?(T)]
+overload InitializeDoesNotThrowType?(#T) : Bool
+    = allValues?(InitializeDoesNotThrowType?, ..PrimitiveCompoundMemberTypes(T));
 [T when PrimitiveCompoundType?(T)]
 overload CopyDoesNotThrowType?(#T) : Bool
     = allValues?(CopyDoesNotThrowType?, ..PrimitiveCompoundMemberTypes(T));

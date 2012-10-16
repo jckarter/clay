@@ -1,0 +1,52 @@
+import printer.(println);
+import test.memory.(Canary, checkCanariesDestroyed);
+
+// test that default assign(ref, ref) implementation works with a type defining
+// a throwing or nonthrowing copy constructor
+
+record NonthrowingCopy (c:Canary);
+overload RegularRecord?(#NonthrowingCopy) = false;
+overload CopyDoesNotThrowType?(#NonthrowingCopy) = true;
+overload NonthrowingCopy() = initializeRecord(NonthrowingCopy);
+overload NonthrowingCopy(x:NonthrowingCopy) = copyRecord(x);
+overload moveUnsafe(x:NonthrowingCopy) = moveRecordUnsafe(x);
+overload resetUnsafe(x:NonthrowingCopy) { resetRecordUnsafe(x); }
+overload destroy(x:NonthrowingCopy) { destroyRecord(x); }
+
+record ThrowingCopy (c:Canary);
+overload RegularRecord?(#ThrowingCopy) = false;
+overload CopyDoesNotThrowType?(#ThrowingCopy) = false;
+overload ThrowingCopy() = initializeRecord(ThrowingCopy, Canary(true));
+overload ThrowingCopy(throw?) = initializeRecord(ThrowingCopy, Canary(throw?));
+overload ThrowingCopy(x:ThrowingCopy) = copyRecord(x);
+overload moveUnsafe(x:ThrowingCopy) = moveRecordUnsafe(x);
+overload resetUnsafe(x:ThrowingCopy) { resetRecordUnsafe(x); }
+overload destroy(x:ThrowingCopy) { destroyRecord(x); }
+
+tryNonthrowing() {
+    var a = NonthrowingCopy();
+    var b = NonthrowingCopy();
+    a = b;
+    var c = move(a);
+    c = move(b);
+}
+
+tryThrowing() {
+    var a = ThrowingCopy(true);
+    var b = ThrowingCopy(true);
+    try {
+        a = b;
+    } catch (ex) {}
+    var c = move(a);
+    c = move(b);
+
+    var d = ThrowingCopy(false);
+    c = d;
+}
+
+main() {
+    tryNonthrowing();
+    tryThrowing();
+    if (checkCanariesDestroyed())
+        println("ok");
+}
