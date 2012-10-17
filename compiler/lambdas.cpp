@@ -102,6 +102,17 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
         initializeLambdaWithFreeVars(x, env, closureDataName, lname);
     }
 }
+static void checkForeignExpr(ObjectPtr &obj, EnvPtr env)
+{
+    if (obj->objKind == EXPRESSION) {
+        ExprPtr expr = (Expr *)obj.ptr();
+        if (expr->exprKind == FOREIGN_EXPR) {
+            PVData pdata = safeAnalyzeOne(expr, env);
+            if (pdata.ok() && !pdata.isTemp)
+                obj = new PValue(pdata.type, false);
+        }
+    }
+}
 
 static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
     llvm::StringRef closureDataName, llvm::StringRef lname)
@@ -121,6 +132,7 @@ static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
 
         TypePtr type;
         ObjectPtr obj = safeLookupEnv(env, ident);
+        checkForeignExpr(obj, env);
         switch (obj->objKind) {
         case PVALUE :
         case CVALUE : {
@@ -487,6 +499,7 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
         ObjectPtr z = lookupEnvEx(env, y->name, ctx.nonLocalEnv,
                                   isNonLocal, isGlobal);
         if (isNonLocal && !isGlobal) {
+            checkForeignExpr(z, env);
             if ((z->objKind == PVALUE) || (z->objKind == CVALUE)) {
                 TypePtr t = typeOfValue(z);
                 if (isStaticOrTupleOfStatics(t)) {
