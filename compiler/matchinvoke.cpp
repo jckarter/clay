@@ -1,4 +1,8 @@
 #include "clay.hpp"
+#include "patterns.hpp"
+#include "matchinvoke.hpp"
+#include "evaluator.hpp"
+
 
 namespace clay {
 
@@ -180,7 +184,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
     return result.ptr();
 }
 
-void printMatchError(llvm::raw_ostream &os, MatchResultPtr result)
+void printMatchError(llvm::raw_ostream &os, const MatchResultPtr& result)
 {
     switch (result->matchCode) {
     case MATCH_SUCCESS :

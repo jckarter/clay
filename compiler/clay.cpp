@@ -1,4 +1,8 @@
 #include "clay.hpp"
+#include "hirestimer.hpp"
+#include "error.hpp"
+#include "codegen.hpp"
+
 
 // for _exit
 #ifdef WIN32

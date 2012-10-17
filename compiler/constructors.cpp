@@ -1,4 +1,9 @@
 #include "clay.hpp"
+#include "loader.hpp"
+#include "patterns.hpp"
+#include "analyzer.hpp"
+#include "constructors.hpp"
+
 
 namespace clay {
 

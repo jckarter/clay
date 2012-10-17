@@ -1,4 +1,5 @@
 #include "clay.hpp"
+#include "types.hpp"
 
 namespace clay {
 

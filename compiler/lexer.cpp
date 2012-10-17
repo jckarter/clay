@@ -1,4 +1,6 @@
 #include "clay.hpp"
+#include "lexer.hpp"
+
 
 namespace clay {
 
