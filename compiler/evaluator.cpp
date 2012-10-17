@@ -1,5 +1,9 @@
 #include "clay.hpp"
 
+
+#pragma clang diagnostic ignored "-Wcovered-switch-default"
+
+
 namespace clay {
 
 MultiEValuePtr evalMultiArgsAsRef(ExprListPtr exprs, EnvPtr env);
@@ -348,7 +352,7 @@ void evaluateStaticAssert(Location const& location,
         std::string s;
         llvm::raw_string_ostream ss(s);
 
-        for (int i = 0; i < str->size(); ++i) {
+        for (size_t i = 0; i < str->size(); ++i) {
             printStaticName(ss, str->values[i]);
         }
 
@@ -2630,14 +2634,6 @@ static TypePtr valueToNumericType(MultiEValuePtr args, unsigned index)
     }
 }
 
-static ComplexTypePtr valueToComplexType(MultiEValuePtr args, unsigned index)
-{
-    TypePtr t = valueToType(args, index);
-    if (t->typeKind != COMPLEX_TYPE)
-        argumentTypeError(index, "complex type", t);
-    return (ComplexType *)t.ptr();
-}
-
 static IntegerTypePtr valueToIntegerType(MultiEValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
@@ -2770,22 +2766,6 @@ static EValuePtr integerOrPointerLikeValue(MultiEValuePtr args, unsigned index,
             argumentTypeError(index, "integer, pointer, or code pointer type", ev->type);
         }
         type = ev->type;
-    }
-    return ev;
-}
-
-static EValuePtr complexValue(MultiEValuePtr args, unsigned index,
-                            ComplexTypePtr &type)
-{
-    EValuePtr ev = args->values[index];
-    if (type.ptr()) {
-        if (ev->type != (Type *)type.ptr())
-            argumentTypeError(index, type.ptr(), ev->type);
-    }
-    else {
-        if (ev->type->typeKind != COMPLEX_TYPE)
-            argumentTypeError(index, "complex type", ev->type);
-        type = (ComplexType *)ev->type.ptr();
     }
     return ev;
 }
@@ -3031,6 +3011,9 @@ public :
         }                                               \
     }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wtautological-compare"
+
 BINARY_OP(Op_orderedEqualsP, bool, a == b);
 BINARY_OP(Op_orderedLesserP, bool, a < b);
 BINARY_OP(Op_orderedLesserEqualsP, bool, a <= b);
@@ -3056,6 +3039,8 @@ BINARY_OP(Op_integerShiftRight, T, a >> b);
 BINARY_OP(Op_integerBitwiseAnd, T, a & b);
 BINARY_OP(Op_integerBitwiseOr, T, a | b);
 BINARY_OP(Op_integerBitwiseXor, T, a ^ b);
+
+#pragma clang diagnostic pop
 
 #undef BINARY_OP
 
@@ -3133,8 +3118,8 @@ public :
         }                                       \
     };
 
-UNARY_OP(Op_numericNegate, T, -a);
-UNARY_OP(Op_integerBitwiseNot, T, ~a);
+UNARY_OP(Op_numericNegate, T, -a)
+UNARY_OP(Op_integerBitwiseNot, T, ~a)
 
 #undef UNARY_OP
 
@@ -3225,11 +3210,11 @@ class Op_integerShiftLeftChecked : public BinaryOpHelper<T> {
         if (std::numeric_limits<T>::min() != 0) {
             // signed
             T testa = a < 0 ? ~a : a;
-            if (b > sizeof(T)*8 - 1 || (testa >> (sizeof(T)*8 - b - 1)) != 0)
+            if (b > T(sizeof(T)*8 - 1) || (testa >> (sizeof(T)*8 - b - 1)) != 0)
                 overflowError("bitshl", a, b);
         } else {
             // unsigned
-            if (b > sizeof(T)*8 || (a >> (sizeof(T)*8 - b)) != 0)
+            if (b > T(sizeof(T)*8) || (a >> (sizeof(T)*8 - b)) != 0)
                 overflowError("bitshl", a, b);
         }
         *((T *)out) = a << b;
@@ -3285,7 +3270,7 @@ public :
     virtual void perform(T &a, T &b, void *out) {
         if (std::numeric_limits<T>::min() != 0
             && a == std::numeric_limits<T>::min()
-            && b == -1)
+            && b == T(-1))
             overflowError("/", a, b);
         if (b == 0)
             divideByZeroError();

@@ -1,5 +1,9 @@
 #include "clay.hpp"
 
+
+#pragma clang diagnostic ignored "-Wcovered-switch-default"
+
+
 namespace clay {
 
 llvm::Module *llvmModule = NULL;
@@ -4538,14 +4542,6 @@ static TypePtr valueToNumericType(MultiCValuePtr args, unsigned index)
     }
 }
 
-static ComplexTypePtr valueToComplexType(MultiCValuePtr args, unsigned index)
-{
-    TypePtr t = valueToType(args, index);
-    if (t->typeKind != COMPLEX_TYPE)
-        argumentTypeError(index, "complex type", t);
-    return (ComplexType *)t.ptr();
-}
-
 static IntegerTypePtr valueToIntegerType(MultiCValuePtr args, unsigned index)
 {
     TypePtr t = valueToType(args, index);
@@ -4687,23 +4683,6 @@ static llvm::Value *integerOrPointerLikeValue(MultiCValuePtr args,
         type = cv->type;
     }
     return ctx->builder->CreateLoad(cv->llValue);
-}
-
-static llvm::Value *complexValue(MultiCValuePtr args,
-                               unsigned index,
-                               ComplexTypePtr &type)
-{
-    CValuePtr cv = args->values[index];
-    if (type.ptr()) {
-        if (cv->type != (Type *)type.ptr())
-            argumentTypeError(index, type.ptr(), cv->type);
-    }
-    else {
-        if (cv->type->typeKind != COMPLEX_TYPE)
-            argumentTypeError(index, "complex type", cv->type);
-        type = (ComplexType *)cv->type.ptr();
-    }
-    return cv->llValue;
 }
 
 static void checkIntegerValue(MultiCValuePtr args,

@@ -1,6 +1,10 @@
 
 #include "clay.hpp"
 
+
+#pragma clang diagnostic ignored "-Wcovered-switch-default"
+
+
 namespace clay {
 
 static int analysisCachingDisabled = 0;
@@ -11,7 +15,6 @@ static TypePtr objectType(ObjectPtr x);
 
 static TypePtr valueToType(MultiPValuePtr x, unsigned index);
 static TypePtr valueToNumericType(MultiPValuePtr x, unsigned index);
-static TypePtr valueToComplexType(MultiPValuePtr x, unsigned index);
 static IntegerTypePtr valueToIntegerType(MultiPValuePtr x, unsigned index);
 static TypePtr valueToPointerLikeType(MultiPValuePtr x, unsigned index);
 static EnumTypePtr valueToEnumType(MultiPValuePtr x, unsigned index);
@@ -19,7 +22,6 @@ static EnumTypePtr valueToEnumType(MultiPValuePtr x, unsigned index);
 static bool staticToTypeTuple(ObjectPtr x, vector<TypePtr> &out);
 static void staticToTypeTuple(MultiStaticPtr x, unsigned index,
                              vector<TypePtr> &out);
-static bool staticToInt(ObjectPtr x, int &out);
 static int staticToInt(MultiStaticPtr x, unsigned index);
 static bool staticToSizeTOrInt(ObjectPtr x, size_t &out);
 
@@ -28,7 +30,6 @@ static IntegerTypePtr integerTypeOfValue(MultiPValuePtr x, unsigned index);
 static PointerTypePtr pointerTypeOfValue(MultiPValuePtr x, unsigned index);
 static ArrayTypePtr arrayTypeOfValue(MultiPValuePtr x, unsigned index);
 static TupleTypePtr tupleTypeOfValue(MultiPValuePtr x, unsigned index);
-static ComplexTypePtr complexTypeOfValue(MultiPValuePtr x, unsigned index);
 static RecordTypePtr recordTypeOfValue(MultiPValuePtr x, unsigned index);
 
 static PVData staticPValue(ObjectPtr x);
@@ -94,14 +95,6 @@ static TypePtr valueToNumericType(MultiPValuePtr x, unsigned index)
         argumentTypeError(index, "numeric type", t);
         return NULL;
     }
-}
-
-static TypePtr valueToComplexType(MultiPValuePtr x, unsigned index)
-{
-    TypePtr t = valueToType(x, index);
-    if (t->typeKind != COMPLEX_TYPE)
-        argumentTypeError(index, "complex type", t);
-    return (ComplexType *)t.ptr();;
 }
 
 static IntegerTypePtr valueToIntegerType(MultiPValuePtr x, unsigned index)
@@ -267,14 +260,6 @@ static TypePtr numericTypeOfValue(MultiPValuePtr x, unsigned index)
         argumentTypeError(index, "numeric type", t);
         return NULL;
     }
-}
-
-static ComplexTypePtr complexTypeOfValue(MultiPValuePtr x, unsigned index)
-{
-    TypePtr t = x->values[index].type;
-    if (t->typeKind != COMPLEX_TYPE)
-        argumentTypeError(index, "complex type", t);
-    return (ComplexType *)t.ptr();
 }
 
 static IntegerTypePtr integerTypeOfValue(MultiPValuePtr x, unsigned index)
@@ -3422,6 +3407,13 @@ BoolKind typeBoolKind(TypePtr type) {
         typeError("Bool or static Bool", type);
         return BOOL_STATIC_TRUE;
     }
+}
+
+ExprPtr implicitUnpackExpr(unsigned wantCount, ExprListPtr exprs) {
+    if (wantCount >= 1 && exprs->size() == 1 && exprs->exprs[0]->exprKind != UNPACK)
+        return exprs->exprs[0];
+    else
+        return NULL;
 }
 
 }
