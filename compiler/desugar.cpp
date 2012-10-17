@@ -104,7 +104,7 @@ static vector<FormalArgPtr> identV(IdentifierPtr x) {
 
 static vector<FormalArgPtr> identVtoFormalV(vector<IdentifierPtr> x) {
     vector<FormalArgPtr> v;
-    for(int i=0; i<x.size(); ++i)
+    for(size_t i=0; i<x.size(); ++i)
         v.push_back(new FormalArg(x[i], NULL));
     return v;
 }

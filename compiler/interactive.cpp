@@ -143,8 +143,7 @@ namespace clay {
 
         void* dtorLlvmFun = engine->getPointerToFunction(dtor);
         typedef void (*PFN)();
-        atexit(reinterpret_cast<PFN>(dtorLlvmFun));
-
+        atexit((PFN)(uintptr_t)dtorLlvmFun);
         engine->runFunction(entryProc->llvmFunc, std::vector<llvm::GenericValue>());
     }
 
