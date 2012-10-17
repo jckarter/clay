@@ -7,7 +7,7 @@ main() {
     foo(20 + r.x);
 }
 
-callbyname foo(x) {
+alias foo(x) {
     var f = () => { println(x); };
     f();
 }
