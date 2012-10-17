@@ -4005,12 +4005,8 @@ void codegenCWrapper(InvokeEntry* entry);
 void codegenEntryPoints(ModulePtr module, bool importedExternals);
 void codegenMain(ModulePtr module);
 
-static ExprPtr implicitUnpackExpr(unsigned wantCount, ExprListPtr exprs) {
-    if (wantCount >= 1 && exprs->size() == 1 && exprs->exprs[0]->exprKind != UNPACK)
-        return exprs->exprs[0];
-    else
-        return NULL;
-}
+ExprPtr implicitUnpackExpr(unsigned wantCount, ExprListPtr exprs);
+
 
 // externals
 

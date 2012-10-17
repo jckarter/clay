@@ -92,7 +92,7 @@ int objectHash(ObjectPtr a)
         // TODO: call clay 'hash'
         int h = 0;
         size_t n = typeSize(b->type);
-        for (int i = 0; i < n; ++i)
+        for (size_t i = 0; i < n; ++i)
             h += b->buf[i];
         h = h*11 + identityHash(b->type.ptr());
         return h;

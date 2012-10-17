@@ -1933,25 +1933,6 @@ static bool optPatternVarsWithCond(vector<PatternVar> &x, ExprPtr &y) {
     return true;
 }
 
-static bool patternVars(vector<PatternVar> &x) {
-    if (!symbol("[")) return false;
-    if (!optPatternVarList(x)) return false;
-    if (!symbol("]")) {
-        x.clear();
-        return false;
-    }
-    return true;
-}
-
-static bool optPatternVars(vector<PatternVar> &x) {
-    int p = save();
-    if (!patternVars(x)) {
-        restore(p);
-        x.clear();
-    }
-    return true;
-}
-
 static bool exprBody(StatementPtr &x) {
     if (!opsymbol("=")) return false;
     Location location = currentLocation();

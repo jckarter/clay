@@ -1,5 +1,9 @@
 #include "clay.hpp"
 
+
+#pragma clang diagnostic ignored "-Wcovered-switch-default"
+
+
 namespace clay {
 
 static llvm::Value *promoteCVarArg(CallingConv conv,
