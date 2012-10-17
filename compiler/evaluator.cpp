@@ -3273,7 +3273,7 @@ public :
         // XXX this won't work for 128-bit types or 64-bit types without
         // compiler int128 support
         BigT bigout = BigT(a) * BigT(b);
-        if (b < std::numeric_limits<T>::min() || std::numeric_limits<T>::max() < b)
+        if (bigout < std::numeric_limits<T>::min() || std::numeric_limits<T>::max() < bigout)
             overflowError("*", a, b);
         *((T *)out) = a * b;
     }
