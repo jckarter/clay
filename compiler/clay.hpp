@@ -1423,19 +1423,19 @@ enum BindingKind {
 struct PatternVar;
 
 struct Binding : public Statement {
-    int bindingKind;
+    BindingKind bindingKind;
     vector<PatternVar> patternVars;
     vector<ObjectPtr> patternTypes;
     ExprPtr predicate;
     vector<FormalArgPtr> args;
     ExprListPtr values;
     bool hasVarArg;
-    Binding(int bindingKind,
+    Binding(BindingKind bindingKind,
         const vector<FormalArgPtr> &args,
         ExprListPtr values)
         : Statement(BINDING), bindingKind(bindingKind),
           args(args), values(values), hasVarArg(false) {}
-    Binding(int bindingKind,
+    Binding(BindingKind bindingKind,
         const vector<PatternVar> &patternVars,
         const vector<ObjectPtr> &patternTypes,
         ExprPtr predicate,

@@ -1062,7 +1062,7 @@ static bool labelDef(StatementPtr &x) {
     return true;
 }
 
-static bool bindingKind(int &bindingKind) {
+static bool bindingKind(BindingKind &bindingKind) {
     int p = save();
     if (keyword("var"))
         bindingKind = VAR;
@@ -1082,7 +1082,7 @@ static bool bindingsBody(vector<FormalArgPtr> &args, bool &hasVarArg);
 
 static bool localBinding(StatementPtr &x) {
     Location location = currentLocation();
-    int bk;
+    BindingKind bk;
     if (!bindingKind(bk)) return false;
     vector<PatternVar> patternVars;
     ExprPtr predicate;
