@@ -50,29 +50,6 @@ define resetUnsafe(a) :;
 [T] uninitializedUnsafe(#T) --> x:T {}
 
 
-/// @section  coordinate type predicates 
-
-Coordinate?(T) : Bool = CallDefined?(dereference, T);
-CoordinateTargetType(T) = ..Type(..dereference(typeToLValue(T)));
-
-RandomAccessCoordinate?(T) : Bool =
-    Coordinate?(T) and
-    CallDefined?((+), T, Int) and
-    CallDefined?((-), T, Int) and
-    CallDefined?((-), T, T);
-
-LValueCoordinate?(T) =
-    Coordinate?(T) and
-    LValue?(dereference(typeToLValue(T)));
-
-// true if adjacent coordinates point to adjacent locations in memory
-[T]
-define ContiguousCoordinate?(#T) : Bool;
-
-overload ContiguousCoordinate?(T) : Bool = false;
-
-
-
 /// @section  iterator type predicates 
 
 Iterator?(T): Bool = CallDefined?(nextValue, T);
