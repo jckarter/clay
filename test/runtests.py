@@ -88,9 +88,10 @@ def getClayPlatform(opt):
         print >>platformclay, '}'
         platformclay.close()
 
-        returncode = call([opt.clayCompiler] + opt.testBuildFlags + ['-o', 'test.exe', platformclay.name])
+        commandline = [opt.clayCompiler] + opt.testBuildFlags + ['-o', 'test.exe', platformclay.name]
+        returncode = call(commandline)
         if returncode != 0:
-            print "could not build an executable with", opt.clayCompiler, opt.testBuildFlags
+            print "could not build an executable with", " ".join(commandline)
             sys.exit(1)
 
         process = Popen(["./test.exe"], stdout=PIPE)
