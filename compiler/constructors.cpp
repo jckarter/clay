@@ -109,7 +109,7 @@ void initTypeOverloads(TypePtr t)
     t->overloadsInitialized = true;
 }
 
-void initBuiltinConstructor(RecordPtr x)
+void initBuiltinConstructor(RecordDeclPtr x)
 {
     assert(!(x->builtinOverloadInitialized));
     x->builtinOverloadInitialized = true;

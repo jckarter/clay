@@ -2077,7 +2077,7 @@ static bool record(TopLevelItemPtr &x) {
     if (!optPatternVarsWithCond(patternVars, predicate)) return false;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("record")) return false;
-    RecordPtr y = new RecordDecl(vis, patternVars, predicate);
+    RecordDeclPtr y = new RecordDecl(vis, patternVars, predicate);
     if (!identifier(y->name)) return false;
     if (!optStaticParams(y->params, y->varParam)) return false;
     if (!recordBody(y->body)) return false;
@@ -2559,7 +2559,7 @@ static bool enumeration(TopLevelItemPtr &x) {
     if (!keyword("enum")) return false;
     IdentifierPtr y;
     if (!identifier(y)) return false;
-    EnumerationPtr z = new EnumDecl(y, vis, patternVars, predicate);
+    EnumDeclPtr z = new EnumDecl(y, vis, patternVars, predicate);
     if (!symbol("(")) return false;
     if (!enumMemberList(z->members)) return false;
     if (!symbol(")")) return false;

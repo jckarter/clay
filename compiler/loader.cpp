@@ -613,7 +613,7 @@ static void initOverload(OverloadPtr x) {
     }
 }
 
-static void initVariantInstance(InstancePtr x) {
+static void initVariantInstance(InstanceDeclPtr x) {
     EnvPtr env = new Env(x->env);
     const vector<PatternVar> &pvars = x->patternVars;
     for (unsigned i = 0; i < pvars.size(); ++i) {
@@ -924,7 +924,7 @@ static ModulePtr makePrimitivesModule() {
     vector<IdentifierPtr> recordParams;
     RecordBodyPtr recordBody = new RecordBody(vector<RecordFieldPtr>());
     recordParams.push_back(Identifier::get("T"));
-    RecordPtr byRefRecord = new RecordDecl(Identifier::get("ByRef"),
+    RecordDeclPtr byRefRecord = new RecordDecl(Identifier::get("ByRef"),
         PUBLIC,
         vector<PatternVar>(),
         NULL,
@@ -937,7 +937,7 @@ static ModulePtr makePrimitivesModule() {
     recordParams.clear();
     recordParams.push_back(Identifier::get("Properties"));
     recordParams.push_back(Identifier::get("Fields"));
-    RecordPtr rwpRecord = new RecordDecl(Identifier::get("RecordWithProperties"),
+    RecordDeclPtr rwpRecord = new RecordDecl(Identifier::get("RecordWithProperties"),
         PUBLIC,
         vector<PatternVar>(),
         NULL,

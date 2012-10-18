@@ -1445,7 +1445,7 @@ TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args)
         }
     }
     else if (constructor->objKind == RECORD_DECL) {
-        RecordPtr x = (RecordDecl *)constructor.ptr();
+        RecordDeclPtr x = (RecordDecl *)constructor.ptr();
         if (x->varParam.ptr()) {
             if (args->size() < x->params.size())
                 arityError2(x->params.size(), args->size());
@@ -1456,7 +1456,7 @@ TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args)
         return recordType(x, args->values);
     }
     else if (constructor->objKind == VARIANT_DECL) {
-        VariantPtr x = (VariantDecl *)constructor.ptr();
+        VariantDeclPtr x = (VariantDecl *)constructor.ptr();
         if (x->varParam.ptr()) {
             if (args->size() < x->params.size())
                 arityError2(x->params.size(), args->size());
@@ -3023,7 +3023,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         if (!obj || !staticToSizeTOrInt(obj, i))
             argumentError(1, "expecting static SizeT or Int value");
 
-        EnumerationPtr e = et->enumeration;
+        EnumDeclPtr e = et->enumeration;
         if (i >= e->members.size())
             argumentIndexRangeError(1, "enum member index",
                                     i, e->members.size());

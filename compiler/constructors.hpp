@@ -10,7 +10,7 @@ vector<OverloadPtr> &primOpOverloads(PrimOpPtr x);
 void addPrimOpOverload(PrimOpPtr x, OverloadPtr overload);
 void addPatternOverload(OverloadPtr x);
 void initTypeOverloads(TypePtr t);
-void initBuiltinConstructor(RecordPtr x);
+void initBuiltinConstructor(RecordDeclPtr x);
 
 }
 

@@ -335,7 +335,7 @@ TypePtr unionType(const vector<TypePtr> &memberTypes) {
     return t.ptr();
 }
 
-TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params) {
+TypePtr recordType(RecordDeclPtr record, const vector<ObjectPtr> &params) {
     int h = pointerHash(record.ptr());
     vector<ObjectPtr>::const_iterator pi, pend;
     for (pi = params.begin(), pend = params.end(); pi != pend; ++pi)
@@ -356,7 +356,7 @@ TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params) {
     return t.ptr();
 }
 
-TypePtr variantType(VariantPtr variant, const vector<ObjectPtr> &params) {
+TypePtr variantType(VariantDeclPtr variant, const vector<ObjectPtr> &params) {
     int h = pointerHash(variant.ptr());
     for (unsigned i = 0; i < params.size(); ++i)
         h += objectHash(params[i]);
@@ -400,14 +400,14 @@ void initializeEnumType(EnumTypePtr t)
     t->initialized = true;
 }
 
-TypePtr enumType(EnumerationPtr enumeration)
+TypePtr enumType(EnumDeclPtr enumeration)
 {
     if (!enumeration->type)
         enumeration->type = new EnumType(enumeration);
     return enumeration->type;
 }
 
-void initializeNewType(NewTypeTypePtr t) 
+void initializeNewType(NewTypePtr t) 
 {
     if (t->newtype->initialized)
         return;
@@ -416,14 +416,14 @@ void initializeNewType(NewTypeTypePtr t)
     t->newtype->initialized = true;
 }
     
-TypePtr newType(NewTypePtr newtype)
+TypePtr newType(NewTypeDeclPtr newtype)
 {
     if (!newtype->type)
         newtype->type = new NewType(newtype);
     return newtype->type;
 }
 
-TypePtr newtypeReprType(NewTypeTypePtr t)
+TypePtr newtypeReprType(NewTypePtr t)
 {
     if (!t->newtype->initialized)
         initializeNewType(t);
@@ -647,7 +647,7 @@ void initializeRecordFields(RecordTypePtr t) {
 
     assert(!t->fieldsInitialized);
     t->fieldsInitialized = true;
-    RecordPtr r = t->record;
+    RecordDeclPtr r = t->record;
     if (r->varParam.ptr())
         assert(t->params.size() >= r->params.size());
     else
@@ -781,9 +781,9 @@ static void initializeVariantType(VariantTypePtr t) {
     ExprListPtr defaultInstances = t->variant->defaultInstances;
     evaluateMultiType(defaultInstances, variantEnv, t->memberTypes);
 
-    const vector<InstancePtr> &instances = t->variant->instances;
+    const vector<InstanceDeclPtr> &instances = t->variant->instances;
     for (size_t i = 0; i < instances.size(); ++i) {
-        InstancePtr x = instances[i];
+        InstanceDeclPtr x = instances[i];
         vector<PatternCellPtr> cells;
         vector<MultiPatternCellPtr> multiCells;
         const vector<PatternVar> &pvars = x->patternVars;

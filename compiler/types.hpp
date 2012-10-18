@@ -55,11 +55,11 @@ TypePtr arrayType(TypePtr elememtType, int size);
 TypePtr vecType(TypePtr elementType, int size);
 TypePtr tupleType(const vector<TypePtr> &elementTypes);
 TypePtr unionType(const vector<TypePtr> &memberTypes);
-TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params);
-TypePtr variantType(VariantPtr variant, const vector<ObjectPtr> &params);
+TypePtr recordType(RecordDeclPtr record, const vector<ObjectPtr> &params);
+TypePtr variantType(VariantDeclPtr variant, const vector<ObjectPtr> &params);
 TypePtr staticType(ObjectPtr obj);
-TypePtr enumType(EnumerationPtr enumeration);
-TypePtr newType(NewTypePtr newtype);
+TypePtr enumType(EnumDeclPtr enumeration);
+TypePtr newType(NewTypeDeclPtr newtype);
 
 bool isPrimitiveType(TypePtr t);
 bool isPrimitiveAggregateType(TypePtr t);
@@ -75,10 +75,10 @@ const llvm::StringMap<size_t> &recordFieldIndexMap(RecordTypePtr t);
 const vector<TypePtr> &variantMemberTypes(VariantTypePtr t);
 TypePtr variantReprType(VariantTypePtr t);
 int dispatchTagCount(TypePtr t);
-TypePtr newtypeReprType(NewTypeTypePtr t);
+TypePtr newtypeReprType(NewTypePtr t);
 
 void initializeEnumType(EnumTypePtr t);
-void initializeNewType(NewTypeTypePtr t);
+void initializeNewType(NewTypePtr t);
 
 const llvm::StructLayout *tupleTypeLayout(TupleType *t);
 const llvm::StructLayout *complexTypeLayout(ComplexType *t);

@@ -662,15 +662,15 @@ typedef Pointer<LLVMCode> LLVMCodePtr;
 typedef Pointer<Code> CodePtr;
 
 typedef Pointer<TopLevelItem> TopLevelItemPtr;
-typedef Pointer<RecordDecl> RecordPtr;
+typedef Pointer<RecordDecl> RecordDeclPtr;
 typedef Pointer<RecordBody> RecordBodyPtr;
 typedef Pointer<RecordField> RecordFieldPtr;
-typedef Pointer<VariantDecl> VariantPtr;
-typedef Pointer<InstanceDecl> InstancePtr;
-typedef Pointer<NewTypeDecl> NewTypePtr;
+typedef Pointer<VariantDecl> VariantDeclPtr;
+typedef Pointer<InstanceDecl> InstanceDeclPtr;
+typedef Pointer<NewTypeDecl> NewTypeDeclPtr;
 typedef Pointer<Overload> OverloadPtr;
 typedef Pointer<Procedure> ProcedurePtr;
-typedef Pointer<EnumDecl> EnumerationPtr;
+typedef Pointer<EnumDecl> EnumDeclPtr;
 typedef Pointer<EnumMember> EnumMemberPtr;
 typedef Pointer<GlobalVariable> GlobalVariablePtr;
 typedef Pointer<GVarInstance> GVarInstancePtr;
@@ -710,7 +710,7 @@ typedef Pointer<RecordType> RecordTypePtr;
 typedef Pointer<VariantType> VariantTypePtr;
 typedef Pointer<StaticType> StaticTypePtr;
 typedef Pointer<EnumType> EnumTypePtr;
-typedef Pointer<NewType> NewTypeTypePtr;
+typedef Pointer<NewType> NewTypePtr;
 
 typedef Pointer<Pattern> PatternPtr;
 typedef Pointer<PatternCell> PatternCellPtr;
@@ -1251,7 +1251,7 @@ struct Lambda : public Expr {
     ProcedureMono mono;
 
     // if freevars are present
-    RecordPtr lambdaRecord;
+    RecordDeclPtr lambdaRecord;
     TypePtr lambdaType;
 
     // if freevars are absent
@@ -1884,7 +1884,7 @@ struct VariantDecl : public TopLevelItem {
     bool open;
     ExprListPtr defaultInstances;
 
-    vector<InstancePtr> instances;
+    vector<InstanceDeclPtr> instances;
 
     vector<OverloadPtr> overloads;
 
@@ -2783,7 +2783,7 @@ struct UnionType : public Type {
 };
 
 struct RecordType : public Type {
-    RecordPtr record;
+    RecordDeclPtr record;
     vector<ObjectPtr> params;
 
     bool fieldsInitialized;
@@ -2793,26 +2793,26 @@ struct RecordType : public Type {
 
     const llvm::StructLayout *layout;
 
-    RecordType(RecordPtr record)
+    RecordType(RecordDeclPtr record)
         : Type(RECORD_TYPE), record(record), fieldsInitialized(false),
           layout(NULL) {}
-    RecordType(RecordPtr record, const vector<ObjectPtr> &params)
+    RecordType(RecordDeclPtr record, const vector<ObjectPtr> &params)
         : Type(RECORD_TYPE), record(record), params(params),
           fieldsInitialized(false), layout(NULL) {}
 };
 
 struct VariantType : public Type {
-    VariantPtr variant;
+    VariantDeclPtr variant;
     vector<ObjectPtr> params;
 
     bool initialized;
     vector<TypePtr> memberTypes;
     TypePtr reprType;
 
-    VariantType(VariantPtr variant)
+    VariantType(VariantDeclPtr variant)
         : Type(VARIANT_TYPE), variant(variant),
           initialized(false) {}
-    VariantType(VariantPtr variant, const vector<ObjectPtr> &params)
+    VariantType(VariantDeclPtr variant, const vector<ObjectPtr> &params)
         : Type(VARIANT_TYPE), variant(variant), params(params),
           initialized(false) {}
 };
@@ -2824,16 +2824,16 @@ struct StaticType : public Type {
 };
 
 struct EnumType : public Type {
-    EnumerationPtr enumeration;
+    EnumDeclPtr enumeration;
     bool initialized;
 
-    EnumType(EnumerationPtr enumeration)
+    EnumType(EnumDeclPtr enumeration)
         : Type(ENUM_TYPE), enumeration(enumeration), initialized(false) {}
 };
 
 struct NewType : public Type {
-    NewTypePtr newtype;
-    NewType(NewTypePtr newtype)
+    NewTypeDeclPtr newtype;
+    NewType(NewTypeDeclPtr newtype)
         : Type(NEW_TYPE), newtype(newtype) {}
 };
 
