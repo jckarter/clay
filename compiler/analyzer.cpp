@@ -1848,6 +1848,12 @@ static TypePtr intrinsicOutputType(llvm::Type *ty)
             return pointerType(baseType);
         else
             return NULL;
+    } else if (llvm::VectorType *vectorTy = llvm::dyn_cast<llvm::VectorType>(ty)) {
+        TypePtr baseType = intrinsicOutputType(vectorTy->getElementType());
+        if (baseType != NULL)
+            return vecType(baseType, vectorTy->getNumElements());
+        else
+            return NULL;
     } else
         return NULL;
 }
