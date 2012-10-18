@@ -1,4 +1,7 @@
 #include "clay.hpp"
+#include "lexer.hpp"
+#include "codegen.hpp"
+
 
 #include <setjmp.h>
 #include <signal.h>

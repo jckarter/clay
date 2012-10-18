@@ -1,4 +1,9 @@
 #include "clay.hpp"
+#include "codegen.hpp"
+#include "operators.hpp"
+#include "lambdas.hpp"
+#include "desugar.hpp"
+
 
 namespace clay {
 

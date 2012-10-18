@@ -1,11 +1,28 @@
 
 #include "clay.hpp"
+#include "evaluator.hpp"
+#include "codegen.hpp"
+#include "loader.hpp"
+#include "operators.hpp"
+#include "patterns.hpp"
+#include "lambdas.hpp"
+#include "analyzer.hpp"
+#include "invoketables.hpp"
+#include "matchinvoke.hpp"
+#include "error.hpp"
+#include "literals.hpp"
+#include "desugar.hpp"
+#include "constructors.hpp"
 
 
 #pragma clang diagnostic ignored "-Wcovered-switch-default"
 
 
 namespace clay {
+
+static StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContext *ctx);
+static EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
+
 
 static int analysisCachingDisabled = 0;
 void disableAnalysisCaching() { analysisCachingDisabled += 1; }
@@ -2058,8 +2075,6 @@ static StatementAnalysis combineStatementAnalysis(StatementAnalysis a,
     return SA_TERMINATED;
 }
 
-StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContext* ctx);
-
 static StatementAnalysis analyzeBlockStatement(StatementPtr stmt, EnvPtr &env, AnalysisContext* ctx)
 {
     if (stmt->stmtKind == BINDING) {
@@ -2110,7 +2125,7 @@ static EnvPtr analyzeStatementExpressionStatements(vector<StatementPtr> const &s
     return env2;
 }
 
-StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContext* ctx)
+static StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContext* ctx)
 {
     LocationContext loc(stmt->location);
         
@@ -2319,7 +2334,7 @@ void initializeStaticForClones(StaticForPtr x, unsigned count)
     }
 }
 
-EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
+static EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
 {
     LocationContext loc(x->location);
         

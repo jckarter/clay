@@ -1,4 +1,9 @@
 #include "clay.hpp"
+#include "operators.hpp"
+#include "evaluator.hpp"
+#include "analyzer.hpp"
+#include "desugar.hpp"
+
 
 namespace clay {
 
