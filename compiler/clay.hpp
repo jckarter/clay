@@ -337,30 +337,7 @@ public :
     }
 };
 
-
-//
-// Object
-//
 
-struct Object {
-    int refCount;
-    int objKind;
-    Object(int objKind)
-        : refCount(0), objKind(objKind) {}
-    void incRef() { ++refCount; }
-    void decRef() {
-        if (--refCount == 0)
-            dealloc();
-    }
-    void operator delete(void*) {}
-    virtual void dealloc() { ::operator delete(this); }
-    virtual ~Object() { dealloc(); }
-};
-
-typedef Pointer<Object> ObjectPtr;
-
-
-
 //
 // ObjectKind
 //
@@ -432,6 +409,28 @@ enum ObjectKind {
 
     DONT_CARE
 };
+
+
+//
+// Object
+//
+
+struct Object {
+    int refCount;
+    ObjectKind objKind;
+    Object(ObjectKind objKind)
+        : refCount(0), objKind(objKind) {}
+    void incRef() { ++refCount; }
+    void decRef() {
+        if (--refCount == 0)
+            dealloc();
+    }
+    void operator delete(void*) {}
+    virtual void dealloc() { ::operator delete(this); }
+    virtual ~Object() { dealloc(); }
+};
+
+typedef Pointer<Object> ObjectPtr;
 
 
 
@@ -978,7 +977,7 @@ static llvm::BumpPtrAllocator *ANodeAllocator = new llvm::BumpPtrAllocator();
 
 struct ANode : public Object {
     Location location;
-    ANode(int objKind)
+    ANode(ObjectKind objKind)
         : Object(objKind) {}
     void *operator new(size_t num_bytes) {
         return ANodeAllocator->Allocate(num_bytes, llvm::AlignOf<ANode>::Alignment);
@@ -1814,11 +1813,11 @@ struct TopLevelItem : public ANode {
     EnvPtr env;
     IdentifierPtr name; // for named top level items
     Visibility visibility; // valid only if name != NULL
-    TopLevelItem(int objKind)
+    TopLevelItem(ObjectKind objKind)
         : ANode(objKind) {}
-    TopLevelItem(int objKind, Visibility visibility)
+    TopLevelItem(ObjectKind objKind, Visibility visibility)
         : ANode(objKind), visibility(visibility) {}
-    TopLevelItem(int objKind, IdentifierPtr name, Visibility visibility)
+    TopLevelItem(ObjectKind objKind, IdentifierPtr name, Visibility visibility)
         : ANode(objKind), name(name), visibility(visibility) {}
 };
 

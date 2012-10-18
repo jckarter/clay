@@ -718,6 +718,8 @@ static void initModule(ModulePtr m, const vector<string>& importChain) {
         case STATIC_ASSERT_TOP_LEVEL:
             checkStaticAssert((StaticAssertTopLevel *)obj);
             break;
+        default:
+            break;
         }
     }
 
@@ -1419,6 +1421,8 @@ void addGlobals(ModulePtr m, const vector<TopLevelItemPtr>& toplevels) {
             break;
         case STATIC_ASSERT_TOP_LEVEL:
             checkStaticAssert((StaticAssertTopLevel *)obj);
+            break;
+        default:
             break;
         }
     }
