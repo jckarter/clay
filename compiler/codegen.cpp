@@ -2021,10 +2021,85 @@ void codegenAliasIndexing(GlobalAliasPtr x,
 //
 // codegenIntrinsic
 //
+    
+static llvm::Constant *valueHolderToLLVMConstant(ValueHolder *vh, CodegenContext *ctx)
+{
+    switch (vh->type->typeKind) {
+        case INTEGER_TYPE: {
+            IntegerType *intType = (IntegerType*)vh->type.ptr();
+            switch (intType->bits) {
+                case 8:
+                    return ctx->builder->getInt8(vh->as<uint8_t>());
+                case 16:
+                    return ctx->builder->getInt16(vh->as<uint16_t>());
+                case 32:
+                    return ctx->builder->getInt32(vh->as<uint32_t>());
+                case 64:
+                    return ctx->builder->getInt64(vh->as<uint64_t>());
+                case 128:
+                    error("static Int128 arguments to intrinsics not yet supported");
+                    return NULL;
+                default:
+                    assert(false && "unexpected int type used as static intrinsic argument!");
+                    return NULL;
+            }
+        }
+        case BOOL_TYPE: {
+            return ctx->builder->getInt1(vh->as<bool>());
+        }
+        default:
+            // XXX should catch this at analysis time
+            error("static argument to intrinsic must be a boolean or integer static");
+            return NULL;
+    }
+}
+
 static void codegenIntrinsic(IntrinsicSymbol *intrin, MultiCValue *args,
                              CodegenContext *ctx, MultiCValuePtr out)
 {
-    error("intrinsic calls not yet supported");
+    vector<TypePtr> argsKey;
+    args->toArgsKey(&argsKey);
+    
+    map<vector<TypePtr>, IntrinsicInstance>::const_iterator instanceI
+        = intrin->instances.find(argsKey);
+    assert(instanceI != intrin->instances.end());
+    
+    IntrinsicInstance const &instance = instanceI->second;
+    if (instance.function == NULL) {
+        assert(!instance.error.empty());
+        error(instance.error);
+    }
+    
+    llvm::FunctionType *funTy = instance.function->getFunctionType();
+    llvm::SmallVector<llvm::Value*, 8> funArgs;
+    
+    assert(args->size() == funTy->getNumParams());
+    
+    for (vector<CValuePtr>::const_iterator i = args->values.begin(), end = args->values.end();
+         i != end;
+         ++i)
+    {
+        Type *type = (*i)->type.ptr();
+        llvm::Value *value;
+        if (type->typeKind == STATIC_TYPE) {
+            StaticType *staticType = (StaticType *)type;
+            assert(staticType->obj->objKind == VALUE_HOLDER);
+            ValueHolder *vh = (ValueHolder*)staticType->obj.ptr();
+            value = valueHolderToLLVMConstant(vh, ctx);
+        } else {
+            value = ctx->builder->CreateLoad((*i)->llValue);
+        }
+        assert(funTy->getParamType(funArgs.size()) == value->getType());
+        funArgs.push_back(value);
+    }
+    
+    llvm::Value *retValue = ctx->builder->CreateCall(instance.function, funArgs);
+    if (retValue->getType()->isVoidTy()) {
+        assert(out->size() == 0);
+    } else {
+        assert(out->size() == 1);
+        ctx->builder->CreateStore(retValue, out->values[0]->llValue);
+    }
 }
 
 //

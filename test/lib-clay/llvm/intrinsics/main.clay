@@ -17,7 +17,7 @@ main() {
     println(Type(leadingZeros (0x10uss)));
     println(Type(trailingZeros(0x10uss)));
     println();
-    /*
+
     println(leadingZeros (0x10l));
     println(trailingZeros(0x10l));
     println(leadingZeros (0x10));
@@ -26,5 +26,4 @@ main() {
     println(trailingZeros(0x10s));
     println(leadingZeros (0x10ss));
     println(trailingZeros(0x10ss));
-    */
 }

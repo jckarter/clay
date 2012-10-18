@@ -1857,6 +1857,9 @@ static MultiPValuePtr intrinsicOutputTypes(llvm::Function *instance)
     
     MultiPValuePtr ret = new MultiPValue();
     llvm::Type *ty = instance->getFunctionType()->getReturnType();
+    
+    if (ty->isVoidTy())
+        return ret;
 
     TypePtr outType = intrinsicOutputType(ty);
     if (outType == NULL) {

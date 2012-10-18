@@ -2930,7 +2930,6 @@ struct MultiStatic : public Object {
     }
 };
 
-
 //
 // parachute
 //
