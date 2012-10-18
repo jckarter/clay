@@ -2028,11 +2028,14 @@ void codegenCallExpr(ExprPtr callable,
     PVData pv = safeAnalyzeOne(callable, env);
 
     switch (pv.type->typeKind) {
-    case CODE_POINTER_TYPE :
+    case CODE_POINTER_TYPE : {
         CValuePtr cv = codegenOneAsRef(callable, env, ctx);
         MultiCValuePtr mcv = codegenMultiAsRef(args, env, ctx);
         codegenCallPointer(cv, mcv, ctx, out);
         return;
+    }
+    default:
+        break;
     }
 
     if ((pv.type->typeKind == CCODE_POINTER_TYPE)
@@ -2253,6 +2256,8 @@ void codegenCallValue(CValuePtr callable,
     case CODE_POINTER_TYPE :
         codegenCallPointer(callable, args, ctx, out);
         return;
+    default:
+        break;
     }
 
     if (callable->type->typeKind != STATIC_TYPE) {

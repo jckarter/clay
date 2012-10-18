@@ -1535,11 +1535,14 @@ void evalCallExpr(ExprPtr callable,
     PVData pv = safeAnalyzeOne(callable, env);
 
     switch (pv.type->typeKind) {
-    case CODE_POINTER_TYPE :
+    case CODE_POINTER_TYPE : {
         EValuePtr ev = evalOneAsRef(callable, env);
         MultiEValuePtr mev = evalMultiAsRef(args, env);
         evalCallPointer(ev, mev, out);
         return;
+    }
+    default:
+        break;
     }
 
     if (pv.type->typeKind != STATIC_TYPE) {
@@ -1726,6 +1729,8 @@ void evalCallValue(EValuePtr callable,
     case CODE_POINTER_TYPE :
         evalCallPointer(callable, args, out);
         return;
+    default:
+        break;
     }
 
     if (callable->type->typeKind != STATIC_TYPE) {

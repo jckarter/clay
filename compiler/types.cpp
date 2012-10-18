@@ -8,6 +8,9 @@
 #include "analyzer.hpp"
 
 
+#pragma clang diagnostic ignored "-Wcovered-switch-default"
+
+
 namespace clay {
 
 TypePtr boolType;

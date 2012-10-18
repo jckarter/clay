@@ -7,6 +7,9 @@
 #include "constructors.hpp"
 
 
+#pragma clang diagnostic ignored "-Wcovered-switch-default"
+
+
 namespace clay {
 
 using namespace std;
@@ -791,6 +794,7 @@ static ModulePtr typeModule(TypePtr t) {
         return envModule(et->newtype->env);
     }
     default :
+        assert(false);
         return NULL;
     }
 }

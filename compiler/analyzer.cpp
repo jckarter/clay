@@ -1561,11 +1561,14 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
     if (!pv.ok())
         return NULL;
     switch (pv.type->typeKind) {
-    case CODE_POINTER_TYPE :
+    case CODE_POINTER_TYPE : {
         MultiPValuePtr mpv = analyzeMulti(args, env, 0);
         if (!mpv)
             return NULL;
         return analyzeCallPointer(pv, mpv);
+    }
+    default:
+        break;
     }
     ObjectPtr obj = unwrapStaticType(pv.type);
     if (!obj) {
@@ -1736,6 +1739,8 @@ MultiPValuePtr analyzeCallValue(PVData const &callable,
     switch (callable.type->typeKind) {
     case CODE_POINTER_TYPE :
         return analyzeCallPointer(callable, args);
+    default:
+        break;
     }
     ObjectPtr obj = unwrapStaticType(callable.type);
     if (!obj) {

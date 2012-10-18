@@ -2643,27 +2643,6 @@ private :
 // Types
 //
 
-struct Type : public Object {
-    int typeKind;
-    llvm::Type *llType;
-    llvm::TrackingVH<llvm::MDNode> debugInfo;
-    bool defined;
-
-    bool typeInfoInitialized;
-    size_t typeSize;
-    size_t typeAlignment;
-
-    bool overloadsInitialized;
-    vector<OverloadPtr> overloads;
-
-    Type(int typeKind)
-        : Object(TYPE), typeKind(typeKind),
-          llType(NULL), debugInfo(NULL), defined(false),
-          typeInfoInitialized(false), overloadsInitialized(false) {}
-
-    llvm::DIType getDebugInfo() { return llvm::DIType(debugInfo); }
-};
-
 enum TypeKind {
     BOOL_TYPE,
     INTEGER_TYPE,
@@ -2681,6 +2660,27 @@ enum TypeKind {
     STATIC_TYPE,
     ENUM_TYPE,
     NEW_TYPE
+};
+
+struct Type : public Object {
+    TypeKind typeKind;
+    llvm::Type *llType;
+    llvm::TrackingVH<llvm::MDNode> debugInfo;
+    bool defined;
+
+    bool typeInfoInitialized;
+    size_t typeSize;
+    size_t typeAlignment;
+
+    bool overloadsInitialized;
+    vector<OverloadPtr> overloads;
+
+    Type(TypeKind typeKind)
+        : Object(TYPE), typeKind(typeKind),
+          llType(NULL), debugInfo(NULL), defined(false),
+          typeInfoInitialized(false), overloadsInitialized(false) {}
+
+    llvm::DIType getDebugInfo() { return llvm::DIType(debugInfo); }
 };
 
 struct BoolType : public Type {
