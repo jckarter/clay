@@ -139,7 +139,7 @@ static void addOptimizationPasses(llvm::PassManager &passes,
     }
 }
 
-static bool linkLibraries(llvm::Module *module, const vector<string>& libSearchPaths, const vector<string>& libs)
+static bool linkLibraries(llvm::Module *module, llvm::ArrayRef<string>  libSearchPaths, llvm::ArrayRef<string>  libs)
 {
     if (libs.empty())
         return true;
@@ -202,8 +202,8 @@ static bool linkLibraries(llvm::Module *module, const vector<string>& libSearchP
 static bool runModule(llvm::Module *module,
                       vector<string> &argv,
                       char const* const* envp,
-                      const vector<string>& libSearchPaths,
-                      const vector<string>& libs)
+                      llvm::ArrayRef<string>  libSearchPaths,
+                      llvm::ArrayRef<string>  libs)
 {
     if (!linkLibraries(module, libSearchPaths, libs)) {
         return false;
@@ -303,11 +303,11 @@ static void generateAssembly(llvm::Module *module,
     fpasses.doFinalization();
 }
 
-static string joinCmdArgs(const std::vector<const char*>& args) {
+static string joinCmdArgs(llvm::ArrayRef<const char*>  args) {
     string s;
     llvm::raw_string_ostream ss(s);
-    for (std::vector<const char*>::const_iterator arg = args.begin();
-            arg != args.end(); ++arg)
+    for (char const * const *arg = args.begin();
+         arg != args.end(); ++arg)
     {
         if (arg != args.begin()) {
             ss << " ";
@@ -330,7 +330,7 @@ static bool generateBinary(llvm::Module *module,
                            bool sharedLib,
                            bool genPIC,
                            bool debug,
-                           const vector<string> &arguments,
+                           llvm::ArrayRef<string> arguments,
                            bool verbose)
 {
     int fd;

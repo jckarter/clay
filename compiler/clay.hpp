@@ -803,40 +803,40 @@ struct CompileContextEntry {
     CompileContextEntry(ObjectPtr callable)
         : callable(callable), hasParams(false) {}
 
-    CompileContextEntry(ObjectPtr callable, const vector<ObjectPtr> &params)
+    CompileContextEntry(ObjectPtr callable, llvm::ArrayRef<ObjectPtr> params)
         : callable(callable), hasParams(true), params(params) {}
 
     CompileContextEntry(ObjectPtr callable,
-                        const vector<ObjectPtr> &params,
-                        const vector<unsigned> &dispatchIndices)
+                        llvm::ArrayRef<ObjectPtr> params,
+                        llvm::ArrayRef<unsigned> dispatchIndices)
         : callable(callable), hasParams(true), params(params), dispatchIndices(dispatchIndices) {}
 };
 
 void pushCompileContext(ObjectPtr obj);
-void pushCompileContext(ObjectPtr obj, const vector<ObjectPtr> &params);
+void pushCompileContext(ObjectPtr obj, llvm::ArrayRef<ObjectPtr> params);
 void pushCompileContext(ObjectPtr obj,
-                        const vector<ObjectPtr> &params,
-                        const vector<unsigned> &dispatchIndices);
+                        llvm::ArrayRef<ObjectPtr> params,
+                        llvm::ArrayRef<unsigned> dispatchIndices);
 void popCompileContext();
 vector<CompileContextEntry> getCompileContext();
-void setCompileContext(const vector<CompileContextEntry> &x);
+void setCompileContext(llvm::ArrayRef<CompileContextEntry> x);
 
 struct CompileContextPusher {
     CompileContextPusher(ObjectPtr obj) {
         pushCompileContext(obj);
     }
-    CompileContextPusher(ObjectPtr obj, const vector<ObjectPtr> &params) {
+    CompileContextPusher(ObjectPtr obj, llvm::ArrayRef<ObjectPtr> params) {
         pushCompileContext(obj, params);
     }
-    CompileContextPusher(ObjectPtr obj, const vector<TypePtr> &params) {
+    CompileContextPusher(ObjectPtr obj, llvm::ArrayRef<TypePtr> params) {
         vector<ObjectPtr> params2;
         for (unsigned i = 0; i < params.size(); ++i)
             params2.push_back((Object *)(params[i].ptr()));
         pushCompileContext(obj, params2);
     }
     CompileContextPusher(ObjectPtr obj,
-                         const vector<TypePtr> &params,
-                         const vector<unsigned> &dispatchIndices) {
+                         llvm::ArrayRef<TypePtr> params,
+                         llvm::ArrayRef<unsigned> dispatchIndices) {
         vector<ObjectPtr> params2;
         for (unsigned i = 0; i < params.size(); ++i)
             params2.push_back((Object *)(params[i].ptr()));
@@ -871,7 +871,7 @@ void warning(llvm::Twine const &msg);
 void fmtError(const char *fmt, ...);
 
 template <class T>
-void error(Pointer<T> context, llvm::Twine const &msg)
+inline void error(Pointer<T> context, llvm::Twine const &msg)
 {
     if (context->location.ok())
         pushLocation(context->location);
@@ -879,7 +879,7 @@ void error(Pointer<T> context, llvm::Twine const &msg)
 }
 
 template <class T>
-void error(T const *context, llvm::Twine const &msg)
+inline void error(T const *context, llvm::Twine const &msg)
 {
     error(context->location, msg);
 }
@@ -890,7 +890,7 @@ void arityError(int expected, int received);
 void arityError2(int minExpected, int received);
 
 template <class T>
-void arityError(Pointer<T> context, int expected, int received)
+inline void arityError(Pointer<T> context, int expected, int received)
 {
     if (context->location.ok())
         pushLocation(context->location);
@@ -898,7 +898,7 @@ void arityError(Pointer<T> context, int expected, int received)
 }
 
 template <class T>
-void arityError2(Pointer<T> context, int minExpected, int received)
+inline void arityError2(Pointer<T> context, int minExpected, int received)
 {
     if (context->location.ok())
         pushLocation(context->location);
@@ -911,14 +911,14 @@ void ensureArity(MultiPValuePtr args, size_t size);
 void ensureArity(MultiCValuePtr args, size_t size);
 
 template <class T>
-void ensureArity(const vector<T> &args, size_t size)
+inline void ensureArity(T const &args, size_t size)
 {
     if (args.size() != size)
         arityError(size, args.size());
 }
-
+    
 template <class T>
-void ensureArity2(const vector<T> &args, size_t size, bool hasVarArgs)
+inline void ensureArity2(T const &args, size_t size, bool hasVarArgs)
 {
     if (!hasVarArgs)
         ensureArity(args, size);
@@ -1261,7 +1261,7 @@ struct Lambda : public Expr {
         Expr(LAMBDA), captureByRef(captureByRef),
         hasVarArg(false), initialized(false) {}
     Lambda(bool captureByRef,
-           const vector<FormalArgPtr> &formalArgs,
+           llvm::ArrayRef<FormalArgPtr> formalArgs,
            bool hasVarArg, StatementPtr body)
         : Expr(LAMBDA), captureByRef(captureByRef),
           formalArgs(formalArgs), hasVarArg(hasVarArg),
@@ -1335,7 +1335,7 @@ struct ExprList : public Object {
         : Object(EXPR_LIST) {
         exprs.push_back(x);
     }
-    ExprList(const vector<ExprPtr> &exprs)
+    ExprList(llvm::ArrayRef<ExprPtr> exprs)
         : Object(EXPR_LIST), exprs(exprs) {}
     size_t size() const { return exprs.size(); }
     void add(ExprPtr x) { exprs.push_back(x); }
@@ -1403,7 +1403,7 @@ struct Block : public Statement {
     vector<StatementPtr> statements;
     Block()
         : Statement(BLOCK) {}
-    Block(const vector<StatementPtr> &statements)
+    Block(llvm::ArrayRef<StatementPtr> statements)
         : Statement(BLOCK), statements(statements) {}
 };
 
@@ -1431,15 +1431,15 @@ struct Binding : public Statement {
     ExprListPtr values;
     bool hasVarArg;
     Binding(BindingKind bindingKind,
-        const vector<FormalArgPtr> &args,
+        llvm::ArrayRef<FormalArgPtr> args,
         ExprListPtr values)
         : Statement(BINDING), bindingKind(bindingKind),
           args(args), values(values), hasVarArg(false) {}
     Binding(BindingKind bindingKind,
-        const vector<PatternVar> &patternVars,
-        const vector<ObjectPtr> &patternTypes,
+        llvm::ArrayRef<PatternVar> patternVars,
+        llvm::ArrayRef<ObjectPtr> patternTypes,
         ExprPtr predicate,
-        const vector<FormalArgPtr> &args,
+        llvm::ArrayRef<FormalArgPtr> args,
         ExprListPtr values, bool hasVarArg)
         : Statement(BINDING), bindingKind(bindingKind),
           patternVars(patternVars),
@@ -1509,11 +1509,11 @@ struct If : public Statement {
     If(ExprPtr condition, StatementPtr thenPart, StatementPtr elsePart)
         : Statement(IF), condition(condition), thenPart(thenPart),
           elsePart(elsePart) {}
-    If(const vector<StatementPtr> &conditionStatements,
+    If(llvm::ArrayRef<StatementPtr> conditionStatements,
         ExprPtr condition, StatementPtr thenPart)
         : Statement(IF), conditionStatements(conditionStatements),
           condition(condition), thenPart(thenPart) {}
-    If(const vector<StatementPtr> &conditionStatements,
+    If(llvm::ArrayRef<StatementPtr> conditionStatements,
         ExprPtr condition, StatementPtr thenPart, StatementPtr elsePart)
         : Statement(IF), conditionStatements(conditionStatements),
           condition(condition), thenPart(thenPart),
@@ -1528,15 +1528,15 @@ struct Switch : public Statement {
 
     StatementPtr desugared;
 
-    Switch(const vector<StatementPtr> &exprStatements,
+    Switch(llvm::ArrayRef<StatementPtr> exprStatements,
            ExprPtr expr,
-           const vector<CaseBlockPtr> &caseBlocks,
+           llvm::ArrayRef<CaseBlockPtr> caseBlocks,
            StatementPtr defaultCase)
         : Statement(SWITCH), exprStatements(exprStatements),
           expr(expr), caseBlocks(caseBlocks),
           defaultCase(defaultCase) {}
     Switch(ExprPtr expr,
-           const vector<CaseBlockPtr> &caseBlocks,
+           llvm::ArrayRef<CaseBlockPtr> caseBlocks,
            StatementPtr defaultCase)
         : Statement(SWITCH), expr(expr), caseBlocks(caseBlocks),
           defaultCase(defaultCase) {}
@@ -1563,7 +1563,7 @@ struct While : public Statement {
 
     While(ExprPtr condition, StatementPtr body)
         : Statement(WHILE), condition(condition), body(body) {}
-    While(const vector<StatementPtr> &conditionStatements,
+    While(llvm::ArrayRef<StatementPtr> conditionStatements,
         ExprPtr condition, StatementPtr body)
         : Statement(WHILE), conditionStatements(conditionStatements),
           condition(condition), body(body) {}
@@ -1584,7 +1584,7 @@ struct For : public Statement {
     ExprPtr expr;
     StatementPtr body;
     StatementPtr desugared;
-    For(const vector<IdentifierPtr> &variables,
+    For(llvm::ArrayRef<IdentifierPtr> variables,
         ExprPtr expr,
         StatementPtr body)
         : Statement(FOR), variables(variables), expr(expr), body(body) {}
@@ -1763,10 +1763,10 @@ struct Code : public ANode {
 
     Code()
         : ANode(CODE),  hasVarArg(false), returnSpecsDeclared(false) {}
-    Code(const vector<PatternVar> &patternVars,
+    Code(llvm::ArrayRef<PatternVar> patternVars,
          ExprPtr predicate,
-         const vector<FormalArgPtr> &formalArgs,
-         const vector<ReturnSpecPtr> &returnSpecs,
+         llvm::ArrayRef<FormalArgPtr> formalArgs,
+         llvm::ArrayRef<ReturnSpecPtr> returnSpecs,
          ReturnSpecPtr varReturnSpec,
          StatementPtr body)
         : ANode(CODE), patternVars(patternVars), predicate(predicate),
@@ -1839,16 +1839,16 @@ struct RecordDecl : public TopLevelItem {
         : TopLevelItem(RECORD_DECL, visibility),
           builtinOverloadInitialized(false) {}
     RecordDecl(Visibility visibility,
-           const vector<PatternVar> &patternVars, ExprPtr predicate)
+           llvm::ArrayRef<PatternVar> patternVars, ExprPtr predicate)
         : TopLevelItem(RECORD_DECL, visibility),
           patternVars(patternVars),
           predicate(predicate),
           builtinOverloadInitialized(false) {}
     RecordDecl(IdentifierPtr name,
            Visibility visibility,
-           const vector<PatternVar> &patternVars,
+           llvm::ArrayRef<PatternVar> patternVars,
            ExprPtr predicate,
-           const vector<IdentifierPtr> &params,
+           llvm::ArrayRef<IdentifierPtr> params,
            IdentifierPtr varParam,
            RecordBodyPtr body)
         : TopLevelItem(RECORD_DECL, name, visibility),
@@ -1863,7 +1863,7 @@ struct RecordBody : public ANode {
     vector<RecordFieldPtr> fields; // valid if isComputed == false
     RecordBody(ExprListPtr computed)
         : ANode(RECORD_BODY), isComputed(true), computed(computed) {}
-    RecordBody(const vector<RecordFieldPtr> &fields)
+    RecordBody(llvm::ArrayRef<RecordFieldPtr> fields)
         : ANode(RECORD_BODY), isComputed(false), fields(fields) {}
 };
 
@@ -1890,9 +1890,9 @@ struct VariantDecl : public TopLevelItem {
 
     VariantDecl(IdentifierPtr name,
             Visibility visibility,
-            const vector<PatternVar> &patternVars,
+            llvm::ArrayRef<PatternVar> patternVars,
             ExprPtr predicate,
-            const vector<IdentifierPtr> &params,
+            llvm::ArrayRef<IdentifierPtr> params,
             IdentifierPtr varParam,
             bool open,
             ExprListPtr defaultInstances)
@@ -1908,7 +1908,7 @@ struct InstanceDecl : public TopLevelItem {
     ExprPtr target;
     ExprListPtr members;
 
-    InstanceDecl(const vector<PatternVar> &patternVars,
+    InstanceDecl(llvm::ArrayRef<PatternVar> patternVars,
              ExprPtr predicate,
              ExprPtr target,
              ExprListPtr members)
@@ -1986,12 +1986,12 @@ struct EnumDecl : public TopLevelItem {
     vector<EnumMemberPtr> members;
     TypePtr type;
     EnumDecl(IdentifierPtr name, Visibility visibility,
-        const vector<PatternVar> &patternVars, ExprPtr predicate)
+        llvm::ArrayRef<PatternVar> patternVars, ExprPtr predicate)
         : TopLevelItem(ENUM_DECL, name, visibility),
           patternVars(patternVars), predicate(predicate) {}
     EnumDecl(IdentifierPtr name, Visibility visibility,
-                const vector<PatternVar> &patternVars, ExprPtr predicate,
-                const vector<EnumMemberPtr> &members)
+                llvm::ArrayRef<PatternVar> patternVars, ExprPtr predicate,
+                llvm::ArrayRef<EnumMemberPtr> members)
         : TopLevelItem(ENUM_DECL, name, visibility),
           patternVars(patternVars), predicate(predicate),
           members(members) {}
@@ -2017,9 +2017,9 @@ struct GlobalVariable : public TopLevelItem {
 
     GlobalVariable(IdentifierPtr name,
                    Visibility visibility,
-                   const vector<PatternVar> &patternVars,
+                   llvm::ArrayRef<PatternVar> patternVars,
                    ExprPtr predicate,
-                   const vector<IdentifierPtr> &params,
+                   llvm::ArrayRef<IdentifierPtr> params,
                    IdentifierPtr varParam,
                    ExprPtr expr)
         : TopLevelItem(GLOBAL_VARIABLE, name, visibility),
@@ -2045,7 +2045,7 @@ struct GVarInstance : public Object {
     llvm::TrackingVH<llvm::MDNode> debugInfo;
 
     GVarInstance(GlobalVariablePtr gvar,
-                 const vector<ObjectPtr> &params)
+                 llvm::ArrayRef<ObjectPtr> params)
         : Object(DONT_CARE), gvar(gvar), params(params),
           analyzing(false), llGlobal(NULL), debugInfo(NULL) {}
 
@@ -2088,7 +2088,7 @@ struct ExternalProcedure : public TopLevelItem {
           analyzed(false), bodyCodegenned(false), llvmFunc(NULL), debugInfo(NULL) {}
     ExternalProcedure(IdentifierPtr name,
                       Visibility visibility,
-                      const vector<ExternalArgPtr> &args,
+                      llvm::ArrayRef<ExternalArgPtr> args,
                       bool hasVarArgs,
                       ExprPtr returnType,
                       StatementPtr body,
@@ -2195,9 +2195,9 @@ struct GlobalAlias : public TopLevelItem {
 
     GlobalAlias(IdentifierPtr name,
                 Visibility visibility,
-                const vector<PatternVar> &patternVars,
+                llvm::ArrayRef<PatternVar> patternVars,
                 ExprPtr predicate,
-                const vector<IdentifierPtr> &params,
+                llvm::ArrayRef<IdentifierPtr> params,
                 IdentifierPtr varParam,
                 ExprPtr expr)
         : TopLevelItem(GLOBAL_ALIAS, name, visibility),
@@ -2351,10 +2351,10 @@ struct Module : public ANode {
           externalsGenerated(false),
           debugInfo(NULL) {}
     Module(llvm::StringRef moduleName,
-           const vector<ImportPtr> &imports,
+           llvm::ArrayRef<ImportPtr> imports,
            ModuleDeclarationPtr declaration,
            LLVMCodePtr topLevelLLVM,
-           const vector<TopLevelItemPtr> &topLevelItems)
+           llvm::ArrayRef<TopLevelItemPtr> topLevelItems)
         : ANode(MODULE), moduleName(moduleName), imports(imports),
           declaration(declaration),
           topLevelLLVM(topLevelLLVM), topLevelItems(topLevelItems),
@@ -2461,9 +2461,9 @@ struct SafePrintNameEnabler {
     ~SafePrintNameEnabler() { disableSafePrintName(); }
 };
 
-void printNameList(llvm::raw_ostream &out, const vector<ObjectPtr> &x);
-void printNameList(llvm::raw_ostream &out, const vector<ObjectPtr> &x, const vector<unsigned> &dispatchIndices);
-void printNameList(llvm::raw_ostream &out, const vector<TypePtr> &x);
+void printNameList(llvm::raw_ostream &out, llvm::ArrayRef<ObjectPtr> x);
+void printNameList(llvm::raw_ostream &out, llvm::ArrayRef<ObjectPtr> x, llvm::ArrayRef<unsigned> dispatchIndices);
+void printNameList(llvm::raw_ostream &out, llvm::ArrayRef<TypePtr> x);
 void printStaticName(llvm::raw_ostream &out, ObjectPtr x);
 void printName(llvm::raw_ostream &out, ObjectPtr x);
 void printTypeAndValue(llvm::raw_ostream &out, EValuePtr ev);
@@ -2477,24 +2477,24 @@ string shortString(llvm::StringRef in);
 //
 
 CodePtr clone(CodePtr x);
-void clone(const vector<PatternVar> &x, vector<PatternVar> &out);
-void clone(const vector<IdentifierPtr> &x, vector<IdentifierPtr> &out);
+void clone(llvm::ArrayRef<PatternVar> x, vector<PatternVar> &out);
+void clone(llvm::ArrayRef<IdentifierPtr> x, vector<IdentifierPtr> &out);
 ExprPtr clone(ExprPtr x);
 ExprPtr cloneOpt(ExprPtr x);
 ExprListPtr clone(ExprListPtr x);
-void clone(const vector<FormalArgPtr> &x, vector<FormalArgPtr> &out);
+void clone(llvm::ArrayRef<FormalArgPtr> x, vector<FormalArgPtr> &out);
 FormalArgPtr clone(FormalArgPtr x);
 FormalArgPtr cloneOpt(FormalArgPtr x);
-void clone(const vector<ReturnSpecPtr> &x, vector<ReturnSpecPtr> &out);
+void clone(llvm::ArrayRef<ReturnSpecPtr> x, vector<ReturnSpecPtr> &out);
 ReturnSpecPtr clone(ReturnSpecPtr x);
 ReturnSpecPtr cloneOpt(ReturnSpecPtr x);
 StatementPtr clone(StatementPtr x);
 StatementPtr cloneOpt(StatementPtr x);
-void clone(const vector<StatementPtr> &x, vector<StatementPtr> &out);
+void clone(llvm::ArrayRef<StatementPtr> x, vector<StatementPtr> &out);
 CaseBlockPtr clone(CaseBlockPtr x);
-void clone(const vector<CaseBlockPtr> &x, vector<CaseBlockPtr> &out);
+void clone(llvm::ArrayRef<CaseBlockPtr> x, vector<CaseBlockPtr> &out);
 CatchPtr clone(CatchPtr x);
-void clone(const vector<CatchPtr> &x, vector<CatchPtr> &out);
+void clone(llvm::ArrayRef<CatchPtr> x, vector<CatchPtr> &out);
 
 
 
@@ -2560,10 +2560,10 @@ extern ModulePtr globalMainModule;
 
 void addProcedureOverload(ProcedurePtr proc, EnvPtr Env, OverloadPtr x);
 void getProcedureMonoTypes(ProcedureMono &mono, EnvPtr env,
-    vector<FormalArgPtr> const &formalArgs, bool hasVarArg);
+    llvm::ArrayRef<FormalArgPtr> formalArgs, bool hasVarArg);
 
 void initLoader();
-void setSearchPath(const std::vector<PathString>& path);
+void setSearchPath(llvm::ArrayRef<PathString>  path);
 ModulePtr loadProgram(llvm::StringRef fileName, vector<string> *sourceFiles, bool verbose);
 ModulePtr loadProgramSource(llvm::StringRef name, llvm::StringRef source, bool verbose);
 ModulePtr loadedModule(llvm::StringRef module);
@@ -2572,7 +2572,7 @@ ModulePtr primitivesModule();
 ModulePtr operatorsModule();
 ModulePtr staticModule(ObjectPtr x);
 
-void addGlobals(ModulePtr m, const vector<TopLevelItemPtr>& toplevels);
+void addGlobals(ModulePtr m, llvm::ArrayRef<TopLevelItemPtr>  toplevels);
 void loadDependent(ModulePtr m, vector<string> *sourceFiles, ImportPtr dependent, bool verbose);
 void initModule(ModulePtr m);
 
@@ -2603,9 +2603,9 @@ inline bool objectEquals(ObjectPtr a, ObjectPtr b) {
     return _objectValueEquals(a,b);
 }
 
-template <typename T>
-bool objectVectorEquals(const vector<Pointer<T> > &a,
-                        const vector<Pointer<T> > &b) {
+template <typename ObjectVectorA, typename ObjectVectorB>
+inline bool objectVectorEquals(ObjectVectorA const &a,
+                        ObjectVectorB const &b) {
     if (a.size() != b.size()) return false;
     for (unsigned i = 0; i < a.size(); ++i) {
         if (!objectEquals(a[i].ptr(), b[i].ptr()))
@@ -2614,8 +2614,8 @@ bool objectVectorEquals(const vector<Pointer<T> > &a,
     return true;
 }
 
-template <typename T>
-int objectVectorHash(const vector<Pointer<T> > &a) {
+template <typename ObjectVector>
+inline int objectVectorHash(ObjectVector const &a) {
     int h = 0;
     for (unsigned i = 0; i < a.size(); ++i)
         h += objectHash(a[i].ptr());
@@ -2625,7 +2625,7 @@ int objectVectorHash(const vector<Pointer<T> > &a) {
 struct ObjectTableNode {
     vector<ObjectPtr> key;
     ObjectPtr value;
-    ObjectTableNode(const vector<ObjectPtr> &key,
+    ObjectTableNode(llvm::ArrayRef<ObjectPtr> key,
                     ObjectPtr value)
         : key(key), value(value) {}
 };
@@ -2635,7 +2635,7 @@ struct ObjectTable : public Object {
     unsigned size;
 public :
     ObjectTable() : Object(DONT_CARE), size(0) {}
-    ObjectPtr &lookup(const vector<ObjectPtr> &key);
+    ObjectPtr &lookup(llvm::ArrayRef<ObjectPtr> key);
 private :
     void rehash();
 };
@@ -2720,12 +2720,12 @@ struct PointerType : public Type {
 struct CodePointerType : public Type {
     vector<TypePtr> argTypes;
 
-    vector<bool> returnIsRef;
+    vector<uint8_t> returnIsRef;
     vector<TypePtr> returnTypes;
 
-    CodePointerType(const vector<TypePtr> &argTypes,
-                    const vector<bool> &returnIsRef,
-                    const vector<TypePtr> &returnTypes)
+    CodePointerType(llvm::ArrayRef<TypePtr> argTypes,
+                    llvm::ArrayRef<uint8_t> returnIsRef,
+                    llvm::ArrayRef<TypePtr> returnTypes)
         : Type(CODE_POINTER_TYPE), argTypes(argTypes),
           returnIsRef(returnIsRef), returnTypes(returnTypes) {}
 };
@@ -2741,7 +2741,7 @@ struct CCodePointerType : public Type {
     llvm::Type *getCallType();
 
     CCodePointerType(CallingConv callingConv,
-                     const vector<TypePtr> &argTypes,
+                     llvm::ArrayRef<TypePtr> argTypes,
                      bool hasVarArgs,
                      TypePtr returnType)
         : Type(CCODE_POINTER_TYPE), callingConv(callingConv),
@@ -2768,7 +2768,7 @@ struct TupleType : public Type {
     const llvm::StructLayout *layout;
     TupleType()
         : Type(TUPLE_TYPE), layout(NULL) {}
-    TupleType(const vector<TypePtr> &elementTypes)
+    TupleType(llvm::ArrayRef<TypePtr> elementTypes)
         : Type(TUPLE_TYPE), elementTypes(elementTypes),
           layout(NULL) {}
 };
@@ -2777,7 +2777,7 @@ struct UnionType : public Type {
     vector<TypePtr> memberTypes;
     UnionType()
         : Type(UNION_TYPE) {}
-    UnionType(const vector<TypePtr> &memberTypes)
+    UnionType(llvm::ArrayRef<TypePtr> memberTypes)
         : Type(UNION_TYPE), memberTypes(memberTypes)
         {}
 };
@@ -2796,7 +2796,7 @@ struct RecordType : public Type {
     RecordType(RecordDeclPtr record)
         : Type(RECORD_TYPE), record(record), fieldsInitialized(false),
           layout(NULL) {}
-    RecordType(RecordDeclPtr record, const vector<ObjectPtr> &params)
+    RecordType(RecordDeclPtr record, llvm::ArrayRef<ObjectPtr> params)
         : Type(RECORD_TYPE), record(record), params(params),
           fieldsInitialized(false), layout(NULL) {}
 };
@@ -2812,7 +2812,7 @@ struct VariantType : public Type {
     VariantType(VariantDeclPtr variant)
         : Type(VARIANT_TYPE), variant(variant),
           initialized(false) {}
-    VariantType(VariantDeclPtr variant, const vector<ObjectPtr> &params)
+    VariantType(VariantDeclPtr variant, llvm::ArrayRef<ObjectPtr> params)
         : Type(VARIANT_TYPE), variant(variant), params(params),
           initialized(false) {}
 };
@@ -2887,7 +2887,7 @@ struct MultiPatternCell : public MultiPattern {
 struct MultiPatternList : public MultiPattern {
     vector<PatternPtr> items;
     MultiPatternPtr tail;
-    MultiPatternList(const vector<PatternPtr> &items,
+    MultiPatternList(llvm::ArrayRef<PatternPtr> items,
                      MultiPatternPtr tail)
         : MultiPattern(MULTI_PATTERN_LIST), items(items), tail(tail) {}
     MultiPatternList(MultiPatternPtr tail)
@@ -2914,7 +2914,7 @@ struct MultiStatic : public Object {
         : Object(MULTI_STATIC) {
         values.push_back(x);
     }
-    MultiStatic(const vector<ObjectPtr> &values)
+    MultiStatic(llvm::ArrayRef<ObjectPtr> values)
         : Object(MULTI_STATIC), values(values) {}
     size_t size() { return values.size(); }
     void add(ObjectPtr x) { values.push_back(x); }

@@ -31,7 +31,7 @@ struct MultiEValue : public Object {
         : Object(MULTI_EVALUE) {
         values.push_back(pv);
     }
-    MultiEValue(const vector<EValuePtr> &values)
+    MultiEValue(llvm::ArrayRef<EValuePtr> values)
         : Object(MULTI_EVALUE), values(values) {}
     size_t size() { return values.size(); }
     void add(EValuePtr x) { values.push_back(x); }
@@ -43,10 +43,10 @@ struct MultiEValue : public Object {
 bool staticToType(ObjectPtr x, TypePtr &out);
 TypePtr staticToType(MultiStaticPtr x, unsigned index);
 
-void evaluateReturnSpecs(const vector<ReturnSpecPtr> &returnSpecs,
+void evaluateReturnSpecs(llvm::ArrayRef<ReturnSpecPtr> returnSpecs,
                          ReturnSpecPtr varReturnSpec,
                          EnvPtr env,
-                         vector<bool> &isRef,
+                         vector<uint8_t> &isRef,
                          vector<TypePtr> &types);
 
 MultiStaticPtr evaluateExprStatic(ExprPtr expr, EnvPtr env);
@@ -57,7 +57,7 @@ TypePtr evaluateType(ExprPtr expr, EnvPtr env);
 void evaluateMultiType(ExprListPtr exprs, EnvPtr env, vector<TypePtr> &out);
 IdentifierPtr evaluateIdentifier(ExprPtr expr, EnvPtr env);
 bool evaluateBool(ExprPtr expr, EnvPtr env);
-void evaluatePredicate(const vector<PatternVar> &patternVars,
+void evaluatePredicate(llvm::ArrayRef<PatternVar> patternVars,
     ExprPtr expr, EnvPtr env);
 void evaluateStaticAssert(Location const& location,
         const ExprPtr& cond, const ExprListPtr& message, EnvPtr env);
@@ -69,7 +69,7 @@ ValueHolderPtr boolToValueHolder(bool x);
 
 size_t valueHolderToSizeT(ValueHolderPtr vh);
 
-ObjectPtr makeTupleValue(const vector<ObjectPtr> &elements);
+ObjectPtr makeTupleValue(llvm::ArrayRef<ObjectPtr> elements);
 ObjectPtr evalueToStatic(EValuePtr ev);
 
 void evalValueInit(EValuePtr dest);

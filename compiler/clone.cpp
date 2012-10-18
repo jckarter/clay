@@ -23,17 +23,17 @@ CodePtr clone(CodePtr x)
     return y;
 }
 
-void clone(const vector<PatternVar> &x, vector<PatternVar> &out)
+void clone(llvm::ArrayRef<PatternVar> x, vector<PatternVar> &out)
 {
     out = x;
 }
 
-void clone(const vector<ObjectPtr> &x, vector<ObjectPtr> &out)
+void clone(llvm::ArrayRef<ObjectPtr> x, vector<ObjectPtr> &out)
 {
     out = x;
 }
 
-void clone(const vector<IdentifierPtr> &x, vector<IdentifierPtr> &out)
+void clone(llvm::ArrayRef<IdentifierPtr> x, vector<IdentifierPtr> &out)
 {
     for (unsigned i = 0; i < x.size(); ++i)
         out.push_back(x[i]);
@@ -228,7 +228,7 @@ ExprListPtr clone(ExprListPtr x)
     return out;
 }
 
-void clone(const vector<FormalArgPtr> &x, vector<FormalArgPtr> &out)
+void clone(llvm::ArrayRef<FormalArgPtr> x, vector<FormalArgPtr> &out)
 {
     for (unsigned i = 0; i < x.size(); ++i)
         out.push_back(clone(x[i]));
@@ -248,7 +248,7 @@ FormalArgPtr cloneOpt(FormalArgPtr x)
     return clone(x);
 }
 
-void clone(const vector<ReturnSpecPtr> &x, vector<ReturnSpecPtr> &out)
+void clone(llvm::ArrayRef<ReturnSpecPtr> x, vector<ReturnSpecPtr> &out)
 {
     for (unsigned i = 0; i < x.size(); ++i)
         out.push_back(clone(x[i]));
@@ -459,7 +459,7 @@ StatementPtr cloneOpt(StatementPtr x)
     return clone(x);
 }
 
-void clone(const vector<StatementPtr> &x, vector<StatementPtr> &out)
+void clone(llvm::ArrayRef<StatementPtr> x, vector<StatementPtr> &out)
 {
     for (unsigned i = 0; i < x.size(); ++i)
         out.push_back(clone(x[i]));
@@ -472,7 +472,7 @@ CaseBlockPtr clone(CaseBlockPtr x)
     return y;
 }
 
-void clone(const vector<CaseBlockPtr> &x, vector<CaseBlockPtr> &out)
+void clone(llvm::ArrayRef<CaseBlockPtr> x, vector<CaseBlockPtr> &out)
 {
     for (unsigned i = 0; i < x.size(); ++i)
         out.push_back(clone(x[i]));
@@ -488,7 +488,7 @@ CatchPtr clone(CatchPtr x)
     return y;
 }
 
-void clone(const vector<CatchPtr> &x, vector<CatchPtr> &out)
+void clone(llvm::ArrayRef<CatchPtr> x, vector<CatchPtr> &out)
 {
     for (unsigned i = 0; i < x.size(); ++i)
         out.push_back(clone(x[i]));

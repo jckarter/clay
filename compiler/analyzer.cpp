@@ -422,8 +422,8 @@ MultiPValuePtr safeAnalyzeMultiArgs(ExprListPtr exprs,
 }
 
 InvokeEntry* safeAnalyzeCallable(ObjectPtr x,
-                                   const vector<TypePtr> &argsKey,
-                                   const vector<ValueTempness> &argsTempness)
+                                   llvm::ArrayRef<TypePtr> argsKey,
+                                   llvm::ArrayRef<ValueTempness> argsTempness)
 {
     ClearAnalysisError clear;
     InvokeEntry* entry = analyzeCallable(x, argsKey, argsTempness);
@@ -982,7 +982,7 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
 //
 
 GVarInstancePtr lookupGVarInstance(GlobalVariablePtr x,
-                                   const vector<ObjectPtr> &params)
+                                   llvm::ArrayRef<ObjectPtr> params)
 {
     if (!x->instances)
         x->instances = new ObjectTable();
@@ -1383,7 +1383,7 @@ TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args)
             staticToTypeTuple(args, 0, argTypes);
             vector<TypePtr> returnTypes;
             staticToTypeTuple(args, 1, returnTypes);
-            vector<bool> returnIsRef(returnTypes.size(), false);
+            vector<uint8_t> returnIsRef(returnTypes.size(), false);
             for (unsigned i = 0; i < returnTypes.size(); ++i)
                 returnIsRef[i] = unwrapByRef(returnTypes[i]);
             return codePointerType(argTypes, returnIsRef, returnTypes);
@@ -1535,8 +1535,8 @@ void computeArgsKey(MultiPValuePtr args,
     }
 }
 
-MultiPValuePtr analyzeReturn(const vector<bool> &returnIsRef,
-                             const vector<TypePtr> &returnTypes)
+MultiPValuePtr analyzeReturn(llvm::ArrayRef<uint8_t> returnIsRef,
+                             llvm::ArrayRef<TypePtr> returnTypes)
 
 {
     MultiPValuePtr x = new MultiPValue();
@@ -1640,7 +1640,7 @@ PVData analyzeDispatchIndex(PVData const &pv, int tag)
 
 MultiPValuePtr analyzeDispatch(ObjectPtr obj,
                                MultiPValuePtr args,
-                               const vector<unsigned> &dispatchIndices)
+                               llvm::ArrayRef<unsigned> dispatchIndices)
 {
     if (dispatchIndices.empty())
         return analyzeCallValue(staticPValue(obj), args);
@@ -1821,8 +1821,8 @@ MultiPValuePtr analyzeCallPointer(PVData const &x,
 //
 
 bool analyzeIsDefined(ObjectPtr x,
-                      const vector<TypePtr> &argsKey,
-                      const vector<ValueTempness> &argsTempness)
+                      llvm::ArrayRef<TypePtr> argsKey,
+                      llvm::ArrayRef<ValueTempness> argsTempness)
 {
     MatchFailureError failures;
     InvokeEntry* entry = lookupInvokeEntry(x, argsKey, argsTempness, failures);
@@ -1833,8 +1833,8 @@ bool analyzeIsDefined(ObjectPtr x,
 }
 
 InvokeEntry* analyzeCallable(ObjectPtr x,
-                               const vector<TypePtr> &argsKey,
-                               const vector<ValueTempness> &argsTempness)
+                               llvm::ArrayRef<TypePtr> argsKey,
+                               llvm::ArrayRef<ValueTempness> argsTempness)
 {
     MatchFailureError failures;
     InvokeEntry* entry = lookupInvokeEntry(x, argsKey, argsTempness, failures);
@@ -1881,7 +1881,7 @@ MultiPValuePtr analyzeCallByName(InvokeEntry* entry,
     assert(code->body.ptr());
 
     if (code->hasReturnSpecs()) {
-        vector<bool> returnIsRef;
+        vector<uint8_t> returnIsRef;
         vector<TypePtr> returnTypes;
         evaluateReturnSpecs(code->returnSpecs, code->varReturnSpec,
                             entry->env, returnIsRef, returnTypes);
@@ -1966,7 +1966,7 @@ static void unifyInterfaceReturns(InvokeEntry* entry)
     if (!interfaceCode->returnSpecsDeclared)
         return;
 
-    vector<bool> interfaceReturnIsRef;
+    vector<uint8_t> interfaceReturnIsRef;
     vector<TypePtr> interfaceReturnTypes;
 
     evaluateReturnSpecs(interfaceCode->returnSpecs,
@@ -2091,7 +2091,7 @@ static StatementAnalysis analyzeBlockStatement(StatementPtr stmt, EnvPtr &env, A
         return SA_FALLTHROUGH;
     } else if (stmt->stmtKind == EVAL_STATEMENT) {
         EvalStatement *eval = (EvalStatement*)stmt.ptr();
-        vector<StatementPtr> const &evaled = desugarEvalStatement(eval, env);
+        llvm::ArrayRef<StatementPtr> evaled = desugarEvalStatement(eval, env);
         for (unsigned i = 0; i < evaled.size(); ++i) {
             StatementAnalysis sa = analyzeBlockStatement(evaled[i], env, ctx);
             if (sa != SA_FALLTHROUGH)
@@ -2102,10 +2102,10 @@ static StatementAnalysis analyzeBlockStatement(StatementPtr stmt, EnvPtr &env, A
         return analyzeStatement(stmt, env, ctx);
 }
 
-static EnvPtr analyzeStatementExpressionStatements(vector<StatementPtr> const &stmts, EnvPtr env)
+static EnvPtr analyzeStatementExpressionStatements(llvm::ArrayRef<StatementPtr> stmts, EnvPtr env)
 {
     EnvPtr env2 = env;
-    for (vector<StatementPtr>::const_iterator i = stmts.begin(), end = stmts.end();
+    for (StatementPtr const *i = stmts.begin(), *end = stmts.end();
          i != end;
          ++i)
     {
@@ -2234,7 +2234,7 @@ static StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, Analysi
 
     case EVAL_STATEMENT : {
         EvalStatement *eval = (EvalStatement*)stmt.ptr();
-        vector<StatementPtr> const &evaled = desugarEvalStatement(eval, env);
+        llvm::ArrayRef<StatementPtr> evaled = desugarEvalStatement(eval, env);
         for (unsigned i = 0; i < evaled.size(); ++i) {
             StatementAnalysis sa = analyzeStatement(evaled[i], env, ctx);
             if (sa != SA_FALLTHROUGH)
@@ -2365,13 +2365,13 @@ static EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
             key.push_back(pv.type);
         }
 
-        const vector<PatternVar> &pvars = x->patternVars;
+        llvm::ArrayRef<PatternVar> pvars = x->patternVars;
         EnvPtr patternEnv = new Env(env);
         vector<PatternCellPtr> cells;
         vector<MultiPatternCellPtr> multiCells;
         initializePatternEnv(patternEnv, pvars, cells, multiCells);
         
-        const vector<FormalArgPtr> &formalArgs = x->args;
+        llvm::ArrayRef<FormalArgPtr> formalArgs = x->args;
         unsigned varArgSize = key.size()-formalArgs.size()+1;
         for (unsigned i = 0, j = 0; i < formalArgs.size(); ++i) {
             FormalArgPtr y = formalArgs[i];
@@ -2846,7 +2846,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         size_t i = 0;
         if (!obj || !staticToSizeTOrInt(obj, i))
             argumentError(1, "expecting static SizeT or Int value");
-        const vector<TypePtr> &fieldTypes = recordFieldTypes(t);
+        llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(t);
         if (i >= fieldTypes.size())
             argumentIndexRangeError(1, "record field index",
                                     i, fieldTypes.size());
@@ -2869,14 +2869,14 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             sout << "field not found: " << fname->str;
             argumentError(1, sout.str());
         }
-        const vector<TypePtr> &fieldTypes = recordFieldTypes(t);
+        llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(t);
         return new MultiPValue(PVData(fieldTypes[fi->second], false));
     }
 
     case PRIM_recordFields : {
         ensureArity(args, 1);
         RecordTypePtr t = recordTypeOfValue(args, 0);
-        const vector<TypePtr> &fieldTypes = recordFieldTypes(t);
+        llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(t);
         MultiPValuePtr mpv = new MultiPValue();
         for (unsigned i = 0; i < fieldTypes.size(); ++i)
             mpv->add(PVData(fieldTypes[i], false));
@@ -2903,10 +2903,10 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         if (t->typeKind != VARIANT_TYPE)
             argumentError(0, "expecting a variant type");
         VariantType *vt = (VariantType *)t.ptr();
-        const vector<TypePtr> &members = variantMemberTypes(vt);
+        llvm::ArrayRef<TypePtr> members = variantMemberTypes(vt);
 
         MultiPValuePtr mpv = new MultiPValue();
-        for (vector<TypePtr>::const_iterator i = members.begin(), end = members.end();
+        for (TypePtr const *i = members.begin(), *end = members.end();
              i != end;
              ++i)
         {
@@ -3338,7 +3338,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
                 RecordType *r = (RecordType*)t;
                 if (r->record->lambda->mono.monoState != Procedure_MonoOverload)
                     argumentError(0, "not a monomorphic lambda record type");
-                vector<TypePtr> const &monoTypes = r->record->lambda->mono.monoTypes;
+                llvm::ArrayRef<TypePtr> monoTypes = r->record->lambda->mono.monoTypes;
                 MultiPValuePtr values = new MultiPValue();
                 for (size_t i = 0; i < monoTypes.size(); ++i)
                     values->add(staticPValue(monoTypes[i].ptr()));

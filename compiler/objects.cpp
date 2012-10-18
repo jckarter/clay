@@ -119,7 +119,7 @@ int objectHash(ObjectPtr a)
 // ObjectTable
 //
 
-ObjectPtr &ObjectTable::lookup(const vector<ObjectPtr> &key)
+ObjectPtr &ObjectTable::lookup(llvm::ArrayRef<ObjectPtr> key)
 {
     if (this->buckets.empty())
         this->buckets.resize(16);

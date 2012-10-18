@@ -15,7 +15,7 @@ struct InvokeEntry {
     InvokeSet *parent;
     ObjectPtr callable;
     vector<TypePtr> argsKey;
-    vector<bool> forwardedRValueFlags;
+    vector<uint8_t> forwardedRValueFlags;
 
     bool analyzed;
     bool analyzing;
@@ -35,7 +35,7 @@ struct InvokeEntry {
     InlineAttribute isInline;
 
     ObjectPtr analysis;
-    vector<bool> returnIsRef;
+    vector<uint8_t> returnIsRef;
     vector<TypePtr> returnTypes;
 
     llvm::Function *llvmFunc;
@@ -45,7 +45,7 @@ struct InvokeEntry {
 
     InvokeEntry(InvokeSet *parent,
                 ObjectPtr callable,
-                const vector<TypePtr> &argsKey)
+                llvm::ArrayRef<TypePtr> argsKey)
         : parent(parent), callable(callable),
           argsKey(argsKey), analyzed(false),
           analyzing(false), varArgPosition(0),
@@ -76,9 +76,9 @@ struct InvokeSet {
     map<vector<ValueTempness>, InvokeEntry*> tempnessMap2;
 
     InvokeSet(ObjectPtr callable,
-              const vector<TypePtr> &argsKey,
+              llvm::ArrayRef<TypePtr> argsKey,
               OverloadPtr symbolInterface,
-              const vector<OverloadPtr> &symbolOverloads)
+              llvm::ArrayRef<OverloadPtr> symbolOverloads)
         : callable(callable), argsKey(argsKey),
           interface(symbolInterface),
           overloads(symbolOverloads), nextOverloadIndex(0),
@@ -98,10 +98,10 @@ struct MatchFailureError {
 };
 
 InvokeSet *lookupInvokeSet(ObjectPtr callable,
-                           const vector<TypePtr> &argsKey);
+                           llvm::ArrayRef<TypePtr> argsKey);
 InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
-                               const vector<TypePtr> &argsKey,
-                               const vector<ValueTempness> &argsTempness,
+                               llvm::ArrayRef<TypePtr> argsKey,
+                               llvm::ArrayRef<ValueTempness> argsTempness,
                                MatchFailureError &failures);
 
 

@@ -286,12 +286,12 @@ static EnvPtr convertFreeVarsFromBinding(BindingPtr binding, EnvPtr env, LambdaC
 }
 
 static EnvPtr convertFreeVarsFromStatementExpressionStatements(
-    vector<StatementPtr> const &stmts,
+    llvm::ArrayRef<StatementPtr> stmts,
     EnvPtr env,
     LambdaContext &ctx)
 {
     EnvPtr env2 = env;
-    for (vector<StatementPtr>::const_iterator i = stmts.begin(), end = stmts.end();
+    for (StatementPtr const *i = stmts.begin(), *end = stmts.end();
          i != end;
          ++i)
     {

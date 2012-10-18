@@ -150,7 +150,7 @@ static string toKey(DottedNamePtr name) {
 // locateModule
 //
 
-void setSearchPath(const std::vector<PathString>& path) {
+void setSearchPath(llvm::ArrayRef<PathString>  path) {
     searchPath = path;
 }
 
@@ -342,19 +342,15 @@ void loadDependent(ModulePtr m, vector<string> *sourceFiles, ImportPtr dependent
                 name = im->alias;
                 m->importedModuleNames[im->alias->str].module = x->module;
             } else {
-                vector<IdentifierPtr> const &parts = im->dottedName->parts;
+                llvm::ArrayRef<IdentifierPtr> parts = im->dottedName->parts;
                 if (parts.size() == 1)
                     name = parts[0];
                 else if (x->visibility == PUBLIC)
                     error(x->location,
                           "public imports of dotted module paths must have an \"as <name>\" alias");
                 llvm::StringMap<ModuleLookup> *node = &m->importedModuleNames;
-                for (vector<IdentifierPtr>::const_reverse_iterator i = parts.rbegin(),
-                     end = parts.rend() - 1;
-                i != end;
-                ++i)
-                {
-                    node = &(*node)[(*i)->str].parents;
+                for (size_t i = parts.size() - 1; i >= 1; --i) {
+                    node = &(*node)[parts[i]->str].parents;
                 }
                 (*node)[parts[0]->str].module = x->module;
             }
@@ -448,7 +444,7 @@ ModulePtr loadedModule(llvm::StringRef module) {
 
 static EnvPtr overloadPatternEnv(OverloadPtr x) {
     EnvPtr env = new Env(x->env);
-    const vector<PatternVar> &pvars = x->code->patternVars;
+    llvm::ArrayRef<PatternVar> pvars = x->code->patternVars;
     for (unsigned i = 0; i < pvars.size(); ++i) {
         if (pvars[i].isMulti) {
             MultiPatternCellPtr cell = new MultiPatternCell(NULL);
@@ -463,7 +459,7 @@ static EnvPtr overloadPatternEnv(OverloadPtr x) {
 }
 
 void getProcedureMonoTypes(ProcedureMono &mono, EnvPtr env,
-    vector<FormalArgPtr> const &formalArgs, bool hasVarArg)
+    llvm::ArrayRef<FormalArgPtr> formalArgs, bool hasVarArg)
 {
     if (mono.monoState == Procedure_NoOverloads && !hasVarArg)
     {
@@ -615,7 +611,7 @@ static void initOverload(OverloadPtr x) {
 
 static void initVariantInstance(InstanceDeclPtr x) {
     EnvPtr env = new Env(x->env);
-    const vector<PatternVar> &pvars = x->patternVars;
+    llvm::ArrayRef<PatternVar> pvars = x->patternVars;
     for (unsigned i = 0; i < pvars.size(); ++i) {
         if (pvars[i].isMulti) {
             MultiPatternCellPtr cell = new MultiPatternCell(NULL);
@@ -654,11 +650,11 @@ static void checkStaticAssert(StaticAssertTopLevelPtr a) {
     evaluateStaticAssert(a->location, a->cond, a->message, a->env);
 }
 
-static void circularImportsError(const vector<string>& modules) {
+static void circularImportsError(llvm::ArrayRef<string>  modules) {
     string s;
     llvm::raw_string_ostream ss(s);
     ss << "import loop:\n";
-    for (vector<string>::const_iterator it = modules.begin(); it != modules.end(); ++it) {
+    for (string const *it = modules.begin(); it != modules.end(); ++it) {
         ss << "    " << *it;
         if (it + 1 != modules.end()) {
             // because error() function adds trailing newline
@@ -668,7 +664,7 @@ static void circularImportsError(const vector<string>& modules) {
     return error(ss.str());
 }
 
-static void initModule(ModulePtr m, const vector<string>& importChain) {
+static void initModule(ModulePtr m, llvm::ArrayRef<string>  importChain) {
     if (m->initState == Module::DONE) return;
 
     if (m->declaration != NULL) {
@@ -707,8 +703,8 @@ static void initModule(ModulePtr m, const vector<string>& importChain) {
 
     verifyAttributes(m);
 
-    const vector<TopLevelItemPtr> &items = m->topLevelItems;
-    vector<TopLevelItemPtr>::const_iterator ti, tend;
+    llvm::ArrayRef<TopLevelItemPtr> items = m->topLevelItems;
+    TopLevelItemPtr const *ti, *tend;
     for (ti = items.begin(), tend = items.end(); ti != tend; ++ti) {
         Object *obj = ti->ptr();
         switch (obj->objKind) {
@@ -1379,8 +1375,8 @@ DEFINE_OPERATOR_ACCESSOR(doIntegerShiftLeftChecked)
 DEFINE_OPERATOR_ACCESSOR(doIntegerNegateChecked)
 DEFINE_OPERATOR_ACCESSOR(doIntegerConvertChecked)
 
-void addGlobals(ModulePtr m, const vector<TopLevelItemPtr>& toplevels) {
-    vector<TopLevelItemPtr>::const_iterator i, end;
+void addGlobals(ModulePtr m, llvm::ArrayRef<TopLevelItemPtr>  toplevels) {
+    TopLevelItemPtr const *i, *end;
     for (i = toplevels.begin(), end = toplevels.end();
     i != end; ++i) {
         m->topLevelItems.push_back(*i);
@@ -1413,7 +1409,7 @@ void addGlobals(ModulePtr m, const vector<TopLevelItemPtr>& toplevels) {
 
     }
 
-    const vector<TopLevelItemPtr> &items = m->topLevelItems;
+    llvm::ArrayRef<TopLevelItemPtr> items = m->topLevelItems;
     for (size_t i = items.size() - toplevels.size(); i < items.size(); ++i) {
         Object *obj = items[i].ptr();
         switch (obj->objKind) {

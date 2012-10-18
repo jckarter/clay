@@ -7,7 +7,7 @@
 namespace clay {
 
 
-void initializePatternEnv(EnvPtr patternEnv, const vector<PatternVar> &pvars, 
+void initializePatternEnv(EnvPtr patternEnv, llvm::ArrayRef<PatternVar> pvars, 
     vector<PatternCellPtr> &cells, vector<MultiPatternCellPtr> &multiCells)
 {
     
@@ -37,13 +37,13 @@ static void initializePatterns(OverloadPtr x)
     x->patternsInitializedState = -1;
 
     CodePtr code = x->code;
-    const vector<PatternVar> &pvars = code->patternVars;
+    llvm::ArrayRef<PatternVar> pvars = code->patternVars;
     EnvPtr patternEnv = new Env(x->env);
     initializePatternEnv(patternEnv, pvars, x->cells, x->multiCells);
     assert(x->target.ptr());
     x->callablePattern = evaluateOnePattern(x->target, patternEnv);
 
-    const vector<FormalArgPtr> &formalArgs = code->formalArgs;
+    llvm::ArrayRef<FormalArgPtr> formalArgs = code->formalArgs;
     for (unsigned i = 0; i < formalArgs.size(); ++i) {
         FormalArgPtr y = formalArgs[i];
         PatternPtr pattern;
@@ -95,7 +95,7 @@ struct PatternReseter {
 
 MatchResultPtr matchInvoke(OverloadPtr overload,
                            ObjectPtr callable,
-                           const vector<TypePtr> &argsKey)
+                           llvm::ArrayRef<TypePtr> argsKey)
 {
     initializePatterns(overload);
 
@@ -113,7 +113,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
         if (code->formalArgs.size() != argsKey.size())
             return new MatchArityError(code->formalArgs.size(), argsKey.size(), false);
     }
-    const vector<FormalArgPtr> &formalArgs = code->formalArgs;
+    llvm::ArrayRef<FormalArgPtr> formalArgs = code->formalArgs;
     unsigned varArgSize = argsKey.size()-formalArgs.size()+1;
     for (unsigned i = 0, j = 0; i < formalArgs.size(); ++i) {
         FormalArgPtr x = formalArgs[i];
@@ -139,7 +139,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
     }
     
     EnvPtr staticEnv = new Env(overload->env);
-    const vector<PatternVar> &pvars = code->patternVars;
+    llvm::ArrayRef<PatternVar> pvars = code->patternVars;
     for (unsigned i = 0; i < pvars.size(); ++i) {
         if (pvars[i].isMulti) {
             MultiStaticPtr ms = derefDeep(overload->multiCells[i].ptr());

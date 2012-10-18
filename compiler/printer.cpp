@@ -107,9 +107,9 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &out, PVData const &pv)
 
 template <class T>
 struct BigVec {
-    const vector<T> *v;
-    BigVec(const vector<T> &v)
-        : v(&v) {}
+    llvm::ArrayRef<T> v;
+    BigVec(llvm::ArrayRef<T> v)
+        : v(v) {}
 };
 
 template <class T>
@@ -123,9 +123,9 @@ template <class T>
 llvm::raw_ostream &operator<<(llvm::raw_ostream &out, const BigVec<T> &v) {
     ++indent;
     out << "[";
-    typename vector<T>::const_iterator i, end;
+    T const *i, *end;
     bool first = true;
-    for (i = v.v->begin(), end = v.v->end(); i != end; ++i) {
+    for (i = v.v.begin(), end = v.v.end(); i != end; ++i) {
         if (!first)
             out << ",";
         first = false;
@@ -806,7 +806,7 @@ void disableSafePrintName()
     assert(_safeNames >= 0);
 }
 
-void printNameList(llvm::raw_ostream &out, const vector<ObjectPtr> &x)
+void printNameList(llvm::raw_ostream &out, llvm::ArrayRef<ObjectPtr> x)
 {
     for (unsigned i = 0; i < x.size(); ++i) {
         if (i != 0)
@@ -815,7 +815,7 @@ void printNameList(llvm::raw_ostream &out, const vector<ObjectPtr> &x)
     }
 }
 
-void printNameList(llvm::raw_ostream &out, const vector<ObjectPtr> &x, const vector<unsigned> &dispatchIndices)
+void printNameList(llvm::raw_ostream &out, llvm::ArrayRef<ObjectPtr> x, llvm::ArrayRef<unsigned> dispatchIndices)
 {
     for (unsigned i = 0; i < x.size(); ++i) {
         if (i != 0)
@@ -826,7 +826,7 @@ void printNameList(llvm::raw_ostream &out, const vector<ObjectPtr> &x, const vec
     }
 }
 
-void printNameList(llvm::raw_ostream &out, const vector<TypePtr> &x)
+void printNameList(llvm::raw_ostream &out, llvm::ArrayRef<TypePtr> x)
 {
     for (unsigned i = 0; i < x.size(); ++i) {
         if (i != 0)
@@ -1101,7 +1101,7 @@ void printValue(llvm::raw_ostream &out, EValuePtr ev)
     }
     case ENUM_TYPE : {
         EnumType *t = (EnumType *)ev->type.ptr();
-        vector<EnumMemberPtr> const &members = t->enumeration->members;
+        llvm::ArrayRef<EnumMemberPtr> members = t->enumeration->members;
         int member = ev->as<int>();
 
         if (member >= 0 && size_t(member) < members.size()) {

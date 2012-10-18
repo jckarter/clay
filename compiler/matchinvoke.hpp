@@ -42,7 +42,7 @@ struct MatchSuccess : public MatchResult {
     unsigned varArgPosition;
 
     MatchSuccess(bool callByName, InlineAttribute isInline, CodePtr code, EnvPtr env,
-                 ObjectPtr callable, const vector<TypePtr> &argsKey)
+                 ObjectPtr callable, llvm::ArrayRef<TypePtr> argsKey)
         : MatchResult(MATCH_SUCCESS), callByName(callByName),
           isInline(isInline), code(code), env(env), callable(callable),
           argsKey(argsKey), varArgPosition(0) {}
@@ -109,11 +109,11 @@ struct MatchMultiBindingError : public MatchResult {
             argIndex(argIndex), types(types), varArg(varArg) {}
 };
 
-void initializePatternEnv(EnvPtr patternEnv, const vector<PatternVar> &pvars, vector<PatternCellPtr> &cells, vector<MultiPatternCellPtr> &multiCells);
+void initializePatternEnv(EnvPtr patternEnv, llvm::ArrayRef<PatternVar> pvars, vector<PatternCellPtr> &cells, vector<MultiPatternCellPtr> &multiCells);
 
 MatchResultPtr matchInvoke(OverloadPtr overload,
                            ObjectPtr callable,
-                           const vector<TypePtr> &argsKey);
+                           llvm::ArrayRef<TypePtr> argsKey);
 
 void printMatchError(llvm::raw_ostream &os, const MatchResultPtr& result);
 

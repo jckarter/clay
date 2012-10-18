@@ -51,7 +51,7 @@ void evalCallExpr(ExprPtr callable,
 void evalDispatch(ObjectPtr obj,
                   MultiEValuePtr args,
                   MultiPValuePtr pvArgs,
-                  const vector<unsigned> &dispatchIndices,
+                  llvm::ArrayRef<unsigned> dispatchIndices,
                   MultiEValuePtr out);
 void evalCallValue(EValuePtr callable,
                    MultiEValuePtr args,
@@ -134,7 +134,7 @@ struct EReturn {
 
 struct EvalContext : public Object {
     vector<EReturn> returns;
-    EvalContext(const vector<EReturn> &returns)
+    EvalContext(llvm::ArrayRef<EReturn> returns)
         : Object(DONT_CARE), returns(returns) {}
 };
 typedef Pointer<EvalContext> EvalContextPtr;
@@ -143,7 +143,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
                              EnvPtr env,
                              EvalContextPtr ctx);
 
-void evalCollectLabels(const vector<StatementPtr> &statements,
+void evalCollectLabels(llvm::ArrayRef<StatementPtr> statements,
                        unsigned startIndex,
                        EnvPtr env,
                        llvm::StringMap<LabelInfo> &labels);
@@ -179,10 +179,10 @@ TypePtr staticToType(MultiStaticPtr x, unsigned index)
 // evaluator wrappers
 //
 
-void evaluateReturnSpecs(const vector<ReturnSpecPtr> &returnSpecs,
+void evaluateReturnSpecs(llvm::ArrayRef<ReturnSpecPtr> returnSpecs,
                          ReturnSpecPtr varReturnSpec,
                          EnvPtr env,
-                         vector<bool> &returnIsRef,
+                         vector<uint8_t> &returnIsRef,
                          vector<TypePtr> &returnTypes)
 {
     returnIsRef.clear();
@@ -337,7 +337,7 @@ bool evaluateBool(ExprPtr expr, EnvPtr env)
     return vh->as<bool>();
 }
 
-void evaluatePredicate(const vector<PatternVar> &patternVars,
+void evaluatePredicate(llvm::ArrayRef<PatternVar> patternVars,
     ExprPtr predicate, EnvPtr env)
 {
     for (unsigned i = 0; i < patternVars.size(); ++i) {
@@ -420,7 +420,7 @@ ValueHolderPtr boolToValueHolder(bool x)
 // makeTupleValue
 //
 
-ObjectPtr makeTupleValue(const vector<ObjectPtr> &elements)
+ObjectPtr makeTupleValue(llvm::ArrayRef<ObjectPtr> elements)
 {
     bool allStatics = true;
     for (unsigned i = 0; i < elements.size(); ++i) {
@@ -1653,7 +1653,7 @@ EValuePtr evalDispatchIndex(EValuePtr ev, PVData const &pvOut, int tag)
 void evalDispatch(ObjectPtr obj,
                   MultiEValuePtr args,
                   MultiPValuePtr pvArgs,
-                  const vector<unsigned> &dispatchIndices,
+                  llvm::ArrayRef<unsigned> dispatchIndices,
                   MultiEValuePtr out)
 {
     if (dispatchIndices.empty()) {
@@ -1858,7 +1858,7 @@ void evalCallCode(InvokeEntry* entry,
     }
 
     if (entry->code->hasReturnSpecs()) {
-        const vector<ReturnSpecPtr> &returnSpecs = entry->code->returnSpecs;
+        llvm::ArrayRef<ReturnSpecPtr> returnSpecs = entry->code->returnSpecs;
         unsigned i = 0;
         for (; i < returnSpecs.size(); ++i) {
             ReturnSpecPtr rspec = returnSpecs[i];
@@ -1988,7 +1988,7 @@ void evalCallByName(InvokeEntry* entry,
     }
 
     if (entry->code->hasReturnSpecs()) {
-        const vector<ReturnSpecPtr> &returnSpecs = entry->code->returnSpecs;
+        llvm::ArrayRef<ReturnSpecPtr> returnSpecs = entry->code->returnSpecs;
         unsigned i = 0;
         for (; i < returnSpecs.size(); ++i) {
             ReturnSpecPtr rspec = returnSpecs[i];
@@ -2032,13 +2032,13 @@ void evalCallByName(InvokeEntry* entry,
 // evalStatement
 //
 
-static EnvPtr evalStatementExpressionStatements(vector<StatementPtr> const &stmts,
+static EnvPtr evalStatementExpressionStatements(llvm::ArrayRef<StatementPtr> stmts,
     EnvPtr env,
     EvalContextPtr ctx)
 {
     EnvPtr env2 = env;
 
-    for (vector<StatementPtr>::const_iterator i = stmts.begin(), end = stmts.end();
+    for (StatementPtr const *i = stmts.begin(), *end = stmts.end();
          i != end;
          ++i)
     {
@@ -2272,7 +2272,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case EVAL_STATEMENT : {
         EvalStatement *eval = (EvalStatement*)stmt.ptr();
-        vector<StatementPtr> const &evaled = desugarEvalStatement(eval, env);
+        llvm::ArrayRef<StatementPtr> evaled = desugarEvalStatement(eval, env);
         TerminationPtr termination;
         for (unsigned i = 0; i < evaled.size(); ++i) {
             termination = evalStatement(evaled[i], env, ctx);
@@ -2398,7 +2398,7 @@ whileContinue:
 // evalCollectLabels
 //
 
-void evalCollectLabels(const vector<StatementPtr> &statements,
+void evalCollectLabels(llvm::ArrayRef<StatementPtr> statements,
                        unsigned startIndex,
                        EnvPtr env,
                        llvm::StringMap<LabelInfo> &labels)
@@ -4322,7 +4322,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
     case PRIM_RecordFieldCount : {
         ensureArity(args, 1);
         RecordTypePtr rt = valueToRecordType(args, 0);
-        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(rt);
         ValueHolderPtr vh = sizeTToValueHolder(fieldTypes.size());
         evalStaticObject(vh.ptr(), out);
         break;
@@ -4332,7 +4332,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         ensureArity(args, 2);
         RecordTypePtr rt = valueToRecordType(args, 0);
         size_t i = valueToStaticSizeTOrInt(args, 1);
-        const vector<IdentifierPtr> &fieldNames = recordFieldNames(rt);
+        llvm::ArrayRef<IdentifierPtr> fieldNames = recordFieldNames(rt);
         if (i >= fieldNames.size())
             argumentIndexRangeError(1, "record field index",
                                     i, fieldNames.size());
@@ -4365,7 +4365,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         RecordTypePtr rt;
         EValuePtr erec = recordValue(args, 0, rt);
         size_t i = valueToStaticSizeTOrInt(args, 1);
-        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(rt);
         if (i >= fieldTypes.size())
             argumentIndexRangeError(1, "record field index",
                                     i, fieldTypes.size());
@@ -4393,7 +4393,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
             argumentError(1, sout.str());
         }
         size_t index = fi->second;
-        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(rt);
         const llvm::StructLayout *layout = recordTypeLayout(rt.ptr());
         char *ptr = erec->addr + layout->getElementOffset(index);
         assert(out->size() == 1);
@@ -4407,7 +4407,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         ensureArity(args, 1);
         RecordTypePtr rt;
         EValuePtr erec = recordValue(args, 0, rt);
-        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(rt);
         assert(out->size() == fieldTypes.size());
         const llvm::StructLayout *layout = recordTypeLayout(rt.ptr());
         for (unsigned i = 0; i < fieldTypes.size(); ++i) {
@@ -4439,7 +4439,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         ensureArity(args, 2);
         VariantTypePtr vt = valueToVariantType(args, 0);
         TypePtr mt = valueToType(args, 1);
-        const vector<TypePtr> &memberTypes = variantMemberTypes(vt);
+        llvm::ArrayRef<TypePtr> memberTypes = variantMemberTypes(vt);
         size_t index = (size_t)-1;
         for (unsigned i = 0; i < memberTypes.size(); ++i) {
             if (memberTypes[i] == mt) {
@@ -4457,7 +4457,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
     case PRIM_VariantMemberCount : {
         ensureArity(args, 1);
         VariantTypePtr vt = valueToVariantType(args, 0);
-        const vector<TypePtr> &memberTypes = variantMemberTypes(vt);
+        llvm::ArrayRef<TypePtr> memberTypes = variantMemberTypes(vt);
         size_t size = memberTypes.size();
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];

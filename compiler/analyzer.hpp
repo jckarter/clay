@@ -50,8 +50,8 @@ MultiPValuePtr safeAnalyzeMultiArgs(ExprListPtr exprs,
                                     EnvPtr env,
                                     vector<unsigned> &dispatchIndices);
 InvokeEntry* safeAnalyzeCallable(ObjectPtr x,
-                                 const vector<TypePtr> &argsKey,
-                                 const vector<ValueTempness> &argsTempness);
+                                 llvm::ArrayRef<TypePtr> argsKey,
+                                 llvm::ArrayRef<ValueTempness> argsTempness);
 MultiPValuePtr safeAnalyzeCallByName(InvokeEntry* entry,
                                      ExprPtr callable,
                                      ExprListPtr args,
@@ -77,7 +77,7 @@ MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env);
 MultiPValuePtr analyzeStaticObject(ObjectPtr x);
 
 GVarInstancePtr lookupGVarInstance(GlobalVariablePtr x,
-                                   const vector<ObjectPtr> &params);
+                                   llvm::ArrayRef<ObjectPtr> params);
 GVarInstancePtr defaultGVarInstance(GlobalVariablePtr x);
 GVarInstancePtr analyzeGVarIndexing(GlobalVariablePtr x,
                                     ExprListPtr args,
@@ -101,25 +101,25 @@ MultiPValuePtr analyzeAliasIndexing(GlobalAliasPtr x,
 void computeArgsKey(MultiPValuePtr args,
                     vector<TypePtr> &argsKey,
                     vector<ValueTempness> &argsTempness);
-MultiPValuePtr analyzeReturn(const vector<bool> &returnIsRef,
-                             const vector<TypePtr> &returnTypes);
+MultiPValuePtr analyzeReturn(llvm::ArrayRef<uint8_t> returnIsRef,
+                             llvm::ArrayRef<TypePtr> returnTypes);
 MultiPValuePtr analyzeCallExpr(ExprPtr callable,
                                ExprListPtr args,
                                EnvPtr env);
 PVData analyzeDispatchIndex(PVData const &pv, int tag);
 MultiPValuePtr analyzeDispatch(ObjectPtr obj,
                                MultiPValuePtr args,
-                               const vector<unsigned> &dispatchIndices);
+                               llvm::ArrayRef<unsigned> dispatchIndices);
 MultiPValuePtr analyzeCallValue(PVData const &callable,
                                 MultiPValuePtr args);
 MultiPValuePtr analyzeCallPointer(PVData const &x,
                                   MultiPValuePtr args);
 bool analyzeIsDefined(ObjectPtr x,
-                      const vector<TypePtr> &argsKey,
-                      const vector<ValueTempness> &argsTempness);
+                      llvm::ArrayRef<TypePtr> argsKey,
+                      llvm::ArrayRef<ValueTempness> argsTempness);
 InvokeEntry* analyzeCallable(ObjectPtr x,
-                             const vector<TypePtr> &argsKey,
-                             const vector<ValueTempness> &argsTempness);
+                             llvm::ArrayRef<TypePtr> argsKey,
+                             llvm::ArrayRef<ValueTempness> argsTempness);
 
 MultiPValuePtr analyzeCallByName(InvokeEntry* entry,
                                  ExprPtr callable,
@@ -131,7 +131,7 @@ void analyzeCodeBody(InvokeEntry* entry);
 struct AnalysisContext {
     bool hasRecursivePropagation;
     bool returnInitialized;
-    vector<bool> returnIsRef;
+    vector<uint8_t> returnIsRef;
     vector<TypePtr> returnTypes;
     AnalysisContext()
         : hasRecursivePropagation(false),

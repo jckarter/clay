@@ -52,7 +52,7 @@ struct MultiCValue : public Object {
         : Object(MULTI_CVALUE) {
         values.push_back(pv);
     }
-    MultiCValue(const vector<CValuePtr> &values)
+    MultiCValue(llvm::ArrayRef<CValuePtr> values)
         : Object(MULTI_CVALUE), values(values) {}
     size_t size() { return values.size(); }
     void add(CValuePtr x) { values.push_back(x); }
@@ -206,8 +206,8 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody);
 struct InvokeEntry;
 
 InvokeEntry* codegenCallable(ObjectPtr x,
-                             const vector<TypePtr> &argsKey,
-                             const vector<ValueTempness> &argsTempness);
+                             llvm::ArrayRef<TypePtr> argsKey,
+                             llvm::ArrayRef<ValueTempness> argsTempness);
 void codegenCodeBody(InvokeEntry* entry);
 void codegenCWrapper(InvokeEntry* entry);
 

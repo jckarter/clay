@@ -90,7 +90,7 @@ void initTypeOverloads(TypePtr t)
     for (unsigned i = 0; i < patternOverloads.size(); ++i) {
         OverloadPtr x = patternOverloads[i];
         EnvPtr env = new Env(x->env);
-        const vector<PatternVar> &pvars = x->code->patternVars;
+        llvm::ArrayRef<PatternVar> pvars = x->code->patternVars;
         for (unsigned i = 0; i < pvars.size(); ++i) {
             if (pvars[i].isMulti) {
                 MultiPatternCellPtr cell = new MultiPatternCell(NULL);

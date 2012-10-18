@@ -156,7 +156,7 @@ void codegenCallExpr(ExprPtr callable,
 void codegenDispatch(ObjectPtr obj,
                      MultiCValuePtr args,
                      MultiPValuePtr pvArgs,
-                     const vector<unsigned> &dispatchIndices,
+                     llvm::ArrayRef<unsigned> dispatchIndices,
                      CodegenContext* ctx,
                      MultiCValuePtr out);
 void codegenCallValue(CValuePtr callable,
@@ -213,7 +213,7 @@ bool codegenStatement(StatementPtr stmt,
                       EnvPtr env,
                       CodegenContext* ctx);
 
-void codegenCollectLabels(const vector<StatementPtr> &statements,
+void codegenCollectLabels(llvm::ArrayRef<StatementPtr> statements,
                           unsigned startIndex,
                           CodegenContext* ctx);
 EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx);
@@ -2146,7 +2146,7 @@ CValuePtr codegenDispatchIndex(CValuePtr cv, PVData const &pvOut, int tag, Codeg
 void codegenDispatch(ObjectPtr obj,
                      MultiCValuePtr args,
                      MultiPValuePtr pvArgs,
-                     const vector<unsigned> &dispatchIndices,
+                     llvm::ArrayRef<unsigned> dispatchIndices,
                      CodegenContext* ctx,
                      MultiCValuePtr out)
 {
@@ -2297,8 +2297,8 @@ void codegenCallValue(CValuePtr callable,
         InvokeEntry* entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
         if (entry->callByName) {
             ExprListPtr objectExprs = new ExprList();
-            for (vector<CValuePtr>::const_iterator i = args->values.begin();
-                 i != args->values.end();
+            for (vector<CValuePtr>::const_iterator i = args->values.begin(), end = args->values.end();
+                 i != end;
                  ++i)
             {
                 objectExprs->add(new ObjectExpr(i->ptr()));
@@ -2544,8 +2544,8 @@ void codegenLowlevelCall(llvm::Value *llCallable,
 //
 
 InvokeEntry* codegenCallable(ObjectPtr x,
-                               const vector<TypePtr> &argsKey,
-                               const vector<ValueTempness> &argsTempness)
+                               llvm::ArrayRef<TypePtr> argsKey,
+                               llvm::ArrayRef<ValueTempness> argsTempness)
 {
     InvokeEntry* entry =
         safeAnalyzeCallable(x, argsKey, argsTempness);
@@ -3088,7 +3088,7 @@ void codegenCodeBody(InvokeEntry* entry)
 
     bool hasNamedReturn = false;
     if (entry->code->hasReturnSpecs()) {
-        const vector<ReturnSpecPtr> &returnSpecs = entry->code->returnSpecs;
+        llvm::ArrayRef<ReturnSpecPtr> returnSpecs = entry->code->returnSpecs;
         unsigned i = 0;
         for (; i < returnSpecs.size(); ++i, ++argNo) {
             ReturnSpecPtr rspec = returnSpecs[i];
@@ -3337,7 +3337,7 @@ void codegenCallInline(InvokeEntry* entry,
 
     bool hasNamedReturn = false;
     if (entry->code->hasReturnSpecs()) {
-        const vector<ReturnSpecPtr> &returnSpecs = entry->code->returnSpecs;
+        llvm::ArrayRef<ReturnSpecPtr> returnSpecs = entry->code->returnSpecs;
         unsigned i = 0;
         for (; i < returnSpecs.size(); ++i) {
             ReturnSpecPtr rspec = returnSpecs[i];
@@ -3444,7 +3444,7 @@ void codegenCallByName(InvokeEntry* entry,
 
     bool hasNamedReturn = false;
     if (entry->code->hasReturnSpecs()) {
-        const vector<ReturnSpecPtr> &returnSpecs = entry->code->returnSpecs;
+        llvm::ArrayRef<ReturnSpecPtr> returnSpecs = entry->code->returnSpecs;
         unsigned i = 0;
         for (; i < returnSpecs.size(); ++i) {
             ReturnSpecPtr rspec = returnSpecs[i];
@@ -3532,7 +3532,7 @@ static void codegenBlockStatement(BlockPtr block,
     }
     else if (stmt->stmtKind == EVAL_STATEMENT) {
         EvalStatement *eval = (EvalStatement*)stmt.ptr();
-        vector<StatementPtr> const &evaled = desugarEvalStatement(eval, env);
+        llvm::ArrayRef<StatementPtr> evaled = desugarEvalStatement(eval, env);
         for (unsigned i = 0; i < evaled.size(); ++i)
             codegenBlockStatement(block, i, evaled[i], env, ctx, terminated);
     } else if (stmt->stmtKind == WITH) {
@@ -3542,13 +3542,13 @@ static void codegenBlockStatement(BlockPtr block,
     }
 }
 
-static EnvPtr codegenStatementExpressionStatements(vector<StatementPtr> const &stmts,
+static EnvPtr codegenStatementExpressionStatements(llvm::ArrayRef<StatementPtr> stmts,
     EnvPtr env,
     CodegenContext* ctx)
 {
     EnvPtr env2 = env;
 
-    for (vector<StatementPtr>::const_iterator i = stmts.begin(), end = stmts.end();
+    for (StatementPtr const *i = stmts.begin(), *end = stmts.end();
          i != end;
          ++i)
     {
@@ -3785,7 +3785,7 @@ bool codegenStatement(StatementPtr stmt,
         Return *x = (Return *)stmt.ptr();
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, 1);
         MultiCValuePtr mcv = new MultiCValue();
-        const vector<CReturn> &returns = ctx->returnLists.back();
+        llvm::ArrayRef<CReturn> returns = ctx->returnLists.back();
         ensureArity(mpv, returns.size());
         for (unsigned i = 0; i < mpv->size(); ++i) {
             PVData const &pv = mpv->values[i];
@@ -3906,7 +3906,7 @@ bool codegenStatement(StatementPtr stmt,
 
     case EVAL_STATEMENT : {
         EvalStatement *eval = (EvalStatement*)stmt.ptr();
-        vector<StatementPtr> const &evaled = desugarEvalStatement(eval, env);
+        llvm::ArrayRef<StatementPtr> evaled = desugarEvalStatement(eval, env);
         bool terminated = false;
         for (unsigned i = 0; i < evaled.size(); ++i) {
             if (terminated)
@@ -4122,7 +4122,7 @@ bool codegenStatement(StatementPtr stmt,
 // codegenCollectLabels
 //
 
-void codegenCollectLabels(const vector<StatementPtr> &statements,
+void codegenCollectLabels(llvm::ArrayRef<StatementPtr> statements,
                           unsigned startIndex,
                           CodegenContext* ctx)
 {
@@ -5998,7 +5998,7 @@ void codegenPrimOp(PrimOpPtr x,
     case PRIM_RecordFieldCount : {
         ensureArity(args, 1);
         RecordTypePtr rt = valueToRecordType(args, 0);
-        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(rt);
         ValueHolderPtr vh = sizeTToValueHolder(fieldTypes.size());
         codegenStaticObject(vh.ptr(), ctx, out);
         break;
@@ -6008,7 +6008,7 @@ void codegenPrimOp(PrimOpPtr x,
         ensureArity(args, 2);
         RecordTypePtr rt = valueToRecordType(args, 0);
         size_t i = valueToStaticSizeTOrInt(args, 1);
-        const vector<IdentifierPtr> &fieldNames = recordFieldNames(rt);
+        llvm::ArrayRef<IdentifierPtr> fieldNames = recordFieldNames(rt);
         if (i >= fieldNames.size())
             argumentIndexRangeError(1, "record field index",
                                     i, fieldNames.size());
@@ -6041,7 +6041,7 @@ void codegenPrimOp(PrimOpPtr x,
         RecordTypePtr rt;
         llvm::Value *vrec = recordValue(args, 0, rt);
         size_t i = valueToStaticSizeTOrInt(args, 1);
-        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(rt);
         if (i >= fieldTypes.size())
             argumentIndexRangeError(1, "record field index",
                                     i, fieldTypes.size());
@@ -6068,7 +6068,7 @@ void codegenPrimOp(PrimOpPtr x,
             argumentError(1, sout.str());
         }
         size_t index = fi->second;
-        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(rt);
         llvm::Value *ptr = ctx->builder->CreateConstGEP2_32(vrec, 0, index);
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
@@ -6081,7 +6081,7 @@ void codegenPrimOp(PrimOpPtr x,
         ensureArity(args, 1);
         RecordTypePtr rt;
         llvm::Value *vrec = recordValue(args, 0, rt);
-        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(rt);
         assert(out->size() == fieldTypes.size());
         for (unsigned i = 0; i < fieldTypes.size(); ++i) {
             CValuePtr outi = out->values[i];
@@ -6110,7 +6110,7 @@ void codegenPrimOp(PrimOpPtr x,
         ensureArity(args, 2);
         VariantTypePtr vt = valueToVariantType(args, 0);
         TypePtr mt = valueToType(args, 1);
-        const vector<TypePtr> &memberTypes = variantMemberTypes(vt);
+        llvm::ArrayRef<TypePtr> memberTypes = variantMemberTypes(vt);
         size_t index = (size_t)-1;
         for (unsigned i = 0; i < memberTypes.size(); ++i) {
             if (memberTypes[i] == mt) {
@@ -6126,7 +6126,7 @@ void codegenPrimOp(PrimOpPtr x,
     case PRIM_VariantMemberCount : {
         ensureArity(args, 1);
         VariantTypePtr vt = valueToVariantType(args, 0);
-        const vector<TypePtr> &memberTypes = variantMemberTypes(vt);
+        llvm::ArrayRef<TypePtr> memberTypes = variantMemberTypes(vt);
         size_t size = memberTypes.size();
         ValueHolderPtr vh = sizeTToValueHolder(size);
         codegenStaticObject(vh.ptr(), ctx, out);

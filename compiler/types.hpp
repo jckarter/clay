@@ -44,19 +44,19 @@ TypePtr floatType(int bits);
 TypePtr imagType(int bits);
 TypePtr complexType(int bits);
 TypePtr pointerType(TypePtr pointeeType);
-TypePtr codePointerType(const vector<TypePtr> &argTypes,
-                        const vector<bool> &returnIsRef,
-                        const vector<TypePtr> &returnTypes);
+TypePtr codePointerType(llvm::ArrayRef<TypePtr> argTypes,
+                        llvm::ArrayRef<uint8_t> returnIsRef,
+                        llvm::ArrayRef<TypePtr> returnTypes);
 TypePtr cCodePointerType(CallingConv callingConv,
-                         const vector<TypePtr> &argTypes,
+                         llvm::ArrayRef<TypePtr> argTypes,
                          bool hasVarArgs,
                          TypePtr returnType);
 TypePtr arrayType(TypePtr elememtType, int size);
 TypePtr vecType(TypePtr elementType, int size);
-TypePtr tupleType(const vector<TypePtr> &elementTypes);
-TypePtr unionType(const vector<TypePtr> &memberTypes);
-TypePtr recordType(RecordDeclPtr record, const vector<ObjectPtr> &params);
-TypePtr variantType(VariantDeclPtr variant, const vector<ObjectPtr> &params);
+TypePtr tupleType(llvm::ArrayRef<TypePtr> elementTypes);
+TypePtr unionType(llvm::ArrayRef<TypePtr> memberTypes);
+TypePtr recordType(RecordDeclPtr record, llvm::ArrayRef<ObjectPtr> params);
+TypePtr variantType(VariantDeclPtr variant, llvm::ArrayRef<ObjectPtr> params);
 TypePtr staticType(ObjectPtr obj);
 TypePtr enumType(EnumDeclPtr enumeration);
 TypePtr newType(NewTypeDeclPtr newtype);
@@ -68,11 +68,11 @@ bool isPointerOrCodePointerType(TypePtr t);
 bool isStaticOrTupleOfStatics(TypePtr t);
 
 void initializeRecordFields(RecordTypePtr t);
-const vector<IdentifierPtr> &recordFieldNames(RecordTypePtr t);
-const vector<TypePtr> &recordFieldTypes(RecordTypePtr t);
+llvm::ArrayRef<IdentifierPtr> recordFieldNames(RecordTypePtr t);
+llvm::ArrayRef<TypePtr> recordFieldTypes(RecordTypePtr t);
 const llvm::StringMap<size_t> &recordFieldIndexMap(RecordTypePtr t);
 
-const vector<TypePtr> &variantMemberTypes(VariantTypePtr t);
+llvm::ArrayRef<TypePtr> variantMemberTypes(VariantTypePtr t);
 TypePtr variantReprType(VariantTypePtr t);
 int dispatchTagCount(TypePtr t);
 TypePtr newtypeReprType(NewTypePtr t);
