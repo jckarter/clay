@@ -510,8 +510,9 @@ alias overload ifExpression(condition, #consequent, #alternate) --> ret:StringLi
 
 
 
-/// @section  bitandc, bitblend 
+/// @section  bitnand, bitandc, bitblend 
 
+forceinline bitnand(a, b) = (~)((&)(a, b));
 forceinline bitandc(a, b) = (&)(a, (~)(b));
 forceinline bitblend(mask, ones, zeros)
     = (|)((&)(ones, mask), bitandc(zeros, mask));
