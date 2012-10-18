@@ -1,4 +1,8 @@
 #include "clay.hpp"
+#include "loader.hpp"
+#include "error.hpp"
+#include "invoketables.hpp"
+#include "constructors.hpp"
 
 
 #pragma clang diagnostic ignored "-Wcovered-switch-default"
@@ -10,6 +14,10 @@ static llvm::SpecificBumpPtrAllocator<InvokeEntry> *invokeEntryAllocator
     = new llvm::SpecificBumpPtrAllocator<InvokeEntry>();
 static llvm::SpecificBumpPtrAllocator<InvokeSet> *invokeSetAllocator
     = new llvm::SpecificBumpPtrAllocator<InvokeSet>();
+
+
+static const vector<OverloadPtr> &callableOverloads(ObjectPtr x);
+
 
 
 //
@@ -53,7 +61,7 @@ const OverloadPtr callableInterface(ObjectPtr x)
     }
 }
 
-const vector<OverloadPtr> &callableOverloads(ObjectPtr x)
+static const vector<OverloadPtr> &callableOverloads(ObjectPtr x)
 {
     initCallable(x);
     switch (x->objKind) {

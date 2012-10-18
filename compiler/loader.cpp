@@ -1,4 +1,11 @@
 #include "clay.hpp"
+#include "loader.hpp"
+#include "patterns.hpp"
+#include "analyzer.hpp"
+#include "codegen.hpp"
+#include "evaluator.hpp"
+#include "constructors.hpp"
+
 
 namespace clay {
 
@@ -843,7 +850,7 @@ EnvPtr ForeignStatement::getEnv() {
 
 static map<int, string> primOpNames;
 
-llvm::StringRef primOpName(PrimOpPtr x) {
+llvm::StringRef primOpName(const PrimOpPtr& x) {
     map<int, string>::iterator i = primOpNames.find(x->primOpCode);
     assert(i != primOpNames.end());
     return i->second;

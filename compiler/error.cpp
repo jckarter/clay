@@ -1,4 +1,10 @@
 #include "clay.hpp"
+#include "evaluator.hpp"
+#include "codegen.hpp"
+#include "matchinvoke.hpp"
+#include "invoketables.hpp"
+#include "error.hpp"
+
 
 namespace clay {
 
@@ -430,7 +436,7 @@ void argumentInvalidStaticObjectError(unsigned int index, ObjectPtr obj)
     argumentError(index, sout.str());
 }
 
-void matchBindingError(MatchResultPtr result)
+void matchBindingError(MatchResultPtr const &result)
 {
     string buf;
     llvm::raw_string_ostream sout(buf);

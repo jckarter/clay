@@ -1,4 +1,12 @@
 #include "clay.hpp"
+#include "types.hpp"
+#include "evaluator.hpp"
+#include "codegen.hpp"
+#include "externals.hpp"
+#include "operators.hpp"
+#include "patterns.hpp"
+#include "analyzer.hpp"
+
 
 namespace clay {
 

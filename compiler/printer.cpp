@@ -1,4 +1,9 @@
 #include "clay.hpp"
+#include "evaluator.hpp"
+#include "codegen.hpp"
+#include "loader.hpp"
+#include "patterns.hpp"
+
 
 
 #pragma clang diagnostic ignored "-Wcovered-switch-default"

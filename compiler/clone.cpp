@@ -1,4 +1,5 @@
 #include "clay.hpp"
+#include "analyzer.hpp"
 
 
 #pragma clang diagnostic ignored "-Wcovered-switch-default"

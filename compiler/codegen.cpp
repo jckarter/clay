@@ -1,4 +1,17 @@
 #include "clay.hpp"
+#include "evaluator.hpp"
+#include "codegen.hpp"
+#include "externals.hpp"
+#include "loader.hpp"
+#include "operators.hpp"
+#include "lambdas.hpp"
+#include "codegen.hpp"
+#include "analyzer.hpp"
+#include "invoketables.hpp"
+#include "literals.hpp"
+#include "desugar.hpp"
+#include "constructors.hpp"
+
 
 
 #pragma clang diagnostic ignored "-Wcovered-switch-default"
