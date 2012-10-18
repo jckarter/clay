@@ -106,10 +106,15 @@ static void checkForeignExpr(ObjectPtr &obj, EnvPtr env)
 {
     if (obj->objKind == EXPRESSION) {
         ExprPtr expr = (Expr *)obj.ptr();
-        if (expr->exprKind == FOREIGN_EXPR) {
-            PVData pdata = safeAnalyzeOne(expr, env);
-            if (pdata.ok() && !pdata.isTemp)
-                obj = new PValue(pdata.type, false);
+        if ((expr->exprKind == FOREIGN_EXPR) || (expr->exprKind == UNPACK) || (expr->exprKind == PAREN)) {
+	        // ExprListPtr exprs = new ExprList(x->expr);
+            ForeignExprPtr f = (ForeignExpr *)obj.ptr();
+	    vector<unsigned> dispatchIndices;
+            MultiPValuePtr mpv = safeAnalyzeMultiArgs(new ExprList(foreignExpr(env, f->expr)), env, dispatchIndices);
+            obj = mpv.ptr();
+            // PVData pdata = mpv->values[0];
+            // if (pdata.ok() && !pdata.isTemp)
+            //     obj = new PValue(pdata.type, false);
         }
     }
 }
