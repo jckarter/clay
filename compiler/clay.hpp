@@ -2219,11 +2219,11 @@ enum ImportKind {
 };
 
 struct Import : public ANode {
-    int importKind;
+    ImportKind importKind;
     DottedNamePtr dottedName;
     Visibility visibility;
     ModulePtr module;
-    Import(int importKind, DottedNamePtr dottedName, Visibility visibility)
+    Import(ImportKind importKind, DottedNamePtr dottedName, Visibility visibility)
         : ANode(IMPORT), importKind(importKind), dottedName(dottedName),
           visibility(visibility) {}
 };
