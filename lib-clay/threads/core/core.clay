@@ -8,6 +8,7 @@ record Thread (
 );
 
 overload RegularRecord?(#Thread) = false;
+overload BitwiseMovedType?(#Thread) = true;
 
 startThread(proc): Thread {
     var launcher = => {
