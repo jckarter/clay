@@ -4,8 +4,7 @@ import math.native.protocol.*;
 import complex.*;
 import numbers.floats.(nan,infinity,infinity?,nan?,signbit);
 
-private external ("llvm.x86.sse2.sqrt.sd", llvm)
-    x86_sqrtsd(a:Vec[Double,2]) : Vec[Double,2];
+import __intrinsics__.(x86_sse2_sqrt_sd as x86_sqrtsd);
 
 [T when Float?(T) ]
 forceinline overload sqrt(x:T) = T(x86_sqrtsd(Vec[Double,2](Double(x),0.))[0]);
