@@ -1975,6 +1975,8 @@ struct NewType : public TopLevelItem {
             ExprPtr expr)
         : TopLevelItem(NEWTYPE, name, visibility), expr(expr),
         initialized(false) {}
+    
+    
 };
 
 struct Enumeration : public TopLevelItem {

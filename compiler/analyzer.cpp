@@ -2931,9 +2931,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         MultiPValuePtr mpv = new MultiPValue();
         if(type->typeKind == NEW_TYPE) {
             NewTypeType *nt = (NewTypeType*)type;
-            if (!nt->newtype->initialized)
-                initializeNewType(nt);
-            mpv->add(staticPValue(nt->newtype->baseType.ptr()));
+            mpv->add(staticPValue(newtypeReprType(nt).ptr()));
         } else {
             mpv->add(staticPValue(type));
         }

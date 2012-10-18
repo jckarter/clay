@@ -37,6 +37,10 @@ static llvm::Value *promoteCVarArg(CallingConv conv,
         }
         return llv;
     }
+    case NEW_TYPE : {
+        NewTypeType *nt = (NewTypeType *)t.ptr();
+        return promoteCVarArg(conv, newtypeReprType(nt), llv, ctx);
+    }
     default :
         return llv;
     }
@@ -367,6 +371,11 @@ struct X86_32_ExternalTarget : public ExternalTarget {
                 return PASS_ON_STACK;
             else
                 return typeSize(type);
+        
+        case NEW_TYPE: {
+            NewTypeType *nt = (NewTypeType*)type.ptr();
+            return aggregateTypeSize(newtypeReprType(nt));
+        }
 
         default:
             assert(false);
@@ -408,6 +417,11 @@ struct X86_32_ExternalTarget : public ExternalTarget {
         case COMPLEX_TYPE:
         case VARIANT_TYPE:
             return NULL;
+        
+        case NEW_TYPE: {
+            NewTypeType *nt = (NewTypeType*)type.ptr();
+            return singleFloatAggregateType(newtypeReprType(nt));
+        }
 
         case UNION_TYPE: {
             UnionType *u = (UnionType*)type.ptr();
@@ -526,6 +540,10 @@ struct X86_64_ExternalTarget : public LLVMExternalTarget {
         case RECORD_TYPE:
         case TUPLE_TYPE:
             return false;
+        case NEW_TYPE: {
+            NewTypeType *nt = (NewTypeType*)type.ptr();
+            return canPassThrough(newtypeReprType(nt));
+        }
         default:
             assert(false);
             return false;
@@ -748,6 +766,10 @@ static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_
                             begin,
                             offset);
         break;
+    }
+    case NEW_TYPE: {
+        NewTypeType *nt = (NewTypeType *)type.ptr();
+        _classifyType(newtypeReprType(nt), begin, offset);
     }
     }
 }

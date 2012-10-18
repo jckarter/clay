@@ -415,7 +415,7 @@ void initializeNewType(NewTypeTypePtr t)
     t->newtype->baseType = evaluateType(t->newtype->expr, t->newtype->env);
     t->newtype->initialized = true;
 }
-
+    
 TypePtr newType(NewTypePtr newtype)
 {
     if (!newtype->type)
