@@ -1204,10 +1204,10 @@ enum VariadicOpKind {
 };
 
 struct VariadicOp : public Expr {
-    int op;
+    VariadicOpKind op;
     ExprListPtr exprs;
     ExprPtr desugared;
-    VariadicOp(int op, ExprListPtr exprs )
+    VariadicOp(VariadicOpKind op, ExprListPtr exprs )
         : Expr(VARIADIC_OP), op(op), exprs(exprs) {}
 };
 
