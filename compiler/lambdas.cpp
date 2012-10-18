@@ -3,6 +3,7 @@
 #include "operators.hpp"
 #include "lambdas.hpp"
 #include "desugar.hpp"
+#include "analyzer.hpp"
 
 
 namespace clay {
