@@ -70,8 +70,8 @@ static TypePtr objectType(ObjectPtr x)
     case PRIM_OP :
     case PROCEDURE :
     case GLOBAL_ALIAS :
-    case RECORD :
-    case VARIANT :
+    case RECORD_DECL :
+    case VARIANT_DECL :
     case MODULE :
     case IDENTIFIER :
         return staticType(x);
@@ -832,10 +832,10 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
 {
     switch (x->objKind) {
 
-    case NEWTYPE : {
-        NewType *y = (NewType *)x.ptr();
+    case NEW_TYPE_DECL : {
+        NewTypeDecl *y = (NewTypeDecl *)x.ptr();
         assert(y->type->typeKind == NEW_TYPE);
-        initializeNewType((NewTypeType*)y->type.ptr());
+        initializeNewType((NewType*)y->type.ptr());
 
         return new MultiPValue(PVData(y->type, true));
     }
@@ -894,8 +894,8 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
         return mpv;
     }
 
-    case RECORD : {
-        Record *y = (Record *)x.ptr();
+    case RECORD_DECL : {
+        RecordDecl *y = (RecordDecl *)x.ptr();
         ObjectPtr z;
         if (y->params.empty() && !y->varParam)
             z = recordType(y, vector<ObjectPtr>()).ptr();
@@ -904,8 +904,8 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
         return new MultiPValue(PVData(staticType(z), true));
     }
 
-    case VARIANT : {
-        Variant *y = (Variant *)x.ptr();
+    case VARIANT_DECL : {
+        VariantDecl *y = (VariantDecl *)x.ptr();
         ObjectPtr z;
         if (y->params.empty() && !y->varParam)
             z = variantType(y, vector<ObjectPtr>()).ptr();
@@ -1290,10 +1290,10 @@ static bool isTypeConstructor(ObjectPtr x) {
             return false;
         }
     }
-    else if (x->objKind == RECORD) {
+    else if (x->objKind == RECORD_DECL) {
         return true;
     }
-    else if (x->objKind == VARIANT) {
+    else if (x->objKind == VARIANT_DECL) {
         return true;
     }
     else {
@@ -1444,8 +1444,8 @@ TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args)
             return NULL;
         }
     }
-    else if (constructor->objKind == RECORD) {
-        RecordPtr x = (Record *)constructor.ptr();
+    else if (constructor->objKind == RECORD_DECL) {
+        RecordPtr x = (RecordDecl *)constructor.ptr();
         if (x->varParam.ptr()) {
             if (args->size() < x->params.size())
                 arityError2(x->params.size(), args->size());
@@ -1455,8 +1455,8 @@ TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args)
         }
         return recordType(x, args->values);
     }
-    else if (constructor->objKind == VARIANT) {
-        VariantPtr x = (Variant *)constructor.ptr();
+    else if (constructor->objKind == VARIANT_DECL) {
+        VariantPtr x = (VariantDecl *)constructor.ptr();
         if (x->varParam.ptr()) {
             if (args->size() < x->params.size())
                 arityError2(x->params.size(), args->size());
@@ -1580,8 +1580,8 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
     switch (obj->objKind) {
 
     case TYPE :
-    case RECORD :
-    case VARIANT :
+    case RECORD_DECL :
+    case VARIANT_DECL :
     case PROCEDURE :
     case GLOBAL_ALIAS :
     case PRIM_OP : {
@@ -1752,8 +1752,8 @@ MultiPValuePtr analyzeCallValue(PVData const &callable,
     switch (obj->objKind) {
 
     case TYPE :
-    case RECORD :
-    case VARIANT :
+    case RECORD_DECL :
+    case VARIANT_DECL :
     case PROCEDURE :
     case GLOBAL_ALIAS :
     case PRIM_OP : {
@@ -2477,8 +2477,8 @@ invokeEntryForCallableArguments(MultiPValuePtr args, size_t callableIndex, size_
         argumentError(callableIndex, "static callable expected");
     switch (callable->objKind) {
     case TYPE :
-    case RECORD :
-    case VARIANT :
+    case RECORD_DECL :
+    case VARIANT_DECL :
     case PROCEDURE :
     case GLOBAL_ALIAS :
         break;
@@ -2930,7 +2930,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         Type *type = (Type *)obj.ptr(); 
         MultiPValuePtr mpv = new MultiPValue();
         if(type->typeKind == NEW_TYPE) {
-            NewTypeType *nt = (NewTypeType*)type;
+            NewType *nt = (NewType*)type;
             mpv->add(staticPValue(newtypeReprType(nt).ptr()));
         } else {
             mpv->add(staticPValue(type));

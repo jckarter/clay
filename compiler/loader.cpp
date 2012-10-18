@@ -270,8 +270,8 @@ static void installGlobals(ModulePtr m) {
         TopLevelItem *x = i->ptr();
         x->env = m->env;
         switch (x->objKind) {
-        case ENUMERATION : {
-            Enumeration *enumer = (Enumeration *)x;
+        case ENUM_DECL : {
+            EnumDecl *enumer = (EnumDecl *)x;
             TypePtr t = enumType(enumer);
             addGlobal(m, enumer->name, enumer->visibility, t.ptr());
             for (unsigned i = 0 ; i < enumer->members.size(); ++i) {
@@ -282,8 +282,8 @@ static void installGlobals(ModulePtr m) {
             }
             break;
         }
-        case NEWTYPE : {
-            NewType *nt = (NewType *)x;
+        case NEW_TYPE_DECL : {
+            NewTypeDecl *nt = (NewTypeDecl *)x;
             TypePtr t = newType(nt);
             addGlobal(m, nt->name, nt->visibility, t.ptr());
             break;
@@ -577,13 +577,13 @@ static void initOverload(OverloadPtr x) {
             addProcedureOverload(proc, env, x);
             break;
         }
-        case RECORD : {
-            Record *r = (Record *)obj.ptr();
+        case RECORD_DECL : {
+            RecordDecl *r = (RecordDecl *)obj.ptr();
             r->overloads.insert(r->overloads.begin(), x);
             break;
         }
-        case VARIANT : {
-            Variant *v = (Variant *)obj.ptr();
+        case VARIANT_DECL : {
+            VariantDecl *v = (VariantDecl *)obj.ptr();
             v->overloads.insert(v->overloads.begin(), x);
             break;
         }
@@ -643,9 +643,9 @@ static void initVariantInstance(InstancePtr x) {
         if (pattern->kind != PATTERN_STRUCT)
             error(x->target, "not a variant type");
         PatternStruct *ps = (PatternStruct *)pattern.ptr();
-        if ((!ps->head) || (ps->head->objKind != VARIANT))
+        if ((!ps->head) || (ps->head->objKind != VARIANT_DECL))
             error(x->target, "not a variant type");
-        Variant *v = (Variant *)ps->head.ptr();
+        VariantDecl *v = (VariantDecl *)ps->head.ptr();
         v->instances.push_back(x);
     }
 }
@@ -715,8 +715,8 @@ static void initModule(ModulePtr m, const vector<string>& importChain) {
         case OVERLOAD :
             initOverload((Overload *)obj);
             break;
-        case INSTANCE :
-            initVariantInstance((Instance *)obj);
+        case INSTANCE_DECL :
+            initVariantInstance((InstanceDecl *)obj);
             break;
         case STATIC_ASSERT_TOP_LEVEL:
             checkStaticAssert((StaticAssertTopLevel *)obj);
@@ -790,7 +790,7 @@ static ModulePtr typeModule(TypePtr t) {
         return envModule(et->enumeration->env);
     }
     case NEW_TYPE : {
-        NewTypeType *et = (NewTypeType *)t.ptr();
+        NewType *et = (NewType *)t.ptr();
         return envModule(et->newtype->env);
     }
     default :
@@ -816,8 +816,8 @@ ModulePtr staticModule(ObjectPtr x) {
     case EXTERNAL_PROCEDURE :
     case EXTERNAL_VARIABLE :
     case PROCEDURE :
-    case RECORD :
-    case VARIANT : {
+    case RECORD_DECL :
+    case VARIANT_DECL : {
         TopLevelItem *t = (TopLevelItem *)x.ptr();
         return envModule(t->env);
     }
@@ -924,7 +924,7 @@ static ModulePtr makePrimitivesModule() {
     vector<IdentifierPtr> recordParams;
     RecordBodyPtr recordBody = new RecordBody(vector<RecordFieldPtr>());
     recordParams.push_back(Identifier::get("T"));
-    RecordPtr byRefRecord = new Record(Identifier::get("ByRef"),
+    RecordPtr byRefRecord = new RecordDecl(Identifier::get("ByRef"),
         PUBLIC,
         vector<PatternVar>(),
         NULL,
@@ -937,7 +937,7 @@ static ModulePtr makePrimitivesModule() {
     recordParams.clear();
     recordParams.push_back(Identifier::get("Properties"));
     recordParams.push_back(Identifier::get("Fields"));
-    RecordPtr rwpRecord = new Record(Identifier::get("RecordWithProperties"),
+    RecordPtr rwpRecord = new RecordDecl(Identifier::get("RecordWithProperties"),
         PUBLIC,
         vector<PatternVar>(),
         NULL,
@@ -1252,14 +1252,14 @@ static IdentifierPtr fnameToIdent(llvm::StringRef str) {
 
 static ObjectPtr convertObject(ObjectPtr x) {
     switch (x->objKind) {
-    case RECORD : {
-        Record *y = (Record *)x.ptr();
+    case RECORD_DECL : {
+        RecordDecl *y = (RecordDecl *)x.ptr();
         if (y->params.empty() && !y->varParam.ptr())
             return recordType(y, vector<ObjectPtr>()).ptr();
         return x;
     }
-    case VARIANT : {
-        Variant *y = (Variant *)x.ptr();
+    case VARIANT_DECL : {
+        VariantDecl *y = (VariantDecl *)x.ptr();
         if (y->params.empty() && !y->varParam.ptr())
             return variantType(y, vector<ObjectPtr>()).ptr();
         return x;
@@ -1387,8 +1387,8 @@ void addGlobals(ModulePtr m, const vector<TopLevelItemPtr>& toplevels) {
         TopLevelItem *x = i->ptr();
         x->env = m->env;
         switch (x->objKind) {
-        case ENUMERATION : {
-                Enumeration *enumer = (Enumeration *)x;
+        case ENUM_DECL : {
+                EnumDecl *enumer = (EnumDecl *)x;
                 TypePtr t = enumType(enumer);
                 addGlobal(m, enumer->name, enumer->visibility, t.ptr());
                 for (unsigned i = 0 ; i < enumer->members.size(); ++i) {
@@ -1420,8 +1420,8 @@ void addGlobals(ModulePtr m, const vector<TopLevelItemPtr>& toplevels) {
         case OVERLOAD :
             initOverload((Overload *)obj);
             break;
-        case INSTANCE :
-            initVariantInstance((Instance *)obj);
+        case INSTANCE_DECL :
+            initVariantInstance((InstanceDecl *)obj);
             break;
         case STATIC_ASSERT_TOP_LEVEL:
             checkStaticAssert((StaticAssertTopLevel *)obj);

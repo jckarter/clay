@@ -360,15 +360,15 @@ enum ObjectKind {
     LLVM_CODE,
     CODE,
 
-    RECORD,
+    RECORD_DECL,
     RECORD_BODY,
     RECORD_FIELD, // -- 15
-    VARIANT,
-    INSTANCE,
-    NEWTYPE,
+    VARIANT_DECL,
+    INSTANCE_DECL,
+    NEW_TYPE_DECL,
     OVERLOAD,
     PROCEDURE,   // -- 20
-    ENUMERATION,   
+    ENUM_DECL,   
     ENUM_MEMBER,
     GLOBAL_VARIABLE,
     EXTERNAL_PROCEDURE,
@@ -509,15 +509,15 @@ struct LLVMCode;
 struct Code;
 
 struct TopLevelItem;
-struct Record;
+struct RecordDecl;
 struct RecordBody;
 struct RecordField;
-struct Variant;
-struct Instance;
-struct NewType;
+struct VariantDecl;
+struct InstanceDecl;
+struct NewTypeDecl;
 struct Overload;
 struct Procedure;
-struct Enumeration;
+struct EnumDecl;
 struct EnumMember;
 struct GlobalVariable;
 struct GVarInstance;
@@ -557,7 +557,7 @@ struct RecordType;
 struct VariantType;
 struct StaticType;
 struct EnumType;
-struct NewTypeType;
+struct NewType;
 
 struct Pattern;
 struct PatternCell;
@@ -662,15 +662,15 @@ typedef Pointer<LLVMCode> LLVMCodePtr;
 typedef Pointer<Code> CodePtr;
 
 typedef Pointer<TopLevelItem> TopLevelItemPtr;
-typedef Pointer<Record> RecordPtr;
+typedef Pointer<RecordDecl> RecordPtr;
 typedef Pointer<RecordBody> RecordBodyPtr;
 typedef Pointer<RecordField> RecordFieldPtr;
-typedef Pointer<Variant> VariantPtr;
-typedef Pointer<Instance> InstancePtr;
-typedef Pointer<NewType> NewTypePtr;
+typedef Pointer<VariantDecl> VariantPtr;
+typedef Pointer<InstanceDecl> InstancePtr;
+typedef Pointer<NewTypeDecl> NewTypePtr;
 typedef Pointer<Overload> OverloadPtr;
 typedef Pointer<Procedure> ProcedurePtr;
-typedef Pointer<Enumeration> EnumerationPtr;
+typedef Pointer<EnumDecl> EnumerationPtr;
 typedef Pointer<EnumMember> EnumMemberPtr;
 typedef Pointer<GlobalVariable> GlobalVariablePtr;
 typedef Pointer<GVarInstance> GVarInstancePtr;
@@ -710,7 +710,7 @@ typedef Pointer<RecordType> RecordTypePtr;
 typedef Pointer<VariantType> VariantTypePtr;
 typedef Pointer<StaticType> StaticTypePtr;
 typedef Pointer<EnumType> EnumTypePtr;
-typedef Pointer<NewTypeType> NewTypeTypePtr;
+typedef Pointer<NewType> NewTypeTypePtr;
 
 typedef Pointer<Pattern> PatternPtr;
 typedef Pointer<PatternCell> PatternCellPtr;
@@ -1821,7 +1821,7 @@ struct TopLevelItem : public ANode {
         : ANode(objKind), name(name), visibility(visibility) {}
 };
 
-struct Record : public TopLevelItem {
+struct RecordDecl : public TopLevelItem {
     vector<PatternVar> patternVars;
     ExprPtr predicate;
 
@@ -1835,23 +1835,23 @@ struct Record : public TopLevelItem {
 
     LambdaPtr lambda;
 
-    Record(Visibility visibility)
-        : TopLevelItem(RECORD, visibility),
+    RecordDecl(Visibility visibility)
+        : TopLevelItem(RECORD_DECL, visibility),
           builtinOverloadInitialized(false) {}
-    Record(Visibility visibility,
+    RecordDecl(Visibility visibility,
            const vector<PatternVar> &patternVars, ExprPtr predicate)
-        : TopLevelItem(RECORD, visibility),
+        : TopLevelItem(RECORD_DECL, visibility),
           patternVars(patternVars),
           predicate(predicate),
           builtinOverloadInitialized(false) {}
-    Record(IdentifierPtr name,
+    RecordDecl(IdentifierPtr name,
            Visibility visibility,
            const vector<PatternVar> &patternVars,
            ExprPtr predicate,
            const vector<IdentifierPtr> &params,
            IdentifierPtr varParam,
            RecordBodyPtr body)
-        : TopLevelItem(RECORD, name, visibility),
+        : TopLevelItem(RECORD_DECL, name, visibility),
           patternVars(patternVars), predicate(predicate),
           params(params), varParam(varParam), body(body),
           builtinOverloadInitialized(false) {}
@@ -1874,7 +1874,7 @@ struct RecordField : public ANode {
         : ANode(RECORD_FIELD), name(name), type(type) {}
 };
 
-struct Variant : public TopLevelItem {
+struct VariantDecl : public TopLevelItem {
     vector<PatternVar> patternVars;
     ExprPtr predicate;
 
@@ -1888,7 +1888,7 @@ struct Variant : public TopLevelItem {
 
     vector<OverloadPtr> overloads;
 
-    Variant(IdentifierPtr name,
+    VariantDecl(IdentifierPtr name,
             Visibility visibility,
             const vector<PatternVar> &patternVars,
             ExprPtr predicate,
@@ -1896,23 +1896,23 @@ struct Variant : public TopLevelItem {
             IdentifierPtr varParam,
             bool open,
             ExprListPtr defaultInstances)
-        : TopLevelItem(VARIANT, name, visibility),
+        : TopLevelItem(VARIANT_DECL, name, visibility),
           patternVars(patternVars), predicate(predicate),
           params(params), varParam(varParam),
           open(open), defaultInstances(defaultInstances) {}
 };
 
-struct Instance : public TopLevelItem {
+struct InstanceDecl : public TopLevelItem {
     vector<PatternVar> patternVars;
     ExprPtr predicate;
     ExprPtr target;
     ExprListPtr members;
 
-    Instance(const vector<PatternVar> &patternVars,
+    InstanceDecl(const vector<PatternVar> &patternVars,
              ExprPtr predicate,
              ExprPtr target,
              ExprListPtr members)
-        : TopLevelItem(INSTANCE), patternVars(patternVars),
+        : TopLevelItem(INSTANCE_DECL), patternVars(patternVars),
           predicate(predicate), target(target), members(members)
         {}
 };
@@ -1965,34 +1965,34 @@ struct Procedure : public TopLevelItem {
 };
 
 
-struct NewType : public TopLevelItem {
+struct NewTypeDecl : public TopLevelItem {
     ExprPtr expr;
     TypePtr type;
     TypePtr baseType;
     bool initialized;
-    NewType(IdentifierPtr name,
+    NewTypeDecl(IdentifierPtr name,
             Visibility visibility,
             ExprPtr expr)
-        : TopLevelItem(NEWTYPE, name, visibility), expr(expr),
+        : TopLevelItem(NEW_TYPE_DECL, name, visibility), expr(expr),
         initialized(false) {}
     
     
 };
 
-struct Enumeration : public TopLevelItem {
+struct EnumDecl : public TopLevelItem {
     vector<PatternVar> patternVars;
     ExprPtr predicate;
 
     vector<EnumMemberPtr> members;
     TypePtr type;
-    Enumeration(IdentifierPtr name, Visibility visibility,
+    EnumDecl(IdentifierPtr name, Visibility visibility,
         const vector<PatternVar> &patternVars, ExprPtr predicate)
-        : TopLevelItem(ENUMERATION, name, visibility),
+        : TopLevelItem(ENUM_DECL, name, visibility),
           patternVars(patternVars), predicate(predicate) {}
-    Enumeration(IdentifierPtr name, Visibility visibility,
+    EnumDecl(IdentifierPtr name, Visibility visibility,
                 const vector<PatternVar> &patternVars, ExprPtr predicate,
                 const vector<EnumMemberPtr> &members)
-        : TopLevelItem(ENUMERATION, name, visibility),
+        : TopLevelItem(ENUM_DECL, name, visibility),
           patternVars(patternVars), predicate(predicate),
           members(members) {}
 };
@@ -2831,9 +2831,9 @@ struct EnumType : public Type {
         : Type(ENUM_TYPE), enumeration(enumeration), initialized(false) {}
 };
 
-struct NewTypeType : public Type {
+struct NewType : public Type {
     NewTypePtr newtype;
-    NewTypeType(NewTypePtr newtype)
+    NewType(NewTypePtr newtype)
         : Type(NEW_TYPE), newtype(newtype) {}
 };
 

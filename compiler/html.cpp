@@ -167,7 +167,7 @@ void emitHtmlModule(std::string outpath, DocState *state, DocModule *mod)
                 case clay::PROCEDURE:
                     emitHtmlProcedure(o, state, *i2);
                     break;
-                case clay::RECORD:
+                case clay::RECORD_DECL:
                     emitHtmlRecord(o, state, *i2);
                     break;
                 case clay::OVERLOAD:

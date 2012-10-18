@@ -419,7 +419,7 @@ void initializeNewType(NewTypeTypePtr t)
 TypePtr newType(NewTypePtr newtype)
 {
     if (!newtype->type)
-        newtype->type = new NewTypeType(newtype);
+        newtype->type = new NewType(newtype);
     return newtype->type;
 }
 
@@ -953,7 +953,7 @@ static void verifyRecursionCorrectness(TypePtr t,
         break;
     }
     case NEW_TYPE : {
-        NewTypeType *nt = (NewTypeType *)t.ptr();
+        NewType *nt = (NewType *)t.ptr();
         verifyRecursionCorrectness(nt->newtype->baseType, visited);
         break;
     }
@@ -1336,7 +1336,7 @@ static void declareLLVMType(TypePtr t) {
         break;
     }
     case NEW_TYPE : {
-        NewTypeType *x = (NewTypeType *)t.ptr();
+        NewType *x = (NewType *)t.ptr();
         TypePtr reprType = newtypeReprType(x);
         if (!reprType->llType)
             declareLLVMType(reprType);
@@ -1592,7 +1592,7 @@ static void defineLLVMType(TypePtr t) {
         break;
     }
     case NEW_TYPE : {
-        NewTypeType *x = (NewTypeType *)t.ptr();
+        NewType *x = (NewType *)t.ptr();
         TypePtr reprType = newtypeReprType(x);
         if (!reprType->llType)
             declareLLVMType(reprType);

@@ -1305,8 +1305,8 @@ void codegenStaticObject(ObjectPtr x,
         break;
     }
 
-    case RECORD : {
-        Record *y = (Record *)x.ptr();
+    case RECORD_DECL : {
+        RecordDecl *y = (RecordDecl *)x.ptr();
         ObjectPtr z;
         if (y->params.empty() && !y->varParam)
             z = recordType(y, vector<ObjectPtr>()).ptr();
@@ -1317,8 +1317,8 @@ void codegenStaticObject(ObjectPtr x,
         break;
     }
 
-    case VARIANT : {
-        Variant *y = (Variant *)x.ptr();
+    case VARIANT_DECL : {
+        VariantDecl *y = (VariantDecl *)x.ptr();
         ObjectPtr z;
         if (y->params.empty() && !y->varParam)
             z = variantType(y, vector<ObjectPtr>()).ptr();
@@ -2067,8 +2067,8 @@ void codegenCallExpr(ExprPtr callable,
     switch (obj->objKind) {
 
     case TYPE :
-    case RECORD :
-    case VARIANT :
+    case RECORD_DECL :
+    case VARIANT_DECL :
     case PROCEDURE :
     case GLOBAL_ALIAS :
     case PRIM_OP : {
@@ -2280,8 +2280,8 @@ void codegenCallValue(CValuePtr callable,
     switch (obj->objKind) {
 
     case TYPE :
-    case RECORD :
-    case VARIANT :
+    case RECORD_DECL :
+    case VARIANT_DECL :
     case PROCEDURE :
     case GLOBAL_ALIAS :
     case PRIM_OP : {
@@ -2779,13 +2779,13 @@ static string getCodeName(InvokeEntry* entry)
         sout << x;
         break;
     }
-    case RECORD : {
-        Record *y = (Record *)x.ptr();
+    case RECORD_DECL : {
+        RecordDecl *y = (RecordDecl *)x.ptr();
         sout << y->name->str;
         break;
     }
-    case VARIANT : {
-        Variant *y = (Variant *)x.ptr();
+    case VARIANT_DECL : {
+        VariantDecl *y = (VariantDecl *)x.ptr();
         sout << y->name->str;
         break;
     }
@@ -5011,8 +5011,8 @@ void codegenPrimOp(PrimOpPtr x,
         if (obj.ptr() != NULL) {
             switch (obj->objKind) {
             case TYPE :
-            case RECORD :
-            case VARIANT :
+            case RECORD_DECL :
+            case VARIANT_DECL :
             case PROCEDURE :
             case GLOBAL_ALIAS:
                 isSymbol = true;
@@ -5035,8 +5035,8 @@ void codegenPrimOp(PrimOpPtr x,
         }
         switch (callable->objKind) {
         case TYPE :
-        case RECORD :
-        case VARIANT :
+        case RECORD_DECL :
+        case VARIANT_DECL :
         case PROCEDURE :
         case GLOBAL_ALIAS:
             break;
@@ -5736,8 +5736,8 @@ void codegenPrimOp(PrimOpPtr x,
         ObjectPtr callable = valueToStatic(args, 0);
         switch (callable->objKind) {
         case TYPE :
-        case RECORD :
-        case VARIANT :
+        case RECORD_DECL :
+        case VARIANT_DECL :
         case PROCEDURE :
         case GLOBAL_ALIAS :
             break;
@@ -5785,8 +5785,8 @@ void codegenPrimOp(PrimOpPtr x,
         ObjectPtr callable = valueToStatic(args, 0);
         switch (callable->objKind) {
         case TYPE :
-        case RECORD :
-        case VARIANT :
+        case RECORD_DECL :
+        case VARIANT_DECL :
         case PROCEDURE :
         case GLOBAL_ALIAS :
             break;

@@ -29,13 +29,13 @@ static void initCallable(ObjectPtr x)
     switch (x->objKind) {
     case TYPE :
         break;
-    case RECORD : {
-        Record *y = (Record *)x.ptr();
+    case RECORD_DECL : {
+        RecordDecl *y = (RecordDecl *)x.ptr();
         if (!y->builtinOverloadInitialized)
             initBuiltinConstructor(y);
         break;
     }
-    case VARIANT :
+    case VARIANT_DECL :
     case PROCEDURE :
     case GLOBAL_ALIAS :
         break;
@@ -69,12 +69,12 @@ static const vector<OverloadPtr> &callableOverloads(ObjectPtr x)
         Type *y = (Type *)x.ptr();
         return y->overloads;
     }
-    case RECORD : {
-        Record *y = (Record *)x.ptr();
+    case RECORD_DECL : {
+        RecordDecl *y = (RecordDecl *)x.ptr();
         return y->overloads;
     }
-    case VARIANT : {
-        Variant *y = (Variant *)x.ptr();
+    case VARIANT_DECL : {
+        VariantDecl *y = (VariantDecl *)x.ptr();
         return y->overloads;
     }
     case PROCEDURE : {

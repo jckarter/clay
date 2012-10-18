@@ -2077,7 +2077,7 @@ static bool record(TopLevelItemPtr &x) {
     if (!optPatternVarsWithCond(patternVars, predicate)) return false;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("record")) return false;
-    RecordPtr y = new Record(vis, patternVars, predicate);
+    RecordPtr y = new RecordDecl(vis, patternVars, predicate);
     if (!identifier(y->name)) return false;
     if (!optStaticParams(y->params, y->varParam)) return false;
     if (!recordBody(y->body)) return false;
@@ -2126,7 +2126,7 @@ static bool variant(TopLevelItemPtr &x) {
     bool open;
     if (!optInstances(defaultInstances, open)) return false;
     if (!symbol(";")) return false;
-    x = new Variant(name, vis, patternVars, predicate, params, varParam, open, defaultInstances);
+    x = new VariantDecl(name, vis, patternVars, predicate, params, varParam, open, defaultInstances);
     x->location = location;
     return true;
 }
@@ -2142,7 +2142,7 @@ static bool instance(TopLevelItemPtr &x) {
     ExprListPtr members;
     if (!instances(members)) return false;
     if (!symbol(";")) return false;
-    x = new Instance(patternVars, predicate, target, members);
+    x = new InstanceDecl(patternVars, predicate, target, members);
     x->location = location;
     return true;
 }
@@ -2158,7 +2158,7 @@ static bool newtype(TopLevelItemPtr &x) {
     ExprPtr expr;
     if (!expression(expr)) return false;
     if (!symbol(";")) return false;
-    x = new NewType(name, vis, expr);
+    x = new NewTypeDecl(name, vis, expr);
     x->location = location;
     return true;
 }
@@ -2559,7 +2559,7 @@ static bool enumeration(TopLevelItemPtr &x) {
     if (!keyword("enum")) return false;
     IdentifierPtr y;
     if (!identifier(y)) return false;
-    EnumerationPtr z = new Enumeration(y, vis, patternVars, predicate);
+    EnumerationPtr z = new EnumDecl(y, vis, patternVars, predicate);
     if (!symbol("(")) return false;
     if (!enumMemberList(z->members)) return false;
     if (!symbol(")")) return false;

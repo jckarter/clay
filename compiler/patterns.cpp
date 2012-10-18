@@ -141,8 +141,8 @@ static PatternPtr objectToPattern(ObjectPtr obj)
                 TypePtr t = cpt->returnTypes[i];
                 if (cpt->returnIsRef[i]) {
                     ObjectPtr obj = primitive_ByRef();
-                    assert(obj->objKind == RECORD);
-                    t = recordType((Record *)obj.ptr(),
+                    assert(obj->objKind == RECORD_DECL);
+                    t = recordType((RecordDecl *)obj.ptr(),
                                    vector<ObjectPtr>(1, t.ptr()));
                 }
                 PatternPtr x = objectToPattern(t.ptr());
@@ -524,8 +524,8 @@ static bool isPatternHead(ObjectPtr x)
         }
         assert(false);
     }
-    case RECORD :
-    case VARIANT :
+    case RECORD_DECL :
+    case VARIANT_DECL :
         return true;
     default :
         return false;
@@ -559,8 +559,8 @@ static PatternPtr namedToPattern(ObjectPtr x)
         }
         return evaluateOnePattern(y->expr, y->env);
     }
-    case RECORD : {
-        Record *y = (Record *)x.ptr();
+    case RECORD_DECL : {
+        RecordDecl *y = (RecordDecl *)x.ptr();
         ObjectPtr z;
         if (y->params.empty() && !y->varParam)
             z = recordType(y, vector<ObjectPtr>()).ptr();
@@ -568,8 +568,8 @@ static PatternPtr namedToPattern(ObjectPtr x)
             z = y;
         return new PatternCell(z);
     }
-    case VARIANT : {
-        Variant *y = (Variant *)x.ptr();
+    case VARIANT_DECL : {
+        VariantDecl *y = (VariantDecl *)x.ptr();
         ObjectPtr z;
         if (y->params.empty() && !y->varParam)
             z = variantType(y, vector<ObjectPtr>()).ptr();

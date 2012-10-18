@@ -549,9 +549,9 @@ static void print(llvm::raw_ostream &out, const Object *x) {
         break;
     }
 
-    case RECORD : {
-        const Record *y = (const Record *)x;
-        out << "Record(" << y->name << ", " << y->params;
+    case RECORD_DECL : {
+        const RecordDecl *y = (const RecordDecl *)x;
+        out << "RecordDecl(" << y->name << ", " << y->params;
         out << ", " << y->varParam << ", " << y->body << ")";
         break;
     }
@@ -567,15 +567,15 @@ static void print(llvm::raw_ostream &out, const Object *x) {
         break;
     }
 
-    case VARIANT : {
-        const Variant *y = (const Variant *)x;
-        out << "Variant(" << y->name << ", " << y->params;
+    case VARIANT_DECL : {
+        const VariantDecl *y = (const VariantDecl *)x;
+        out << "VariantDecl(" << y->name << ", " << y->params;
         out << ", " << y->varParam << ")";
         break;
     }
-    case INSTANCE : {
-        const Instance *y = (const Instance *)x;
-        out << "Instance(" << y->patternVars << ", " << y->predicate;
+    case INSTANCE_DECL : {
+        const InstanceDecl *y = (const InstanceDecl *)x;
+        out << "InstanceDecl(" << y->patternVars << ", " << y->predicate;
         out << ", " << y->target << ", " << y->members << ")";
         break;
     }
@@ -592,9 +592,9 @@ static void print(llvm::raw_ostream &out, const Object *x) {
         break;
     }
 
-    case ENUMERATION : {
-        const Enumeration *y = (const Enumeration *)x;
-        out << "Enumeration(" << y->name << ", " << y->members << ")";
+    case ENUM_DECL : {
+        const EnumDecl *y = (const EnumDecl *)x;
+        out << "EnumDecl(" << y->name << ", " << y->members << ")";
         break;
     }
     case ENUM_MEMBER : {
@@ -603,9 +603,9 @@ static void print(llvm::raw_ostream &out, const Object *x) {
         break;
     }
 
-    case NEWTYPE : {
-        const NewType *y = (const NewType *)x;
-        out << "NewType(" << y->name << ")";
+    case NEW_TYPE_DECL : {
+        const NewTypeDecl *y = (const NewTypeDecl *)x;
+        out << "NewTypeDecl(" << y->name << ")";
         break;
     }
     
@@ -952,13 +952,13 @@ void printName(llvm::raw_ostream &out, ObjectPtr x)
         out << y->name->str;
         break;
     }
-    case RECORD : {
-        Record *y = (Record *)x.ptr();
+    case RECORD_DECL : {
+        RecordDecl *y = (RecordDecl *)x.ptr();
         out << y->name->str;
         break;
     }
-    case VARIANT : {
-        Variant *y = (Variant *)x.ptr();
+    case VARIANT_DECL : {
+        VariantDecl *y = (VariantDecl *)x.ptr();
         out << y->name->str;
         break;
     }
@@ -1322,7 +1322,7 @@ void typePrint(llvm::raw_ostream &out, TypePtr t) {
         break;
     }
     case NEW_TYPE : {
-        NewTypeType *x = (NewTypeType *)t.ptr();
+        NewType *x = (NewType *)t.ptr();
         out << x->newtype->name->str;
         break;
     }

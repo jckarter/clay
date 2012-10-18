@@ -123,7 +123,7 @@ static void checkForeignExpr(ObjectPtr &obj, EnvPtr env)
 static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
     llvm::StringRef closureDataName, llvm::StringRef lname)
 {
-    RecordPtr r = new Record(PRIVATE);
+    RecordPtr r = new RecordDecl(PRIVATE);
     r->location = x->location;
     r->name = Identifier::get(lname);
     r->env = env;

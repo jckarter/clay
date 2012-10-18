@@ -429,8 +429,8 @@ ObjectPtr makeTupleValue(const vector<ObjectPtr> &elements)
         case PRIM_OP :
         case PROCEDURE :
         case GLOBAL_ALIAS :
-        case RECORD :
-        case VARIANT :
+        case RECORD_DECL :
+        case VARIANT_DECL :
         case MODULE :
         case IDENTIFIER :
             break;
@@ -1266,8 +1266,8 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
         break;
     }
 
-    case RECORD : {
-        Record *y = (Record *)x.ptr();
+    case RECORD_DECL : {
+        RecordDecl *y = (RecordDecl *)x.ptr();
         ObjectPtr z;
         if (y->params.empty() && !y->varParam)
             z = recordType(y, vector<ObjectPtr>()).ptr();
@@ -1278,8 +1278,8 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
         break;
     }
 
-    case VARIANT : {
-        Variant *y = (Variant *)x.ptr();
+    case VARIANT_DECL : {
+        VariantDecl *y = (VariantDecl *)x.ptr();
         ObjectPtr z;
         if (y->params.empty() && !y->varParam)
             z = variantType(y, vector<ObjectPtr>()).ptr();
@@ -1558,8 +1558,8 @@ void evalCallExpr(ExprPtr callable,
     switch (obj->objKind) {
 
     case TYPE :
-    case RECORD :
-    case VARIANT :
+    case RECORD_DECL :
+    case VARIANT_DECL :
     case PROCEDURE :
     case GLOBAL_ALIAS :
     case PRIM_OP : {
@@ -1749,8 +1749,8 @@ void evalCallValue(EValuePtr callable,
     switch (obj->objKind) {
 
     case TYPE :
-    case RECORD :
-    case VARIANT :
+    case RECORD_DECL :
+    case VARIANT_DECL :
     case PROCEDURE :
     case GLOBAL_ALIAS :
     case PRIM_OP : {
@@ -3652,8 +3652,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         if (obj.ptr() != NULL) {
             switch (obj->objKind) {
             case TYPE :
-            case RECORD :
-            case VARIANT :
+            case RECORD_DECL :
+            case VARIANT_DECL :
             case PROCEDURE :
             case GLOBAL_ALIAS:
                 isSymbol = true;
@@ -3678,8 +3678,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         }
         switch (callable->objKind) {
         case TYPE :
-        case RECORD :
-        case VARIANT :
+        case RECORD_DECL :
+        case VARIANT_DECL :
         case PROCEDURE :
         case GLOBAL_ALIAS :
             break;
