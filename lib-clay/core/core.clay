@@ -1,6 +1,7 @@
 public import __primitives__.*;
 public import core.types.*;
 public import core.operators.*;
+public import core.sequences.*;
 public import core.records.*;
 public import core.tuples.*;
 public import core.unions.*;
@@ -30,8 +31,6 @@ public import core.strings.stringrefs.*;
 
 public import core.errors.*;
 public import core.exceptions.*;
-
-public import core.sequences.*;
 
 public import core.system.*;
 public import core.system.platform.*;
