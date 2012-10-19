@@ -3,11 +3,13 @@
 overload AtomicTypeForSize(#n) = UInt64;
 [n when n > 2 and n <= 4]
 overload AtomicTypeForSize(#n) = UInt32;
-overload AtomicTypeForSize(#2) = UInt16;
-overload AtomicTypeForSize(#1) = UInt8;
+[n when n == 2]
+overload AtomicTypeForSize(#n) = UInt16;
+[n when n == 1]
+overload AtomicTypeForSize(#n) = UInt8;
 
 [T when TypeSize(T) <= TypeSize(RawPointer)] define AtomicTypeForType(#T);
 
 [T] /*default*/ overload AtomicTypeForType(#T) = AtomicTypeForSize(#TypeSize(T));
-[T when Integer?(T) or T == Bool]
+[T when Integer?(T)]
 overload AtomicTypeForType(#T) = T;
