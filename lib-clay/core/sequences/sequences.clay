@@ -125,6 +125,7 @@ SizedSequence?(T): Bool = Sequence?(T) and CallDefined?(size, T);
 StaticSizedSequence?(T) : Bool = Sequence?(T) and CallDefined?(StaticSize, Static[T]);
 RandomAccessSequence?(T) : Bool  = Sequence?(T) and CallDefined?(index, T, Int);
 LValueSequence?(T) : Bool = Sequence?(T) and LValue?(getValue(nextValue(iterator(typeToLValue(T)))));
+RValueSequence?(T) : Bool = Sequence?(T) and RValue?(getValue(nextValue(iterator(typeToLValue(T)))));
 
 CoordinateSequence?(T) : Bool = Sequence?(T) and CallDefined?(begin, T) and CallDefined?(end, T);
 SequenceCoordinateType(T) = Type(begin(typeToLValue(T)));
