@@ -153,7 +153,8 @@ class RefText(object):
         self.re = None
         xx = text.split('\n', 1)
         if len(xx) == 2 and xx[0] == '(re)':
-            self.re = re.compile(xx[1] + '$', re.DOTALL)
+            restring = xx[1].replace('\r', '').strip()
+            self.re = re.compile(restring, re.DOTALL)
         else:
             self.re = None
 
