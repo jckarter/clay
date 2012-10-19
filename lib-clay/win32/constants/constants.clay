@@ -142,3 +142,8 @@ alias SO_REUSEADDR = 4;
 
 /// @section  socket error 
 alias SOCKET_ERROR = Greatest(SOCKET);
+
+
+/// @section  condition variables
+
+alias INFINITE = Greatest(DWORD);
