@@ -24,7 +24,7 @@ overload ConvFuncForType(#T) = libc.strtoul;
 
 overload ConvFuncForType(#CLongDouble) = libc.strtold;
 overload ConvFuncForType(#CDouble) = libc.strtod;
-overload ConvFuncForType(#CFloat) = libc.strtof;
+overload ConvFuncForType(#CFloat) = (nptr, endptr) -> CFloat(libc.strtod(nptr, endptr));
 
 [T when Imaginary?(T)]
 overload ConvFuncForType(#T) = ConvFuncForType(ImagBaseType(T));
