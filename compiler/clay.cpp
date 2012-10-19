@@ -6,7 +6,7 @@
 
 
 // for _exit
-#ifdef WIN32
+#ifdef _WIN32
 # include <process.h>
 #else
 # include <unistd.h>

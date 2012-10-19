@@ -1,4 +1,6 @@
 #include "hirestimer.hpp"
+#include <cassert>
+
 
 #ifdef __APPLE__
 
