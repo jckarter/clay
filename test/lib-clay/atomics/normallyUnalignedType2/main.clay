@@ -6,7 +6,7 @@ import threads.(startThread, joinThread);
 
 var counters = Atomic(Array[UInt8, 4](0uss, 0uss, 0uss, 0uss));
 
-noinline counterThread(id) {
+counterThread(id) {
     var i = id % 4u;
     var c = Array[UInt8, 4](0uss, 0uss, 0uss, 0uss);
     for (x in range(100)) {
