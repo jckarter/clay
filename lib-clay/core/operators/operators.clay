@@ -715,10 +715,32 @@ forceinline MonoType?(F) : Bool = Mono?(typeToRValue(F));
 [F when MonoType?(F)]
 alias MonoOutputTypes(f:F) = ..CallOutputTypes(f, ..MonoInputTypes(f));
 
+/// @section functors and monads
+
+
+public define typeInBox(T);
+public define changeTypeInBox;
+
+public define Functor?;
+overload Functor?(T) : bool = false;
+public define fmap;
+alias (<&>) = fmap;
+
+public define Applicative?;
+overload Applicative?(T): bool = false;
+public define ap;
+alias (<*>) = ap;
+
 public define Monad?;
 overload Monad?(T) : Bool = false;
+public define mbind;
+alias (=<<) = mbind;
+alias (>>=)(x, f) = mbind(f, x);
+[M when Monad?(M)]
+overload (>>)(x : M, f) = x >>= (dummy => f);
+//FIXME: overload operatorPrecedence
+public define mreturn;
 
-
 /// @section  operator functions for closure conversion 
 
 overload packMultiValuedFreeVar(..x) = [..x];

@@ -1,0 +1,30 @@
+[T]
+overload typeInBox(#Maybe[T]) = T;
+
+[T, U]
+overload changeTypeInBox(#Maybe[T], #U) = Maybe[U];
+
+[T]
+overload fmap(f, v : Maybe[T]) {
+    if (hasValue(v))
+        return Maybe(f(getValue(v)));
+    else
+        return nothing(Type(f(getValue(v))));
+}
+
+[T]
+overload Monad?(#Maybe[T]) = true;
+[T]
+overload mbind(f, v : Maybe[T])
+{
+    if (hasValue?(v))
+        return f(getValue(v));
+    else
+        return nothing(typeInBox(Type(f(getValue(v)))));	
+}
+
+[A, T]
+overload mreturn(a : A, #Maybe[T])= Maybe[A](a);
+[T]
+overload mreturn(#Maybe[T])= Maybe[T]();
+

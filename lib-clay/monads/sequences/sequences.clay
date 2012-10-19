@@ -1,0 +1,34 @@
+import algorithms;
+import sequences;
+import vectors.(Vector);
+
+[S when Sequence?(S)]
+overload typeInBox(#S) = SequenceElementType(S);
+
+[T, U]
+overload changeTypeInBox(#Vector[T], #U) = Vector[U];
+
+[S when Sequence?(S)]
+overload fmap(f, s : S) = sequences.map(f, s);
+
+[S when Sequence?(S)]
+overload Monad?(#S) = true;
+
+[S when Sequence?(S)]
+overload mbind(f, x : S) = algorithms.concat(fmap(f, x));
+
+[S when Sequence?(S)]
+overload mreturn(a, #S)= S(a);
+
+[S when Sequence?(S)]
+overload mreturn(#S)= S();
+
+overload Applicative?(#S) = true;
+[S when Sequence?(S)]
+overload ap(fs, xs) {
+    with f = mbind(fs);
+	with x = mbind(xs);
+	mreturn(f(x),unboxType(#S));
+}
+
+

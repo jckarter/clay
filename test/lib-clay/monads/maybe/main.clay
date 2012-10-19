@@ -1,0 +1,35 @@
+import monads.maybe;
+import monads;
+import printer.(println);
+import vectors;
+
+main(){
+    alias m = Maybe[Int];
+
+    var maybeSugar = ()-> {
+        with x1 = mbind(m(5));
+        with x2 = mbind(m());
+        return mreturn(x1 + x2, #m);
+    };
+
+    var maybeNotSugar = m(5) >>= (x1 ->
+                        m(6) >>= (x2 ->
+                        mreturn(x1 + x2, #m)));
+
+    var vOfM = vectors.Vector[m](m(1), m(2), m(3)); 
+    var sequenceMaybe = monads.sequence(vOfM);
+
+    var vOfM2 = vectors.Vector[m](m(1), m(), m(3)); 
+    var sequenceMaybe2 = monads.sequence(vOfM2);
+
+    var sequenceMaybe_ = monads.sequence_(vOfM);
+
+    println(maybeSugar());
+    println(maybeNotSugar);
+    println(sequenceMaybe);   
+    println(sequenceMaybe2);
+    println(sequenceMaybe_);   
+}
+
+
+

@@ -1,0 +1,38 @@
+import algorithms;
+import printer.(println);
+import sequences;
+import vectors.(Vector);
+
+[T]
+pushAndReturn(forward xs : Vector[T], forward x : T){
+    var y = xs;
+    push(y, x);
+    return move(y);
+}
+
+[M when Monad?(M)]
+sequence(ms: Vector[M]){
+    alias A = typeInBox(M);
+    alias R = changeTypeInBox(#M, Vector[A]);
+    var k = (m, m1) => mbind(xs => mbind(x => mreturn(pushAndReturn(xs, x),#R), m1), m);
+    return algorithms.reduce(k, mreturn(Vector[A](), #R), ms);
+}
+
+[M when Monad?(M)]
+sequence_(ms: Vector[M]){
+    alias A = typeInBox(M);//Int32
+    alias R = changeTypeInBox(#M, Vector[A]);
+    return algorithms.reduce((>>), mreturn(#M), sequences.reverse(ms));
+}
+
+[A]
+mapM(f, a: Vector[A]) = sequence(sequences.map(f, a));
+
+[A]
+mapM_(f, a: Vector[A]) = sequence_(sequences.map(f, a));
+
+alias forM(a, f) = mapM(f, a);
+alias forM_(a, f) = mapM(f, a);
+
+[MM when Monad?(MM) and Monad?(typeInBox(MM))]
+join(x : MM) : typeInBox(MM) = x >>= (x -> x);
