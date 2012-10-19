@@ -4,6 +4,7 @@
 #include "lambdas.hpp"
 #include "desugar.hpp"
 #include "analyzer.hpp"
+#include "loader.hpp"
 
 
 namespace clay {

@@ -2,6 +2,7 @@
 #include "hirestimer.hpp"
 #include "error.hpp"
 #include "codegen.hpp"
+#include "loader.hpp"
 
 
 // for _exit

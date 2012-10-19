@@ -1,6 +1,7 @@
 #include "clay.hpp"
 #include "lexer.hpp"
 #include "codegen.hpp"
+#include "loader.hpp"
 
 
 #include <setjmp.h>

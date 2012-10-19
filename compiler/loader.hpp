@@ -6,6 +6,30 @@
 namespace clay {
 
 
+extern llvm::StringMap<ModulePtr> globalModules;
+extern llvm::StringMap<string> globalFlags;
+extern ModulePtr globalMainModule;
+
+void addProcedureOverload(ProcedurePtr proc, EnvPtr Env, OverloadPtr x);
+void getProcedureMonoTypes(ProcedureMono &mono, EnvPtr env,
+    llvm::ArrayRef<FormalArgPtr> formalArgs, bool hasVarArg);
+
+void initLoader();
+void setSearchPath(const llvm::ArrayRef<PathString> path);
+ModulePtr loadProgram(llvm::StringRef fileName, vector<string> *sourceFiles, bool verbose);
+ModulePtr loadProgramSource(llvm::StringRef name, llvm::StringRef source, bool verbose);
+ModulePtr loadedModule(llvm::StringRef module);
+ModulePtr preludeModule();
+ModulePtr primitivesModule();
+ModulePtr operatorsModule();
+ModulePtr staticModule(ObjectPtr x);
+
+void addGlobals(ModulePtr m, llvm::ArrayRef<TopLevelItemPtr> toplevels);
+void loadDependent(ModulePtr m, vector<string> *sourceFiles, ImportPtr dependent, bool verbose);
+void initModule(ModulePtr m);
+
+
+
 //
 // PrimOp
 //

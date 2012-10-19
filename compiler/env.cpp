@@ -1,4 +1,6 @@
 #include "clay.hpp"
+#include "loader.hpp"
+
 
 namespace clay {
 
