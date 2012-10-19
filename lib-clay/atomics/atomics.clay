@@ -45,7 +45,7 @@ record Atomic[T] = _holder:AtomicTypeForType(T);
 
 [T] overload Atomic[T]() --> returned:Atomic[T]
 {
-    bitcast(T, returned._holder) <-- T();
+    returned._holder <-- atomicInput(T());
 }
 
 // disable default elementwise constructor
