@@ -31,7 +31,7 @@ overload unlock(m:Mutex) :
     LeaveCriticalSection(@m._cs);
 }
 
-overload tryLock(m:Mutex) :
+overload tryLock(m:Mutex) : Bool
 {
     return TryEnterCriticalSection(@m._cs) != 0;
 }
