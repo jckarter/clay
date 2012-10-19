@@ -30,6 +30,7 @@ joinThread(thread: Thread) {
     }
 }
 
+overload resetUnsafe(thread: Thread) { thread.joined = true; }
 overload destroy(thread: Thread) {
     joinThread(thread);
 }
