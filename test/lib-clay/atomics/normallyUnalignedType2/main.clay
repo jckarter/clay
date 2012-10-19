@@ -1,0 +1,35 @@
+import atomics.(Atomic, casValue, load);
+import printer.*;
+import sequences.(map);
+import strings.(String);
+import threads.(startThread, joinThread);
+
+var counters = Atomic(Array[UInt8, 4](0uss, 0uss, 0uss, 0uss));
+
+noinline counterThread(id) {
+    var i = id % 4u;
+    var c = Array[UInt8, 4](0uss, 0uss, 0uss, 0uss);
+    for (x in range(100)) {
+        while (true) {
+            var c1 = c;
+            c1[i] +: 1uss;
+            var d = casValue(counters, c, c1);
+            if (c == d) {
+                c = c1;
+                break;
+            } else
+                c = d;
+        }
+    }
+}
+
+main() {
+    // spawn eight threads, each of which (very inefficiently) atomically increments
+    // one of the bytes in counter 100 times according to its id
+    var threads = map(x -> startThread(=> { counterThread(x); }), range(8u));
+
+    for (thread in threads)
+        joinThread(thread);
+
+    println(load(counters));
+}

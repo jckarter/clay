@@ -1,0 +1,22 @@
+import atomics.(Atomic, rmw, load);
+import printer.(println);
+import sequences.(map);
+import threads.(startThread, joinThread);
+
+var counter = Atomic(0u);
+
+counterThread() {
+    var c = 0u;
+    for (x in range(1000))
+        rmw(counter, (+), 1u);
+}
+
+main() {
+    // spawn eight threads, each of which atomically increments counter 1000 times
+    var threads = map(x -> startThread(counterThread), range(8));
+
+    for (thread in threads)
+        joinThread(thread);
+
+    println(load(counter));
+}

@@ -1,0 +1,13 @@
+[n] private define AtomicTypeForSize(#n);
+[n when n > 4 and n <= 8]
+overload AtomicTypeForSize(#n) = UInt64;
+[n when n > 2 and n <= 4]
+overload AtomicTypeForSize(#n) = UInt32;
+overload AtomicTypeForSize(#2) = UInt16;
+overload AtomicTypeForSize(#1) = UInt8;
+
+[T when TypeSize(T) <= TypeSize(RawPointer)] define AtomicTypeForType(#T);
+
+[T] /*default*/ overload AtomicTypeForType(#T) = AtomicTypeForSize(#TypeSize(T));
+[T when Integer?(T) or T == Bool]
+overload AtomicTypeForType(#T) = T;
