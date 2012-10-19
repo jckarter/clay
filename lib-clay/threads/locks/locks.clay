@@ -13,7 +13,7 @@ withLock(l:L, f) {
 
 record Spinlock (_flag:Atomic[Bool]);
 overload RegularRecord?(#Spinlock) = false;
-overload NotDestroyedType?(#Spinlock) = true;
+overload DestroyDoesNothingType?(#Spinlock) = true;
 
 overload Spinlock() = initializeRecord(Spinlock, Atomic(false));
 

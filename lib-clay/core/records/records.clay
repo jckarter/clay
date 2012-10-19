@@ -117,7 +117,7 @@ resetRecordUnsafe(a:T) {
         resetUnsafe(x);
 }
 
-[T when RegularRecord?(T) and not NotResetType?(T)]
+[T when RegularRecord?(T) and not ResetDoesNothingType?(T)]
 overload resetUnsafe(a:T) {
     resetRecordUnsafe(a);
 }
@@ -132,7 +132,7 @@ destroyRecord(a:T) {
         destroy(x);
 }
 
-[T when RegularRecord?(T) and not NotDestroyedType?(T)]
+[T when RegularRecord?(T) and not DestroyDoesNothingType?(T)]
 overload destroy(a:T) {
     destroyRecord(a);
 }

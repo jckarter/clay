@@ -186,12 +186,12 @@ overload moveUnsafe(src:Array[T,n]) --> returned:Array[T,n] {
     moveNonoverlappingMemoryUnsafe(begin(returned), begin(src), end(src));
 }
 
-[T,n when not NotResetType?(T)]
+[T,n when not ResetDoesNothingType?(T)]
 overload resetUnsafe(a:Array[T,n]) {
     resetMemoryUnsafe(begin(a), end(a));
 }
 
-[T,n when not NotDestroyedType?(T)]
+[T,n when not DestroyDoesNothingType?(T)]
 overload destroy(a:Array[T,n]) {
     destroyMemory(begin(a), end(a));
 }

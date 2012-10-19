@@ -607,9 +607,9 @@ define BitwiseCopiedType?(#T) : Bool;
 [T]
 define BitwiseMovedType?(#T) : Bool;
 [T]
-define NotDestroyedType?(#T) : Bool;
+define DestroyDoesNothingType?(#T) : Bool;
 [T]
-define NotResetType?(#T) : Bool;
+define ResetDoesNothingType?(#T) : Bool;
 [T]
 define InitializeDoesNotThrowType?(#T) : Bool;
 [T]
@@ -623,13 +623,13 @@ define BitwiseMoveAssignedType?(#T) : Bool;
 
 overload BitwiseCopiedType?(T) = PODType?(T);
 overload BitwiseMovedType?(T) = PODType?(T);
-overload NotDestroyedType?(T) = PODType?(T);
-overload NotResetType?(T) = PODType?(T);
+overload DestroyDoesNothingType?(T) = PODType?(T);
+overload ResetDoesNothingType?(T) = PODType?(T);
 overload InitializeDoesNotThrowType?(T) = PODType?(T);
 overload CopyDoesNotThrowType?(T) = PODType?(T);
 overload AssignDoesNotThrowType?(T) = PODType?(T);
-overload BitwiseAssignedType?(T) = BitwiseCopiedType?(T) and NotDestroyedType?(T);
-overload BitwiseMoveAssignedType?(T) = BitwiseMovedType?(T) and NotDestroyedType?(T);
+overload BitwiseAssignedType?(T) = BitwiseCopiedType?(T) and DestroyDoesNothingType?(T);
+overload BitwiseMoveAssignedType?(T) = BitwiseMovedType?(T) and DestroyDoesNothingType?(T);
 
 [T when PrimitiveCompoundType?(T)]
 overload BitwiseCopiedType?(#T) : Bool
@@ -638,11 +638,11 @@ overload BitwiseCopiedType?(#T) : Bool
 overload BitwiseMovedType?(#T) : Bool
     = allValues?(BitwiseMovedType?, ..PrimitiveCompoundMemberTypes(T));
 [T when PrimitiveCompoundType?(T)]
-overload NotDestroyedType?(#T) : Bool
-    = allValues?(NotDestroyedType?, ..PrimitiveCompoundMemberTypes(T));
+overload DestroyDoesNothingType?(#T) : Bool
+    = allValues?(DestroyDoesNothingType?, ..PrimitiveCompoundMemberTypes(T));
 [T when PrimitiveCompoundType?(T)]
-overload NotResetType?(#T) : Bool
-    = allValues?(NotResetType?, ..PrimitiveCompoundMemberTypes(T));
+overload ResetDoesNothingType?(#T) : Bool
+    = allValues?(ResetDoesNothingType?, ..PrimitiveCompoundMemberTypes(T));
 [T when PrimitiveCompoundType?(T)]
 overload InitializeDoesNotThrowType?(#T) : Bool
     = allValues?(InitializeDoesNotThrowType?, ..PrimitiveCompoundMemberTypes(T));

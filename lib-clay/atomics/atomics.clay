@@ -40,8 +40,8 @@ record Atomic[T] = _holder:AtomicTypeForType(T);
 
 [T] overload RegularRecord?(#Atomic[T]) = false;
 [T] overload BitwiseMovedType?(#Atomic[T]) = false;
-[T] overload NotDestroyedType?(#Atomic[T]) = true;
-[T] overload NotResetType?(#Atomic[T]) = true;
+[T] overload DestroyDoesNothingType?(#Atomic[T]) = true;
+[T] overload ResetDoesNothingType?(#Atomic[T]) = true;
 
 [T] overload Atomic[T]() --> returned:Atomic[T]
 {
