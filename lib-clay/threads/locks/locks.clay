@@ -50,3 +50,6 @@ record Synchronized[T, L] (_data:T, _lock:L);
     ref data = s._data;
     withLock(s._lock, -> { data = from; });
 }
+
+staticassert (Lock?(Mutex));
+staticassert (Lock?(Spinlock));
