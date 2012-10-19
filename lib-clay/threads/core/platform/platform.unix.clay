@@ -28,3 +28,5 @@ joinThreadImpl(handle: pthread_t) {
         throw GenericOSError(ok, "pthread_join");
     }
 }
+
+yield() { sched_yield(); }

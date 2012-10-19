@@ -1,4 +1,5 @@
 import threads.core.platform.*;
+public import threads.core.platform.(yield);
 import lambdas.*;
 import libc.(abort);
 
