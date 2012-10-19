@@ -1,0 +1,14 @@
+public import threads.condvars.protocol.(
+    ConditionVariableMutex,
+    wait, notifyOne, notifyAll,
+    ConditionVariable?,
+);
+public import threads.condvars.platform.(ConditionVariable);
+
+staticassert (ConditionVariable?(ConditionVariable));
+
+[C, M when ConditionVariable?(C) and ConditionVariableMutex(C) == M]
+waitUntil(cv:C, m:M, f) {
+    while (not f())
+        wait(cv, m);
+}

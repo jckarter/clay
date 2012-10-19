@@ -1,0 +1,50 @@
+import threads.locks.(Mutex, withLock);
+import threads.condvars.(ConditionVariable, waitUntil, notifyOne, notifyAll);
+import threads.(startThread, joinThread);
+import deques.(Deque);
+import printer.(println);
+import time.(sleep);
+
+record Workqueue[T] (cv:ConditionVariable, lock:Mutex, queue:Deque[T], done?:Bool);
+
+[T] put(w:Workqueue[T], item:T) {
+    withLock(w.lock, -> {
+        push(w.queue, item);
+        notifyOne(w.cv);
+    });
+}
+
+[T] finish(w:Workqueue[T]) {
+    withLock(w.lock, -> {
+        w.done? = true;
+        notifyAll(w.cv);
+    });
+}
+
+[T] get(w:Workqueue[T]) : Maybe[T] {
+    return withLock(w.lock, -> {
+        waitUntil(w.cv, w.lock, -> not empty?(w.queue) or w.done?);
+        return if (empty?(w.queue)) nothing(T) else Maybe(popFront(w.queue));
+    });
+}
+
+var workqueue = Workqueue[Int]();
+
+producer() {
+    for (i in range(10)) {
+        sleep(0.1);
+        put(workqueue, i);
+    }
+    finish(workqueue);
+}
+
+consumer() {
+    while (var item = get(workqueue); just?(item))
+        println(just(item));
+}
+
+main() {
+    var consumerThread = startThread(consumer);
+    producer();
+    joinThread(consumerThread);
+}

@@ -1,0 +1,13 @@
+[T] define ConditionVariableMutex(#T);
+[C, M when M == ConditionVariableMutex(C)]
+define wait(cv:C, m:M) :;
+define notifyOne(cv) :;
+define notifyAll(cv) :;
+
+[C] define ConditionVariable?(#C);
+[C when not CallDefined?(ConditionVariableMutex, Static[C])]
+overload ConditionVariable?(#C) = false;
+[C when CallDefined?(ConditionVariableMutex, Static[C])]
+overload ConditionVariable?(#C) = CallDefined?(wait, C, ConditionVariableMutex(C))
+    and CallDefined?(notifyOne, C)
+    and CallDefined?(notifyAll, C);
