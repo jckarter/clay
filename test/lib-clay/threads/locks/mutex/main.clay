@@ -6,7 +6,6 @@ import threads.locks.(Mutex, Synchronized, synchronized, synchronizedLoad);
 var counter = Synchronized[UInt, Mutex](0u);
 
 counterThread() {
-    var c = 0u;
     for (x in range(1000))
         synchronized(counter): c -> {
             c +: 1;

@@ -6,7 +6,6 @@ import threads.locks.(Spinlock, Synchronized, synchronized, synchronizedLoad);
 var counter = Synchronized[UInt, Spinlock](0u);
 
 counterThread() {
-    var c = 0u;
     for (x in range(1000))
         synchronized(counter): c -> {
             c +: 1;
@@ -15,7 +14,7 @@ counterThread() {
 
 main() {
     // spawn eight threads, each of which increments counter 1000 times
-    // using a mutex for synchronization
+    // using a spinlock for synchronization
     var threads = map(x -> startThread(counterThread), range(8));
 
     for (thread in threads)
