@@ -33,6 +33,11 @@ public import __operators__.(
     getValue,
 
     ifExpression,
+
+    packMultiValuedFreeVar,
+    packMultiValuedFreeVarByRef,
+    unpackMultiValuedFreeVar,
+    unpackMultiValuedFreeVarAndDereference,
 );
 
 
@@ -712,3 +717,16 @@ alias MonoOutputTypes(f:F) = ..CallOutputTypes(f, ..MonoInputTypes(f));
 
 public define Monad?;
 overload Monad?(T) : Bool = false;
+
+
+/// @section  operator functions for closure conversion 
+
+overload packMultiValuedFreeVar(..x) = [..x];
+
+overload packMultiValuedFreeVarByRef(..x) =
+    Tuple(..mapValues(addressOf, ..x));
+
+overload unpackMultiValuedFreeVar(x) = forward ..unpackRef(x);
+
+overload unpackMultiValuedFreeVarAndDereference(x) =
+    forward ..mapValues(dereference, ..unpack(x));
