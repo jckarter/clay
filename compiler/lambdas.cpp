@@ -109,6 +109,7 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
         initializeLambdaWithFreeVars(x, env, closureDataName, lname);
     }
 }
+
 static void checkForeignExpr(ObjectPtr &obj, EnvPtr env)
 {
     if (obj->objKind == EXPRESSION) {
@@ -117,6 +118,14 @@ static void checkForeignExpr(ObjectPtr &obj, EnvPtr env)
             MultiPValuePtr mpv = safeAnalyzeMulti(new ExprList(expr), env, 0);
             obj = mpv.ptr();
         }
+    }
+    else if (obj->objKind == EXPR_LIST) {
+        ExprListPtr expr = (ExprList *)obj.ptr();
+        if ((expr->exprs[0]->exprKind == FOREIGN_EXPR) || (expr->exprs[0]->exprKind == UNPACK)) {
+            MultiPValuePtr mpv = safeAnalyzeMulti(new ExprList(foreignExpr(env, expr->exprs[0])), env, 0);
+            obj = mpv.ptr();
+        }
+
     }
 }
 

@@ -1,0 +1,14 @@
+import printer.(println);
+
+applier(f, x) { f(x); }
+
+alias adder(..y) {
+	applier(xin -> { (..y) +: xin; }, 2);
+}
+
+main() {
+    var x, ..y = 1, 2;
+    adder(x);
+    adder(..y);
+    println(x, ", ", ..y);
+}
