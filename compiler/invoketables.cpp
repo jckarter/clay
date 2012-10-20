@@ -1,4 +1,12 @@
 #include "clay.hpp"
+#include "loader.hpp"
+#include "error.hpp"
+#include "invoketables.hpp"
+#include "constructors.hpp"
+
+
+#pragma clang diagnostic ignored "-Wcovered-switch-default"
+
 
 namespace clay {
 
@@ -6,6 +14,10 @@ static llvm::SpecificBumpPtrAllocator<InvokeEntry> *invokeEntryAllocator
     = new llvm::SpecificBumpPtrAllocator<InvokeEntry>();
 static llvm::SpecificBumpPtrAllocator<InvokeSet> *invokeSetAllocator
     = new llvm::SpecificBumpPtrAllocator<InvokeSet>();
+
+
+static llvm::ArrayRef<OverloadPtr> callableOverloads(ObjectPtr x);
+
 
 
 //
@@ -17,13 +29,13 @@ static void initCallable(ObjectPtr x)
     switch (x->objKind) {
     case TYPE :
         break;
-    case RECORD : {
-        Record *y = (Record *)x.ptr();
+    case RECORD_DECL : {
+        RecordDecl *y = (RecordDecl *)x.ptr();
         if (!y->builtinOverloadInitialized)
             initBuiltinConstructor(y);
         break;
     }
-    case VARIANT :
+    case VARIANT_DECL :
     case PROCEDURE :
     case GLOBAL_ALIAS :
         break;
@@ -49,7 +61,7 @@ const OverloadPtr callableInterface(ObjectPtr x)
     }
 }
 
-const vector<OverloadPtr> &callableOverloads(ObjectPtr x)
+static llvm::ArrayRef<OverloadPtr> callableOverloads(ObjectPtr x)
 {
     initCallable(x);
     switch (x->objKind) {
@@ -57,12 +69,12 @@ const vector<OverloadPtr> &callableOverloads(ObjectPtr x)
         Type *y = (Type *)x.ptr();
         return y->overloads;
     }
-    case RECORD : {
-        Record *y = (Record *)x.ptr();
+    case RECORD_DECL : {
+        RecordDecl *y = (RecordDecl *)x.ptr();
         return y->overloads;
     }
-    case VARIANT : {
-        Variant *y = (Variant *)x.ptr();
+    case VARIANT_DECL : {
+        VariantDecl *y = (VariantDecl *)x.ptr();
         return y->overloads;
     }
     case PROCEDURE : {
@@ -134,7 +146,7 @@ static bool shouldLogCallable(ObjectPtr callable)
 }
 
 InvokeSet* lookupInvokeSet(ObjectPtr callable,
-                             const vector<TypePtr> &argsKey)
+                             llvm::ArrayRef<TypePtr> argsKey)
 {
     if (!invokeTablesInitialized)
         initInvokeTables();
@@ -150,7 +162,7 @@ InvokeSet* lookupInvokeSet(ObjectPtr callable,
         }
     }
     OverloadPtr interface = callableInterface(callable);
-    const vector<OverloadPtr> &overloads = callableOverloads(callable);
+    llvm::ArrayRef<OverloadPtr> overloads = callableOverloads(callable);
     InvokeSet* invokeSet = invokeSetAllocator->Allocate();
     new ((void*)invokeSet) InvokeSet(callable, argsKey, interface, overloads);
     invokeSet->shouldLog = shouldLogCallable(callable);
@@ -166,10 +178,10 @@ InvokeSet* lookupInvokeSet(ObjectPtr callable,
 //
 
 static
-MatchSuccessPtr findMatchingInvoke(const vector<OverloadPtr> &overloads,
+MatchSuccessPtr findMatchingInvoke(llvm::ArrayRef<OverloadPtr> overloads,
                                    unsigned &overloadIndex,
                                    ObjectPtr callable,
-                                   const vector<TypePtr> &argsKey,
+                                   llvm::ArrayRef<TypePtr> argsKey,
                                    MatchFailureError &failures)
 {
     while (overloadIndex < overloads.size()) {
@@ -243,12 +255,12 @@ static ValueTempness tempnessKeyItem(ValueTempness formalTempness,
 }
 
 static bool matchTempness(CodePtr code,
-                          const vector<ValueTempness> &argsTempness,
+                          llvm::ArrayRef<ValueTempness> argsTempness,
                           bool callByName,
                           vector<ValueTempness> &tempnessKey,
-                          vector<bool> &forwardedRValueFlags)
+                          vector<uint8_t> &forwardedRValueFlags)
 {
-    const vector<FormalArgPtr> &fargs = code->formalArgs;
+    llvm::ArrayRef<FormalArgPtr> fargs = code->formalArgs;
     
     if (code->hasVarArg)
         assert(fargs.size()-1 <= argsTempness.size());
@@ -315,8 +327,8 @@ static InvokeEntry* newInvokeEntry(InvokeSet* parent,
 }
 
 InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
-                               const vector<TypePtr> &argsKey,
-                               const vector<ValueTempness> &argsTempness,
+                               llvm::ArrayRef<TypePtr> argsKey,
+                               llvm::ArrayRef<ValueTempness> argsTempness,
                                MatchFailureError &failures)
 {
     InvokeSet* invokeSet = lookupInvokeSet(callable, argsKey);
@@ -340,7 +352,7 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
 
     MatchSuccessPtr match;
     vector<ValueTempness> tempnessKey;
-    vector<bool> forwardedRValueFlags;
+    vector<uint8_t> forwardedRValueFlags;
     
     unsigned i = 0;
     while ((match = getMatch(invokeSet,i,failures)).ptr() != NULL) {

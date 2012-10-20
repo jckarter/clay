@@ -1,0 +1,37 @@
+import threads.condvars.protocol.(ConditionVariableMutex, wait, notifyOne, notifyAll);
+import threads.locks.platform.(Mutex);
+import win32.(
+    CONDITION_VARIABLE,
+    INFINITE,
+    InitializeConditionVariable,
+    SleepConditionVariableCS,
+    WakeConditionVariable,
+    WakeAllConditionVariable,
+);
+
+record ConditionVariable (_cv:CONDITION_VARIABLE);
+overload RegularRecord?(#ConditionVariable) = false;
+overload DestroyDoesNothingType?(#ConditionVariable) = true;
+
+overload ConditionVariable() --> returned:ConditionVariable
+{
+    InitializeConditionVariable(@returned._cv);
+}
+
+overload ConditionVariableMutex(#ConditionVariable) = Mutex;
+
+overload wait(cv:ConditionVariable, m:Mutex)
+{
+    var ok = SleepConditionVariableCS(@cv._cv, @m._cs, INFINITE);
+    assert(ok != 0);
+}
+
+overload notifyOne(cv:ConditionVariable)
+{
+    WakeConditionVariable(@cv._cv);
+}
+
+overload notifyAll(cv:ConditionVariable)
+{
+    WakeAllConditionVariable(@cv._cv);
+}

@@ -1,4 +1,11 @@
 #include "clay.hpp"
+#include "codegen.hpp"
+#include "operators.hpp"
+#include "lambdas.hpp"
+#include "desugar.hpp"
+#include "analyzer.hpp"
+#include "loader.hpp"
+
 
 namespace clay {
 
@@ -122,7 +129,7 @@ static void checkForeignExpr(ObjectPtr &obj, EnvPtr env)
 static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
     llvm::StringRef closureDataName, llvm::StringRef lname)
 {
-    RecordPtr r = new Record(PRIVATE);
+    RecordDeclPtr r = new RecordDecl(PRIVATE);
     r->location = x->location;
     r->name = Identifier::get(lname);
     r->env = env;
@@ -285,12 +292,12 @@ static EnvPtr convertFreeVarsFromBinding(BindingPtr binding, EnvPtr env, LambdaC
 }
 
 static EnvPtr convertFreeVarsFromStatementExpressionStatements(
-    vector<StatementPtr> const &stmts,
+    llvm::ArrayRef<StatementPtr> stmts,
     EnvPtr env,
     LambdaContext &ctx)
 {
     EnvPtr env2 = env;
-    for (vector<StatementPtr>::const_iterator i = stmts.begin(), end = stmts.end();
+    for (StatementPtr const *i = stmts.begin(), *end = stmts.end();
          i != end;
          ++i)
     {

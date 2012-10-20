@@ -1,0 +1,37 @@
+import win32.(
+    CRITICAL_SECTION,
+    InitializeCriticalSection,
+    DeleteCriticalSection,
+    EnterCriticalSection,
+    LeaveCriticalSection,
+    TryEnterCriticalSection
+);
+import threads.locks.protocol.(lock, unlock, tryLock);
+
+record Mutex (_cs:CRITICAL_SECTION);
+overload RegularRecord?(#Mutex) = false;
+
+overload Mutex() --> returned:Mutex
+{
+    InitializeCriticalSection(@returned._cs);
+}
+
+overload destroy(m:Mutex) :
+{
+    DeleteCriticalSection(@m._cs);
+}
+
+overload lock(m:Mutex) :
+{
+    EnterCriticalSection(@m._cs);
+}
+
+overload unlock(m:Mutex) :
+{
+    LeaveCriticalSection(@m._cs);
+}
+
+overload tryLock(m:Mutex) : Bool
+{
+    return TryEnterCriticalSection(@m._cs) != 0;
+}

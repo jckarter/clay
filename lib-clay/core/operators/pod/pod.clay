@@ -23,7 +23,7 @@ forceinline overload moveMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEn
     else
         resetMemoryUnsafe(srcBegin, min(srcEnd, destBegin));
 }
-[P when BitwiseMovedType?(P) and NotResetType?(P)]
+[P when BitwiseMovedType?(P) and ResetDoesNothingType?(P)]
 forceinline overload moveMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) : {
     copyPODs(destBegin, srcBegin, srcEnd);
 }
@@ -36,7 +36,7 @@ forceinline overload moveNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Poi
     copyNonovPODs(destBegin, srcBegin, srcEnd);
     resetMemoryUnsafe(srcBegin, srcEnd);
 }
-[P when BitwiseMovedType?(P) and NotResetType?(P)]
+[P when BitwiseMovedType?(P) and ResetDoesNothingType?(P)]
 forceinline overload moveNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) : {
     copyNonovPODs(destBegin, srcBegin, srcEnd);
 }
@@ -56,10 +56,10 @@ forceinline overload moveAssignNonoverlappingMemory(destBegin:Pointer[P], srcBeg
 
 /// @section  resetMemoryUnsafe, destroyMemory for POD 
 
-[P when NotResetType?(P)]
+[P when ResetDoesNothingType?(P)]
 forceinline overload resetMemoryUnsafe(begin:Pointer[P], end:Pointer[P]) : { }
 
-[P when NotDestroyedType?(P)]
+[P when DestroyDoesNothingType?(P)]
 forceinline overload destroyMemory(begin:Pointer[P], end:Pointer[P]) : { }
 
 
@@ -83,11 +83,11 @@ forceinline overload copyPOD(x: ExternalCodePointer[C,V,I,O])
     --> returned: ExternalCodePointer[C,V,I,O]
     { bitcopy(returned, x); }
 
-[P when NotDestroyedType?(P)]
+[P when DestroyDoesNothingType?(P)]
 forceinline overload destroy(x: P) : {}
 [P when BitwiseMovedType?(P)]
 forceinline overload moveUnsafe(x: P) : P = copyPOD(x);
-[P when NotResetType?(P)]
+[P when ResetDoesNothingType?(P)]
 forceinline overload resetUnsafe(x: P) : { }
 [P when BitwiseCopiedType?(P)]
 forceinline overload P(x: P) --> returned: P = copyPOD(x);

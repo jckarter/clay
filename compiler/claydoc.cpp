@@ -51,7 +51,7 @@ DocModule *docParseModule(string fileName, DocState *state, std::string fqn)
             case OVERLOAD:
                 if (!!((clay::Overload *)item.ptr())->target)
                     name = ((clay::Overload *)item.ptr())->target->asString();
-            case RECORD:
+            case RECORD_DECL:
             case PROCEDURE: {
                 DocObject *obj = new DocObject;
                 obj->item = item;

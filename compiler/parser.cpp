@@ -1,4 +1,6 @@
 #include "clay.hpp"
+#include "lexer.hpp"
+
 
 namespace clay {
 
@@ -1060,7 +1062,7 @@ static bool labelDef(StatementPtr &x) {
     return true;
 }
 
-static bool bindingKind(int &bindingKind) {
+static bool bindingKind(BindingKind &bindingKind) {
     int p = save();
     if (keyword("var"))
         bindingKind = VAR;
@@ -1080,7 +1082,7 @@ static bool bindingsBody(vector<FormalArgPtr> &args, bool &hasVarArg);
 
 static bool localBinding(StatementPtr &x) {
     Location location = currentLocation();
-    int bk;
+    BindingKind bk;
     if (!bindingKind(bk)) return false;
     vector<PatternVar> patternVars;
     ExprPtr predicate;
@@ -1933,25 +1935,6 @@ static bool optPatternVarsWithCond(vector<PatternVar> &x, ExprPtr &y) {
     return true;
 }
 
-static bool patternVars(vector<PatternVar> &x) {
-    if (!symbol("[")) return false;
-    if (!optPatternVarList(x)) return false;
-    if (!symbol("]")) {
-        x.clear();
-        return false;
-    }
-    return true;
-}
-
-static bool optPatternVars(vector<PatternVar> &x) {
-    int p = save();
-    if (!patternVars(x)) {
-        restore(p);
-        x.clear();
-    }
-    return true;
-}
-
 static bool exprBody(StatementPtr &x) {
     if (!opsymbol("=")) return false;
     Location location = currentLocation();
@@ -2094,7 +2077,7 @@ static bool record(TopLevelItemPtr &x) {
     if (!optPatternVarsWithCond(patternVars, predicate)) return false;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("record")) return false;
-    RecordPtr y = new Record(vis, patternVars, predicate);
+    RecordDeclPtr y = new RecordDecl(vis, patternVars, predicate);
     if (!identifier(y->name)) return false;
     if (!optStaticParams(y->params, y->varParam)) return false;
     if (!recordBody(y->body)) return false;
@@ -2143,7 +2126,7 @@ static bool variant(TopLevelItemPtr &x) {
     bool open;
     if (!optInstances(defaultInstances, open)) return false;
     if (!symbol(";")) return false;
-    x = new Variant(name, vis, patternVars, predicate, params, varParam, open, defaultInstances);
+    x = new VariantDecl(name, vis, patternVars, predicate, params, varParam, open, defaultInstances);
     x->location = location;
     return true;
 }
@@ -2159,7 +2142,7 @@ static bool instance(TopLevelItemPtr &x) {
     ExprListPtr members;
     if (!instances(members)) return false;
     if (!symbol(";")) return false;
-    x = new Instance(patternVars, predicate, target, members);
+    x = new InstanceDecl(patternVars, predicate, target, members);
     x->location = location;
     return true;
 }
@@ -2175,7 +2158,7 @@ static bool newtype(TopLevelItemPtr &x) {
     ExprPtr expr;
     if (!expression(expr)) return false;
     if (!symbol(";")) return false;
-    x = new NewType(name, vis, expr);
+    x = new NewTypeDecl(name, vis, expr);
     x->location = location;
     return true;
 }
@@ -2576,7 +2559,7 @@ static bool enumeration(TopLevelItemPtr &x) {
     if (!keyword("enum")) return false;
     IdentifierPtr y;
     if (!identifier(y)) return false;
-    EnumerationPtr z = new Enumeration(y, vis, patternVars, predicate);
+    EnumDeclPtr z = new EnumDecl(y, vis, patternVars, predicate);
     if (!symbol("(")) return false;
     if (!enumMemberList(z->members)) return false;
     if (!symbol(")")) return false;

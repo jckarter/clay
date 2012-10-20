@@ -1,4 +1,14 @@
 #include "clay.hpp"
+#include "loader.hpp"
+#include "patterns.hpp"
+#include "analyzer.hpp"
+#include "codegen.hpp"
+#include "evaluator.hpp"
+#include "constructors.hpp"
+
+
+#pragma clang diagnostic ignored "-Wcovered-switch-default"
+
 
 namespace clay {
 
@@ -140,7 +150,7 @@ static string toKey(DottedNamePtr name) {
 // locateModule
 //
 
-void setSearchPath(const std::vector<PathString>& path) {
+void setSearchPath(llvm::ArrayRef<PathString>  path) {
     searchPath = path;
 }
 
@@ -260,8 +270,8 @@ static void installGlobals(ModulePtr m) {
         TopLevelItem *x = i->ptr();
         x->env = m->env;
         switch (x->objKind) {
-        case ENUMERATION : {
-            Enumeration *enumer = (Enumeration *)x;
+        case ENUM_DECL : {
+            EnumDecl *enumer = (EnumDecl *)x;
             TypePtr t = enumType(enumer);
             addGlobal(m, enumer->name, enumer->visibility, t.ptr());
             for (unsigned i = 0 ; i < enumer->members.size(); ++i) {
@@ -272,8 +282,8 @@ static void installGlobals(ModulePtr m) {
             }
             break;
         }
-        case NEWTYPE : {
-            NewType *nt = (NewType *)x;
+        case NEW_TYPE_DECL : {
+            NewTypeDecl *nt = (NewTypeDecl *)x;
             TypePtr t = newType(nt);
             addGlobal(m, nt->name, nt->visibility, t.ptr());
             break;
@@ -332,19 +342,15 @@ void loadDependent(ModulePtr m, vector<string> *sourceFiles, ImportPtr dependent
                 name = im->alias;
                 m->importedModuleNames[im->alias->str].module = x->module;
             } else {
-                vector<IdentifierPtr> const &parts = im->dottedName->parts;
+                llvm::ArrayRef<IdentifierPtr> parts = im->dottedName->parts;
                 if (parts.size() == 1)
                     name = parts[0];
                 else if (x->visibility == PUBLIC)
                     error(x->location,
                           "public imports of dotted module paths must have an \"as <name>\" alias");
                 llvm::StringMap<ModuleLookup> *node = &m->importedModuleNames;
-                for (vector<IdentifierPtr>::const_reverse_iterator i = parts.rbegin(),
-                     end = parts.rend() - 1;
-                i != end;
-                ++i)
-                {
-                    node = &(*node)[(*i)->str].parents;
+                for (size_t i = parts.size() - 1; i >= 1; --i) {
+                    node = &(*node)[parts[i]->str].parents;
                 }
                 (*node)[parts[0]->str].module = x->module;
             }
@@ -438,7 +444,7 @@ ModulePtr loadedModule(llvm::StringRef module) {
 
 static EnvPtr overloadPatternEnv(OverloadPtr x) {
     EnvPtr env = new Env(x->env);
-    const vector<PatternVar> &pvars = x->code->patternVars;
+    llvm::ArrayRef<PatternVar> pvars = x->code->patternVars;
     for (unsigned i = 0; i < pvars.size(); ++i) {
         if (pvars[i].isMulti) {
             MultiPatternCellPtr cell = new MultiPatternCell(NULL);
@@ -453,7 +459,7 @@ static EnvPtr overloadPatternEnv(OverloadPtr x) {
 }
 
 void getProcedureMonoTypes(ProcedureMono &mono, EnvPtr env,
-    vector<FormalArgPtr> const &formalArgs, bool hasVarArg)
+    llvm::ArrayRef<FormalArgPtr> formalArgs, bool hasVarArg)
 {
     if (mono.monoState == Procedure_NoOverloads && !hasVarArg)
     {
@@ -567,13 +573,13 @@ static void initOverload(OverloadPtr x) {
             addProcedureOverload(proc, env, x);
             break;
         }
-        case RECORD : {
-            Record *r = (Record *)obj.ptr();
+        case RECORD_DECL : {
+            RecordDecl *r = (RecordDecl *)obj.ptr();
             r->overloads.insert(r->overloads.begin(), x);
             break;
         }
-        case VARIANT : {
-            Variant *v = (Variant *)obj.ptr();
+        case VARIANT_DECL : {
+            VariantDecl *v = (VariantDecl *)obj.ptr();
             v->overloads.insert(v->overloads.begin(), x);
             break;
         }
@@ -603,9 +609,9 @@ static void initOverload(OverloadPtr x) {
     }
 }
 
-static void initVariantInstance(InstancePtr x) {
+static void initVariantInstance(InstanceDeclPtr x) {
     EnvPtr env = new Env(x->env);
-    const vector<PatternVar> &pvars = x->patternVars;
+    llvm::ArrayRef<PatternVar> pvars = x->patternVars;
     for (unsigned i = 0; i < pvars.size(); ++i) {
         if (pvars[i].isMulti) {
             MultiPatternCellPtr cell = new MultiPatternCell(NULL);
@@ -633,9 +639,9 @@ static void initVariantInstance(InstancePtr x) {
         if (pattern->kind != PATTERN_STRUCT)
             error(x->target, "not a variant type");
         PatternStruct *ps = (PatternStruct *)pattern.ptr();
-        if ((!ps->head) || (ps->head->objKind != VARIANT))
+        if ((!ps->head) || (ps->head->objKind != VARIANT_DECL))
             error(x->target, "not a variant type");
-        Variant *v = (Variant *)ps->head.ptr();
+        VariantDecl *v = (VariantDecl *)ps->head.ptr();
         v->instances.push_back(x);
     }
 }
@@ -644,11 +650,11 @@ static void checkStaticAssert(StaticAssertTopLevelPtr a) {
     evaluateStaticAssert(a->location, a->cond, a->message, a->env);
 }
 
-static void circularImportsError(const vector<string>& modules) {
+static void circularImportsError(llvm::ArrayRef<string>  modules) {
     string s;
     llvm::raw_string_ostream ss(s);
     ss << "import loop:\n";
-    for (vector<string>::const_iterator it = modules.begin(); it != modules.end(); ++it) {
+    for (string const *it = modules.begin(); it != modules.end(); ++it) {
         ss << "    " << *it;
         if (it + 1 != modules.end()) {
             // because error() function adds trailing newline
@@ -658,7 +664,7 @@ static void circularImportsError(const vector<string>& modules) {
     return error(ss.str());
 }
 
-static void initModule(ModulePtr m, const vector<string>& importChain) {
+static void initModule(ModulePtr m, llvm::ArrayRef<string>  importChain) {
     if (m->initState == Module::DONE) return;
 
     if (m->declaration != NULL) {
@@ -697,19 +703,21 @@ static void initModule(ModulePtr m, const vector<string>& importChain) {
 
     verifyAttributes(m);
 
-    const vector<TopLevelItemPtr> &items = m->topLevelItems;
-    vector<TopLevelItemPtr>::const_iterator ti, tend;
+    llvm::ArrayRef<TopLevelItemPtr> items = m->topLevelItems;
+    TopLevelItemPtr const *ti, *tend;
     for (ti = items.begin(), tend = items.end(); ti != tend; ++ti) {
         Object *obj = ti->ptr();
         switch (obj->objKind) {
         case OVERLOAD :
             initOverload((Overload *)obj);
             break;
-        case INSTANCE :
-            initVariantInstance((Instance *)obj);
+        case INSTANCE_DECL :
+            initVariantInstance((InstanceDecl *)obj);
             break;
         case STATIC_ASSERT_TOP_LEVEL:
             checkStaticAssert((StaticAssertTopLevel *)obj);
+            break;
+        default:
             break;
         }
     }
@@ -778,10 +786,11 @@ static ModulePtr typeModule(TypePtr t) {
         return envModule(et->enumeration->env);
     }
     case NEW_TYPE : {
-        NewTypeType *et = (NewTypeType *)t.ptr();
+        NewType *et = (NewType *)t.ptr();
         return envModule(et->newtype->env);
     }
     default :
+        assert(false);
         return NULL;
     }
 }
@@ -803,8 +812,8 @@ ModulePtr staticModule(ObjectPtr x) {
     case EXTERNAL_PROCEDURE :
     case EXTERNAL_VARIABLE :
     case PROCEDURE :
-    case RECORD :
-    case VARIANT : {
+    case RECORD_DECL :
+    case VARIANT_DECL : {
         TopLevelItem *t = (TopLevelItem *)x.ptr();
         return envModule(t->env);
     }
@@ -843,7 +852,7 @@ EnvPtr ForeignStatement::getEnv() {
 
 static map<int, string> primOpNames;
 
-llvm::StringRef primOpName(PrimOpPtr x) {
+llvm::StringRef primOpName(const PrimOpPtr& x) {
     map<int, string>::iterator i = primOpNames.find(x->primOpCode);
     assert(i != primOpNames.end());
     return i->second;
@@ -911,7 +920,7 @@ static ModulePtr makePrimitivesModule() {
     vector<IdentifierPtr> recordParams;
     RecordBodyPtr recordBody = new RecordBody(vector<RecordFieldPtr>());
     recordParams.push_back(Identifier::get("T"));
-    RecordPtr byRefRecord = new Record(Identifier::get("ByRef"),
+    RecordDeclPtr byRefRecord = new RecordDecl(Identifier::get("ByRef"),
         PUBLIC,
         vector<PatternVar>(),
         NULL,
@@ -924,7 +933,7 @@ static ModulePtr makePrimitivesModule() {
     recordParams.clear();
     recordParams.push_back(Identifier::get("Properties"));
     recordParams.push_back(Identifier::get("Fields"));
-    RecordPtr rwpRecord = new Record(Identifier::get("RecordWithProperties"),
+    RecordDeclPtr rwpRecord = new RecordDecl(Identifier::get("RecordWithProperties"),
         PUBLIC,
         vector<PatternVar>(),
         NULL,
@@ -1239,14 +1248,14 @@ static IdentifierPtr fnameToIdent(llvm::StringRef str) {
 
 static ObjectPtr convertObject(ObjectPtr x) {
     switch (x->objKind) {
-    case RECORD : {
-        Record *y = (Record *)x.ptr();
+    case RECORD_DECL : {
+        RecordDecl *y = (RecordDecl *)x.ptr();
         if (y->params.empty() && !y->varParam.ptr())
             return recordType(y, vector<ObjectPtr>()).ptr();
         return x;
     }
-    case VARIANT : {
-        Variant *y = (Variant *)x.ptr();
+    case VARIANT_DECL : {
+        VariantDecl *y = (VariantDecl *)x.ptr();
         if (y->params.empty() && !y->varParam.ptr())
             return variantType(y, vector<ObjectPtr>()).ptr();
         return x;
@@ -1278,11 +1287,11 @@ DEFINE_PRIMITIVE_ACCESSOR(boolNot)
 DEFINE_PRIMITIVE_ACCESSOR(Pointer)
 DEFINE_PRIMITIVE_ACCESSOR(CodePointer)
 DEFINE_PRIMITIVE_ACCESSOR(ExternalCodePointer)
-DEFINE_PRIMITIVE_ACCESSOR(AttributeCCall);
-DEFINE_PRIMITIVE_ACCESSOR(AttributeStdCall);
-DEFINE_PRIMITIVE_ACCESSOR(AttributeFastCall);
-DEFINE_PRIMITIVE_ACCESSOR(AttributeThisCall);
-DEFINE_PRIMITIVE_ACCESSOR(AttributeLLVMCall);
+DEFINE_PRIMITIVE_ACCESSOR(AttributeCCall)
+DEFINE_PRIMITIVE_ACCESSOR(AttributeStdCall)
+DEFINE_PRIMITIVE_ACCESSOR(AttributeFastCall)
+DEFINE_PRIMITIVE_ACCESSOR(AttributeThisCall)
+DEFINE_PRIMITIVE_ACCESSOR(AttributeLLVMCall)
 DEFINE_PRIMITIVE_ACCESSOR(Array)
 DEFINE_PRIMITIVE_ACCESSOR(Vec)
 DEFINE_PRIMITIVE_ACCESSOR(Tuple)
@@ -1349,7 +1358,7 @@ DEFINE_OPERATOR_ACCESSOR(packMultiValuedFreeVar)
 DEFINE_OPERATOR_ACCESSOR(unpackMultiValuedFreeVarAndDereference)
 DEFINE_OPERATOR_ACCESSOR(unpackMultiValuedFreeVar)
 DEFINE_OPERATOR_ACCESSOR(variantReprType)
-DEFINE_OPERATOR_ACCESSOR(DispatchTagCount);
+DEFINE_OPERATOR_ACCESSOR(DispatchTagCount)
 DEFINE_OPERATOR_ACCESSOR(dispatchTag)
 DEFINE_OPERATOR_ACCESSOR(dispatchIndex)
 DEFINE_OPERATOR_ACCESSOR(invalidDispatch)
@@ -1357,25 +1366,25 @@ DEFINE_OPERATOR_ACCESSOR(stringLiteral)
 DEFINE_OPERATOR_ACCESSOR(ifExpression)
 DEFINE_OPERATOR_ACCESSOR(typeToRValue)
 DEFINE_OPERATOR_ACCESSOR(typesToRValues)
-DEFINE_OPERATOR_ACCESSOR(doIntegerAddChecked);
-DEFINE_OPERATOR_ACCESSOR(doIntegerSubtractChecked);
-DEFINE_OPERATOR_ACCESSOR(doIntegerMultiplyChecked);
-DEFINE_OPERATOR_ACCESSOR(doIntegerQuotientChecked);
-DEFINE_OPERATOR_ACCESSOR(doIntegerRemainderChecked);
-DEFINE_OPERATOR_ACCESSOR(doIntegerShiftLeftChecked);
-DEFINE_OPERATOR_ACCESSOR(doIntegerNegateChecked);
-DEFINE_OPERATOR_ACCESSOR(doIntegerConvertChecked);
+DEFINE_OPERATOR_ACCESSOR(doIntegerAddChecked)
+DEFINE_OPERATOR_ACCESSOR(doIntegerSubtractChecked)
+DEFINE_OPERATOR_ACCESSOR(doIntegerMultiplyChecked)
+DEFINE_OPERATOR_ACCESSOR(doIntegerQuotientChecked)
+DEFINE_OPERATOR_ACCESSOR(doIntegerRemainderChecked)
+DEFINE_OPERATOR_ACCESSOR(doIntegerShiftLeftChecked)
+DEFINE_OPERATOR_ACCESSOR(doIntegerNegateChecked)
+DEFINE_OPERATOR_ACCESSOR(doIntegerConvertChecked)
 
-void addGlobals(ModulePtr m, const vector<TopLevelItemPtr>& toplevels) {
-    vector<TopLevelItemPtr>::const_iterator i, end;
+void addGlobals(ModulePtr m, llvm::ArrayRef<TopLevelItemPtr>  toplevels) {
+    TopLevelItemPtr const *i, *end;
     for (i = toplevels.begin(), end = toplevels.end();
     i != end; ++i) {
         m->topLevelItems.push_back(*i);
         TopLevelItem *x = i->ptr();
         x->env = m->env;
         switch (x->objKind) {
-        case ENUMERATION : {
-                Enumeration *enumer = (Enumeration *)x;
+        case ENUM_DECL : {
+                EnumDecl *enumer = (EnumDecl *)x;
                 TypePtr t = enumType(enumer);
                 addGlobal(m, enumer->name, enumer->visibility, t.ptr());
                 for (unsigned i = 0 ; i < enumer->members.size(); ++i) {
@@ -1400,18 +1409,20 @@ void addGlobals(ModulePtr m, const vector<TopLevelItemPtr>& toplevels) {
 
     }
 
-    const vector<TopLevelItemPtr> &items = m->topLevelItems;
+    llvm::ArrayRef<TopLevelItemPtr> items = m->topLevelItems;
     for (size_t i = items.size() - toplevels.size(); i < items.size(); ++i) {
         Object *obj = items[i].ptr();
         switch (obj->objKind) {
         case OVERLOAD :
             initOverload((Overload *)obj);
             break;
-        case INSTANCE :
-            initVariantInstance((Instance *)obj);
+        case INSTANCE_DECL :
+            initVariantInstance((InstanceDecl *)obj);
             break;
         case STATIC_ASSERT_TOP_LEVEL:
             checkStaticAssert((StaticAssertTopLevel *)obj);
+            break;
+        default:
             break;
         }
     }

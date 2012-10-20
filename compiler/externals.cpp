@@ -1,4 +1,10 @@
 #include "clay.hpp"
+#include "externals.hpp"
+
+
+
+#pragma clang diagnostic ignored "-Wcovered-switch-default"
+
 
 namespace clay {
 
@@ -30,6 +36,10 @@ static llvm::Value *promoteCVarArg(CallingConv conv,
                 return ctx->builder->CreateFPExt(llv, llvmType(float64Type));
         }
         return llv;
+    }
+    case NEW_TYPE : {
+        NewType *nt = (NewType *)t.ptr();
+        return promoteCVarArg(conv, newtypeReprType(nt), llv, ctx);
     }
     default :
         return llv;
@@ -361,6 +371,11 @@ struct X86_32_ExternalTarget : public ExternalTarget {
                 return PASS_ON_STACK;
             else
                 return typeSize(type);
+        
+        case NEW_TYPE: {
+            NewType *nt = (NewType*)type.ptr();
+            return aggregateTypeSize(newtypeReprType(nt));
+        }
 
         default:
             assert(false);
@@ -402,6 +417,11 @@ struct X86_32_ExternalTarget : public ExternalTarget {
         case COMPLEX_TYPE:
         case VARIANT_TYPE:
             return NULL;
+        
+        case NEW_TYPE: {
+            NewType *nt = (NewType*)type.ptr();
+            return singleFloatAggregateType(newtypeReprType(nt));
+        }
 
         case UNION_TYPE: {
             UnionType *u = (UnionType*)type.ptr();
@@ -412,7 +432,7 @@ struct X86_32_ExternalTarget : public ExternalTarget {
 
         case RECORD_TYPE: {
             RecordType *r = (RecordType*)type.ptr();
-            const vector<TypePtr> &fieldTypes = recordFieldTypes(r);
+            llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(r);
             if (fieldTypes.size() == 1 && isSingleFloatMemberType(fieldTypes[0]))
                 return llvmType(fieldTypes[0]);
             return NULL;
@@ -496,7 +516,7 @@ struct X86_64_ExternalTarget : public LLVMExternalTarget {
 
     map<TypePtr, vector<WordClass> > typeClassifications;
     map<TypePtr, llvm::Type*> llvmWordTypes;
-    vector<WordClass> const &getTypeClassification(TypePtr type);
+    llvm::ArrayRef<WordClass> getTypeClassification(TypePtr type);
     llvm::Type* getLLVMWordType(TypePtr type);
 
     llvm::Type *llvmWordType(TypePtr type);
@@ -520,6 +540,10 @@ struct X86_64_ExternalTarget : public LLVMExternalTarget {
         case RECORD_TYPE:
         case TUPLE_TYPE:
             return false;
+        case NEW_TYPE: {
+            NewType *nt = (NewType*)type.ptr();
+            return canPassThrough(newtypeReprType(nt));
+        }
         default:
             assert(false);
             return false;
@@ -534,7 +558,7 @@ struct X86_64_ExternalTarget : public LLVMExternalTarget {
             || c == SSE_INT_VECTOR;
     }
 
-    static bool areYmmWordClasses(vector<WordClass> const &wordClasses) {
+    static bool areYmmWordClasses(llvm::ArrayRef<WordClass> wordClasses) {
         return (wordClasses.size() > 2
             && isSSEClass(wordClasses[0]) && wordClasses[1] == SSEUP && wordClasses[2] == SSEUP)
         || (wordClasses.size() > 3
@@ -569,7 +593,7 @@ struct X86_64_ExternalTarget : public LLVMExternalTarget {
     {
         if (conv == CC_LLVM) return false;
 
-        vector<WordClass> const &wordClasses = getTypeClassification(type);
+        llvm::ArrayRef<WordClass> wordClasses = getTypeClassification(type);
         assert(!wordClasses.empty());
 
         return wordClasses[0] == MEMORY;
@@ -579,7 +603,7 @@ struct X86_64_ExternalTarget : public LLVMExternalTarget {
     {
         if (conv == CC_LLVM) return false;
 
-        vector<WordClass> const &wordClasses = getTypeClassification(type);
+        llvm::ArrayRef<WordClass> wordClasses = getTypeClassification(type);
         assert(!wordClasses.empty());
 
         if (varArg && areYmmWordClasses(wordClasses))
@@ -615,8 +639,7 @@ static void unifyWordClass(vector<WordClass>::iterator wordi, WordClass newClass
     }
 }
 
-static void _classifyStructType(vector<TypePtr>::const_iterator fieldBegin,
-                                vector<TypePtr>::const_iterator fieldEnd,
+static void _classifyStructType(llvm::ArrayRef<TypePtr> fields,
                                 vector<WordClass>::iterator begin,
                                 size_t offset);
 
@@ -728,34 +751,38 @@ static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_
     }
     case TUPLE_TYPE: {
         TupleType *tupleType = (TupleType *)type.ptr();
-        _classifyStructType(tupleType->elementTypes.begin(),
-                            tupleType->elementTypes.end(),
+        _classifyStructType(tupleType->elementTypes,
                             begin,
                             offset);
         break;
     }
     case RECORD_TYPE: {
         RecordType *recordType = (RecordType *)type.ptr();
-        const vector<TypePtr> &fieldTypes = recordFieldTypes(recordType);
-        _classifyStructType(fieldTypes.begin(),
-                            fieldTypes.end(),
+        llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(recordType);
+        _classifyStructType(fieldTypes,
                             begin,
                             offset);
         break;
     }
+    case NEW_TYPE: {
+        NewType *nt = (NewType *)type.ptr();
+        _classifyType(newtypeReprType(nt), begin, offset);
+    }
     }
 }
 
-static void _classifyStructType(vector<TypePtr>::const_iterator fieldBegin,
-                                vector<TypePtr>::const_iterator fieldEnd,
+static void _classifyStructType(llvm::ArrayRef<TypePtr> fields,
                                 vector<WordClass>::iterator begin,
                                 size_t offset)
 {
-    if (fieldBegin == fieldEnd)
+    if (fields.empty())
         _classifyType(intType(8), begin, offset);
     else {
         size_t fieldOffset = offset;
-        for (vector<TypePtr>::const_iterator i = fieldBegin; i != fieldEnd; ++i) {
+        for (TypePtr const *i = fields.begin(), *end = fields.end();
+             i != end;
+             ++i)
+        {
             fieldOffset = alignedUpTo(fieldOffset, *i);
             _classifyType(*i, begin, fieldOffset);
             fieldOffset += typeSize(*i);
@@ -829,7 +856,7 @@ vector<WordClass> X86_64_ExternalTarget::classifyType(TypePtr type)
     return wordClasses;
 }
 
-vector<WordClass> const &X86_64_ExternalTarget::getTypeClassification(TypePtr type)
+llvm::ArrayRef<WordClass> X86_64_ExternalTarget::getTypeClassification(TypePtr type)
 {
     map< TypePtr, vector<WordClass> >::iterator found = typeClassifications.find(type);
     if (found == typeClassifications.end())
@@ -840,12 +867,12 @@ vector<WordClass> const &X86_64_ExternalTarget::getTypeClassification(TypePtr ty
 
 llvm::Type *X86_64_ExternalTarget::llvmWordType(TypePtr type)
 {
-    vector<WordClass> const &wordClasses = getTypeClassification(type);
+    llvm::ArrayRef<WordClass> wordClasses = getTypeClassification(type);
     assert(!wordClasses.empty());
 
     llvm::StructType *llType = llvm::StructType::create(llvm::getGlobalContext(), "x86-64 " + typeName(type));
     vector<llvm::Type*> llWordTypes;
-    vector<WordClass>::const_iterator i = wordClasses.begin();
+    WordClass const *i = wordClasses.begin();
     while (i != wordClasses.end()) {
         switch (*i) {
         // docs don't cover this case. is it possible?

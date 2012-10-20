@@ -1,0 +1,13 @@
+import test.(expectTrue);
+import test.module.(testMainModule);
+import printer.(println);
+
+TEST_should_pass(test) {
+    expectTrue(test, "truth", true);
+}
+
+TEST_should_fail(test) {
+    expectTrue(test, "falsehood", false);
+}
+
+private main() = testMainModule();

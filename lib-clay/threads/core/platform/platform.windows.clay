@@ -27,3 +27,4 @@ joinThreadImpl(handle: HANDLE) {
     }
 }
 
+yield() { SwitchToThread(); }

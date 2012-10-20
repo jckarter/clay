@@ -88,9 +88,10 @@ def getClayPlatform(opt):
         print >>platformclay, '}'
         platformclay.close()
 
-        returncode = call([opt.clayCompiler] + opt.testBuildFlags + ['-o', 'test.exe', platformclay.name])
+        commandline = [opt.clayCompiler] + opt.testBuildFlags + ['-o', 'test.exe', platformclay.name]
+        returncode = call(commandline)
         if returncode != 0:
-            print "could not build an executable with", opt.clayCompiler, opt.testBuildFlags
+            print "could not build an executable with", " ".join(commandline)
             sys.exit(1)
 
         process = Popen(["./test.exe"], stdout=PIPE)
@@ -152,7 +153,8 @@ class RefText(object):
         self.re = None
         xx = text.split('\n', 1)
         if len(xx) == 2 and xx[0] == '(re)':
-            self.re = re.compile(xx[1] + '$', re.DOTALL)
+            restring = xx[1].replace('\r', '').strip()
+            self.re = re.compile(restring, re.DOTALL)
         else:
             self.re = None
 

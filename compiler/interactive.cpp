@@ -1,4 +1,8 @@
 #include "clay.hpp"
+#include "lexer.hpp"
+#include "codegen.hpp"
+#include "loader.hpp"
+
 
 #include <setjmp.h>
 #include <signal.h>
@@ -75,7 +79,7 @@ namespace clay {
         }
     }
 
-    static void loadImports(vector<ImportPtr> const& imports)
+    static void loadImports(llvm::ArrayRef<ImportPtr>  imports)
     {
         for (size_t i = 0; i < imports.size(); ++i) {
             module->imports.push_back(imports[i]);
@@ -88,7 +92,7 @@ namespace clay {
         }
     }
 
-    static void jitTopLevel(vector<TopLevelItemPtr> const& toplevels)
+    static void jitTopLevel(llvm::ArrayRef<TopLevelItemPtr>  toplevels)
     {
         if (toplevels.empty()) {
             return;
@@ -101,7 +105,7 @@ namespace clay {
         addGlobals(module, toplevels);
     }
 
-    static void jitStatements(vector<StatementPtr> const& statements)
+    static void jitStatements(llvm::ArrayRef<StatementPtr>  statements)
     {
         if (statements.empty()) {
             return;
@@ -143,8 +147,7 @@ namespace clay {
 
         void* dtorLlvmFun = engine->getPointerToFunction(dtor);
         typedef void (*PFN)();
-        atexit(reinterpret_cast<PFN>(dtorLlvmFun));
-
+        atexit((PFN)(uintptr_t)dtorLlvmFun);
         engine->runFunction(entryProc->llvmFunc, std::vector<llvm::GenericValue>());
     }
 

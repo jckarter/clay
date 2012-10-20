@@ -1,0 +1,24 @@
+import printer.(println);
+import sequences.(map);
+import threads.(startThread, joinThread);
+import threads.locks.(Mutex, Synchronized, synchronized, synchronizedLoad);
+
+var counter = Synchronized[UInt, Mutex](0u);
+
+counterThread() {
+    for (x in range(1000))
+        synchronized(counter): c -> {
+            c +: 1;
+        }
+}
+
+main() {
+    // spawn eight threads, each of which increments counter 1000 times
+    // using a mutex for synchronization
+    var threads = map(x -> startThread(counterThread), range(8));
+
+    for (thread in threads)
+        joinThread(thread);
+
+    println(synchronizedLoad(counter));
+}

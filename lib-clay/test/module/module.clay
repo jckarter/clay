@@ -1,0 +1,16 @@
+import core.values.(filterValues, mapValues);
+import test.(TestSuite, TestCase, TestStatus, testMain);
+
+private test?(mod, name) =
+    stringLiteralStartsWith?(name, "TEST_")
+    and CallDefined?(staticFieldRef(mod, name), TestStatus);
+
+[mod] moduleTestNames(#mod) =
+    ..filterValues(name -> test?(mod, name), ..ModuleMemberNames(mod));
+
+[mod] moduleTestSuite(#mod) = TestSuite(
+    StaticName(mod), array(
+        ..mapValues(name -> TestCase(name, staticFieldRef(mod, name)),
+                    ..moduleTestNames(mod))));
+
+testMainModule() = testMain(moduleTestSuite(MainModule()));

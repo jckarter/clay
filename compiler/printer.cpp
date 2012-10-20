@@ -1,4 +1,13 @@
 #include "clay.hpp"
+#include "evaluator.hpp"
+#include "codegen.hpp"
+#include "loader.hpp"
+#include "patterns.hpp"
+
+
+
+#pragma clang diagnostic ignored "-Wcovered-switch-default"
+
 
 namespace clay {
 
@@ -98,9 +107,9 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &out, PVData const &pv)
 
 template <class T>
 struct BigVec {
-    const vector<T> *v;
-    BigVec(const vector<T> &v)
-        : v(&v) {}
+    llvm::ArrayRef<T> v;
+    BigVec(llvm::ArrayRef<T> v)
+        : v(v) {}
 };
 
 template <class T>
@@ -114,9 +123,9 @@ template <class T>
 llvm::raw_ostream &operator<<(llvm::raw_ostream &out, const BigVec<T> &v) {
     ++indent;
     out << "[";
-    typename vector<T>::const_iterator i, end;
+    T const *i, *end;
     bool first = true;
-    for (i = v.v->begin(), end = v.v->end(); i != end; ++i) {
+    for (i = v.v.begin(), end = v.v.end(); i != end; ++i) {
         if (!first)
             out << ",";
         first = false;
@@ -540,9 +549,9 @@ static void print(llvm::raw_ostream &out, const Object *x) {
         break;
     }
 
-    case RECORD : {
-        const Record *y = (const Record *)x;
-        out << "Record(" << y->name << ", " << y->params;
+    case RECORD_DECL : {
+        const RecordDecl *y = (const RecordDecl *)x;
+        out << "RecordDecl(" << y->name << ", " << y->params;
         out << ", " << y->varParam << ", " << y->body << ")";
         break;
     }
@@ -558,15 +567,15 @@ static void print(llvm::raw_ostream &out, const Object *x) {
         break;
     }
 
-    case VARIANT : {
-        const Variant *y = (const Variant *)x;
-        out << "Variant(" << y->name << ", " << y->params;
+    case VARIANT_DECL : {
+        const VariantDecl *y = (const VariantDecl *)x;
+        out << "VariantDecl(" << y->name << ", " << y->params;
         out << ", " << y->varParam << ")";
         break;
     }
-    case INSTANCE : {
-        const Instance *y = (const Instance *)x;
-        out << "Instance(" << y->patternVars << ", " << y->predicate;
+    case INSTANCE_DECL : {
+        const InstanceDecl *y = (const InstanceDecl *)x;
+        out << "InstanceDecl(" << y->patternVars << ", " << y->predicate;
         out << ", " << y->target << ", " << y->members << ")";
         break;
     }
@@ -583,9 +592,9 @@ static void print(llvm::raw_ostream &out, const Object *x) {
         break;
     }
 
-    case ENUMERATION : {
-        const Enumeration *y = (const Enumeration *)x;
-        out << "Enumeration(" << y->name << ", " << y->members << ")";
+    case ENUM_DECL : {
+        const EnumDecl *y = (const EnumDecl *)x;
+        out << "EnumDecl(" << y->name << ", " << y->members << ")";
         break;
     }
     case ENUM_MEMBER : {
@@ -594,9 +603,9 @@ static void print(llvm::raw_ostream &out, const Object *x) {
         break;
     }
 
-    case NEWTYPE : {
-        const NewType *y = (const NewType *)x;
-        out << "NewType(" << y->name << ")";
+    case NEW_TYPE_DECL : {
+        const NewTypeDecl *y = (const NewTypeDecl *)x;
+        out << "NewTypeDecl(" << y->name << ")";
         break;
     }
     
@@ -797,7 +806,7 @@ void disableSafePrintName()
     assert(_safeNames >= 0);
 }
 
-void printNameList(llvm::raw_ostream &out, const vector<ObjectPtr> &x)
+void printNameList(llvm::raw_ostream &out, llvm::ArrayRef<ObjectPtr> x)
 {
     for (unsigned i = 0; i < x.size(); ++i) {
         if (i != 0)
@@ -806,7 +815,7 @@ void printNameList(llvm::raw_ostream &out, const vector<ObjectPtr> &x)
     }
 }
 
-void printNameList(llvm::raw_ostream &out, const vector<ObjectPtr> &x, const vector<unsigned> &dispatchIndices)
+void printNameList(llvm::raw_ostream &out, llvm::ArrayRef<ObjectPtr> x, llvm::ArrayRef<unsigned> dispatchIndices)
 {
     for (unsigned i = 0; i < x.size(); ++i) {
         if (i != 0)
@@ -817,7 +826,7 @@ void printNameList(llvm::raw_ostream &out, const vector<ObjectPtr> &x, const vec
     }
 }
 
-void printNameList(llvm::raw_ostream &out, const vector<TypePtr> &x)
+void printNameList(llvm::raw_ostream &out, llvm::ArrayRef<TypePtr> x)
 {
     for (unsigned i = 0; i < x.size(); ++i) {
         if (i != 0)
@@ -943,13 +952,13 @@ void printName(llvm::raw_ostream &out, ObjectPtr x)
         out << y->name->str;
         break;
     }
-    case RECORD : {
-        Record *y = (Record *)x.ptr();
+    case RECORD_DECL : {
+        RecordDecl *y = (RecordDecl *)x.ptr();
         out << y->name->str;
         break;
     }
-    case VARIANT : {
-        Variant *y = (Variant *)x.ptr();
+    case VARIANT_DECL : {
+        VariantDecl *y = (VariantDecl *)x.ptr();
         out << y->name->str;
         break;
     }
@@ -1092,7 +1101,7 @@ void printValue(llvm::raw_ostream &out, EValuePtr ev)
     }
     case ENUM_TYPE : {
         EnumType *t = (EnumType *)ev->type.ptr();
-        vector<EnumMemberPtr> const &members = t->enumeration->members;
+        llvm::ArrayRef<EnumMemberPtr> members = t->enumeration->members;
         int member = ev->as<int>();
 
         if (member >= 0 && size_t(member) < members.size()) {
@@ -1313,7 +1322,7 @@ void typePrint(llvm::raw_ostream &out, TypePtr t) {
         break;
     }
     case NEW_TYPE : {
-        NewTypeType *x = (NewTypeType *)t.ptr();
+        NewType *x = (NewType *)t.ptr();
         out << x->newtype->name->str;
         break;
     }

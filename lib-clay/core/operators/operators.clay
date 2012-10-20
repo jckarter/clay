@@ -50,201 +50,6 @@ define resetUnsafe(a) :;
 [T] uninitializedUnsafe(#T) --> x:T {}
 
 
-/// @section  coordinate type predicates 
-
-Coordinate?(T) : Bool = CallDefined?(dereference, T);
-CoordinateTargetType(T) = ..Type(..dereference(typeToLValue(T)));
-
-RandomAccessCoordinate?(T) : Bool =
-    Coordinate?(T) and
-    CallDefined?((+), T, Int) and
-    CallDefined?((-), T, Int) and
-    CallDefined?((-), T, T);
-
-LValueCoordinate?(T) =
-    Coordinate?(T) and
-    LValue?(dereference(typeToLValue(T)));
-
-// true if adjacent coordinates point to adjacent locations in memory
-[T]
-define ContiguousCoordinate?(#T) : Bool;
-
-overload ContiguousCoordinate?(T) : Bool = false;
-
-
-
-/// @section  iterator type predicates 
-
-Iterator?(T): Bool = CallDefined?(nextValue, T);
-IteratorTargetType(T) = ..Type(..getValue(nextValue(typeToLValue(T))));
-
-
-/// @section  Default two-arg hasValue? 
-
-alias overload hasValue?(iter, coord) : Bool = hasValue?(coord);
-
-
-/// @section  pointer as iterator value 
-
-[T] forceinline overload hasValue?(p:Pointer[T]) : Bool = not null?(p);
-[T] forceinline overload getValue(p:Pointer[T]) = ref p^;
-
-
-/// @section  reverse iteration 
-
-[S when Sequence?(S)]
-define reverseIterator(s:S);
-
-
-
-/// @section  sequence protocol 
-
-// defined for collections
-define size(s): SizeT;
-
-
-[S when Sequence?(S)]
-define begin(s:S);
-
-[S when Sequence?(S)]
-define end(s:S);
-
-
-[S when Sequence?(S)]
-define front(s:S);
-
-[S when Sequence?(S)]
-define back(s:S);
-
-
-[S] // when Sequence?(S)
-define push(s:S, ..vs) :;
-
-[S, Vs when Sequence?(S) and Sequence?(Vs)]
-define pushAll(s:S, vs:Vs) :;
-
-[S when Sequence?(S)]
-define pop(s:S);
-
-// defined for collections
-define clear(s) :;
-
-[S when Sequence?(S)]
-define insert(s:S, coord, v) :;
-
-[S, Vs when Sequence?(S) and Sequence?(Vs)]
-define insertAll(s:S, coord, vs:Vs) :;
-
-// defined for collections
-define remove;
-
-[S, I when Sequence?(S) and Integer?(I)]
-define reserve(s:S, n:I) :;
-
-[S, I when Sequence?(S) and Integer?(I)]
-define resize(s:S, n:I) :;
-
-[S, I when Sequence?(S) and Integer?(I)]
-define resizeUnsafe(s:S, n:I) :;
-
-
-[S when Sequence?(S)]
-define pushFront(s:S, v) :;
-
-[S when Sequence?(S)]
-define popFront(s:S);
-
-
-
-// default implementation using `push`
-overload pushAll(s, vs) {
-    for (v in vs) {
-        push(s, v);
-    }
-}
-
-// default implementation using `insert`
-overload insertAll(s, coord, vs) {
-    var insertPoint = coord;
-    for (v in vs) {
-        insert(v, insertPoint, vs);
-        insertPoint +: 1;
-    }
-}
-
-
-// defined for statically sized sequences like Array[T,n]
-[S]
-define StaticSize(#S);
-
-
-overload push(s) {}
-
-overload push(s, forward v1, forward v2, forward ..vs) {
-    ..for (v in v1, v2, ..vs) {
-        push(s, v);
-    }
-}
-
-
-
-/// @section  sequence type predicates 
-
-Sequence?(T): Bool = CallDefined?(iterator, T);
-SequenceElementType(T) = ..Type(..getValue(nextValue(iterator(typeToLValue(T)))));
-SizedSequence?(T): Bool = Sequence?(T) and CallDefined?(size, T);
-StaticSizedSequence?(T) : Bool = Sequence?(T) and CallDefined?(StaticSize, Static[T]);
-RandomAccessSequence?(T) : Bool  = Sequence?(T) and CallDefined?(index, T, Int);
-LValueSequence?(T) : Bool = Sequence?(T) and LValue?(getValue(nextValue(iterator(typeToLValue(T)))));
-
-CoordinateSequence?(T) : Bool = Sequence?(T) and CallDefined?(begin, T) and CallDefined?(end, T);
-SequenceCoordinateType(T) = Type(begin(typeToLValue(T)));
-
-SequenceIteratorType(T) = Type(iterator(typeToLValue(T)));
-
-// true if sequence elements are stored contiguously in memory
-[T]
-define ContiguousSequence?(#T) : Bool;
-
-overload ContiguousSequence?(T) : Bool = false;
-
-// true if copying the sequence is efficient
-[T]
-define LightweightSequence?(#T) : Bool;
-
-overload LightweightSequence?(T) : Bool = false;
-
-// true for sequences which have value semantics.
-[T]
-define SequenceContainer?(#T) : Bool;
-
-overload SequenceContainer?(T) : Bool = false;
-
-// true if sequence is not single-valued (0 valued sequences are included).
-MultiValuedSequence?(T) : Bool =
-    Sequence?(T) and multiValued?(..Type(..getValue(nextValue(iterator(typeToLValue(T))))));
-
-private define multiValued?(..x) : Bool;
-overload multiValued?(..x) : Bool = true;
-overload multiValued?(x) : Bool = false;
-
-
-
-/// @section  mapping protocol 
-
-// 'index' and 'size' are available for mappings
-// 'remove' is available
-
-// get pointer to element, null if not available
-define lookup(map, key);
-define put(map, key, value) :;
-// iterate over all items
-define items(map);
-
-forceinline contains?(map, key) : Bool = not null?(lookup(map, key));
-
-
-
 /// @section  LValue?, RValue? 
 
 define LValue?;
@@ -705,8 +510,9 @@ alias overload ifExpression(condition, #consequent, #alternate) --> ret:StringLi
 
 
 
-/// @section  bitandc, bitblend 
+/// @section  bitnand, bitandc, bitblend 
 
+forceinline bitnand(a, b) = (~)((&)(a, b));
 forceinline bitandc(a, b) = (&)(a, (~)(b));
 forceinline bitblend(mask, ones, zeros)
     = (|)((&)(ones, mask), bitandc(zeros, mask));
@@ -801,9 +607,9 @@ define BitwiseCopiedType?(#T) : Bool;
 [T]
 define BitwiseMovedType?(#T) : Bool;
 [T]
-define NotDestroyedType?(#T) : Bool;
+define DestroyDoesNothingType?(#T) : Bool;
 [T]
-define NotResetType?(#T) : Bool;
+define ResetDoesNothingType?(#T) : Bool;
 [T]
 define InitializeDoesNotThrowType?(#T) : Bool;
 [T]
@@ -817,13 +623,13 @@ define BitwiseMoveAssignedType?(#T) : Bool;
 
 overload BitwiseCopiedType?(T) = PODType?(T);
 overload BitwiseMovedType?(T) = PODType?(T);
-overload NotDestroyedType?(T) = PODType?(T);
-overload NotResetType?(T) = PODType?(T);
+overload DestroyDoesNothingType?(T) = PODType?(T);
+overload ResetDoesNothingType?(T) = PODType?(T);
 overload InitializeDoesNotThrowType?(T) = PODType?(T);
 overload CopyDoesNotThrowType?(T) = PODType?(T);
 overload AssignDoesNotThrowType?(T) = PODType?(T);
-overload BitwiseAssignedType?(T) = BitwiseCopiedType?(T) and NotDestroyedType?(T);
-overload BitwiseMoveAssignedType?(T) = BitwiseMovedType?(T) and NotDestroyedType?(T);
+overload BitwiseAssignedType?(T) = BitwiseCopiedType?(T) and DestroyDoesNothingType?(T);
+overload BitwiseMoveAssignedType?(T) = BitwiseMovedType?(T) and DestroyDoesNothingType?(T);
 
 [T when PrimitiveCompoundType?(T)]
 overload BitwiseCopiedType?(#T) : Bool
@@ -832,11 +638,11 @@ overload BitwiseCopiedType?(#T) : Bool
 overload BitwiseMovedType?(#T) : Bool
     = allValues?(BitwiseMovedType?, ..PrimitiveCompoundMemberTypes(T));
 [T when PrimitiveCompoundType?(T)]
-overload NotDestroyedType?(#T) : Bool
-    = allValues?(NotDestroyedType?, ..PrimitiveCompoundMemberTypes(T));
+overload DestroyDoesNothingType?(#T) : Bool
+    = allValues?(DestroyDoesNothingType?, ..PrimitiveCompoundMemberTypes(T));
 [T when PrimitiveCompoundType?(T)]
-overload NotResetType?(#T) : Bool
-    = allValues?(NotResetType?, ..PrimitiveCompoundMemberTypes(T));
+overload ResetDoesNothingType?(#T) : Bool
+    = allValues?(ResetDoesNothingType?, ..PrimitiveCompoundMemberTypes(T));
 [T when PrimitiveCompoundType?(T)]
 overload InitializeDoesNotThrowType?(#T) : Bool
     = allValues?(InitializeDoesNotThrowType?, ..PrimitiveCompoundMemberTypes(T));

@@ -1,4 +1,9 @@
 #include "clay.hpp"
+#include "operators.hpp"
+#include "evaluator.hpp"
+#include "analyzer.hpp"
+#include "desugar.hpp"
+
 
 namespace clay {
 
@@ -104,7 +109,7 @@ static vector<FormalArgPtr> identV(IdentifierPtr x) {
 
 static vector<FormalArgPtr> identVtoFormalV(vector<IdentifierPtr> x) {
     vector<FormalArgPtr> v;
-    for(int i=0; i<x.size(); ++i)
+    for(size_t i=0; i<x.size(); ++i)
         v.push_back(new FormalArg(x[i], NULL));
     return v;
 }
@@ -184,7 +189,7 @@ static void makeExceptionVars(vector<IdentifierPtr>& identifiers, CatchPtr x) {
                     Identifier::get("%context", x->location));
 }
 
-StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks) {
+StatementPtr desugarCatchBlocks(llvm::ArrayRef<CatchPtr> catchBlocks) {
     assert(!catchBlocks.empty());
     Location firstCatchLocation = catchBlocks.front()->location;
     IdentifierPtr expVar = Identifier::get("%exp", firstCatchLocation);
@@ -376,7 +381,7 @@ ExprListPtr desugarEvalExpr(EvalExprPtr eval, EnvPtr env)
     }
 }
 
-vector<StatementPtr> const &desugarEvalStatement(EvalStatementPtr eval, EnvPtr env)
+llvm::ArrayRef<StatementPtr> desugarEvalStatement(EvalStatementPtr eval, EnvPtr env)
 {
     if (eval->evaled)
         return eval->value;
@@ -388,7 +393,7 @@ vector<StatementPtr> const &desugarEvalStatement(EvalStatementPtr eval, EnvPtr e
     }
 }
 
-vector<TopLevelItemPtr> const &desugarEvalTopLevel(EvalTopLevelPtr eval, EnvPtr env)
+llvm::ArrayRef<TopLevelItemPtr> desugarEvalTopLevel(EvalTopLevelPtr eval, EnvPtr env)
 {
     if (eval->evaled)
         return eval->value;
@@ -401,7 +406,7 @@ vector<TopLevelItemPtr> const &desugarEvalTopLevel(EvalTopLevelPtr eval, EnvPtr 
 }
 
 static StatementPtr desugarWithBlock(WithStatementPtr with,
-        const vector<StatementPtr> & statements, unsigned int i)
+        llvm::ArrayRef<StatementPtr>  statements, unsigned int i)
 {
     ++i;
     BlockPtr b = new Block();

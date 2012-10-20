@@ -1,0 +1,55 @@
+import atomics.(Atomic, cas, store);
+import threads.(yield);
+
+public import threads.locks.protocol.(lock, unlock, tryLock, Lock?);
+public import threads.locks.platform.(Mutex);
+
+[L when Lock?(L)]
+withLock(l:L, f) {
+    lock(l);
+    finally unlock(l);
+    return forward ..f();
+}
+
+record Spinlock (_flag:Atomic[Bool]);
+overload RegularRecord?(#Spinlock) = false;
+overload DestroyDoesNothingType?(#Spinlock) = true;
+
+overload Spinlock() = initializeRecord(Spinlock, Atomic(false));
+
+overload lock(l:Spinlock) {
+    while (not cas(l._flag, false, true)) { yield(); }
+}
+
+overload unlock(l:Spinlock) {
+    store(l._flag, false);
+}
+
+overload tryLock(l:Spinlock) {
+    return cas(l._flag, false, true);
+}
+
+record Synchronized[T, L] (_data:T, _lock:L);
+[T, L] alias overload Synchronized[T, L](initial:T) = Synchronized[T, L](initial, L());
+[T] alias overload Synchronized(initial:T) = Synchronized[T, Mutex](initial, Mutex());
+
+[T, L] synchronized(s:Synchronized[T,L], f)
+{
+    ref data = s._data;
+    return forward ..withLock(s._lock, -> forward ..f(data));
+}
+
+[T, L] synchronizedLoad(s:Synchronized[T,L]) : T
+{
+    ref data = s._data;
+    return withLock(s._lock, -> copy(data));
+}
+
+[T, L] synchronizedStore(s:Synchronized[T,L], from:T) :
+{
+    ref data = s._data;
+    withLock(s._lock, -> { data = from; });
+}
+
+staticassert (Lock?(Mutex));
+staticassert (Lock?(Spinlock));

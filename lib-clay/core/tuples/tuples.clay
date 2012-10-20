@@ -97,7 +97,7 @@ forceinline overload moveUnsafe(src:Tuple[..T]) --> returned:Tuple[..T] {
         staticIndex(returned, i) <-- moveUnsafe(staticIndex(src, i));
 }
 
-[..T when not allValues?(NotResetType?, ..T)]
+[..T when not allValues?(ResetDoesNothingType?, ..T)]
 forceinline overload resetUnsafe(a:Tuple[..T]) : {
     ..for (x in tupleElements(a))
         resetUnsafe(x);
@@ -107,7 +107,7 @@ forceinline overload resetUnsafe(a:Tuple[..T]) : {
 
 /// @section  destroy 
 
-[..T when not allValues?(NotDestroyedType?, ..T)]
+[..T when not allValues?(DestroyDoesNothingType?, ..T)]
 forceinline overload destroy(a:Tuple[..T]) : {
     ..for (x in tupleElements(a))
         destroy(x);

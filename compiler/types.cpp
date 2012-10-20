@@ -1,4 +1,16 @@
 #include "clay.hpp"
+#include "types.hpp"
+#include "evaluator.hpp"
+#include "codegen.hpp"
+#include "externals.hpp"
+#include "operators.hpp"
+#include "patterns.hpp"
+#include "analyzer.hpp"
+#include "loader.hpp"
+
+
+#pragma clang diagnostic ignored "-Wcovered-switch-default"
+
 
 namespace clay {
 
@@ -192,9 +204,9 @@ TypePtr pointerType(TypePtr pointeeType) {
     return t.ptr();
 }
 
-TypePtr codePointerType(const vector<TypePtr> &argTypes,
-                        const vector<bool> &returnIsRef,
-                        const vector<TypePtr> &returnTypes) {
+TypePtr codePointerType(llvm::ArrayRef<TypePtr> argTypes,
+                        llvm::ArrayRef<uint8_t> returnIsRef,
+                        llvm::ArrayRef<TypePtr> returnTypes) {
     assert(returnIsRef.size() == returnTypes.size());
     int h = 0;
     for (unsigned i = 0; i < argTypes.size(); ++i) {
@@ -208,9 +220,9 @@ TypePtr codePointerType(const vector<TypePtr> &argTypes,
     vector<CodePointerTypePtr> &bucket = codePointerTypes[h];
     for (unsigned i = 0; i < bucket.size(); ++i) {
         CodePointerType *t = bucket[i].ptr();
-        if ((t->argTypes == argTypes) &&
-            (t->returnIsRef == returnIsRef) &&
-            (t->returnTypes == returnTypes))
+        if ((argTypes.equals(t->argTypes)) &&
+            (returnIsRef.equals(t->returnIsRef)) &&
+            (returnTypes.equals(t->returnTypes)))
         {
             return t;
         }
@@ -222,7 +234,7 @@ TypePtr codePointerType(const vector<TypePtr> &argTypes,
 }
 
 TypePtr cCodePointerType(CallingConv callingConv,
-                         const vector<TypePtr> &argTypes,
+                         llvm::ArrayRef<TypePtr> argTypes,
                          bool hasVarArgs,
                          TypePtr returnType) {
     int h = int(callingConv)*100;
@@ -237,7 +249,7 @@ TypePtr cCodePointerType(CallingConv callingConv,
     for (unsigned i = 0; i < bucket.size(); ++i) {
         CCodePointerType *t = bucket[i].ptr();
         if ((t->callingConv == callingConv) &&
-            (t->argTypes == argTypes) &&
+            (argTypes.equals(t->argTypes)) &&
             (t->hasVarArgs == hasVarArgs) &&
             (t->returnType == returnType))
         {
@@ -284,9 +296,9 @@ TypePtr vecType(TypePtr elementType, int size) {
     return t.ptr();
 }
 
-TypePtr tupleType(const vector<TypePtr> &elementTypes) {
+TypePtr tupleType(llvm::ArrayRef<TypePtr> elementTypes) {
     int h = 0;
-    vector<TypePtr>::const_iterator ei, eend;
+    TypePtr const *ei, *eend;
     for (ei = elementTypes.begin(), eend = elementTypes.end();
          ei != eend; ++ei) {
         h += pointerHash(ei->ptr());
@@ -296,7 +308,7 @@ TypePtr tupleType(const vector<TypePtr> &elementTypes) {
     for (i = tupleTypes[h].begin(), end = tupleTypes[h].end();
          i != end; ++i) {
         TupleType *t = i->ptr();
-        if (t->elementTypes == elementTypes)
+        if (elementTypes.equals(t->elementTypes))
             return t;
     }
     TupleTypePtr t = new TupleType(elementTypes);
@@ -304,9 +316,9 @@ TypePtr tupleType(const vector<TypePtr> &elementTypes) {
     return t.ptr();
 }
 
-TypePtr unionType(const vector<TypePtr> &memberTypes) {
+TypePtr unionType(llvm::ArrayRef<TypePtr> memberTypes) {
     int h = 0;
-    vector<TypePtr>::const_iterator mi, mend;
+    TypePtr const *mi, *mend;
     for (mi = memberTypes.begin(), mend = memberTypes.end();
          mi != mend; ++mi) {
         h += pointerHash(mi->ptr());
@@ -316,7 +328,7 @@ TypePtr unionType(const vector<TypePtr> &memberTypes) {
     for (i = unionTypes[h].begin(), end = unionTypes[h].end();
          i != end; ++i) {
         UnionType *t = i->ptr();
-        if (t->memberTypes == memberTypes)
+        if (memberTypes.equals(t->memberTypes))
             return t;
     }
     UnionTypePtr t = new UnionType(memberTypes);
@@ -324,9 +336,9 @@ TypePtr unionType(const vector<TypePtr> &memberTypes) {
     return t.ptr();
 }
 
-TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params) {
+TypePtr recordType(RecordDeclPtr record, llvm::ArrayRef<ObjectPtr> params) {
     int h = pointerHash(record.ptr());
-    vector<ObjectPtr>::const_iterator pi, pend;
+    ObjectPtr const *pi, *pend;
     for (pi = params.begin(), pend = params.end(); pi != pend; ++pi)
         h += objectHash(*pi);
     h &= recordTypes.size() - 1;
@@ -345,7 +357,7 @@ TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params) {
     return t.ptr();
 }
 
-TypePtr variantType(VariantPtr variant, const vector<ObjectPtr> &params) {
+TypePtr variantType(VariantDeclPtr variant, llvm::ArrayRef<ObjectPtr> params) {
     int h = pointerHash(variant.ptr());
     for (unsigned i = 0; i < params.size(); ++i)
         h += objectHash(params[i]);
@@ -389,14 +401,14 @@ void initializeEnumType(EnumTypePtr t)
     t->initialized = true;
 }
 
-TypePtr enumType(EnumerationPtr enumeration)
+TypePtr enumType(EnumDeclPtr enumeration)
 {
     if (!enumeration->type)
         enumeration->type = new EnumType(enumeration);
     return enumeration->type;
 }
 
-void initializeNewType(NewTypeTypePtr t) 
+void initializeNewType(NewTypePtr t) 
 {
     if (t->newtype->initialized)
         return;
@@ -404,15 +416,15 @@ void initializeNewType(NewTypeTypePtr t)
     t->newtype->baseType = evaluateType(t->newtype->expr, t->newtype->env);
     t->newtype->initialized = true;
 }
-
-TypePtr newType(NewTypePtr newtype)
+    
+TypePtr newType(NewTypeDeclPtr newtype)
 {
     if (!newtype->type)
-        newtype->type = new NewTypeType(newtype);
+        newtype->type = new NewType(newtype);
     return newtype->type;
 }
 
-TypePtr newtypeReprType(NewTypeTypePtr t)
+TypePtr newtypeReprType(NewTypePtr t)
 {
     if (!t->newtype->initialized)
         initializeNewType(t);
@@ -568,7 +580,7 @@ static bool unpackField(TypePtr x, IdentifierPtr &name, TypePtr &type) {
 
 static void setProperty(TypePtr type,
                         ProcedurePtr proc,
-                        const vector<ExprPtr> &exprs) {
+                        llvm::ArrayRef<ExprPtr> exprs) {
     CodePtr code = new Code();
 
     TypePtr typeType = staticType(type.ptr());
@@ -626,7 +638,7 @@ static void setProperty(TypePtr type, TypePtr propType) {
     setProperty(type, proc, exprs);
 }
 
-static void setProperties(TypePtr type, const vector<TypePtr> &props) {
+static void setProperties(TypePtr type, llvm::ArrayRef<TypePtr> props) {
     for (unsigned i = 0; i < props.size(); ++i)
         setProperty(type, props[i]);
 }
@@ -636,7 +648,7 @@ void initializeRecordFields(RecordTypePtr t) {
 
     assert(!t->fieldsInitialized);
     t->fieldsInitialized = true;
-    RecordPtr r = t->record;
+    RecordDeclPtr r = t->record;
     if (r->varParam.ptr())
         assert(t->params.size() >= r->params.size());
     else
@@ -664,7 +676,7 @@ void initializeRecordFields(RecordTypePtr t) {
             (((RecordType *)mpv->values[0].type.ptr())->record.ptr() ==
              primitive_RecordWithProperties().ptr()))
         {
-            const vector<ObjectPtr> &params =
+            llvm::ArrayRef<ObjectPtr> params =
                 ((RecordType *)mpv->values[0].type.ptr())->params;
             assert(params.size() == 2);
             if (params[0]->objKind != TYPE)
@@ -709,13 +721,13 @@ void initializeRecordFields(RecordTypePtr t) {
     }
 }
 
-const vector<IdentifierPtr> &recordFieldNames(RecordTypePtr t) {
+llvm::ArrayRef<IdentifierPtr> recordFieldNames(RecordTypePtr t) {
     if (!t->fieldsInitialized)
         initializeRecordFields(t);
     return t->fieldNames;
 }
 
-const vector<TypePtr> &recordFieldTypes(RecordTypePtr t) {
+llvm::ArrayRef<TypePtr> recordFieldTypes(RecordTypePtr t) {
     if (!t->fieldsInitialized)
         initializeRecordFields(t);
     return t->fieldTypes;
@@ -747,7 +759,7 @@ static void initializeVariantType(VariantTypePtr t) {
 
     EnvPtr variantEnv = new Env(t->variant->env);
     {
-        const vector<IdentifierPtr> &params = t->variant->params;
+        llvm::ArrayRef<IdentifierPtr> params = t->variant->params;
         IdentifierPtr varParam = t->variant->varParam;
         assert(params.size() <= t->params.size());
         for (size_t j = 0; j < params.size(); ++j)
@@ -770,12 +782,12 @@ static void initializeVariantType(VariantTypePtr t) {
     ExprListPtr defaultInstances = t->variant->defaultInstances;
     evaluateMultiType(defaultInstances, variantEnv, t->memberTypes);
 
-    const vector<InstancePtr> &instances = t->variant->instances;
+    llvm::ArrayRef<InstanceDeclPtr> instances = t->variant->instances;
     for (size_t i = 0; i < instances.size(); ++i) {
-        InstancePtr x = instances[i];
+        InstanceDeclPtr x = instances[i];
         vector<PatternCellPtr> cells;
         vector<MultiPatternCellPtr> multiCells;
-        const vector<PatternVar> &pvars = x->patternVars;
+        llvm::ArrayRef<PatternVar> pvars = x->patternVars;
         EnvPtr patternEnv = new Env(x->env);
         for (size_t j = 0; j < pvars.size(); ++j) {
             if (pvars[j].isMulti) {
@@ -822,7 +834,7 @@ static void initializeVariantType(VariantTypePtr t) {
     t->reprType = getVariantReprType(t);
 }
 
-const vector<TypePtr> &variantMemberTypes(VariantTypePtr t) {
+llvm::ArrayRef<TypePtr> variantMemberTypes(VariantTypePtr t) {
     if (!t->initialized)
         initializeVariantType(t);
     return t->memberTypes;
@@ -929,20 +941,20 @@ static void verifyRecursionCorrectness(TypePtr t,
     }
     case RECORD_TYPE : {
         RecordType *rt = (RecordType *)t.ptr();
-        const vector<TypePtr> &fieldTypes = recordFieldTypes(rt);
+        llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(rt);
         for (unsigned i = 0; i < fieldTypes.size(); ++i)
             verifyRecursionCorrectness(fieldTypes[i], visited);
         break;
     }
     case VARIANT_TYPE : {
         VariantType *vt = (VariantType *)t.ptr();
-        const vector<TypePtr> &memberTypes = variantMemberTypes(vt);
+        llvm::ArrayRef<TypePtr> memberTypes = variantMemberTypes(vt);
         for (unsigned i = 0; i < memberTypes.size(); ++i)
             verifyRecursionCorrectness(memberTypes[i], visited);
         break;
     }
     case NEW_TYPE : {
-        NewTypeType *nt = (NewTypeType *)t.ptr();
+        NewType *nt = (NewType *)t.ptr();
         verifyRecursionCorrectness(nt->newtype->baseType, visited);
         break;
     }
@@ -1325,7 +1337,7 @@ static void declareLLVMType(TypePtr t) {
         break;
     }
     case NEW_TYPE : {
-        NewTypeType *x = (NewTypeType *)t.ptr();
+        NewType *x = (NewType *)t.ptr();
         TypePtr reprType = newtypeReprType(x);
         if (!reprType->llType)
             declareLLVMType(reprType);
@@ -1504,10 +1516,10 @@ static void defineLLVMType(TypePtr t) {
 
         llvm::StructType *theType = llvm::cast<llvm::StructType>(t->llType);
 
-        const vector<IdentifierPtr> &fieldNames = recordFieldNames(x);
-        const vector<TypePtr> &fieldTypes = recordFieldTypes(x);
+        llvm::ArrayRef<IdentifierPtr> fieldNames = recordFieldNames(x);
+        llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(x);
         vector<llvm::Type *> llTypes;
-        vector<TypePtr>::const_iterator i, end;
+        TypePtr const *i, *end;
         for (i = fieldTypes.begin(), end = fieldTypes.end(); i != end; ++i)
             llTypes.push_back(llvmType(*i));
         if (fieldTypes.empty())
@@ -1581,7 +1593,7 @@ static void defineLLVMType(TypePtr t) {
         break;
     }
     case NEW_TYPE : {
-        NewTypeType *x = (NewTypeType *)t.ptr();
+        NewType *x = (NewType *)t.ptr();
         TypePtr reprType = newtypeReprType(x);
         if (!reprType->llType)
             declareLLVMType(reprType);

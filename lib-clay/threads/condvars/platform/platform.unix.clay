@@ -1,0 +1,50 @@
+import threads.condvars.protocol.(ConditionVariableMutex, wait, notifyOne, notifyAll);
+import threads.locks.platform.(Mutex);
+import unix.(
+    pthread_cond_t,
+    pthread_condattr_t,
+    pthread_cond_init,
+    pthread_cond_destroy,
+    pthread_cond_wait,
+    pthread_cond_timedwait,
+    pthread_cond_signal,
+    pthread_cond_broadcast,
+);
+import os.errors.(GenericOSError);
+
+record ConditionVariable (_pcond:pthread_cond_t);
+overload RegularRecord?(#ConditionVariable) = false;
+
+overload ConditionVariable() --> returned:ConditionVariable
+{
+    var ok = pthread_cond_init(@returned._pcond, null(pthread_condattr_t));
+    if (ok != 0)
+        throw GenericOSError(ok, "pthread_cond_init");
+}
+
+overload destroy(cv:ConditionVariable) :
+{
+    // can fail if cv is being waited on; what to do?
+    var ok = pthread_cond_destroy(@cv._pcond);
+    assert(ok == 0);
+}
+
+overload ConditionVariableMutex(#ConditionVariable) = Mutex;
+
+overload wait(cv:ConditionVariable, m:Mutex) :
+{
+    var ok = pthread_cond_wait(@cv._pcond, @m._pmutex);
+    assert(ok == 0);
+}
+
+overload notifyOne(cv:ConditionVariable) :
+{
+    var ok = pthread_cond_signal(@cv._pcond);
+    assert(ok == 0);
+}
+
+overload notifyAll(cv:ConditionVariable) :
+{
+    var ok = pthread_cond_broadcast(@cv._pcond);
+    assert(ok == 0);
+}

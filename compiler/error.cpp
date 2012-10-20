@@ -1,4 +1,10 @@
 #include "clay.hpp"
+#include "evaluator.hpp"
+#include "codegen.hpp"
+#include "matchinvoke.hpp"
+#include "invoketables.hpp"
+#include "error.hpp"
+
 
 namespace clay {
 
@@ -22,7 +28,7 @@ void pushCompileContext(ObjectPtr obj) {
     contextStack.push_back(CompileContextEntry(obj));
 }
 
-void pushCompileContext(ObjectPtr obj, const vector<ObjectPtr> &params) {
+void pushCompileContext(ObjectPtr obj, llvm::ArrayRef<ObjectPtr> params) {
     if (contextStack.size() >= RECURSION_WARNING_LEVEL)
         warning("potential runaway recursion");
     if (!contextStack.empty())
@@ -30,7 +36,7 @@ void pushCompileContext(ObjectPtr obj, const vector<ObjectPtr> &params) {
     contextStack.push_back(CompileContextEntry(obj, params));
 }
 
-void pushCompileContext(ObjectPtr obj, const vector<ObjectPtr> &params, const vector<unsigned> &dispatchIndices) {
+void pushCompileContext(ObjectPtr obj, llvm::ArrayRef<ObjectPtr> params, llvm::ArrayRef<unsigned> dispatchIndices) {
     if (contextStack.size() >= RECURSION_WARNING_LEVEL)
         warning("potential runaway recursion");
     if (!contextStack.empty())
@@ -46,7 +52,7 @@ vector<CompileContextEntry> getCompileContext() {
     return contextStack;
 }
 
-void setCompileContext(const vector<CompileContextEntry> &x) {
+void setCompileContext(llvm::ArrayRef<CompileContextEntry> x) {
     contextStack = x;
 }
 
@@ -202,7 +208,7 @@ extern "C" void displayCompileContext() {
     llvm::raw_string_ostream errs(buf);
     for (size_t i = contextStack.size(); i > 0; --i) {
         ObjectPtr obj = contextStack[i-1].callable;
-        const vector<ObjectPtr> &params = contextStack[i-1].params;
+        llvm::ArrayRef<ObjectPtr> params = contextStack[i-1].params;
 
         if (i < contextStack.size() && contextStack[i-1].location.ok()) {
             errs << "  ";
@@ -430,7 +436,7 @@ void argumentInvalidStaticObjectError(unsigned int index, ObjectPtr obj)
     argumentError(index, sout.str());
 }
 
-void matchBindingError(MatchResultPtr result)
+void matchBindingError(MatchResultPtr const &result)
 {
     string buf;
     llvm::raw_string_ostream sout(buf);

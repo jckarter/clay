@@ -1,0 +1,7 @@
+define lock(l) :;
+define unlock(l) :; // cannot throw
+define tryLock(l) : Bool;
+
+Lock?(L) = CallDefined?(lock, L)
+    and CallDefined?(unlock, L)
+    and CallDefined?(tryLock, L);

@@ -337,30 +337,7 @@ public :
     }
 };
 
-
-//
-// Object
-//
 
-struct Object {
-    int refCount;
-    int objKind;
-    Object(int objKind)
-        : refCount(0), objKind(objKind) {}
-    void incRef() { ++refCount; }
-    void decRef() {
-        if (--refCount == 0)
-            dealloc();
-    }
-    void operator delete(void*) {}
-    virtual void dealloc() { ::operator delete(this); }
-    virtual ~Object() { dealloc(); }
-};
-
-typedef Pointer<Object> ObjectPtr;
-
-
-
 //
 // ObjectKind
 //
@@ -383,15 +360,15 @@ enum ObjectKind {
     LLVM_CODE,
     CODE,
 
-    RECORD,
+    RECORD_DECL,
     RECORD_BODY,
     RECORD_FIELD, // -- 15
-    VARIANT,
-    INSTANCE,
-    NEWTYPE,
+    VARIANT_DECL,
+    INSTANCE_DECL,
+    NEW_TYPE_DECL,
     OVERLOAD,
     PROCEDURE,   // -- 20
-    ENUMERATION,   
+    ENUM_DECL,   
     ENUM_MEMBER,
     GLOBAL_VARIABLE,
     EXTERNAL_PROCEDURE,
@@ -432,6 +409,28 @@ enum ObjectKind {
 
     DONT_CARE
 };
+
+
+//
+// Object
+//
+
+struct Object {
+    int refCount;
+    ObjectKind objKind;
+    Object(ObjectKind objKind)
+        : refCount(0), objKind(objKind) {}
+    void incRef() { ++refCount; }
+    void decRef() {
+        if (--refCount == 0)
+            dealloc();
+    }
+    void operator delete(void*) {}
+    virtual void dealloc() { ::operator delete(this); }
+    virtual ~Object() { dealloc(); }
+};
+
+typedef Pointer<Object> ObjectPtr;
 
 
 
@@ -510,15 +509,15 @@ struct LLVMCode;
 struct Code;
 
 struct TopLevelItem;
-struct Record;
+struct RecordDecl;
 struct RecordBody;
 struct RecordField;
-struct Variant;
-struct Instance;
-struct NewType;
+struct VariantDecl;
+struct InstanceDecl;
+struct NewTypeDecl;
 struct Overload;
 struct Procedure;
-struct Enumeration;
+struct EnumDecl;
 struct EnumMember;
 struct GlobalVariable;
 struct GVarInstance;
@@ -558,7 +557,7 @@ struct RecordType;
 struct VariantType;
 struct StaticType;
 struct EnumType;
-struct NewTypeType;
+struct NewType;
 
 struct Pattern;
 struct PatternCell;
@@ -583,6 +582,9 @@ struct MultiCValue;
 struct ObjectTable;
 
 struct ValueStackEntry;
+
+struct MatchResult;
+struct MatchFailureError;
 
 
 //
@@ -660,15 +662,15 @@ typedef Pointer<LLVMCode> LLVMCodePtr;
 typedef Pointer<Code> CodePtr;
 
 typedef Pointer<TopLevelItem> TopLevelItemPtr;
-typedef Pointer<Record> RecordPtr;
+typedef Pointer<RecordDecl> RecordDeclPtr;
 typedef Pointer<RecordBody> RecordBodyPtr;
 typedef Pointer<RecordField> RecordFieldPtr;
-typedef Pointer<Variant> VariantPtr;
-typedef Pointer<Instance> InstancePtr;
-typedef Pointer<NewType> NewTypePtr;
+typedef Pointer<VariantDecl> VariantDeclPtr;
+typedef Pointer<InstanceDecl> InstanceDeclPtr;
+typedef Pointer<NewTypeDecl> NewTypeDeclPtr;
 typedef Pointer<Overload> OverloadPtr;
 typedef Pointer<Procedure> ProcedurePtr;
-typedef Pointer<Enumeration> EnumerationPtr;
+typedef Pointer<EnumDecl> EnumDeclPtr;
 typedef Pointer<EnumMember> EnumMemberPtr;
 typedef Pointer<GlobalVariable> GlobalVariablePtr;
 typedef Pointer<GVarInstance> GVarInstancePtr;
@@ -708,7 +710,7 @@ typedef Pointer<RecordType> RecordTypePtr;
 typedef Pointer<VariantType> VariantTypePtr;
 typedef Pointer<StaticType> StaticTypePtr;
 typedef Pointer<EnumType> EnumTypePtr;
-typedef Pointer<NewTypeType> NewTypeTypePtr;
+typedef Pointer<NewType> NewTypePtr;
 
 typedef Pointer<Pattern> PatternPtr;
 typedef Pointer<PatternCell> PatternCellPtr;
@@ -730,6 +732,8 @@ typedef Pointer<CValue> CValuePtr;
 typedef Pointer<MultiCValue> MultiCValuePtr;
 
 typedef Pointer<ObjectTable> ObjectTablePtr;
+
+typedef Pointer<MatchResult> MatchResultPtr;
 
 
 
@@ -788,9 +792,6 @@ struct Location {
 // error module
 //
 
-extern bool shouldPrintFullMatchErrors;
-extern set<pair<string,string> > logMatchSymbols;
-
 struct CompileContextEntry {
     ObjectPtr callable;
     bool hasParams;
@@ -802,40 +803,40 @@ struct CompileContextEntry {
     CompileContextEntry(ObjectPtr callable)
         : callable(callable), hasParams(false) {}
 
-    CompileContextEntry(ObjectPtr callable, const vector<ObjectPtr> &params)
+    CompileContextEntry(ObjectPtr callable, llvm::ArrayRef<ObjectPtr> params)
         : callable(callable), hasParams(true), params(params) {}
 
     CompileContextEntry(ObjectPtr callable,
-                        const vector<ObjectPtr> &params,
-                        const vector<unsigned> &dispatchIndices)
+                        llvm::ArrayRef<ObjectPtr> params,
+                        llvm::ArrayRef<unsigned> dispatchIndices)
         : callable(callable), hasParams(true), params(params), dispatchIndices(dispatchIndices) {}
 };
 
 void pushCompileContext(ObjectPtr obj);
-void pushCompileContext(ObjectPtr obj, const vector<ObjectPtr> &params);
+void pushCompileContext(ObjectPtr obj, llvm::ArrayRef<ObjectPtr> params);
 void pushCompileContext(ObjectPtr obj,
-                        const vector<ObjectPtr> &params,
-                        const vector<unsigned> &dispatchIndices);
+                        llvm::ArrayRef<ObjectPtr> params,
+                        llvm::ArrayRef<unsigned> dispatchIndices);
 void popCompileContext();
 vector<CompileContextEntry> getCompileContext();
-void setCompileContext(const vector<CompileContextEntry> &x);
+void setCompileContext(llvm::ArrayRef<CompileContextEntry> x);
 
 struct CompileContextPusher {
     CompileContextPusher(ObjectPtr obj) {
         pushCompileContext(obj);
     }
-    CompileContextPusher(ObjectPtr obj, const vector<ObjectPtr> &params) {
+    CompileContextPusher(ObjectPtr obj, llvm::ArrayRef<ObjectPtr> params) {
         pushCompileContext(obj, params);
     }
-    CompileContextPusher(ObjectPtr obj, const vector<TypePtr> &params) {
+    CompileContextPusher(ObjectPtr obj, llvm::ArrayRef<TypePtr> params) {
         vector<ObjectPtr> params2;
         for (unsigned i = 0; i < params.size(); ++i)
             params2.push_back((Object *)(params[i].ptr()));
         pushCompileContext(obj, params2);
     }
     CompileContextPusher(ObjectPtr obj,
-                         const vector<TypePtr> &params,
-                         const vector<unsigned> &dispatchIndices) {
+                         llvm::ArrayRef<TypePtr> params,
+                         llvm::ArrayRef<unsigned> dispatchIndices) {
         vector<ObjectPtr> params2;
         for (unsigned i = 0; i < params.size(); ++i)
             params2.push_back((Object *)(params[i].ptr()));
@@ -870,7 +871,7 @@ void warning(llvm::Twine const &msg);
 void fmtError(const char *fmt, ...);
 
 template <class T>
-void error(Pointer<T> context, llvm::Twine const &msg)
+inline void error(Pointer<T> context, llvm::Twine const &msg)
 {
     if (context->location.ok())
         pushLocation(context->location);
@@ -878,7 +879,7 @@ void error(Pointer<T> context, llvm::Twine const &msg)
 }
 
 template <class T>
-void error(T const *context, llvm::Twine const &msg)
+inline void error(T const *context, llvm::Twine const &msg)
 {
     error(context->location, msg);
 }
@@ -889,7 +890,7 @@ void arityError(int expected, int received);
 void arityError2(int minExpected, int received);
 
 template <class T>
-void arityError(Pointer<T> context, int expected, int received)
+inline void arityError(Pointer<T> context, int expected, int received)
 {
     if (context->location.ok())
         pushLocation(context->location);
@@ -897,7 +898,7 @@ void arityError(Pointer<T> context, int expected, int received)
 }
 
 template <class T>
-void arityError2(Pointer<T> context, int minExpected, int received)
+inline void arityError2(Pointer<T> context, int minExpected, int received)
 {
     if (context->location.ok())
         pushLocation(context->location);
@@ -910,14 +911,14 @@ void ensureArity(MultiPValuePtr args, size_t size);
 void ensureArity(MultiCValuePtr args, size_t size);
 
 template <class T>
-void ensureArity(const vector<T> &args, size_t size)
+inline void ensureArity(T const &args, size_t size)
 {
     if (args.size() != size)
         arityError(size, args.size());
 }
-
+    
 template <class T>
-void ensureArity2(const vector<T> &args, size_t size, bool hasVarArgs)
+inline void ensureArity2(T const &args, size_t size, bool hasVarArgs)
 {
     if (!hasVarArgs)
         ensureArity(args, size);
@@ -969,54 +970,6 @@ extern "C" void displayCompileContext();
 
 
 //
-// Token
-//
-
-enum TokenKind {
-    T_NONE,
-    T_UOPSTRING,
-    T_OPSTRING,
-    T_SYMBOL,
-    T_KEYWORD,
-    T_IDENTIFIER,
-    T_STRING_LITERAL,
-    T_CHAR_LITERAL,
-    T_INT_LITERAL,
-    T_FLOAT_LITERAL,
-    T_STATIC_INDEX,
-    T_SPACE,
-    T_LINE_COMMENT,
-    T_BLOCK_COMMENT,
-    T_LLVM,
-    T_DOC_START,
-    T_DOC_PROPERTY,
-    T_DOC_TEXT,
-    T_DOC_END
-};
-
-struct Token {
-    Location location;
-    llvm::SmallString<16> str;
-    int tokenKind;
-    Token() : tokenKind(T_NONE) {}
-    explicit Token(int tokenKind) : tokenKind(tokenKind) {}
-    explicit Token(int tokenKind, llvm::StringRef str) : str(str), tokenKind(tokenKind) {}
-};
-
-
-
-//
-// lexer module
-//
-
-void tokenize(SourcePtr source, vector<Token> &tokens);
-
-void tokenize(SourcePtr source, size_t offset, size_t length,
-              vector<Token> &tokens);
-
-bool isSpace(char c);
-
-//
 // AST
 //
 
@@ -1024,7 +977,7 @@ static llvm::BumpPtrAllocator *ANodeAllocator = new llvm::BumpPtrAllocator();
 
 struct ANode : public Object {
     Location location;
-    ANode(int objKind)
+    ANode(ObjectKind objKind)
         : Object(objKind) {}
     void *operator new(size_t num_bytes) {
         return ANodeAllocator->Allocate(num_bytes, llvm::AlignOf<ANode>::Alignment);
@@ -1251,10 +1204,10 @@ enum VariadicOpKind {
 };
 
 struct VariadicOp : public Expr {
-    int op;
+    VariadicOpKind op;
     ExprListPtr exprs;
     ExprPtr desugared;
-    VariadicOp(int op, ExprListPtr exprs )
+    VariadicOp(VariadicOpKind op, ExprListPtr exprs )
         : Expr(VARIADIC_OP), op(op), exprs(exprs) {}
 };
 
@@ -1298,7 +1251,7 @@ struct Lambda : public Expr {
     ProcedureMono mono;
 
     // if freevars are present
-    RecordPtr lambdaRecord;
+    RecordDeclPtr lambdaRecord;
     TypePtr lambdaType;
 
     // if freevars are absent
@@ -1308,7 +1261,7 @@ struct Lambda : public Expr {
         Expr(LAMBDA), captureByRef(captureByRef),
         hasVarArg(false), initialized(false) {}
     Lambda(bool captureByRef,
-           const vector<FormalArgPtr> &formalArgs,
+           llvm::ArrayRef<FormalArgPtr> formalArgs,
            bool hasVarArg, StatementPtr body)
         : Expr(LAMBDA), captureByRef(captureByRef),
           formalArgs(formalArgs), hasVarArg(hasVarArg),
@@ -1382,7 +1335,7 @@ struct ExprList : public Object {
         : Object(EXPR_LIST) {
         exprs.push_back(x);
     }
-    ExprList(const vector<ExprPtr> &exprs)
+    ExprList(llvm::ArrayRef<ExprPtr> exprs)
         : Object(EXPR_LIST), exprs(exprs) {}
     size_t size() const { return exprs.size(); }
     void add(ExprPtr x) { exprs.push_back(x); }
@@ -1450,7 +1403,7 @@ struct Block : public Statement {
     vector<StatementPtr> statements;
     Block()
         : Statement(BLOCK) {}
-    Block(const vector<StatementPtr> &statements)
+    Block(llvm::ArrayRef<StatementPtr> statements)
         : Statement(BLOCK), statements(statements) {}
 };
 
@@ -1470,23 +1423,23 @@ enum BindingKind {
 struct PatternVar;
 
 struct Binding : public Statement {
-    int bindingKind;
+    BindingKind bindingKind;
     vector<PatternVar> patternVars;
     vector<ObjectPtr> patternTypes;
     ExprPtr predicate;
     vector<FormalArgPtr> args;
     ExprListPtr values;
     bool hasVarArg;
-    Binding(int bindingKind,
-        const vector<FormalArgPtr> &args,
+    Binding(BindingKind bindingKind,
+        llvm::ArrayRef<FormalArgPtr> args,
         ExprListPtr values)
         : Statement(BINDING), bindingKind(bindingKind),
           args(args), values(values), hasVarArg(false) {}
-    Binding(int bindingKind,
-        const vector<PatternVar> &patternVars,
-        const vector<ObjectPtr> &patternTypes,
+    Binding(BindingKind bindingKind,
+        llvm::ArrayRef<PatternVar> patternVars,
+        llvm::ArrayRef<ObjectPtr> patternTypes,
         ExprPtr predicate,
-        const vector<FormalArgPtr> &args,
+        llvm::ArrayRef<FormalArgPtr> args,
         ExprListPtr values, bool hasVarArg)
         : Statement(BINDING), bindingKind(bindingKind),
           patternVars(patternVars),
@@ -1556,11 +1509,11 @@ struct If : public Statement {
     If(ExprPtr condition, StatementPtr thenPart, StatementPtr elsePart)
         : Statement(IF), condition(condition), thenPart(thenPart),
           elsePart(elsePart) {}
-    If(const vector<StatementPtr> &conditionStatements,
+    If(llvm::ArrayRef<StatementPtr> conditionStatements,
         ExprPtr condition, StatementPtr thenPart)
         : Statement(IF), conditionStatements(conditionStatements),
           condition(condition), thenPart(thenPart) {}
-    If(const vector<StatementPtr> &conditionStatements,
+    If(llvm::ArrayRef<StatementPtr> conditionStatements,
         ExprPtr condition, StatementPtr thenPart, StatementPtr elsePart)
         : Statement(IF), conditionStatements(conditionStatements),
           condition(condition), thenPart(thenPart),
@@ -1575,15 +1528,15 @@ struct Switch : public Statement {
 
     StatementPtr desugared;
 
-    Switch(const vector<StatementPtr> &exprStatements,
+    Switch(llvm::ArrayRef<StatementPtr> exprStatements,
            ExprPtr expr,
-           const vector<CaseBlockPtr> &caseBlocks,
+           llvm::ArrayRef<CaseBlockPtr> caseBlocks,
            StatementPtr defaultCase)
         : Statement(SWITCH), exprStatements(exprStatements),
           expr(expr), caseBlocks(caseBlocks),
           defaultCase(defaultCase) {}
     Switch(ExprPtr expr,
-           const vector<CaseBlockPtr> &caseBlocks,
+           llvm::ArrayRef<CaseBlockPtr> caseBlocks,
            StatementPtr defaultCase)
         : Statement(SWITCH), expr(expr), caseBlocks(caseBlocks),
           defaultCase(defaultCase) {}
@@ -1610,7 +1563,7 @@ struct While : public Statement {
 
     While(ExprPtr condition, StatementPtr body)
         : Statement(WHILE), condition(condition), body(body) {}
-    While(const vector<StatementPtr> &conditionStatements,
+    While(llvm::ArrayRef<StatementPtr> conditionStatements,
         ExprPtr condition, StatementPtr body)
         : Statement(WHILE), conditionStatements(conditionStatements),
           condition(condition), body(body) {}
@@ -1631,7 +1584,7 @@ struct For : public Statement {
     ExprPtr expr;
     StatementPtr body;
     StatementPtr desugared;
-    For(const vector<IdentifierPtr> &variables,
+    For(llvm::ArrayRef<IdentifierPtr> variables,
         ExprPtr expr,
         StatementPtr body)
         : Statement(FOR), variables(variables), expr(expr), body(body) {}
@@ -1810,10 +1763,10 @@ struct Code : public ANode {
 
     Code()
         : ANode(CODE),  hasVarArg(false), returnSpecsDeclared(false) {}
-    Code(const vector<PatternVar> &patternVars,
+    Code(llvm::ArrayRef<PatternVar> patternVars,
          ExprPtr predicate,
-         const vector<FormalArgPtr> &formalArgs,
-         const vector<ReturnSpecPtr> &returnSpecs,
+         llvm::ArrayRef<FormalArgPtr> formalArgs,
+         llvm::ArrayRef<ReturnSpecPtr> returnSpecs,
          ReturnSpecPtr varReturnSpec,
          StatementPtr body)
         : ANode(CODE), patternVars(patternVars), predicate(predicate),
@@ -1860,15 +1813,15 @@ struct TopLevelItem : public ANode {
     EnvPtr env;
     IdentifierPtr name; // for named top level items
     Visibility visibility; // valid only if name != NULL
-    TopLevelItem(int objKind)
+    TopLevelItem(ObjectKind objKind)
         : ANode(objKind) {}
-    TopLevelItem(int objKind, Visibility visibility)
+    TopLevelItem(ObjectKind objKind, Visibility visibility)
         : ANode(objKind), visibility(visibility) {}
-    TopLevelItem(int objKind, IdentifierPtr name, Visibility visibility)
+    TopLevelItem(ObjectKind objKind, IdentifierPtr name, Visibility visibility)
         : ANode(objKind), name(name), visibility(visibility) {}
 };
 
-struct Record : public TopLevelItem {
+struct RecordDecl : public TopLevelItem {
     vector<PatternVar> patternVars;
     ExprPtr predicate;
 
@@ -1882,23 +1835,23 @@ struct Record : public TopLevelItem {
 
     LambdaPtr lambda;
 
-    Record(Visibility visibility)
-        : TopLevelItem(RECORD, visibility),
+    RecordDecl(Visibility visibility)
+        : TopLevelItem(RECORD_DECL, visibility),
           builtinOverloadInitialized(false) {}
-    Record(Visibility visibility,
-           const vector<PatternVar> &patternVars, ExprPtr predicate)
-        : TopLevelItem(RECORD, visibility),
+    RecordDecl(Visibility visibility,
+           llvm::ArrayRef<PatternVar> patternVars, ExprPtr predicate)
+        : TopLevelItem(RECORD_DECL, visibility),
           patternVars(patternVars),
           predicate(predicate),
           builtinOverloadInitialized(false) {}
-    Record(IdentifierPtr name,
+    RecordDecl(IdentifierPtr name,
            Visibility visibility,
-           const vector<PatternVar> &patternVars,
+           llvm::ArrayRef<PatternVar> patternVars,
            ExprPtr predicate,
-           const vector<IdentifierPtr> &params,
+           llvm::ArrayRef<IdentifierPtr> params,
            IdentifierPtr varParam,
            RecordBodyPtr body)
-        : TopLevelItem(RECORD, name, visibility),
+        : TopLevelItem(RECORD_DECL, name, visibility),
           patternVars(patternVars), predicate(predicate),
           params(params), varParam(varParam), body(body),
           builtinOverloadInitialized(false) {}
@@ -1910,7 +1863,7 @@ struct RecordBody : public ANode {
     vector<RecordFieldPtr> fields; // valid if isComputed == false
     RecordBody(ExprListPtr computed)
         : ANode(RECORD_BODY), isComputed(true), computed(computed) {}
-    RecordBody(const vector<RecordFieldPtr> &fields)
+    RecordBody(llvm::ArrayRef<RecordFieldPtr> fields)
         : ANode(RECORD_BODY), isComputed(false), fields(fields) {}
 };
 
@@ -1921,7 +1874,7 @@ struct RecordField : public ANode {
         : ANode(RECORD_FIELD), name(name), type(type) {}
 };
 
-struct Variant : public TopLevelItem {
+struct VariantDecl : public TopLevelItem {
     vector<PatternVar> patternVars;
     ExprPtr predicate;
 
@@ -1931,35 +1884,35 @@ struct Variant : public TopLevelItem {
     bool open;
     ExprListPtr defaultInstances;
 
-    vector<InstancePtr> instances;
+    vector<InstanceDeclPtr> instances;
 
     vector<OverloadPtr> overloads;
 
-    Variant(IdentifierPtr name,
+    VariantDecl(IdentifierPtr name,
             Visibility visibility,
-            const vector<PatternVar> &patternVars,
+            llvm::ArrayRef<PatternVar> patternVars,
             ExprPtr predicate,
-            const vector<IdentifierPtr> &params,
+            llvm::ArrayRef<IdentifierPtr> params,
             IdentifierPtr varParam,
             bool open,
             ExprListPtr defaultInstances)
-        : TopLevelItem(VARIANT, name, visibility),
+        : TopLevelItem(VARIANT_DECL, name, visibility),
           patternVars(patternVars), predicate(predicate),
           params(params), varParam(varParam),
           open(open), defaultInstances(defaultInstances) {}
 };
 
-struct Instance : public TopLevelItem {
+struct InstanceDecl : public TopLevelItem {
     vector<PatternVar> patternVars;
     ExprPtr predicate;
     ExprPtr target;
     ExprListPtr members;
 
-    Instance(const vector<PatternVar> &patternVars,
+    InstanceDecl(llvm::ArrayRef<PatternVar> patternVars,
              ExprPtr predicate,
              ExprPtr target,
              ExprListPtr members)
-        : TopLevelItem(INSTANCE), patternVars(patternVars),
+        : TopLevelItem(INSTANCE_DECL), patternVars(patternVars),
           predicate(predicate), target(target), members(members)
         {}
 };
@@ -2012,32 +1965,34 @@ struct Procedure : public TopLevelItem {
 };
 
 
-struct NewType : public TopLevelItem {
+struct NewTypeDecl : public TopLevelItem {
     ExprPtr expr;
     TypePtr type;
     TypePtr baseType;
     bool initialized;
-    NewType(IdentifierPtr name,
+    NewTypeDecl(IdentifierPtr name,
             Visibility visibility,
             ExprPtr expr)
-        : TopLevelItem(NEWTYPE, name, visibility), expr(expr),
+        : TopLevelItem(NEW_TYPE_DECL, name, visibility), expr(expr),
         initialized(false) {}
+    
+    
 };
 
-struct Enumeration : public TopLevelItem {
+struct EnumDecl : public TopLevelItem {
     vector<PatternVar> patternVars;
     ExprPtr predicate;
 
     vector<EnumMemberPtr> members;
     TypePtr type;
-    Enumeration(IdentifierPtr name, Visibility visibility,
-        const vector<PatternVar> &patternVars, ExprPtr predicate)
-        : TopLevelItem(ENUMERATION, name, visibility),
+    EnumDecl(IdentifierPtr name, Visibility visibility,
+        llvm::ArrayRef<PatternVar> patternVars, ExprPtr predicate)
+        : TopLevelItem(ENUM_DECL, name, visibility),
           patternVars(patternVars), predicate(predicate) {}
-    Enumeration(IdentifierPtr name, Visibility visibility,
-                const vector<PatternVar> &patternVars, ExprPtr predicate,
-                const vector<EnumMemberPtr> &members)
-        : TopLevelItem(ENUMERATION, name, visibility),
+    EnumDecl(IdentifierPtr name, Visibility visibility,
+                llvm::ArrayRef<PatternVar> patternVars, ExprPtr predicate,
+                llvm::ArrayRef<EnumMemberPtr> members)
+        : TopLevelItem(ENUM_DECL, name, visibility),
           patternVars(patternVars), predicate(predicate),
           members(members) {}
 };
@@ -2062,9 +2017,9 @@ struct GlobalVariable : public TopLevelItem {
 
     GlobalVariable(IdentifierPtr name,
                    Visibility visibility,
-                   const vector<PatternVar> &patternVars,
+                   llvm::ArrayRef<PatternVar> patternVars,
                    ExprPtr predicate,
-                   const vector<IdentifierPtr> &params,
+                   llvm::ArrayRef<IdentifierPtr> params,
                    IdentifierPtr varParam,
                    ExprPtr expr)
         : TopLevelItem(GLOBAL_VARIABLE, name, visibility),
@@ -2090,7 +2045,7 @@ struct GVarInstance : public Object {
     llvm::TrackingVH<llvm::MDNode> debugInfo;
 
     GVarInstance(GlobalVariablePtr gvar,
-                 const vector<ObjectPtr> &params)
+                 llvm::ArrayRef<ObjectPtr> params)
         : Object(DONT_CARE), gvar(gvar), params(params),
           analyzing(false), llGlobal(NULL), debugInfo(NULL) {}
 
@@ -2133,7 +2088,7 @@ struct ExternalProcedure : public TopLevelItem {
           analyzed(false), bodyCodegenned(false), llvmFunc(NULL), debugInfo(NULL) {}
     ExternalProcedure(IdentifierPtr name,
                       Visibility visibility,
-                      const vector<ExternalArgPtr> &args,
+                      llvm::ArrayRef<ExternalArgPtr> args,
                       bool hasVarArgs,
                       ExprPtr returnType,
                       StatementPtr body,
@@ -2240,9 +2195,9 @@ struct GlobalAlias : public TopLevelItem {
 
     GlobalAlias(IdentifierPtr name,
                 Visibility visibility,
-                const vector<PatternVar> &patternVars,
+                llvm::ArrayRef<PatternVar> patternVars,
                 ExprPtr predicate,
-                const vector<IdentifierPtr> &params,
+                llvm::ArrayRef<IdentifierPtr> params,
                 IdentifierPtr varParam,
                 ExprPtr expr)
         : TopLevelItem(GLOBAL_ALIAS, name, visibility),
@@ -2266,11 +2221,11 @@ enum ImportKind {
 };
 
 struct Import : public ANode {
-    int importKind;
+    ImportKind importKind;
     DottedNamePtr dottedName;
     Visibility visibility;
     ModulePtr module;
-    Import(int importKind, DottedNamePtr dottedName, Visibility visibility)
+    Import(ImportKind importKind, DottedNamePtr dottedName, Visibility visibility)
         : ANode(IMPORT), importKind(importKind), dottedName(dottedName),
           visibility(visibility) {}
 };
@@ -2396,10 +2351,10 @@ struct Module : public ANode {
           externalsGenerated(false),
           debugInfo(NULL) {}
     Module(llvm::StringRef moduleName,
-           const vector<ImportPtr> &imports,
+           llvm::ArrayRef<ImportPtr> imports,
            ModuleDeclarationPtr declaration,
            LLVMCodePtr topLevelLLVM,
-           const vector<TopLevelItemPtr> &topLevelItems)
+           llvm::ArrayRef<TopLevelItemPtr> topLevelItems)
         : ANode(MODULE), moduleName(moduleName), imports(imports),
           declaration(declaration),
           topLevelLLVM(topLevelLLVM), topLevelItems(topLevelItems),
@@ -2412,6 +2367,48 @@ struct Module : public ANode {
           debugInfo(NULL) {}
 
     llvm::DINameSpace getDebugInfo() { return llvm::DINameSpace(debugInfo); }
+};
+
+
+//
+// analyzer
+//
+
+struct PVData {
+    TypePtr type;
+    bool isTemp;
+    PVData() : type(NULL), isTemp(NULL) {}
+    PVData(TypePtr type, bool isTemp)
+        : type(type), isTemp(isTemp) {}
+
+    bool ok() const { return type != NULL; }
+
+    bool operator==(PVData const &x) const { return type == x.type && isTemp == x.isTemp; }
+};
+
+struct PValue : public Object {
+    PVData data;
+    PValue(TypePtr type, bool isTemp)
+        : Object(PVALUE), data(type, isTemp) {}
+    PValue(PVData data)
+        : Object(PVALUE), data(data) {}
+};
+
+struct MultiPValue : public Object {
+    llvm::SmallVector<PVData, 4> values;
+    MultiPValue()
+        : Object(MULTI_PVALUE) {}
+    MultiPValue(PVData const &pv)
+        : Object(MULTI_PVALUE) {
+        values.push_back(pv);
+    }
+    MultiPValue(llvm::ArrayRef<PVData> values)
+        : Object(MULTI_PVALUE), values(values.begin(), values.end()) {}
+    size_t size() { return values.size(); }
+    void add(PVData const &x) { values.push_back(x); }
+    void add(MultiPValuePtr x) {
+        values.insert(values.end(), x->values.begin(), x->values.end());
+    }
 };
 
 
@@ -2464,9 +2461,9 @@ struct SafePrintNameEnabler {
     ~SafePrintNameEnabler() { disableSafePrintName(); }
 };
 
-void printNameList(llvm::raw_ostream &out, const vector<ObjectPtr> &x);
-void printNameList(llvm::raw_ostream &out, const vector<ObjectPtr> &x, const vector<unsigned> &dispatchIndices);
-void printNameList(llvm::raw_ostream &out, const vector<TypePtr> &x);
+void printNameList(llvm::raw_ostream &out, llvm::ArrayRef<ObjectPtr> x);
+void printNameList(llvm::raw_ostream &out, llvm::ArrayRef<ObjectPtr> x, llvm::ArrayRef<unsigned> dispatchIndices);
+void printNameList(llvm::raw_ostream &out, llvm::ArrayRef<TypePtr> x);
 void printStaticName(llvm::raw_ostream &out, ObjectPtr x);
 void printName(llvm::raw_ostream &out, ObjectPtr x);
 void printTypeAndValue(llvm::raw_ostream &out, EValuePtr ev);
@@ -2480,24 +2477,24 @@ string shortString(llvm::StringRef in);
 //
 
 CodePtr clone(CodePtr x);
-void clone(const vector<PatternVar> &x, vector<PatternVar> &out);
-void clone(const vector<IdentifierPtr> &x, vector<IdentifierPtr> &out);
+void clone(llvm::ArrayRef<PatternVar> x, vector<PatternVar> &out);
+void clone(llvm::ArrayRef<IdentifierPtr> x, vector<IdentifierPtr> &out);
 ExprPtr clone(ExprPtr x);
 ExprPtr cloneOpt(ExprPtr x);
 ExprListPtr clone(ExprListPtr x);
-void clone(const vector<FormalArgPtr> &x, vector<FormalArgPtr> &out);
+void clone(llvm::ArrayRef<FormalArgPtr> x, vector<FormalArgPtr> &out);
 FormalArgPtr clone(FormalArgPtr x);
 FormalArgPtr cloneOpt(FormalArgPtr x);
-void clone(const vector<ReturnSpecPtr> &x, vector<ReturnSpecPtr> &out);
+void clone(llvm::ArrayRef<ReturnSpecPtr> x, vector<ReturnSpecPtr> &out);
 ReturnSpecPtr clone(ReturnSpecPtr x);
 ReturnSpecPtr cloneOpt(ReturnSpecPtr x);
 StatementPtr clone(StatementPtr x);
 StatementPtr cloneOpt(StatementPtr x);
-void clone(const vector<StatementPtr> &x, vector<StatementPtr> &out);
+void clone(llvm::ArrayRef<StatementPtr> x, vector<StatementPtr> &out);
 CaseBlockPtr clone(CaseBlockPtr x);
-void clone(const vector<CaseBlockPtr> &x, vector<CaseBlockPtr> &out);
+void clone(llvm::ArrayRef<CaseBlockPtr> x, vector<CaseBlockPtr> &out);
 CatchPtr clone(CatchPtr x);
-void clone(const vector<CatchPtr> &x, vector<CatchPtr> &out);
+void clone(llvm::ArrayRef<CatchPtr> x, vector<CatchPtr> &out);
 
 
 
@@ -2554,237 +2551,6 @@ void runInteractive(llvm::Module *llvmModule, ModulePtr module);
 
 
 //
-// loader module
-//
-
-extern llvm::StringMap<ModulePtr> globalModules;
-extern llvm::StringMap<string> globalFlags;
-extern ModulePtr globalMainModule;
-
-void addProcedureOverload(ProcedurePtr proc, EnvPtr Env, OverloadPtr x);
-void getProcedureMonoTypes(ProcedureMono &mono, EnvPtr env,
-    vector<FormalArgPtr> const &formalArgs, bool hasVarArg);
-
-void initLoader();
-void setSearchPath(const std::vector<PathString>& path);
-ModulePtr loadProgram(llvm::StringRef fileName, vector<string> *sourceFiles, bool verbose);
-ModulePtr loadProgramSource(llvm::StringRef name, llvm::StringRef source, bool verbose);
-ModulePtr loadedModule(llvm::StringRef module);
-llvm::StringRef primOpName(PrimOpPtr x);
-ModulePtr preludeModule();
-ModulePtr primitivesModule();
-ModulePtr operatorsModule();
-ModulePtr staticModule(ObjectPtr x);
-
-void addGlobals(ModulePtr m, const vector<TopLevelItemPtr>& toplevels);
-void loadDependent(ModulePtr m, vector<string> *sourceFiles, ImportPtr dependent, bool verbose);
-void initModule(ModulePtr m);
-
-//
-// PrimOp
-//
-
-enum PrimOpCode {
-    PRIM_TypeP,
-    PRIM_TypeSize,
-    PRIM_TypeAlignment,
-
-    PRIM_SymbolP,
-    
-    PRIM_StaticCallDefinedP,
-    PRIM_StaticCallOutputTypes,
-
-    PRIM_StaticMonoP,
-    PRIM_StaticMonoInputTypes,
-
-    PRIM_bitcopy,
-    PRIM_bitcast,
-
-    PRIM_boolNot,
-
-    PRIM_numericAdd,
-    PRIM_numericSubtract,
-    PRIM_numericMultiply,
-    PRIM_floatDivide,
-    PRIM_numericNegate,
-
-    PRIM_integerQuotient,
-    PRIM_integerRemainder,
-    PRIM_integerShiftLeft,
-    PRIM_integerShiftRight,
-    PRIM_integerBitwiseAnd,
-    PRIM_integerBitwiseOr,
-    PRIM_integerBitwiseXor,
-    PRIM_integerBitwiseNot,
-    PRIM_integerEqualsP,
-    PRIM_integerLesserP,
-
-    PRIM_numericConvert,
-
-    PRIM_integerAddChecked,
-    PRIM_integerSubtractChecked,
-    PRIM_integerMultiplyChecked,
-    PRIM_integerQuotientChecked,
-    PRIM_integerRemainderChecked,
-    PRIM_integerNegateChecked,
-    PRIM_integerShiftLeftChecked,
-    PRIM_integerConvertChecked,
-
-    PRIM_floatOrderedEqualsP,
-    PRIM_floatOrderedLesserP,
-    PRIM_floatOrderedLesserEqualsP,
-    PRIM_floatOrderedGreaterP,
-    PRIM_floatOrderedGreaterEqualsP,
-    PRIM_floatOrderedNotEqualsP,
-    PRIM_floatOrderedP,
-    PRIM_floatUnorderedEqualsP,
-    PRIM_floatUnorderedLesserP,
-    PRIM_floatUnorderedLesserEqualsP,
-    PRIM_floatUnorderedGreaterP,
-    PRIM_floatUnorderedGreaterEqualsP,
-    PRIM_floatUnorderedNotEqualsP,
-    PRIM_floatUnorderedP,
-
-    PRIM_Pointer,
-
-    PRIM_addressOf,
-    PRIM_pointerDereference,
-    PRIM_pointerOffset,
-    PRIM_pointerToInt,
-    PRIM_intToPointer,
-    PRIM_nullPointer,
-
-    PRIM_CodePointer,
-    PRIM_makeCodePointer,
-
-    PRIM_AttributeStdCall,
-    PRIM_AttributeFastCall,
-    PRIM_AttributeThisCall,
-    PRIM_AttributeCCall,
-    PRIM_AttributeLLVMCall,
-    PRIM_AttributeDLLImport,
-    PRIM_AttributeDLLExport,
-
-    PRIM_ExternalCodePointer,
-    PRIM_makeExternalCodePointer,
-    PRIM_callExternalCodePointer,
-
-    PRIM_Array,
-    PRIM_arrayRef,
-    PRIM_arrayElements,
-
-    PRIM_Vec,
-
-    PRIM_Tuple,
-    PRIM_TupleElementCount,
-    PRIM_tupleRef,
-    PRIM_tupleElements,
-
-    PRIM_Union,
-    PRIM_UnionMemberCount,
-
-    PRIM_RecordP,
-    PRIM_RecordFieldCount,
-    PRIM_RecordFieldName,
-    PRIM_RecordWithFieldP,
-    PRIM_recordFieldRef,
-    PRIM_recordFieldRefByName,
-    PRIM_recordFields,
-
-    PRIM_VariantP,
-    PRIM_VariantMemberIndex,
-    PRIM_VariantMemberCount,
-    PRIM_VariantMembers,
-    PRIM_variantRepr,
-
-    PRIM_BaseType,
-
-    PRIM_Static,
-    PRIM_StaticName,
-    PRIM_staticIntegers,
-    PRIM_integers,
-    PRIM_staticFieldRef,
-
-    PRIM_MainModule,
-    PRIM_StaticModule,
-    PRIM_ModuleName,
-    PRIM_ModuleMemberNames,
-
-    PRIM_EnumP,
-    PRIM_EnumMemberCount,
-    PRIM_EnumMemberName,
-    PRIM_enumToInt,
-    PRIM_intToEnum,
-
-    PRIM_StringLiteralP,
-    PRIM_stringLiteralByteIndex,
-    PRIM_stringLiteralBytes,
-    PRIM_stringLiteralByteSize,
-    PRIM_stringLiteralByteSlice,
-    PRIM_stringLiteralConcat,
-    PRIM_stringLiteralFromBytes,
-
-    PRIM_stringTableConstant,
-
-    PRIM_FlagP,
-    PRIM_Flag,
-
-    PRIM_atomicFence,
-    PRIM_atomicRMW,
-    PRIM_atomicLoad,
-    PRIM_atomicStore,
-    PRIM_atomicCompareExchange,
-
-    PRIM_OrderUnordered,
-    PRIM_OrderMonotonic,
-    PRIM_OrderAcquire,
-    PRIM_OrderRelease,
-    PRIM_OrderAcqRel,
-    PRIM_OrderSeqCst,
-
-    PRIM_RMWXchg,
-    PRIM_RMWAdd,
-    PRIM_RMWSubtract,
-    PRIM_RMWAnd,
-    PRIM_RMWNAnd,
-    PRIM_RMWOr,
-    PRIM_RMWXor,
-    PRIM_RMWMin,
-    PRIM_RMWMax,
-    PRIM_RMWUMin,
-    PRIM_RMWUMax,
-
-    PRIM_ByRef,
-    PRIM_RecordWithProperties,
-
-    PRIM_activeException,
-
-    PRIM_memcpy,
-    PRIM_memmove,
-
-    PRIM_countValues,
-    PRIM_nthValue,
-    PRIM_withoutNthValue,
-    PRIM_takeValues,
-    PRIM_dropValues,
-
-    PRIM_LambdaRecordP,
-    PRIM_LambdaSymbolP,
-    PRIM_LambdaMonoP,
-    PRIM_LambdaMonoInputTypes,
-
-    PRIM_GetOverload
-};
-
-struct PrimOp : public Object {
-    int primOpCode;
-    PrimOp(int primOpCode)
-        : Object(PRIM_OP), primOpCode(primOpCode) {}
-};
-
-
-
-//
 // objects
 //
 
@@ -2811,9 +2577,9 @@ inline bool objectEquals(ObjectPtr a, ObjectPtr b) {
     return _objectValueEquals(a,b);
 }
 
-template <typename T>
-bool objectVectorEquals(const vector<Pointer<T> > &a,
-                        const vector<Pointer<T> > &b) {
+template <typename ObjectVectorA, typename ObjectVectorB>
+inline bool objectVectorEquals(ObjectVectorA const &a,
+                        ObjectVectorB const &b) {
     if (a.size() != b.size()) return false;
     for (unsigned i = 0; i < a.size(); ++i) {
         if (!objectEquals(a[i].ptr(), b[i].ptr()))
@@ -2822,8 +2588,8 @@ bool objectVectorEquals(const vector<Pointer<T> > &a,
     return true;
 }
 
-template <typename T>
-int objectVectorHash(const vector<Pointer<T> > &a) {
+template <typename ObjectVector>
+inline int objectVectorHash(ObjectVector const &a) {
     int h = 0;
     for (unsigned i = 0; i < a.size(); ++i)
         h += objectHash(a[i].ptr());
@@ -2833,7 +2599,7 @@ int objectVectorHash(const vector<Pointer<T> > &a) {
 struct ObjectTableNode {
     vector<ObjectPtr> key;
     ObjectPtr value;
-    ObjectTableNode(const vector<ObjectPtr> &key,
+    ObjectTableNode(llvm::ArrayRef<ObjectPtr> key,
                     ObjectPtr value)
         : key(key), value(value) {}
 };
@@ -2843,37 +2609,15 @@ struct ObjectTable : public Object {
     unsigned size;
 public :
     ObjectTable() : Object(DONT_CARE), size(0) {}
-    ObjectPtr &lookup(const vector<ObjectPtr> &key);
+    ObjectPtr &lookup(llvm::ArrayRef<ObjectPtr> key);
 private :
     void rehash();
 };
 
 
-
 //
-// types module
+// Types
 //
-
-struct Type : public Object {
-    int typeKind;
-    llvm::Type *llType;
-    llvm::TrackingVH<llvm::MDNode> debugInfo;
-    bool defined;
-
-    bool typeInfoInitialized;
-    size_t typeSize;
-    size_t typeAlignment;
-
-    bool overloadsInitialized;
-    vector<OverloadPtr> overloads;
-
-    Type(int typeKind)
-        : Object(TYPE), typeKind(typeKind),
-          llType(NULL), debugInfo(NULL), defined(false),
-          typeInfoInitialized(false), overloadsInitialized(false) {}
-
-    llvm::DIType getDebugInfo() { return llvm::DIType(debugInfo); }
-};
 
 enum TypeKind {
     BOOL_TYPE,
@@ -2892,6 +2636,27 @@ enum TypeKind {
     STATIC_TYPE,
     ENUM_TYPE,
     NEW_TYPE
+};
+
+struct Type : public Object {
+    TypeKind typeKind;
+    llvm::Type *llType;
+    llvm::TrackingVH<llvm::MDNode> debugInfo;
+    bool defined;
+
+    bool typeInfoInitialized;
+    size_t typeSize;
+    size_t typeAlignment;
+
+    bool overloadsInitialized;
+    vector<OverloadPtr> overloads;
+
+    Type(TypeKind typeKind)
+        : Object(TYPE), typeKind(typeKind),
+          llType(NULL), debugInfo(NULL), defined(false),
+          typeInfoInitialized(false), overloadsInitialized(false) {}
+
+    llvm::DIType getDebugInfo() { return llvm::DIType(debugInfo); }
 };
 
 struct BoolType : public Type {
@@ -2929,12 +2694,12 @@ struct PointerType : public Type {
 struct CodePointerType : public Type {
     vector<TypePtr> argTypes;
 
-    vector<bool> returnIsRef;
+    vector<uint8_t> returnIsRef;
     vector<TypePtr> returnTypes;
 
-    CodePointerType(const vector<TypePtr> &argTypes,
-                    const vector<bool> &returnIsRef,
-                    const vector<TypePtr> &returnTypes)
+    CodePointerType(llvm::ArrayRef<TypePtr> argTypes,
+                    llvm::ArrayRef<uint8_t> returnIsRef,
+                    llvm::ArrayRef<TypePtr> returnTypes)
         : Type(CODE_POINTER_TYPE), argTypes(argTypes),
           returnIsRef(returnIsRef), returnTypes(returnTypes) {}
 };
@@ -2950,7 +2715,7 @@ struct CCodePointerType : public Type {
     llvm::Type *getCallType();
 
     CCodePointerType(CallingConv callingConv,
-                     const vector<TypePtr> &argTypes,
+                     llvm::ArrayRef<TypePtr> argTypes,
                      bool hasVarArgs,
                      TypePtr returnType)
         : Type(CCODE_POINTER_TYPE), callingConv(callingConv),
@@ -2977,7 +2742,7 @@ struct TupleType : public Type {
     const llvm::StructLayout *layout;
     TupleType()
         : Type(TUPLE_TYPE), layout(NULL) {}
-    TupleType(const vector<TypePtr> &elementTypes)
+    TupleType(llvm::ArrayRef<TypePtr> elementTypes)
         : Type(TUPLE_TYPE), elementTypes(elementTypes),
           layout(NULL) {}
 };
@@ -2986,13 +2751,13 @@ struct UnionType : public Type {
     vector<TypePtr> memberTypes;
     UnionType()
         : Type(UNION_TYPE) {}
-    UnionType(const vector<TypePtr> &memberTypes)
+    UnionType(llvm::ArrayRef<TypePtr> memberTypes)
         : Type(UNION_TYPE), memberTypes(memberTypes)
         {}
 };
 
 struct RecordType : public Type {
-    RecordPtr record;
+    RecordDeclPtr record;
     vector<ObjectPtr> params;
 
     bool fieldsInitialized;
@@ -3002,26 +2767,26 @@ struct RecordType : public Type {
 
     const llvm::StructLayout *layout;
 
-    RecordType(RecordPtr record)
+    RecordType(RecordDeclPtr record)
         : Type(RECORD_TYPE), record(record), fieldsInitialized(false),
           layout(NULL) {}
-    RecordType(RecordPtr record, const vector<ObjectPtr> &params)
+    RecordType(RecordDeclPtr record, llvm::ArrayRef<ObjectPtr> params)
         : Type(RECORD_TYPE), record(record), params(params),
           fieldsInitialized(false), layout(NULL) {}
 };
 
 struct VariantType : public Type {
-    VariantPtr variant;
+    VariantDeclPtr variant;
     vector<ObjectPtr> params;
 
     bool initialized;
     vector<TypePtr> memberTypes;
     TypePtr reprType;
 
-    VariantType(VariantPtr variant)
+    VariantType(VariantDeclPtr variant)
         : Type(VARIANT_TYPE), variant(variant),
           initialized(false) {}
-    VariantType(VariantPtr variant, const vector<ObjectPtr> &params)
+    VariantType(VariantDeclPtr variant, llvm::ArrayRef<ObjectPtr> params)
         : Type(VARIANT_TYPE), variant(variant), params(params),
           initialized(false) {}
 };
@@ -3033,124 +2798,24 @@ struct StaticType : public Type {
 };
 
 struct EnumType : public Type {
-    EnumerationPtr enumeration;
+    EnumDeclPtr enumeration;
     bool initialized;
 
-    EnumType(EnumerationPtr enumeration)
+    EnumType(EnumDeclPtr enumeration)
         : Type(ENUM_TYPE), enumeration(enumeration), initialized(false) {}
 };
 
-struct NewTypeType : public Type {
-    NewTypePtr newtype;
-    NewTypeType(NewTypePtr newtype)
+struct NewType : public Type {
+    NewTypeDeclPtr newtype;
+    NewType(NewTypeDeclPtr newtype)
         : Type(NEW_TYPE), newtype(newtype) {}
 };
 
-extern TypePtr boolType;
-extern TypePtr int8Type;
-extern TypePtr int16Type;
-extern TypePtr int32Type;
-extern TypePtr int64Type;
-extern TypePtr int128Type;
-extern TypePtr uint8Type;
-extern TypePtr uint16Type;
-extern TypePtr uint32Type;
-extern TypePtr uint64Type;
-extern TypePtr uint128Type;
-extern TypePtr float32Type;
-extern TypePtr float64Type;
-extern TypePtr float80Type;
-extern TypePtr imag32Type;
-extern TypePtr imag64Type;
-extern TypePtr imag80Type;
-extern TypePtr complex32Type;
-extern TypePtr complex64Type;
-extern TypePtr complex80Type;
 
-// aliases
-extern TypePtr cIntType;
-extern TypePtr cSizeTType;
-extern TypePtr cPtrDiffTType;
-
-void initTypes();
-
-TypePtr integerType(int bits, bool isSigned);
-TypePtr intType(int bits);
-TypePtr uintType(int bits);
-TypePtr floatType(int bits);
-TypePtr imagType(int bits);
-TypePtr complexType(int bits);
-TypePtr pointerType(TypePtr pointeeType);
-TypePtr codePointerType(const vector<TypePtr> &argTypes,
-                        const vector<bool> &returnIsRef,
-                        const vector<TypePtr> &returnTypes);
-TypePtr cCodePointerType(CallingConv callingConv,
-                         const vector<TypePtr> &argTypes,
-                         bool hasVarArgs,
-                         TypePtr returnType);
-TypePtr arrayType(TypePtr elememtType, int size);
-TypePtr vecType(TypePtr elementType, int size);
-TypePtr tupleType(const vector<TypePtr> &elementTypes);
-TypePtr unionType(const vector<TypePtr> &memberTypes);
-TypePtr recordType(RecordPtr record, const vector<ObjectPtr> &params);
-TypePtr variantType(VariantPtr variant, const vector<ObjectPtr> &params);
-TypePtr staticType(ObjectPtr obj);
-TypePtr enumType(EnumerationPtr enumeration);
-TypePtr newType(NewTypePtr newtype);
-
-bool isPrimitiveType(TypePtr t);
-bool isPrimitiveAggregateType(TypePtr t);
-bool isPrimitiveAggregateTooLarge(TypePtr t);
-bool isPointerOrCodePointerType(TypePtr t);
-bool isStaticOrTupleOfStatics(TypePtr t);
-
-void initializeRecordFields(RecordTypePtr t);
-const vector<IdentifierPtr> &recordFieldNames(RecordTypePtr t);
-const vector<TypePtr> &recordFieldTypes(RecordTypePtr t);
-const llvm::StringMap<size_t> &recordFieldIndexMap(RecordTypePtr t);
-
-const vector<TypePtr> &variantMemberTypes(VariantTypePtr t);
-TypePtr variantReprType(VariantTypePtr t);
-int dispatchTagCount(TypePtr t);
-TypePtr newtypeReprType(NewTypeTypePtr t);
-
-void initializeEnumType(EnumTypePtr t);
-void initializeNewType(NewTypeTypePtr t);
-
-const llvm::StructLayout *tupleTypeLayout(TupleType *t);
-const llvm::StructLayout *complexTypeLayout(ComplexType *t);
-const llvm::StructLayout *recordTypeLayout(RecordType *t);
-
-llvm::Type *llvmIntType(int bits);
-llvm::Type *llvmFloatType(int bits);
-llvm::PointerType *llvmPointerType(llvm::Type *llType);
-llvm::PointerType *llvmPointerType(TypePtr t);
-llvm::Type *llvmArrayType(llvm::Type *llType, int size);
-llvm::Type *llvmArrayType(TypePtr type, int size);
-llvm::Type *llvmVoidType();
-
-llvm::Type *llvmType(TypePtr t);
-llvm::DIType llvmTypeDebugInfo(TypePtr t);
-llvm::DIType llvmVoidTypeDebugInfo();
-
-size_t typeSize(TypePtr t);
-size_t typeAlignment(TypePtr t);
-void typePrint(llvm::raw_ostream &out, TypePtr t);
-string typeName(TypePtr t);
-
-inline size_t alignedUpTo(size_t offset, size_t align) {
-    return (offset+align-1)/align*align;
-}
-
-inline size_t alignedUpTo(size_t offset, TypePtr type) {
-    return alignedUpTo(offset, typeAlignment(type));
-}
-
-
 //
 // Pattern
 //
-
+
 enum PatternKind {
     PATTERN_CELL,
     PATTERN_STRUCT
@@ -3196,7 +2861,7 @@ struct MultiPatternCell : public MultiPattern {
 struct MultiPatternList : public MultiPattern {
     vector<PatternPtr> items;
     MultiPatternPtr tail;
-    MultiPatternList(const vector<PatternPtr> &items,
+    MultiPatternList(llvm::ArrayRef<PatternPtr> items,
                      MultiPatternPtr tail)
         : MultiPattern(MULTI_PATTERN_LIST), items(items), tail(tail) {}
     MultiPatternList(MultiPatternPtr tail)
@@ -3210,7 +2875,7 @@ struct MultiPatternList : public MultiPattern {
 };
 
 
-
+
 //
 // MultiStatic
 //
@@ -3223,7 +2888,7 @@ struct MultiStatic : public Object {
         : Object(MULTI_STATIC) {
         values.push_back(x);
     }
-    MultiStatic(const vector<ObjectPtr> &values)
+    MultiStatic(llvm::ArrayRef<ObjectPtr> values)
         : Object(MULTI_STATIC), values(values) {}
     size_t size() { return values.size(); }
     void add(ObjectPtr x) { values.push_back(x); }
@@ -3232,857 +2897,6 @@ struct MultiStatic : public Object {
     }
 };
 
-//
-// desugar
-//
-
-ExprPtr desugarCharLiteral(char c);
-void desugarFieldRef(FieldRefPtr x, ModulePtr module);
-ExprPtr desugarStaticIndexing(StaticIndexingPtr x);
-ExprPtr desugarVariadicOp(VariadicOpPtr x);
-ExprListPtr desugarVariadicAssignmentRight(VariadicAssignment *x);
-StatementPtr desugarForStatement(ForPtr x);
-StatementPtr desugarCatchBlocks(const vector<CatchPtr> &catchBlocks);
-StatementPtr desugarSwitchStatement(SwitchPtr x);
-BlockPtr desugarBlock(BlockPtr x);
-
-ExprListPtr desugarEvalExpr(EvalExprPtr eval, EnvPtr env);
-vector<StatementPtr> const &desugarEvalStatement(EvalStatementPtr eval, EnvPtr env);
-vector<TopLevelItemPtr> const &desugarEvalTopLevel(EvalTopLevelPtr eval, EnvPtr env);
-
-
-//
-// patterns
-//
-
-ObjectPtr derefDeep(PatternPtr x);
-MultiStaticPtr derefDeep(MultiPatternPtr x);
-
-bool unifyObjObj(ObjectPtr a, ObjectPtr b);
-bool unifyObjPattern(ObjectPtr a, PatternPtr b);
-bool unifyPatternObj(PatternPtr a, ObjectPtr b);
-bool unify(PatternPtr a, PatternPtr b);
-bool unifyMulti(MultiPatternPtr a, MultiStaticPtr b);
-bool unifyMulti(MultiPatternPtr a, MultiPatternPtr b);
-bool unifyMulti(MultiPatternListPtr a, unsigned indexA,
-                MultiPatternPtr b);
-bool unifyMulti(MultiPatternPtr a,
-                MultiPatternListPtr b, unsigned indexB);
-bool unifyMulti(MultiPatternListPtr a, unsigned indexA,
-                MultiPatternListPtr b, unsigned indexB);
-bool unifyEmpty(MultiPatternListPtr x, unsigned index);
-bool unifyEmpty(MultiPatternPtr x);
-
-PatternPtr evaluateOnePattern(ExprPtr expr, EnvPtr env);
-PatternPtr evaluateAliasPattern(GlobalAliasPtr x, MultiPatternPtr params);
-MultiPatternPtr evaluateMultiPattern(ExprListPtr exprs, EnvPtr env);
-
-void patternPrint(llvm::raw_ostream &out, PatternPtr x);
-void patternPrint(llvm::raw_ostream &out, MultiPatternPtr x);
-
-
-
-//
-// lambdas
-//
-
-void initializeLambda(LambdaPtr x, EnvPtr env);
-
-
-//
-// match invoke
-//
-
-enum MatchCode {
-    MATCH_SUCCESS,
-    MATCH_CALLABLE_ERROR,
-    MATCH_ARITY_ERROR,
-    MATCH_ARGUMENT_ERROR,
-    MATCH_MULTI_ARGUMENT_ERROR,
-    MATCH_PREDICATE_ERROR,
-    MATCH_BINDING_ERROR,
-    MATCH_MULTI_BINDING_ERROR
-};
-
-struct MatchResult : public Object {
-    int matchCode;
-    MatchResult(int matchCode)
-        : Object(DONT_CARE), matchCode(matchCode) {}
-};
-typedef Pointer<MatchResult> MatchResultPtr;
-
-struct MatchSuccess : public MatchResult {
-    bool callByName;
-    InlineAttribute isInline;
-    CodePtr code;
-    EnvPtr env;
-
-    ObjectPtr callable;
-    vector<TypePtr> argsKey;
-
-    vector<TypePtr> fixedArgTypes;
-    vector<IdentifierPtr> fixedArgNames;
-    IdentifierPtr varArgName;
-    vector<TypePtr> varArgTypes;
-    unsigned varArgPosition;
-
-    MatchSuccess(bool callByName, InlineAttribute isInline, CodePtr code, EnvPtr env,
-                 ObjectPtr callable, const vector<TypePtr> &argsKey)
-        : MatchResult(MATCH_SUCCESS), callByName(callByName),
-          isInline(isInline), code(code), env(env), callable(callable),
-          argsKey(argsKey), varArgPosition(0) {}
-};
-typedef Pointer<MatchSuccess> MatchSuccessPtr;
-
-struct MatchCallableError : public MatchResult {
-    ExprPtr patternExpr;
-    ObjectPtr callable;
-    MatchCallableError(ExprPtr patternExpr, ObjectPtr callable)
-        : MatchResult(MATCH_CALLABLE_ERROR), patternExpr(patternExpr), callable(callable) {}
-};
-
-struct MatchArityError : public MatchResult {
-    unsigned expectedArgs;
-    unsigned gotArgs;
-    bool variadic;
-    MatchArityError(unsigned expectedArgs, unsigned gotArgs, bool variadic)
-        : MatchResult(MATCH_ARITY_ERROR),
-          expectedArgs(expectedArgs),
-          gotArgs(gotArgs),
-          variadic(variadic) {}
-};
-
-struct MatchArgumentError : public MatchResult {
-    unsigned argIndex;
-    TypePtr type;
-    FormalArgPtr arg;
-    MatchArgumentError(unsigned argIndex, TypePtr type, FormalArgPtr arg)
-        : MatchResult(MATCH_ARGUMENT_ERROR), argIndex(argIndex),
-            type(type), arg(arg) {}
-};
-
-struct MatchMultiArgumentError : public MatchResult {
-    unsigned argIndex;
-    MultiStaticPtr types;
-    FormalArgPtr varArg;
-    MatchMultiArgumentError(unsigned argIndex, MultiStaticPtr types, FormalArgPtr varArg)
-        : MatchResult(MATCH_MULTI_ARGUMENT_ERROR),
-            argIndex(argIndex), types(types), varArg(varArg) {}
-};
-
-struct MatchPredicateError : public MatchResult {
-    ExprPtr predicateExpr;
-    MatchPredicateError(ExprPtr predicateExpr)
-        : MatchResult(MATCH_PREDICATE_ERROR), predicateExpr(predicateExpr) {}
-};
-
-struct MatchBindingError : public MatchResult {
-    unsigned argIndex;
-    TypePtr type;
-    FormalArgPtr arg;
-    MatchBindingError(unsigned argIndex, TypePtr type, FormalArgPtr arg)
-        : MatchResult(MATCH_BINDING_ERROR), argIndex(argIndex),
-            type(type), arg(arg) {}
-};
-
-struct MatchMultiBindingError : public MatchResult {
-    unsigned argIndex;
-    MultiStaticPtr types;
-    FormalArgPtr varArg;
-    MatchMultiBindingError(unsigned argIndex, MultiStaticPtr types, FormalArgPtr varArg)
-        : MatchResult(MATCH_MULTI_BINDING_ERROR),
-            argIndex(argIndex), types(types), varArg(varArg) {}
-};
-
-void initializePatternEnv(EnvPtr patternEnv, const vector<PatternVar> &pvars, vector<PatternCellPtr> &cells, vector<MultiPatternCellPtr> &multiCells);
-    
-MatchResultPtr matchInvoke(OverloadPtr overload,
-                           ObjectPtr callable,
-                           const vector<TypePtr> &argsKey);
-
-void printMatchError(llvm::raw_ostream &os, MatchResultPtr result);
-
-
-
-//
-// invoke tables
-//
-
-const vector<OverloadPtr> &callableOverloads(ObjectPtr x);
-
-struct InvokeSet;
-
-struct InvokeEntry {
-    InvokeSet *parent;
-    ObjectPtr callable;
-    vector<TypePtr> argsKey;
-    vector<bool> forwardedRValueFlags;
-
-    bool analyzed;
-    bool analyzing;
-
-    CodePtr origCode;
-    CodePtr code;
-    EnvPtr env;
-    EnvPtr interfaceEnv;
-
-    vector<TypePtr> fixedArgTypes;
-    vector<IdentifierPtr> fixedArgNames;
-    IdentifierPtr varArgName;
-    vector<TypePtr> varArgTypes;
-    unsigned varArgPosition;
-
-    bool callByName; // if callByName the rest of InvokeEntry is not set
-    InlineAttribute isInline;
-
-    ObjectPtr analysis;
-    vector<bool> returnIsRef;
-    vector<TypePtr> returnTypes;
-
-    llvm::Function *llvmFunc;
-    llvm::Function *llvmCWrappers[CC_Count];
-
-    llvm::TrackingVH<llvm::MDNode> debugInfo;
-
-    InvokeEntry(InvokeSet *parent,
-                ObjectPtr callable,
-                const vector<TypePtr> &argsKey)
-        : parent(parent), callable(callable),
-          argsKey(argsKey), analyzed(false),
-          analyzing(false), varArgPosition(0),
-          callByName(false),
-          isInline(IGNORE), llvmFunc(NULL), debugInfo(NULL)
-    {
-        for (size_t i = 0; i < CC_Count; ++i)
-            llvmCWrappers[i] = NULL;
-    }
-
-    llvm::DISubprogram getDebugInfo() { return llvm::DISubprogram(debugInfo); }
-};
-
-extern vector<OverloadPtr> patternOverloads;
-
-struct InvokeSet {
-    ObjectPtr callable;
-    vector<TypePtr> argsKey;
-    OverloadPtr interface;
-    vector<OverloadPtr> overloads;
-
-    vector<MatchSuccessPtr> matches;
-    unsigned nextOverloadIndex;
-
-    bool shouldLog;
-
-    map<vector<ValueTempness>, InvokeEntry*> tempnessMap;
-    map<vector<ValueTempness>, InvokeEntry*> tempnessMap2;
-
-    InvokeSet(ObjectPtr callable,
-              const vector<TypePtr> &argsKey,
-              OverloadPtr symbolInterface,
-              const vector<OverloadPtr> &symbolOverloads)
-        : callable(callable), argsKey(argsKey),
-          interface(symbolInterface),
-          overloads(symbolOverloads), nextOverloadIndex(0),
-          shouldLog(false)
-    {
-        overloads.insert(overloads.end(), patternOverloads.begin(), patternOverloads.end());
-    }
-};
-
-typedef vector< pair<OverloadPtr, MatchResultPtr> > MatchFailureVector;
-
-struct MatchFailureError {
-    MatchFailureVector failures;
-    bool failedInterface;
-
-    MatchFailureError() : failedInterface(false) {}
-};
-
-InvokeSet *lookupInvokeSet(ObjectPtr callable,
-                           const vector<TypePtr> &argsKey);
-InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
-                               const vector<TypePtr> &argsKey,
-                               const vector<ValueTempness> &argsTempness,
-                               MatchFailureError &failures);
-
-void matchBindingError(MatchResultPtr result);
-void matchFailureLog(MatchFailureError const &err);
-void matchFailureError(MatchFailureError const &err);
-
-
-
-//
-// constructors
-//
-
-bool isOverloadablePrimOp(ObjectPtr x);
-vector<OverloadPtr> &primOpOverloads(PrimOpPtr x);
-void addPrimOpOverload(PrimOpPtr x, OverloadPtr overload);
-void addPatternOverload(OverloadPtr x);
-void initTypeOverloads(TypePtr t);
-void initBuiltinConstructor(RecordPtr x);
-
-
-
-//
-// literals
-//
-
-ValueHolderPtr parseIntLiteral(ModulePtr module, IntLiteral *x);
-ValueHolderPtr parseFloatLiteral(ModulePtr module, FloatLiteral *x);
-
-
-//
-// analyzer
-//
-
-struct PVData {
-    TypePtr type;
-    bool isTemp;
-    PVData() : type(NULL), isTemp(NULL) {}
-    PVData(TypePtr type, bool isTemp)
-        : type(type), isTemp(isTemp) {}
-
-    bool ok() const { return type != NULL; }
-
-    bool operator==(PVData const &x) const { return type == x.type && isTemp == x.isTemp; }
-};
-
-struct PValue : public Object {
-    PVData data;
-    PValue(TypePtr type, bool isTemp)
-        : Object(PVALUE), data(type, isTemp) {}
-    PValue(PVData data)
-        : Object(PVALUE), data(data) {}
-};
-
-struct MultiPValue : public Object {
-    llvm::SmallVector<PVData, 4> values;
-    MultiPValue()
-        : Object(MULTI_PVALUE) {}
-    MultiPValue(PVData const &pv)
-        : Object(MULTI_PVALUE) {
-        values.push_back(pv);
-    }
-    MultiPValue(llvm::ArrayRef<PVData> values)
-        : Object(MULTI_PVALUE), values(values.begin(), values.end()) {}
-    size_t size() { return values.size(); }
-    void add(PVData const &x) { values.push_back(x); }
-    void add(MultiPValuePtr x) {
-        values.insert(values.end(), x->values.begin(), x->values.end());
-    }
-};
-
-void disableAnalysisCaching();
-void enableAnalysisCaching();
-
-struct AnalysisCachingDisabler {
-    AnalysisCachingDisabler() { disableAnalysisCaching(); }
-    ~AnalysisCachingDisabler() { enableAnalysisCaching(); }
-};
-
-
-PVData safeAnalyzeOne(ExprPtr expr, EnvPtr env);
-MultiPValuePtr safeAnalyzeMulti(ExprListPtr exprs, EnvPtr env, unsigned wantCount);
-MultiPValuePtr safeAnalyzeExpr(ExprPtr expr, EnvPtr env);
-MultiPValuePtr safeAnalyzeIndexingExpr(ExprPtr indexable,
-                                       ExprListPtr args,
-                                       EnvPtr env);
-MultiPValuePtr safeAnalyzeMultiArgs(ExprListPtr exprs,
-                                    EnvPtr env,
-                                    vector<unsigned> &dispatchIndices);
-InvokeEntry* safeAnalyzeCallable(ObjectPtr x,
-                                 const vector<TypePtr> &argsKey,
-                                 const vector<ValueTempness> &argsTempness);
-MultiPValuePtr safeAnalyzeCallByName(InvokeEntry* entry,
-                                     ExprPtr callable,
-                                     ExprListPtr args,
-                                     EnvPtr env);
-MultiPValuePtr safeAnalyzeGVarInstance(GVarInstancePtr x);
-
-MultiPValuePtr analyzeMulti(ExprListPtr exprs, EnvPtr env, unsigned wantCount);
-PVData analyzeOne(ExprPtr expr, EnvPtr env);
-
-MultiPValuePtr analyzeMultiArgs(ExprListPtr exprs,
-                                EnvPtr env,
-                                vector<unsigned> &dispatchIndices);
-PVData analyzeOneArg(ExprPtr x,
-                        EnvPtr env,
-                        unsigned startIndex,
-                        vector<unsigned> &dispatchIndices);
-MultiPValuePtr analyzeArgExpr(ExprPtr x,
-                              EnvPtr env,
-                              unsigned startIndex,
-                              vector<unsigned> &dispatchIndices);
-
-MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env);
-MultiPValuePtr analyzeStaticObject(ObjectPtr x);
-
-GVarInstancePtr lookupGVarInstance(GlobalVariablePtr x,
-                                   const vector<ObjectPtr> &params);
-GVarInstancePtr defaultGVarInstance(GlobalVariablePtr x);
-GVarInstancePtr analyzeGVarIndexing(GlobalVariablePtr x,
-                                    ExprListPtr args,
-                                    EnvPtr env);
-MultiPValuePtr analyzeGVarInstance(GVarInstancePtr x);
-
-PVData analyzeExternalVariable(ExternalVariablePtr x);
-void analyzeExternalProcedure(ExternalProcedurePtr x);
-void verifyAttributes(ExternalProcedurePtr x);
-void verifyAttributes(ExternalVariablePtr x);
-void verifyAttributes(ModulePtr x);
-MultiPValuePtr analyzeIndexingExpr(ExprPtr indexable,
-                                   ExprListPtr args,
-                                   EnvPtr env);
-bool unwrapByRef(TypePtr &t);
-TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args);
-PVData analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args);
-MultiPValuePtr analyzeAliasIndexing(GlobalAliasPtr x,
-                                    ExprListPtr args,
-                                    EnvPtr env);
-void computeArgsKey(MultiPValuePtr args,
-                    vector<TypePtr> &argsKey,
-                    vector<ValueTempness> &argsTempness);
-MultiPValuePtr analyzeReturn(const vector<bool> &returnIsRef,
-                             const vector<TypePtr> &returnTypes);
-MultiPValuePtr analyzeCallExpr(ExprPtr callable,
-                               ExprListPtr args,
-                               EnvPtr env);
-PVData analyzeDispatchIndex(PVData const &pv, int tag);
-MultiPValuePtr analyzeDispatch(ObjectPtr obj,
-                               MultiPValuePtr args,
-                               const vector<unsigned> &dispatchIndices);
-MultiPValuePtr analyzeCallValue(PVData const &callable,
-                                MultiPValuePtr args);
-MultiPValuePtr analyzeCallPointer(PVData const &x,
-                                  MultiPValuePtr args);
-bool analyzeIsDefined(ObjectPtr x,
-                      const vector<TypePtr> &argsKey,
-                      const vector<ValueTempness> &argsTempness);
-InvokeEntry* analyzeCallable(ObjectPtr x,
-                             const vector<TypePtr> &argsKey,
-                             const vector<ValueTempness> &argsTempness);
-
-MultiPValuePtr analyzeCallByName(InvokeEntry* entry,
-                                 ExprPtr callable,
-                                 ExprListPtr args,
-                                 EnvPtr env);
-
-void analyzeCodeBody(InvokeEntry* entry);
-
-struct AnalysisContext {
-    bool hasRecursivePropagation;
-    bool returnInitialized;
-    vector<bool> returnIsRef;
-    vector<TypePtr> returnTypes;
-    AnalysisContext()
-        : hasRecursivePropagation(false),
-          returnInitialized(false) {}
-};
-
-enum StatementAnalysis {
-    SA_FALLTHROUGH,
-    SA_RECURSIVE,
-    SA_TERMINATED
-};
-
-StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContext *ctx);
-void initializeStaticForClones(StaticForPtr x, unsigned count);
-EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);
-bool returnKindToByRef(ReturnKind returnKind, PVData const &pv);
-
-MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args);
-
-ObjectPtr unwrapStaticType(TypePtr t);
-
-bool staticToBool(ObjectPtr x, bool &out, TypePtr &type);
-bool staticToBool(MultiStaticPtr x, unsigned index);
-bool staticToCallingConv(ObjectPtr x, CallingConv &out);
-CallingConv staticToCallingConv(MultiStaticPtr x, unsigned index);
-
-
-enum BoolKind {
-    BOOL_EXPR,
-    BOOL_STATIC_TRUE,
-    BOOL_STATIC_FALSE
-};
-
-BoolKind typeBoolKind(TypePtr type);
-
-
-//
-// evaluator
-//
-
-bool staticToType(ObjectPtr x, TypePtr &out);
-TypePtr staticToType(MultiStaticPtr x, unsigned index);
-
-void evaluateReturnSpecs(const vector<ReturnSpecPtr> &returnSpecs,
-                         ReturnSpecPtr varReturnSpec,
-                         EnvPtr env,
-                         vector<bool> &isRef,
-                         vector<TypePtr> &types);
-
-MultiStaticPtr evaluateExprStatic(ExprPtr expr, EnvPtr env);
-ObjectPtr evaluateOneStatic(ExprPtr expr, EnvPtr env);
-MultiStaticPtr evaluateMultiStatic(ExprListPtr exprs, EnvPtr env);
-
-TypePtr evaluateType(ExprPtr expr, EnvPtr env);
-void evaluateMultiType(ExprListPtr exprs, EnvPtr env, vector<TypePtr> &out);
-IdentifierPtr evaluateIdentifier(ExprPtr expr, EnvPtr env);
-bool evaluateBool(ExprPtr expr, EnvPtr env);
-void evaluatePredicate(const vector<PatternVar> &patternVars,
-    ExprPtr expr, EnvPtr env);
-void evaluateStaticAssert(Location const& location,
-        const ExprPtr& cond, const ExprListPtr& message, EnvPtr env);
-
-ValueHolderPtr intToValueHolder(int x);
-ValueHolderPtr sizeTToValueHolder(size_t x);
-ValueHolderPtr ptrDiffTToValueHolder(ptrdiff_t x);
-ValueHolderPtr boolToValueHolder(bool x);
-
-size_t valueHolderToSizeT(ValueHolderPtr vh);
-
-ObjectPtr makeTupleValue(const vector<ObjectPtr> &elements);
-ObjectPtr evalueToStatic(EValuePtr ev);
-
-struct EValue : public Object {
-    TypePtr type;
-    char *addr;
-    bool forwardedRValue;
-    EValue(TypePtr type, char *addr)
-        : Object(EVALUE), type(type), addr(addr),
-          forwardedRValue(false) {}
-    EValue(TypePtr type, char *addr, bool forwardedRValue)
-        : Object(EVALUE), type(type), addr(addr),
-          forwardedRValue(forwardedRValue) {}
-
-    template<typename T>
-    T &as() { return *(T*)addr; }
-
-    template<typename T>
-    T const &as() const { return *(T const *)addr; }
-};
-
-struct MultiEValue : public Object {
-    vector<EValuePtr> values;
-    MultiEValue()
-        : Object(MULTI_EVALUE) {}
-    MultiEValue(EValuePtr pv)
-        : Object(MULTI_EVALUE) {
-        values.push_back(pv);
-    }
-    MultiEValue(const vector<EValuePtr> &values)
-        : Object(MULTI_EVALUE), values(values) {}
-    size_t size() { return values.size(); }
-    void add(EValuePtr x) { values.push_back(x); }
-    void add(MultiEValuePtr x) {
-        values.insert(values.end(), x->values.begin(), x->values.end());
-    }
-};
-
-void evalValueInit(EValuePtr dest);
-void evalValueDestroy(EValuePtr dest);
-void evalValueCopy(EValuePtr dest, EValuePtr src);
-void evalValueMove(EValuePtr dest, EValuePtr src);
-void evalValueAssign(EValuePtr dest, EValuePtr src);
-void evalValueMoveAssign(EValuePtr dest, EValuePtr src);
-bool evalToBoolFlag(EValuePtr a, bool acceptStatics);
-
-int evalMarkStack();
-void evalDestroyStack(int marker);
-void evalPopStack(int marker);
-void evalDestroyAndPopStack(int marker);
-EValuePtr evalAllocValue(TypePtr t);
-
-EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env);
-
-
-//
-// codegen
-//
-
-void codegenBeforeRepl(ModulePtr module);
-void codegenAfterRepl(llvm::Function*& ctor, llvm::Function*& dtor);
-
-static const unsigned short DW_LANG_user_CLAY = 0xC1A4;
-
-extern llvm::Module *llvmModule;
-extern llvm::DIBuilder *llvmDIBuilder;
-extern const llvm::TargetData *llvmTargetData;
-
-llvm::PointerType *exceptionReturnType();
-llvm::Value *noExceptionReturnValue();
-
-llvm::TargetMachine *initLLVM(llvm::StringRef targetTriple,
-    llvm::StringRef name,
-    llvm::StringRef flags,
-    bool relocPic,
-    bool debug,
-    bool optimized);
-
-bool inlineEnabled();
-void setInlineEnabled(bool enabled);
-bool exceptionsEnabled();
-void setExceptionsEnabled(bool enabled);
-
-struct CValue : public Object {
-    TypePtr type;
-    llvm::Value *llValue;
-    bool forwardedRValue;
-    CValue(TypePtr type, llvm::Value *llValue)
-        : Object(CVALUE), type(type), llValue(llValue),
-          forwardedRValue(false)
-    {
-        llvmType(type); // force full definition of type
-    }
-};
-
-struct MultiCValue : public Object {
-    vector<CValuePtr> values;
-    MultiCValue()
-        : Object(MULTI_CVALUE) {}
-    MultiCValue(CValuePtr pv)
-        : Object(MULTI_CVALUE) {
-        values.push_back(pv);
-    }
-    MultiCValue(const vector<CValuePtr> &values)
-        : Object(MULTI_CVALUE), values(values) {}
-    size_t size() { return values.size(); }
-    void add(CValuePtr x) { values.push_back(x); }
-    void add(MultiCValuePtr x) {
-        values.insert(values.end(), x->values.begin(), x->values.end());
-    }
-};
-
-struct JumpTarget {
-    llvm::BasicBlock *block;
-    int stackMarker;
-    int useCount;
-    JumpTarget() : block(NULL), stackMarker(-1), useCount(0) {}
-    JumpTarget(llvm::BasicBlock *block, int stackMarker)
-        : block(block), stackMarker(stackMarker), useCount(0) {}
-};
-
-struct CReturn {
-    bool byRef;
-    TypePtr type;
-    CValuePtr value;
-    CReturn(bool byRef, TypePtr type, CValuePtr value)
-        : byRef(byRef), type(type), value(value) {}
-};
-
-struct StackSlot {
-    llvm::Type *llType;
-    llvm::Value *llValue;
-    StackSlot(llvm::Type *llType, llvm::Value *llValue)
-        : llType(llType), llValue(llValue) {}
-};
-
-enum ValueStackEntryType {
-    LOCAL_VALUE,
-    FINALLY_STATEMENT,
-    ONERROR_STATEMENT
-};
-
-struct ValueStackEntry {
-    ValueStackEntryType type;
-    CValuePtr value;
-    EnvPtr statementEnv;
-    StatementPtr statement;
-
-    explicit ValueStackEntry(CValuePtr value)
-        : type(LOCAL_VALUE), value(value), statementEnv(NULL), statement(NULL) {}
-    ValueStackEntry(ValueStackEntryType type,
-        EnvPtr statementEnv,
-        StatementPtr statement)
-        : type(type), value(NULL), statementEnv(statementEnv), statement(statement)
-    {
-        assert(type != LOCAL_VALUE);
-    }
-};
-
-struct CodegenContext {
-    llvm::Function *llvmFunc;
-    vector<llvm::TrackingVH<llvm::MDNode> > debugScope;
-    llvm::IRBuilder<> *initBuilder;
-    llvm::IRBuilder<> *builder;
-
-    vector<ValueStackEntry> valueStack;
-    llvm::Value *valueForStatics;
-
-    vector<StackSlot> allocatedSlots;
-    vector<StackSlot> discardedSlots;
-
-    vector< vector<CReturn> > returnLists;
-    vector<JumpTarget> returnTargets;
-    llvm::StringMap<JumpTarget> labels;
-    vector<JumpTarget> breaks;
-    vector<JumpTarget> continues;
-    vector<JumpTarget> exceptionTargets;
-    bool checkExceptions;
-    llvm::Value *exceptionValue;
-    int inlineDepth;
-
-    CodegenContext()
-        : llvmFunc(NULL),
-          initBuilder(NULL),
-          builder(NULL),
-          valueForStatics(NULL),
-          checkExceptions(true),
-          exceptionValue(NULL),
-          inlineDepth(0)
-    {
-    }
-
-    CodegenContext(llvm::Function *llvmFunc)
-        : llvmFunc(llvmFunc),
-          initBuilder(NULL),
-          builder(NULL),
-          valueForStatics(NULL),
-          checkExceptions(true),
-          exceptionValue(NULL),
-          inlineDepth(0)
-    {
-    }
-
-    ~CodegenContext() {
-        delete builder;
-        delete initBuilder;
-    }
-
-    llvm::DILexicalBlock getDebugScope() {
-        if (debugScope.empty())
-            return llvm::DILexicalBlock(NULL);
-        else
-            return llvm::DILexicalBlock(debugScope.back());
-    }
-
-    void pushDebugScope(llvm::DILexicalBlock scope) {
-        debugScope.push_back((llvm::MDNode*)scope);
-    }
-    void popDebugScope() {
-        debugScope.pop_back();
-    }
-};
-
-struct DebugLocationContext {
-    Location loc;
-    CodegenContext* ctx;
-    DebugLocationContext(Location const &loc, CodegenContext* ctx)
-        : loc(loc), ctx(ctx)
-    {
-        if (loc.ok()) {
-            pushLocation(loc);
-            if (llvmDIBuilder != NULL && ctx->inlineDepth == 0) {
-                int line, column;
-                getDebugLineCol(loc, line, column);
-                llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, ctx->getDebugScope());
-                ctx->builder->SetCurrentDebugLocation(debugLoc);
-            }
-        }
-    }
-    ~DebugLocationContext() {
-        if (loc.ok()) {
-            popLocation();
-        }
-    }
-private :
-    DebugLocationContext(const DebugLocationContext &) {}
-    void operator=(const DebugLocationContext &) {}
-};
-
-void codegenGVarInstance(GVarInstancePtr x);
-void codegenExternalVariable(ExternalVariablePtr x);
-void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody);
-
-InvokeEntry* codegenCallable(ObjectPtr x,
-                             const vector<TypePtr> &argsKey,
-                             const vector<ValueTempness> &argsTempness);
-void codegenCodeBody(InvokeEntry* entry);
-void codegenCWrapper(InvokeEntry* entry);
-
-void codegenEntryPoints(ModulePtr module, bool importedExternals);
-void codegenMain(ModulePtr module);
-
-static ExprPtr implicitUnpackExpr(unsigned wantCount, ExprListPtr exprs) {
-    if (wantCount >= 1 && exprs->size() == 1 && exprs->exprs[0]->exprKind != UNPACK)
-        return exprs->exprs[0];
-    else
-        return NULL;
-}
-
-// externals
-
-struct ExternalTarget : public Object {
-    ExternalTarget() : Object(DONT_CARE) {}
-    virtual ~ExternalTarget() {}
-
-    virtual llvm::CallingConv::ID callingConvention(CallingConv conv) = 0;
-
-    virtual llvm::Type *typeReturnsAsBitcastType(CallingConv conv, TypePtr type) = 0;
-    virtual llvm::Type *typePassesAsBitcastType(CallingConv conv, TypePtr type, bool varArg) = 0;
-    virtual bool typeReturnsBySretPointer(CallingConv conv, TypePtr type) = 0;
-    virtual bool typePassesByByvalPointer(CallingConv conv, TypePtr type, bool varArg) = 0;
-
-    // for generating C function declarations
-    llvm::Type *pushReturnType(CallingConv conv,
-                               TypePtr type,
-                               vector<llvm::Type *> &llArgTypes,
-                               vector< pair<unsigned, llvm::Attributes> > &llAttributes);
-    void pushArgumentType(CallingConv conv,
-                          TypePtr type,
-                          vector<llvm::Type *> &llArgTypes,
-                          vector< pair<unsigned, llvm::Attributes> > &llAttributes);
-
-    // for generating C function definitions
-    void allocReturnValue(CallingConv conv,
-                          TypePtr type,
-                          llvm::Function::arg_iterator &ai,
-                          vector<CReturn> &returns,
-                          CodegenContext* ctx);
-    CValuePtr allocArgumentValue(CallingConv conv,
-                                 TypePtr type,
-                                 llvm::StringRef name,
-                                 llvm::Function::arg_iterator &ai,
-                                 CodegenContext* ctx);
-    void returnStatement(CallingConv conv,
-                         TypePtr type,
-                         vector<CReturn> &returns,
-                         CodegenContext* ctx);
-
-    // for calling C functions
-    void loadStructRetArgument(CallingConv conv,
-                               TypePtr type,
-                               vector<llvm::Value *> &llArgs,
-                               vector< pair<unsigned, llvm::Attributes> > &llAttributes,
-                               CodegenContext* ctx,
-                               MultiCValuePtr out);
-    void loadArgument(CallingConv conv,
-                      CValuePtr cv,
-                      vector<llvm::Value *> &llArgs,
-                      vector< pair<unsigned, llvm::Attributes> > &llAttributes,
-                      CodegenContext* ctx);
-    void loadVarArgument(CallingConv conv,
-                         CValuePtr cv,
-                         vector<llvm::Value *> &llArgs,
-                         vector< pair<unsigned, llvm::Attributes> > &llAttributes,
-                         CodegenContext* ctx);
-    void storeReturnValue(CallingConv conv,
-                          llvm::Value *callReturnValue,
-                          TypePtr returnType,
-                          CodegenContext* ctx,
-                          MultiCValuePtr out);
-};
-
-typedef Pointer<ExternalTarget> ExternalTargetPtr;
-
-void initExternalTarget(string target);
-ExternalTargetPtr getExternalTarget();
-
-
-class CompilerError : std::exception {
-};
 
 //
 // parachute
@@ -4092,8 +2906,5 @@ int parachute(int (*mainfn)(int, char **, char const* const*),
     int argc, char **argv, char const* const* envp);
 
 }
-
-#include "operators.hpp"
-#include "hirestimer.hpp"
 
 #endif

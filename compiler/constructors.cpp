@@ -1,4 +1,9 @@
 #include "clay.hpp"
+#include "loader.hpp"
+#include "patterns.hpp"
+#include "analyzer.hpp"
+#include "constructors.hpp"
+
 
 namespace clay {
 
@@ -85,7 +90,7 @@ void initTypeOverloads(TypePtr t)
     for (unsigned i = 0; i < patternOverloads.size(); ++i) {
         OverloadPtr x = patternOverloads[i];
         EnvPtr env = new Env(x->env);
-        const vector<PatternVar> &pvars = x->code->patternVars;
+        llvm::ArrayRef<PatternVar> pvars = x->code->patternVars;
         for (unsigned i = 0; i < pvars.size(); ++i) {
             if (pvars[i].isMulti) {
                 MultiPatternCellPtr cell = new MultiPatternCell(NULL);
@@ -104,7 +109,7 @@ void initTypeOverloads(TypePtr t)
     t->overloadsInitialized = true;
 }
 
-void initBuiltinConstructor(RecordPtr x)
+void initBuiltinConstructor(RecordDeclPtr x)
 {
     assert(!(x->builtinOverloadInitialized));
     x->builtinOverloadInitialized = true;

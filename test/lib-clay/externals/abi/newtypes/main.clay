@@ -1,0 +1,32 @@
+import printer.(println);
+import io.streams.(flush);
+import io.files.(stdout);
+
+newtype MyInt = CInt;
+
+record ReturnByReg (x:CInt);
+
+newtype MyReturnByReg = ReturnByReg;
+
+record SingleFloat (x:CDouble);
+
+newtype MySingleFloat = SingleFloat;
+
+record MultiReg (x:Int64, y:CDouble);
+
+newtype MyMultiReg = MultiReg;
+
+external an_int() : MyInt;
+external return_by_reg() : MyReturnByReg;
+external single_float() : MySingleFloat;
+external multi_reg() : MyMultiReg;
+
+main() {
+    println(bitcast(Int, an_int()));
+    flush(stdout);
+    println(bitcast(ReturnByReg, return_by_reg()));
+    flush(stdout);
+    println(bitcast(SingleFloat, single_float()));
+    flush(stdout);
+    println(bitcast(MultiReg, multi_reg()));
+}

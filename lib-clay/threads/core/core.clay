@@ -1,4 +1,5 @@
 import threads.core.platform.*;
+public import threads.core.platform.(yield);
 import lambdas.*;
 import libc.(abort);
 
@@ -8,6 +9,7 @@ record Thread (
 );
 
 overload RegularRecord?(#Thread) = false;
+overload BitwiseMovedType?(#Thread) = true;
 
 startThread(proc): Thread {
     var launcher = => {
@@ -29,6 +31,7 @@ joinThread(thread: Thread) {
     }
 }
 
+overload resetUnsafe(thread: Thread) { thread.joined = true; }
 overload destroy(thread: Thread) {
     joinThread(thread);
 }
