@@ -1,0 +1,3 @@
+import printer.(println);
+
+private main() { println("ok"); }

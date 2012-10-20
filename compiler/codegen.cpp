@@ -6915,7 +6915,7 @@ void codegenEntryPoints(ModulePtr module, bool importedExternals)
     generateLLVMCtorsAndDtors();
     codegenModuleEntryPoints(module, importedExternals);
 
-    ObjectPtr mainProc = lookupPublic(module, Identifier::get("main"));
+    ObjectPtr mainProc = lookupPrivate(module, Identifier::get("main"));
     
     if (mainProc != NULL)
         codegenMain(module);
