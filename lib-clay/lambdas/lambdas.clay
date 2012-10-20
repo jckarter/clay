@@ -1,9 +1,3 @@
-import __operators__.(
-    packMultiValuedFreeVar,
-    packMultiValuedFreeVarByRef,
-    unpackMultiValuedFreeVar,
-    unpackMultiValuedFreeVarAndDereference,
-);
 
 import sharedpointers.*;
 
@@ -107,16 +101,3 @@ overload destroy(x:FunctionBody[In, Out]) {
     freeRawMemoryAligned(x.obj);
 }
 
-
-
-/// @section  operator functions for closure conversion 
-
-overload packMultiValuedFreeVar(..x) = [..x];
-
-overload packMultiValuedFreeVarByRef(..x) =
-    Tuple(..mapValues(addressOf, ..x));
-
-overload unpackMultiValuedFreeVar(x) = forward ..unpackRef(x);
-
-overload unpackMultiValuedFreeVarAndDereference(x) =
-    forward ..mapValues(dereference, ..unpack(x));
