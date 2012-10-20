@@ -1,0 +1,8 @@
+Testing __main__:
+  TEST_should_pass: passed
+  TEST_should_fail:
+    falsehood is expected to be true but isn't
+    -- FAILED
+-- __main__: 1 expectations passed; 1 failed (0 pending)
+Overall: 1 expectations passed; 1 failed (0 pending)
+TESTS FAILED
