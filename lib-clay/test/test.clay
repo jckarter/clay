@@ -112,7 +112,7 @@ runTestCase(_case: TestCase) : TestStatus {
             printFailure("-- FIXED (should clear pending flag)");
             test.failed = 1;
         } else {
-            if(Flag?("test.minimal"))
+            if(#Flag?("test.minimal"))
                 println(" passed");
             else
                 printlnColored(Green, " passed");
