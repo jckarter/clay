@@ -1,0 +1,21 @@
+import threads.locks.(withLock, Mutex);
+import threads.threadlocal.(ThreadLocal);
+import threads.(startThread, joinThread);
+import sequences.(map);
+import printer.(println);
+
+var counter = ThreadLocal[UInt]();
+var outLock = Mutex();
+
+counterThread() {
+    ref c = counter^;
+    for (i in range(100))
+        c +: 1;
+    withLock(outLock, -> { println(c); });
+}
+
+main() {
+    var threads = map(x -> startThread(counterThread), range(8));
+    for (thread in threads)
+        joinThread(thread);
+}

@@ -1,0 +1,30 @@
+import os.errors.(GenericOSError);
+import unix.(
+    pthread_key_t,
+    pthread_key_create,
+    pthread_key_delete,
+    pthread_getspecific,
+    pthread_setspecific,
+);
+
+alias TLSHandle = pthread_key_t;
+
+makeTLSHandle(destructor:CCodePointer[[RawPointer],[]]) --> returned:TLSHandle
+{
+    var ok = pthread_key_create(@returned, destructor);
+    if (ok != 0)
+        throw GenericOSError(ok, "pthread_key_create");
+}
+
+deleteTLSHandle(handle:TLSHandle)
+{
+    var ok = pthread_key_delete(handle);
+    assert(ok == 0);
+}
+
+getTLS(handle:TLSHandle) : RawPointer = pthread_getspecific(handle);
+setTLS(handle:TLSHandle, value:RawPointer)
+{
+    var ok = pthread_setspecific(handle, value);
+    assert(ok == 0);
+}
