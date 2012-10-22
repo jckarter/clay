@@ -612,7 +612,7 @@ static bool operatorOp(llvm::StringRef &op) {
     int p = save();
 
     const char *s[] = {
-        "<--", "-->", "=>", "->", "=", NULL
+        "<--", "-->", "=>", "->", "~>", "=", NULL
     };
     for (const char **a = s; *a; ++a) {
         if (opsymbol(*a)) return false;
@@ -856,19 +856,21 @@ static bool lambdaExprBody(StatementPtr &x) {
     return true;
 }
 
-static bool lambdaArrow(bool &captureByRef) {
+static bool lambdaArrow(LambdaCapture &captureBy) {
     int p = save();
     if (opsymbol("->")) {
-        captureByRef = true;
+        captureBy = REF_CAPTURE;
         return true;
-    } else {
-        restore(p);
-        if (opsymbol("=>")) {
-            captureByRef = false;
-            return true;
-        }
-        return false;
+    } 
+    else if (restore(p), opsymbol("=>")) {
+        captureBy = VALUE_CAPTURE;
+        return true;
     }
+    else if (restore(p), opsymbol("~>")) {
+        captureBy = STATELESS;
+        return true;
+    }
+    return false;
 }
 
 static bool lambdaBody(StatementPtr &x) {
@@ -882,12 +884,12 @@ static bool lambda(ExprPtr &x) {
     Location location = currentLocation();
     vector<FormalArgPtr> formalArgs;
     bool hasVarArg = false;
-    bool captureByRef;
+    LambdaCapture captureBy;
     StatementPtr body;
     if (!lambdaArgs(formalArgs, hasVarArg)) return false;
-    if (!lambdaArrow(captureByRef)) return false;
+    if (!lambdaArrow(captureBy)) return false;
     if (!lambdaBody(body)) return false;
-    x = new Lambda(captureByRef, formalArgs, hasVarArg, body);
+    x = new Lambda(captureBy, formalArgs, hasVarArg, body);
     x->location = location;
     return true;
 }
