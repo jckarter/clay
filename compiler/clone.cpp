@@ -158,7 +158,7 @@ ExprPtr clone(ExprPtr x)
 
     case LAMBDA : {
         Lambda *y = (Lambda *)x.ptr();
-        LambdaPtr z = new Lambda(y->captureByRef);
+        LambdaPtr z = new Lambda(y->captureBy);
         clone(y->formalArgs, z->formalArgs);
         z->hasVarArg = y->hasVarArg;
         z->body = clone(y->body);
