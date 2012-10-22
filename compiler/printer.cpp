@@ -267,7 +267,7 @@ static void printExpr(llvm::raw_ostream &out, const Expr *x) {
     }
     case LAMBDA : {
         const Lambda *y = (const Lambda *)x;
-        out << "Lambda(" << y->captureByRef << ", " << y->formalArgs
+        out << "Lambda(" << y->captureBy << ", " << y->formalArgs
             << ", " << y->hasVarArg << ", " << y->body << ")";
         break;
     }

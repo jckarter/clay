@@ -424,11 +424,8 @@ static StatementPtr desugarWithBlock(WithStatementPtr with,
         formalArgs.push_back(new FormalArg(with->lhs.at(i), NULL, TEMPNESS_DONTCARE));
     }
 
-    bool captureByRef = false;
-
-    ExprPtr la = new Lambda(captureByRef, formalArgs, false, b.ptr());
+    ExprPtr la = new Lambda(VALUE_CAPTURE, formalArgs, false, b.ptr());
     la->location = with->withLocation;
-
 
     if (with->rhs->exprKind != CALL) {
         error("the right hand side of a with statement must be a call.");

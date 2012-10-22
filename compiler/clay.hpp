@@ -1236,8 +1236,14 @@ struct ProcedureMono {
     ProcedureMono() : monoState(Procedure_NoOverloads) {}
 };
 
+enum LambdaCapture {
+    REF_CAPTURE,
+    VALUE_CAPTURE,
+    STATELESS
+};
+
 struct Lambda : public Expr {
-    bool captureByRef;
+    LambdaCapture captureBy;
     vector<FormalArgPtr> formalArgs;
     bool hasVarArg;
 
@@ -1257,13 +1263,13 @@ struct Lambda : public Expr {
     // if freevars are absent
     ProcedurePtr lambdaProc;
 
-    Lambda(bool captureByRef) :
-        Expr(LAMBDA), captureByRef(captureByRef),
+    Lambda(LambdaCapture captureBy) :
+        Expr(LAMBDA), captureBy(captureBy),
         hasVarArg(false), initialized(false) {}
-    Lambda(bool captureByRef,
+    Lambda(LambdaCapture captureBy,
            llvm::ArrayRef<FormalArgPtr> formalArgs,
            bool hasVarArg, StatementPtr body)
-        : Expr(LAMBDA), captureByRef(captureByRef),
+        : Expr(LAMBDA), captureBy(captureBy),
           formalArgs(formalArgs), hasVarArg(hasVarArg),
           body(body), initialized(false) {}
 };
