@@ -1,6 +1,13 @@
+import monads;
 import algorithms;
+import lambdas.(Function);
 import sequences;
 import vectors.(Vector);
+
+alias VectorMonad = Vector[Tuple[]];
+
+[S when Sequence?(S)]
+overload Monad?(#S) = true;
 
 [S when Sequence?(S)]
 overload typeInBox(#S) = SequenceElementType(S);
@@ -11,24 +18,21 @@ overload changeTypeInBox(#Vector[T], #U) = Vector[U];
 [S when Sequence?(S)]
 overload fmap(f, s : S) = sequences.map(f, s);
 
-[S when Sequence?(S)]
-overload Monad?(#S) = true;
+[A, S, MB when Sequence?(S) and A == typeInBox(S)]
+overload mbind(x : S, f:Function[[A], [MB]]) = algorithms.concat(fmap(f, x));
 
-[S when Sequence?(S)]
-overload mbind(f, x : S) = algorithms.concat(fmap(f, x));
-
-[S when Sequence?(S)]
-overload mreturn(a, #S)= S(a);
-
-[S when Sequence?(S)]
-overload mreturn(#S)= S();
+[A, S when Sequence?(S)]
+overload mreturn(a : A, #S) {
+    alias SA = changeTypeInBox(S, A);
+    return SA(a);
+}
 
 overload Applicative?(#S) = true;
 [S when Sequence?(S)]
 overload ap(fs, xs) {
     with f = mbind(fs);
-	with x = mbind(xs);
-	mreturn(f(x),unboxType(#S));
+    with x = mbind(xs);
+    mreturn(f(x),unboxType(#S));
 }
 
 

@@ -1,30 +1,37 @@
+import monads;
+import lambdas.(Function);
+
+alias MaybeMonad = Maybe[Tuple[]];
+
+[T]
+overload Functor?(#Maybe[T]) = true;
+
+[T]
+overload Monad?(#Maybe[T]) = true;
+
 [T]
 overload typeInBox(#Maybe[T]) = T;
 
 [T, U]
 overload changeTypeInBox(#Maybe[T], #U) = Maybe[U];
 
-[T]
-overload fmap(f, v : Maybe[T]) {
-    if (hasValue(v))
-        return Maybe(f(getValue(v)));
+[A, B]
+overload fmap(f : Function[[A], [B]], functor : Maybe[A]) {
+    if (hasValue?(functor))
+        return Maybe(f(getValue(functor)));
     else
-        return nothing(Type(f(getValue(v))));
+        return nothing(B);
 }
 
-[T]
-overload Monad?(#Maybe[T]) = true;
-[T]
-overload mbind(f, v : Maybe[T])
+[A, MB]
+overload mbind(m:Maybe[A], f:Function[[A], [MB]])
 {
-    if (hasValue?(v))
-        return f(getValue(v));
+    if (hasValue?(m))
+        return f(getValue(m));
     else
-        return nothing(typeInBox(Type(f(getValue(v)))));	
+        return nothing(typeInBox(MB));
 }
 
 [A, T]
 overload mreturn(a : A, #Maybe[T])= Maybe[A](a);
-[T]
-overload mreturn(#Maybe[T])= Maybe[T]();
 

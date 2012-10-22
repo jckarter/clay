@@ -20,30 +20,23 @@ evalState(state : State[S, A], st: S) = state.f(st).0;
 [S, A]
 execState(state : State[S, A], st: S) = state.f(st).1;
 
-
 [S, A, B]
 overload mreturn(x : B, #State[S,A]){
     return State[S, B](Function[[S], [Tuple[B,S]]](s => [x, s]));
 }
 
-[S, A]
-overload mreturn(#State[S,A]) {
-    return State[S,Int](Function[[S], [Tuple[Int,S]]](s => [0, s]));
-}
-
-[S, A]
-overload mbind(g, p : State[S, A]) {
-alias B = typeInBox(Type(g(A())));
-return State(Function[[S], [Tuple[B, S]]](st => {var Z = runState(p, st);
-                                                 var x, st_ = ..unpack(Z);
-                                                 return runState(g(x), st_);}));
+[S, A, MB]
+overload mbind(p : State[S, A], g : Function[[A], [MB]]) {
+    alias B = typeInBox(MB);
+    return State(Function[[S], [Tuple[B, S]]](st => {var x, st_ = ..unpack(runState(p, st));
+                                                     return runState(g(x), st_);}));
 }
 
 [OldS, S, A]
 put(newState : S, #State[OldS,A]) 
 {
-var newState_ = newState;//FIXME: why this temp variable is needed?
-return State[S,Int](Function[[S], [Tuple[Int,S]]]((oldState : S) => [0, newState_]));
+    var newState_ = newState;//FIXME: why this temp variable is needed?
+    return State[S,Int](Function[[S], [Tuple[Int,S]]]((oldState : S) => [0, newState_]));
 }
 
 [S, A]

@@ -1,7 +1,30 @@
 import algorithms;
+import lambdas.(Function);
 import printer.(println);
 import sequences;
 import vectors.(Vector);
+
+[FA when Functor?(FA)]
+//(A->B, F[A]) : F[B]
+overload fmap(f, functor : FA){
+    alias A = typeInBox(FA);
+    alias B = CallOutputTypes(f, A);
+    return fmap(Function[[A], [B]](f), functor);
+}
+
+[MA when Monad?(MA)]
+//(M[A], A -> M[B]) : M[B]
+overload mbind(m : MA, f){
+    alias A = typeInBox(MA);
+    alias MB = CallOutputTypes(f, A);
+    return mbind(m, Function[[A], [MB]](f));
+}
+
+[M when Monad?(M)]
+overload mreturn(#M) {
+    alias A = typeInBox(M);
+    return mreturn(A(), #M);
+}
 
 [T]
 pushAndReturn(forward xs : Vector[T], forward x : T){
@@ -14,7 +37,7 @@ pushAndReturn(forward xs : Vector[T], forward x : T){
 sequence(ms: Vector[M]){
     alias A = typeInBox(M);
     alias R = changeTypeInBox(#M, Vector[A]);
-    var k = (m, m1) => mbind(xs => mbind(x => mreturn(pushAndReturn(xs, x),#R), m1), m);
+    var k = (m, m1) => old_mbind(xs => old_mbind(x => mreturn(pushAndReturn(xs, x),#R), m1), m);
     return algorithms.reduce(k, mreturn(Vector[A](), #R), ms);
 }
 

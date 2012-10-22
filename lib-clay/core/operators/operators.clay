@@ -733,13 +733,14 @@ alias (<*>) = ap;
 
 public define Monad?;
 overload Monad?(T) : Bool = false;
-public define mbind;
-alias (=<<) = mbind;
-alias (>>=)(x, f) = mbind(f, x);
-[M when Monad?(M)]
-overload (>>)(x : M, f) = x >>= (dummy => f);
-//FIXME: overload operatorPrecedence
 public define mreturn;
+public define mbind(m, f);
+alias old_mbind(f, m) = mbind(m, f);
+alias (>>=) = mbind;
+alias (=<<)(x, f) = mbind(f, x);
+[M when Monad?(M)]
+alias overload (>>)(x : M, f) = x >>= (dummy => f);
+//FIXME: overload operatorPrecedence
 
 /// @section  operator functions for closure conversion 
 

@@ -1,28 +1,35 @@
 import monads.sequences;
 import monads;
 import printer.(println);
-import vectors;
+import vectors.(Vector);
+import strings.(String);
 
 main(){
-    alias v = vectors.Vector[Int32];
+    alias m = monads.sequences.VectorMonad;
+    alias v = Vector[Int];
 
+    var fmap1 = fmap(x -> x ++ x, array("foo", "bar"));
+    
     var seqSugar = () -> {
-        with x1 = mbind(array(1,2,3));
-        with x2 = mbind(array(4,5,6));
-        return mreturn(x1 * x2, #v);
+        with x1 = old_mbind(array(1,2,3));
+        with x2 = old_mbind(array(4,5,6));
+        return mreturn(x1 * x2 + 1.0, #m);
     };
+    
+    var fmap2 = fmap(x -> Int(x), seqSugar());
 
     var seqSugar2 = () -> {
-        with x1 = mbind(v());
-        with x2 = mbind(array(4,5,6));
-        return mreturn(x1 * x2, #v);
+        with x1 = old_mbind(v());
+        with x2 = old_mbind(array(4,5,6));
+        return mreturn(x1 * x2, #m);
     };
-	
-    var vOfV = vectors.Vector[v](v(1,2,3),v(4,5,6), v(7,8,9));
+    
+    var vOfV = Vector[v](v(1,2,3),v(4,5,6), v(7,8,9));
     var sequenceVector = monads.sequence(vOfV);
-    var join = monads.join(monads.forM(v(1,2,3,4,5), x -> mreturn(x * 5, #v)));
-
-    println(seqSugar());
+    var join = monads.join(monads.forM(v(1,2,3,4,5), x -> mreturn(x * 5, #m)));
+    
+    println(fmap1);
+    println(fmap2);
     println(seqSugar2());  
     println(sequenceVector);
     println(join);   
