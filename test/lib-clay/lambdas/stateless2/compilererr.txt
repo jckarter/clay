@@ -1,0 +1,1 @@
+error: cannot capture free variable in stateless lambda function
