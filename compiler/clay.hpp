@@ -1805,6 +1805,7 @@ struct Code : public ANode {
 //
 
 enum Visibility {
+    VISIBILITY_UNDEFINED,
     PUBLIC,
     PRIVATE
 };
@@ -1819,9 +1820,7 @@ struct TopLevelItem : public ANode {
     EnvPtr env;
     IdentifierPtr name; // for named top level items
     Visibility visibility; // valid only if name != NULL
-    TopLevelItem(ObjectKind objKind)
-        : ANode(objKind) {}
-    TopLevelItem(ObjectKind objKind, Visibility visibility)
+    TopLevelItem(ObjectKind objKind, Visibility visibility = VISIBILITY_UNDEFINED)
         : ANode(objKind), visibility(visibility) {}
     TopLevelItem(ObjectKind objKind, IdentifierPtr name, Visibility visibility)
         : ANode(objKind), name(name), visibility(visibility) {}
