@@ -315,13 +315,10 @@ private testOptions() {
 
 testMain(..suites) {
     var test = TestStatus();
-    eachValue(
-        suite -> {
-          if(runSuite?(suite))
-            accumulateTestStatus(test, runTestSuite(suite));
-        },
-        ..suites
-    );
+
+    ..for (suite in suites)
+      if(runSuite?(suite))
+        accumulateTestStatus(test, runTestSuite(suite));
 
     reportTest(test, "Overall: ");
 
@@ -342,9 +339,13 @@ private printlnColored(c : Color, ..values) {
         println(..values);    
 }
 
-private runSuite?(suite) = optionsInclude?("suite", suite.name);
-private runCase?(_case) = optionsInclude?("case", _case.name);
-private colored?() = not(optionGiven?(testOptions(), "no-color"));
+private define runSuite?;
+private define runCase?;
+private define colored?;
+
+overload runSuite?(suite) = optionsInclude?("suite", suite.name);
+overload runCase?(_case) = optionsInclude?("case", _case.name);
+overload colored?() = not(optionGiven?(testOptions(), "no-color"));
 
 private optionsInclude?(name, elt){
     forward seq = getOptions(testOptions(), name);
@@ -355,3 +356,11 @@ private include?(seq, elt){
     for(x in seq) if(x == elt) return true;
     return false;
 }
+
+[when Flag?("test.minimal")]
+overload runSuite?(suite) = true;
+[when Flag?("test.minimal")]
+overload runCase?(_case) = true;
+[when Flag?("test.minimal")]
+overload colored?() = false;
+

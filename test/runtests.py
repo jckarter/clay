@@ -228,7 +228,7 @@ class TestCase(object):
         self.testfile = testfile
 
     def cmdline(self, clay) :
-        r = [clay, "-I" + self.path, "-o", "test.exe"] + self.opt.testBuildFlags + self.buildflags + [self.testfile]
+        r = [clay, "-I" + self.path, "-o", "test.exe", "-Dtest.minimal"] + self.opt.testBuildFlags + self.buildflags + [self.testfile]
         return r
 
     def pre_build(self) :
