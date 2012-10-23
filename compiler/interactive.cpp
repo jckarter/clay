@@ -1,15 +1,12 @@
 #include "clay.hpp"
 #include "lexer.hpp"
 #include "codegen.hpp"
+#include "error.hpp"
 #include "loader.hpp"
-
 
 #include <setjmp.h>
 #include <signal.h>
 #include <stdio.h>
-
-#include <llvm/Target/TargetOptions.h>
-
 
 namespace clay {
 
@@ -170,13 +167,13 @@ namespace clay {
                 vector<ImportPtr> imports;
                 try {
                     parseInteractive(source, 0, source->size(), toplevels, imports, stmts);
+                    loadImports(imports);
+                    jitTopLevel(toplevels);
+                    jitStatements(stmts);
                 }
-                catch (std::exception) {
+                catch (CompilerError) {
                     continue;
                 }
-                loadImports(imports);
-                jitTopLevel(toplevels);
-                jitStatements(stmts);
             }
         }
         engine->runStaticConstructorsDestructors(true);
