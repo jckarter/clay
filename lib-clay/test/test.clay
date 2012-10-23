@@ -315,13 +315,10 @@ private testOptions() {
 
 testMain(..suites) {
     var test = TestStatus();
-    eachValue(
-        suite -> {
-          if(runSuite?(suite))
-            accumulateTestStatus(test, runTestSuite(suite));
-        },
-        ..suites
-    );
+
+    ..for (suite in suites)
+      if(runSuite?(suite))
+        accumulateTestStatus(test, runTestSuite(suite));
 
     reportTest(test, "Overall: ");
 
