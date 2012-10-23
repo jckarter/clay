@@ -187,7 +187,7 @@ forceinline variantIs?(x:V, #T) {
 
 /// @section  variantAs 
 
-define variantAs;
+define variantAs private overload;
 
 [V,T when Variant?(V) and VariantMember?(V, T)]
 forceinline overload variantAs(ref x:V, #T) {

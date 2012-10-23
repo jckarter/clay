@@ -57,7 +57,7 @@ forceinline nestedVariantIs?(x:V, #T) {
 /// @section  nestedVariantAs 
 
 [V, T when Variant?(V)]
-define nestedVariantAs(x:V, #T);
+define nestedVariantAs(x:V, #T) private overload;
 
 [V, T when Variant?(V)]
 forceinline overload nestedVariantAs(ref x:V, #T) {
