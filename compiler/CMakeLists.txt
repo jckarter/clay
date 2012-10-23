@@ -63,7 +63,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInf
 else()
     set(CLAY_CXXFLAGS "${LLVM_CXXFLAGS} -DNDEBUG")
 endif()
-set(CLAY_CXXFLAGS "${CLAY_CXXFLAGS} -fexceptions")
+if (NOT MSVC)
+    set(CLAY_CXXFLAGS "${CLAY_CXXFLAGS} -fexceptions")
+endif()
 
 set(ENABLE_PCH False CACHE BOOL
     "Use precompiled headers when building the compiler. (experimental)")
