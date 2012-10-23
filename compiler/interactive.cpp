@@ -118,7 +118,8 @@ namespace clay {
 
         BlockPtr funBody = new Block(statements);
         ExternalProcedurePtr entryProc =
-                new ExternalProcedure(fun,
+                new ExternalProcedure(NULL,
+                                      fun,
                                       PRIVATE,
                                       vector<ExternalArgPtr>(),
                                       false,

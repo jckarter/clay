@@ -4,7 +4,7 @@ import __operators__;
 /// @section  Tuple? 
 
 [T]
-define Tuple?(#T) : Bool;
+define Tuple?(#T) : Bool private overload;
 overload Tuple?(x) = false;
 [..T] overload Tuple?(#Tuple[..T]) : Bool = true;
 
@@ -35,7 +35,7 @@ forceinline unpackTupleRef(x:Tuple[..T]) = ref ..tupleElements(x);
 
 /// @section  unpack, unpackRef 
 
-define unpackRef;
+define unpackRef private overload;
 
 forceinline overload unpackRef(x) = ref x;
 [..T]

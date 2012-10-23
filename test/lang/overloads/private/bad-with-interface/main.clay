@@ -1,0 +1,6 @@
+import baz.*;
+
+overload foo() = 1;
+
+main() {
+}

@@ -3363,8 +3363,8 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         nameout << ")";
 
         ProcedurePtr proc = new Procedure(
-            Identifier::get(nameout.str()),
-            PRIVATE);
+            NULL, Identifier::get(nameout.str()),
+            PRIVATE, false);
 
         proc->env = entry.second->env;
 
@@ -3389,6 +3389,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         code->llvmBody = origCode->llvmBody;
 
         OverloadPtr overload = new Overload(
+            NULL,
             new ObjectExpr(proc.ptr()),
             code,
             entry.second->callByName,

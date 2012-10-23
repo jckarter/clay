@@ -399,7 +399,7 @@ llvm::ArrayRef<TopLevelItemPtr> desugarEvalTopLevel(EvalTopLevelPtr eval, EnvPtr
         return eval->value;
     else {
         SourcePtr source = evalToSource(eval->location, eval->args, env);
-        parseTopLevelItems(source, 0, source->size(), eval->value);
+        parseTopLevelItems(source, 0, source->size(), eval->value, eval->module);
         eval->evaled = true;
         return eval->value;
     }

@@ -530,6 +530,12 @@ void addProcedureOverload(ProcedurePtr proc, EnvPtr env, OverloadPtr x) {
         error(x->location, "standalone functions cannot be overloaded");
     }
 
+    if (proc->privateOverload) {
+        if (proc->module != x->module) {
+            error("symbol " + toString(proc->name->str) + " is declared as private for overload");
+        }
+    }
+
     if (proc->interface != NULL) {
         if (maxParamCount(proc->interface->code) < minParamCount(x->code)) {
             error(x->location,
@@ -908,7 +914,8 @@ static ModulePtr makePrimitivesModule() {
     addPrim(prims, "Complex80", complex80Type.ptr());
 
     GlobalAliasPtr v =
-        new GlobalAlias(Identifier::get("ExceptionsEnabled?"),
+        new GlobalAlias(prims.ptr(),
+                        Identifier::get("ExceptionsEnabled?"),
                         PUBLIC,
                         vector<PatternVar>(),
                         NULL,
@@ -920,7 +927,9 @@ static ModulePtr makePrimitivesModule() {
     vector<IdentifierPtr> recordParams;
     RecordBodyPtr recordBody = new RecordBody(vector<RecordFieldPtr>());
     recordParams.push_back(Identifier::get("T"));
-    RecordDeclPtr byRefRecord = new RecordDecl(Identifier::get("ByRef"),
+    RecordDeclPtr byRefRecord = new RecordDecl(
+        prims.ptr(),
+        Identifier::get("ByRef"),
         PUBLIC,
         vector<PatternVar>(),
         NULL,
@@ -933,7 +942,9 @@ static ModulePtr makePrimitivesModule() {
     recordParams.clear();
     recordParams.push_back(Identifier::get("Properties"));
     recordParams.push_back(Identifier::get("Fields"));
-    RecordDeclPtr rwpRecord = new RecordDecl(Identifier::get("RecordWithProperties"),
+    RecordDeclPtr rwpRecord = new RecordDecl(
+        prims.ptr(),
+        Identifier::get("RecordWithProperties"),
         PUBLIC,
         vector<PatternVar>(),
         NULL,
@@ -1140,7 +1151,7 @@ static ModulePtr makePrimitivesModule() {
 
 static void addOperator(ModulePtr module, llvm::StringRef name) {
     IdentifierPtr ident = Identifier::get(name);
-    ProcedurePtr opProc = new Procedure(ident, PUBLIC);
+    ProcedurePtr opProc = new Procedure(module.ptr(), ident, PUBLIC, false);
     opProc->env = new Env(module);
     addGlobal(module, ident, PUBLIC, opProc.ptr());
 }

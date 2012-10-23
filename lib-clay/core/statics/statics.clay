@@ -5,7 +5,7 @@ public import __primitives__.(Static);
 
 /// @section  Static? predicate 
 
-define Static?(x) : Bool;
+define Static?(x) : Bool private overload;
 alias overload Static?(x) : Bool = false;
 [T] alias overload Static?(#T) : Bool = true;
 
