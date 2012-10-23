@@ -6869,7 +6869,8 @@ void codegenMain(ModulePtr module)
     mainArgs.push_back(new ExternalArg(argv, argvType));
 
     ExternalProcedurePtr entryProc =
-        new ExternalProcedure(main,
+        new ExternalProcedure(module.ptr(),
+                              main,
                               PUBLIC,
                               mainArgs,
                               false,

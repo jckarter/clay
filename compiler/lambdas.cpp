@@ -148,7 +148,7 @@ static void checkForeignExpr(ObjectPtr &obj, EnvPtr env)
 static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
     llvm::StringRef closureDataName, llvm::StringRef lname)
 {
-    RecordDeclPtr r = new RecordDecl(PRIVATE);
+    RecordDeclPtr r = new RecordDecl(NULL, PRIVATE);
     r->location = x->location;
     r->name = Identifier::get(lname);
     r->env = env;
@@ -231,7 +231,7 @@ static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
     code->body = x->body;
 
     OverloadPtr overload = new Overload(
-        operator_expr_call(), code, false, IGNORE
+        NULL, operator_expr_call(), code, false, IGNORE
     );
     overload->env = env;
     overload->location = x->location;
@@ -246,7 +246,7 @@ static void initializeLambdaWithoutFreeVars(LambdaPtr x, EnvPtr env,
     llvm::StringRef lname)
 {
     IdentifierPtr name = Identifier::get(lname, x->location);
-    x->lambdaProc = new Procedure(name, PRIVATE);
+    x->lambdaProc = new Procedure(NULL, name, PRIVATE, false);
     x->lambdaProc->lambda = x;
 
     CodePtr code = new Code();
@@ -259,7 +259,7 @@ static void initializeLambdaWithoutFreeVars(LambdaPtr x, EnvPtr env,
 
     ExprPtr procRef = new ObjectExpr(x->lambdaProc.ptr());
     procRef->location = x->location;
-    OverloadPtr overload = new Overload(procRef, code, false, IGNORE);
+    OverloadPtr overload = new Overload(NULL, procRef, code, false, IGNORE);
     overload->env = env;
     overload->location = x->location;
     addProcedureOverload(x->lambdaProc, env, overload);
