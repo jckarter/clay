@@ -1159,7 +1159,10 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
     }
 
     case UNPACK : {
-        error("incorrect usage of unpack operator");
+        Unpack *unpack = (Unpack *)expr.ptr();
+        if (unpack->expr->exprKind != FOREIGN_EXPR)
+            error("incorrect usage of unpack operator");
+        evalExpr(unpack->expr, env, out);
         break;
     }
 

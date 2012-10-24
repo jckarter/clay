@@ -1179,7 +1179,10 @@ void codegenExpr(ExprPtr expr,
     }
 
     case UNPACK : {
-        error("incorrect usage of unpack operator");
+        Unpack *unpack = (Unpack *)expr.ptr();
+        if (unpack->expr->exprKind != FOREIGN_EXPR)
+            error("incorrect usage of unpack operator");
+        codegenExpr(unpack->expr, env, ctx, out);
         break;
     }
 

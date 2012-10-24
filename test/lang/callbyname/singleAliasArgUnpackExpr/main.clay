@@ -1,0 +1,13 @@
+import printer.(println);
+
+alias foo(x) {
+    println(x);
+}
+
+bar(forward ..x) {
+    foo(..x);
+}
+
+main() {
+    bar("hello world");
+}

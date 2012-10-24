@@ -817,8 +817,10 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
     }
 
     case UNPACK : {
-        error("incorrect usage of unpack operator");
-        return NULL;
+        Unpack *unpack = (Unpack *)expr.ptr();
+        if (unpack->expr->exprKind != FOREIGN_EXPR)
+            error("incorrect usage of unpack operator");
+        return analyzeExpr(unpack->expr, env);
     }
 
     case STATIC_EXPR : {
