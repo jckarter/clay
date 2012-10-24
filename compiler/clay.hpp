@@ -1805,6 +1805,7 @@ struct Code : public ANode {
 //
 
 enum Visibility {
+    VISIBILITY_UNDEFINED,
     PUBLIC,
     PRIVATE
 };
@@ -1816,15 +1817,16 @@ enum Visibility {
 //
 
 struct TopLevelItem : public ANode {
-    EnvPtr env;
+    Module * const module;
     IdentifierPtr name; // for named top level items
     Visibility visibility; // valid only if name != NULL
-    TopLevelItem(ObjectKind objKind)
-        : ANode(objKind) {}
-    TopLevelItem(ObjectKind objKind, Visibility visibility)
-        : ANode(objKind), visibility(visibility) {}
-    TopLevelItem(ObjectKind objKind, IdentifierPtr name, Visibility visibility)
-        : ANode(objKind), name(name), visibility(visibility) {}
+
+    EnvPtr env;
+
+    TopLevelItem(ObjectKind objKind, Module *module, Visibility visibility = VISIBILITY_UNDEFINED)
+        : ANode(objKind), module(module), visibility(visibility) {}
+    TopLevelItem(ObjectKind objKind, Module *module, IdentifierPtr name, Visibility visibility)
+        : ANode(objKind), module(module), name(name), visibility(visibility) {}
 };
 
 struct RecordDecl : public TopLevelItem {
@@ -1841,23 +1843,23 @@ struct RecordDecl : public TopLevelItem {
 
     LambdaPtr lambda;
 
-    RecordDecl(Visibility visibility)
-        : TopLevelItem(RECORD_DECL, visibility),
+    RecordDecl(Module *module, Visibility visibility)
+        : TopLevelItem(RECORD_DECL, module, visibility),
           builtinOverloadInitialized(false) {}
-    RecordDecl(Visibility visibility,
+    RecordDecl(Module *module, Visibility visibility,
            llvm::ArrayRef<PatternVar> patternVars, ExprPtr predicate)
-        : TopLevelItem(RECORD_DECL, visibility),
+        : TopLevelItem(RECORD_DECL, module, visibility),
           patternVars(patternVars),
           predicate(predicate),
           builtinOverloadInitialized(false) {}
-    RecordDecl(IdentifierPtr name,
+    RecordDecl(Module *module, IdentifierPtr name,
            Visibility visibility,
            llvm::ArrayRef<PatternVar> patternVars,
            ExprPtr predicate,
            llvm::ArrayRef<IdentifierPtr> params,
            IdentifierPtr varParam,
            RecordBodyPtr body)
-        : TopLevelItem(RECORD_DECL, name, visibility),
+        : TopLevelItem(RECORD_DECL, module, name, visibility),
           patternVars(patternVars), predicate(predicate),
           params(params), varParam(varParam), body(body),
           builtinOverloadInitialized(false) {}
@@ -1894,7 +1896,7 @@ struct VariantDecl : public TopLevelItem {
 
     vector<OverloadPtr> overloads;
 
-    VariantDecl(IdentifierPtr name,
+    VariantDecl(Module *module, IdentifierPtr name,
             Visibility visibility,
             llvm::ArrayRef<PatternVar> patternVars,
             ExprPtr predicate,
@@ -1902,7 +1904,7 @@ struct VariantDecl : public TopLevelItem {
             IdentifierPtr varParam,
             bool open,
             ExprListPtr defaultInstances)
-        : TopLevelItem(VARIANT_DECL, name, visibility),
+        : TopLevelItem(VARIANT_DECL, module, name, visibility),
           patternVars(patternVars), predicate(predicate),
           params(params), varParam(varParam),
           open(open), defaultInstances(defaultInstances) {}
@@ -1914,11 +1916,11 @@ struct InstanceDecl : public TopLevelItem {
     ExprPtr target;
     ExprListPtr members;
 
-    InstanceDecl(llvm::ArrayRef<PatternVar> patternVars,
+    InstanceDecl(Module *module, llvm::ArrayRef<PatternVar> patternVars,
              ExprPtr predicate,
              ExprPtr target,
              ExprListPtr members)
-        : TopLevelItem(INSTANCE_DECL), patternVars(patternVars),
+        : TopLevelItem(INSTANCE_DECL, module), patternVars(patternVars),
           predicate(predicate), target(target), members(members)
         {}
 };
@@ -1945,16 +1947,17 @@ struct Overload : public TopLevelItem {
     vector<PatternPtr> argPatterns;
     MultiPatternPtr varArgPattern;
     
-    Overload(ExprPtr target,
+    Overload(Module *module, ExprPtr target,
              CodePtr code,
              bool callByName,
              InlineAttribute isInline)
-        : TopLevelItem(OVERLOAD), target(target), code(code),
+        : TopLevelItem(OVERLOAD, module), target(target), code(code),
           callByName(callByName), isInline(isInline),
           patternsInitializedState(0), nameIsPattern(false) {}
 };
 
 struct Procedure : public TopLevelItem {
+    bool privateOverload;
     OverloadPtr interface;
 
     OverloadPtr singleOverload;
@@ -1963,11 +1966,15 @@ struct Procedure : public TopLevelItem {
     ProcedureMono mono;
     LambdaPtr lambda;
 
-    Procedure(IdentifierPtr name, Visibility visibility)
-        : TopLevelItem(PROCEDURE, name, visibility) {}
+    Procedure(Module *module, IdentifierPtr name, Visibility visibility, bool privateOverload)
+        : TopLevelItem(PROCEDURE, module, name, visibility),
+          privateOverload(privateOverload)
+    {}
 
-    Procedure(IdentifierPtr name, Visibility visibility, OverloadPtr interface)
-        : TopLevelItem(PROCEDURE, name, visibility), interface(interface) {}
+    Procedure(Module *module, IdentifierPtr name, Visibility visibility, bool privateOverload, OverloadPtr interface)
+        : TopLevelItem(PROCEDURE, module, name, visibility),
+          privateOverload(privateOverload), interface(interface)
+    {}
 };
 
 
@@ -1976,10 +1983,10 @@ struct NewTypeDecl : public TopLevelItem {
     TypePtr type;
     TypePtr baseType;
     bool initialized;
-    NewTypeDecl(IdentifierPtr name,
+    NewTypeDecl(Module *module, IdentifierPtr name,
             Visibility visibility,
             ExprPtr expr)
-        : TopLevelItem(NEW_TYPE_DECL, name, visibility), expr(expr),
+        : TopLevelItem(NEW_TYPE_DECL, module, name, visibility), expr(expr),
         initialized(false) {}
     
     
@@ -1991,14 +1998,14 @@ struct EnumDecl : public TopLevelItem {
 
     vector<EnumMemberPtr> members;
     TypePtr type;
-    EnumDecl(IdentifierPtr name, Visibility visibility,
+    EnumDecl(Module *module, IdentifierPtr name, Visibility visibility,
         llvm::ArrayRef<PatternVar> patternVars, ExprPtr predicate)
-        : TopLevelItem(ENUM_DECL, name, visibility),
+        : TopLevelItem(ENUM_DECL, module, name, visibility),
           patternVars(patternVars), predicate(predicate) {}
-    EnumDecl(IdentifierPtr name, Visibility visibility,
+    EnumDecl(Module *module, IdentifierPtr name, Visibility visibility,
                 llvm::ArrayRef<PatternVar> patternVars, ExprPtr predicate,
                 llvm::ArrayRef<EnumMemberPtr> members)
-        : TopLevelItem(ENUM_DECL, name, visibility),
+        : TopLevelItem(ENUM_DECL, module, name, visibility),
           patternVars(patternVars), predicate(predicate),
           members(members) {}
 };
@@ -2021,14 +2028,14 @@ struct GlobalVariable : public TopLevelItem {
 
     ObjectTablePtr instances;
 
-    GlobalVariable(IdentifierPtr name,
+    GlobalVariable(Module *module, IdentifierPtr name,
                    Visibility visibility,
                    llvm::ArrayRef<PatternVar> patternVars,
                    ExprPtr predicate,
                    llvm::ArrayRef<IdentifierPtr> params,
                    IdentifierPtr varParam,
                    ExprPtr expr)
-        : TopLevelItem(GLOBAL_VARIABLE, name, visibility),
+        : TopLevelItem(GLOBAL_VARIABLE, module, name, visibility),
           patternVars(patternVars), predicate(predicate),
           params(params), varParam(varParam), expr(expr) {}
 
@@ -2088,18 +2095,18 @@ struct ExternalProcedure : public TopLevelItem {
     llvm::Function *llvmFunc;
     llvm::TrackingVH<llvm::MDNode> debugInfo;
 
-    ExternalProcedure(Visibility visibility)
-        : TopLevelItem(EXTERNAL_PROCEDURE, visibility), hasVarArgs(false),
+    ExternalProcedure(Module *module, Visibility visibility)
+        : TopLevelItem(EXTERNAL_PROCEDURE, module, visibility), hasVarArgs(false),
           attributes(new ExprList()), attributesVerified(false),
           analyzed(false), bodyCodegenned(false), llvmFunc(NULL), debugInfo(NULL) {}
-    ExternalProcedure(IdentifierPtr name,
+    ExternalProcedure(Module *module, IdentifierPtr name,
                       Visibility visibility,
                       llvm::ArrayRef<ExternalArgPtr> args,
                       bool hasVarArgs,
                       ExprPtr returnType,
                       StatementPtr body,
                       ExprListPtr attributes)
-        : TopLevelItem(EXTERNAL_PROCEDURE, name, visibility), args(args),
+        : TopLevelItem(EXTERNAL_PROCEDURE, module, name, visibility), args(args),
           hasVarArgs(hasVarArgs), returnType(returnType), body(body),
           attributes(attributes), attributesVerified(false),
           analyzed(false), bodyCodegenned(false), llvmFunc(NULL), debugInfo(NULL) {}
@@ -2127,15 +2134,15 @@ struct ExternalVariable : public TopLevelItem {
     llvm::GlobalVariable *llGlobal;
     llvm::TrackingVH<llvm::MDNode> debugInfo;
 
-    ExternalVariable(Visibility visibility)
-        : TopLevelItem(EXTERNAL_VARIABLE, visibility),
+    ExternalVariable(Module *module, Visibility visibility)
+        : TopLevelItem(EXTERNAL_VARIABLE, module, visibility),
           attributes(new ExprList()), attributesVerified(false),
           llGlobal(NULL), debugInfo(NULL) {}
-    ExternalVariable(IdentifierPtr name,
+    ExternalVariable(Module *module, IdentifierPtr name,
                      Visibility visibility,
                      ExprPtr type,
                      ExprListPtr attributes)
-        : TopLevelItem(EXTERNAL_VARIABLE, name, visibility),
+        : TopLevelItem(EXTERNAL_VARIABLE, module, name, visibility),
           type(type), attributes(attributes),
           attributesVerified(false), llGlobal(NULL), debugInfo(NULL) {}
 
@@ -2147,8 +2154,8 @@ struct EvalTopLevel : public TopLevelItem {
     bool evaled;
     vector<TopLevelItemPtr> value;
 
-    EvalTopLevel(ExprListPtr args)
-        : TopLevelItem(EVAL_TOPLEVEL), args(args), evaled(false)
+    EvalTopLevel(Module *module, ExprListPtr args)
+        : TopLevelItem(EVAL_TOPLEVEL, module), args(args), evaled(false)
         {}
 };
 
@@ -2156,8 +2163,8 @@ struct StaticAssertTopLevel : public TopLevelItem {
     ExprPtr cond;
     ExprListPtr message;
 
-    StaticAssertTopLevel(ExprPtr cond, ExprListPtr message)
-    : TopLevelItem(STATIC_ASSERT_TOP_LEVEL), cond(cond), message(message)
+    StaticAssertTopLevel(Module *module, ExprPtr cond, ExprListPtr message)
+    : TopLevelItem(STATIC_ASSERT_TOP_LEVEL, module), cond(cond), message(message)
     {}
 };
 
@@ -2178,8 +2185,8 @@ struct Documentation : public TopLevelItem {
 
     std::map<DocumentationAnnotation, string> annotation;
     std::string text;
-    Documentation(const std::map<DocumentationAnnotation, string> &annotation, const std::string &text)
-        : TopLevelItem(DOCUMENTATION), annotation(annotation), text(text)
+    Documentation(Module *module, const std::map<DocumentationAnnotation, string> &annotation, const std::string &text)
+        : TopLevelItem(DOCUMENTATION, module), annotation(annotation), text(text)
         {}
 };
 
@@ -2199,14 +2206,14 @@ struct GlobalAlias : public TopLevelItem {
 
     vector<OverloadPtr> overloads;
 
-    GlobalAlias(IdentifierPtr name,
+    GlobalAlias(Module *module, IdentifierPtr name,
                 Visibility visibility,
                 llvm::ArrayRef<PatternVar> patternVars,
                 ExprPtr predicate,
                 llvm::ArrayRef<IdentifierPtr> params,
                 IdentifierPtr varParam,
                 ExprPtr expr)
-        : TopLevelItem(GLOBAL_ALIAS, name, visibility),
+        : TopLevelItem(GLOBAL_ALIAS, module, name, visibility),
           patternVars(patternVars), predicate(predicate),
           params(params), varParam(varParam), expr(expr) {}
     bool hasParams() const {
@@ -2435,7 +2442,7 @@ ExprListPtr parseExprList(SourcePtr source, int offset, int length);
 void parseStatements(SourcePtr source, int offset, int length,
     vector<StatementPtr> &statements);
 void parseTopLevelItems(SourcePtr source, int offset, int length,
-    vector<TopLevelItemPtr> &topLevels);
+    vector<TopLevelItemPtr> &topLevels, Module *);
 void parseInteractive(SourcePtr source, int offset, int length,
                       vector<TopLevelItemPtr>& toplevels,
                       vector<ImportPtr>& imports,

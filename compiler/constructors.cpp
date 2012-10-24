@@ -167,7 +167,7 @@ void initBuiltinConstructor(RecordDeclPtr x)
     code->body = new Return(RETURN_VALUE, new ExprList(returnExpr.ptr()));
     code->body->location = returnExpr->location;
 
-    OverloadPtr defaultOverload = new Overload(recName, code, true, IGNORE);
+    OverloadPtr defaultOverload = new Overload(x->module, recName, code, true, IGNORE);
     defaultOverload->location = x->location;
     defaultOverload->env = x->env;
     x->overloads.push_back(defaultOverload);

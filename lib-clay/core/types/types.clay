@@ -99,7 +99,7 @@ forceinline overload returnValues() = ;
 
 /// @section  returnTypeToValue, returnTypesToValues 
 
-define returnTypeToValue;
+define returnTypeToValue private overload;
 [T] forceinline overload returnTypeToValue(#T) = typeToRValue(T);
 [T] forceinline overload returnTypeToValue(#ByRef[T]) = ref typeToLValue(T);
 

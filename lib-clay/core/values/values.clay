@@ -9,7 +9,7 @@ forceinline eachValue(fn, ..xs) {
     }
 }
 
-define mapValues;
+define mapValues private overload;
 forceinline overload mapValues(fn, forward x, forward ..xs)
     = forward ..fn(x), ..mapValues(fn, ..xs);
 forceinline overload mapValues(fn) = ;
@@ -24,7 +24,7 @@ mapIndexedValues(fn, forward ..values) = forward .._mapIndexedValues(fn, #0, ..v
 // filter values using given predicate
 // unlike most other functions, all parameters must be static values
 [Fn]
-define filterValues(#Fn, ..xs);
+define filterValues(#Fn, ..xs) private overload;
 [Fn, First when Fn(First)]
 overload filterValues(#Fn, #First, ..xs) = #First, ..filterValues(#Fn, ..xs);
 [Fn, First when not Fn(First)]
@@ -32,17 +32,17 @@ overload filterValues(#Fn, #First, ..xs) = ..filterValues(#Fn, ..xs);
 [Fn]
 overload filterValues(#Fn) = ;
 
-define foldValues;
+define foldValues private overload;
 forceinline overload foldValues(fn, forward x, forward ..xs)
     = fn(x, foldValues(fn, ..xs));
 forceinline overload foldValues(fn, forward x) = forward x;
 
-define foldlValues;
+define foldlValues private overload;
 forceinline overload foldlValues(fn, forward x1, forward x2, forward ..xs)
     = foldlValues(fn, fn(x1, x2), ..xs);
 forceinline overload foldlValues(fn, forward x) = forward x;
 
-define weaveValues;
+define weaveValues private overload;
 forceinline overload weaveValues(between, forward x, forward ..xs)
     = forward x, between, ..weaveValues(between, ..xs);
 forceinline overload weaveValues(between, forward x, forward y)
@@ -50,14 +50,14 @@ forceinline overload weaveValues(between, forward x, forward y)
 forceinline overload weaveValues(between, forward x) = forward x;
 forceinline overload weaveValues(between) = ;
 
-define reverseValues;
+define reverseValues private overload;
 forceinline overload reverseValues() = ;
 forceinline overload reverseValues(forward x, forward ..xs) = forward ..reverseValues(..xs), x;
 
 
 /// @section  countOccurrences, firstValue 
 
-define countOccurrences;
+define countOccurrences private overload;
 forceinline overload countOccurrences(value) = 0;
 [value1, value2]
 forceinline overload countOccurrences(#value1, #value2, forward ..xs)
@@ -77,7 +77,7 @@ forceinline lastValue(..a, forward last) = forward last;
 /// @section  replicateValue, allValues?, anyValues?, equalValues?, inValues? 
 
 [n when n >= 0]
-define replicateValue(a, #n);
+define replicateValue(a, #n) private overload;
 
 [n when n > 0]
 forceinline overload replicateValue(a, #n) = a, ..replicateValue(a, #(n-1));
@@ -118,7 +118,7 @@ private record CapturedRValue[T] (
     value: T
 );
 
-define CapturedValue?(a) : Bool;
+define CapturedValue?(a) : Bool private overload;
 
 overload CapturedValue?(a) = false;
 [T]
@@ -126,17 +126,17 @@ overload CapturedValue?(#CapturedLValue[T]) = true;
 [T]
 overload CapturedValue?(#CapturedRValue[T]) = true;
 
-define captureValue(v);
+define captureValue(v) private overload;
 forceinline overload captureValue(rvalue x) = CapturedRValue(move(x));
 forceinline overload captureValue(ref x) = CapturedLValue(@x);
 
 [V when CapturedValue?(V)]
-define forwardValue(v:V);
+define forwardValue(v:V) private overload;
 [T] forceinline overload forwardValue(x:CapturedRValue[T]) = move(x.value);
 [T] forceinline overload forwardValue(x:CapturedLValue[T]) = ref x.ptr^;
 
 [V when CapturedValue?(V)]
-define capturedRef(v:V);
+define capturedRef(v:V) private overload;
 [T] forceinline overload capturedRef(x:CapturedRValue[T]) = ref x.value;
 [T] forceinline overload capturedRef(x:CapturedLValue[T]) = ref x.ptr^;
 
@@ -159,7 +159,7 @@ forceinline capturedRefs(x:Tuple[..T]) =
 sequenceValues(seq: S, #n) = forward ..iteratorValues(iterator(seq), #n);
 
 [I, n when Iterator?(I)]
-define iteratorValues(iter:I, #n);
+define iteratorValues(iter:I, #n) private overload;
 
 overload iteratorValues(iter, #0) = ;
 [n when n > 0]
@@ -172,7 +172,7 @@ overload iteratorValues(iter, #n) {
 
 
 /// @section  iterate over two sets of values in tandem 
-define eachValue2;
+define eachValue2 private overload;
 
 [n when n > 0]
 overload eachValue2(fn, #n, forward x, forward ..xs) {
@@ -181,7 +181,7 @@ overload eachValue2(fn, #n, forward x, forward ..xs) {
 }
 overload eachValue2(fn, #0, forward ..xs) { }
 
-define mapValues2;
+define mapValues2 private overload;
 [n when n > 0]
 overload mapValues2(fn, #n, forward x, forward ..xs)
     = forward fn(x, nthValue(#(n-1), ..xs)),
@@ -192,7 +192,7 @@ overload mapValues2(fn, #0, forward ..xs) = ;
 
 /// @section  treat multiple #tuple values as key-values pairs 
 
-define assocValue;
+define assocValue private overload;
 
 [key]
 overload assocValue(#key, kv, forward ..kvs) = forward ..assocValue(#key, ..kvs);
@@ -203,7 +203,7 @@ overload assocValue(#key, forward kv: Tuple[Static[key], ..T], ..kvs)
 
 
 [key]
-define assocValue?(#key, ..kvs) : Bool;
+define assocValue?(#key, ..kvs) : Bool private overload;
 [key]
 overload assocValue?(#key) = false;
 [key]
@@ -211,7 +211,7 @@ overload assocValue?(#key, kv, ..kvs) = assocValue?(key, ..kvs);
 [key, ..T]
 overload assocValue?(#key, kv: Tuple[Static[key], ..T], ..kvs) = true;
 
-define assocCountValues;
+define assocCountValues private overload;
 [key]
 overload assocCountValues(#key) = -1;
 [key]

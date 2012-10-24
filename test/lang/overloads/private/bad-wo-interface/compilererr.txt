@@ -1,0 +1,1 @@
+symbol foo is declared as private for overload

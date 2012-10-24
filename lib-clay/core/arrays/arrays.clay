@@ -200,7 +200,7 @@ overload destroy(a:Array[T,n]) {
 
 /// @section  array - type inferring constructor 
 
-define array;
+define array private overload;
 
 [..A when countValues(..A) > 0 and equalValues?(..A)]
 alias overload array(..args:A) {

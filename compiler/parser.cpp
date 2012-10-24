@@ -254,7 +254,7 @@ static bool literal(ExprPtr &x) {
 // expression misc
 //
 
-static bool expression(ExprPtr &x);
+static bool expression(ExprPtr &x, bool = false);
 
 static bool optExpression(ExprPtr &x) {
     int p = save();
@@ -265,7 +265,7 @@ static bool optExpression(ExprPtr &x) {
     return true;
 }
 
-static bool expressionList(ExprListPtr &x) {
+static bool expressionList(ExprListPtr &x, bool = false) {
     ExprListPtr a;
     ExprPtr b;
     if (!expression(b)) return false;
@@ -938,7 +938,7 @@ static bool pairExpr(ExprPtr &x) {
 // expression
 //
 
-static bool expression(ExprPtr &x) {
+static bool expression(ExprPtr &x, bool) {
     Location startLocation = currentLocation();
     int p = save();
     if (restore(p), lambda(x)) goto success;
@@ -1052,7 +1052,7 @@ static bool optExprTypeSpec(ExprPtr &x) {
 // statements
 //
 
-static bool statement(StatementPtr &x);
+static bool statement(StatementPtr &x, bool = false);
 
 static bool labelDef(StatementPtr &x) {
     Location location = currentLocation();
@@ -1104,7 +1104,7 @@ static bool localBinding(StatementPtr &x) {
     return true;
 }
 
-static bool blockItems(vector<StatementPtr> &stmts);
+static bool blockItems(vector<StatementPtr> &stmts, bool);
 static bool withStatement(StatementPtr &x) {
     Location startLocation = currentLocation();
 
@@ -1138,7 +1138,7 @@ static bool blockItem(StatementPtr &x) {
     return false;
 }
 
-static bool blockItems(vector<StatementPtr> &stmts) {
+static bool blockItems(vector<StatementPtr> &stmts, bool) {
     while (true) {
         int p = save();
         StatementPtr z;
@@ -1179,7 +1179,7 @@ static bool block(StatementPtr &x) {
     Location location = currentLocation();
     if (!symbol("{")) return false;
     BlockPtr y = new Block();
-    if (!blockItems(y->statements)) return false;
+    if (!blockItems(y->statements, false)) return false;
     if (!symbol("}")) return false;
     x = y.ptr();
     x->location = location;
@@ -1537,15 +1537,13 @@ static bool evalStatement(StatementPtr &x) {
 }
 
 // parse staticassert top level or statement
-template <typename S, typename T>
-static bool staticAssert(S &x) {
-    Location location = currentLocation();
+static bool staticAssert(ExprPtr& cond, ExprListPtr& message, Location& location) {
+    location = currentLocation();
     if (!keyword("staticassert")) return false;
     if (!symbol("(")) return false;
-    ExprPtr cond;
     if (!expression(cond)) return false;
 
-    ExprListPtr message = new ExprList();
+    message = new ExprList();
 
     int s = save();
     while (symbol(",")) {
@@ -1558,12 +1556,31 @@ static bool staticAssert(S &x) {
 
     if (!symbol(")")) return false;
     if (!symbol(";")) return false;
-    x = new T(cond, message);
+    return true;
+}
+
+static bool staticAssertTopLevel(TopLevelItemPtr &x, Module *module) {
+    ExprPtr cond;
+    ExprListPtr message;
+    Location location;
+    if (!staticAssert(cond, message, location)) return false;
+    x = new StaticAssertTopLevel(module, cond, message);
     x->location = location;
     return true;
 }
 
-static bool statement(StatementPtr &x) {
+static bool staticAssertStatement(StatementPtr &x) {
+    ExprPtr cond;
+    ExprListPtr message;
+    Location location;
+    if (!staticAssert(cond, message, location)) return false;
+    x = new StaticAssertStatement(cond, message);
+    x->location = location;
+    return true;
+}
+
+
+static bool statement(StatementPtr &x, bool) {
     int p = save();
     if (block(x)) return true;
     if (restore(p), assignment(x)) return true;
@@ -1575,7 +1592,7 @@ static bool statement(StatementPtr &x) {
     if (restore(p), switchStatement(x)) return true;
     if (restore(p), returnStatement(x)) return true;
     if (restore(p), evalStatement(x)) return true;
-    if (restore(p), staticAssert<StatementPtr, StaticAssertStatement>(x)) return true;
+    if (restore(p), staticAssertStatement(x)) return true;
     if (restore(p), exprStatement(x)) return true;
     if (restore(p), whileStatement(x)) return true;
     if (restore(p), breakStatement(x)) return true;
@@ -2071,7 +2088,7 @@ static bool recordBody(RecordBodyPtr &x) {
     return false;
 }
 
-static bool record(TopLevelItemPtr &x) {
+static bool record(TopLevelItemPtr &x, Module *module) {
     Location location = currentLocation();
     vector<PatternVar> patternVars;
     ExprPtr predicate;
@@ -2079,7 +2096,7 @@ static bool record(TopLevelItemPtr &x) {
     if (!optPatternVarsWithCond(patternVars, predicate)) return false;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("record")) return false;
-    RecordDeclPtr y = new RecordDecl(vis, patternVars, predicate);
+    RecordDeclPtr y = new RecordDecl(module, vis, patternVars, predicate);
     if (!identifier(y->name)) return false;
     if (!optStaticParams(y->params, y->varParam)) return false;
     if (!recordBody(y->body)) return false;
@@ -2111,7 +2128,7 @@ static bool optInstances(ExprListPtr &x, bool &open) {
     }
 }
 
-static bool variant(TopLevelItemPtr &x) {
+static bool variant(TopLevelItemPtr &x, Module *module) {
     Location location = currentLocation();
     vector<PatternVar> patternVars;
     ExprPtr predicate;
@@ -2128,12 +2145,12 @@ static bool variant(TopLevelItemPtr &x) {
     bool open;
     if (!optInstances(defaultInstances, open)) return false;
     if (!symbol(";")) return false;
-    x = new VariantDecl(name, vis, patternVars, predicate, params, varParam, open, defaultInstances);
+    x = new VariantDecl(module, name, vis, patternVars, predicate, params, varParam, open, defaultInstances);
     x->location = location;
     return true;
 }
 
-static bool instance(TopLevelItemPtr &x) {
+static bool instance(TopLevelItemPtr &x, Module *module) {
     Location location = currentLocation();
     vector<PatternVar> patternVars;
     ExprPtr predicate;
@@ -2144,12 +2161,12 @@ static bool instance(TopLevelItemPtr &x) {
     ExprListPtr members;
     if (!instances(members)) return false;
     if (!symbol(";")) return false;
-    x = new InstanceDecl(patternVars, predicate, target, members);
+    x = new InstanceDecl(module, patternVars, predicate, target, members);
     x->location = location;
     return true;
 }
 
-static bool newtype(TopLevelItemPtr &x) {
+static bool newtype(TopLevelItemPtr &x, Module *module) {
     Location location = currentLocation();
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
@@ -2160,7 +2177,7 @@ static bool newtype(TopLevelItemPtr &x) {
     ExprPtr expr;
     if (!expression(expr)) return false;
     if (!symbol(";")) return false;
-    x = new NewTypeDecl(name, vis, expr);
+    x = new NewTypeDecl(module, name, vis, expr);
     x->location = location;
     return true;
 }
@@ -2351,6 +2368,20 @@ static bool optCallByName(bool &callByName) {
     return true;
 }
 
+static bool optPrivateOverload(bool &privateOverload) {
+    int p = save();
+    if (!keyword("private")) {
+        restore(p);
+        privateOverload = false;
+        return true;
+    }
+    if (!keyword("overload")) {
+        return false;
+    }
+    privateOverload = true;
+    return true;
+}
+
 static bool llvmCode(LLVMCodePtr &b) {
     Token* t;
     if (!next(t) || (t->tokenKind != T_LLVM))
@@ -2360,7 +2391,7 @@ static bool llvmCode(LLVMCodePtr &b) {
     return true;
 }
 
-static bool llvmProcedure(vector<TopLevelItemPtr> &x) {
+static bool llvmProcedure(vector<TopLevelItemPtr> &x, Module *module) {
     Location location = currentLocation();
     CodePtr y = new Code();
     if (!optPatternVarsWithCond(y->patternVars, y->predicate)) return false;
@@ -2377,7 +2408,7 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x) {
     if (!llvmCode(y->llvmBody)) return false;
     y->location = location;
 
-    ProcedurePtr u = new Procedure(z, vis);
+    ProcedurePtr u = new Procedure(module, z, vis, true);
     u->location = location;
     x.push_back(u.ptr());
 
@@ -2385,7 +2416,7 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x) {
     target->location = location;
     target->startLocation = targetStartLocation;
     target->endLocation = targetEndLocation;
-    OverloadPtr v = new Overload(target, y, false, isInline);
+    OverloadPtr v = new Overload(module, target, y, false, isInline);
     v->location = location;
     x.push_back(v.ptr());
 
@@ -2394,7 +2425,7 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x) {
     return true;
 }
 
-static bool procedureWithInterface(vector<TopLevelItemPtr> &x) {
+static bool procedureWithInterface(vector<TopLevelItemPtr> &x, Module *module) {
     Location location = currentLocation();
     CodePtr interfaceCode = new Code();
     if (!optPatternVarsWithCond(interfaceCode->patternVars, interfaceCode->predicate)) return false;
@@ -2407,6 +2438,10 @@ static bool procedureWithInterface(vector<TopLevelItemPtr> &x) {
     Location targetEndLocation = currentLocation();
     if (!arguments(interfaceCode->formalArgs, interfaceCode->hasVarArg)) return false;
     interfaceCode->returnSpecsDeclared = allReturnSpecs(interfaceCode->returnSpecs, interfaceCode->varReturnSpec);
+
+    bool privateOverload;
+    if (!optPrivateOverload(privateOverload)) return false;
+
     if (!symbol(";")) return false;
     interfaceCode->location = location;
 
@@ -2414,17 +2449,17 @@ static bool procedureWithInterface(vector<TopLevelItemPtr> &x) {
     target->location = location;
     target->startLocation = targetStartLocation;
     target->endLocation = targetEndLocation;
-    OverloadPtr interface = new Overload(target, interfaceCode, false, IGNORE);
+    OverloadPtr interface = new Overload(module, target, interfaceCode, false, IGNORE);
     interface->location = location;
 
-    ProcedurePtr proc = new Procedure(name, vis, interface);
+    ProcedurePtr proc = new Procedure(module, name, vis, privateOverload, interface);
     proc->location = location;
     x.push_back(proc.ptr());
 
     return true;
 }
 
-static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
+static bool procedureWithBody(vector<TopLevelItemPtr> &x, Module *module) {
     Location location = currentLocation();
     CodePtr code = new Code();
     if (!optPatternVarsWithCond(code->patternVars, code->predicate)) return false;
@@ -2449,7 +2484,7 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
             x->isReturnSpecs = true;
     }
 
-    ProcedurePtr proc = new Procedure(name, vis);
+    ProcedurePtr proc = new Procedure(module, name, vis, true);
     proc->location = location;
     x.push_back(proc.ptr());
 
@@ -2457,7 +2492,7 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
     target->location = location;
     target->startLocation = targetStartLocation;
     target->endLocation = targetEndLocation;
-    OverloadPtr oload = new Overload(target, code, callByName, isInline);
+    OverloadPtr oload = new Overload(module, target, code, callByName, isInline);
     oload->location = location;
     x.push_back(oload.ptr());
 
@@ -2466,20 +2501,22 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x) {
     return true;
 }
 
-static bool procedure(TopLevelItemPtr &x) {
+static bool procedure(TopLevelItemPtr &x, Module *module) {
     Location location = currentLocation();
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("define")) return false;
     IdentifierPtr name;
     if (!identifier(name)) return false;
+    bool privateOverload;
+    if (!optPrivateOverload(privateOverload)) return false;
     if (!symbol(";")) return false;
-    x = new Procedure(name, vis);
+    x = new Procedure(module, name, vis, privateOverload);
     x->location = location;
     return true;
 }
 
-static bool overload(TopLevelItemPtr &x) {
+static bool overload(TopLevelItemPtr &x, Module *module) {
     Location location = currentLocation();
     CodePtr code = new Code();
     if (!optPatternVarsWithCond(code->patternVars, code->predicate)) return false;
@@ -2510,7 +2547,7 @@ static bool overload(TopLevelItemPtr &x) {
     target->startLocation = targetStartLocation;
     target->endLocation = targetEndLocation;
     code->location = location;
-    x = new Overload(target, code, callByName, isInline);
+    x = new Overload(module, target, code, callByName, isInline);
     x->location = location;
     NameRefPtr name = (NameRef *)target.ptr();
     return true;
@@ -2551,7 +2588,7 @@ static bool enumMemberList(vector<EnumMemberPtr> &x) {
     return true;
 }
 
-static bool enumeration(TopLevelItemPtr &x) {
+static bool enumeration(TopLevelItemPtr &x, Module *module) {
     Location location = currentLocation();
     vector<PatternVar> patternVars;
     ExprPtr predicate;
@@ -2561,7 +2598,7 @@ static bool enumeration(TopLevelItemPtr &x) {
     if (!keyword("enum")) return false;
     IdentifierPtr y;
     if (!identifier(y)) return false;
-    EnumDeclPtr z = new EnumDecl(y, vis, patternVars, predicate);
+    EnumDeclPtr z = new EnumDecl(module, y, vis, patternVars, predicate);
     if (!symbol("(")) return false;
     if (!enumMemberList(z->members)) return false;
     if (!symbol(")")) return false;
@@ -2577,7 +2614,7 @@ static bool enumeration(TopLevelItemPtr &x) {
 // global variable
 //
 
-static bool globalVariable(TopLevelItemPtr &x) {
+static bool globalVariable(TopLevelItemPtr &x, Module *module) {
     Location location = currentLocation();
     vector<PatternVar> patternVars;
     ExprPtr predicate;
@@ -2594,7 +2631,7 @@ static bool globalVariable(TopLevelItemPtr &x) {
     ExprPtr expr;
     if (!expression(expr)) return false;
     if (!symbol(";")) return false;
-    x = new GlobalVariable(name, vis, patternVars, predicate, params, varParam, expr);
+    x = new GlobalVariable(module, name, vis, patternVars, predicate, params, varParam, expr);
     x->location = location;
     return true;
 }
@@ -2715,12 +2752,12 @@ static bool optExternalReturn(ExprPtr &x) {
     return optExpression(x);
 }
 
-static bool external(TopLevelItemPtr &x) {
+static bool external(TopLevelItemPtr &x, Module *module) {
     Location location = currentLocation();
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("external")) return false;
-    ExternalProcedurePtr y = new ExternalProcedure(vis);
+    ExternalProcedurePtr y = new ExternalProcedure(module, vis);
     if (!optExternalAttributes(y->attributes)) return false;
     if (!identifier(y->name)) return false;
     if (!symbol("(")) return false;
@@ -2733,12 +2770,12 @@ static bool external(TopLevelItemPtr &x) {
     return true;
 }
 
-static bool externalVariable(TopLevelItemPtr &x) {
+static bool externalVariable(TopLevelItemPtr &x, Module *module) {
     Location location = currentLocation();
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("external")) return false;
-    ExternalVariablePtr y = new ExternalVariable(vis);
+    ExternalVariablePtr y = new ExternalVariable(module, vis);
     if (!optExternalAttributes(y->attributes)) return false;
     if (!identifier(y->name)) return false;
     if (!exprTypeSpec(y->type)) return false;
@@ -2754,7 +2791,7 @@ static bool externalVariable(TopLevelItemPtr &x) {
 // global alias
 //
 
-static bool globalAlias(TopLevelItemPtr &x) {
+static bool globalAlias(TopLevelItemPtr &x, Module *module) {
     Location location = currentLocation();
     vector<PatternVar> patternVars;
     ExprPtr predicate;
@@ -2771,7 +2808,7 @@ static bool globalAlias(TopLevelItemPtr &x) {
     ExprPtr expr;
     if (!expression(expr)) return false;
     if (!symbol(";")) return false;
-    x = new GlobalAlias(name, vis, patternVars, predicate, params, varParam, expr);
+    x = new GlobalAlias(module, name, vis, patternVars, predicate, params, varParam, expr);
     x->location = location;
     return true;
 }
@@ -2894,13 +2931,13 @@ static bool imports(vector<ImportPtr> &x) {
     return true;
 }
 
-static bool evalTopLevel(TopLevelItemPtr &x) {
+static bool evalTopLevel(TopLevelItemPtr &x, Module *module) {
     Location location = currentLocation();
     if (!keyword("eval")) return false;
     ExprListPtr args;
     if (!expressionList(args)) return false;
     if (!symbol(";")) return false;
-    x = new EvalTopLevel(args);
+    x = new EvalTopLevel(module, args);
     x->location = location;
     return true;
 }
@@ -2949,7 +2986,7 @@ static bool documentationText(std::string &text)
 }
 
 
-static bool documentation(TopLevelItemPtr &x)
+static bool documentation(TopLevelItemPtr &x, Module *module)
 {
     Location location = currentLocation();
     std::map<DocumentationAnnotation, string> annotation;
@@ -2979,7 +3016,7 @@ static bool documentation(TopLevelItemPtr &x)
     }
 
     if (success) {
-        x = new Documentation(annotation, text);
+        x = new Documentation(module, annotation, text);
         return true;
     }
     return false;
@@ -2992,27 +3029,27 @@ static bool documentation(TopLevelItemPtr &x)
 // module
 //
 
-static bool topLevelItem(vector<TopLevelItemPtr> &x) {
+static bool topLevelItem(vector<TopLevelItemPtr> &x, Module *module) {
     int p = save();
 
     TopLevelItemPtr y;
-    if (documentation(y)) goto success;
-    if (restore(p), record(y)) goto success;
-    if (restore(p), variant(y)) goto success;
-    if (restore(p), instance(y)) goto success;
-    if (restore(p), procedure(y)) goto success;
-    if (restore(p), procedureWithInterface(x)) goto success2;
-    if (restore(p), procedureWithBody(x)) goto success2;
-    if (restore(p), llvmProcedure(x)) goto success2;
-    if (restore(p), overload(y)) goto success;
-    if (restore(p), enumeration(y)) goto success;
-    if (restore(p), globalVariable(y)) goto success;
-    if (restore(p), external(y)) goto success;
-    if (restore(p), externalVariable(y)) goto success;
-    if (restore(p), globalAlias(y)) goto success;
-    if (restore(p), newtype(y)) goto success;
-    if (restore(p), evalTopLevel(y)) goto success;
-    if (restore(p), staticAssert<TopLevelItemPtr, StaticAssertTopLevel>(y)) goto success;
+    if (documentation(y, module)) goto success;
+    if (restore(p), record(y, module)) goto success;
+    if (restore(p), variant(y, module)) goto success;
+    if (restore(p), instance(y, module)) goto success;
+    if (restore(p), procedure(y, module)) goto success;
+    if (restore(p), procedureWithInterface(x, module)) goto success2;
+    if (restore(p), procedureWithBody(x, module)) goto success2;
+    if (restore(p), llvmProcedure(x, module)) goto success2;
+    if (restore(p), overload(y, module)) goto success;
+    if (restore(p), enumeration(y, module)) goto success;
+    if (restore(p), globalVariable(y, module)) goto success;
+    if (restore(p), external(y, module)) goto success;
+    if (restore(p), externalVariable(y, module)) goto success;
+    if (restore(p), globalAlias(y, module)) goto success;
+    if (restore(p), newtype(y, module)) goto success;
+    if (restore(p), evalTopLevel(y, module)) goto success;
+    if (restore(p), staticAssertTopLevel(y, module)) goto success;
     return false;
 success :
     assert(y.ptr());
@@ -3021,12 +3058,12 @@ success2 :
     return true;
 }
 
-static bool topLevelItems(vector<TopLevelItemPtr> &x) {
+static bool topLevelItems(vector<TopLevelItemPtr> &x, Module *module) {
     x.clear();
 
     while (true) {
         int p = save();
-        if (!topLevelItem(x)) {
+        if (!topLevelItem(x, module)) {
             restore(p);
             break;
         }
@@ -3086,7 +3123,7 @@ static bool module(llvm::StringRef moduleName, ModulePtr &x) {
     if (!imports(y->imports)) return false;
     if (!optModuleDeclaration(y->declaration)) return false;
     if (!optTopLevelLLVM(y->topLevelLLVM)) return false;
-    if (!topLevelItems(y->topLevelItems)) return false;
+    if (!topLevelItems(y->topLevelItems, y.ptr())) return false;
     x = y.ptr();
     x->location = location;
     return true;
@@ -3102,7 +3139,7 @@ struct REPLitem {
     vector<StatementPtr> stmts;
 };
 
-static bool replItems(REPLitem& x ) {
+static bool replItems(REPLitem& x, bool = false) {
     x.toplevels.clear();
     x.imports.clear();
     x.stmts.clear();
@@ -3110,7 +3147,7 @@ static bool replItems(REPLitem& x ) {
     StatementPtr stmtItem;
     while (true) {
         int p = save();
-        if (!topLevelItem(x.toplevels)) {
+        if (!topLevelItem(x.toplevels, NULL)) {
             restore(p);
         } else {
             continue;
@@ -3136,8 +3173,8 @@ static bool replItems(REPLitem& x ) {
 // parse
 //
 
-template<typename Parser, typename Node>
-void applyParser(SourcePtr source, int offset, int length, Parser parser, Node &node)
+template<typename Parser, typename ParserParam, typename Node>
+void applyParser(SourcePtr source, int offset, int length, Parser parser, ParserParam parserParam, Node &node)
 {
     vector<Token> t;
     tokenize(source, offset, length, t);
@@ -3145,7 +3182,7 @@ void applyParser(SourcePtr source, int offset, int length, Parser parser, Node &
     tokens = &t;
     position = maxPosition = 0;
 
-    if (!parser(node) || (position < (int)t.size())) {
+    if (!parser(node, parserParam) || (position < (int)t.size())) {
         Location location;
         if (maxPosition == (int)t.size())
             location = Location(source.ptr(), source->size());
@@ -3161,7 +3198,7 @@ void applyParser(SourcePtr source, int offset, int length, Parser parser, Node &
 
 struct ModuleParser {
     llvm::StringRef moduleName;
-    bool operator()(ModulePtr &m) { return module(moduleName, m); }
+    bool operator()(ModulePtr &m, Module*) { return module(moduleName, m); }
 };
 
 ModulePtr parse(llvm::StringRef moduleName, SourcePtr source, ParserFlags flags) {
@@ -3169,7 +3206,7 @@ ModulePtr parse(llvm::StringRef moduleName, SourcePtr source, ParserFlags flags)
         parserOptionKeepDocumentation = true;
     ModulePtr m;
     ModuleParser p = { moduleName };
-    applyParser(source, 0, source->size(), p, m);
+    applyParser(source, 0, source->size(), p, m.ptr(), m);
     m->source = source;
     return m;
 }
@@ -3181,7 +3218,7 @@ ModulePtr parse(llvm::StringRef moduleName, SourcePtr source, ParserFlags flags)
 
 ExprPtr parseExpr(SourcePtr source, int offset, int length) {
     ExprPtr expr;
-    applyParser(source, offset, length, expression, expr);
+    applyParser(source, offset, length, expression, false, expr);
     return expr;
 }
 
@@ -3192,7 +3229,7 @@ ExprPtr parseExpr(SourcePtr source, int offset, int length) {
 
 ExprListPtr parseExprList(SourcePtr source, int offset, int length) {
     ExprListPtr exprList;
-    applyParser(source, offset, length, expressionList, exprList);
+    applyParser(source, offset, length, expressionList, false, exprList);
     return exprList;
 }
 
@@ -3204,7 +3241,7 @@ ExprListPtr parseExprList(SourcePtr source, int offset, int length) {
 void parseStatements(SourcePtr source, int offset, int length,
         vector<StatementPtr> &stmts)
 {
-    applyParser(source, offset, length, blockItems, stmts);
+    applyParser(source, offset, length, blockItems, false, stmts);
 }
 
 
@@ -3213,9 +3250,9 @@ void parseStatements(SourcePtr source, int offset, int length,
 //
 
 void parseTopLevelItems(SourcePtr source, int offset, int length,
-        vector<TopLevelItemPtr> &topLevels)
+        vector<TopLevelItemPtr> &topLevels, Module *module)
 {
-    applyParser(source, offset, length, topLevelItems, topLevels);
+    applyParser(source, offset, length, topLevelItems, module, topLevels);
 }
 
 //
@@ -3228,7 +3265,7 @@ void parseInteractive(SourcePtr source, int offset, int length,
                       vector<StatementPtr>& stmts)
 {
     REPLitem x;
-    applyParser(source, offset, length, replItems, x);
+    applyParser(source, offset, length, replItems, false, x);
     toplevels = x.toplevels;
     imports = x.imports;
     stmts = x.stmts;
