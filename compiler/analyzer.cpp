@@ -617,6 +617,27 @@ MultiPValuePtr analyzeArgExpr(ExprPtr x,
 
 static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env);
 
+void appendArgString(Expr *expr, string *outString)
+{
+    ForeignExpr *fexpr;
+    if (expr->exprKind == FOREIGN_EXPR)
+        fexpr = (ForeignExpr*)expr;
+    else if (expr->exprKind == UNPACK) {
+        Unpack *uexpr = (Unpack*)expr;
+        if (uexpr->expr->exprKind != FOREIGN_EXPR)
+            goto notAlias;
+        fexpr = (ForeignExpr *)uexpr->expr.ptr();
+        *outString += "..";
+    } else
+        goto notAlias;
+
+    *outString += fexpr->expr->asString();
+    return;
+
+notAlias:
+    error("__ARG__ may only be applied to an alias value or alias function argument");
+}
+
 MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env)
 {
     if (analysisCachingDisabled > 0)
@@ -690,16 +711,12 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
     case ARG_EXPR : {
         ARGExpr *arg = (ARGExpr *)expr.ptr();
         ObjectPtr obj = safeLookupEnv(env, arg->name);
+        string argString;
         if (obj->objKind == EXPRESSION) {
             Expr *expr = (Expr*)obj.ptr();
-            if (expr->exprKind == FOREIGN_EXPR) {
-                ForeignExpr *fexpr = (ForeignExpr*)expr;
-                string argString = fexpr->expr->asString();
-                return analyzeStaticObject(Identifier::get(argString));
-            }
+            appendArgString(expr, &argString);
         } else if (obj->objKind == EXPR_LIST) {
             ExprList *elist = (ExprList*)obj.ptr();
-            string argString;
             for (vector<ExprPtr>::const_iterator i = elist->exprs.begin(),
                     end = elist->exprs.end();
                  i != end;
@@ -709,24 +726,10 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
                     argString += ", ";
 
                 Expr *expr = i->ptr();
-                ForeignExpr *fexpr;
-                if (expr->exprKind == FOREIGN_EXPR)
-                    fexpr = (ForeignExpr*)expr;
-                else if (expr->exprKind == UNPACK) {
-                    Unpack *uexpr = (Unpack*)expr;
-                    if (uexpr->expr->exprKind != FOREIGN_EXPR)
-                        goto notAlias;
-                    fexpr = (ForeignExpr *)uexpr->expr.ptr();
-                    argString += "..";
-                } else
-                    goto notAlias;
-
-                argString += fexpr->expr->asString();
+                appendArgString(expr, &argString);
             }
-            return analyzeStaticObject(Identifier::get(argString));
         }
-    notAlias:
-        error("__ARG__ may only be applied to an alias value or alias function argument");
+        return analyzeStaticObject(Identifier::get(argString));
     }
 
     case TUPLE : {

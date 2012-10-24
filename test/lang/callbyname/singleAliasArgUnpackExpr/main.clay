@@ -1,7 +1,7 @@
 import printer.(println);
 
 alias foo(x) {
-    println(x);
+    println(__ARG__ x, ": ", x);
 }
 
 bar(forward ..x) {
