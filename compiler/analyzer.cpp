@@ -697,7 +697,35 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
                 string argString = fexpr->expr->asString();
                 return analyzeStaticObject(Identifier::get(argString));
             }
+        } else if (obj->objKind == EXPR_LIST) {
+            ExprList *elist = (ExprList*)obj.ptr();
+            string argString;
+            for (vector<ExprPtr>::const_iterator i = elist->exprs.begin(),
+                    end = elist->exprs.end();
+                 i != end;
+                 ++i)
+            {
+                if (!argString.empty())
+                    argString += ", ";
+
+                Expr *expr = i->ptr();
+                ForeignExpr *fexpr;
+                if (expr->exprKind == FOREIGN_EXPR)
+                    fexpr = (ForeignExpr*)expr;
+                else if (expr->exprKind == UNPACK) {
+                    Unpack *uexpr = (Unpack*)expr;
+                    if (uexpr->expr->exprKind != FOREIGN_EXPR)
+                        goto notAlias;
+                    fexpr = (ForeignExpr *)uexpr->expr.ptr();
+                    argString += "..";
+                } else
+                    goto notAlias;
+
+                argString += fexpr->expr->asString();
+            }
+            return analyzeStaticObject(Identifier::get(argString));
         }
+    notAlias:
         error("__ARG__ may only be applied to an alias value or alias function argument");
     }
 

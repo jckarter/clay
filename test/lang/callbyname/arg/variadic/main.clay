@@ -1,0 +1,10 @@
+import printer.(println);
+
+alias foo(..x) = __ARG__ x;
+
+main() {
+    var ..abc = 'a', 'b', 'c';
+    println(foo(1, 2, 3));
+    println(foo(..abc));
+    println(foo(..abc, 'd'));
+}
