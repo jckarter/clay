@@ -1,0 +1,16 @@
+import printer.(println);
+import vectors.(Vector);
+
+main(){
+    var v = Vector(array(1,2));
+    var byVal = x ::val> v[0] + x + 1;
+    var byVal2 = x ::val> v[1] + x + 2;
+    var byRef = x ::byref> v[0] + x;
+    v[0] = 5;
+    println("byVal: ", byVal(0));
+    println("byVal2: ", byVal2(0));
+    println("byRef: ", byRef(0));
+    var byMove = x ::move> v[0] + x;
+    println("byMove: ", byMove(0));
+    println("v: ", v);
+}

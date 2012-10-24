@@ -1,0 +1,30 @@
+public define lambdaPack;
+public define lambdaUnpack;
+
+record Lambda[L, T](closures: T);
+
+packMultiValuedFreeVarByMove(..x) = Tuple(..mapValues(move, ..x));
+
+[L]
+mkLambda(#L, data) = Lambda[#L, Type(data)](data);
+
+[L]
+forceinline overload lambdaPack(#"val", #L, ..xs) =
+    mkLambda(#L, packMultiValuedFreeVar(..xs));
+
+forceinline overload lambdaUnpack(#"val", xs) = 
+    forward ..unpackMultiValuedFreeVar(xs.closures);
+
+[L]
+forceinline overload lambdaPack(#"byref", #L, ..xs) =
+    mkLambda(#L, packMultiValuedFreeVarByRef(..xs));
+
+forceinline overload lambdaUnpack(#"byref", xs) =
+    forward ..unpackMultiValuedFreeVarAndDereference(xs.closures);
+
+[L]
+forceinline overload lambdaPack(#"move", #L, ..xs) = 
+    mkLambda(#L, packMultiValuedFreeVarByMove(..xs));
+
+forceinline overload lambdaUnpack(#"move", xs) =
+    forward ..unpackMultiValuedFreeVar(xs.closures);

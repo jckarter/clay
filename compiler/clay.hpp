@@ -1256,7 +1256,8 @@ struct ProcedureMono {
 enum LambdaCapture {
     REF_CAPTURE,
     VALUE_CAPTURE,
-    STATELESS
+    STATELESS,
+    OVERLOADED
 };
 
 struct Lambda : public Expr {
@@ -1278,6 +1279,9 @@ struct Lambda : public Expr {
     // if freevars are absent
     ProcedurePtr lambdaProc;
 
+    //if LambdaCapture == OVERLOADED
+    StringLiteralPtr hook;
+
     bool hasVarArg:1;
     bool initialized:1;
 
@@ -1289,6 +1293,12 @@ struct Lambda : public Expr {
            bool hasVarArg, StatementPtr body)
         : Expr(LAMBDA), captureBy(captureBy),
           formalArgs(formalArgs), body(body),
+          hasVarArg(hasVarArg), initialized(false) {}
+    Lambda(LambdaCapture captureBy,
+           llvm::ArrayRef<FormalArgPtr> formalArgs,
+           bool hasVarArg, StatementPtr body, StringLiteralPtr hook)
+        : Expr(LAMBDA), captureBy(captureBy),
+          formalArgs(formalArgs), body(body), hook(hook),
           hasVarArg(hasVarArg), initialized(false) {}
 };
 
@@ -2493,6 +2503,7 @@ struct MultiPValue : public Object {
 // parser module
 //
 
+void setOnlyOverloadedLambdas(bool value);
 
 enum ParserFlags
 {
