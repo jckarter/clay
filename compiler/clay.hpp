@@ -1991,8 +1991,8 @@ struct IntrinsicSymbol : public TopLevelItem {
     llvm::Intrinsic::ID id;
     map<vector<TypePtr>, IntrinsicInstance> instances;
     
-    IntrinsicSymbol(IdentifierPtr name, llvm::Intrinsic::ID id)
-        : TopLevelItem(INTRINSIC, name, PUBLIC), id(id) {}
+    IntrinsicSymbol(Module *module, IdentifierPtr name, llvm::Intrinsic::ID id)
+        : TopLevelItem(INTRINSIC, module, name, PUBLIC), id(id) {}
 };
 
 struct NewTypeDecl : public TopLevelItem {
@@ -2441,6 +2441,16 @@ struct MultiPValue : public Object {
     void add(PVData const &x) { values.push_back(x); }
     void add(MultiPValuePtr x) {
         values.insert(values.end(), x->values.begin(), x->values.end());
+    }
+
+    void toArgsKey(vector<TypePtr> *args)
+    {
+        for (PVData const *i = values.begin(), *end = values.end();
+             i != end;
+             ++i)
+        {
+            args->push_back(i->type);
+        }
     }
 };
 

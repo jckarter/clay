@@ -59,6 +59,16 @@ struct MultiCValue : public Object {
     void add(MultiCValuePtr x) {
         values.insert(values.end(), x->values.begin(), x->values.end());
     }
+
+    void toArgsKey(vector<TypePtr> *types)
+    {
+        for (vector<CValuePtr>::const_iterator i = values.begin(), end = values.end();
+             i != end;
+             ++i)
+        {
+            types->push_back((*i)->type);
+        }
+    }
 };
 
 struct JumpTarget {
