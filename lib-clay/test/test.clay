@@ -24,9 +24,9 @@ record TestCase (
     xfail?: Bool,
 );
 
-[T when String?(T) and T != String]
-overload TestCase(name : T, _case, xfail?) : TestCase
-    = TestCase(String(name), _case, xfail?);
+[T, F when String?(T) and CallDefined?(call, F) and (T != String or F != TestFunction)]
+overload TestCase(name:T, _case:F, xfail?)
+    = TestCase(String(name), TestFunction(_case), xfail?);
 
 overload TestCase(name, fn) = TestCase(name, TestFunction(fn), false);
 

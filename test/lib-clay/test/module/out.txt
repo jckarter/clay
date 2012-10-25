@@ -1,8 +1,12 @@
 Testing __main__:
   TEST_should_pass: passed
+  (xfail) TEST_XFAIL_should_pass:
+    `false` is expected to be true but isn't
   TEST_should_fail:
     `false` is expected to be true but isn't
     -- FAILED
--- __main__: 1 expectations passed; 1 failed (0 xfail)
-Overall: 1 expectations passed; 1 failed (0 xfail)
+  (xfail) TEST_XFAIL_should_fail:
+    -- FIXED (should clear xfail flag)
+-- __main__: 2 expectations passed; 2 failed (1 xfail)
+Overall: 2 expectations passed; 2 failed (1 xfail)
 TESTS FAILED

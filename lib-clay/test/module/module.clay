@@ -5,12 +5,14 @@ private test?(mod, name) =
     stringLiteralStartsWith?(name, "TEST_")
     and CallDefined?(staticFieldRef(mod, name));
 
+private xfail?(name) : Bool = stringLiteralStartsWith?(name, "TEST_XFAIL_");
+
 [mod] moduleTestNames(#mod) =
     ..filterValues(name -> test?(mod, name), ..ModuleMemberNames(mod));
 
 [mod] moduleTestSuite(#mod) = TestSuite(
     StaticName(mod), array(
-        ..mapValues(name -> TestCase(name, staticFieldRef(mod, name)),
+        ..mapValues(name -> TestCase(name, staticFieldRef(mod, name), xfail?(name)),
                     ..moduleTestNames(mod))));
 
 testMainModule() = testMain(moduleTestSuite(MainModule()));

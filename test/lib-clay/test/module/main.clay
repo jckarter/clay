@@ -10,4 +10,12 @@ TEST_should_fail() {
     expectTrue(false);
 }
 
+TEST_XFAIL_should_pass() {
+    expectTrue(false);
+}
+
+TEST_XFAIL_should_fail() {
+    expectTrue(true);
+}
+
 private main() = testMainModule();
