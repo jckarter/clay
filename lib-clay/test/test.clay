@@ -11,7 +11,7 @@ import printer.formatter.(repr);
 record TestStatus (
     passed: UInt,
     failed: UInt,
-    pending: UInt,
+    xfail: UInt,
 );
 
 overload TestStatus() = TestStatus(UInt(0), UInt(0), UInt(0));
@@ -21,16 +21,16 @@ alias TestFunction = Function[[], []];
 record TestCase (
     name: String,
     _case: TestFunction,
-    pending?: Bool,
+    xfail?: Bool,
 );
 
 [T when String?(T) and T != String]
-overload TestCase(name : T, _case, pending?) : TestCase
-    = TestCase(String(name), _case, pending?);
+overload TestCase(name : T, _case, xfail?) : TestCase
+    = TestCase(String(name), _case, xfail?);
 
 overload TestCase(name, fn) = TestCase(name, TestFunction(fn), false);
 
-PendingTestCase(name, fn) = TestCase(name, TestFunction(fn), true);
+XFAILTestCase(name, fn) = TestCase(name, TestFunction(fn), true);
 
 record TestSuite (
     name: String,
@@ -47,7 +47,7 @@ alias TEST_FAIL_CASE_INDENT = TEST_FAILURE_INDENT++TEST_CASE_INDENT;
 accumulateTestStatus(test: TestStatus, newTest: TestStatus) {
     test.passed  +: newTest.passed;
     test.failed  +: newTest.failed;
-    test.pending +: newTest.pending;
+    test.xfail +: newTest.xfail;
 }
 
 reportTest(test: TestStatus, ..prefix) {
@@ -55,7 +55,7 @@ reportTest(test: TestStatus, ..prefix) {
         ..prefix,
         test.passed, " expectations passed; ",
         test.failed, " failed (",
-        test.pending, " pending",
+        test.xfail, " xfail",
         ")"
     );
 }
@@ -71,8 +71,8 @@ runTestSuite(suite: TestSuite) : TestStatus {
     return test;
 }
 
-pendingMessage(pending?: Bool) : String = 
-    String(if (pending?) "(pending) " else "");
+xfailMessage(xfail?: Bool) : String = 
+    String(if (xfail?) "(xfail) " else "");
 
 define printFailure;
 
@@ -87,7 +87,7 @@ overload printFailure(..xs) {
 var g_testCaseStatus = Maybe[TestStatus]();
 
 runTestCase(_case: TestCase) : TestStatus {
-    print(TEST_CASE_INDENT, pendingMessage(_case.pending?), _case.name, ":");
+    print(TEST_CASE_INDENT, xfailMessage(_case.xfail?), _case.name, ":");
     flush(stdout);
 
     assert(nothing?(g_testCaseStatus));
@@ -109,16 +109,16 @@ runTestCase(_case: TestCase) : TestStatus {
     ref test = just(g_testCaseStatus);
 
     if (test.failed > 0) {
-        if (_case.pending?) {
-            test.pending = test.failed;
+        if (_case.xfail?) {
+            test.xfail = test.failed;
             test.failed = 0;
         } else {
             printFailure("-- FAILED");
         }
     } else {
-        if (_case.pending?) {
+        if (_case.xfail?) {
             println();
-            printFailure("-- FIXED (should clear pending flag)");
+            printFailure("-- FIXED (should clear xfail flag)");
             test.failed = 1;
         } else {
             if(#Flag?("test.minimal"))

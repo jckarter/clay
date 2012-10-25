@@ -24,6 +24,6 @@ Testing test uses repr to print values:
       1u
       17u
     -- FAILED
--- test uses repr to print values: 0 expectations passed; 5 failed (0 pending)
-Overall: 0 expectations passed; 5 failed (0 pending)
+-- test uses repr to print values: 0 expectations passed; 5 failed (0 xfail)
+Overall: 0 expectations passed; 5 failed (0 xfail)
 TESTS FAILED

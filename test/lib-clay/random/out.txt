@@ -5,5 +5,5 @@ Testing Random number generation:
   uniform integers should be in range: passed
   uniform integers should cover the whole range: passed
   uniform doubles should be in range: passed
--- Random number generation: 218 expectations passed; 0 failed (0 pending)
-Overall: 218 expectations passed; 0 failed (0 pending)
+-- Random number generation: 218 expectations passed; 0 failed (0 xfail)
+Overall: 218 expectations passed; 0 failed (0 xfail)

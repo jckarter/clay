@@ -60,10 +60,10 @@ main() = testMain(
                 throwInt();
                 expectFalse(true);
             }),
-            PendingTestCase("should pass", -> {
+            XFAILTestCase("should pass", -> {
                 expectTrue(true);
             }),
-            PendingTestCase("should fail", -> {
+            XFAILTestCase("should fail", -> {
                 expectTrue(false);
             }),
             TestCase("required", -> {

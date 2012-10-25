@@ -89,9 +89,9 @@ Testing test test suite:
     uncaught exception:
       7
     -- FAILED
-  (pending) should pass:
-    -- FIXED (should clear pending flag)
-  (pending) should fail:
+  (xfail) should pass:
+    -- FIXED (should clear xfail flag)
+  (xfail) should fail:
     `false` is expected to be true but isn't
   required:
     `false` is expected to be true but isn't
@@ -101,6 +101,6 @@ Testing test test suite:
   ifPasses:
     `false` is expected to be true but isn't
     -- FAILED
--- test test suite: 14 expectations passed; 20 failed (1 pending)
-Overall: 14 expectations passed; 20 failed (1 pending)
+-- test test suite: 14 expectations passed; 20 failed (1 xfail)
+Overall: 14 expectations passed; 20 failed (1 xfail)
 TESTS FAILED

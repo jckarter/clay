@@ -324,7 +324,7 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
         expectMsgSendNotCompatible(NSMutableString, NSString);
         expectMsgSendCompatible(NSMutableString, NSMutableString);
     }),
-    PendingTestCase("MsgSendCompatible?", -> {
+    XFAILTestCase("MsgSendCompatible?", -> {
         expectMsgSendNotCompatible(NSObject, Static[NSObject]);
     }),
     TestCase("selector type encoding", -> {
