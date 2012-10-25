@@ -4,13 +4,13 @@ import algorithms.strings.(trim);
 main() = testMain(
     TestSuite(
         "algorithms.strings", array(
-            TestCase("trim", test -> {
-                expectEqual(test, "trim, string",
+            TestCase("trim", -> {
+                expectEqual(
                     trim("   \t A string,\nthat\tneeds trimming. \n  \n "),
                     "A string,\nthat\tneeds trimming.",
                 );
-                expectEqual(test, "trim, predicate",
-                    trim("*** message ***", x => (x == "*"[0] or x == " "[0])),
+                expectEqual(
+                    trim("*** message ***", x => (x == '*' or x == ' ')),
                     "message"
                 );
             }),

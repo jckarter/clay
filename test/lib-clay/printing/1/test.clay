@@ -21,27 +21,27 @@ record Address (
     email : StringLiteralRef,
 );
 
-testPrintRecordEnum(test) {
+testPrintRecordEnum() {
     var p = Person(StringLiteralRef("Foo"), 100, FEMALE, Address(StringLiteralRef("foo@bar.com")));
-    expectPrinted(test, "p", "Person(Foo, 100, FEMALE, Address(foo@bar.com))", p);
+    expectPrinted("Person(Foo, 100, FEMALE, Address(foo@bar.com))", p);
 }
 
 
 main() = testMain(
     TestSuite("printer", array(
         TestCase("record, enum", testPrintRecordEnum),
-        TestCase("tuple", test -> {
-            expectPrinted(test, "tuple", "[1, true, 3.5]", [1, true, 3.5]);
+        TestCase("tuple", -> {
+            expectPrinted("[1, true, 3.5]", [1, true, 3.5]);
         }),
-        TestCase("array", test -> {
-            expectPrinted(test, "tuple", "{10, 20, 30}", array(10, 20, 30));
+        TestCase("array", -> {
+            expectPrinted("{10, 20, 30}", array(10, 20, 30));
         }),
-        TestCase("vector", test -> {
-            expectPrinted(test, "vector", "{true, false, true}", Vector[Bool](true, false, true));
+        TestCase("vector", -> {
+            expectPrinted("{true, false, true}", Vector[Bool](true, false, true));
         }),
-        TestCase("CStringRef", test -> {
-            expectPrinted(test, "CStringRef(aaa)", "aaa", CStringRef(cstring("aaa")));
-            expectPrinted(test, "CStringRef()", "(null)", CStringRef());
+        TestCase("CStringRef", -> {
+            expectPrinted("aaa", CStringRef(cstring("aaa")));
+            expectPrinted("(null)", CStringRef());
         }),
     )));
 

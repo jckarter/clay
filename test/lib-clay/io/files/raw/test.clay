@@ -6,12 +6,12 @@ import test.*;
 
 main() = testMain(
     TestSuite("io.files.raw", array(
-        TestCase("*Stream?(RawFile)", test -> {
-            expectTrue(test, "InputStream?", InputStream?(RawFile));
-            expectTrue(test, "OutputStream?", OutputStream?(RawFile));
+        TestCase("*Stream?(RawFile)", -> {
+            expectTrue(InputStream?(RawFile));
+            expectTrue(OutputStream?(RawFile));
         }),
-        TestCase("*Stream?(RawFilePointer)", test -> {
-            expectTrue(test, "InputStream?", InputStream?(RawFilePointer));
-            expectTrue(test, "OutputStream?", OutputStream?(RawFilePointer));
+        TestCase("*Stream?(RawFilePointer)", -> {
+            expectTrue(InputStream?(RawFilePointer));
+            expectTrue(OutputStream?(RawFilePointer));
         }),
     )));

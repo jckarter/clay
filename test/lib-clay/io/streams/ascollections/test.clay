@@ -8,20 +8,20 @@ import test.*;
 
 main() = testMain(
     TestSuite("io.streams collections", array(
-        TestCase("InputStream as Iterator", test -> {
+        TestCase("InputStream as Iterator", -> {
             var s = "elk";
             var i = MemoryInputStream(begin(s), end(s));
-            expectEqual(test, "1", Byte('e'), getValue(nextValue(i)));
-            expectEqual(test, "2", Byte('l'), getValue(nextValue(i)));
-            expectEqual(test, "3", Byte('k'), getValue(nextValue(i)));
-            expectEqual(test, "EOF", nothing(Byte), nextValue(i));
+            expectEqual(Byte('e'), getValue(nextValue(i)));
+            expectEqual(Byte('l'), getValue(nextValue(i)));
+            expectEqual(Byte('k'), getValue(nextValue(i)));
+            expectEqual(nothing(Byte), nextValue(i));
         }),
-        TestCase("OutputStream push protocol", test -> {
+        TestCase("OutputStream push protocol", -> {
             var a = Array[Char, 4]();
             var s = MemoryOutputStream(a);
             push(s, 'p');
             push(s, Byte('u'));
             push(s, "sh");
-            expectEqual(test, "written", "push", String(coordinateRange(begin(a), end(a))));
+            expectEqual("push", String(coordinateRange(begin(a), end(a))));
         }),
     )));

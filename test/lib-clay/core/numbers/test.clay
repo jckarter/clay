@@ -3,43 +3,41 @@ import test.*;
 
 main() = testMain(
     TestSuite("numbers", array(
-        TestCase("*IntegerOfSize", test -> {
+        TestCase("*IntegerOfSize", -> {
             ..for (type in ..BuiltinIntegerTypes()) {
                 if (SignedInteger?(type)) {
-                    expectEqual(test, type, type, SignedIntegerOfSize(#Int(TypeSize(type))));
+                    expectEqual(type, SignedIntegerOfSize(#Int(TypeSize(type))));
                 } else {
-                    expectEqual(test, type, type, UnsignedIntegerOfSize(#Int(TypeSize(type))));
+                    expectEqual(type, UnsignedIntegerOfSize(#Int(TypeSize(type))));
                 }
             }
         }),
-        TestCase("SignedInteger, UnsignedInteger", test -> {
+        TestCase("SignedInteger, UnsignedInteger", -> {
             ..for (type in ..BuiltinIntegerTypes()) {
                 if (SignedInteger?(type)) {
-                    expectEqual(test, type,
+                    expectEqual(
                         type,
                         SignedInteger(type));
-                    expectNotEqual(test, str("UnsignedInteger of ", type),
+                    expectNotEqual(
                         type,
                         UnsignedInteger(type));
-                    expectEqual(test, str("SignedInteger of UnsignedInteger of ", type),
+                    expectEqual(
                         type,
                         SignedInteger(UnsignedInteger(type)));
                 } else {
-                    expectEqual(test, type,
+                    expectEqual(
                         type,
                         UnsignedInteger(type));
-                    expectNotEqual(test, str("SignedInteger of ", type),
+                    expectNotEqual(
                         type,
                         SignedInteger(type));
-                    expectEqual(test, str("UnsignedInteger of SignedInteger of ", type),
+                    expectEqual(
                         type,
                         UnsignedInteger(SignedInteger(type)));
                 }
 
-                expectEqual(test, str("size of UnsignedInteger of ", type),
-                    TypeSize(type), TypeSize(UnsignedInteger(type)));
-                expectEqual(test, str("size of SignedInteger of ", type),
-                    TypeSize(type), TypeSize(SignedInteger(type)));
+                expectEqual(TypeSize(type), TypeSize(UnsignedInteger(type)));
+                expectEqual(TypeSize(type), TypeSize(SignedInteger(type)));
             }
         }),
     )));

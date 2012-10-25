@@ -5,13 +5,13 @@ import test.*;
 
 main() = testMain(
     TestSuite("sequences for Maybe", array(
-        TestCase("map", test -> {
-            expectEqual(test, "map just",    Maybe(4),     map(x -> x + 1, Maybe(3)));
-            expectEqual(test, "map nothing", nothing(Int), map(x -> x + 1, nothing(Int)));
+        TestCase("map", -> {
+            expectEqual(Maybe(4),     map(x -> x + 1, Maybe(3)));
+            expectEqual(nothing(Int), map(x -> x + 1, nothing(Int)));
         }),
-        TestCase("filter", test -> {
-            expectEqual(test, "filter just pos", Maybe(4),     filter(x -> x % 2 == 0, Maybe(4)));
-            expectEqual(test, "filter just neg", nothing(Int), filter(x -> x % 2 == 0, Maybe(3)));
-            expectEqual(test, "filter nothing",  nothing(Int), filter(x -> x % 2 == 0, nothing(Int)));
+        TestCase("filter", -> {
+            expectEqual(Maybe(4),     filter(x -> x % 2 == 0, Maybe(4)));
+            expectEqual(nothing(Int), filter(x -> x % 2 == 0, Maybe(3)));
+            expectEqual(nothing(Int), filter(x -> x % 2 == 0, nothing(Int)));
         }),
     )));

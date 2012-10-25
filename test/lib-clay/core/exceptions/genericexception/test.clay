@@ -2,12 +2,12 @@ import test.*;
 
 main() = testMain(
     TestSuite("core.exceptions", array(
-        TestCase("GenericException", test -> {
+        TestCase("GenericException", -> {
             var f = -> { throw GenericException("hi there"); };
-            expectExceptionType(test, "GenericException", GenericException, f);
+            expectExceptionType(GenericException, f);
         }),
-        TestCase("throw string", test -> {
+        TestCase("throw string", -> {
             var f = -> { throw "hi there"; };
-            expectException(test, "GenericException", GenericException("hi there"), f);
+            expectException(GenericException("hi there"), f);
         }),
     )));

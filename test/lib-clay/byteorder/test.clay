@@ -5,30 +5,30 @@ import test.*;
 define testNetworkToHost;
 
 [IntType]
-overload testNetworkToHost(test: TestStatus, #IntType, function, expectReversed?) {
+overload testNetworkToHost(#IntType, function, expectReversed?) {
     alias S = #TypeSize(IntType);
     var digits = array(..mapValues(i -> UInt8(250 - i), ..integers(S)));
     var digitsReversed = array(..reverseValues(..arrayElements(digits)));
     var expected = if (expectReversed?) digitsReversed else digits;
-    expectEqual(test, str(function, " ", IntType),
+    expectEqual(
         expected,
         bitcast(Array[UInt8, Int(TypeSize(IntType))], function(Union[IntType, Array[UInt8, Int(TypeSize(IntType))]](digits).0)));
 }
 
 [IntType when not IntegerAvailable?(IntType)]
-overload testNetworkToHost(test: TestStatus, #IntType, function) {
+overload testNetworkToHost(#IntType, function, expectReversed?) {
 }
 
 main() = testMain(
     TestSuite("byteorder", array(
-        TestCase("networkToHost, hostToNetwork", test -> {
+        TestCase("networkToHost, hostToNetwork", -> {
             ..for (IntType in UInt8, Int8, UInt16, Int16, UInt32, Int32, UInt64, Int64, UInt128, Int128) {
-                testNetworkToHost(test, IntType, networkToHost, LittleEndian?);
-                testNetworkToHost(test, IntType, hostToNetwork, LittleEndian?);
-                testNetworkToHost(test, IntType, bigToHost, LittleEndian?);
-                testNetworkToHost(test, IntType, hostToBig, LittleEndian?);
-                testNetworkToHost(test, IntType, littleToHost, BigEndian?);
-                testNetworkToHost(test, IntType, hostToLittle, BigEndian?);
+                testNetworkToHost(IntType, networkToHost, LittleEndian?);
+                testNetworkToHost(IntType, hostToNetwork, LittleEndian?);
+                testNetworkToHost(IntType, bigToHost, LittleEndian?);
+                testNetworkToHost(IntType, hostToBig, LittleEndian?);
+                testNetworkToHost(IntType, littleToHost, BigEndian?);
+                testNetworkToHost(IntType, hostToLittle, BigEndian?);
             }
         }),
     )));

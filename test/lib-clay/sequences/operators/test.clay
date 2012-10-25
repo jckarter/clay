@@ -10,8 +10,8 @@ overload iterator(s: MyAnotherSequenceWithoutSize) = DummyIterator();
 
 overload nextValue(iter: DummyIterator): Maybe[Int] = nothing(Int);
 
-testEqualsOnSequencesWithoutSize(test) {
-    expectEqual(test, "==", MySequenceWithoutSize(), MyAnotherSequenceWithoutSize());
+testEqualsOnSequencesWithoutSize() {
+    expectEqual(MySequenceWithoutSize(), MyAnotherSequenceWithoutSize());
 }
 
 main() = testMain(

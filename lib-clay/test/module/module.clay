@@ -3,7 +3,7 @@ import test.(TestSuite, TestCase, TestStatus, testMain);
 
 private test?(mod, name) =
     stringLiteralStartsWith?(name, "TEST_")
-    and CallDefined?(staticFieldRef(mod, name), TestStatus);
+    and CallDefined?(staticFieldRef(mod, name));
 
 [mod] moduleTestNames(#mod) =
     ..filterValues(name -> test?(mod, name), ..ModuleMemberNames(mod));

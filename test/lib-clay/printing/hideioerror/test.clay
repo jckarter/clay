@@ -12,10 +12,10 @@ import test.*;
 
 main() = testMain(
     TestSuite("printer for GenericIOError", array(
-        TestCase("print", test -> {
+        TestCase("print", -> {
             var s = str(GenericIOError(2, "close"));
             // if printTo(stream, record) is defined after, then
             // str returns "GenericIOError(ESMTH, \"close\")"
-            expectTrue(test, "starts with", beginsWith?(s, String("close: error(2)")));
+            expectTrue(beginsWith?(s, String("close: error(2)")));
         }),
     )));

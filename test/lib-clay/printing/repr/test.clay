@@ -11,120 +11,117 @@ record Foo (x:Int, y:StringLiteralRef);
 
 variant Bar (Int, StringLiteralRef);
 
-forceinline testWithEval(test: TestStatus, expr) {
-    expectPrinted(test, expr, expr, repr(eval expr));
+forceinline testWithEval(expr) {
+    expectPrinted(expr, repr(eval expr));
 }
 
 main() = testMain(
     TestSuite("repr", array(
-        TestCase("numbers", test -> {
-            testWithEval(test, "0ss");
-            testWithEval(test, "0uss");
-            testWithEval(test, "0s");
-            testWithEval(test, "0us");
-            testWithEval(test, "0i");
-            testWithEval(test, "0u");
-            testWithEval(test, "0l");
-            testWithEval(test, "0ul");
+        TestCase("numbers", -> {
+            testWithEval("0ss");
+            testWithEval("0uss");
+            testWithEval("0s");
+            testWithEval("0us");
+            testWithEval("0i");
+            testWithEval("0u");
+            testWithEval("0l");
+            testWithEval("0ul");
 
-            expectPrinted(test, "0.0",         "0x0.0000000000000p+0",  repr(0.0));
-            expectPrinted(test, "-0.0",       "-0x0.0000000000000p+0",  repr(-0.0));
-            expectPrinted(test, "1.0",         "0x1.0000000000000p+0",  repr(1.0));
-            expectPrinted(test, "1.5",         "0x1.8000000000000p+0",  repr(1.5));
-            expectPrinted(test, "nan(Double)", "nan(Float64)"        ,  repr(nan(Double)));
+            expectPrinted( "0x0.0000000000000p+0",  repr(0.0));
+            expectPrinted("-0x0.0000000000000p+0",  repr(-0.0));
+            expectPrinted( "0x1.0000000000000p+0",  repr(1.0));
+            expectPrinted( "0x1.8000000000000p+0",  repr(1.5));
+            expectPrinted( "nan(Float64)"        ,  repr(nan(Double)));
 
-            expectPrinted(test, "0.0f",        "0x0.000000p+0f", repr(0.0f));
-            expectPrinted(test, "-0.0f",      "-0x0.000000p+0f", repr(-0.0f));
-            expectPrinted(test, "1.0f",        "0x1.000000p+0f", repr(1.0f));
-            expectPrinted(test, "1.5f",        "0x1.800000p+0f", repr(1.5f));
-            expectPrinted(test, "nan(Float)",  "nan(Float32)",   repr(nan(Float)));
+            expectPrinted( "0x0.000000p+0f", repr(0.0f));
+            expectPrinted("-0x0.000000p+0f", repr(-0.0f));
+            expectPrinted( "0x1.000000p+0f", repr(1.0f));
+            expectPrinted( "0x1.800000p+0f", repr(1.5f));
+            expectPrinted( "nan(Float32)",   repr(nan(Float)));
 
-            expectPrinted(test, "fj1",  "0x0.000000p+0f+0x0.000000p+0fj", repr( 0.0f+0.0fj));
-            expectPrinted(test, "fj2",  "0x0.000000p+0f-0x0.000000p+0fj", repr( 0.0f-0.0fj));
-            expectPrinted(test, "fj3", "-0x0.000000p+0f+0x0.000000p+0fj", repr(-0.0f+0.0fj));
-            expectPrinted(test, "fj4", "-0x0.000000p+0f-0x0.000000p+0fj", repr(-0.0f-0.0fj));
+            expectPrinted( "0x0.000000p+0f+0x0.000000p+0fj", repr( 0.0f+0.0fj));
+            expectPrinted( "0x0.000000p+0f-0x0.000000p+0fj", repr( 0.0f-0.0fj));
+            expectPrinted("-0x0.000000p+0f+0x0.000000p+0fj", repr(-0.0f+0.0fj));
+            expectPrinted("-0x0.000000p+0f-0x0.000000p+0fj", repr(-0.0f-0.0fj));
 
-            expectPrinted(test, "fj5",  "0x1.000000p+0f+0x1.000000p+0fj", repr( 1.0f+1.0fj));
-            expectPrinted(test, "fj6",  "0x1.000000p+0f-0x1.000000p+0fj", repr( 1.0f-1.0fj));
-            expectPrinted(test, "fj7", "-0x1.000000p+0f+0x1.000000p+0fj", repr(-1.0f+1.0fj));
-            expectPrinted(test, "fj8", "-0x1.000000p+0f-0x1.000000p+0fj", repr(-1.0f-1.0fj));
+            expectPrinted( "0x1.000000p+0f+0x1.000000p+0fj", repr( 1.0f+1.0fj));
+            expectPrinted( "0x1.000000p+0f-0x1.000000p+0fj", repr( 1.0f-1.0fj));
+            expectPrinted("-0x1.000000p+0f+0x1.000000p+0fj", repr(-1.0f+1.0fj));
+            expectPrinted("-0x1.000000p+0f-0x1.000000p+0fj", repr(-1.0f-1.0fj));
 
-            expectPrinted(test, "nan(Complex32)", "nan(Complex32)", repr(nan(Complex32)));
+            expectPrinted("nan(Complex32)", repr(nan(Complex32)));
 
-            expectPrinted(test, "dj1",  "0x0.0000000000000p+0+0x0.0000000000000p+0j", repr( 0.0+0.0j));
-            expectPrinted(test, "dj2",  "0x0.0000000000000p+0-0x0.0000000000000p+0j", repr( 0.0-0.0j));
-            expectPrinted(test, "dj3", "-0x0.0000000000000p+0+0x0.0000000000000p+0j", repr(-0.0+0.0j));
-            expectPrinted(test, "dj4", "-0x0.0000000000000p+0-0x0.0000000000000p+0j", repr(-0.0-0.0j));
+            expectPrinted( "0x0.0000000000000p+0+0x0.0000000000000p+0j", repr( 0.0+0.0j));
+            expectPrinted( "0x0.0000000000000p+0-0x0.0000000000000p+0j", repr( 0.0-0.0j));
+            expectPrinted("-0x0.0000000000000p+0+0x0.0000000000000p+0j", repr(-0.0+0.0j));
+            expectPrinted("-0x0.0000000000000p+0-0x0.0000000000000p+0j", repr(-0.0-0.0j));
 
-            expectPrinted(test, "dj5",  "0x1.0000000000000p+0+0x1.0000000000000p+0j", repr( 1.0+1.0j));
-            expectPrinted(test, "dj6",  "0x1.0000000000000p+0-0x1.0000000000000p+0j", repr( 1.0-1.0j));
-            expectPrinted(test, "dj7", "-0x1.0000000000000p+0+0x1.0000000000000p+0j", repr(-1.0+1.0j));
-            expectPrinted(test, "dj8", "-0x1.0000000000000p+0-0x1.0000000000000p+0j", repr(-1.0-1.0j));
+            expectPrinted( "0x1.0000000000000p+0+0x1.0000000000000p+0j", repr( 1.0+1.0j));
+            expectPrinted( "0x1.0000000000000p+0-0x1.0000000000000p+0j", repr( 1.0-1.0j));
+            expectPrinted("-0x1.0000000000000p+0+0x1.0000000000000p+0j", repr(-1.0+1.0j));
+            expectPrinted("-0x1.0000000000000p+0-0x1.0000000000000p+0j", repr(-1.0-1.0j));
 
-            expectPrinted(test, "nan(Complex64)", "nan(Complex64)", repr(nan(Complex64)));
+            expectPrinted("nan(Complex64)", repr(nan(Complex64)));
         }),
-        TestCase("chars, strings", test -> {
-            testWithEval(test, "'x'");
-            testWithEval(test, "' '");
-            testWithEval(test, "'~'");
-            testWithEval(test, "'\\x01'");
-            testWithEval(test, "'\\x1F'");
-            testWithEval(test, "'\\x7F'");
-            testWithEval(test, "'\\x80'");
-            testWithEval(test, "'\\xFF'");
+        TestCase("chars, strings", -> {
+            testWithEval("'x'");
+            testWithEval("' '");
+            testWithEval("'~'");
+            testWithEval("'\\x01'");
+            testWithEval("'\\x1F'");
+            testWithEval("'\\x7F'");
+            testWithEval("'\\x80'");
+            testWithEval("'\\xFF'");
 
-            testWithEval(test, "'\\0'");
-            testWithEval(test, "'\\n'");
-            testWithEval(test, "'\\r'");
-            testWithEval(test, "'\\t'");
-            testWithEval(test, "'\\f'");
-            testWithEval(test, "'\\\''");
-            testWithEval(test, "'\\\"'");
+            testWithEval("'\\0'");
+            testWithEval("'\\n'");
+            testWithEval("'\\r'");
+            testWithEval("'\\t'");
+            testWithEval("'\\f'");
+            testWithEval("'\\\''");
+            testWithEval("'\\\"'");
 
-            testWithEval(test, "\"x ~\\x01\\x1F\\x7F\\x80\\xFF\"");
-            testWithEval(test, """"\\0\\n\\r\\t\\f\\'\\""""");
+            testWithEval("\"x ~\\x01\\x1F\\x7F\\x80\\xFF\"");
+            testWithEval(""""\\0\\n\\r\\t\\f\\'\\""""");
         }),
-        TestCase("tuples", test -> {
-            testWithEval(test, """[]""");
-            testWithEval(test, """[1u]""");
-            testWithEval(test, """[1i, "two"]""");
+        TestCase("tuples", -> {
+            testWithEval("""[]""");
+            testWithEval("""[1u]""");
+            testWithEval("""[1i, "two"]""");
         }),
-        TestCase("records", test -> {
-            testWithEval(test, """Foo(1i, StringLiteralRef("two"))""");
+        TestCase("records", -> {
+            testWithEval("""Foo(1i, StringLiteralRef("two"))""");
         }),
-        TestCase("variants", test -> {
-            testWithEval(test, """Bar(1i)""");
-            testWithEval(test, """Bar(StringLiteralRef("two"))""");
+        TestCase("variants", -> {
+            testWithEval("""Bar(1i)""");
+            testWithEval("""Bar(StringLiteralRef("two"))""");
         }),
-        TestCase("statics", test -> {
-            testWithEval(test, "#1i");
-            testWithEval(test, "#2u");
-            testWithEval(test, "#3l");
-            testWithEval(test, "#true");
+        TestCase("statics", -> {
+            testWithEval("#1i");
+            testWithEval("#2u");
+            testWithEval("#3l");
+            testWithEval("#true");
 
             // symbols
-            testWithEval(test, "TestCase");
-            testWithEval(test, "repr");
+            testWithEval("TestCase");
+            testWithEval("repr");
         }),
-        TestCase("strings", test -> {
-            testWithEval(test, """"static"""");
-            testWithEval(test, """StringLiteralRef("string literal ref")""");
-            testWithEval(test, """String("string")""");
-            testWithEval(test, """CStringRef("cstring ref")""");
-            testWithEval(test, """CStringRef()""");
-            testWithEval(test, """StringRef("string ref")""");
-            testWithEval(test, """StringRef()""");
+        TestCase("strings", -> {
+            testWithEval(""""static"""");
+            testWithEval("""StringLiteralRef("string literal ref")""");
+            testWithEval("""String("string")""");
+            testWithEval("""CStringRef("cstring ref")""");
+            testWithEval("""CStringRef()""");
+            testWithEval("""StringRef("string ref")""");
+            testWithEval("""StringRef()""");
         }),
-        TestCase("stringRepr", test -> {
-            expectPrinted(test, "string literal",
-                          """"abc\\r\\n\\""""", stringRepr("abc\r\n\""));
-            expectPrinted(test, "String",
-                          """"abc\\r\\n\\""""", stringRepr(String"abc\r\n\""));
-            expectPrinted(test, "StringLiteralRef",
-                          """"abc\\r\\n\\""""", stringRepr(StringLiteralRef"abc\r\n\""));
+        TestCase("stringRepr", -> {
+            expectPrinted(""""abc\\r\\n\\""""", stringRepr("abc\r\n\""));
+            expectPrinted(""""abc\\r\\n\\""""", stringRepr(String"abc\r\n\""));
+            expectPrinted(""""abc\\r\\n\\""""", stringRepr(StringLiteralRef"abc\r\n\""));
         }),
-        TestCase("ArrayRef", test -> {
-            testWithEval(test, """ArrayRef[Int32]""");
+        TestCase("ArrayRef", -> {
+            testWithEval("""ArrayRef[Int32]""");
             // content printing is not tested, because output contains pointers
         }),
     )));

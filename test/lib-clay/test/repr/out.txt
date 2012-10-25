@@ -1,24 +1,24 @@
 Testing test uses repr to print values:
   in expectEqual:
-    newline (not really) is expected to equal "\n" but is "\t"
+    `"\t"` is expected to equal "\n" but is "\t"
     -- FAILED
   in expectNotEqual:
-    newline (not really) is expected not to equal "\n" but is "\n"
+    `"\n"` is expected not to equal "\n" but is "\n"
     -- FAILED
   in expectEqualValues:
-    something (not really) are expected to equal:
+    `'\x12', "x\t"` are expected to equal:
       '\r', "x\t"
     but are:
       '\x12', "x\t"
     -- FAILED
   in expectIterator and expectSequence:
-    values (not really) is expected to contain:
+    `iterator(vs)` is expected to contain:
       4u
     but contains:
       1u
       17u
 
-    values (not really) is expected to contain:
+    `vs` is expected to contain:
       12u
     but contains:
       1u

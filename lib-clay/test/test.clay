@@ -16,9 +16,11 @@ record TestStatus (
 
 overload TestStatus() = TestStatus(UInt(0), UInt(0), UInt(0));
 
+alias TestFunction = Function[[], []];
+
 record TestCase (
     name: String,
-    _case: Function[[TestStatus], []],
+    _case: TestFunction,
     pending?: Bool,
 );
 
@@ -26,9 +28,9 @@ record TestCase (
 overload TestCase(name : T, _case, pending?) : TestCase
     = TestCase(String(name), _case, pending?);
 
-overload TestCase(name, fn) = TestCase(name, Function[[TestStatus], []](fn), false);
+overload TestCase(name, fn) = TestCase(name, TestFunction(fn), false);
 
-PendingTestCase(name, fn) = TestCase(name, Function[[TestStatus], []](fn), true);
+PendingTestCase(name, fn) = TestCase(name, TestFunction(fn), true);
 
 record TestSuite (
     name: String,
@@ -82,22 +84,29 @@ overload printFailure(..xs) {
     println(TEST_FAILURE_INDENT, ..xs);
 }
 
+var g_testCaseStatus = Maybe[TestStatus]();
+
 runTestCase(_case: TestCase) : TestStatus {
     print(TEST_CASE_INDENT, pendingMessage(_case.pending?), _case.name, ":");
     flush(stdout);
 
-    var test = TestStatus();
+    assert(nothing?(g_testCaseStatus));
+    g_testCaseStatus = Maybe(TestStatus());
+    finally g_testCaseStatus = nothing(TestStatus);
+
     try {
-        _case._case(test);
+        _case._case();
     } catch(e:RequiredExpectationFailed) {
         println();
         printFailure("required expectation did not pass");
     } catch(e) {
-        failed(test);
+        failed();
         println();
         printFailure("uncaught exception:");
         printFailure(TEST_CASE_INDENT, *e);
     }
+
+    ref test = just(g_testCaseStatus);
 
     if (test.failed > 0) {
         if (_case.pending?) {
@@ -122,63 +131,69 @@ runTestCase(_case: TestCase) : TestStatus {
     return test;
 }
 
-passed(test: TestStatus) { test.passed +: 1; }
-failed(test: TestStatus) { test.failed +: 1; }
+passed() { just(g_testCaseStatus).passed +: 1; }
+failed() { just(g_testCaseStatus).failed +: 1; }
 
 define expect;
 
 // primitive assertion function
-overload expect(test: TestStatus, passed?: Bool, failReportFn) {
+overload expect(passed?: Bool, failReportFn) {
     if (passed?) {
-        passed(test);
+        passed();
     } else {
-        failed(test);
+        failed();
         println();
         failReportFn();
     }
 }
 
-overload expect(test: TestStatus, passed?: Bool, failReportMsg:String) {
+overload expect(passed?: Bool, failReportMsg:String) {
     if (passed?) {
-        passed(test);
+        passed();
     } else {
-        failed(test);
+        failed();
         println();
         printFailure(failReportMsg);
     }
 }
 
-forceinline expectTrue(test: TestStatus, name, value) {
-    expect(test, value, str(name, " is expected to be true but isn't"));
+alias overload expect(passed?:Bool) {
+    expect(passed?, str("`", __ARG__ passed?, "` returned false"));
+}
+
+alias expectTrue(value:Bool) {
+    expect(value, str("`", __ARG__ value, "` is expected to be true but isn't"));
 }
  
-forceinline expectFalse(test: TestStatus, name, value) {
-    expect(test, not value, str(name, " is expected to be false but isn't"));
+alias expectFalse(value:Bool) {
+    expect(not value, str("`", __ARG__ value, "` is expected to be false but isn't"));
 }
 
-forceinline expectType(test: TestStatus, name, ExpectedType, result) {
-    expectType2(test, name, ExpectedType, Type(result));
+alias expectType(ExpectedType, result) {
+    expectType2(__ARG__ result, ExpectedType, Type(result));
 }
 
-private forceinline expectType2(test:TestStatus, name, ExpectedType, ResultType) {
-    expect(test, ResultType == ExpectedType, str(name, 
-        " is expected to be of type ", ExpectedType, " but is of type ", 
+private expectType2(name, ExpectedType, ResultType) {
+    expect(ResultType == ExpectedType, str("`", name,
+        "` is expected to be of type ", ExpectedType, " but is of type ", 
         ResultType));
 }
 
-forceinline expectEqual(test: TestStatus, name, expected, result) {
+private expectEqual2(name, expected, result) {
     expect(
-        test,
         expected == result,
-        str(name, " is expected to equal ", 
+        str("`", name, "` is expected to equal ", 
             repr(expected), " but is ", repr(result)));
 }
 
-forceinline expectNotEqual(test: TestStatus, name, expected, result) {
+alias expectEqual(expected, result) {
+    expectEqual2(__ARG__ result, expected, result);
+}
+
+alias expectNotEqual(expected, result) {
     expect(
-        test,
         expected != result,
-        str(name, " is expected not to equal ", 
+        str("`", __ARG__ result, "` is expected not to equal ", 
             repr(expected), " but is ", repr(result)));
 }
 
@@ -187,11 +202,10 @@ overload expectedResults?(expected, result) = false;
 [T when Tuple?(T)]
 overload expectedResults?(expected: T, result: T) = expected == result;
 
-forceinline expectEqualValues(test: TestStatus, name, expectedTuple, ..results) {
+alias expectEqualValues(expectedTuple, ..results) {
     expect(
-        test,
         expectedResults?(expectedTuple, Tuple(..results)),
-        str(name, " are expected to equal:\n", 
+        str("`", __ARG__ results, "` are expected to equal:\n", 
             TEST_FAIL_CASE_INDENT, 
             ..weaveValues(", ", ..mapValues(repr, ..unpack(expectedTuple))), "\n", 
             TEST_FAILURE_INDENT, "but are:\n", 
@@ -199,28 +213,26 @@ forceinline expectEqualValues(test: TestStatus, name, expectedTuple, ..results) 
             ..weaveValues(", ", ..mapValues(repr, ..results))));
 }
 
-forceinline expectCallDefined(test: TestStatus, Proc, ..Types) {
+alias expectCallDefined(Proc, ..Types) {
     expect(
-        test,
         CallDefined?(Proc, ..Types),
-        str(Proc, " isn't callable with the expected argument types:\n",
+        str("`", __ARG__ Proc, "` isn't callable with the expected argument types:\n",
             TEST_FAIL_CASE_INDENT, ..weaveValues(", ", ..Types)));
 }
 
-forceinline expectCallUndefined(test: TestStatus, Proc, ..Types) {
+alias expectCallUndefined(Proc, ..Types) {
     expect(
-        test,
         not CallDefined?(Proc, ..Types),
-        str(Proc, " shouldn't be callable with the expected argument types:\n",
+        str("`", Proc, "` shouldn't be callable with the expected argument types:\n",
             TEST_FAIL_CASE_INDENT, ..weaveValues(", ", ..Types)));
 }
 
 [I]
-inline expectIterator(test: TestStatus, name, iter:I, ..expected) {
+private expectIterator2(name, iter:I, ..expected) {
     var expectedV = Vector[IteratorTargetType(I)](..expected);
     var resultV = Vector[IteratorTargetType(I)]();
     pushAll(resultV, iter);
-    var msg = str(name, " is expected to contain:\n");
+    var msg = str("`", name, "` is expected to contain:\n");
     for (expectedX in expectedV)
         push(msg, TEST_FAIL_CASE_INDENT, str(repr(expectedX)),"\n");
     push(msg, TEST_FAILURE_INDENT, "but contains:\n");
@@ -228,62 +240,67 @@ inline expectIterator(test: TestStatus, name, iter:I, ..expected) {
         push(msg, TEST_FAIL_CASE_INDENT, str(repr(resultX)), "\n");
     pop(msg);
     expect(
-        test,
         expectedV == resultV,
         msg
     );
 }
 
-forceinline expectSequence(test: TestStatus, name, seq, ..expected) {
-    expectIterator(test, name, iterator(seq), ..expected);
+alias expectIterator(iter, ..expected) {
+    expectIterator2(__ARG__ iter, iter, ..expected);
 }
 
-inline expectExceptionType(test: TestStatus, name, T, fn) {
+alias expectSequence(seq, ..expected) {
+    expectIterator2(__ARG__ seq, iterator(seq), ..expected);
+}
+
+alias expectExceptionType(T, fn) {
     try {
         fn();
     } catch(x: T) {
-        expect(test, true, str());
+        expect(true, str());
         return;
     } catch(x) {
-        expect(test, false, str(name, 
-            " is expected to throw exception of type ", T, " but throws ", x));
+        expect(false, str("`", __ARG__ fn,
+            "` is expected to throw exception of type ", T, " but throws ", x));
         return;
     }
 
-    expect(test, false, str(name, 
-        " is expected to throw exception of type ", T, " but doesn't throw"));
+    expect(false, str("`", __ARG__ fn,
+        "` is expected to throw exception of type ", T, " but doesn't throw"));
 }
 
-inline expectException(test: TestStatus, name, expectedException, fn) {
+[E]
+alias expectException(expectedException:E, fn) {
     try {
         fn();
-    } catch(x: Type(expectedException)) {
-        expect(test, x == expectedException, 
-            str(name, " is expected to throw ", 
+    } catch(x:E) {
+        expect(x == expectedException, 
+            str("`", __ARG__ fn, "` is expected to throw ", 
                 expectedException, " but throws ", x));
         return;
     } catch(x) {
-        expect(test, false,
-            str(name, " is expected to throw ", 
+        expect(false,
+            str("`", __ARG__ fn, "` is expected to throw ", 
                 expectedException, " but throws ", x));
         return;
     }
 
-    expect(test, false, 
-        str(name, " is expected to throw ", 
+    expect(false, 
+        str("`", __ARG__ fn, "` is expected to throw ", 
             expectedException, " but doesn't throw"));
 }
 
-forceinline expectPrinted(test: TestStatus, name, expectedOutput, forward ..values) {
-    expectEqual(test, name, expectedOutput, str(..values));
+alias expectPrinted(expectedOutput, ..values) {
+    expectEqual2(__ARG__ values, expectedOutput, str(..values));
 }
 
 record RequiredExpectationFailed();
 instance Exception (RequiredExpectationFailed);
 
-required(expectFn, test: TestStatus, forward ..args) {
+required(block) {
+    ref test = just(g_testCaseStatus);
     var preFailed = test.failed;
-    expectFn(test, ..args);
+    block();
     if (test.failed != preFailed)
         throw RequiredExpectationFailed();
 }
@@ -305,12 +322,12 @@ private testOptions() {
     return ref _testOptions;
 }
 
-[..T] ifPasses(expectFn, test: TestStatus, ..args:T) {
-    forward fn = dropValues(#(countValues(..T) - 1), ..args);
+ifPasses(block, then) {
+    ref test = just(g_testCaseStatus);
     var preFailed = test.failed;
-    expectFn(test, ..takeValues(#(countValues(..T) - 1), ..args));
+    block();
     if (test.failed == preFailed)
-        fn();
+        then();
 }
 
 testMain(..suites) {

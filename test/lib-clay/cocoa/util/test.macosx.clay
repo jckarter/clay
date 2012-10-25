@@ -85,94 +85,94 @@ record RegularTest = regularClass(["foo", String], ["bar", Char]);
 record RegularCanary = regularClass(["foo", Canary], ["bar", Canary]);
 
 main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
-    TestCase("constructor overloads", test -> {
-        expectEqual(test, "NSNumber(bool)", true, NSNumber(true).boolValue());
-        expectEqual(test, "NSNumber(integer)", 5, NSNumber(5).intValue());
-        expectEqual(test, "NSNumber(double)", 5.5, NSNumber(5.5).doubleValue());
-        expectEqual(test, "NSNumber(64-bit integer)", 0x1_0000_0000_ul,
+    TestCase("constructor overloads", -> {
+        expectEqual(true, NSNumber(true).boolValue());
+        expectEqual(5, NSNumber(5).intValue());
+        expectEqual(5.5, NSNumber(5.5).doubleValue());
+        expectEqual(0x1_0000_0000_ul,
             NSNumber(0x1_0000_0000_ul).unsignedLongLongValue()
         );
 
-        expectEqual(test, "NSString(identifier)", "bees",
+        expectEqual("bees",
             CStringRef(NSString("bees").UTF8String())
         );
-        expectEqual(test, "NSString(string constant)", "bees",
+        expectEqual("bees",
             CStringRef(NSString("bees").UTF8String())
         );
-        expectEqual(test, "NSString(string)", "bees",
+        expectEqual("bees",
             CStringRef(NSString(String("bees")).UTF8String())
         );
 
-        expectEqual(test, "String(NSString)", "ants",
+        expectEqual("ants",
             String(NSString("ants"))
         );
 
-        expectEqual(test, "NSValue(integer)", 5, fromNSValue(Int, makeNSValue(5)));
-        expectEqual(test, "NSValue(double)", 5.5, fromNSValue(Double, makeNSValue(5.5)));
-        expectEqual(test, "NSValue(pointer)", null(Int),
+        expectEqual(5, fromNSValue(Int, makeNSValue(5)));
+        expectEqual(5.5, fromNSValue(Double, makeNSValue(5.5)));
+        expectEqual(null(Int),
             fromNSValue(Pointer[Int], makeNSValue(null(Int)))
         );
-        expectEqual(test, "NSValue(record)", Foo(14, 92.0),
+        expectEqual(Foo(14, 92.0),
             fromNSValue(Foo, makeNSValue(Foo(14, 92.0)))
         );
     }),
-    TestCase("boxing of clay primitives", test -> {
-        expectEqual(test, "integer", 5, Id(5).intValue());
-        expectEqual(test, "double", 5.5, Id(5.5).doubleValue());
-        expectEqual(test, "64-bit integer", 0x1_0000_0000_ul,
+    TestCase("boxing of clay primitives", -> {
+        expectEqual(5, Id(5).intValue());
+        expectEqual(5.5, Id(5.5).doubleValue());
+        expectEqual(0x1_0000_0000_ul,
             Id(0x1_0000_0000_ul).unsignedLongLongValue()
         );
-        expectEqual(test, "bool", true,
+        expectEqual(true,
             Id(true).boolValue()
         );
 
-        expectEqual(test, "string constant", "worms",
+        expectEqual("worms",
             String(Id("worms"))
         );
 
-        expectEqual(test, "identifier", "worms",
+        expectEqual("worms",
             String(Id("worms"))
         );
 
-        expectEqual(test, "string", "worms",
+        expectEqual("worms",
             String(Id(String("worms")))
         );
 
-        expectEqual(test, "record", Foo(7, 11.0),
+        expectEqual(Foo(7, 11.0),
             fromNSValue(Foo, Id(Foo(7, 11.0)))
         );
     }),
-    TestCase("equality, hashing and comparison", test -> {
+    TestCase("equality, hashing and comparison", -> {
         var x = NSString("foo");
         var y = NSString("foo");
         var z = x;
         var w = NSString("bar");
 
-        expectType(test, "NSString(\"foo\")", NSString, x);
+        expectType(NSString, x);
 
-        expectTrue(test, "equality", x == y);
-        expectTrue(test, "inequality", x != w);
+        expectTrue(x == y);
+        expectTrue(x != w);
 
-        expectFalse(test, "<", x < y);
-        expectFalse(test, "<", x < w);
-        expectTrue (test, "<=", x <= y);
-        expectFalse(test, "<=", x <= w);
-        expectFalse(test, ">", x > y);
-        expectTrue (test, ">", x > w);
-        expectTrue (test, ">=", x >= y);
-        expectTrue (test, ">=", x >= w);
+        expectFalse(x < y);
+        expectFalse(x < w);
+        expectTrue (x <= y);
+        expectFalse(x <= w);
+        expectFalse(x > y);
+        expectTrue (x > w);
+        expectTrue (x >= y);
+        expectTrue (x >= w);
 
-        expectTrue(test, "object-primitive <", x < "fop");
-        expectTrue(test, "object-primitive ==", x == "foo");
-        expectTrue(test, "object-primitive !=", x != "bar");
-        expectTrue(test, "object-primitive >", x > "fon");
+        expectTrue(x < "fop");
+        expectTrue(x == "foo");
+        expectTrue(x != "bar");
+        expectTrue(x > "fon");
 
-        expectTrue(test, "different identity", isNot?(x, y));
-        expectTrue(test, "same identity", is?(x, z));
+        expectTrue(isNot?(x, y));
+        expectTrue(is?(x, z));
 
-        expectEqual(test, "hashing", x.hash(), hash(x));
+        expectEqual(x.hash(), hash(x));
     }),
-    TestCase("array", test -> {
+    TestCase("array", -> {
         var array = NSMutableArray.alloc().init();
 
         array.addObject(9);
@@ -180,14 +180,14 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
         array.insertObject_atIndex(Foo(12, 24.0), NSUInteger(1));
         insert(array, 1, NSNull.null());
 
-        expectEqual(test, "index 0", 9, array[0].intValue());
-        expectEqual(test, "index 1", NSNull.null(), array[1]);
-        expectEqual(test, "index 2", Foo(12, 24.0), fromNSValue(Foo, array[2]));
-        expectEqual(test, "index 3", "birds", String(array[3]));
+        expectEqual(9, array[0].intValue());
+        expectEqual(NSNull.null(), array[1]);
+        expectEqual(Foo(12, 24.0), fromNSValue(Foo, array[2]));
+        expectEqual("birds", String(array[3]));
 
-        expectEqual(test, "size(array)", 4, size(array));
+        expectEqual(4, size(array));
 
-        expectSequence(test, "array as sequence", array,
+        expectSequence(array,
             Id(NSNumber(9)),
             Id(NSNull.null()),
             Id(makeNSValue(Foo(12, 24.0))),
@@ -196,20 +196,20 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
 
         array.release();
     }),
-    TestCase("dictionary", test -> {
+    TestCase("dictionary", -> {
         var dict = NSMutableDictionary.alloc().init();
 
         dict.setObject_forKey(9, "zim");
         dict.setObject_forKey("birds", "zang");
 
-        expectEqual(test, "key zim", 9, dict["zim"].intValue());
-        expectEqual(test, "key zang", "birds", String(dict["zang"]));
+        expectEqual(9, dict["zim"].intValue());
+        expectEqual("birds", String(dict["zang"]));
 
-        expectEqual(test, "size(dict)", 2, size(dict));
+        expectEqual(2, size(dict));
 
         dict.release();
     }),
-    TestCase("array, dictionary constructors", test -> {
+    TestCase("array, dictionary constructors", -> {
         var array = makeNSArray(1, "foo", 2.0, NSNull.null());
         var dict = makeNSDictionary(
             "zim", 9,
@@ -217,21 +217,21 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
             "zung", false,
         );
 
-        expectEqual(test, "size(array)", 4, size(array));
-        expectEqual(test, "size(dict)",  3, size(dict));
+        expectEqual(4, size(array));
+        expectEqual(3, size(dict));
 
-        expectSequence(test, "array as sequence", array,
+        expectSequence(array,
             Id(NSNumber(1)),
             Id(NSString("foo")),
             Id(NSNumber(2.0)),
             Id(NSNull.null())
         );
-        expectEqual(test, "dict key zim",  9,     dict["zim" ]);
-        expectEqual(test, "dict key zang", "bar", dict["zang"]);
-        expectEqual(test, "dict key zung", false, dict["zung"]);
+        expectEqual(9,     dict["zim" ]);
+        expectEqual("bar", dict["zang"]);
+        expectEqual(false, dict["zung"]);
     }),
-    TestCase("lifecycle methods", test -> {
-        expectCanariesDestroyed(test, "lifecycle methods on clay objc class", () => {
+    TestCase("lifecycle methods", -> {
+        expectCanariesDestroyed(() => {
             withAutoreleasePool(() => {
                 var autoreleased1 = LifecycleTest.lifecycleTest();
                 var autoreleased2 = LifecycleTest.lifecycleTestWithCanary(Canary());
@@ -258,12 +258,12 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
             });
         });
     }),
-    TestCase("printing objects", test -> {
-        expectEqual(test, "print NSString", "whisky", str(NSString("whisky")));
-        expectEqual(test, "print NSNumber", "2020", str(NSNumber(2020)));
-        expectEqual(test, "print nil", "(nil)", str(nil(NSString)));
+    TestCase("printing objects", -> {
+        expectEqual("whisky", str(NSString("whisky")));
+        expectEqual("2020", str(NSNumber(2020)));
+        expectEqual("(nil)", str(nil(NSString)));
     }),
-    TestCase("property accessor methods", test -> {
+    TestCase("property accessor methods", -> {
         var x = Retained(PropertyTest.alloc().init());
         {
             var s = Retained(NSString.alloc().initWithFormat(NSSTR("catch-%d"), 22));
@@ -272,80 +272,80 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
             x.setBas(true);
             // s gets released here, so setBar had better have retained it
         }
-        expectEqual(test, "foo", 27, x.foo());
-        expectEqual(test, "foo64", 27_l, x.foo64());
-        expectEqual(test, "bar retainCount", NSUInteger(1), x.bar().retainCount());
-        expectEqual(test, "bar", "catch-22", x.bar());
-        expectEqual(test, "isBas", true, x.isBas());
+        expectEqual(27, x.foo());
+        expectEqual(27_l, x.foo64());
+        expectEqual(NSUInteger(1), x.bar().retainCount());
+        expectEqual("catch-22", x.bar());
+        expectEqual(true, x.isBas());
     }),
-    TestCase("regularClass method signatures", test -> {
-        expectEqual(test, "SelectorReturnType(RegularTest, #foo)", String,
+    TestCase("regularClass method signatures", -> {
+        expectEqual(String,
             SelectorReturnType(RegularTest, "foo")
         );
-        expectEqualValues(test, "SelectorArgumentTypes(RegularTest, #foo)", [],
+        expectEqualValues([],
             ..SelectorArgumentTypes(RegularTest, "foo")
         );
-        expectEqual(test, "SelectorReturnType(RegularTest, #setFoo:)", Void,
+        expectEqual(Void,
             SelectorReturnType(RegularTest, "setFoo:")
         );
-        expectEqualValues(test, "SelectorArgumentTypes(RegularTest, #setFoo:)", Tuple(String),
+        expectEqualValues(Tuple(String),
             ..SelectorArgumentTypes(RegularTest, "setFoo:")
         );
 
-        expectEqual(test, "SelectorReturnType(RegularTest, #initWithFoo:bar:)", RegularTest,
+        expectEqual(RegularTest,
             SelectorReturnType(RegularTest, "initWithFoo:bar:")
         );
-        expectEqualValues(test, "SelectorArgumentTypes(RegularTest, #initWithFoo:bar:)",
+        expectEqualValues(
             [String, Char],
             ..SelectorArgumentTypes(RegularTest, "initWithFoo:bar:")
         );
 
-        expectEqual(test, "SelectorReturnType(RegularCanary, #initWithFoo:bar:)", RegularCanary,
+        expectEqual(RegularCanary,
             SelectorReturnType(RegularCanary, "initWithFoo:bar:")
         );
-        expectEqualValues(test, "SelectorArgumentTypes(RegularCanary, #initWithFoo:bar:)",
+        expectEqualValues(
             [Canary, Canary],
             ..SelectorArgumentTypes(RegularCanary, "initWithFoo:bar:")
         );
     }),
-    TestCase("regularClass usage", test -> {
+    TestCase("regularClass usage", -> {
         var defaultObject = Retained(RegularTest.alloc().init());
 
-        expectEqual(test, "defaultObject.foo()", "", defaultObject.foo());
+        expectEqual("", defaultObject.foo());
 
         var regularObject = Retained(RegularTest.alloc().initWithFoo_bar(String("wye"), 'x'));
 
-        expectEqual(test, "regularObject.foo()", "wye", regularObject.foo());
-        expectEqual(test, "regularObject.bar()", 'x', regularObject.bar());
+        expectEqual("wye", regularObject.foo());
+        expectEqual('x', regularObject.bar());
 
         regularObject.setFoo(String("zed"));
         regularObject.setBar('w');
 
-        expectEqual(test, "regularObject.foo()", "zed", regularObject.foo());
-        expectEqual(test, "regularObject.bar()", 'w', regularObject.bar());
+        expectEqual("zed", regularObject.foo());
+        expectEqual('w', regularObject.bar());
 
         var copy = Retained(regularObject.copy());
 
-        expectEqual(test, "copy.foo()", "zed", copy.foo());
-        expectEqual(test, "copy.bar()", 'w', copy.bar());
+        expectEqual("zed", copy.foo());
+        expectEqual('w', copy.bar());
     }),
-    TestCase("regularClass memory management", test -> {
-        expectCanariesDestroyed(test, "regularClass memory management", () => {
+    TestCase("regularClass memory management", -> {
+        expectCanariesDestroyed(() => {
             var foo = Retained(RegularCanary.alloc().init());
             var bar = Retained(foo.copy());
             foo.setFoo(Canary());
             var bas = Retained(RegularCanary.alloc().initWithFoo_bar(Canary(), Canary()));
         });
     }),
-    TestCase("indexSetIndices", test -> {
-        expectSequence(test, "indexSetIndices(empty index set)",
+    TestCase("indexSetIndices", -> {
+        expectSequence(
             indexSetIndices(NSIndexSet.indexSet()),
         );
-        expectSequence(test, "indexSetIndices(single index set)",
+        expectSequence(
             indexSetIndices(NSIndexSet.indexSetWithIndex(NSUInteger(5))),
             NSUInteger(5)
         );
-        expectSequence(test, "indexSetIndices(range index set)",
+        expectSequence(
             indexSetIndices(NSIndexSet.indexSetWithIndexesInRange(
                 NSMakeRange(NSUInteger(10), NSUInteger(5))
             )),

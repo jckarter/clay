@@ -7,45 +7,45 @@ import sequences.*;
 
 define _expectSockaddrIn;
 
-overload _expectSockaddrIn(test, name, expectedHost, expectedPort, sockaddr) {}
-overload _expectSockaddrIn(test, name, expectedHost, expectedPort, sockaddr: Sockaddr_in)
+overload _expectSockaddrIn(expectedHost, expectedPort, sockaddr) {}
+overload _expectSockaddrIn(expectedHost, expectedPort, sockaddr: Sockaddr_in)
 {
-    expectEqual(test, "family of " ++ name, AF_INET, sockaddr.sin_family);
-    expectEqual(test, "host of " ++ name, expectedHost, networkToHost(s_addr(sockaddr.sin_addr)));
-    expectEqual(test, "port of " ++ name, expectedPort, networkToHost(sockaddr.sin_port));
+    expectEqual(AF_INET, sockaddr.sin_family);
+    expectEqual(expectedHost, networkToHost(s_addr(sockaddr.sin_addr)));
+    expectEqual(expectedPort, networkToHost(sockaddr.sin_port));
 }
 
-expectSockaddrIn(test, name, expectedHost, expectedPort, address) {
+expectSockaddrIn(expectedHost, expectedPort, address) {
     var sockaddr = makeSockaddr(address);
-    expectType(test, "address of " ++ name, Sockaddr_in, sockaddr);
-    _expectSockaddrIn(test, name, expectedHost, expectedPort, sockaddr);
+    expectType(Sockaddr_in, sockaddr);
+    _expectSockaddrIn(expectedHost, expectedPort, sockaddr);
 }
 
 main() {
     startSockets();
     var r = testMain(
         TestSuite("socket IPv4 addresses", array(
-            TestCase("numeric addresses", test -> {
-                expectSockaddrIn(test, "0x7F_00_00_01:1234",
+            TestCase("numeric addresses", -> {
+                expectSockaddrIn(
                     0x7F_00_00_01u,
                     1234,
                     Inet(0x7F_00_00_01u, 1234)
                 );
-                expectSockaddrIn(test, "INADDR_ANY:1234",
+                expectSockaddrIn(
                     INADDR_ANY,
                     1234,
                     Inet(INADDR_ANY, 1234)
                 );
             }),
-            TestCase("dotted quads", test -> {
-                expectSockaddrIn(test, "127.0.0.1:1234",
+            TestCase("dotted quads", -> {
+                expectSockaddrIn(
                     0x7F_00_00_01u,
                     1234,
                     Inet("127.0.0.1", 1234)
                 );
             }),
-            TestCase("hostnames", test -> {
-                expectSockaddrIn(test, "localhost:1234",
+            TestCase("hostnames", -> {
+                expectSockaddrIn(
                     0x7F_00_00_01u,
                     1234,
                     Inet("localhost", 1234)

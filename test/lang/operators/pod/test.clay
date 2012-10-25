@@ -16,32 +16,30 @@ variant NonPODVariant (Int, NonPODRecord);
 
 enum Enum ( A, B, C );
 
-expectPOD(test, tf, Type) { expectEqual(test, StaticName(Type), tf, PODType?(Type)); }
-
 main() = testMain(TestSuite("PODType?", array(
-    TestCase("PODType?", test -> {
-        expectPOD(test, false, IrregularRecord);
-        expectPOD(test, true,  PODRecord);
-        expectPOD(test, false, NonPODRecord);
-        expectPOD(test, true,  Array[Int, 2]);
-        expectPOD(test, false, Array[IrregularRecord, 2]);
-        expectPOD(test, true,  Vec[Int, 2]);
-        expectPOD(test, true,  Tuple[]);
-        expectPOD(test, true,  Tuple[Int, Float]);
-        expectPOD(test, false, Tuple[Int, IrregularRecord]);
-        expectPOD(test, true,  Union[]);
-        expectPOD(test, true,  Union[Int, Float]);
+    TestCase("PODType?", -> {
+        expectFalse(PODType?(IrregularRecord));
+        expectTrue (PODType?(PODRecord));
+        expectFalse(PODType?(NonPODRecord));
+        expectTrue (PODType?(Array[Int, 2]));
+        expectFalse(PODType?(Array[IrregularRecord, 2]));
+        expectTrue (PODType?(Vec[Int, 2]));
+        expectTrue (PODType?(Tuple[]));
+        expectTrue (PODType?(Tuple[Int, Float]));
+        expectFalse(PODType?(Tuple[Int, IrregularRecord]));
+        expectTrue (PODType?(Union[]));
+        expectTrue (PODType?(Union[Int, Float]));
 
-        expectPOD(test, true,  Char);
-        expectPOD(test, true,  StringLiteralRef);
-        expectPOD(test, false, SharedPointer[Int]);
-        expectPOD(test, false, UniquePointer[Int]);
-        expectPOD(test, false, Vector[Int]);
-        expectPOD(test, false, String);
+        expectTrue (PODType?(Char));
+        expectTrue (PODType?(StringLiteralRef));
+        expectFalse(PODType?(SharedPointer[Int]));
+        expectFalse(PODType?(UniquePointer[Int]));
+        expectFalse(PODType?(Vector[Int]));
+        expectFalse(PODType?(String));
 
-        expectPOD(test, true,  PODVariant);
-        expectPOD(test, false, NonPODVariant);
+        expectTrue (PODType?(PODVariant));
+        expectFalse(PODType?(NonPODVariant));
 
-        expectPOD(test, true,  Enum);
+        expectTrue (PODType?(Enum));
     }),
 )));

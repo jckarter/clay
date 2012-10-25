@@ -10,9 +10,9 @@ overload iterator(seq: MySequenceForPrecedence) = MyIteratorForPrecedence();
 
 overload nextValue(iter: MyIteratorForPrecedence) = nothing(Int);
 
-testSequenceEqualsHigherThatRecordPrecedence(test) {
+testSequenceEqualsHigherThatRecordPrecedence() {
     // if 'equal?' from records has higher precedence, this test fails
-    expectEqual(test, "==", MySequenceForPrecedence(1), MySequenceForPrecedence(2));
+    expectEqual(MySequenceForPrecedence(1), MySequenceForPrecedence(2));
 }
 
 main() = testMain(

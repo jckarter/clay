@@ -150,507 +150,466 @@ record Bar (
 
 alias Foonion = Union[Int, Foo, Bar];
 
-expectEncoding(test, expected, ..Types) {
-    expectEqual(test,
-        str("encoding of (", ..Types, ")"),
+expectEncoding(expected, ..Types) {
+    expectEqual(
         expected, encode(..Types)
     );
 }
 
-expectSubclass(test, Super, Sub) {
-    expectTrue(test, str(Sub, " subclass of ", Super),
+expectSubclass(Super, Sub) {
+    expectTrue(
         Subclass?(Super, Sub)
     );
 }
 
-expectNotSubclass(test, Super, Sub) {
-    expectFalse(test, str(Sub, " subclass of ", Super),
+expectNotSubclass(Super, Sub) {
+    expectFalse(
         Subclass?(Super, Sub)
     );
 }
 
-__expectMsgSendCompatible(expectTF, test, ParamType, ValueType) {
-    expectTF(test, str(ParamType, " accepts values of ", ValueType),
+__expectMsgSendCompatible(expectTF, ParamType, ValueType) {
+    expectTF(
         MsgSendCompatible?(ParamType, ValueType)
     );
 }
 
 define _expectMsgSendCompatible;
-overload _expectMsgSendCompatible(expectTF, test, ParamType, ValueType) {
-    __expectMsgSendCompatible(expectTF, test, ParamType, ValueType);
+overload _expectMsgSendCompatible(expectTF, ParamType, ValueType) {
+    __expectMsgSendCompatible(expectTF, ParamType, ValueType);
 }
 [ParamType when ObjectType?(ParamType)]
-overload _expectMsgSendCompatible(expectTF, test, #ParamType, ValueType) {
-    __expectMsgSendCompatible(expectTF, test, ParamType, ValueType);
-    __expectMsgSendCompatible(expectTF, test, Retained[ParamType], ValueType);
+overload _expectMsgSendCompatible(expectTF, #ParamType, ValueType) {
+    __expectMsgSendCompatible(expectTF, ParamType, ValueType);
+    __expectMsgSendCompatible(expectTF, Retained[ParamType], ValueType);
 }
 [ValueType when ObjectType?(ValueType)]
-overload _expectMsgSendCompatible(expectTF, test, ParamType, #ValueType) {
-    __expectMsgSendCompatible(expectTF, test, ParamType, ValueType);
-    __expectMsgSendCompatible(expectTF, test, ParamType, Retained[ValueType]);
+overload _expectMsgSendCompatible(expectTF, ParamType, #ValueType) {
+    __expectMsgSendCompatible(expectTF, ParamType, ValueType);
+    __expectMsgSendCompatible(expectTF, ParamType, Retained[ValueType]);
 }
 [ParamType, ValueType when ObjectType?(ParamType) and ObjectType?(ValueType)]
-overload _expectMsgSendCompatible(expectTF, test, #ParamType, #ValueType) {
-    __expectMsgSendCompatible(expectTF, test, ParamType, ValueType);
-    __expectMsgSendCompatible(expectTF, test, Retained[ParamType], ValueType);
-    __expectMsgSendCompatible(expectTF, test, ParamType, Retained[ValueType]);
-    __expectMsgSendCompatible(expectTF, test, Retained[ParamType], Retained[ValueType]);
+overload _expectMsgSendCompatible(expectTF, #ParamType, #ValueType) {
+    __expectMsgSendCompatible(expectTF, ParamType, ValueType);
+    __expectMsgSendCompatible(expectTF, Retained[ParamType], ValueType);
+    __expectMsgSendCompatible(expectTF, ParamType, Retained[ValueType]);
+    __expectMsgSendCompatible(expectTF, Retained[ParamType], Retained[ValueType]);
 }
 
-expectMsgSendCompatible(test, ParamType, ValueType) {
-    _expectMsgSendCompatible(expectTrue, test, ParamType, ValueType);
+expectMsgSendCompatible(ParamType, ValueType) {
+    _expectMsgSendCompatible(expectTrue, ParamType, ValueType);
 }
 
-expectMsgSendNotCompatible(test, ParamType, ValueType) {
-    _expectMsgSendCompatible(expectFalse, test, ParamType, ValueType);
+expectMsgSendNotCompatible(ParamType, ValueType) {
+    _expectMsgSendCompatible(expectFalse, ParamType, ValueType);
 }
 
-expectSelectorTypeEncoding(test, Class, selector, encoding) {
-    expectEqual(test, str("SelectorTypeEncoding(", Class, ", ", selector, ")"),
+expectSelectorTypeEncoding(Class, selector, encoding) {
+    expectEqual(
         encoding, SelectorTypeEncoding(Class, selector)
     );
 }
 
-expectMsgSendParamType(test, Type, ParamType) {
-    expectEqual(test, str("MsgSendParamType(", Type, ")"),
+expectMsgSendParamType(Type, ParamType) {
+    expectEqual(
         ParamType, MsgSendParamType(Type)
     );
 }
 
-expectSelectorCallableWith(test, Class, selector, ..T) {
-    expectTrue(test,
-        str(Class, ".", selector, " callable with (", ..weaveValues(", ", ..T), ")"),
+expectSelectorCallableWith(Class, selector, ..T) {
+    expectTrue(
         SelectorCallableWith?(Class, selector, ..T)
     );
 }
 
-expectSelectorNotCallableWith(test, Class, selector, ..T) {
-    expectFalse(test,
-        str(Class, ".", selector, " callable with (", ..weaveValues(", ", ..T), ")"),
+expectSelectorNotCallableWith(Class, selector, ..T) {
+    expectFalse(
         SelectorCallableWith?(Class, selector, ..T)
     );
 }
 
 main() = testMain(TestSuite("Objective-C binding internals", array(
-    TestCase("type encodings", test -> {
-        expectEncoding(test, "");
-        expectEncoding(test, "c", Int8);
-        expectEncoding(test, "s", Int16);
-        expectEncoding(test, "i", Int32);
-        expectEncoding(test, "q", Int64);
-        expectEncoding(test, "C", UInt8);
-        expectEncoding(test, "S", UInt16);
-        expectEncoding(test, "I", UInt32);
-        expectEncoding(test, "Q", UInt64);
-        expectEncoding(test, "f", Float32);
-        expectEncoding(test, "d", Float64);
-        expectEncoding(test, "c", Bool);
-        expectEncoding(test, "*", Pointer[CChar]);
-        expectEncoding(test, "@", ObjectHandle);
-        expectEncoding(test, "#", ClassHandle);
-        expectEncoding(test, ":", SelectorHandle);
-        expectEncoding(test, "@", Id);
-        expectEncoding(test, "@", NSObject);
-        expectEncoding(test, "@", NSString);
-        expectEncoding(test, "@", Retained[NSString]);
-        expectEncoding(test, "^v", RawPointer);
-        expectEncoding(test, "^i", Pointer[Int32]);
-        expectEncoding(test, "^^i", Pointer[Pointer[Int32]]);
-        expectEncoding(test, "^^^i", Pointer[Pointer[Pointer[Int32]]]);
-        expectEncoding(test, "{Foo=@*i}", Foo);
-        expectEncoding(test, "^{Foo=@*i}", Pointer[Foo]);
-        expectEncoding(test, "^^{Foo}", Pointer[Pointer[Foo]]);
-        expectEncoding(test, "^^^{Foo}", Pointer[Pointer[Pointer[Foo]]]);
-        expectEncoding(test, "{Bar=q{Foo=@*i}}", Bar);
-        expectEncoding(test, "(Union=i{Foo=@*i}{Bar=q{Foo=@*i}})", Foonion);
-        expectEncoding(test, "^(Union=i{Foo=@*i}{Bar=q{Foo=@*i}})", Pointer[Foonion]);
-        expectEncoding(test, "^^(Union)", Pointer[Pointer[Foonion]]);
-        expectEncoding(test, "^^^(Union)", Pointer[Pointer[Pointer[Foonion]]]);
-        expectEncoding(test, "?", CCodePointer[[],[]]);
-        expectEncoding(test, "@@:", Id, Id, SelectorHandle);
-        expectEncoding(test, "v@:", Void, Id, SelectorHandle);
+    TestCase("type encodings", -> {
+        expectEncoding("");
+        expectEncoding("c", Int8);
+        expectEncoding("s", Int16);
+        expectEncoding("i", Int32);
+        expectEncoding("q", Int64);
+        expectEncoding("C", UInt8);
+        expectEncoding("S", UInt16);
+        expectEncoding("I", UInt32);
+        expectEncoding("Q", UInt64);
+        expectEncoding("f", Float32);
+        expectEncoding("d", Float64);
+        expectEncoding("c", Bool);
+        expectEncoding("*", Pointer[CChar]);
+        expectEncoding("@", ObjectHandle);
+        expectEncoding("#", ClassHandle);
+        expectEncoding(":", SelectorHandle);
+        expectEncoding("@", Id);
+        expectEncoding("@", NSObject);
+        expectEncoding("@", NSString);
+        expectEncoding("@", Retained[NSString]);
+        expectEncoding("^v", RawPointer);
+        expectEncoding("^i", Pointer[Int32]);
+        expectEncoding("^^i", Pointer[Pointer[Int32]]);
+        expectEncoding("^^^i", Pointer[Pointer[Pointer[Int32]]]);
+        expectEncoding("{Foo=@*i}", Foo);
+        expectEncoding("^{Foo=@*i}", Pointer[Foo]);
+        expectEncoding("^^{Foo}", Pointer[Pointer[Foo]]);
+        expectEncoding("^^^{Foo}", Pointer[Pointer[Pointer[Foo]]]);
+        expectEncoding("{Bar=q{Foo=@*i}}", Bar);
+        expectEncoding("(Union=i{Foo=@*i}{Bar=q{Foo=@*i}})", Foonion);
+        expectEncoding("^(Union=i{Foo=@*i}{Bar=q{Foo=@*i}})", Pointer[Foonion]);
+        expectEncoding("^^(Union)", Pointer[Pointer[Foonion]]);
+        expectEncoding("^^^(Union)", Pointer[Pointer[Pointer[Foonion]]]);
+        expectEncoding("?", CCodePointer[[],[]]);
+        expectEncoding("@@:", Id, Id, SelectorHandle);
+        expectEncoding("v@:", Void, Id, SelectorHandle);
     }),
-    TestCase("class hierarchy", test -> {
-        expectSubclass(test, NSObject, NSObject);
-        expectSubclass(test, NSObject, NSString);
-        expectSubclass(test, NSObject, NSMutableString);
-        expectSubclass(test, NSString, NSMutableString);
-        expectSubclass(test, NSString, SubString1);
-        expectSubclass(test, NSString, SubString2);
-        expectSubclass(test, NSString, SubSubString);
-        expectSubclass(test, SubString1, SubSubString);
+    TestCase("class hierarchy", -> {
+        expectSubclass(NSObject, NSObject);
+        expectSubclass(NSObject, NSString);
+        expectSubclass(NSObject, NSMutableString);
+        expectSubclass(NSString, NSMutableString);
+        expectSubclass(NSString, SubString1);
+        expectSubclass(NSString, SubString2);
+        expectSubclass(NSString, SubSubString);
+        expectSubclass(SubString1, SubSubString);
 
-        expectNotSubclass(test, NSMutableString, NSString);
-        expectNotSubclass(test, NSMutableString, NSObject);
-        expectNotSubclass(test, SubString1, SubString2);
-        expectNotSubclass(test, SubString2, SubSubString);
+        expectNotSubclass(NSMutableString, NSString);
+        expectNotSubclass(NSMutableString, NSObject);
+        expectNotSubclass(SubString1, SubString2);
+        expectNotSubclass(SubString2, SubSubString);
     }),
-    TestCase("ClassName", test -> {
-        expectEqual(test, "class name for externalClass NSObject", "NSObject",
-            ClassName(NSObject)
-        );
-        expectEqual(test, "class name for externalClass(name) MyNSNumber", "NSNumber",
-            ClassName(MyNSNumber)
-        );
-        expectEqual(test, "class name for newClass SubString1", "clay____main____SubString1",
-            ClassName(SubString1)
-        );
-        expectEqual(test, "class name for newClass foo.FooClass", "clay__foo__FooClass",
-            ClassName(FooClass)
-        );
-        expectEqual(test, "class name for newClass zim.zang.ZangClass", "clay__zim__zang__ZangClass",
-            ClassName(ZangClass)
-        );
-        expectEqual(test, "class name for newClass(name) SubString2", "ClaySubString2",
-            ClassName(SubString2)
-        );
-        expectEqual(test, "class name for newExternalClass SubSubString", "SubSubString",
-            ClassName(SubSubString)
-        );
+    TestCase("ClassName", -> {
+        expectEqual("NSObject", ClassName(NSObject));
+        expectEqual("NSNumber", ClassName(MyNSNumber));
+        expectEqual("clay____main____SubString1", ClassName(SubString1));
+        expectEqual("clay__foo__FooClass", ClassName(FooClass));
+        expectEqual("clay__zim__zang__ZangClass", ClassName(ZangClass));
+        expectEqual("ClaySubString2", ClassName(SubString2));
+        expectEqual("SubSubString", ClassName(SubSubString));
     }),
-    TestCase("MsgSendCompatible?", test -> {
-        expectMsgSendCompatible(test, Int, Int);
-        expectMsgSendCompatible(test, Foo, Foo);
+    TestCase("MsgSendCompatible?", -> {
+        expectMsgSendCompatible(Int, Int);
+        expectMsgSendCompatible(Foo, Foo);
 
-        expectMsgSendCompatible(test, Id, Id);
-        expectMsgSendCompatible(test, Id, NSObject);
-        expectMsgSendCompatible(test, Id, NSString);
-        expectMsgSendCompatible(test, Id, NSMutableString);
-        expectMsgSendCompatible(test, Id, ObjectHandle);
-        expectMsgSendCompatible(test, Id, Static[NSObject]);
-        expectMsgSendNotCompatible(test, Id, Int);
-        expectMsgSendNotCompatible(test, Id, Foo);
+        expectMsgSendCompatible(Id, Id);
+        expectMsgSendCompatible(Id, NSObject);
+        expectMsgSendCompatible(Id, NSString);
+        expectMsgSendCompatible(Id, NSMutableString);
+        expectMsgSendCompatible(Id, ObjectHandle);
+        expectMsgSendCompatible(Id, Static[NSObject]);
+        expectMsgSendNotCompatible(Id, Int);
+        expectMsgSendNotCompatible(Id, Foo);
 
-        expectMsgSendCompatible(test, NSObject, Id);
-        expectMsgSendCompatible(test, NSObject, ObjectHandle);
-        expectMsgSendCompatible(test, NSObject, NSObject);
-        expectMsgSendCompatible(test, NSObject, NSString);
-        expectMsgSendCompatible(test, NSObject, NSMutableString);
-        expectMsgSendNotCompatible(test, NSString, Int);
-        expectMsgSendNotCompatible(test, NSString, Foo);
+        expectMsgSendCompatible(NSObject, Id);
+        expectMsgSendCompatible(NSObject, ObjectHandle);
+        expectMsgSendCompatible(NSObject, NSObject);
+        expectMsgSendCompatible(NSObject, NSString);
+        expectMsgSendCompatible(NSObject, NSMutableString);
+        expectMsgSendNotCompatible(NSString, Int);
+        expectMsgSendNotCompatible(NSString, Foo);
 
-        expectMsgSendCompatible(test, NSString, Id);
-        expectMsgSendCompatible(test, NSString, ObjectHandle);
-        expectMsgSendNotCompatible(test, NSString, NSObject);
-        expectMsgSendCompatible(test, NSString, NSString);
-        expectMsgSendCompatible(test, NSString, NSMutableString);
+        expectMsgSendCompatible(NSString, Id);
+        expectMsgSendCompatible(NSString, ObjectHandle);
+        expectMsgSendNotCompatible(NSString, NSObject);
+        expectMsgSendCompatible(NSString, NSString);
+        expectMsgSendCompatible(NSString, NSMutableString);
 
-        expectMsgSendCompatible(test, NSMutableString, Id);
-        expectMsgSendCompatible(test, NSMutableString, ObjectHandle);
-        expectMsgSendNotCompatible(test, NSMutableString, NSObject);
-        expectMsgSendNotCompatible(test, NSMutableString, NSString);
-        expectMsgSendCompatible(test, NSMutableString, NSMutableString);
+        expectMsgSendCompatible(NSMutableString, Id);
+        expectMsgSendCompatible(NSMutableString, ObjectHandle);
+        expectMsgSendNotCompatible(NSMutableString, NSObject);
+        expectMsgSendNotCompatible(NSMutableString, NSString);
+        expectMsgSendCompatible(NSMutableString, NSMutableString);
     }),
-    PendingTestCase("MsgSendCompatible?", test -> {
-        expectMsgSendNotCompatible(test, NSObject, Static[NSObject]);
+    PendingTestCase("MsgSendCompatible?", -> {
+        expectMsgSendNotCompatible(NSObject, Static[NSObject]);
     }),
-    TestCase("selector type encoding", test -> {
-        expectSelectorTypeEncoding(test, Id, "alloc", "@@:");
-        expectSelectorTypeEncoding(test, Static[NSObject], "alloc", "@@:");
-        expectSelectorTypeEncoding(test, Static[NSString], "alloc", "@@:");
-        expectSelectorTypeEncoding(test, Static[SubString1], "alloc", "@@:");
-        expectSelectorTypeEncoding(test, Static[SubSubString], "alloc", "@@:");
+    TestCase("selector type encoding", -> {
+        expectSelectorTypeEncoding(Id, "alloc", "@@:");
+        expectSelectorTypeEncoding(Static[NSObject], "alloc", "@@:");
+        expectSelectorTypeEncoding(Static[NSString], "alloc", "@@:");
+        expectSelectorTypeEncoding(Static[SubString1], "alloc", "@@:");
+        expectSelectorTypeEncoding(Static[SubSubString], "alloc", "@@:");
 
-        expectSelectorTypeEncoding(test, Id, "init", "@@:");
-        expectSelectorTypeEncoding(test, NSObject, "init", "@@:");
-        expectSelectorTypeEncoding(test, NSString, "init", "@@:");
-        expectSelectorTypeEncoding(test, SubString1, "init", "@@:");
-        expectSelectorTypeEncoding(test, SubSubString, "init", "@@:");
+        expectSelectorTypeEncoding(Id, "init", "@@:");
+        expectSelectorTypeEncoding(NSObject, "init", "@@:");
+        expectSelectorTypeEncoding(NSString, "init", "@@:");
+        expectSelectorTypeEncoding(SubString1, "init", "@@:");
+        expectSelectorTypeEncoding(SubSubString, "init", "@@:");
 
-        expectSelectorTypeEncoding(test, Id, "drain", "v@:");
-        expectSelectorTypeEncoding(test, Id, "stringWithUTF8String:", "@@:*");
-        expectSelectorTypeEncoding(test, Id, "initWithUTF8String:", "@@:*");
-        expectSelectorTypeEncoding(test, Id, "UTF8String", "*@:");
-        expectSelectorTypeEncoding(test, Id, "description", "@@:");
-        expectSelectorTypeEncoding(test, Id, "stringWithFormat:", "@@:@");
-        expectSelectorTypeEncoding(test, Id, "initWithFormat:", "@@:@");
+        expectSelectorTypeEncoding(Id, "drain", "v@:");
+        expectSelectorTypeEncoding(Id, "stringWithUTF8String:", "@@:*");
+        expectSelectorTypeEncoding(Id, "initWithUTF8String:", "@@:*");
+        expectSelectorTypeEncoding(Id, "UTF8String", "*@:");
+        expectSelectorTypeEncoding(Id, "description", "@@:");
+        expectSelectorTypeEncoding(Id, "stringWithFormat:", "@@:@");
+        expectSelectorTypeEncoding(Id, "initWithFormat:", "@@:@");
 
         // generic selector via Id
-        expectSelectorTypeEncoding(test, Id, "version", "@@:");
+        expectSelectorTypeEncoding(Id, "version", "@@:");
         // generic selector via non-implementing class
-        expectSelectorTypeEncoding(test, NSObject, "version", "@@:");
+        expectSelectorTypeEncoding(NSObject, "version", "@@:");
         // generic selector via non-implementing metaclass
-        expectSelectorTypeEncoding(test, Static[NSObject], "version", "@@:");
+        expectSelectorTypeEncoding(Static[NSObject], "version", "@@:");
         // typed selector via implementing class
-        expectSelectorTypeEncoding(test, SubString1, "version", "i@:");
+        expectSelectorTypeEncoding(SubString1, "version", "i@:");
         // typed selector via implementing class defaulting to generic selector
-        expectSelectorTypeEncoding(test, SubString2, "version", "@@:");
+        expectSelectorTypeEncoding(SubString2, "version", "@@:");
         // typed selector via implementing superclass 
-        expectSelectorTypeEncoding(test, SubSubString, "version", "i@:");
+        expectSelectorTypeEncoding(SubSubString, "version", "i@:");
         // typed selector via implementing class defaulting to superclass selector 
-        expectSelectorTypeEncoding(test, SubSubSubString, "version", "i@:");
+        expectSelectorTypeEncoding(SubSubSubString, "version", "i@:");
 
         // generic selector via Id
-        expectSelectorTypeEncoding(test, Id, "classVersion", "@@:");
+        expectSelectorTypeEncoding(Id, "classVersion", "@@:");
         // generic selector via non-implementing class
-        expectSelectorTypeEncoding(test, NSObject, "classVersion", "@@:");
+        expectSelectorTypeEncoding(NSObject, "classVersion", "@@:");
         // generic selector via non-implementing class
-        expectSelectorTypeEncoding(test, SubString1, "classVersion", "@@:");
+        expectSelectorTypeEncoding(SubString1, "classVersion", "@@:");
         // generic selector via non-implementing metaclass
-        expectSelectorTypeEncoding(test, Static[NSObject], "classVersion", "@@:");
+        expectSelectorTypeEncoding(Static[NSObject], "classVersion", "@@:");
         // typed selector via implementing metaclass
-        expectSelectorTypeEncoding(test, Static[SubString1], "classVersion", "i@:");
+        expectSelectorTypeEncoding(Static[SubString1], "classVersion", "i@:");
         // typed selector via implementing metaclass defaulting to generic selector
-        expectSelectorTypeEncoding(test, Static[SubString2], "classVersion", "@@:");
+        expectSelectorTypeEncoding(Static[SubString2], "classVersion", "@@:");
         // typed selector via implementing supermetaclass
-        expectSelectorTypeEncoding(test, Static[SubSubString], "classVersion", "i@:");
+        expectSelectorTypeEncoding(Static[SubSubString], "classVersion", "i@:");
         // typed selector via implementing metaclass defaulting to supermetaclass selector
-        expectSelectorTypeEncoding(test, Static[SubSubSubString], "classVersion", "i@:");
+        expectSelectorTypeEncoding(Static[SubSubSubString], "classVersion", "i@:");
     }),
-    TestCase("parameter type conversion", test -> {
-        expectMsgSendParamType(test, Id, ObjectHandle);
-        expectMsgSendParamType(test, NSObject, ObjectHandle);
-        expectMsgSendParamType(test, Void, #[]);
-        expectMsgSendParamType(test, Int, Int);
-        expectMsgSendParamType(test, Bool, BOOL);
-        expectMsgSendParamType(test, Foo, Foo);
-        // expectMsgSendParamType(test, Selector, SelectorHandle);
-        // expectMsgSendParamType(test, Class, ObjectHandle);
+    TestCase("parameter type conversion", -> {
+        expectMsgSendParamType(Id, ObjectHandle);
+        expectMsgSendParamType(NSObject, ObjectHandle);
+        expectMsgSendParamType(Void, #[]);
+        expectMsgSendParamType(Int, Int);
+        expectMsgSendParamType(Bool, BOOL);
+        expectMsgSendParamType(Foo, Foo);
+        // expectMsgSendParamType(Selector, SelectorHandle);
+        // expectMsgSendParamType(Class, ObjectHandle);
     }),
-    TestCase("SelectorCallableWith?", test -> {
-        expectSelectorCallableWith(test, Id, "alloc");
-        expectSelectorNotCallableWith(test, Id, "alloc", Id);
+    TestCase("SelectorCallableWith?", -> {
+        expectSelectorCallableWith(Id, "alloc");
+        expectSelectorNotCallableWith(Id, "alloc", Id);
 
-        expectSelectorNotCallableWith(test, Id, "stringWithUTF8String:");
-        expectSelectorCallableWith(test, Id, "stringWithUTF8String:", Pointer[CChar]);
-        expectSelectorNotCallableWith(test, Id, "stringWithUTF8String:", ObjectHandle);
-        expectSelectorNotCallableWith(test, Id, "stringWithUTF8String:", Id);
-        expectSelectorNotCallableWith(test, Id, "stringWithUTF8String:", Pointer[CChar], Pointer[CChar]);
+        expectSelectorNotCallableWith(Id, "stringWithUTF8String:");
+        expectSelectorCallableWith(Id, "stringWithUTF8String:", Pointer[CChar]);
+        expectSelectorNotCallableWith(Id, "stringWithUTF8String:", ObjectHandle);
+        expectSelectorNotCallableWith(Id, "stringWithUTF8String:", Id);
+        expectSelectorNotCallableWith(Id, "stringWithUTF8String:", Pointer[CChar], Pointer[CChar]);
 
-        expectSelectorNotCallableWith(test, Id, "stringWithFormat:");
-        expectSelectorCallableWith(test, Id, "stringWithFormat:", Id);
-        expectSelectorNotCallableWith(test, Id, "stringWithFormat:", NSObject);
-        expectSelectorCallableWith(test, Id, "stringWithFormat:", NSString);
-        expectSelectorCallableWith(test, Id, "stringWithFormat:", NSMutableString);
-        expectSelectorCallableWith(test, Id, "stringWithFormat:", SubString1);
-        expectSelectorCallableWith(test, Id, "stringWithFormat:", SubSubString);
-        expectSelectorCallableWith(test, Id, "stringWithFormat:", NSString, Id);
-        expectSelectorCallableWith(test, Id, "stringWithFormat:", NSString, Int);
-        expectSelectorCallableWith(test, Id, "stringWithFormat:", NSString, Foo, Char);
+        expectSelectorNotCallableWith(Id, "stringWithFormat:");
+        expectSelectorCallableWith(Id, "stringWithFormat:", Id);
+        expectSelectorNotCallableWith(Id, "stringWithFormat:", NSObject);
+        expectSelectorCallableWith(Id, "stringWithFormat:", NSString);
+        expectSelectorCallableWith(Id, "stringWithFormat:", NSMutableString);
+        expectSelectorCallableWith(Id, "stringWithFormat:", SubString1);
+        expectSelectorCallableWith(Id, "stringWithFormat:", SubSubString);
+        expectSelectorCallableWith(Id, "stringWithFormat:", NSString, Id);
+        expectSelectorCallableWith(Id, "stringWithFormat:", NSString, Int);
+        expectSelectorCallableWith(Id, "stringWithFormat:", NSString, Foo, Char);
     }),
-    TestCase("instance variable types", test -> {
-        expectEqual(test, "SubString1 ivar \"foo\"", Int, ClassIvarType(SubString1, "foo"));
-        expectEqual(test, "SubString2 ivar \"foo\"", Double, ClassIvarType(SubString2, "foo"));
-        expectEqual(test, "SubSubString ivar \"foo\"", Int, ClassIvarType(SubSubString, "foo"));
-        expectEqual(test, "SubSubString ivar \"bar\"", StringLiteralRef,
-            ClassIvarType(SubSubString, "bar")
-        );
+    TestCase("instance variable types", -> {
+        expectEqual(Int, ClassIvarType(SubString1, "foo"));
+        expectEqual(Double, ClassIvarType(SubString2, "foo"));
+        expectEqual(Int, ClassIvarType(SubSubString, "foo"));
+        expectEqual(StringLiteralRef, ClassIvarType(SubSubString, "bar"));
 
-        expectType(test, "SubString1^.foo", Int, nil(SubString1)^.foo);
-        expectType(test, "SubString2^.foo", Double, nil(SubString2)^.foo);
-        expectType(test, "SubSubString^.foo", Int, nil(SubSubString)^.foo);
-        expectType(test, "SubSubString^.bar", StringLiteralRef, nil(SubSubString)^.bar);
+        expectType(Int, nil(SubString1)^.foo);
+        expectType(Double, nil(SubString2)^.foo);
+        expectType(Int, nil(SubSubString)^.foo);
+        expectType(StringLiteralRef, nil(SubSubString)^.bar);
     }),
-    TestCase("special selectors", test -> {
-        expectTrue(test, "alloc", AllocatingSelector?("alloc"));
-        expectTrue(test, "allocWithZone:", AllocatingSelector?("allocWithZone:"));
-        expectTrue(test, "new", AllocatingSelector?("new"));
+    TestCase("special selectors", -> {
+        expectTrue(AllocatingSelector?("alloc"));
+        expectTrue(AllocatingSelector?("allocWithZone:"));
+        expectTrue(AllocatingSelector?("new"));
 
-        expectTrue(test, "retain", RetainingSelector?("retain"));
-        expectTrue(test, "copy", RetainingSelector?("copy"));
-        expectTrue(test, "copyWithZone:", RetainingSelector?("copyWithZone:"));
-        expectTrue(test, "mutableCopy", RetainingSelector?("mutableCopy"));
-        expectTrue(test, "mutableCopyWithZone", RetainingSelector?("mutableCopy"));
+        expectTrue(RetainingSelector?("retain"));
+        expectTrue(RetainingSelector?("copy"));
+        expectTrue(RetainingSelector?("copyWithZone:"));
+        expectTrue(RetainingSelector?("mutableCopy"));
+        expectTrue(RetainingSelector?("mutableCopy"));
 
-        expectTrue(test, "init", ForwardingSelector?("init"));
-        expectTrue(test, "initWithFormat:", ForwardingSelector?("initWithFormat:"));
+        expectTrue(ForwardingSelector?("init"));
+        expectTrue(ForwardingSelector?("initWithFormat:"));
 
-        expectTrue(test, "autorelease", AutoreleasingSelector?("autorelease"));
+        expectTrue(AutoreleasingSelector?("autorelease"));
     }),
-    TestCase("return types for special selectors", test -> {
-        expectEqual(test, "NSObject +alloc", NSObject,
+    TestCase("return types for special selectors", -> {
+        expectEqual(NSObject,
             SelectorReturnType(Static[NSObject], "alloc")
         );
-        expectEqual(test, "NSString +alloc", NSString,
+        expectEqual(NSString,
             SelectorReturnType(Static[NSString], "alloc")
         );
-        expectEqual(test, "Id -alloc", Id,
+        expectEqual(Id,
             SelectorReturnType(Id, "alloc")
         );
-        expectEqual(test, "NSObject -alloc", Id,
+        expectEqual(Id,
             SelectorReturnType(NSObject, "alloc")
         );
 
-        expectEqual(test, "Id -retain", Id,
+        expectEqual(Id,
             SelectorReturnType(Id, "retain")
         );
-        expectEqual(test, "NSObject -retain", NSObject,
+        expectEqual(NSObject,
             SelectorReturnType(NSObject, "retain")
         );
-        expectEqual(test, "NSString -retain", NSString,
+        expectEqual(NSString,
             SelectorReturnType(NSString, "retain")
         );
-        expectEqual(test, "NSObject +retain", Id, // XXX Class?
+        expectEqual(Id, // XXX Class?
             SelectorReturnType(Static[NSObject], "retain")
         );
 
-        expectEqual(test, "Id -init", Id,
+        expectEqual(Id,
             SelectorReturnType(Id, "init")
         );
-        expectEqual(test, "NSObject -init", NSObject,
+        expectEqual(NSObject,
             SelectorReturnType(NSObject, "init")
         );
-        expectEqual(test, "NSString -init", NSString,
+        expectEqual(NSString,
             SelectorReturnType(NSString, "init")
         );
-        expectEqual(test, "NSObject +init", Id, // XXX Class
+        expectEqual(Id, // XXX Class
             SelectorReturnType(Static[NSObject], "init")
         );
     }),
-    TestCase("return types of message expressions", test -> {
+    TestCase("return types of message expressions", -> {
         var id = nil(Id);
         var object = nil(NSObject);
         var string = nil(NSString);
 
-        expectType(test, "NSObject.alloc().init()", NSObject, NSObject.alloc().init());
-        expectType(test, "NSString.alloc().init()", NSString, NSString.alloc().init());
+        expectType(NSObject, NSObject.alloc().init());
+        expectType(NSString, NSString.alloc().init());
 
-        expectType(test, "id.init()", Id, id.init());
-        expectType(test, "object.init()", NSObject, object.init());
-        expectType(test, "string.init()", NSString, string.init());
-        expectType(test, "super(string).init()", NSString, string.init());
+        expectType(Id, id.init());
+        expectType(NSObject, object.init());
+        expectType(NSString, string.init());
+        expectType(NSString, string.init());
 
-        expectType(test, "id.init().autorelease()", Id, id.init().autorelease());
-        expectType(test, "object.init().autorelease()", NSObject, object.init().autorelease());
-        expectType(test, "string.init().autorelease()", NSString, string.init().autorelease());
+        expectType(Id, id.init().autorelease());
+        expectType(NSObject, object.init().autorelease());
+        expectType(NSString, string.init().autorelease());
 
-        expectType(test, "object.class().alloc().init()", Id,
+        expectType(Id,
             object.class().alloc().init());
-        expectType(test, "object.class().alloc().init().autorelease()", Id,
+        expectType(Id,
             object.class().alloc().init());
     }),
-    TestCase("msgSendBox1 type", test -> {
-        expectType(test, "Id from ObjectHandle", Id,
+    TestCase("msgSendBox1 type", -> {
+        expectType(Id,
             msgSendBox1(Id, nilHandle)
         );
-        expectType(test, "Pointer from Pointer", Pointer[CChar],
+        expectType(Pointer[CChar],
             msgSendBox1(Pointer[CChar], null(CChar))
         );
-        expectType(test, "NSString from ObjectHandle", NSString,
+        expectType(NSString,
             msgSendBox1(NSString, nilHandle)
         );
-        expectType(test, "clay Bool from objc BOOL", Bool,
+        expectType(Bool,
             msgSendBox1(Bool, NO)
         );
     }),
-    TestCase("msgSendUnbox1 type", test -> {
-        expectType(test, "ObjectHandle from Id", ObjectHandle,
+    TestCase("msgSendUnbox1 type", -> {
+        expectType(ObjectHandle,
             msgSendUnbox1(Id, nil(Id))
         );
-        expectType(test, "Pointer from Pointer", Pointer[CChar],
+        expectType(Pointer[CChar],
             msgSendUnbox1(Pointer[CChar], null(CChar))
         );
-        expectType(test, "ObjectHandle from NSString", ObjectHandle,
+        expectType(ObjectHandle,
             msgSendUnbox1(NSString, nil(NSString))
         );
-        expectType(test, "ObjectHandle from class type", ObjectHandle,
+        expectType(ObjectHandle,
             msgSendUnbox1(Id, NSString) // XXX Class
         );
-        expectType(test, "objc BOOL from clay Bool", BOOL,
+        expectType(BOOL,
             msgSendUnbox1(Bool, false)
         );
     }),
-    TestCase("msgSendUnbox types", test -> {
-        expectEqualValues(test, "alloc", [],
+    TestCase("msgSendUnbox types", -> {
+        expectEqualValues([],
             ..Type(..msgSendUnbox(Id, "alloc"))
         );
-        expectEqualValues(test, "stringWithUTF8String:", Tuple(Pointer[CChar]),
+        expectEqualValues(Tuple(Pointer[CChar]),
             ..Type(..msgSendUnbox(Id, "stringWithUTF8String:", null(CChar)))
         );
-        expectEqualValues(test, "stringWithFormat:", Tuple(ObjectHandle),
+        expectEqualValues(Tuple(ObjectHandle),
             ..Type(..msgSendUnbox(Id, "stringWithFormat:", nil(Id)))
         );
-        expectEqualValues(test, "stringWithFormat: varargs", Tuple(ObjectHandle, Pointer[CChar], Int, Foo, ObjectHandle),
+        expectEqualValues(Tuple(ObjectHandle, Pointer[CChar], Int, Foo, ObjectHandle),
             ..Type(..msgSendUnbox(Id, "stringWithFormat:", nil(NSString), null(CChar), 0, Foo(), nil(NSObject)))
         );
-        expectEqualValues(test, "setEnabled:", Tuple(BOOL),
+        expectEqualValues(Tuple(BOOL),
             ..Type(..msgSendUnbox(Id, "setEnabled:", false))
         );
     }),
-    TestCase("msgSendBox types", test -> {
-        expectEqualValues(test, "alloc", [],
+    TestCase("msgSendBox types", -> {
+        expectEqualValues([],
             ..Type(..msgSendBox(Id, "alloc"))
         );
-        expectEqualValues(test, "stringWithUTF8String:", Tuple(Pointer[CChar]),
+        expectEqualValues(Tuple(Pointer[CChar]),
             ..Type(..msgSendBox(Id, "stringWithUTF8String:", null(CChar)))
         );
-        expectEqualValues(test, "setEnabled:", Tuple(Bool),
+        expectEqualValues(Tuple(Bool),
             ..Type(..msgSendBox(Id, "setEnabled:", NO))
         );
     }),
-    TestCase("object parameter types", test -> {
-        expectTrue(test, "Id", ObjectParameterType?(Id));
+    TestCase("object parameter types", -> {
+        expectTrue(ObjectParameterType?(Id));
     }),
-    TestCase("identifier-selector conversion", test -> {
-        expectEqual(test, "foo()", "foo", identifierSelector("foo", #0));
+    TestCase("identifier-selector conversion", -> {
+        expectEqual("foo", identifierSelector("foo", #0));
 
-        expectEqual(test, "foo(x)", "foo:", identifierSelector("foo", #1));
-        expectEqual(test, "foo_(x)", "foo:", identifierSelector("foo_", #1));
-        expectEqual(test, "foo:(x)", "foo:", identifierSelector("foo:", #1));
+        expectEqual("foo:", identifierSelector("foo", #1));
+        expectEqual("foo:", identifierSelector("foo_", #1));
+        expectEqual("foo:", identifierSelector("foo:", #1));
 
-        expectEqual(test, "foo(x, y)", "foo:", identifierSelector("foo", #2));
-        expectEqual(test, "foo_(x, y)", "foo:", identifierSelector("foo_", #2));
-        expectEqual(test, "foo__(x, y)", "foo::", identifierSelector("foo__", #2));
-        expectEqual(test, "foo:(x, y)", "foo:", identifierSelector("foo:", #2));
-        expectEqual(test, "foo::(x, y)", "foo::", identifierSelector("foo::", #2));
+        expectEqual("foo:", identifierSelector("foo", #2));
+        expectEqual("foo:", identifierSelector("foo_", #2));
+        expectEqual("foo::", identifierSelector("foo__", #2));
+        expectEqual("foo:", identifierSelector("foo:", #2));
+        expectEqual("foo::", identifierSelector("foo::", #2));
 
-        expectEqual(test, "foo_bar(x, y)", "foo:bar:",
-            identifierSelector("foo_bar", #2)
-        );
-        expectEqual(test, "foo_bar_(x, y)", "foo:bar:",
-            identifierSelector("foo_bar_", #2)
-        );
+        expectEqual("foo:bar:", identifierSelector("foo_bar", #2));
+        expectEqual("foo:bar:", identifierSelector("foo_bar_", #2));
 
-        expectEqual(test, "foo:bar:(x, y)", "foo:bar:",
-            identifierSelector("foo:bar:", #2)
-        );
+        expectEqual("foo:bar:", identifierSelector("foo:bar:", #2));
 
-        expectEqual(test, "foo_bar(x, y, z)", "foo:bar:",
-            identifierSelector("foo_bar", #3)
-        );
-        expectEqual(test, "foo_bar_(x, y, z)", "foo:bar:",
-            identifierSelector("foo_bar_", #3)
-        );
-        expectEqual(test, "foo_bar__(x, y, z)", "foo:bar::",
-            identifierSelector("foo_bar__", #3)
-        );
+        expectEqual("foo:bar:", identifierSelector("foo_bar", #3));
+        expectEqual("foo:bar:", identifierSelector("foo_bar_", #3));
+        expectEqual("foo:bar::", identifierSelector("foo_bar__", #3));
 
-        expectEqual(test, "foo:bar:(x, y, z)", "foo:bar:",
-            identifierSelector("foo:bar:", #3)
-        );
-        expectEqual(test, "foo:bar::(x, y, z)", "foo:bar::",
-            identifierSelector("foo:bar::", #3)
-        );
+        expectEqual("foo:bar:", identifierSelector("foo:bar:", #3));
+        expectEqual("foo:bar::", identifierSelector("foo:bar::", #3));
 
-        expectEqual(test, "foo_bar_bas(x, y, z)", "foo:bar:bas:",
-            identifierSelector("foo_bar_bas", #3)
-        );
-        expectEqual(test, "foo_bar_bas_(x, y, z)", "foo:bar:bas:",
-            identifierSelector("foo_bar_bas_", #3)
-        );
+        expectEqual("foo:bar:bas:", identifierSelector("foo_bar_bas", #3));
+        expectEqual("foo:bar:bas:", identifierSelector("foo_bar_bas_", #3));
     }),
-    TestCase("constant NSStrings", test -> {
-        expectType(test, "constant string", ObjectHandle, NSSTR("Hello"));
-        expectEqual(test, "constant string identity",
-            NSSTR("Hello"), NSSTR("Hello")
-        );
-        expectNotEqual(test, "constant string address", nilHandle, NSSTR("Hello"));
+    TestCase("constant NSStrings", -> {
+        expectType(ObjectHandle, NSSTR("Hello"));
+        expectEqual(NSSTR("Hello"), NSSTR("Hello"));
+        expectNotEqual(nilHandle, NSSTR("Hello"));
 
         var stringFields = Pointer[cocoa.objc.platform.CFConstantString](NSSTR("Hello"));
 
-        expectNotEqual(test, "constant string isa", ClassHandle(0), stringFields^.isa);
-        expectEqual(test, "constant string isa", 
+        expectNotEqual(ClassHandle(0), stringFields^.isa);
+        expectEqual(
             ClassHandle(@cocoa.objc.platform.__CFConstantStringClassReference),
             stringFields^.isa
         );
-        expectEqual(test, "constant string flags",
+        expectEqual(
             cocoa.objc.platform.CFConstantStringID,
             stringFields^.flags
         );
-        expectEqual(test, "string", "Hello", CStringRef(stringFields^.string));
-        expectEqual(test, "length", 5, stringFields^.length);
+        expectEqual("Hello", CStringRef(stringFields^.string));
+        expectEqual(5, stringFields^.length);
     }),
-    TestCase("Retained memory management", test -> {
+    TestCase("Retained memory management", -> {
         var pool = NSAutoreleasePool.alloc().init();
 
         // construction from unretained reference

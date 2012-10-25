@@ -4,11 +4,11 @@ import complex.*;
 import test.*;
 import libc;
 
-testParseAndPrint(test, type, string) {
-    expectEqual(test, string, string, str(parse(type, string)));
+testParseAndPrint(type, string) {
+    expectEqual(string, str(parse(type, string)));
 }
 
-testParseInvalid(test, type, string) {
+testParseInvalid(type, string) {
     try {
         parse(type, string);
         error();
@@ -19,34 +19,34 @@ testParseInvalid(test, type, string) {
 
 main() = testMain(
     TestSuite("numbers.parser", array(
-        TestCase("simple", test -> {
-            testParseAndPrint(test, Int8, "111");
-            testParseAndPrint(test, Int16, "222");
-            testParseAndPrint(test, Int32, "333");
-            testParseAndPrint(test, Int64, "444");
-            testParseAndPrint(test, Float32, "1.2");
-            testParseAndPrint(test, Float64, "3.4");
+        TestCase("simple", -> {
+            testParseAndPrint(Int8, "111");
+            testParseAndPrint(Int16, "222");
+            testParseAndPrint(Int32, "333");
+            testParseAndPrint(Int64, "444");
+            testParseAndPrint(Float32, "1.2");
+            testParseAndPrint(Float64, "3.4");
         }),
-        TestCase("all types", test -> {
+        TestCase("all types", -> {
             ..for (type in ..BuiltinIntegerTypes()) {
                 if (#(type != Int128 and type != UInt128)) {
-                    testParseAndPrint(test, type, "12");
-                    testParseAndPrint(test, type, str(Greatest(type)));
-                    testParseAndPrint(test, type, str(Least(type)));
+                    testParseAndPrint(type, "12");
+                    testParseAndPrint(type, str(Greatest(type)));
+                    testParseAndPrint(type, str(Least(type)));
                 }
             }
         }),
-        TestCase("imag", test -> {
-            expectEqual(test, "Imag32", 5.5j, parse(Imag32, "5.5"));
-            expectEqual(test, "Imag64", 6.7j, parse(Imag64, "6.7"));
+        TestCase("imag", -> {
+            expectEqual(5.5j, parse(Imag32, "5.5"));
+            expectEqual(6.7j, parse(Imag64, "6.7"));
         }),
-        TestCase("out of range", test -> {
-            testParseInvalid(test, Int8, "128");
-            testParseInvalid(test, UInt16, "-2");
+        TestCase("out of range", -> {
+            testParseInvalid(Int8, "128");
+            testParseInvalid(UInt16, "-2");
         }),
-        TestCase("not a number", test -> {
-            testParseInvalid(test, Int32, "abc9");
-            testParseInvalid(test, Int32, "9ab");
-            testParseInvalid(test, Float, "abc1.2");
+        TestCase("not a number", -> {
+            testParseInvalid(Int32, "abc9");
+            testParseInvalid(Int32, "9ab");
+            testParseInvalid(Float, "abc1.2");
         }),
     )));

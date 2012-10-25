@@ -11,15 +11,15 @@ fact(n){
 }
 
 baseTestCase(n) = 
-  TestCase(str("Permuting 1..", n), test => {
+  TestCase(str("Permuting 1..", n), => {
     var it = Vector[Int](range(1,n+1));
 
     var counter = 0;
-    eachPermutation(it, () -> {
+    eachPermutation(it, -> {
       counter +: 1;
     });
 
-    expectEqual(test, "number of permutations", fact(n), counter);
+    expectEqual(fact(n), counter);
   });
 
 main() = testMain(

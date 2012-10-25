@@ -5,26 +5,25 @@ import test.*;
 
 main() = testMain(
     TestSuite("io.streams.memory", array(
-        TestCase("MemoryInputStream", test -> {
+        TestCase("MemoryInputStream", -> {
             var s = "hedgehog";
             var is = MemoryInputStream(begin(s), end(s));
-            expectEqual(test, "read first 5", "hedge", read(is, SizeT(5)));
-            expectEqual(test, "read rest", "hog", read(is, SizeT(10)));
-            expectEqual(test, "read at EOF", "", read(is, SizeT(100)));
+            expectEqual("hedge", read(is, SizeT(5)));
+            expectEqual("hog", read(is, SizeT(10)));
+            expectEqual("", read(is, SizeT(100)));
         }),
-        TestCase("MemoryOutputStream", test -> {
+        TestCase("MemoryOutputStream", -> {
             var a = Array[Int16, 6]();
             var os = MemoryOutputStream(a);
             write(os, "hair");
             write(os, "dressing");
-            expectEqual(test, "remaining at EOF", 0, (os.end - os.pos));
+            expectEqual(0, (os.end - os.pos));
             try {
                 write(os, "b");
-                expectTrue(test, "expecting to fail", false);
+                expectTrue(false);
             } catch (e) {
                 // expecting
             }
-            expectEqual(test, "content",
-                "hairdressing", coordinateRange(Pointer[Char](begin(a)), Pointer[Char](end(a))));
+            expectEqual("hairdressing", coordinateRange(Pointer[Char](begin(a)), Pointer[Char](end(a))));
         }),
     )));

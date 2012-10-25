@@ -3,38 +3,38 @@ import comparators.*;
 
 main() = testMain(
   TestSuite("Natural comparators", array(
-    TestCase("should do the same thing as the base operations", test -> {
+    TestCase("should do the same thing as the base operations", -> {
       var c = natural();
     
-      expectEqual(test, "1 c.== 2", 1 == 2, equals?(c, 1, 2)); 
-      expectEqual(test, "1 c.== 1", 1 == 1, equals?(c, 1, 1)); 
-      expectEqual(test, "1 c.!= 1", 1 != 1, notEquals?(c, 1, 1)); 
-      expectEqual(test, "1 c.< 1", 1 == 1, lesser?(c, 1, 2)); 
+      expectEqual(1 == 2, equals?(c, 1, 2)); 
+      expectEqual(1 == 1, equals?(c, 1, 1)); 
+      expectEqual(1 != 1, notEquals?(c, 1, 1)); 
+      expectEqual(1 == 1, lesser?(c, 1, 2)); 
     })
   )),
   TestSuite("Reverse comparators", array(
-    TestCase("should do the same thing as the base operations for equality", test -> {
+    TestCase("should do the same thing as the base operations for equality", -> {
       var c = reversed();
     
-      expectEqual(test, "1 c.== 2", 1 == 2, equals?(c, 1, 2)); 
-      expectEqual(test, "1 c.== 1", 1 == 1, equals?(c, 1, 1)); 
-      expectEqual(test, "1 c.!= 1", 1 != 1, notEquals?(c, 1, 1)); 
+      expectEqual(1 == 2, equals?(c, 1, 2)); 
+      expectEqual(1 == 1, equals?(c, 1, 1)); 
+      expectEqual(1 != 1, notEquals?(c, 1, 1)); 
     }),
-    TestCase("should do the opposite to the base operations for ordering", test -> {
+    TestCase("should do the opposite to the base operations for ordering", -> {
       var c = reversed();
 
-      expectEqual(test, "1 r.< 2", false, lesser?(c, 1, 2));
-      expectEqual(test, "1 r.<= 1", true, lesserEquals?(c, 1, 1));
-      expectEqual(test, "1 r.< 1", false, lesser?(c, 1, 1));
+      expectEqual(false, lesser?(c, 1, 2));
+      expectEqual(true, lesserEquals?(c, 1, 1));
+      expectEqual(false, lesser?(c, 1, 1));
     })
   )),
   TestSuite("Mapped comparators", array(
-    TestCase("should use the provided function for all operations", test -> {
+    TestCase("should use the provided function for all operations", -> {
       var c = comparing(size);
 
-      expectEqual(test, "foo c.== bar", true, equals?(c, "foo", "bar"));
-      expectEqual(test, "foo c.!= bars", true, notEquals?(c, "foo", "bars"));
-      expectEqual(test, "foo c.< bars", true, notEquals?(c, "foo", "bars"));
+      expectEqual(true, equals?(c, "foo", "bar"));
+      expectEqual(true, notEquals?(c, "foo", "bars"));
+      expectEqual(true, notEquals?(c, "foo", "bars"));
     })
   ))
 );

@@ -8,38 +8,38 @@ import sharedpointers.*;
 import strings.*;
 import vectors.*;
 
-expectMarshalingInvariants(test, name, value) {
+expectMarshalingInvariants(value) {
     var marshaled = marshal(value);
     var expectedValue = UnmarshaledType(Type(value))(value);
 
-    expectEqual(test, "unmarshal(marshal(" ++ name ++ ")",
+    expectEqual(
         expectedValue, unmarshal(marshaled, Type(value))
     );
-    expectTrue(test, "size(marshal(" ++ name ++ ") == marshaledSize(" ++ name ++ ")",
+    expectTrue(
         size(marshaled) == marshaledSize(MarshalContext(), value)
     );
 
     if (not empty?(marshaled)) {
         var truncated = marshaled;
         pop(truncated);
-        expectExceptionType(test, name ++ " unmarshaled from truncated vector",
+        expectExceptionType(
             UnmarshalUnexpectedEOF,
             () => { unmarshal(truncated, Type(value)); }
         );
-        expectExceptionType(test, name ++ " unmarshaled from empty byte vector",
+        expectExceptionType(
             UnmarshalUnexpectedEOF,
             () => { unmarshal(Vector[Byte](), Type(value)); }
         );
     }
 }
 
-expectNullMarshaling(test, name, value) {
+expectNullMarshaling(value) {
     var marshaled = marshal(value);
 
-    expectEqual(test, "size(marshal(" ++ name ++ "))",
+    expectEqual(
         SizeT(0), size(marshaled)
     );
-    expectEqual(test, "unmarshal(marshal(" ++ name ++ "))",
+    expectEqual(
         value, unmarshal(marshaled, Type(value))
     );
 }
@@ -80,126 +80,116 @@ variant TestVariant (Int, Vector[Int], Char, Double);
 
 main() = testMain(
     TestSuite("marshaling", array(
-        TestCase("POD types", test -> {
-            expectMarshalingInvariants(test, "1", 1);
-            expectMarshalingInvariants(test, "'a'", 'a');
-            expectMarshalingInvariants(test, "0.0", 0.0);
-            expectMarshalingInvariants(test, "[1, 'a', 0.0]", [1, 'a', 0.0]);
-            expectMarshalingInvariants(test,
-                "PODRecord(1, 'a', 0.0)", PODRecord(1, 'a', 0.0)
+        TestCase("POD types", -> {
+            expectMarshalingInvariants(1);
+            expectMarshalingInvariants('a');
+            expectMarshalingInvariants(0.0);
+            expectMarshalingInvariants([1, 'a', 0.0]);
+            expectMarshalingInvariants(PODRecord(1, 'a', 0.0)
             );
-            expectMarshalingInvariants(test, "array(1, 2, 3)", array(1, 2, 3));
+            expectMarshalingInvariants(array(1, 2, 3));
         }),
-        TestCase("reference types", test -> {
-            expectMarshalingInvariants(test, "ReferenceRecord(3)", ReferenceRecord(3));
+        TestCase("reference types", -> {
+            expectMarshalingInvariants(ReferenceRecord(3));
         }),
-        TestCase("sequences", test -> {
-            expectMarshalingInvariants(test,
-                "Vector[Int](1, 2, 3)", Vector[Int](1, 2, 3)
+        TestCase("sequences", -> {
+            expectMarshalingInvariants(
+                Vector[Int](1, 2, 3)
             );
-            expectMarshalingInvariants(test,
-                "String(\"crenshaw\")", String("crenshaw")
+            expectMarshalingInvariants(
+                String("crenshaw")
             );
-            expectMarshalingInvariants(test,
-                "Vector[String](String(\"crenshaw\"), String(\"mathers\"))",
+            expectMarshalingInvariants(
                 Vector[String](String("crenshaw"), String("mathers"))
             );
-            expectMarshalingInvariants(test,
-                "String()", String(),
+            expectMarshalingInvariants(
+                String(),
             );
-            expectMarshalingInvariants(test,
-                "Vector[Int]()", Vector[Int](),
+            expectMarshalingInvariants(
+                Vector[Int](),
             );
-            expectMarshalingInvariants(test,
-                "Vector[String]()", Vector[String](),
+            expectMarshalingInvariants(
+                Vector[String](),
             );
         }),
-        TestCase("special sequences", test -> {
-            expectMarshalingInvariants(test, "\"mathers\"", "mathers");
+        TestCase("special sequences", -> {
+            expectMarshalingInvariants("mathers");
         }),
-        TestCase("composites", test -> {
-            expectMarshalingInvariants(test,
-                "[1, Vector[Int](1, 2, 3), 'a']",
+        TestCase("composites", -> {
+            expectMarshalingInvariants(
                 [1, Vector[Int](1, 2, 3), 'a']
             );
-            expectMarshalingInvariants(test,
-                "[1, Vector[Int](1, 2, 3), 'a']",
+            expectMarshalingInvariants(
                 [1, Vector[Int](1, 2, 3), 'a']
             );
-            expectMarshalingInvariants(test,
-                "ComplexRecord(1, Vector[Int](1, 2, 3), 'a')",
+            expectMarshalingInvariants(
                 ComplexRecord(1, Vector[Int](1, 2, 3), 'a')
             );
-            expectMarshalingInvariants(test,
-                "[ReferenceRecord(3), ReferenceRecord(5)]",
+            expectMarshalingInvariants(
                 [ReferenceRecord(3), ReferenceRecord(5)]
             );
-            expectMarshalingInvariants(test,
-                "Vector[ReferenceRecord](ReferenceRecord(3), ReferenceRecord(5))",
+            expectMarshalingInvariants(
                 Vector[ReferenceRecord](ReferenceRecord(3), ReferenceRecord(5)),
             );
-            expectMarshalingInvariants(test,
-                "[ReferenceRecord(3), Vector[ReferenceRecord](ReferenceRecord(3), ReferenceRecord(5))]",
+            expectMarshalingInvariants(
                 [ReferenceRecord(3), Vector[ReferenceRecord](ReferenceRecord(3), ReferenceRecord(5))],
             );
-            expectMarshalingInvariants(test,
-                "Range[Int](1, 3)",
+            expectMarshalingInvariants(
                 Range[Int](1, 3),
             );
-            expectMarshalingInvariants(test,
-                "Range[SizeT](1, 3)",
+            expectMarshalingInvariants(
                 Range[SizeT](SizeT(1), SizeT(3)),
             );
-            expectNullMarshaling(test, "[]", []);
-            expectNullMarshaling(test, "EmptyRecord()", EmptyRecord());
+            expectNullMarshaling([]);
+            expectNullMarshaling(EmptyRecord());
         }),
-        TestCase("variants", test -> {
-            expectMarshalingInvariants(test,
-                "TestVariant(1)", TestVariant(1)
+        TestCase("variants", -> {
+            expectMarshalingInvariants(
+                TestVariant(1)
             );
-            expectMarshalingInvariants(test,
-                "TestVariant('a')", TestVariant('a')
+            expectMarshalingInvariants(
+                TestVariant('a')
             );
-            expectMarshalingInvariants(test,
-                "TestVariant(0.0)", TestVariant(0.0)
+            expectMarshalingInvariants(
+                TestVariant(0.0)
             );
-            expectMarshalingInvariants(test,
-                "TestVariant(Vector[Int](1, 2, 3))", TestVariant(Vector[Int](1, 2, 3))
+            expectMarshalingInvariants(
+                TestVariant(Vector[Int](1, 2, 3))
             );
         }),
-        TestCase("statics", test -> {
-            expectNullMarshaling(test, "#0", #0);
-            expectNullMarshaling(test, "add", add);
-            expectNullMarshaling(test, "Int", Int);
+        TestCase("statics", -> {
+            expectNullMarshaling(#0);
+            expectNullMarshaling(add);
+            expectNullMarshaling(Int);
         }),
-        TestCase("lambdas", test -> {
+        TestCase("lambdas", -> {
             var int = 1;
             var char = 'a';
             var vectorInt = Vector[Int](1, 2, 3);
             var vectorString = Vector[String](String("crenshaw"), String("mathers"));
 
-            expectMarshalingInvariants(test, "() => int", () => int);
-            expectMarshalingInvariants(test, "() => char", () => char);
-            expectMarshalingInvariants(test, "() => vectorInt", () => vectorInt);
-            expectMarshalingInvariants(test, "() => vectorString", () => vectorString);
-            expectMarshalingInvariants(test, "() => (int, char)", () => (int, char));
-            expectMarshalingInvariants(test, "() => (int, vectorInt)",
+            expectMarshalingInvariants(() => int);
+            expectMarshalingInvariants(() => char);
+            expectMarshalingInvariants(() => vectorInt);
+            expectMarshalingInvariants(() => vectorString);
+            expectMarshalingInvariants(() => (int, char));
+            expectMarshalingInvariants(
                 () => (int, vectorInt)
             );
-            expectMarshalingInvariants(test, "() => (int, vectorString, char)",
+            expectMarshalingInvariants(
                 () => (int, vectorString, char)
             );
-            expectNullMarshaling(test, "() => {}", () => {});
+            expectNullMarshaling(() => {});
         }),
-        TestCase("unique pointers", test -> {
-            expectMarshalingInvariants(test, "UniquePointerRecord()",
+        TestCase("unique pointers", -> {
+            expectMarshalingInvariants(
                 UniquePointerRecord()
             );
-            expectMarshalingInvariants(test, "UniquePointerRecord(3)",
+            expectMarshalingInvariants(
                 UniquePointerRecord(3)
             );
         }),
-        TestCase("shared pointers", test -> {
+        TestCase("shared pointers", -> {
             var a = new(GraphNodeRecord());
             var b = new(GraphNodeRecord());
             var c = new(GraphNodeRecord());
@@ -216,17 +206,17 @@ main() = testMain(
             var cc = bb^.left;
             var dd = aa^.right;
 
-            expectEqual(test, "aa^.left", bb, aa^.left);
-            expectEqual(test, "aa^.right", dd, aa^.right);
-            expectEqual(test, "bb^.left", cc, bb^.left);
-            expectEqual(test, "bb^.right", cc, bb^.right);
-            expectEqual(test, "cc^.left", dd, cc^.left);
-            expectEqual(test, "cc^.right", nullShared(GraphNodeRecord), cc^.right);
-            expectEqual(test, "dd^.left", nullShared(GraphNodeRecord), dd^.left);
-            expectEqual(test, "dd^.right", nullShared(GraphNodeRecord), dd^.right);
+            expectEqual(bb, aa^.left);
+            expectEqual(dd, aa^.right);
+            expectEqual(cc, bb^.left);
+            expectEqual(cc, bb^.right);
+            expectEqual(dd, cc^.left);
+            expectEqual(nullShared(GraphNodeRecord), cc^.right);
+            expectEqual(nullShared(GraphNodeRecord), dd^.left);
+            expectEqual(nullShared(GraphNodeRecord), dd^.right);
         }),
-        TestCase("enums", test -> {
-            expectMarshalingInvariants(test, "FOO", FOO);
+        TestCase("enums", -> {
+            expectMarshalingInvariants(FOO);
         }),
     )),
 );

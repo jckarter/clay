@@ -5,92 +5,92 @@ import strings.*;
 
 main() = testMain(
     TestSuite("lazy grouped sequences", array(
-        TestCase("iterator-only sequences", test -> {
+        TestCase("iterator-only sequences", -> {
             var ustr = grouped(UTF8("abc123!!!"), 3);
             var iter = iterator(ustr);
 
             var v = nextValue(iter);
 
-            expectTrue(test, "first hasValue?", hasValue?(v));
-            expectSequence(test, "first group", getValue(v),
+            expectTrue(hasValue?(v));
+            expectSequence(getValue(v),
                 UniChar('a'), UniChar('b'), UniChar('c')
             );
 
             v = nextValue(iter);
 
-            expectTrue(test, "second hasValue?", hasValue?(v));
-            expectSequence(test, "second group", getValue(v),
+            expectTrue(hasValue?(v));
+            expectSequence(getValue(v),
                 UniChar('1'), UniChar('2'), UniChar('3')
             );
 
             v = nextValue(iter);
 
-            expectTrue(test, "third hasValue?", hasValue?(v));
-            expectSequence(test, "third group", getValue(v),
+            expectTrue(hasValue?(v));
+            expectSequence(getValue(v),
                 UniChar('!'), UniChar('!'), UniChar('!')
             );
 
             v = nextValue(iter);
 
-            expectFalse(test, "fourth hasValue?", hasValue?(v));
+            expectFalse(hasValue?(v));
         }),
-        TestCase("random access coordinate sequences", test -> {
+        TestCase("random access coordinate sequences", -> {
             var str = grouped(String("abc123!!!"), 3);
             var iter = iterator(str);
 
             var v = nextValue(iter);
 
-            expectTrue(test, "first hasValue?", hasValue?(v));
-            expectSequence(test, "first group", getValue(v),
+            expectTrue(hasValue?(v));
+            expectSequence(getValue(v),
                 'a', 'b', 'c'
             );
 
             v = nextValue(iter);
 
-            expectTrue(test, "second hasValue?", hasValue?(v));
-            expectSequence(test, "second group", getValue(v),
+            expectTrue(hasValue?(v));
+            expectSequence(getValue(v),
                 '1', '2', '3'
             );
 
             v = nextValue(iter);
 
-            expectTrue(test, "third hasValue?", hasValue?(v));
-            expectSequence(test, "third group", getValue(v),
+            expectTrue(hasValue?(v));
+            expectSequence(getValue(v),
                 '!', '!', '!'
             );
 
             v = nextValue(iter);
 
-            expectFalse(test, "fourth hasValue?", hasValue?(v));
+            expectFalse(hasValue?(v));
 
-            expectSequence(test, "str[0]", str[0],
+            expectSequence(str[0],
                 'a', 'b', 'c'
             );
-            expectSequence(test, "str[1]", str[1],
+            expectSequence(str[1],
                 '1', '2', '3'
             );
-            expectSequence(test, "str[2]", str[2],
+            expectSequence(str[2],
                 '!', '!', '!'
             );
 
             str[2][1] = '?';
 
-            expectSequence(test, "str[2] after mutation", str[2],
+            expectSequence(str[2],
                 '!', '?', '!'
             );
 
-            expectTrue(test, "begin(str) + size(str) == end(str)",
+            expectTrue(
                 begin(str) + size(str) == end(str)
             );
-            expectTrue(test, "end(str) - begin(str) == size(str)",
+            expectTrue(
                 end(str) - begin(str) == size(str)
             );
-            expectTrue(test, "end(str) > begin(str)", end(str) > begin(str));
-            expectFalse(test, "end(str) < begin(str)", end(str) < begin(str));
-            expectFalse(test, "end(str) == begin(str)", end(str) == begin(str));
-            expectFalse(test, "begin(str) > begin(str)", begin(str) > begin(str));
-            expectFalse(test, "begin(str) < begin(str)", begin(str) < begin(str));
-            expectTrue(test, "begin(str) == begin(str)", begin(str) == begin(str));
+            expectTrue(end(str) > begin(str));
+            expectFalse(end(str) < begin(str));
+            expectFalse(end(str) == begin(str));
+            expectFalse(begin(str) > begin(str));
+            expectFalse(begin(str) < begin(str));
+            expectTrue(begin(str) == begin(str));
         }),
     )),
 );

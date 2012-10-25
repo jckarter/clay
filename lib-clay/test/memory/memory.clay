@@ -1,5 +1,5 @@
 import test.(expect, printFailure);
-import printer.(println);
+import printer.(println, str);
 import vectors.*;
 
 alias UNINITIALIZED_CANARY = Greatest(SizeT);
@@ -149,15 +149,12 @@ checkCanariesLiveInSequence(seq: S) : Bool {
     return r;
 }
 
-expectCanariesDestroyed(test, name, fn) {
+expectCanariesDestroyed(fn) {
     fn();
-    expect(test, checkCanariesDestroyed(), () => {
-        printFailure(name, " left memory canaries undestroyed");
-    });
+    expect(checkCanariesDestroyed(), str(fn, " left memory canaries undestroyed"));
 }
 
-expectCanariesLiveInSequence(test, name, seq) {
-    expect(test, checkCanariesLiveInSequence(seq), () => {
-        printFailure(name, " contains invalid memory canaries");
-    });
+alias expectCanariesLiveInSequence(test, name, seq) {
+    expect(checkCanariesLiveInSequence(seq),
+        str("`", __ARG__ seg, "` contains invalid memory canaries"));
 }
