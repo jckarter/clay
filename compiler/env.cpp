@@ -117,10 +117,11 @@ static void getIntrinsicSymbols(ModulePtr module)
 #include "llvm/Intrinsics.gen"
 #undef GET_INTRINSIC_NAME_TABLE
     };
-    for (llvm::Intrinsic::ID id = llvm::Intrinsic::ID(1);
-         id < llvm::Intrinsic::num_intrinsics;
-         ++id)
+    for (size_t idIter = llvm::Intrinsic::ID(1);
+         idIter < llvm::Intrinsic::num_intrinsics;
+         ++idIter)
     {
+        llvm::Intrinsic::ID id = static_cast<llvm::Intrinsic::ID>(idIter);
         llvm::SmallString<64> identifier;
         getIntrinsicIdentifier(&identifier, intrinsicNames[id]);
         module->publicSymbols[identifier].insert(
