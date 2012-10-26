@@ -1,0 +1,15 @@
+import printer.(println);
+
+define X;
+define Y;
+define Z;
+
+main() {
+    println([] == []);
+    println([1, "2"] == [1, "2"]);
+    println([1, "2"] == [1u, StringLiteralRef("2")]);
+    println([X, Y] == [X, Y]);
+    println([X, Y] != [Y, X]);
+    println([X, Y] != [X, Y, Z]);
+
+}
