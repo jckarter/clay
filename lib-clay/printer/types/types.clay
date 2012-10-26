@@ -185,9 +185,14 @@ overload printTo(stream, x:Tuple[..T]) {
     printTo(stream, "[", ..weaveValues(", ", ..unpackTuple(x)), "]");
 }
 
-[T when Record?(T)]
+[T when Record?(T) and not LambdaRecord?(T)]
 overload printTo(stream, x:T) {
     printTo(stream, T, "(", ..weaveValues(", ", ..recordFields(x)), ")");
+}
+
+[T when LambdaRecord?(T)]
+overload printTo(stream, x:T) {
+    printTo(stream, T);
 }
 
 printSequenceTo(stream, xs) {
@@ -411,10 +416,15 @@ overload printReprTo(stream, x:Tuple[..T]) {
 
 /// @section  printReprTo - records 
 
-[T when Record?(T)]
+[T when Record?(T) and not LambdaRecord?(T)]
 overload printReprTo(stream, x:T) {
     printTo(stream, T);
     printReprArgumentsTo(stream, ..recordFields(x));
+}
+
+[T when LambdaRecord?(T)]
+overload printReprTo(stream, x:T) {
+    printTo(stream, T);
 }
 
 

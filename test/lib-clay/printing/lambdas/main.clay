@@ -1,0 +1,15 @@
+import printer.(println);
+import printer.formatter.(repr);
+
+main() {
+    var a = 2;
+
+    println(x -> x);
+    println(x -> x + a);
+    println(x => x);
+    println(x => x + a);
+    println(repr(x -> x));
+    println(repr(x -> x + a));
+    println(repr(x => x));
+    println(repr(x => x + a));
+}
