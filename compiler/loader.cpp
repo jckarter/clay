@@ -472,13 +472,14 @@ void getProcedureMonoTypes(ProcedureMono &mono, EnvPtr env,
             LocationContext loc(formalArgs[i]->type->location);
             PatternPtr argPattern =
                 evaluateOnePattern(formalArgs[i]->type, env);
-            ObjectPtr argType = derefDeep(argPattern);
-            if (argType == NULL)
+            ObjectPtr argTypeObj = derefDeep(argPattern);
+            if (argTypeObj == NULL)
                 goto poly;
-            if (argType->objKind != TYPE)
+            TypePtr argType;
+            if (!staticToType(argTypeObj, argType))
                 error(formalArgs[i], "expecting a type");
 
-            mono.monoTypes.push_back((Type*)argType.ptr());
+            mono.monoTypes.push_back(argType);
         }
     } else
         goto poly;
