@@ -1,0 +1,7 @@
+import printer.(println);
+import lambdas.(Function);
+
+main() {
+    var f = Function[[Int],[]](x -> { println(x); return x; });
+    f(219);
+}

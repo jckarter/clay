@@ -11,6 +11,13 @@ record Function[In,Out] (
 
 // main constructor
 
+/* this comes before Function[In, Out] so that the shim isn't constructed if the object
+   natively returns no values */
+[..In, T when CallDefined?(call, T, ..In)]
+alias overload Function[[..In], []](x:T) {
+    return Function[[..In],[]](new(FunctionBody[[..In],[]]((forward ..args) => { x(..args); })));
+}
+
 [In, Out, T when CallableWithSignature?(T, In, Out)]
 alias overload Function[In, Out](x:T) {
     return Function[In,Out](new(FunctionBody[In,Out](x)));
