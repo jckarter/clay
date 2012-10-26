@@ -21,10 +21,16 @@ alias overload Function(x:T) {
     return Function[[..MonoInputTypes(x)],[..MonoOutputTypes(x)]](x);
 }
 
-private CallableWithSignature?(T, In, Out) {
+[T] private define CallableWithSignature?(#T, In, Out) : Bool;
+
+[T] overload CallableWithSignature?(#T, In, Out) = false;
+
+[T, I, O when CallDefined?(call, T, ..unpack(I()))]
+overload CallableWithSignature?(#T, In:I, Out:O) {
     var CodePtr = Type(makeCodePointer(call, T, ..unpack(In)));
     return Out == CodePointerReturnTypes(CodePtr);
 }
+
 
 [In,..Out]
 private CodePointerReturnTypes(#CodePointer[In,[..Out]]) = [..Out];
