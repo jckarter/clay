@@ -254,7 +254,7 @@ alias RIGHT = 1;
 alias VARIADIC = 2;
 alias BOOLEAN = 3;
 
-// two of three arguments (x, x) or (comparator, x, x)
+// two or three arguments (x, x) or (comparator, x, x)
 define (==)(..p): Bool;
 define (!=)(..p): Bool;
 define (>=)(..p): Bool;
