@@ -128,6 +128,19 @@ forceinline overload assign(ref dest:Tuple[..T], ref src:Tuple[..T]) : {
 
 /// @section  equals? 
 
+[..T, ..U when countValues(..T) == countValues(..U)
+    and allValues?(x -> x,
+        ..mapValues2((t, u) -> CallDefined?((==), t, u),
+            #countValues(..T), ..T, ..U))]
+forceinline overload equals?(a:Tuple[..T], b:Tuple[..U]) : Bool {
+    alias n = TupleElementCount(Tuple[..T]);
+    ..for (i in staticIntegers(#n)) {
+        if (not equals?(staticIndex(a, i), staticIndex(b, i)))
+            return false;
+    }
+    return true;
+}
+
 [..T]
 forceinline overload equals?(a:Tuple[..T], b:Tuple[..T]) : Bool {
     alias n = TupleElementCount(Tuple[..T]);
