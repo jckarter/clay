@@ -1,0 +1,36 @@
+import test.module.(testMainModule);
+import test.fuzz.(expectForAll);
+import complex.(Complex, real, imag, imagValue);
+import numbers.floats.(nan?);
+import printer.(println);
+import printer.observe.(observe);
+
+TEST_imag_real_constructor() {
+    ..for (I in Imag32, Imag64)
+        ..for (F in Float32, Float64) {
+            expectForAll((f:F) -> zero?(I(f)));
+            expectForAll((i:I) -> zero?(F(i)));
+        }
+}
+
+TEST_complex_constructor() {
+    ..for (C in Complex, Complex32, Complex64)
+        ..for (A in Float32, Float64) {
+            ..for (B in Float32, Float64)
+                expectForAll((a:A, b:B) -> {
+                    var c = C(a, b);
+                    return nan?(c) or (
+                        Float32(real(c)) == Float32(a) and
+                        Float32(imagValue(c)) == Float32(b));
+                });
+            ..for (B in Imag32, Imag64)
+                expectForAll((a:A, b:B) -> {
+                    var c = C(a, b);
+                    return nan?(c) or (
+                        Float32(real(c)) == Float32(a) and
+                        Imag32(imag(c)) == Imag32(b));
+                });
+        }
+}
+
+main() = testMainModule();

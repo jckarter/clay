@@ -101,8 +101,10 @@ forceinline overload C(a:T) = Complex(ComplexBaseType(C)(real(a)), ComplexBaseTy
 [T,C when (Float?(T) or Imaginary?(T)) and Complex?(C)]
 forceinline overload C(a:T) = Complex(ComplexBaseType(C)(a));
 
-[U,T,C when Float?(U) and (Float?(T) or Imaginary?(T)) and Complex?(C)]
+[U,T,C when Float?(U) and Float?(T) and Complex?(C)]
 forceinline overload C(a:U, b:T) = Complex(ComplexBaseType(C)(a), ComplexBaseType(C)(b));
+[U,T,C when Float?(U) and Imaginary?(T) and Complex?(C)]
+forceinline overload C(a:U, b:T) = Complex(ComplexBaseType(C)(a), ComplexImagType(C)(b));
 
 [I,C when Integer?(I) and Complex?(C)]
 forceinline overload C(a:I) = Complex(ComplexBaseType(C)(a));
