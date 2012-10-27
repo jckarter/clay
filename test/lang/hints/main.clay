@@ -1,9 +1,6 @@
 import printer.(println);
 
-foo(x:Bool) {
-    usuallyEquals(x, #true);
-    return not x;
-}
+foo(x:Bool) = not usuallyEquals(x, #true);
 
 main() {
     println(foo(true), ' ', foo(false), ' ', #foo(true), ' ', #foo(false));

@@ -6732,6 +6732,8 @@ void codegenPrimOp(PrimOpPtr x,
 
     case PRIM_usuallyEquals : {
         ensureArity(args, 2);
+        if (!isPrimitiveType(args->values[0]->type))
+            argumentTypeError(0, "primitive type", args->values[0]->type);
         llvm::Value *expectee = ctx->builder->CreateLoad(args->values[0]->llValue);
         ObjectPtr expectedValue = unwrapStaticType(args->values[1]->type);
         if (expectedValue == NULL
@@ -6750,7 +6752,12 @@ void codegenPrimOp(PrimOpPtr x,
             llvm::Intrinsic::expect,
             expectee->getType());
 
-        ctx->builder->CreateCall(expectFunction, argValues);
+        llvm::Value *hinted = ctx->builder->CreateCall(expectFunction, argValues);
+        assert(out->size() == 1);
+        CValuePtr out0 = out->values[0];
+        assert(out0->type == args->values[0]->type);
+        ctx->builder->CreateStore(hinted, out0->llValue);
+        break;
     }
 
     default :

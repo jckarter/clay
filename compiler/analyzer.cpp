@@ -3799,12 +3799,14 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     
     case PRIM_usuallyEquals : {
         ensureArity(args, 2);
+        if (!isPrimitiveType(args->values[0].type))
+            argumentTypeError(0, "primitive type", args->values[0].type);
         ObjectPtr expectedValue = unwrapStaticType(args->values[1].type);
         if (expectedValue == NULL
             || expectedValue->objKind != VALUE_HOLDER
             || ((ValueHolder*)expectedValue.ptr())->type != args->values[0].type)
             error("second argument to usuallyEquals must be a static value of the same type as the first argument");
-        return new MultiPValue();
+        return new MultiPValue(PVData(args->values[0].type, true));
     }
 
     default :

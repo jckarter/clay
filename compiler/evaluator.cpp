@@ -4863,8 +4863,18 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
     case PRIM_GetOverload :
         break;
 
-    case PRIM_usuallyEquals :
+    case PRIM_usuallyEquals : {
+        ensureArity(args, 2);
+        EValuePtr ev0 = args->values[0];
+        if (!isPrimitiveType(ev0->type))
+            argumentTypeError(0, "primitive type", ev0->type);
+
+        assert(out->values->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == ev0->type);
+        memcpy(out0->addr, ev0->addr, typeSize(ev0->type));
         break;
+    }
 
     default :
         assert(false);
