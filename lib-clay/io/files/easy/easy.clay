@@ -35,7 +35,7 @@ overload File(path:S) = File(new(FileData(RawFile(path))));
 overload File(rvalue f:RawFile) =
     File(new(FileData(move(f))));
 
-overload FileData(rvalue file:RawFile) --> returned:FileData {
+overload FileData(rvalue file:RawFile) {
     var lineBuffered? = terminal?(file);
     var file = RawFilePointer(move(file));
     return FileData(
