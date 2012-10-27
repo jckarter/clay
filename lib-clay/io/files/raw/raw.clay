@@ -32,3 +32,9 @@ staticassert(OutputStream?(RawFile));
 staticassert( InputStream?(RawFile));
 staticassert(OutputStream?(RawFilePointer));
 staticassert( InputStream?(RawFilePointer));
+
+staticassert(not Copyable?(RawFile));
+staticassert(     Movable?(RawFile));
+
+staticassert(Copyable?(RawFilePointer));
+staticassert( Movable?(RawFilePointer));
