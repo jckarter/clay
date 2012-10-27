@@ -1,5 +1,7 @@
 import algorithms.(in?);
 
+import io.streams.memory.*;
+
 public import io.streams.*;
 
 
@@ -64,6 +66,32 @@ record BufferedOutputStream[S] (
     buffer: Buffer,
     flushOnNewlines?: Bool,
 );
+
+[S]
+overload RegularRecord?(#BufferedOutputStream[S]) = false;
+[S]
+overload RegularRecord?( #BufferedInputStream[S]) = false;
+
+[S]
+overload moveUnsafe(s: BufferedOutputStream[S]) = moveRecordUnsafe(s);
+[S]
+overload moveUnsafe( s: BufferedInputStream[S]) = moveRecordUnsafe(s);
+
+[S]
+overload resetUnsafe(s: BufferedOutputStream[S]) = resetRecordUnsafe(s);
+[S]
+overload resetUnsafe( s: BufferedInputStream[S]) = resetRecordUnsafe(s);
+
+[S]
+overload destroy(s: BufferedOutputStream[S]) = ..destroyRecord(s);
+[S]
+overload destroy( s: BufferedInputStream[S]) = ..destroyRecord(s);
+
+
+staticassert(not Copyable?(BufferedOutputStream[MemoryOutputStream]));
+staticassert(not Copyable?( BufferedInputStream[ MemoryInputStream]));
+staticassert(    Moveable?(BufferedOutputStream[MemoryOutputStream]));
+staticassert(    Moveable?( BufferedInputStream[ MemoryInputStream]));
 
 
 [S when InputStream?(S)]
