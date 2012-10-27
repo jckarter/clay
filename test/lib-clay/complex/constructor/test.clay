@@ -2,8 +2,6 @@ import test.module.(testMainModule);
 import test.fuzz.(expectForAll);
 import complex.(Complex, real, imag, imagValue);
 import numbers.floats.(nan?);
-import printer.(println);
-import printer.observe.(observe);
 
 TEST_imag_real_constructor() {
     ..for (I in Imag32, Imag64)
