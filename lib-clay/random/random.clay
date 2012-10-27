@@ -3,6 +3,8 @@ import math.libm.(sqrt,cos,log);
 import printer.formatter.(hex, repr);
 import libc;
 
+RNG?(G) = CallDefined?(generate, G, Static[UInt32]);
+
 // Implementation of XOR-shift RNGs by George Marsaglia
 record XORShiftRNG(
   w : UInt32,
