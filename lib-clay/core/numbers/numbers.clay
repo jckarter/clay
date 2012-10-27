@@ -183,7 +183,7 @@ forceinline overload T1(src:T2) : T1 = numericConvert(T1, src);
 forceinline overload T(a:I) : T = T(0.);
 
 [T,I when Float?(T) and Imaginary?(I)]
-forceinline overload I(a:T) : T = I(0.j);
+forceinline overload I(a:T) : I = I(0.j);
 
 
 
