@@ -2619,6 +2619,13 @@ void codegenLowlevelCall(llvm::Value *llCallable,
     if (!ctx->checkExceptions)
         return;
     llvm::Value *noException = noExceptionReturnValue();
+    llvm::Function *expect = llvm::Intrinsic::getDeclaration(
+        llvmModule,
+        llvm::Intrinsic::expect,
+        result->getType());
+    llvm::Value *expectArgs[2] = {result, noException};
+    result = ctx->builder->CreateCall(expect, expectArgs);
+
     llvm::Value *cond = ctx->builder->CreateICmpEQ(result, noException);
     llvm::BasicBlock *landing = newBasicBlock("landing", ctx);
     llvm::BasicBlock *normal = newBasicBlock("normal", ctx);
