@@ -48,7 +48,9 @@ overload expectForAll(numberOfTries:UInt, f:F)
     else {
         failed();
         println();
-        var failureMessage = str("axiom `", f, "` failed for the following inputs:\n");
+        var failureMessage = str(
+            "axiom `", f, "` failed for ", size(failedInputs), " out of ",
+            numberOfTries, " inputs:\n");
         for (inputs in failedInputs)
             printlnTo(failureMessage,
                 TEST_FAILURE_INDENT, TEST_FAILURE_INDENT,
