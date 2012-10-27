@@ -1,0 +1,48 @@
+import test.*;
+import random.*;
+import printer.(str);
+
+main() = testMain(
+  TestSuite("Random number generation", array(
+    TestCase("consecutive runs from the same RNG", -> {
+      var rng = XORShiftRNG();
+      var rng0 = rng;
+
+      generate(rng, UInt64);
+      var rng1 = rng;
+
+      generate(rng, UInt64);
+      var rng2 = rng;
+
+      expectNotEqual(rng0, rng1);
+      expectNotEqual(rng1, rng2);
+      expectNotEqual(rng0, rng2);
+    }),
+
+    TestCase("Independent runs from a copy", -> {
+      var rng = XORShiftRNG();
+      var rng2 = rng;
+
+      expectEqual(generate(rng, UInt64), generate(rng2, UInt64));
+    }),
+
+    TestCase("uniform integers should be in range", -> {
+      var rng = XORShiftRNG();
+
+      for(i in range(5)){
+        var x = uniform(rng, 1, 10);
+        expectTrue(x >= 1);
+        expectTrue(x < 10);
+      }
+    }),
+    TestCase("uniform doubles should be in range", -> {
+      var rng = XORShiftRNG();
+
+      for(i in range(100)){
+        var x = uniform(rng, 1.0, 3.0);
+        expectTrue(x >= 1.0);
+        expectTrue(x < 3.0);
+      }
+    }),
+  ))
+);

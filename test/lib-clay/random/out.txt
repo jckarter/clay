@@ -1,9 +1,0 @@
-Testing Random number generation:
-  consecutive runs from the same RNG: passed
-  Independent runs from a copy: passed
-  runs from two RNGs created consecutively: passed
-  uniform integers should be in range: passed
-  uniform integers should cover the whole range: passed
-  uniform doubles should be in range: passed
--- Random number generation: 218 expectations passed; 0 failed (0 xfail)
-Overall: 218 expectations passed; 0 failed (0 xfail)
