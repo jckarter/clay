@@ -1,0 +1,56 @@
+import test.*;
+import test.fuzz.(lookForFailures, expectForAll);
+import test.module.(testMainModule);
+import numbers.floats.(nan?);
+import printer.(str);
+import random.(XORShiftRNG);
+import strings.(String);
+import complex.*;
+
+TEST_lookForFailures() {
+    var g = XORShiftRNG();
+    expect(size(lookForFailures(g, 10u, (x:Int) -> x != x)) == 10);
+    expect(size(lookForFailures(g, 10u, (x:Int) -> x == x)) ==  0);
+}
+
+TEST_bool_arguments() {
+    expectForAll((a:Bool, b:Bool) -> (a and b) == (not (not a or not b)));
+}
+
+TEST_integer_arguments() {
+    ..for (I in Int8, Int16, Int32, Int64,
+                UInt8, UInt16, UInt32, UInt64)
+        expectForAll((x:I) -> x == Greatest(I) or x + 1 > x);
+}
+
+TEST_float_arguments() {
+    ..for (F in Float32, Float64)
+        expectForAll((x:F) -> nan?(x) or -(-x) == x);
+}
+
+TEST_complex_arguments() {
+    ..for (C in Complex32, Complex64)
+        expectForAll((z:C) -> nan?(z) or zero?(imag(z + conj(z))));
+}
+
+enum Foo (FEE, FIE, FOE, FUM);
+
+TEST_enum_arguments() {
+    expectForAll((f:Foo) -> str(f)[0] == 'F');
+}
+
+TEST_tuple_arguments() {
+    expectForAll((t:Tuple[Bool, Bool]) -> (t.0 and t.1) == (not (not t.0 or not t.1)));
+}
+
+record Dibool (a:Bool, b:Bool);
+
+TEST_record_arguments() {
+    expectForAll((r:Dibool) -> (r.a and r.b) == (not (not r.a or not r.b)));
+}
+
+TEST_string_arguments() {
+    expectForAll((a:String, b:String) -> size(a ++ b) == size(a) + size(b));
+}
+
+private main() = testMainModule();
