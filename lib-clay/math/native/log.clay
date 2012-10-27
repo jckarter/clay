@@ -2,7 +2,6 @@
 
 import math.native.kernel.ieee754.*;
 import math.native.protocol.*;
-import complex.(Complex,Complex?,imagValue,real);
 
 
 overload log(x:Double) : Double {

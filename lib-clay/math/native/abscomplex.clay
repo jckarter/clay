@@ -1,5 +1,4 @@
 public import math.native.protocol.*;
-import complex.core.(real,imagValue,Complex?);
 
 [U when Complex?(U) ]
 forceinline overload abs(x:U) = hypot(real(x),imagValue(x));

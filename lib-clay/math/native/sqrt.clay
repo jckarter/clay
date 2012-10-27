@@ -3,7 +3,6 @@ import math.native.kernel.ieee754.*;
 import numbers.floats.(nan?,nan,infinity, infinity?, signbit);
 import math.native.fpclassify.(fpclassify,FP_INFINITE,FP_NAN,FP_ZERO);
 import math.native.protocol.*;
-import complex.(Complex?,Complex,ComplexBaseType, real,imagValue);
 import math.native.(fma);
 
 private var inroot = array(

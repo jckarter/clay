@@ -1,7 +1,6 @@
 
 import numbers.floats.*;
 import math.native.abscomplex.(abs);
-public import complex.core.*;
 
 
 /// @section  (==), (!=), less?, lessEquals?, (>), (>=) 
