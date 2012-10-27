@@ -1,0 +1,10 @@
+import printer.(println);
+
+foo(x:Bool) {
+    usuallyEquals(x, #true);
+    return not x;
+}
+
+main() {
+    println(foo(true), ' ', foo(false), ' ', #foo(true), ' ', #foo(false));
+}

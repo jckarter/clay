@@ -6723,6 +6723,29 @@ void codegenPrimOp(PrimOpPtr x,
     case PRIM_GetOverload :
         break;
 
+    case PRIM_usuallyEquals : {
+        ensureArity(args, 2);
+        llvm::Value *expectee = ctx->builder->CreateLoad(args->values[0]->llValue);
+        ObjectPtr expectedValue = unwrapStaticType(args->values[1]->type);
+        if (expectedValue == NULL
+            || expectedValue->objKind != VALUE_HOLDER
+            || ((ValueHolder*)expectedValue.ptr())->type != args->values[0]->type)
+            error("second argument to usuallyEquals must be a static value of the same type as the first argument");
+        llvm::Constant *expected =
+            valueHolderToLLVMConstant((ValueHolder*)expectedValue.ptr(), ctx);
+
+        assert(expectee->getType() == expected->getType());
+
+        llvm::Value *argValues[2] = {expectee, expected};
+
+        llvm::Function *expectFunction = llvm::Intrinsic::getDeclaration(
+            llvmModule,
+            llvm::Intrinsic::expect,
+            expectee->getType());
+
+        ctx->builder->CreateCall(expectFunction, argValues);
+    }
+
     default :
         assert(false);
         break;

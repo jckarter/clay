@@ -4863,6 +4863,9 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
     case PRIM_GetOverload :
         break;
 
+    case PRIM_usuallyEquals :
+        break;
+
     default :
         assert(false);
 

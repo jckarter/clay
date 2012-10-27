@@ -224,7 +224,9 @@ enum PrimOpCode {
     PRIM_LambdaMonoP,
     PRIM_LambdaMonoInputTypes,
 
-    PRIM_GetOverload
+    PRIM_GetOverload,
+
+    PRIM_usuallyEquals,
 };
 
 struct PrimOp : public Object {

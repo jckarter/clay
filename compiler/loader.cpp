@@ -1152,6 +1152,8 @@ static ModulePtr makePrimitivesModule() {
 
     PRIMITIVE(GetOverload);
 
+    PRIMITIVE(usuallyEquals);
+
 #undef PRIMITIVE
 
     return prims;
