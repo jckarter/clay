@@ -1,4 +1,5 @@
 #include "clay.hpp"
+#include "codegen.hpp"
 #include "evaluator.hpp"
 #include "loader.hpp"
 #include "operators.hpp"
@@ -539,6 +540,18 @@ static bool isPatternHead(ObjectPtr x)
 // evaluateOnePattern
 //
 
+template<typename XValuePtr>
+static PatternPtr xvalueToPatternCell(XValuePtr xv)
+{
+    ObjectPtr stat = unwrapStaticType(xv->type);
+    if (stat == NULL) {
+        error("non-static value used in pattern context");
+        return NULL;
+    }
+    else
+        return new PatternCell(stat);
+}
+
 static PatternPtr namedToPattern(ObjectPtr x)
 {
     switch (x->objKind) {
@@ -582,6 +595,18 @@ static PatternPtr namedToPattern(ObjectPtr x)
         ValueHolderPtr vh = new ValueHolder(member->type);
         vh->as<int>() = member->index;
         return new PatternCell(vh.ptr());
+    }
+    case PVALUE : {
+        PValue *pv = (PValue *)x.ptr();
+        return xvalueToPatternCell(&pv->data);
+    }
+    case CVALUE : {
+        CValue *cv = (CValue *)x.ptr();
+        return xvalueToPatternCell(cv);
+    }
+    case EVALUE : {
+        EValue *ev = (EValue *)x.ptr();
+        return xvalueToPatternCell(ev);
     }
 
     default :

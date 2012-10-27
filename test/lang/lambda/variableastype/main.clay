@@ -1,0 +1,7 @@
+import printer.(println);
+
+foo(T) = ((x:T) -> x)(219);
+
+main() {
+    println(foo(Int), ' ', #foo(Int));
+}
