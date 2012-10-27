@@ -86,6 +86,11 @@ forceinline overload move(src:T) --> returned:T {
     resetUnsafe(src);
 }
 
+
+Copyable?(T) = CallDefined?(copy, T);
+Moveable?(T) = CallDefined?(move, T);
+
+
 [T]
 forceinline overload assign(ref dest:T, rvalue src:T) : {
     swap(dest, src);
