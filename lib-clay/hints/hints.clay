@@ -1,0 +1,11 @@
+import __primitives__.(usuallyEquals);
+
+forceinline likely(x:Bool) : Bool {
+    usuallyEquals(x, #true);
+    return x;
+}
+
+forceinline unlikely(x:Bool) : Bool {
+    usuallyEquals(x, #false);
+    return x;
+}

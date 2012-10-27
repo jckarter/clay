@@ -1,5 +1,6 @@
 import core.errors.backtrace.(showBacktrace);
 import core.libc as libc;
+import hints.(likely);
 
 
 /// @section  error (exceptions disabled) 
@@ -62,14 +63,14 @@ private assertStringLiteral(#file, #line, #column, #cond, ..etc)
 
 [when AllAssertionsEnabled?()]
 alias overload assert(cond:Bool) : {
-    if (not cond)
+    if (not likely(cond))
         errorWithPrintfNoThrow(
             assertStringLiteral(__FILE__, #__LINE__, #__COLUMN__, __ARG__ cond));
 }
 
 [..tags when AllAssertionsEnabled?() and allValues?(AssertionEnabled?, ..tags)]
 alias overload assert[..tags](cond:Bool) : {
-    if (not cond)
+    if (not likely(cond))
         errorWithPrintfNoThrow(
             assertStringLiteral(__FILE__, #__LINE__, #__COLUMN__, __ARG__ cond));
 }

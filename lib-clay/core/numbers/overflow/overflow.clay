@@ -1,4 +1,5 @@
 import core.platform.(OSFamily, Windows);
+import hints.(unlikely);
 import __operators__;
 
 __llvm__{
@@ -249,7 +250,7 @@ private define checked;
 [T]
 forceinline overload checked(checkedFn, arg:T) {
     var out, overflow? = checkedFn(arg);
-    if (overflow?)
+    if (unlikely(overflow?))
         errorWithPrintfNoThrow(stringLiteralConcat(
             "invalid integer math: " , StaticName(checkedFn)
             , "(" , PrintfFmt(T) , ")"),
@@ -260,7 +261,7 @@ forceinline overload checked(checkedFn, arg:T) {
 [T]
 forceinline overload checked(checkedFn, arg1:T, arg2:T) {
     var out, overflow? = checkedFn(arg1, arg2);
-    if (overflow?)
+    if (unlikely(overflow?))
         errorWithPrintfNoThrow(stringLiteralConcat(
             "invalid integer math: " , StaticName(checkedFn)
             , "(" , PrintfFmt(T) , ", " , PrintfFmt(T), ")"),
@@ -271,7 +272,7 @@ forceinline overload checked(checkedFn, arg1:T, arg2:T) {
 [T, U]
 forceinline overload checked(checkedFn, #T, arg2:U) {
     var out, overflow? = checkedFn(T, arg2);
-    if (overflow?)
+    if (unlikely(overflow?))
         errorWithPrintfNoThrow(stringLiteralConcat(
             "invalid integer math: " , StaticName(checkedFn)
             , "(" , StaticName(T) , ", " , PrintfFmt(U) , ")"),
