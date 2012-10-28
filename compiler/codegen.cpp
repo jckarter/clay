@@ -2600,7 +2600,8 @@ void codegenCallCode(InvokeEntry* entry,
             assert(cv->type == entry->returnTypes[i]);
         llArgs.push_back(cv->llValue);
     }
-    codegenLowlevelCall(entry->llvmFunc, llArgs, ctx);
+    if (!entry->runtimeNop)
+        codegenLowlevelCall(entry->llvmFunc, llArgs, ctx);
 }
 
 
@@ -2941,6 +2942,16 @@ static string getCodeName(InvokeEntry* entry)
 // codegenCodeBody
 //
 
+static bool blockIsNop(llvm::BasicBlock *codeBlock, llvm::BasicBlock *returnBlock)
+{
+    if (codeBlock->size() == 1) {
+        if (llvm::BranchInst *branch = llvm::dyn_cast<llvm::BranchInst>(&codeBlock->front())) {
+            return branch->getNumSuccessors() == 1 && branch->getSuccessor(0) == returnBlock;
+        }
+    }
+    return false;
+}
+
 void codegenCodeBody(InvokeEntry* entry)
 {
     assert(entry->analyzed);
@@ -3264,6 +3275,8 @@ void codegenCodeBody(InvokeEntry* entry)
         ctx.builder->CreateBr(returnBlock);
     }
     cgPopStack(returnTarget.stackMarker, &ctx);
+
+    entry->runtimeNop = blockIsNop(codeBlock, returnBlock);
 
     ctx.initBuilder->CreateBr(codeBlock);
 

@@ -17,8 +17,10 @@ struct InvokeEntry {
     vector<TypePtr> argsKey;
     vector<uint8_t> forwardedRValueFlags;
 
-    bool analyzed;
-    bool analyzing;
+    bool analyzed:1;
+    bool analyzing:1;
+    bool callByName:1; // if callByName the rest of InvokeEntry is not set
+    bool runtimeNop:1;
 
     CodePtr origCode;
     CodePtr code;
@@ -31,7 +33,6 @@ struct InvokeEntry {
     vector<TypePtr> varArgTypes;
     unsigned varArgPosition;
 
-    bool callByName; // if callByName the rest of InvokeEntry is not set
     InlineAttribute isInline;
 
     ObjectPtr analysis;
@@ -47,9 +48,10 @@ struct InvokeEntry {
                 ObjectPtr callable,
                 llvm::ArrayRef<TypePtr> argsKey)
         : parent(parent), callable(callable),
-          argsKey(argsKey), analyzed(false),
-          analyzing(false), varArgPosition(0),
-          callByName(false),
+          argsKey(argsKey),
+          analyzed(false), analyzing(false),
+          callByName(false), runtimeNop(false),
+          varArgPosition(0),
           isInline(IGNORE), llvmFunc(NULL), debugInfo(NULL)
     {
         for (size_t i = 0; i < CC_Count; ++i)
