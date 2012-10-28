@@ -35,7 +35,7 @@ void initExternalTarget(string target);
 struct CValue : public Object {
     TypePtr type;
     llvm::Value *llValue;
-    bool forwardedRValue;
+    bool forwardedRValue:1;
     CValue(TypePtr type, llvm::Value *llValue)
         : Object(CVALUE), type(type), llValue(llValue),
           forwardedRValue(false)
@@ -81,9 +81,9 @@ struct JumpTarget {
 };
 
 struct CReturn {
-    bool byRef;
     TypePtr type;
     CValuePtr value;
+    bool byRef:1;
     CReturn(bool byRef, TypePtr type, CValuePtr value)
         : byRef(byRef), type(type), value(value) {}
 };
@@ -136,18 +136,18 @@ struct CodegenContext {
     vector<JumpTarget> breaks;
     vector<JumpTarget> continues;
     vector<JumpTarget> exceptionTargets;
-    bool checkExceptions;
     llvm::Value *exceptionValue;
-    int inlineDepth;
+    int inlineDepth:31;
+    bool checkExceptions:1;
 
     CodegenContext()
         : llvmFunc(NULL),
           initBuilder(NULL),
           builder(NULL),
           valueForStatics(NULL),
-          checkExceptions(true),
           exceptionValue(NULL),
-          inlineDepth(0)
+          inlineDepth(0),
+          checkExceptions(true)
     {
     }
 
@@ -156,9 +156,9 @@ struct CodegenContext {
           initBuilder(NULL),
           builder(NULL),
           valueForStatics(NULL),
-          checkExceptions(true),
           exceptionValue(NULL),
-          inlineDepth(0)
+          inlineDepth(0),
+          checkExceptions(true)
     {
     }
 

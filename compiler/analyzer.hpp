@@ -129,10 +129,10 @@ MultiPValuePtr analyzeCallByName(InvokeEntry* entry,
 void analyzeCodeBody(InvokeEntry* entry);
 
 struct AnalysisContext {
-    bool hasRecursivePropagation;
-    bool returnInitialized;
     vector<uint8_t> returnIsRef;
     vector<TypePtr> returnTypes;
+    bool hasRecursivePropagation:1;
+    bool returnInitialized:1;
     AnalysisContext()
         : hasRecursivePropagation(false),
           returnInitialized(false) {}

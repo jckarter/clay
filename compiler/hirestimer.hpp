@@ -4,8 +4,8 @@
 namespace clay {
 struct HiResTimer {
     unsigned long long elapsedTicks;
-    int running;
     unsigned long long startTicks;
+    int running;
 
     HiResTimer();
     void start();

@@ -296,18 +296,18 @@ struct LLVMExternalTarget : public ExternalTarget {
 struct X86_32_ExternalTarget : public ExternalTarget {
     // Linux, Solaris, and NetBSD pass all aggregates on the stack
     // (except long long and complex float32)
-    bool alwaysPassStructsOnStack;
+    bool alwaysPassStructsOnStack:1;
 
     // Windows x64 has only one calling convention
-    bool alwaysUseCCallingConv;
+    bool alwaysUseCCallingConv:1;
 
     // MacOS X passes XMM vectors in registers; other platforms treat them
     // as aggregates
-    bool passVecAsNonaggregate;
+    bool passVecAsNonaggregate:1;
 
     // MacOS X returns aggregates containing a single float or double
     // on the x87 stack
-    bool returnSingleFloatAggregateAsNonaggregate;
+    bool returnSingleFloatAggregateAsNonaggregate:1;
 
     explicit X86_32_ExternalTarget(llvm::Triple target) {
         alwaysUseCCallingConv = target.getArch() == llvm::Triple::x86_64;
@@ -505,8 +505,10 @@ enum WordClass {
 };
 
 struct X86_64_ExternalTarget : public LLVMExternalTarget {
+    map<TypePtr, vector<WordClass> > typeClassifications;
+    map<TypePtr, llvm::Type*> llvmWordTypes;
     // Mac OS X does its own thing with X87UP chunks not preceded by X87
-    bool passesOrphanX87UPAsSSE;
+    bool passesOrphanX87UPAsSSE:1;
 
     explicit X86_64_ExternalTarget(llvm::Triple target)
         : LLVMExternalTarget(target)
@@ -514,8 +516,6 @@ struct X86_64_ExternalTarget : public LLVMExternalTarget {
         passesOrphanX87UPAsSSE = target.getOS() == llvm::Triple::Darwin;
     }
 
-    map<TypePtr, vector<WordClass> > typeClassifications;
-    map<TypePtr, llvm::Type*> llvmWordTypes;
     llvm::ArrayRef<WordClass> getTypeClassification(TypePtr type);
     llvm::Type* getLLVMWordType(TypePtr type);
 

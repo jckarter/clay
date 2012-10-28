@@ -17,11 +17,6 @@ struct InvokeEntry {
     vector<TypePtr> argsKey;
     vector<uint8_t> forwardedRValueFlags;
 
-    bool analyzed:1;
-    bool analyzing:1;
-    bool callByName:1; // if callByName the rest of InvokeEntry is not set
-    bool runtimeNop:1;
-
     CodePtr origCode;
     CodePtr code;
     EnvPtr env;
@@ -43,6 +38,11 @@ struct InvokeEntry {
     llvm::Function *llvmCWrappers[CC_Count];
 
     llvm::TrackingVH<llvm::MDNode> debugInfo;
+
+    bool analyzed:1;
+    bool analyzing:1;
+    bool callByName:1; // if callByName the rest of InvokeEntry is not set
+    bool runtimeNop:1;
 
     InvokeEntry(InvokeSet *parent,
                 ObjectPtr callable,
@@ -70,12 +70,12 @@ struct InvokeSet {
     vector<OverloadPtr> overloads;
 
     vector<MatchSuccessPtr> matches;
-    unsigned nextOverloadIndex;
-
-    bool shouldLog;
-
     map<vector<ValueTempness>, InvokeEntry*> tempnessMap;
     map<vector<ValueTempness>, InvokeEntry*> tempnessMap2;
+
+    unsigned nextOverloadIndex:31;
+
+    bool shouldLog:1;
 
     InvokeSet(ObjectPtr callable,
               llvm::ArrayRef<TypePtr> argsKey,
@@ -94,7 +94,7 @@ typedef vector< pair<OverloadPtr, MatchResultPtr> > MatchFailureVector;
 
 struct MatchFailureError {
     MatchFailureVector failures;
-    bool failedInterface;
+    bool failedInterface:1;
 
     MatchFailureError() : failedInterface(false) {}
 };

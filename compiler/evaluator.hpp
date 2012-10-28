@@ -8,7 +8,7 @@ namespace clay {
 struct EValue : public Object {
     TypePtr type;
     char *addr;
-    bool forwardedRValue;
+    bool forwardedRValue:1;
     EValue(TypePtr type, char *addr)
         : Object(EVALUE), type(type), addr(addr),
           forwardedRValue(false) {}

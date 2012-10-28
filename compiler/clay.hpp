@@ -81,6 +81,16 @@
 
 namespace clay {
 
+template<bool Cond> struct StaticAssertChecker;
+template<> struct StaticAssertChecker<true> { typedef int type; };
+template<> struct StaticAssertChecker<false> { };
+
+#define _CLAY_CAT(a,b) a##b
+#define CLAY_CAT(a,b) _CLAY_CAT(a,b)
+
+#define CLAY_STATIC_ASSERT(cond) \
+    static const ::clay::StaticAssertChecker<(cond)>::type CLAY_CAT(static_assert_, __LINE__);
+
 using std::string;
 using std::vector;
 using std::pair;
@@ -754,6 +764,7 @@ struct Source : public Object {
     string fileName;
     llvm::OwningPtr<llvm::MemoryBuffer> buffer;
     llvm::TrackingVH<llvm::MDNode> debugInfo;
+
     Source(llvm::StringRef fileName)
         : Object(SOURCE), fileName(fileName), debugInfo(NULL)
     {
@@ -797,12 +808,14 @@ struct Location {
 //
 
 struct CompileContextEntry {
-    ObjectPtr callable;
-    bool hasParams;
     vector<ObjectPtr> params;
     vector<unsigned> dispatchIndices;
 
     Location location;
+
+    ObjectPtr callable;
+
+    bool hasParams:1;
 
     CompileContextEntry(ObjectPtr callable)
         : callable(callable), hasParams(false) {}
@@ -1108,8 +1121,8 @@ struct FloatLiteral : public Expr {
 };
 
 struct CharLiteral : public Expr {
-    char value;
     ExprPtr desugared;
+    char value;
     CharLiteral(char value)
         : Expr(CHAR_LITERAL), value(value) {}
 };
@@ -1249,13 +1262,11 @@ enum LambdaCapture {
 struct Lambda : public Expr {
     LambdaCapture captureBy;
     vector<FormalArgPtr> formalArgs;
-    bool hasVarArg;
 
     StatementPtr body;
 
     ExprPtr converted;
 
-    bool initialized;
     vector<string> freeVars;
 
     ProcedureMono mono;
@@ -1267,6 +1278,9 @@ struct Lambda : public Expr {
     // if freevars are absent
     ProcedurePtr lambdaProc;
 
+    bool hasVarArg:1;
+    bool initialized:1;
+
     Lambda(LambdaCapture captureBy) :
         Expr(LAMBDA), captureBy(captureBy),
         hasVarArg(false), initialized(false) {}
@@ -1274,8 +1288,8 @@ struct Lambda : public Expr {
            llvm::ArrayRef<FormalArgPtr> formalArgs,
            bool hasVarArg, StatementPtr body)
         : Expr(LAMBDA), captureBy(captureBy),
-          formalArgs(formalArgs), hasVarArg(hasVarArg),
-          body(body), initialized(false) {}
+          formalArgs(formalArgs), body(body),
+          hasVarArg(hasVarArg), initialized(false) {}
 };
 
 struct Unpack : public Expr {
@@ -1321,8 +1335,8 @@ struct ObjectExpr : public Expr {
 
 struct EvalExpr : public Expr {
     ExprPtr args;
-    bool evaled;
     ExprListPtr value;
+    bool evaled;
 
     EvalExpr(ExprPtr args)
         : Expr(EVAL_EXPR), args(args), evaled(false) {}
@@ -1476,11 +1490,11 @@ struct InitAssignment : public Statement {
 };
 
 struct VariadicAssignment : public Statement {
-    int op;
     ExprListPtr exprs;
     ExprPtr desugared;
+    int op;
     VariadicAssignment(int op, ExprListPtr exprs )
-        : Statement(VARIADIC_ASSIGNMENT), op(op), exprs(exprs) {}
+        : Statement(VARIADIC_ASSIGNMENT), exprs(exprs), op(op) {}
 };
 
 struct Goto : public Statement {
@@ -1496,16 +1510,16 @@ enum ReturnKind {
 };
 
 struct Return : public Statement {
-    ReturnKind returnKind;
     ExprListPtr values;
-    bool isExprReturn;
-    bool isReturnSpecs;
+    ReturnKind returnKind:2;
+    bool isExprReturn:1;
+    bool isReturnSpecs:1;
     Return(ReturnKind returnKind, ExprListPtr values)
-        : Statement(RETURN), returnKind(returnKind), values(values), 
-          isExprReturn(false), isReturnSpecs(false) {}
+        : Statement(RETURN), values(values),
+          returnKind(returnKind), isExprReturn(false), isReturnSpecs(false) {}
     Return(ReturnKind returnKind, ExprListPtr values, bool exprRet)
-        : Statement(RETURN), returnKind(returnKind), values(values), 
-          isExprReturn(exprRet), isReturnSpecs(false) {}
+        : Statement(RETURN), values(values), 
+          returnKind(returnKind), isExprReturn(exprRet), isReturnSpecs(false) {}
 };
 
 struct If : public Statement {
@@ -1683,8 +1697,8 @@ struct Unreachable : public Statement {
 
 struct EvalStatement : public Statement {
     ExprListPtr args;
-    bool evaled;
     vector<StatementPtr> value;
+    bool evaled:1;
 
     EvalStatement(ExprListPtr args)
         : Statement(EVAL_STATEMENT), args(args), evaled(false) {}
@@ -1724,7 +1738,7 @@ struct FormalArg : public ANode {
     IdentifierPtr name;
     ExprPtr type;
     ValueTempness tempness;
-    bool varArg;
+    bool varArg:1;
     FormalArg(IdentifierPtr name, ExprPtr type)
         : ANode(FORMAL_ARG), name(name), type(type),
           tempness(TEMPNESS_DONTCARE), varArg(false) {}
@@ -1746,10 +1760,10 @@ struct ReturnSpec : public ANode {
 };
 
 struct PatternVar {
-    bool isMulti;
     IdentifierPtr name;
+    bool isMulti:1;
     PatternVar(bool isMulti, IdentifierPtr name)
-        : isMulti(isMulti), name(name) {}
+        : name(name), isMulti(isMulti) {}
     PatternVar()
         : isMulti(false) {}
 };
@@ -1764,12 +1778,12 @@ struct Code : public ANode {
     vector<PatternVar> patternVars;
     ExprPtr predicate;
     vector<FormalArgPtr> formalArgs;
-    bool hasVarArg;
-    bool returnSpecsDeclared;
     vector<ReturnSpecPtr> returnSpecs;
     ReturnSpecPtr varReturnSpec;
     StatementPtr body;
     LLVMCodePtr llvmBody;
+    bool hasVarArg:1;
+    bool returnSpecsDeclared:1;
 
     Code()
         : ANode(CODE),  hasVarArg(false), returnSpecsDeclared(false) {}
@@ -1780,9 +1794,11 @@ struct Code : public ANode {
          ReturnSpecPtr varReturnSpec,
          StatementPtr body)
         : ANode(CODE), patternVars(patternVars), predicate(predicate),
-          formalArgs(formalArgs), hasVarArg(false), returnSpecsDeclared(false),
+          formalArgs(formalArgs),
           returnSpecs(returnSpecs), varReturnSpec(varReturnSpec),
-          body(body) {}
+          body(body),
+          hasVarArg(false), returnSpecsDeclared(false)
+          {}
 
     bool hasReturnSpecs() {
         return returnSpecsDeclared;
@@ -1843,9 +1859,10 @@ struct RecordDecl : public TopLevelItem {
     RecordBodyPtr body;
 
     vector<OverloadPtr> overloads;
-    bool builtinOverloadInitialized;
 
     LambdaPtr lambda;
+
+    bool builtinOverloadInitialized:1;
 
     RecordDecl(Module *module, Visibility visibility)
         : TopLevelItem(RECORD_DECL, module, visibility),
@@ -1870,13 +1887,13 @@ struct RecordDecl : public TopLevelItem {
 };
 
 struct RecordBody : public ANode {
-    bool isComputed;
     ExprListPtr computed; // valid if isComputed == true
     vector<RecordFieldPtr> fields; // valid if isComputed == false
+    bool isComputed:1;
     RecordBody(ExprListPtr computed)
-        : ANode(RECORD_BODY), isComputed(true), computed(computed) {}
+        : ANode(RECORD_BODY), computed(computed), isComputed(true) {}
     RecordBody(llvm::ArrayRef<RecordFieldPtr> fields)
-        : ANode(RECORD_BODY), isComputed(false), fields(fields) {}
+        : ANode(RECORD_BODY), fields(fields), isComputed(false) {}
 };
 
 struct RecordField : public ANode {
@@ -1893,12 +1910,13 @@ struct VariantDecl : public TopLevelItem {
     vector<IdentifierPtr> params;
     IdentifierPtr varParam;
 
-    bool open;
     ExprListPtr defaultInstances;
 
     vector<InstanceDeclPtr> instances;
 
     vector<OverloadPtr> overloads;
+
+    bool open:1;
 
     VariantDecl(Module *module, IdentifierPtr name,
             Visibility visibility,
@@ -1911,7 +1929,8 @@ struct VariantDecl : public TopLevelItem {
         : TopLevelItem(VARIANT_DECL, module, name, visibility),
           patternVars(patternVars), predicate(predicate),
           params(params), varParam(varParam),
-          open(open), defaultInstances(defaultInstances) {}
+          defaultInstances(defaultInstances),
+          open(open) {}
 };
 
 struct InstanceDecl : public TopLevelItem {
@@ -1939,29 +1958,28 @@ enum InlineAttribute {
 struct Overload : public TopLevelItem {
     ExprPtr target;
     CodePtr code;
-    bool callByName;
-    InlineAttribute isInline;
 
     // pre-computed patterns for matchInvoke
-    int patternsInitializedState; // 0:notinit, -1:initing, +1:inited
-    bool nameIsPattern;
     vector<PatternCellPtr> cells;
     vector<MultiPatternCellPtr> multiCells;
     PatternPtr callablePattern;
     vector<PatternPtr> argPatterns;
     MultiPatternPtr varArgPattern;
+    InlineAttribute isInline:2;
+    int patternsInitializedState:2; // 0:notinit, -1:initing, +1:inited
+    bool callByName:1;
+    bool nameIsPattern:1;
     
     Overload(Module *module, ExprPtr target,
              CodePtr code,
              bool callByName,
              InlineAttribute isInline)
         : TopLevelItem(OVERLOAD, module), target(target), code(code),
-          callByName(callByName), isInline(isInline),
-          patternsInitializedState(0), nameIsPattern(false) {}
+          isInline(isInline), patternsInitializedState(0),
+          callByName(callByName), nameIsPattern(false) {}
 };
 
 struct Procedure : public TopLevelItem {
-    bool privateOverload;
     OverloadPtr interface;
 
     OverloadPtr singleOverload;
@@ -1970,6 +1988,8 @@ struct Procedure : public TopLevelItem {
     ProcedureMono mono;
     LambdaPtr lambda;
 
+    bool privateOverload:1;
+
     Procedure(Module *module, IdentifierPtr name, Visibility visibility, bool privateOverload)
         : TopLevelItem(PROCEDURE, module, name, visibility),
           privateOverload(privateOverload)
@@ -1977,7 +1997,7 @@ struct Procedure : public TopLevelItem {
 
     Procedure(Module *module, IdentifierPtr name, Visibility visibility, bool privateOverload, OverloadPtr interface)
         : TopLevelItem(PROCEDURE, module, name, visibility),
-          privateOverload(privateOverload), interface(interface)
+          interface(interface), privateOverload(privateOverload)
     {}
 };
 
@@ -1999,7 +2019,7 @@ struct NewTypeDecl : public TopLevelItem {
     ExprPtr expr;
     TypePtr type;
     TypePtr baseType;
-    bool initialized;
+    bool initialized:1;
     NewTypeDecl(Module *module, IdentifierPtr name,
             Visibility visibility,
             ExprPtr expr)
@@ -2029,8 +2049,8 @@ struct EnumDecl : public TopLevelItem {
 
 struct EnumMember : public ANode {
     IdentifierPtr name;
-    int index;
     TypePtr type;
+    int index;
     EnumMember(IdentifierPtr name)
         : ANode(ENUM_MEMBER), name(name), index(-1) {}
 };
@@ -2065,7 +2085,6 @@ struct GVarInstance : public Object {
     GlobalVariablePtr gvar;
     vector<ObjectPtr> params;
 
-    bool analyzing;
     ExprPtr expr;
     EnvPtr env;
     MultiPValuePtr analysis;
@@ -2074,10 +2093,12 @@ struct GVarInstance : public Object {
     llvm::GlobalVariable *llGlobal;
     llvm::TrackingVH<llvm::MDNode> debugInfo;
 
+    bool analyzing:1;
+
     GVarInstance(GlobalVariablePtr gvar,
                  llvm::ArrayRef<ObjectPtr> params)
         : Object(DONT_CARE), gvar(gvar), params(params),
-          analyzing(false), llGlobal(NULL), debugInfo(NULL) {}
+          llGlobal(NULL), debugInfo(NULL), analyzing(false) {}
 
     llvm::DIGlobalVariable getDebugInfo() { return llvm::DIGlobalVariable(debugInfo); }
 };
@@ -2093,29 +2114,34 @@ enum CallingConv {
 
 struct ExternalProcedure : public TopLevelItem {
     vector<ExternalArgPtr> args;
-    bool hasVarArgs;
     ExprPtr returnType;
     StatementPtr body;
     ExprListPtr attributes;
 
-    bool attributesVerified;
-    bool attrDLLImport;
-    bool attrDLLExport;
-    CallingConv callingConv;
     llvm::SmallString<16> attrAsmLabel;
 
-    bool analyzed;
-    bool bodyCodegenned;
     TypePtr returnType2;
     TypePtr ptrType;
 
     llvm::Function *llvmFunc;
     llvm::TrackingVH<llvm::MDNode> debugInfo;
 
+    CallingConv callingConv:3;
+    bool hasVarArgs:1;
+    bool attributesVerified:1;
+    bool attrDLLImport:1;
+    bool attrDLLExport:1;
+    bool analyzed:1;
+    bool bodyCodegenned:1;
+
     ExternalProcedure(Module *module, Visibility visibility)
-        : TopLevelItem(EXTERNAL_PROCEDURE, module, visibility), hasVarArgs(false),
-          attributes(new ExprList()), attributesVerified(false),
-          analyzed(false), bodyCodegenned(false), llvmFunc(NULL), debugInfo(NULL) {}
+        : TopLevelItem(EXTERNAL_PROCEDURE, module, visibility),
+          attributes(new ExprList()),
+          llvmFunc(NULL), debugInfo(NULL),
+          hasVarArgs(false),
+          attributesVerified(false),
+          analyzed(false), bodyCodegenned(false)
+        {}
     ExternalProcedure(Module *module, IdentifierPtr name,
                       Visibility visibility,
                       llvm::ArrayRef<ExternalArgPtr> args,
@@ -2124,9 +2150,13 @@ struct ExternalProcedure : public TopLevelItem {
                       StatementPtr body,
                       ExprListPtr attributes)
         : TopLevelItem(EXTERNAL_PROCEDURE, module, name, visibility), args(args),
-          hasVarArgs(hasVarArgs), returnType(returnType), body(body),
-          attributes(attributes), attributesVerified(false),
-          analyzed(false), bodyCodegenned(false), llvmFunc(NULL), debugInfo(NULL) {}
+          returnType(returnType), body(body),
+          attributes(attributes),
+          llvmFunc(NULL), debugInfo(NULL),
+          hasVarArgs(hasVarArgs),
+          attributesVerified(false),
+          analyzed(false), bodyCodegenned(false)
+        {}
 
     llvm::DISubprogram getDebugInfo() { return llvm::DISubprogram(debugInfo); }
 };
@@ -2143,33 +2173,37 @@ struct ExternalVariable : public TopLevelItem {
     ExprPtr type;
     ExprListPtr attributes;
 
-    bool attributesVerified;
-    bool attrDLLImport;
-    bool attrDLLExport;
-
     TypePtr type2;
     llvm::GlobalVariable *llGlobal;
     llvm::TrackingVH<llvm::MDNode> debugInfo;
 
+    bool attributesVerified:1;
+    bool attrDLLImport:1;
+    bool attrDLLExport:1;
+
     ExternalVariable(Module *module, Visibility visibility)
         : TopLevelItem(EXTERNAL_VARIABLE, module, visibility),
-          attributes(new ExprList()), attributesVerified(false),
-          llGlobal(NULL), debugInfo(NULL) {}
+          attributes(new ExprList()),
+          llGlobal(NULL), debugInfo(NULL),
+          attributesVerified(false)
+          {}
     ExternalVariable(Module *module, IdentifierPtr name,
                      Visibility visibility,
                      ExprPtr type,
                      ExprListPtr attributes)
         : TopLevelItem(EXTERNAL_VARIABLE, module, name, visibility),
           type(type), attributes(attributes),
-          attributesVerified(false), llGlobal(NULL), debugInfo(NULL) {}
+          llGlobal(NULL), debugInfo(NULL),
+          attributesVerified(false)
+          {}
 
     llvm::DIGlobalVariable getDebugInfo() { return llvm::DIGlobalVariable(debugInfo); }
 };
 
 struct EvalTopLevel : public TopLevelItem {
     ExprListPtr args;
-    bool evaled;
     vector<TopLevelItemPtr> value;
+    bool evaled:1;
 
     EvalTopLevel(Module *module, ExprListPtr args)
         : TopLevelItem(EVAL_TOPLEVEL, module), args(args), evaled(false)
@@ -2351,24 +2385,24 @@ struct Module : public ANode {
 
     EnvPtr env;
     InitState initState;
-    bool attributesVerified;
     vector<llvm::SmallString<16> > attrBuildFlags;
     IntegerTypePtr attrDefaultIntegerType;
     FloatTypePtr attrDefaultFloatType;
 
     llvm::StringMap<ImportSet> publicSymbols;
-    bool publicSymbolsLoaded;
-    int publicSymbolsLoading;
 
     llvm::StringMap<ImportSet> allSymbols;
-    bool allSymbolsLoaded;
-    int allSymbolsLoading;
 
     set<string> importedNames;
 
-    bool topLevelLLVMGenerated;
-    bool externalsGenerated;
-    bool isIntrinsicsModule;
+    int publicSymbolsLoading:3;
+    int allSymbolsLoading:3;
+    bool attributesVerified:1;
+    bool publicSymbolsLoaded:1;
+    bool allSymbolsLoaded:1;
+    bool topLevelLLVMGenerated:1;
+    bool externalsGenerated:1;
+    bool isIntrinsicsModule:1;
 
     llvm::TrackingVH<llvm::MDNode> debugInfo;
 
@@ -2409,7 +2443,7 @@ struct Module : public ANode {
 
 struct PVData {
     TypePtr type;
-    bool isTemp;
+    bool isTemp:1;
     PVData() : type(NULL), isTemp(NULL) {}
     PVData(TypePtr type, bool isTemp)
         : type(type), isTemp(isTemp) {}
@@ -2685,15 +2719,15 @@ struct Type : public Object {
     TypeKind typeKind;
     llvm::Type *llType;
     llvm::TrackingVH<llvm::MDNode> debugInfo;
-    bool defined;
-
-    bool typeInfoInitialized;
     size_t typeSize;
     size_t typeAlignment;
 
-    bool overloadsInitialized;
     vector<OverloadPtr> overloads;
 
+    bool overloadsInitialized:1;
+    bool defined:1;
+    bool typeInfoInitialized:1;
+    
     Type(TypeKind typeKind)
         : Object(TYPE), typeKind(typeKind),
           llType(NULL), debugInfo(NULL), defined(false),
@@ -2708,22 +2742,22 @@ struct BoolType : public Type {
 };
 
 struct IntegerType : public Type {
-    int bits;
-    bool isSigned;
+    int bits:15;
+    bool isSigned:1;
     IntegerType(int bits, bool isSigned)
         : Type(INTEGER_TYPE), bits(bits), isSigned(isSigned) {}
 };
 
 struct FloatType : public Type {
-    int bits;
-    bool isImaginary;
+    int bits:15;
+    bool isImaginary:1;
     FloatType(int bits, bool isImaginary)
         : Type(FLOAT_TYPE), bits(bits), isImaginary(isImaginary){}
 };
 
 struct ComplexType : public Type {
-    int bits;
     const llvm::StructLayout *layout;
+    int bits:15;
     ComplexType(int bits)
         : Type(COMPLEX_TYPE), bits(bits), layout(NULL) {}
 };
@@ -2748,14 +2782,15 @@ struct CodePointerType : public Type {
 };
 
 struct CCodePointerType : public Type {
-    CallingConv callingConv;
     vector<TypePtr> argTypes;
-    bool hasVarArgs;
     TypePtr returnType; // NULL if void return
 
     llvm::Type *callType;
 
     llvm::Type *getCallType();
+
+    CallingConv callingConv:3;
+    bool hasVarArgs:1;
 
     CCodePointerType(CallingConv callingConv,
                      llvm::ArrayRef<TypePtr> argTypes,
@@ -2803,12 +2838,13 @@ struct RecordType : public Type {
     RecordDeclPtr record;
     vector<ObjectPtr> params;
 
-    bool fieldsInitialized;
     vector<IdentifierPtr> fieldNames;
     vector<TypePtr> fieldTypes;
     llvm::StringMap<size_t> fieldIndexMap;
 
     const llvm::StructLayout *layout;
+
+    bool fieldsInitialized:1;
 
     RecordType(RecordDeclPtr record)
         : Type(RECORD_TYPE), record(record), fieldsInitialized(false),
@@ -2822,9 +2858,10 @@ struct VariantType : public Type {
     VariantDeclPtr variant;
     vector<ObjectPtr> params;
 
-    bool initialized;
     vector<TypePtr> memberTypes;
     TypePtr reprType;
+
+    bool initialized:1;
 
     VariantType(VariantDeclPtr variant)
         : Type(VARIANT_TYPE), variant(variant),
@@ -2842,7 +2879,7 @@ struct StaticType : public Type {
 
 struct EnumType : public Type {
     EnumDeclPtr enumeration;
-    bool initialized;
+    bool initialized:1;
 
     EnumType(EnumDeclPtr enumeration)
         : Type(ENUM_TYPE), enumeration(enumeration), initialized(false) {}

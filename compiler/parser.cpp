@@ -2403,7 +2403,9 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x, Module *module) {
     Location targetStartLocation = currentLocation();
     if (!identifier(z)) return false;
     Location targetEndLocation = currentLocation();
-    if (!arguments(y->formalArgs, y->hasVarArg)) return false;
+    bool hasVarArg = false;
+    if (!arguments(y->formalArgs, hasVarArg)) return false;
+    y->hasVarArg = hasVarArg;
     y->returnSpecsDeclared = allReturnSpecs(y->returnSpecs, y->varReturnSpec);
     if (!llvmCode(y->llvmBody)) return false;
     y->location = location;
@@ -2436,7 +2438,9 @@ static bool procedureWithInterface(vector<TopLevelItemPtr> &x, Module *module) {
     Location targetStartLocation = currentLocation();
     if (!identifier(name)) return false;
     Location targetEndLocation = currentLocation();
-    if (!arguments(interfaceCode->formalArgs, interfaceCode->hasVarArg)) return false;
+    bool hasVarArg = false;
+    if (!arguments(interfaceCode->formalArgs, hasVarArg)) return false;
+    interfaceCode->hasVarArg = hasVarArg;
     interfaceCode->returnSpecsDeclared = allReturnSpecs(interfaceCode->returnSpecs, interfaceCode->varReturnSpec);
 
     bool privateOverload;
@@ -2473,7 +2477,9 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x, Module *module) {
     Location targetStartLocation = currentLocation();
     if (!identifier(name)) return false;
     Location targetEndLocation = currentLocation();
-    if (!arguments(code->formalArgs, code->hasVarArg)) return false;
+    bool hasVarArg = false;
+    if (!arguments(code->formalArgs, hasVarArg)) return false;
+    code->hasVarArg = hasVarArg;
     bool exprRetSpecs = false;
     code->returnSpecsDeclared = allReturnSpecsWithFlag(code->returnSpecs, code->varReturnSpec, exprRetSpecs);
     if (!body(code->body)) return false;
@@ -2529,7 +2535,9 @@ static bool overload(TopLevelItemPtr &x, Module *module) {
     Location targetStartLocation = currentLocation();
     if (!pattern(target)) return false;
     Location targetEndLocation = currentLocation();
-    if (!arguments(code->formalArgs, code->hasVarArg)) return false;
+    bool hasVarArg = false;
+    if (!arguments(code->formalArgs, hasVarArg)) return false;
+    code->hasVarArg = hasVarArg;
     bool exprRetSpecs = false;
     code->returnSpecsDeclared = allReturnSpecsWithFlag(code->returnSpecs, code->varReturnSpec, exprRetSpecs);
     int p = save();
@@ -2761,7 +2769,9 @@ static bool external(TopLevelItemPtr &x, Module *module) {
     if (!optExternalAttributes(y->attributes)) return false;
     if (!identifier(y->name)) return false;
     if (!symbol("(")) return false;
-    if (!externalArgsBody(y->args, y->hasVarArgs)) return false;
+    bool hasVarArg = false;
+    if (!externalArgsBody(y->args, hasVarArg)) return false;
+    y->hasVarArgs = hasVarArg;
     if (!symbol(")")) return false;
     if (!optExternalReturn(y->returnType)) return false;
     if (!externalBody(y->body)) return false;

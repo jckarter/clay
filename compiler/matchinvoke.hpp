@@ -1,5 +1,5 @@
-#ifndef __MATCHIVOKE_HPP
-#define __MATCHIVOKE_HPP
+#ifndef __MATCHINVOKE_HPP
+#define __MATCHINVOKE_HPP
 
 #include "clay.hpp"
 
@@ -27,8 +27,6 @@ struct MatchResult : public Object {
 };
 
 struct MatchSuccess : public MatchResult {
-    bool callByName;
-    InlineAttribute isInline;
     CodePtr code;
     EnvPtr env;
 
@@ -39,7 +37,10 @@ struct MatchSuccess : public MatchResult {
     vector<IdentifierPtr> fixedArgNames;
     IdentifierPtr varArgName;
     vector<TypePtr> varArgTypes;
+
     unsigned varArgPosition;
+    InlineAttribute isInline:2;
+    bool callByName:1;
 
     MatchSuccess(bool callByName, InlineAttribute isInline, CodePtr code, EnvPtr env,
                  ObjectPtr callable, llvm::ArrayRef<TypePtr> argsKey)
@@ -119,4 +120,4 @@ void printMatchError(llvm::raw_ostream &os, const MatchResultPtr& result);
 
 }
 
-#endif // __MATCHIVOKE_HPP
+#endif // __MATCHINVOKE_HPP
