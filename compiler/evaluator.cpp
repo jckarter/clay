@@ -4869,7 +4869,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         if (!isPrimitiveType(ev0->type))
             argumentTypeError(0, "primitive type", ev0->type);
 
-        assert(out->values->size() == 1);
+        assert(out->values.size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == ev0->type);
         memcpy(out0->addr, ev0->addr, typeSize(ev0->type));
