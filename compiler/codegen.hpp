@@ -85,7 +85,7 @@ struct CReturn {
     CValuePtr value;
     bool byRef:1;
     CReturn(bool byRef, TypePtr type, CValuePtr value)
-        : byRef(byRef), type(type), value(value) {}
+        : type(type), value(value), byRef(byRef) {}
 };
 
 struct StackSlot {

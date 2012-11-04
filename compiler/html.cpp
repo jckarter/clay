@@ -173,6 +173,7 @@ void emitHtmlModule(std::string outpath, DocState *state, DocModule *mod)
                 case clay::OVERLOAD:
                     emitHtmlOverload(o, state, *i2);
                     break;
+                default: {} // make compiler happy
             }
 
         }

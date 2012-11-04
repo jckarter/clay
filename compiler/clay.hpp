@@ -821,12 +821,12 @@ struct CompileContextEntry {
         : callable(callable), hasParams(false) {}
 
     CompileContextEntry(ObjectPtr callable, llvm::ArrayRef<ObjectPtr> params)
-        : callable(callable), hasParams(true), params(params) {}
+        : params(params), callable(callable), hasParams(true) {}
 
     CompileContextEntry(ObjectPtr callable,
                         llvm::ArrayRef<ObjectPtr> params,
                         llvm::ArrayRef<unsigned> dispatchIndices)
-        : callable(callable), hasParams(true), params(params), dispatchIndices(dispatchIndices) {}
+        : params(params), dispatchIndices(dispatchIndices), callable(callable), hasParams(true) {}
 };
 
 void pushCompileContext(ObjectPtr obj);
@@ -2409,9 +2409,11 @@ struct Module : public ANode {
     Module(llvm::StringRef moduleName)
         : ANode(MODULE), moduleName(moduleName),
           initState(BEFORE),
+          publicSymbolsLoading(0),
+          allSymbolsLoading(0),
           attributesVerified(false),
-          publicSymbolsLoaded(false), publicSymbolsLoading(0),
-          allSymbolsLoaded(false), allSymbolsLoading(0),
+          publicSymbolsLoaded(false),
+          allSymbolsLoaded(false),
           topLevelLLVMGenerated(false),
           externalsGenerated(false),
           isIntrinsicsModule(false),
@@ -2425,9 +2427,11 @@ struct Module : public ANode {
           declaration(declaration),
           topLevelLLVM(topLevelLLVM), topLevelItems(topLevelItems),
           initState(BEFORE),
+          publicSymbolsLoading(0),
+          allSymbolsLoading(0),
           attributesVerified(false),
-          publicSymbolsLoaded(false), publicSymbolsLoading(0),
-          allSymbolsLoaded(false), allSymbolsLoading(0),
+          publicSymbolsLoaded(false),
+          allSymbolsLoaded(false),
           topLevelLLVMGenerated(false),
           externalsGenerated(false),
           isIntrinsicsModule(false),
@@ -2730,8 +2734,11 @@ struct Type : public Object {
     
     Type(TypeKind typeKind)
         : Object(TYPE), typeKind(typeKind),
-          llType(NULL), debugInfo(NULL), defined(false),
-          typeInfoInitialized(false), overloadsInitialized(false) {}
+          llType(NULL), debugInfo(NULL),
+          overloadsInitialized(false),
+          defined(false),
+          typeInfoInitialized(false)
+    {}
 
     llvm::DIType getDebugInfo() { return llvm::DIType(debugInfo); }
 };
@@ -2759,7 +2766,7 @@ struct ComplexType : public Type {
     const llvm::StructLayout *layout;
     int bits:15;
     ComplexType(int bits)
-        : Type(COMPLEX_TYPE), bits(bits), layout(NULL) {}
+        : Type(COMPLEX_TYPE), layout(NULL), bits(bits) {}
 };
 
 struct PointerType : public Type {
@@ -2796,9 +2803,10 @@ struct CCodePointerType : public Type {
                      llvm::ArrayRef<TypePtr> argTypes,
                      bool hasVarArgs,
                      TypePtr returnType)
-        : Type(CCODE_POINTER_TYPE), callingConv(callingConv),
-          argTypes(argTypes), hasVarArgs(hasVarArgs),
-          returnType(returnType), callType(NULL) {}
+        : Type(CCODE_POINTER_TYPE),
+          argTypes(argTypes),
+          returnType(returnType), callType(NULL),
+          callingConv(callingConv), hasVarArgs(hasVarArgs) {}
 };
 
 struct ArrayType : public Type {
@@ -2847,11 +2855,11 @@ struct RecordType : public Type {
     bool fieldsInitialized:1;
 
     RecordType(RecordDeclPtr record)
-        : Type(RECORD_TYPE), record(record), fieldsInitialized(false),
-          layout(NULL) {}
+        : Type(RECORD_TYPE), record(record),
+          layout(NULL), fieldsInitialized(false) {}
     RecordType(RecordDeclPtr record, llvm::ArrayRef<ObjectPtr> params)
         : Type(RECORD_TYPE), record(record), params(params),
-          fieldsInitialized(false), layout(NULL) {}
+          layout(NULL), fieldsInitialized(false) {}
 };
 
 struct VariantType : public Type {

@@ -49,10 +49,14 @@ struct InvokeEntry {
                 llvm::ArrayRef<TypePtr> argsKey)
         : parent(parent), callable(callable),
           argsKey(argsKey),
-          analyzed(false), analyzing(false),
-          callByName(false), runtimeNop(false),
           varArgPosition(0),
-          isInline(IGNORE), llvmFunc(NULL), debugInfo(NULL)
+          isInline(IGNORE),
+          llvmFunc(NULL),
+          debugInfo(NULL),
+          analyzed(false),
+          analyzing(false),
+          callByName(false),
+          runtimeNop(false)
     {
         for (size_t i = 0; i < CC_Count; ++i)
             llvmCWrappers[i] = NULL;

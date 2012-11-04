@@ -67,6 +67,7 @@ DocModule *docParseModule(string fileName, DocState *state, std::string fqn)
 
                 break;
             }
+            default: {} // make compiler happy
         }
     }
     state->modules.insert(std::pair<std::string, DocModule*>(fqn, docMod));

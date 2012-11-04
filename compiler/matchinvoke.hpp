@@ -44,9 +44,10 @@ struct MatchSuccess : public MatchResult {
 
     MatchSuccess(bool callByName, InlineAttribute isInline, CodePtr code, EnvPtr env,
                  ObjectPtr callable, llvm::ArrayRef<TypePtr> argsKey)
-        : MatchResult(MATCH_SUCCESS), callByName(callByName),
-          isInline(isInline), code(code), env(env), callable(callable),
-          argsKey(argsKey), varArgPosition(0) {}
+        : MatchResult(MATCH_SUCCESS),
+          code(code), env(env), callable(callable),
+          argsKey(argsKey), varArgPosition(0),
+          isInline(isInline), callByName(callByName) {}
 };
 typedef Pointer<MatchSuccess> MatchSuccessPtr;
 

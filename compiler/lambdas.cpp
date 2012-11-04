@@ -137,10 +137,12 @@ static void checkForeignExpr(ObjectPtr &obj, EnvPtr env)
         ExprListPtr expr = (ExprList *)obj.ptr();
         switch (expr->exprs[0]->exprKind) {
         case FOREIGN_EXPR :
-        case UNPACK :
+        case UNPACK : {
             MultiPValuePtr mpv = safeAnalyzeMulti(
                 new ExprList(foreignExpr(env, expr->exprs[0])), env, 0);
             obj = mpv.ptr();
+        }
+        default: {} // make compiler happy
         }
     }
 }

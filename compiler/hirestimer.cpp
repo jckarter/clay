@@ -10,7 +10,7 @@
 namespace clay {
 
 HiResTimer::HiResTimer()
-    : elapsedTicks(0), running(0), startTicks(0)
+    : elapsedTicks(0), startTicks(0), running(0)
 {
 }
 
