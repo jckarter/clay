@@ -1511,7 +1511,7 @@ enum ReturnKind {
 
 struct Return : public Statement {
     ExprListPtr values;
-    ReturnKind returnKind:2;
+    ReturnKind returnKind:3;
     bool isExprReturn:1;
     bool isReturnSpecs:1;
     Return(ReturnKind returnKind, ExprListPtr values)
@@ -1965,7 +1965,7 @@ struct Overload : public TopLevelItem {
     PatternPtr callablePattern;
     vector<PatternPtr> argPatterns;
     MultiPatternPtr varArgPattern;
-    InlineAttribute isInline:2;
+    InlineAttribute isInline:3;
     int patternsInitializedState:2; // 0:notinit, -1:initing, +1:inited
     bool callByName:1;
     bool nameIsPattern:1;
@@ -2126,7 +2126,7 @@ struct ExternalProcedure : public TopLevelItem {
     llvm::Function *llvmFunc;
     llvm::TrackingVH<llvm::MDNode> debugInfo;
 
-    CallingConv callingConv:3;
+    CallingConv callingConv:4;
     bool hasVarArgs:1;
     bool attributesVerified:1;
     bool attrDLLImport:1;

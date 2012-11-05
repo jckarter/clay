@@ -39,7 +39,7 @@ struct MatchSuccess : public MatchResult {
     vector<TypePtr> varArgTypes;
 
     unsigned varArgPosition;
-    InlineAttribute isInline:2;
+    InlineAttribute isInline:3;
     bool callByName:1;
 
     MatchSuccess(bool callByName, InlineAttribute isInline, CodePtr code, EnvPtr env,
