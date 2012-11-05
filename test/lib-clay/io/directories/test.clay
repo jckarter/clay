@@ -1,9 +1,15 @@
 import core.platform.*;
-import algorithms.*;
-import vectors.*;
+
+import io.errors.*;
+
 import printer.*;
 
+import algorithms.*;
+import vectors.*;
+
 import io.directories.*;
+import io.temp.*;
+import io.paths.*;
 
 import test.*;
 
@@ -24,4 +30,16 @@ overload testListDirectory() {
 main() = testMain(
     TestSuite("io.directories", array(
         TestCase("listDirectory", testListDirectory),
+        TestCase("makeDirectory, deleteDirectory", => {
+            var tmpdir = tempDirectory();
+            var testTmpdir = joinPath(tmpdir, "io.directories.makeDirectory-deleteDirectory");
+            if (pathIsDirectory?(testTmpdir))
+                deleteDirectory(testTmpdir);
+            expectFalse(pathExists?(testTmpdir));
+            makeDirectory(testTmpdir);
+            expectTrue(pathExists?(testTmpdir));
+            expectTrue(pathIsDirectory?(testTmpdir));
+            expectFalse(pathIsRegularFile?(testTmpdir));
+            deleteDirectory(testTmpdir);
+        }),
     )));

@@ -3,6 +3,8 @@ import strings.(String);
 
 import io.directories.platform.*;
 
+public import io.directories.platform.(makeDirectory, deleteDirectory);
+
 
 /// @section  listDirectory
 

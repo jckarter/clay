@@ -1,9 +1,12 @@
 import io.errors.*;
-import unix.(opendir, readdir_r, closedir, DIR, Struct_dirent, errno);
+import unix.(opendir, readdir_r, closedir, DIR, Struct_dirent, errno, rmdir, mkdir, mode_t);
 import strings.*;
 
 
 import io.directories.common.*;
+
+
+/// @section DirectoryIterator
 
 record DirectoryIterator (
     dir : Pointer[DIR],
@@ -45,6 +48,25 @@ overload nextValue(x:DirectoryIterator) {
         if (name == "." or name == "..")
             continue;
         return Maybe(DirectoryEntry(name));
+    }
+}
+
+
+
+/// @section makeDirectory, deleteDirectory
+
+makeDirectory(path) {
+    alias oct777 = 511;
+    var r = mkdir(cstring(path), mode_t(oct777));
+    if (r < 0) {
+        throw GenericIOError(errno(), "mkdir");
+    }
+}
+
+deleteDirectory(path) {
+    var r = rmdir(cstring(path));
+    if (r < 0) {
+        throw GenericIOError(errno(), "rmdir");
     }
 }
 
