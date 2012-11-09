@@ -89,7 +89,7 @@ overload TwoHash[E]()
 overload Table[B](ln2_size: Int) 
 {
     var size = bitshl(SizeT(1), ln2_size);
-    var ptr = allocateRawMemoryAligned(B, size, 16);
+    var ptr = allocateRawMemory(B, size);
     initializeMemory(ptr, ptr+size);
     return Table[B](ptr, ln2_size);
 }
@@ -133,7 +133,7 @@ overload destroy(t: Table[B])
     if (not null?(t.ptr))
     {
         destroyMemory(t.ptr, t.ptr+size(t));
-        freeRawMemoryAligned(t.ptr);
+        freeRawMemory(t.ptr);
     }
 }
 

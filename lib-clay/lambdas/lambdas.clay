@@ -97,12 +97,12 @@ alias overload FunctionBody[[..I],[..O]](x:T) --> returned:FunctionBody[[..I],[.
     returned.code = CodePointer[[Opaque, ..I], [..O]](codePtr);
     returned.destructor = CodePointer[[Opaque],[]](destructor);
 
-    var ptr = allocateRawMemoryAligned(T, 1, TypeAlignment(T));
+    var ptr = allocateRawMemory(T, 1);
     try {
         ptr^ <-- x;
     }
     catch (e) {
-        freeRawMemoryAligned(ptr);
+        freeRawMemory(ptr);
         throw e;
     }
     returned.obj = Pointer[Opaque](ptr);
@@ -111,6 +111,6 @@ alias overload FunctionBody[[..I],[..O]](x:T) --> returned:FunctionBody[[..I],[.
 [In, Out]
 overload destroy(x:FunctionBody[In, Out]) {
     x.destructor(x.obj^);
-    freeRawMemoryAligned(x.obj);
+    freeRawMemory(x.obj);
 }
 

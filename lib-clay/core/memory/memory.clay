@@ -1,4 +1,3 @@
-import core.memory.platform.(SystemMallocAlignment);
 import core.libc as libc;
 
 
@@ -44,46 +43,10 @@ freeArray(array:CoordinateRange[T]) {
 }
 
 
-/// @section  alignedMalloc, alignedFree 
-
-alignedMalloc(numBytes:SizeT, alignment:SizeT) {
-    var ptr = libc.malloc(numBytes + alignment + TypeSize(UInt8));
-    if (null?(ptr))
-        return null(UInt8);
-    var mask = bitnot(SizeT(alignment) - 1);
-    var roundedDown = bitand(SizeT(ptr), mask);
-    var alignedPtr = Pointer[UInt8](alignment + roundedDown);
-    (alignedPtr - 1)^ = Byte(alignedPtr - ptr);
-    return alignedPtr;
-}
-
-alignedFree(ptr:Pointer[UInt8]) {
-    if (null?(ptr))
-        return;
-    var offset = SizeT((ptr-1)^);
-    var originalPtr = ptr - offset;
-    libc.free(originalPtr);
-}
-
-
-/// @section  allocateRawMemoryAligned, freeRawMemoryAligned 
-
-[T, I, J when Integer?(I) and Integer?(J)]
-allocateRawMemoryAligned(#T, count:I, alignment:J) {
-    var ptr = alignedMalloc(TypeSize(T) * SizeT(count), SizeT(alignment));
-    return Pointer[T](ptr);
-}
-
-[T]
-freeRawMemoryAligned(ptr:Pointer[T]) {
-    alignedFree(Pointer[UInt8](ptr));
-}
-
-
-
 /// @section  allocateRawMemory, freeRawMemory 
 
-define allocateRawMemory;
+[T,I when Integer?(I)]
+define allocateRawMemory(#T, count:I): Pointer[T];
 
 [T,I when Integer?(I)]
 overload allocateRawMemory(#T, count:I) {
@@ -91,29 +54,16 @@ overload allocateRawMemory(#T, count:I) {
     return Pointer[T](ptr);
 }
 
-[T,I when Integer?(I) and TypeAlignment(T) <= SystemMallocAlignment]
+[T,I when Integer?(I)]
 reallocateRawMemory(ptr:Pointer[T], count:I) {
     var newptr = libc.realloc(RawPointer(ptr), TypeSize(T) * SizeT(count));
     return Pointer[T](newptr);
 }
 
-define freeRawMemory;
-
 [T]
-overload freeRawMemory(ptr:Pointer[T]) {
+freeRawMemory(ptr:Pointer[T]) {
     libc.free(RawPointer(ptr));
 }
-
-[T,I when Integer?(I) and (TypeAlignment(T) > SystemMallocAlignment)]
-overload allocateRawMemory(#T, count:I) {
-    return allocateRawMemoryAligned(T, count, TypeAlignment(T));
-}
-
-[T when TypeAlignment(T) > SystemMallocAlignment]
-overload freeRawMemory(ptr:Pointer[T]) {
-    freeRawMemoryAligned(ptr);
-}
-
 
 
 /// @section  initializeMemory 
