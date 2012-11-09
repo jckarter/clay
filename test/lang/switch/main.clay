@@ -1,6 +1,6 @@
 import printer.(println);
-import sequences.*;
-import vectors.*;
+import data.sequences.*;
+import data.vectors.*;
 
 f(n) {
     switch (n)

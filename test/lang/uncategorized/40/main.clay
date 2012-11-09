@@ -1,6 +1,6 @@
 import printer.(println,printTo);
-import strings.*;
-import vectors.*;
+import data.strings.*;
+import data.vectors.*;
 
 main() {
     var a = Vector[Char]();

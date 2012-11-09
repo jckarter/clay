@@ -5,8 +5,8 @@ import uniquepointers.(UniquePointer,newUnique);
 import printer.(printTo);
 import referencetypes.(referenceType);
 import sharedpointers.*;
-import strings.*;
-import vectors.*;
+import data.strings.*;
+import data.vectors.*;
 
 expectMarshalingInvariants(value) {
     var marshaled = marshal(value);

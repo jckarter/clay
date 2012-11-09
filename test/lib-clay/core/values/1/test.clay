@@ -1,6 +1,6 @@
 import printer.(str);
-import strings.(String);
-import vectors.(Vector);
+import data.strings.(String);
+import data.vectors.(Vector);
 import test.*;
 
 even?(x) = x % 2 == 0;

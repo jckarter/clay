@@ -2,7 +2,7 @@
 import parsing.combinators.strings.*;
 import printer.(println,print);
 import numbers.parser.*;
-import strings.*;
+import data.strings.*;
 
 //
 // bracketed -> '(' expr ')'

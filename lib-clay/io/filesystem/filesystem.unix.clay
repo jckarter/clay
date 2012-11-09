@@ -1,7 +1,7 @@
 import unix.*;
 import io.errors.*;
 public import io.filesystem.executable.*;
-import strings.*;
+import data.strings.*;
 import libc;
 
 readLink(x) {

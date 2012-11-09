@@ -1,6 +1,6 @@
 import atomics.(Atomic, casValue, load);
 import printer.(println);
-import sequences.(map);
+import data.sequences.(map);
 import threads.(startThread, joinThread);
 
 var counter = Atomic(0u);

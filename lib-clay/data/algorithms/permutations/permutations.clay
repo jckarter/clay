@@ -1,0 +1,47 @@
+import data.algorithms.(sort);
+
+eachPermutation(xs, f){
+  sort(xs);
+
+  f();
+
+  while(variantIs?(nextPermutation(xs), SizeT)){
+    f();
+  }
+}
+
+// Permute xs in place to the lexicographically next permutation
+// If this is the last one (i.e. the sequence is weakly decreasing)
+// return Nothing. Else return Just(first index altered).
+nextPermutation(xs) : Maybe[SizeT]{
+  if(size(xs) <= 1) return nothing(SizeT);
+
+  var k = size(xs) - 2;
+
+  while(xs[k] >= xs[k + 1]){
+    if(k > 0){
+      dec(k);
+    } else {
+      return nothing(SizeT);
+    }
+  }
+
+  var l = k + 1;
+
+  for(s in range(l, size(xs))){
+    if(xs[k] < xs[s]) l = s;
+  }
+
+  swap(xs[k], xs[l]);
+
+  var i = k + 1;
+  var j = size(xs) - 1;
+
+  while(i < j){
+    swap(xs[i], xs[j]);
+    inc(i);
+    dec(j);
+  }
+
+  return Maybe(k);
+}

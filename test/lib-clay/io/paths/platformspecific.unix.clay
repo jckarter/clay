@@ -2,8 +2,8 @@
 import test.*;
 import io.paths.*;
 import printer.(printTo);
-import strings.*;
-import vectors.*;
+import data.strings.*;
+import data.vectors.*;
 
 expectSplitPath(path, expected) {
     expectEqual(

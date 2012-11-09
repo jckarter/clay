@@ -1,6 +1,6 @@
 import printer.(println);
 import printer.observe.*;
-import strings.*;
+import data.strings.*;
 
 define tellRvalue;
 overload tellRvalue(ref x) = 0;

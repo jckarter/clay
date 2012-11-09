@@ -2,7 +2,7 @@ import test.(passed, failed, printFailure, TEST_FAILURE_INDENT);
 import printer.(println, str, printlnTo);
 import printer.formatter.(repr);
 import random.(RNG?, XORShiftRNG, generate, uniform);
-import vectors.(Vector);
+import data.vectors.(Vector);
 
 // protocol for generating arbitrary values of a type
 

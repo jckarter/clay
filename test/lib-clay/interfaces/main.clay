@@ -1,8 +1,8 @@
 import interfaces.*;
 import test.memory.*;
-import deques.*;
+import data.deques.*;
 import printer.(println,print);
-import vectors.*;
+import data.vectors.*;
 
 record TestInterface = interfaceType(
     [print, [],    []],

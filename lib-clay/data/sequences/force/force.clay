@@ -1,0 +1,36 @@
+import data.vectors.*;
+
+
+/// @section  UnderlyingContainerConstructor 
+
+define UnderlyingContainerConstructor;
+
+[T,n]
+overload UnderlyingContainerConstructor(#Array[T,n]) = Array;
+
+[T]
+overload UnderlyingContainerConstructor(#Vector[T]) = Vector;
+
+
+
+/// @section  ForcedContainerConstructor 
+
+define ForcedContainerConstructor;
+
+overload ForcedContainerConstructor(T) = Vector;
+
+[T when CallDefined?(UnderlyingContainerConstructor, Static[T])]
+overload ForcedContainerConstructor(#T) = UnderlyingContainerConstructor(T);
+
+
+[T when CallDefined?(UnderlyingContainerConstructor, Static[T])
+     and (UnderlyingContainerConstructor(T) == Array)
+     and not StaticSizedSequence?(T)]
+overload ForcedContainerConstructor(#T) = Vector;
+
+
+
+/// @section  force 
+
+[A when Sequence?(A)]
+alias force(a:A) = ForcedContainerConstructor(A)(a);

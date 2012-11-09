@@ -1,5 +1,5 @@
 import printer.(println);
-import strings.*;
+import data.strings.*;
 import lambdas.*;
 
 record Foo[F] ( fn : F );

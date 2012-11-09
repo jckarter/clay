@@ -1,5 +1,5 @@
-import vectors.(Vector);
-import strings.(String);
+import data.vectors.(Vector);
+import data.strings.(String);
 
 import io.directories.platform.*;
 

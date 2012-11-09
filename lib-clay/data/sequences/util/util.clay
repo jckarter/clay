@@ -1,0 +1,46 @@
+
+import data.sequences.handle.*;
+
+
+
+/// @section  wrapSequence 
+
+define wrapSequence;
+
+forceinline overload wrapSequence(rvalue x) = move(x);
+forceinline overload wrapSequence(ref x) = sequenceHandle(x);
+
+[A when LightweightSequence?(A)]
+forceinline overload wrapSequence(ref x:A) = x;
+
+
+
+/// @section  packSequences, unpackSequences 
+
+forceinline packSequences(forward ..args) = [..mapValues(wrapSequence, ..args)];
+
+[..T]
+forceinline unpackSequences(x:Tuple[..T]) = ref ..unpackTupleRef(x);
+
+
+
+/// @section  CapturedElementsType 
+
+alias CapturedElementsType(packedSeq) =
+    Type(captureValues(..dummyElements(..unpackTupleRef(packedSeq))));
+
+
+private forceinline dummyElement(seq) = forward ..getValue(nextValue(iterator(seq)));
+
+private forceinline dummyElements(..seqs) = forward ..mapValues(dummyElement, ..seqs);
+
+
+
+/// @section  multiIterators, multiReverseIterators 
+
+forceinline multiIterators(packedSeq) =
+    [..mapValues(iterator, ..unpackTupleRef(packedSeq))];
+
+forceinline multiReverseIterators(packedSeq) =
+    [..mapValues(reverseIterator, ..unpackTupleRef(packedSeq))];
+

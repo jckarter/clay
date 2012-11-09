@@ -1,6 +1,6 @@
 import io.errors.*;
 import unix.(opendir, readdir_r, closedir, DIR, Struct_dirent, errno, rmdir, mkdir, mode_t);
-import strings.*;
+import data.strings.*;
 
 
 import io.directories.common.*;

@@ -2,9 +2,9 @@
 import numbers.parser.errno.*;
 import printer.(error);
 import printer.formatter.(repr);
-import strings.*;
+import data.strings.*;
 import libc;
-import sequences.*;
+import data.sequences.*;
 
 
 

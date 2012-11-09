@@ -1,7 +1,7 @@
 import paged;
 import printer.(println);
-import strings.*;
-import vectors.*;
+import data.strings.*;
+import data.vectors.*;
 
 main() {
     paged.initializePaging("temppaged.data", 100*1000);

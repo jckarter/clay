@@ -7,9 +7,9 @@ public import cocoa.objc.runtime.(
     SEL as SelectorHandle,
     BOOL, YES, NO, IMP
 );
-import algorithms.(log2);
+import data.algorithms.(log2);
 import printer.(str);
-import sequences.*;
+import data.sequences.*;
 
 
 /// @section  class, selector, and ivar data 

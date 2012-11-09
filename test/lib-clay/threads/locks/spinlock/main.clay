@@ -1,5 +1,5 @@
 import printer.(println);
-import sequences.(map);
+import data.sequences.(map);
 import threads.(startThread, joinThread);
 import threads.locks.(Spinlock, Synchronized, synchronized, synchronizedLoad);
 

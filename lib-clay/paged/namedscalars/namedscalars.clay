@@ -1,6 +1,6 @@
 import paged.misc.*;
 
-import strings;
+import data.strings;
 import io.mapping.*;
 import io.paths.*;
 import io.files.*;
@@ -9,7 +9,7 @@ import io.files.*;
 /// @section  NamedScalar[T] 
 
 record NamedScalar[T] (
-    fileName : strings.String,
+    fileName : data.strings.String,
     file : File,
     mapping : FileMapping,
 );
@@ -26,7 +26,7 @@ overload NamedScalar[T](fileName:S, initial:T) {
     if (pathExists?(fileName)) {
         var f = File(fileName, READ_WRITE);
         var mapping = FileMapping(f, MAP_READ_WRITE);
-        return NamedScalar[T](strings.String(fileName), f, mapping);
+        return NamedScalar[T](data.strings.String(fileName), f, mapping);
     }
     else {
         var f = File(fileName, CREATE);
@@ -35,7 +35,7 @@ overload NamedScalar[T](fileName:S, initial:T) {
         var mapping = FileMapping(f, MAP_READ_WRITE);
         var ptr = Pointer[T](mappingAddress(mapping));
         ptr^ <-- initial;
-        return NamedScalar[T](strings.String(fileName), f, mapping);
+        return NamedScalar[T](data.strings.String(fileName), f, mapping);
     }
 }
 

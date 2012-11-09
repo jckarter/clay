@@ -1,7 +1,7 @@
 import threads.locks.(Mutex, withLock);
 import threads.condvars.(ConditionVariable, waitUntil, notifyOne, notifyAll);
 import threads.(startThread, joinThread);
-import deques.(Deque);
+import data.deques.(Deque);
 import printer.(println);
 import time.(sleep);
 

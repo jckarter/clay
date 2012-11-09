@@ -1,5 +1,5 @@
 import printer.(println,print);
-import vectors.*;
+import data.vectors.*;
 
 record Square (
     side : Double

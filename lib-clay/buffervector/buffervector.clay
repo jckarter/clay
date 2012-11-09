@@ -1,4 +1,4 @@
-import vectors.generic.*;
+import data.vectors.generic.*;
 import io.streams.protocol.(ByteBuffer?);
 import printer.protocol.(printTo);
 

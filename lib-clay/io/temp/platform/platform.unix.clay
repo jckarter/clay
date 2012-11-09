@@ -1,5 +1,5 @@
 import libc;
-import strings.(String);
+import data.strings.(String);
 
 tempDirectory() {
     var r = libc.getenv(cstring("TMPDIR"));

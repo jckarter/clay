@@ -1,10 +1,10 @@
 
 import win32;
 import io.errors.*;
-import algorithms.(findIf,reverseFindIf,reverseInPlace,beginsWith?);
-import strings.*;
-import vectors.*;
-import sequences.*;
+import data.algorithms.(findIf,reverseFindIf,reverseInPlace,beginsWith?);
+import data.strings.*;
+import data.vectors.*;
+import data.sequences.*;
 
 
 /// @section  separators 

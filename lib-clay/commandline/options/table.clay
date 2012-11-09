@@ -1,9 +1,9 @@
 public import commandline.options.spec.*;
 import commandline.options.parser.*;
 import printer.protocol.(printTo);
-import strings.*;
-import vectors.*;
-import sequences.(sliceFrom);
+import data.strings.*;
+import data.vectors.*;
+import data.sequences.(sliceFrom);
 
 record NoSuchOption(name : String);
 

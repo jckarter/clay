@@ -1,4 +1,4 @@
-import vectors.*;
+import data.vectors.*;
 
 main() {
     Vector[Int]() = Vector[Int]();

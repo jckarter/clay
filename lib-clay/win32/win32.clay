@@ -4,7 +4,7 @@ public import win32.constants.*;
 public import win32.errorcodes.*;
 public import win32.platform.*;
 import win32.errornames.(errorNames);
-import sequences.lazy.mapped.*;
+import data.sequences.lazy.mapped.*;
 
 
 /// @section  GetFileSizeEx, SetFilePointerEx 

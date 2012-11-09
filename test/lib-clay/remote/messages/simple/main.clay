@@ -3,7 +3,7 @@ import commandline.dispatch.*;
 import libc;
 import printer.(printlnTo);
 import io.files.*;
-import sequences.*;
+import data.sequences.*;
 
 main() = dispatchMain(client, server);
 

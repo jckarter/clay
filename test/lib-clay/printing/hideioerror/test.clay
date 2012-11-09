@@ -5,8 +5,8 @@
 
 import printer.*;
 import io.errors.*;
-import algorithms.*;
-import strings.*;
+import data.algorithms.*;
+import data.strings.*;
 
 import test.*;
 

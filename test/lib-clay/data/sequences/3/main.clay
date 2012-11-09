@@ -1,0 +1,27 @@
+import printer.(println);
+import data.sequences.*;
+import data.vectors.*;
+
+main() {
+    var a = Vector[Int](1, 4, 9, 16, 25, 36);
+    var b = Vector[Int](6, 5, 4, 3, 2, 1);
+    println("zipped");
+    for (x, y in zipped(a, b))
+        println(x, ", ", y);
+    println("filtered by greater?");
+    for (x, y in filtered(greater?, a, b))
+        println(x, ", ", y);
+    println("mapped min");
+    for (x in mapped(min, a, b))
+        println(x);
+    println("mapped max");
+    for (x in mapped(max, a, b))
+        println(x);
+    println("mapped multiply");
+    for (x in mapped(multiply, a, b))
+        println(x);
+    println("mapped swap");
+    var swap = (a, b) => { return b, a; };
+    for (x, y in mapped(swap, a, b))
+        println(x, ", ", y);
+}

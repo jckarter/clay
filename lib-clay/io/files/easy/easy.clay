@@ -4,8 +4,8 @@ import io.files.api.*;
 import io.streams.*;
 import io.streams.buffered.*;
 import sharedpointers.*;
-import strings.*;
-import algorithms.(in?);
+import data.strings.*;
+import data.algorithms.(in?);
 
 
 /// @section  File 

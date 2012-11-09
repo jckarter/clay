@@ -1,4 +1,4 @@
-import vectors.*;
+import data.vectors.*;
 
 
 /// @section  readBytes, writeBytes, flush - byte stream operations 

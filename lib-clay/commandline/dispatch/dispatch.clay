@@ -1,10 +1,10 @@
 import printer.(printlnTo);
 import io.files.*;
 import numbers.parser.*;
-import strings.*;
+import data.strings.*;
 import lambdas.*;
-import vectors.*;
-import sequences.*;
+import data.vectors.*;
+import data.sequences.*;
 
 private dispatchCommand() {
     var args = commandLine(); 

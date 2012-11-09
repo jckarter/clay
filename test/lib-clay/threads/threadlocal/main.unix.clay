@@ -1,7 +1,7 @@
 import threads.locks.(withLock, Mutex);
 import threads.threadlocal.(ThreadLocal);
 import threads.(startThread, joinThread);
-import sequences.(map);
+import data.sequences.(map);
 import printer.(println);
 
 var counter = ThreadLocal[UInt]();

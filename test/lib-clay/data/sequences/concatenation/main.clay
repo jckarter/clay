@@ -1,0 +1,26 @@
+import printer.(println);
+import data.strings.*;
+import data.sequences.*;
+import data.sequences.operators.*;
+import data.vectors.(Vector);
+
+main(){
+
+    var h = String("hello");
+    var w = String("world");
+
+    println(h ++ " " ++ w ++ "!");
+
+    var a = String("a");
+    a ++: "b";
+    updateAssign(cat,a,"c","d","e");
+
+    println(a);
+
+    var b = String("abc");
+    b ++: "def";
+    b ++: "ghi" ++ "jkl";
+    println(b);
+
+    println(cat(Vector[Int](1,2,3), Vector[Int](4), Vector[Int](5,6)));
+}

@@ -1,8 +1,8 @@
 import printer.(println);
-import vectors.generic as vg;
+import data.vectors.generic as vg;
 import hash;
-import hashmaps.*;
-import strings.*;
+import data.hashmaps.*;
+import data.strings.*;
 
 main() {
     disp(add);

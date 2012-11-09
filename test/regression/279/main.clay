@@ -1,2 +1,2 @@
-import strings.*;
+import data.strings.*;
 main(argc: Int, argv: Array[String]) {}

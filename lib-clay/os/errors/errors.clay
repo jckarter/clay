@@ -1,6 +1,6 @@
 import os.errors.platform as platform;
 import printer.protocol.(printTo,printReprTo);
-import strings.*;
+import data.strings.*;
 
 record GenericOSError(code:Int, where:StringLiteralRef);
 

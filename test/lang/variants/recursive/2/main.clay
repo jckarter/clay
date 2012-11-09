@@ -1,7 +1,7 @@
 // #228
 // thanks to freenode:maw
 import printer.(println);
-import vectors.*;
+import data.vectors.*;
 
 variant Node (Tree, Int);
 record Tree (nodes : Vector[Node]);

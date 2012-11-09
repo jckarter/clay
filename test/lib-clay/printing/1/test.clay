@@ -1,6 +1,6 @@
 import printer.*;
-import strings.*;
-import vectors.*;
+import data.strings.*;
+import data.vectors.*;
 
 import test.*;
 

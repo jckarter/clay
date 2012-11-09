@@ -2,8 +2,8 @@
 public import io.streams.protocol.*;
 public import io.errors.*;
 import buffervector.*;
-import strings.*;
-import vectors.*;
+import data.strings.*;
+import data.vectors.*;
 
 public import io.streams.bytevector.*;
 

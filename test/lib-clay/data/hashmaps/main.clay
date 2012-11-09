@@ -1,0 +1,53 @@
+import data.hashmaps.(HashMap);
+import data.algorithms.(sort);
+import printer.(println,printTo);
+import data.strings.*;
+import data.vectors.*;
+
+even?(x) = (x % 2 == 0);
+
+printSortedContents(h) {
+    var contents = Vector[String]();
+    for (k,v in items(h)) {
+        var str = String();
+        printTo(str, k, ", ", v);
+        push(contents, move(str));
+    }
+    sort(contents);
+    for (str in contents)
+        println(str);
+}
+
+main() {
+    var h = HashMap[Int,Int]();
+    
+    for (i in range(10))
+        h[i*i] = i;
+
+    for (x in range(100)) {
+        var flag = contains?(h, x);
+        if (even?(x)) {
+            var result = remove(h, x);
+            assert(flag == result);
+        }
+    }
+
+    printSortedContents(h);
+
+    var hh = HashMap[Int,Int]();
+    hh = h;
+    
+    println();
+    printSortedContents(hh);
+
+    hh = hh;
+
+    println();
+    printSortedContents(hh);
+
+    clear(hh);
+
+    println();
+    println(size(hh));
+    printSortedContents(hh);
+}

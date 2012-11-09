@@ -1,9 +1,9 @@
 
-import vectors.generic
+import data.vectors.generic
  as vg;
-import hashmaps.*;
+import data.hashmaps.*;
 import printer.(println);
-import strings.*;
+import data.strings.*;
 
 main() {
     disp(add);

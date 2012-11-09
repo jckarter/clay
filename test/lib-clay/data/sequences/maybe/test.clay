@@ -1,0 +1,17 @@
+import data.sequences.*;
+
+import test.*;
+
+
+main() = testMain(
+    TestSuite("sequences for Maybe", array(
+        TestCase("map", -> {
+            expectEqual(Maybe(4),     map(x -> x + 1, Maybe(3)));
+            expectEqual(nothing(Int), map(x -> x + 1, nothing(Int)));
+        }),
+        TestCase("filter", -> {
+            expectEqual(Maybe(4),     filter(x -> x % 2 == 0, Maybe(4)));
+            expectEqual(nothing(Int), filter(x -> x % 2 == 0, Maybe(3)));
+            expectEqual(nothing(Int), filter(x -> x % 2 == 0, nothing(Int)));
+        }),
+    )));

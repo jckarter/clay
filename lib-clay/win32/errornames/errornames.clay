@@ -1,5 +1,5 @@
-import vectors.*;
-import sequences.lazy.mapped.*;
+import data.vectors.*;
+import data.sequences.lazy.mapped.*;
 
 errorNames() {
     // FIXME: make errorNamesVector thread local or use a lock to initialize

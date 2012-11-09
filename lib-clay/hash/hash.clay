@@ -1,11 +1,11 @@
 
-import vectors.generic.*;
+import data.vectors.generic.*;
 import numbers.floats.(floatBits);
 import referencetypes.(ReferenceType?);
 import sharedpointers.*;
-import strings.*;
+import data.strings.*;
 import complex.*;
-import vectors.*;
+import data.vectors.*;
 
 
 /// @section  hashing 

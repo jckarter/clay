@@ -1,6 +1,6 @@
 import printer.(println);
 import cocoa.objc.runtime.*;
-import strings.*;
+import data.strings.*;
 
 NSString(string) {
     var class = objc_getClass(cstring("NSString"));

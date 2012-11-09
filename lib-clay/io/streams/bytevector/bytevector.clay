@@ -1,4 +1,4 @@
-import vectors.*;
+import data.vectors.*;
 
 public import io.streams.protocol.*;
 

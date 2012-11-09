@@ -10,8 +10,8 @@ import io.files.raw.(stderrRawFile,stdoutRawFile);
 import io.streams.(write,flush);
 
 import libc;
-import vectors.(moveVectorBuffer);
-import strings.(String);
+import data.vectors.(moveVectorBuffer);
+import data.strings.(String);
 
 import printer.exceptions as unused;
 

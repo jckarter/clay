@@ -1,7 +1,7 @@
 import printer.protocol.(printTo);
-import strings.*;
-import vectors.*;
-import sequences.*;
+import data.strings.*;
+import data.vectors.*;
+import data.sequences.*;
 
 record OptionSpec(
   names         : Vector[String],

@@ -1,0 +1,402 @@
+import data.algorithms.heaps as heaps;
+import data.algorithms.introsort as introsort;
+import comparators.(comparing,natural,Comparator?);
+import data.hashmaps.(HashMap);
+import data.vectors.*;
+import data.sequences.lazy.*;
+
+alias log2 = introsort.log2;
+
+
+/// @section  reduce 
+
+private getNext(iter) {
+    var value = nextValue(iter);
+    assert(hasValue?(value));
+    return forward ..getValue(move(value));
+}
+
+define reduce;
+
+[F, A when Sequence?(A)]
+overload reduce(f:F, a:A) {
+    var iter = iterator(a);
+    var result = getNext(iter);
+    for (x in iter)
+        result = f(result, x);
+    return result;
+}
+
+[F, A, X when Sequence?(A) and CallDefined?(call, F, X, SequenceElementType(A))]
+overload reduce(f:F, initial:X, a:A) {
+    var result = initial;
+    for (x in a)
+        result = f(result, x);
+    return result;
+}
+
+
+
+/// @section  reduceBy 
+[KeyF, F, A, X when Sequence?(A) and CallDefined?(call, F, X, SequenceElementType(A))]
+reduceBy(keyF: KeyF, f: F, initial: X, a:A) {
+    alias KeyType = Type(keyF(typeToLValue(SequenceElementType(A))));
+    alias ValueType = X;
+    var results = HashMap[KeyType, ValueType]();
+
+    for (x in a) {
+        var key = keyF(x);
+        var resultPtr = lookup(results, key);
+        if (null?(resultPtr))
+            put(results, key, f(initial, x));
+        else
+            resultPtr^ = f(resultPtr^, x);
+    }
+    return results;
+}
+
+
+
+/// @section  sum, product, count 
+
+[A when Sequence?(A)]
+sum(a:A) {
+    alias T = SequenceElementType(A);
+    return reduce(add, T(0), a);
+}
+
+[A when Sequence?(A)]
+product(a:A) {
+    alias T = SequenceElementType(A);
+    return reduce(multiply, T(1), a);
+}
+
+[A when Sequence?(A)]
+count(pred, a:A) {
+    return reduce((n,elt) => if (pred(elt)) n+1 else n, SizeT(0), a);
+}
+
+
+
+/// @section  select 
+
+private define select;
+
+[A when Sequence?(A)]
+overload select(a:A, f) {
+    var iter = iterator(a);
+    var result = getNext(iter);
+    for (x in iter)
+        if (f(x, result))
+            result = x;
+    return result;
+}
+
+[A when LValueSequence?(A)]
+overload select(a:A, f) {
+    var iter = iterator(a);
+    var result = @getNext(iter);
+    for (x in iter)
+        if (f(x, result^))
+            result = @x;
+    return ref result^;
+}
+
+
+
+/// @section  selectMin, selectMax for sequences 
+
+[A when Sequence?(A)]
+selectMin(a:A) = forward select(a, lesser?);
+
+[A when Sequence?(A)]
+selectMax(a:A) = forward select(a, greater?);
+
+
+
+/// @section  findIf, reverseFindIf 
+
+define findIf;
+
+overload findIf(seq, pred) {
+    return findIf(begin(seq), end(seq), pred);
+}
+
+overload findIf(_first, _last, pred) {
+    var cur, last = _first, _last;
+    while ((cur != last) and not pred(cur^))
+        inc(cur);
+    return cur;
+}
+
+define reverseFindIf;
+
+overload reverseFindIf(seq, pred) {
+    return reverseFindIf(begin(seq), end(seq), pred);
+}
+
+overload reverseFindIf(_first, _last, pred) {
+    var first, cur = _first, _last;
+    while (cur != first) {
+        var prev = cur;
+        dec(prev);
+        if (pred(prev^))
+            break;
+        cur = prev;
+    }
+    return cur;
+}
+
+any?(seq, pred) = findIf(seq, pred) != end(seq);
+all?(seq, pred) = findIf(seq, x -> not pred(x)) != end(seq);
+
+
+/// @section  find 
+
+define find;
+
+[A, T when Sequence?(A) and CallDefined?(equals?, SequenceElementType(A), T)]
+overload find(a:A, x:T) {
+    return find(begin(a), end(a), x);
+}
+
+[C, T when Coordinate?(C) and CallDefined?(equals?, CoordinateTargetType(C), T)]
+overload find(begin:C, end:C, x:T) {
+    var i = begin;
+    while (i != end) {
+        if (i^ == x)
+            break;
+        inc(i);
+    }
+    return i;
+}
+
+
+[A, B when SizedSequence?(A) and SizedSequence?(B)
+        and (SequenceElementType(A) == SequenceElementType(B))]
+overload find(a:A, b:B) {
+    return find(begin(a), end(a), b);
+}
+
+[C, B when Coordinate?(C) and SizedSequence?(B)
+        and (CoordinateTargetType(C) == SequenceElementType(B))]
+overload find(begin_:C, end_:C, b:B) {
+    // FIXME: use something like boyer-moore.
+    var begin, end = begin_, end_;
+    var bsize = size(b);
+    for (c in range(begin, end)) {
+        var n = end - c;
+        if (n < bsize)
+            break;
+        var range = coordinateRange(c, c+bsize);
+        if (range == b)
+            return c;
+    }
+    return end;
+}
+
+
+
+/// @section  reverseFind 
+
+define reverseFind;
+
+[A, T when Sequence?(A) and CallDefined?(equals?, SequenceElementType(A), T)]
+overload reverseFind(a:A, x:T) {
+    return reverseFind(begin(a), end(a), x);
+}
+
+[C, T when Coordinate?(C) and CallDefined?(equals?, CoordinateTargetType(C), T)]
+overload reverseFind(begin:C, end:C, x:T) {
+    var i = end;
+    while (i != begin) {
+        var j = i;
+        dec(j);
+        if (j^ == x)
+            break;
+        i = j;
+    }
+    return i;
+}
+
+
+
+/// @section  in? 
+in?(seq, elem) = find(seq, elem) != end(seq);
+
+
+
+/// @section  beginsWith?, endsWith? 
+
+define beginsWith?;
+define endsWith?;
+
+[A, B when Sequence?(A) and Sequence?(B) and (SequenceElementType(A) == SequenceElementType(B))]
+overload beginsWith?(seq:A, prefix:B) =
+    (size(seq) >= size(prefix)) and (slicedUpto(seq, size(prefix)) == prefix);
+
+[A, T when Sequence?(A) and (T == SequenceElementType(A))]
+overload beginsWith?(seq:A, x:T) =
+    (size(seq) > 0) and (seq[0] == x);
+
+
+[A, B when Sequence?(A) and Sequence?(B) and (SequenceElementType(A) == SequenceElementType(B))]
+overload endsWith?(seq:A, suffix:B) =
+    (size(seq) >= size(suffix))
+    and (slicedFrom(seq, size(seq)-size(suffix)) == suffix);
+
+[A, T when Sequence?(A) and (T == SequenceElementType(A))]
+overload endsWith?(seq:A, x:T) =
+    (size(seq) > 0) and (seq[size(seq)-1] == x);
+
+
+
+/// @section  reverseInPlace 
+
+[A when RandomAccessSequence?(A) and LValueSequence?(A)]
+reverseInPlace(a:A) {
+    var n = size(a);
+    for (i in range(n \ 2))
+        swap(a[i], a[n-i-1]);
+}
+
+
+
+/// @section  split 
+
+[A when CoordinateSequence?(A)]
+split(a:A, sep) {
+    alias T = SequenceElementType(A);
+    var result = Vector[Vector[T]]();
+    var cur, last = begin(a), end(a);
+    while (true) {
+        var pos = find(cur, last, sep);
+        push(result, Vector(coordinateRange(cur, pos)));
+        if (pos == last)
+            break;
+        cur = advancePast(pos, sep);
+    }
+    return move(result);
+}
+
+private define advancePast;
+
+[C, S when Coordinate?(C) and Sequence?(S)
+        and (CoordinateTargetType(C) == SequenceElementType(S))]
+overload advancePast(pos:C, x:S) {
+    return pos + size(x);
+}
+
+[C, T when Coordinate?(C) and (CoordinateTargetType(C) == T)]
+overload advancePast(pos:C, x:T) {
+    return pos + 1;
+}
+
+
+
+/// @section  join 
+
+define concat(seq);
+
+[A when Sequence?(A) and Sequence?(SequenceElementType(A))]
+overload concat(a:A) {
+    alias T = SequenceElementType(SequenceElementType(A));
+    var result = Vector[T]();
+    for (x in a) {
+        pushAll(result, x);
+    }
+    return move(result);
+}
+
+define join(sep, seq);
+
+[S, A when Sequence?(A) and Sequence?(SequenceElementType(A))
+    and Sequence?(S) and (SequenceElementType(S) == SequenceElementType(SequenceElementType(A)))]
+overload join(sep:S, a:A) {
+    alias T = SequenceElementType(SequenceElementType(A));
+    var result = Vector[T]();
+    var first = true;
+    for (x in a) {
+        if (not first)
+            pushAll(result, sep);
+        else
+            first = false;
+        pushAll(result, x);
+    }
+    return move(result);
+}
+
+[S, A when Sequence?(A) and Sequence?(SequenceElementType(A))
+        and S == SequenceElementType(SequenceElementType(A))]
+overload join(sep:S, a:A) = ..join(array(sep), a);
+
+
+
+/// @section  binarySearch, binarySearchLowerBound, binarySearchUpperBound 
+
+define binarySearch;
+define binarySearchLowerBound;
+define binarySearchUpperBound;
+
+[A when Sequence?(A)]
+overload binarySearch(a:A, x) {
+    return ..binarySearch(begin(a), end(a), x);
+}
+
+[A when Sequence?(A)]
+overload binarySearchLowerBound(a:A, x) {
+    return binarySearchLowerBound(begin(a), end(a), x);
+}
+
+[A when Sequence?(A)]
+overload binarySearchUpperBound(a:A, x) {
+    return binarySearchUpperBound(begin(a), end(a), x);
+}
+
+overload binarySearch(begin, end, x) {
+    var i = binarySearchLowerBound(begin, end, x);
+    return i, binarySearchUpperBound(i, end, x);
+}
+
+overload binarySearchLowerBound(begin_, end_, x) {
+    var begin, end = begin_, end_;
+    while (begin < end) {
+        var mid = begin + (end - begin) \ 2;
+        if (mid^ < x)
+            begin = mid + 1;
+        else
+            end = mid;
+    }
+    return begin;
+}
+
+overload binarySearchUpperBound(begin_, end_, x) {
+    var begin, end = begin_, end_;
+    while (begin < end) {
+        var mid = begin + (end - begin) \ 2;
+        if (mid^ <= x)
+            begin = mid + 1;
+        else
+            end = mid;
+    }
+    return end;
+}
+
+
+
+/// @section  sort - use quicksort with median-of-3 partitioning 
+
+[C when Comparator?(C)]
+sortBy(a, comparator : C) {
+    introsort.introSort(a, (x, y) -> lesser?(comparator, x, y));
+}
+
+define sort;
+
+overload sort(a){
+  sortBy(a, natural());
+}
+
+overload sort(xs, f){
+  sortBy(xs, comparing(f));
+}

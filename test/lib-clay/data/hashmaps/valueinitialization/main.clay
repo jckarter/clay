@@ -1,0 +1,34 @@
+import data.hashmaps.(HashMap);
+import printer.(println);
+import data.vectors.*;
+
+main() {
+    var map = HashMap[Int,Int]();
+
+    println(map[0]);
+    put(map, 0, -1);
+    remove(map, 0);
+    println(map[0]);
+
+    map[1] +: 1234;
+    println(map[1]);
+    remove(map, 1);
+
+    map[1] +: 1234;
+    println(map[1]);
+
+    var vmap = HashMap[Int,Vector[Int]]();
+
+    println(vmap[0]);
+    put(vmap, 0, Vector[Int](1,2,3));
+    remove(vmap, 0);
+    println(vmap[0]);
+
+    push(vmap[1], 1234);
+    println(vmap[1]);
+    remove(vmap, 1);
+
+    push(vmap[1], 1234);
+    println(vmap[1]);
+}
+

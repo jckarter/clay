@@ -4,9 +4,9 @@ import cocoa.nib.*;
 import cocoa.foundation.*;
 import hash.(hash);
 import printer.(printTo, str);
-import strings.(String);
-import sequences.*;
-import vectors.*;
+import data.strings.(String);
+import data.sequences.*;
+import data.vectors.*;
 
 public import cocoa.util.platform.*;
 

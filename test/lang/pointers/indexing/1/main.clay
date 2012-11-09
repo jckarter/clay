@@ -1,5 +1,5 @@
 import printer.(println);
-import vectors.*;
+import data.vectors.*;
 main() {
     var v = Vector(range(256));
     var p = begin(v);
