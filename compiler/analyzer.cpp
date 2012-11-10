@@ -2535,10 +2535,8 @@ static StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, Analysi
 
     case BLOCK : {
         Block *block = (Block *)stmt.ptr();
-        if (!block->desugared)
-            block->desugared = desugarBlock(block);
-        for (unsigned i = 0; i < block->desugared->statements.size(); ++i) {
-            StatementAnalysis sa = analyzeBlockStatement(block->desugared->statements[i], env, ctx);
+        for (unsigned i = 0; i < block->statements.size(); ++i) {
+            StatementAnalysis sa = analyzeBlockStatement(block->statements[i], env, ctx);
             if (sa != SA_FALLTHROUGH)
                 return sa;
         }

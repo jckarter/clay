@@ -213,7 +213,7 @@ static void printExpr(llvm::raw_ostream &out, const Expr *x) {
     }
     case CALL : {
         const Call *y = (const Call *)x;
-        out << "Call(" << y->expr << ", " << y->parenArgs << ", " << y->lambdaArgs << ")";
+        out << "Call(" << y->expr << ", " << y->parenArgs << ")";
         break;
     }
     case FIELD_REF : {
@@ -323,11 +323,6 @@ static void printExpr(llvm::raw_ostream &out, const Expr *x) {
 
 static void printStatement(llvm::raw_ostream &out, const Statement *x) {
     switch (x->stmtKind) {
-    case WITH : {
-        const WithStatement *y = (const WithStatement *)x;
-        out << "WithStatement(" << y->lhs << ", " << y->rhs << ")";
-        break;
-    }
     case BLOCK : {
         const Block *y = (const Block *)x;
         out << "Block(" << bigVec(y->statements) << ")";

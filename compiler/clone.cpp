@@ -122,7 +122,7 @@ ExprPtr clone(ExprPtr x)
 
     case CALL : {
         Call *y = (Call *)x.ptr();
-        out = new Call(clone(y->expr), clone(y->parenArgs), clone(y->lambdaArgs));
+        out = new Call(clone(y->expr), clone(y->parenArgs));
         break;
     }
 
@@ -428,12 +428,6 @@ StatementPtr clone(StatementPtr x)
     case EVAL_STATEMENT : {
         EvalStatement *eval = (EvalStatement *)x.ptr();
         out = new EvalStatement(eval->args);
-        break;
-    }
-
-    case WITH : {
-        WithStatement *with= (WithStatement*)x.ptr();
-        out = new WithStatement(with->lhs, with->rhs, with->withLocation);
         break;
     }
 
