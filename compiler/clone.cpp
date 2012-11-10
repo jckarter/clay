@@ -431,12 +431,6 @@ StatementPtr clone(StatementPtr x)
         break;
     }
 
-    case WITH : {
-        WithStatement *with= (WithStatement*)x.ptr();
-        out = new WithStatement(with->lhs, with->rhs, with->withLocation);
-        break;
-    }
-
     case STATIC_ASSERT_STATEMENT : {
         StaticAssertStatement *staticAssert = (StaticAssertStatement *)x.ptr();
         out = new StaticAssertStatement(clone(staticAssert->cond), clone(staticAssert->message));

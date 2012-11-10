@@ -512,7 +512,6 @@ struct Finally;
 struct OnError;
 struct Unreachable;
 struct EvalStatement;
-struct WithStatement;
 struct StaticAssertStatement;
 
 struct FormalArg;
@@ -666,7 +665,6 @@ typedef Pointer<Finally> FinallyPtr;
 typedef Pointer<OnError> OnErrorPtr;
 typedef Pointer<Unreachable> UnreachablePtr;
 typedef Pointer<EvalStatement> EvalStatementPtr;
-typedef Pointer<WithStatement> WithStatementPtr;
 typedef Pointer<StaticAssertStatement> StaticAssertStatementPtr;
 
 typedef Pointer<FormalArg> FormalArgPtr;
@@ -1412,7 +1410,6 @@ enum StatementKind {
     ONERROR,
     UNREACHABLE,
     EVAL_STATEMENT,
-    WITH,
     STATIC_ASSERT_STATEMENT
 };
 
@@ -1423,7 +1420,6 @@ struct Statement : public ANode {
 };
 
 struct Block : public Statement {
-    BlockPtr desugared;
     vector<StatementPtr> statements;
     Block()
         : Statement(BLOCK) {}
@@ -1703,16 +1699,6 @@ struct EvalStatement : public Statement {
     EvalStatement(ExprListPtr args)
         : Statement(EVAL_STATEMENT), args(args), evaled(false) {}
 };
-
-
-struct WithStatement : public Statement {
-    vector<IdentifierPtr> lhs;
-    ExprPtr rhs;
-    Location withLocation;
-    WithStatement( vector<IdentifierPtr> i, ExprPtr r, Location const &l)
-        : Statement(WITH), lhs(i), rhs(r), withLocation(l) {}
-};
-
 
 struct StaticAssertStatement : public Statement {
     ExprPtr cond;

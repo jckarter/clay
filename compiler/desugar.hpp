@@ -13,7 +13,6 @@ ExprListPtr desugarVariadicAssignmentRight(VariadicAssignment *x);
 StatementPtr desugarForStatement(ForPtr x);
 StatementPtr desugarCatchBlocks(llvm::ArrayRef<CatchPtr> catchBlocks);
 StatementPtr desugarSwitchStatement(SwitchPtr x);
-BlockPtr desugarBlock(BlockPtr x);
 
 ExprListPtr desugarEvalExpr(EvalExprPtr eval, EnvPtr env);
 llvm::ArrayRef<StatementPtr> desugarEvalStatement(EvalStatementPtr eval, EnvPtr env);

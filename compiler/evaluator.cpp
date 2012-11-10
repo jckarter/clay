@@ -2390,9 +2390,6 @@ whileContinue:
         error("unreachable statement");
         return NULL;
     }
-    case WITH :
-        error("unexpected with statement");
-        return NULL;
 
     case STATIC_ASSERT_STATEMENT : {
         StaticAssertStatement *x = (StaticAssertStatement *)stmt.ptr();
