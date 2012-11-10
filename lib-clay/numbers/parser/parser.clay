@@ -3,6 +3,7 @@ import numbers.parser.errno.*;
 import printer.(error);
 import printer.formatter.(repr);
 import data.strings.*;
+import data.strings.tempcstrings.*;
 import libc;
 import data.sequences.*;
 
@@ -35,15 +36,11 @@ overload ConvFuncForType(#T) = ConvFuncForType(ImagBaseType(T));
 define parse(#T, s:S): T;
 
 
-[T when Integer?(T) or Float?(T) or Imaginary?(T)]
-overload parse(T, s) =
-    parse(T, String(s));
-
-
-[S, IntType when CCompatibleString?(S) and Integer?(IntType)]
+[S, IntType when String?(S) and Integer?(IntType)]
 overload parse(#IntType, s:S) {
     alias convFunc = ConvFuncForType(IntType);
-    var p = cstring(s);
+    var temp = tempCString(s);
+    var p = temp.ptr;
     var end = null(CChar);
     var value = convFunc(p, @end, 0);
     var typeName = StaticName(IntType);
@@ -54,10 +51,11 @@ overload parse(#IntType, s:S) {
     return IntType(value);
 }
 
-[S, FloatType when CCompatibleString?(S) and Float?(FloatType)]
+[S, FloatType when String?(S) and Float?(FloatType)]
 overload parse(#FloatType, s:S) {
     alias convFunc = ConvFuncForType(FloatType);
-    var p = cstring(s);
+    var temp = tempCString(s);
+    var p = temp.ptr;
     var end = null(CChar);
     var value = convFunc(p, @end);
     var typeName = StaticName(FloatType);
@@ -68,10 +66,11 @@ overload parse(#FloatType, s:S) {
     return FloatType(value);
 }
 
-[S, ImagType when CCompatibleString?(S) and Imaginary?(ImagType)]
+[S, ImagType when String?(S) and Imaginary?(ImagType)]
 overload parse(#ImagType, s:S) {
     alias convFunc = ConvFuncForType(ImagType);
-    var p = cstring(s);
+    var temp = tempCString(s);
+    var p = temp.ptr;
     var end = null(CChar);
     var value = convFunc(p, @end);
     var typeName = StaticName(ImagType);
