@@ -1,0 +1,46 @@
+import data.strings.*;
+
+
+[Owned when Type(Owned) == Bool]
+record CStringHolder[Owned] (
+    cstring: CStringRef,
+);
+
+[Owned]
+overload fieldRef(s: CStringHolder[Owned], #"ptr") = s.cstring.ptr;
+
+[Owned]
+overload PODType?(#CStringHolder[Owned]) = false;
+[Owned]
+overload RegularRecord?(#CStringHolder[Owned]) = false;
+[Owned]
+overload BitwiseMovedType?(#CStringHolder[Owned]) = true;
+
+[Owned]
+overload resetUnsafe(s: CStringHolder[Owned]) {
+    s.cstring = CStringRef();
+}
+
+[Owned]
+overload destroy(holder: CStringHolder[Owned]) {
+    if (#Owned) {
+        libc.free(holder.cstring.ptr);
+    }
+}
+
+staticassert(     Movable?(CStringHolder[ #true]));
+staticassert(not Copyable?(CStringHolder[ #true]));
+staticassert(     Movable?(CStringHolder[#false]));
+staticassert(not Copyable?(CStringHolder[#false]));
+
+[S when String?(S)]
+tempCString(s: S) {
+    if (#CCompatibleString?(S)) {
+        return CStringHolder[#false](CStringRef(s));
+    } else {
+        var string = String(s);
+        cstring(string); // add trailing \0
+        return CStringHolder[ #true](CStringRef(moveVectorBuffer(string)));
+    }
+}
+
