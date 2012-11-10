@@ -348,10 +348,8 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
 
     case BLOCK : {
         Block *y = (Block *)x.ptr();
-        if (!y->desugared)
-            y->desugared = desugarBlock(y);
-        for (unsigned i = 0; i < y->desugared->statements.size(); ++i) {
-            StatementPtr z = y->desugared->statements[i];
+        for (unsigned i = 0; i < y->statements.size(); ++i) {
+            StatementPtr z = y->statements[i];
             if (z->stmtKind == BINDING)
                 env = convertFreeVarsFromBinding((Binding *)z.ptr(), env, ctx);
             else
@@ -643,7 +641,6 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
         Call *y = (Call *)x.ptr();
         convertFreeVars(y->expr, env, ctx);
         convertFreeVars(y->parenArgs, env, ctx);
-        convertFreeVars(y->lambdaArgs, env, ctx);
         break;
     }
 

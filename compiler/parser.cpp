@@ -402,7 +402,7 @@ static bool stringLiteralSuffix(ExprPtr &x) {
     ExprPtr str;
     if (!stringLiteral(str)) return false;
     ExprListPtr strArgs = new ExprList(str);
-    x = new Call(NULL, strArgs, new ExprList());
+    x = new Call(NULL, strArgs);
     x->location = location;
     return true;
 }
@@ -418,42 +418,13 @@ static bool indexingSuffix(ExprPtr &x) {
     return true;
 }
 
-static bool lambda(ExprPtr &x);
-
-static bool optCallLambdaList(ExprListPtr &args) {
-    args = new ExprList();
-
-    int p = save();
-    if (!symbol(":")) {
-        restore(p);
-        return true;
-    }
-
-    while (true) {
-        ExprPtr lambdaArg;
-        Location startLocation = currentLocation();
-        if (!lambda(lambdaArg)) return false;
-        lambdaArg->startLocation = startLocation;
-        lambdaArg->endLocation = currentLocation();
-
-        args->add(lambdaArg);
-        p = save();
-        if (!symbol("::")) {
-            restore(p);
-            return true;
-        }
-    }
-}
-
 static bool callSuffix(ExprPtr &x) {
     Location location = currentLocation();
     if (!symbol("(")) return false;
     ExprListPtr args;
     if (!optExpressionList(args)) return false;
     if (!symbol(")")) return false;
-    ExprListPtr lambdaArgs;
-    if (!optCallLambdaList(lambdaArgs)) return false;
-    x = new Call(NULL, args, lambdaArgs);
+    x = new Call(NULL, args);
     x->location = location;
     return true;
 }
@@ -1104,35 +1075,9 @@ static bool localBinding(StatementPtr &x) {
     return true;
 }
 
-static bool blockItems(vector<StatementPtr> &stmts, bool);
-static bool withStatement(StatementPtr &x) {
-    Location startLocation = currentLocation();
-
-    if (!keyword("with")) return false;
-    vector<IdentifierPtr> lhs;
-
-    int p = save();
-    if (!identifierList(lhs) || !opsymbol("=")) {
-        lhs.clear();
-        restore(p);
-    }
-    Location location = currentLocation();
-
-    ExprPtr rhs = NULL;
-    if (!suffixExpr(rhs)) return false;
-    if (!symbol(";")) return false;
-
-    WithStatementPtr w = new WithStatement(lhs, rhs, location);
-
-    x = w.ptr();
-    x->location = location;
-    return true;
-}
-
 static bool blockItem(StatementPtr &x) {
     int p = save();
     if (labelDef(x)) return true;
-    if (restore(p), withStatement(x)) return true;
     if (restore(p), localBinding(x)) return true;
     if (restore(p), statement(x)) return true;
     return false;
@@ -1350,24 +1295,11 @@ static bool switchStatement(StatementPtr &x) {
     return true;
 }
 
-static bool exprStatementNeedsSemicolon(ExprPtr expr) {
-    if (expr->exprKind == CALL) {
-        CallPtr call = (Call*)expr.ptr();
-        unsigned lambdaCount = call->lambdaArgs->size();
-        if (lambdaCount != 0) {
-            LambdaPtr lastLambda = (Lambda*)call->lambdaArgs->exprs.back().ptr();
-            assert(lastLambda->exprKind == LAMBDA);
-            return lastLambda->body->stmtKind != BLOCK;
-        }
-    }
-    return true;
-}
-
 static bool exprStatement(StatementPtr &x) {
     Location location = currentLocation();
     ExprPtr y;
     if (!expression(y)) return false;
-    if (exprStatementNeedsSemicolon(y) && !symbol(";")) return false;
+    if (!symbol(";")) return false;
     x = new ExprStatement(y);
     x->location = location;
     return true;

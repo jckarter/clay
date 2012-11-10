@@ -512,7 +512,6 @@ struct Finally;
 struct OnError;
 struct Unreachable;
 struct EvalStatement;
-struct WithStatement;
 struct StaticAssertStatement;
 
 struct FormalArg;
@@ -666,7 +665,6 @@ typedef Pointer<Finally> FinallyPtr;
 typedef Pointer<OnError> OnErrorPtr;
 typedef Pointer<Unreachable> UnreachablePtr;
 typedef Pointer<EvalStatement> EvalStatementPtr;
-typedef Pointer<WithStatement> WithStatementPtr;
 typedef Pointer<StaticAssertStatement> StaticAssertStatementPtr;
 
 typedef Pointer<FormalArg> FormalArgPtr;
@@ -1182,16 +1180,14 @@ struct Indexing : public Expr {
 struct Call : public Expr {
     ExprPtr expr;
     ExprListPtr parenArgs;
-    ExprListPtr lambdaArgs;
 
     ExprListPtr _allArgs;
 
     ExprListPtr allArgs();
 
-    Call(ExprPtr expr, ExprListPtr parenArgs, ExprListPtr lambdaArgs)
-        : Expr(CALL), expr(expr), parenArgs(parenArgs), lambdaArgs(lambdaArgs),
+    Call(ExprPtr expr, ExprListPtr parenArgs)
+        : Expr(CALL), expr(expr), parenArgs(parenArgs),
           _allArgs(NULL) {}
-    Call(ExprPtr expr, ExprListPtr parenArgs);
 };
 
 struct FieldRef : public Expr {
@@ -1375,14 +1371,10 @@ inline ExprListPtr Call::allArgs() {
     if (_allArgs == NULL) {
         _allArgs = new ExprList();
         _allArgs->add(parenArgs);
-        _allArgs->add(lambdaArgs);
     }
     return _allArgs;
 }
 
-inline Call::Call(ExprPtr expr, ExprListPtr parenArgs)
-        : Expr(CALL), expr(expr), parenArgs(parenArgs), lambdaArgs(new ExprList()),
-          _allArgs(NULL) {}
 
 //
 // Stmt
@@ -1412,7 +1404,6 @@ enum StatementKind {
     ONERROR,
     UNREACHABLE,
     EVAL_STATEMENT,
-    WITH,
     STATIC_ASSERT_STATEMENT
 };
 
@@ -1423,7 +1414,6 @@ struct Statement : public ANode {
 };
 
 struct Block : public Statement {
-    BlockPtr desugared;
     vector<StatementPtr> statements;
     Block()
         : Statement(BLOCK) {}
@@ -1703,16 +1693,6 @@ struct EvalStatement : public Statement {
     EvalStatement(ExprListPtr args)
         : Statement(EVAL_STATEMENT), args(args), evaled(false) {}
 };
-
-
-struct WithStatement : public Statement {
-    vector<IdentifierPtr> lhs;
-    ExprPtr rhs;
-    Location withLocation;
-    WithStatement( vector<IdentifierPtr> i, ExprPtr r, Location const &l)
-        : Statement(WITH), lhs(i), rhs(r), withLocation(l) {}
-};
-
 
 struct StaticAssertStatement : public Statement {
     ExprPtr cond;

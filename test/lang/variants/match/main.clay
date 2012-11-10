@@ -2,14 +2,16 @@ import printer.(println);
 variant Foo (Int, Double, StringLiteralRef);
 
 foo(x) {
-    match(x): (i:Int) => { println("I saw an Int ", i); }
-        :: (f:Double) => { println("I saw a Double ", f); }
-        :: (s:StringLiteralRef) => { println("I saw a string ", s); }
+    match(x, (i:Int) => { println("I saw an Int ", i); }
+        , (f:Double) => { println("I saw a Double ", f); }
+        , (s:StringLiteralRef) => { println("I saw a string ", s); }
+        );
 }
 
 bar(x) {
-    match(x): (i:Int) => { println("I saw an Int ", i); }
-        :: (x) => { println("I saw a non-Int ", x); }
+    match(x, (i:Int) => { println("I saw an Int ", i); }
+        , (x) => { println("I saw a non-Int ", x); }
+        );
 }
 
 main() {
