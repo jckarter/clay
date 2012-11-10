@@ -213,7 +213,7 @@ static void printExpr(llvm::raw_ostream &out, const Expr *x) {
     }
     case CALL : {
         const Call *y = (const Call *)x;
-        out << "Call(" << y->expr << ", " << y->parenArgs << ", " << y->lambdaArgs << ")";
+        out << "Call(" << y->expr << ", " << y->parenArgs << ")";
         break;
     }
     case FIELD_REF : {

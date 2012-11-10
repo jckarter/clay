@@ -1180,16 +1180,14 @@ struct Indexing : public Expr {
 struct Call : public Expr {
     ExprPtr expr;
     ExprListPtr parenArgs;
-    ExprListPtr lambdaArgs;
 
     ExprListPtr _allArgs;
 
     ExprListPtr allArgs();
 
-    Call(ExprPtr expr, ExprListPtr parenArgs, ExprListPtr lambdaArgs)
-        : Expr(CALL), expr(expr), parenArgs(parenArgs), lambdaArgs(lambdaArgs),
+    Call(ExprPtr expr, ExprListPtr parenArgs)
+        : Expr(CALL), expr(expr), parenArgs(parenArgs),
           _allArgs(NULL) {}
-    Call(ExprPtr expr, ExprListPtr parenArgs);
 };
 
 struct FieldRef : public Expr {
@@ -1373,14 +1371,10 @@ inline ExprListPtr Call::allArgs() {
     if (_allArgs == NULL) {
         _allArgs = new ExprList();
         _allArgs->add(parenArgs);
-        _allArgs->add(lambdaArgs);
     }
     return _allArgs;
 }
 
-inline Call::Call(ExprPtr expr, ExprListPtr parenArgs)
-        : Expr(CALL), expr(expr), parenArgs(parenArgs), lambdaArgs(new ExprList()),
-          _allArgs(NULL) {}
 
 //
 // Stmt

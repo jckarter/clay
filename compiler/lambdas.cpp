@@ -641,7 +641,6 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
         Call *y = (Call *)x.ptr();
         convertFreeVars(y->expr, env, ctx);
         convertFreeVars(y->parenArgs, env, ctx);
-        convertFreeVars(y->lambdaArgs, env, ctx);
         break;
     }
 

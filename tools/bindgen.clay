@@ -416,12 +416,15 @@ visitToplevel(cursor:CXCursor, parent:CXCursor, data:CXClientData) : Int
         else
             printTo(g_bindingsOut, "cdecl");
 
-        maybe(attributes.asmLabel): asmLabel -> {
-            printTo(g_bindingsOut, ", ", stringRepr(asmLabel));
-        } :: () -> {
-            if (clayKeyword?(name))
-                printTo(g_bindingsOut, ", ", stringRepr(name));
-        }
+        maybe(attributes.asmLabel, 
+            asmLabel -> {
+                printTo(g_bindingsOut, ", ", stringRepr(asmLabel));
+            },
+            () -> {
+                if (clayKeyword?(name))
+                    printTo(g_bindingsOut, ", ", stringRepr(name));
+            }
+        );
 
         printTo(g_bindingsOut, ") ", clayIdentifier(name), "(");
         var argCount = clang_getNumArgTypes(type);
@@ -636,9 +639,9 @@ main(argc, argv)
 
     try {
         clang_argc, clang_argv, options = parseOptions(argc, argv);
-        maybe(options.outputFileName): outputFileName -> {
-            g_bindingsOut = File(outputFileName, CREATE);
-        }
+        maybe(options.outputFileName, 
+            outputFileName -> {g_bindingsOut = File(outputFileName, CREATE);}
+        );
     } catch (ex:Usage) {
         print(ex);
         return 2;
