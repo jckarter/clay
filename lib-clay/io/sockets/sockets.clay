@@ -5,6 +5,7 @@ import printer.(printTo,printReprTo);
 import io.files.*;
 import io.streams.*;
 import data.strings.*;
+import data.strings.tempcstrings.*;
 import libc;
 import data.sequences.*;
 
@@ -133,9 +134,9 @@ instance SocketError (HostnameLookupError);
 [S when String?(S) and S != String]
 overload HostnameLookupError(name: S) = HostnameLookupError(String(name));
 
-[S when CCompatibleString?(S)]
+[S when String?(S)]
 overload lookupInetHostname(hostname: S) {
-    var hostent = platform.gethostbyname(cstring(hostname));
+    var hostent = platform.gethostbyname(tempCString(hostname).ptr);
     if (null?(hostent))
         throw HostnameLookupError(hostname);
     if (hostent^.h_addrtype != AF_INET
