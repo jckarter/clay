@@ -558,6 +558,8 @@ int main2(int argc, char **argv, char const* const* envp) {
     unsigned optLevel = 2;
     bool optLevelSet = false;
 
+    setOnlyOverloadedLambdas(false);
+
 #ifdef __APPLE__
     genPIC = true;
 
@@ -621,6 +623,12 @@ int main2(int argc, char **argv, char const* const* envp) {
             optLevel = 3;
             optLevelSet = true;
         }
+        else if (strcmp(argv[i], "-only-overloaded-lambdas") == 0) {
+            setOnlyOverloadedLambdas(true);
+        }
+        else if (strcmp(argv[i], "-no-only-overloaded-lambdas") == 0) {
+            setOnlyOverloadedLambdas(false);
+        }
         else if (strcmp(argv[i], "-inline") == 0) {
             inlineEnabled = true;
         }
@@ -631,8 +639,6 @@ int main2(int argc, char **argv, char const* const* envp) {
             exceptions = true;
         }
         else if (strcmp(argv[i], "-no-exceptions") == 0) {
-
-
             exceptions = false;
         }
         else if (strcmp(argv[i], "-pic") == 0) {

@@ -4,6 +4,12 @@
 
 namespace clay {
 
+bool onlyOverloadedLambdas;
+
+void setOnlyOverloadedLambdas(bool value) {
+    onlyOverloadedLambdas = value;
+}
+
 map<llvm::StringRef, IdentifierPtr> Identifier::freeIdentifiers;
 
 static vector<Token> *tokens;
@@ -856,18 +862,36 @@ static bool lambdaExprBody(StatementPtr &x) {
     return true;
 }
 
-static bool lambdaArrow(LambdaCapture &captureBy) {
+static bool lambdaArrow(LambdaCapture &captureBy, StringLiteralPtr& overloadIdentifier) {
     int p = save();
     if (opsymbol("->")) {
-        captureBy = REF_CAPTURE;
+        if (onlyOverloadedLambdas) {
+            captureBy = OVERLOADED;
+            overloadIdentifier = new StringLiteral(Identifier::get("byref"));
+        } else {
+            captureBy = REF_CAPTURE;
+        }
         return true;
     } 
     else if (restore(p), opsymbol("=>")) {
-        captureBy = VALUE_CAPTURE;
+        if (onlyOverloadedLambdas) {
+            captureBy = OVERLOADED;
+            overloadIdentifier = new StringLiteral(Identifier::get("val"));
+        } else {
+            captureBy = VALUE_CAPTURE;
+        }
         return true;
     }
     else if (restore(p), opsymbol("~>")) {
         captureBy = STATELESS;
+        return true;
+    }
+    else if (restore(p), symbol("::")) {
+        captureBy = OVERLOADED;
+        IdentifierPtr x;
+        if (!identifier(x)) return false;
+        overloadIdentifier = new StringLiteral(x);
+        if (!opsymbol(">")) return false;
         return true;
     }
     return false;
@@ -886,10 +910,11 @@ static bool lambda(ExprPtr &x) {
     bool hasVarArg = false;
     LambdaCapture captureBy;
     StatementPtr body;
+    StringLiteralPtr overloadIdentifier;
     if (!lambdaArgs(formalArgs, hasVarArg)) return false;
-    if (!lambdaArrow(captureBy)) return false;
+    if (!lambdaArrow(captureBy, overloadIdentifier)) return false;
     if (!lambdaBody(body)) return false;
-    x = new Lambda(captureBy, formalArgs, hasVarArg, body);
+    x = new Lambda(captureBy, formalArgs, hasVarArg, body, overloadIdentifier);
     x->location = location;
     return true;
 }

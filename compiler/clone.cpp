@@ -161,6 +161,7 @@ ExprPtr clone(ExprPtr x)
         LambdaPtr z = new Lambda(y->captureBy);
         clone(y->formalArgs, z->formalArgs);
         z->hasVarArg = y->hasVarArg;
+        z->hook = y->hook.ptr();
         z->body = clone(y->body);
         out = z.ptr();
         break;

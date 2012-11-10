@@ -11,14 +11,16 @@ namespace clay {
 
 struct LambdaContext {
     LambdaCapture captureBy;
+    StringLiteralPtr hook;
     EnvPtr nonLocalEnv;
     llvm::StringRef closureDataName;
     vector<string> &freeVars;
     LambdaContext(LambdaCapture captureBy,
+                  StringLiteralPtr hook,
                   EnvPtr nonLocalEnv,
                   llvm::StringRef closureDataName,
                   vector<string> &freeVars)
-        : captureBy(captureBy), nonLocalEnv(nonLocalEnv),
+        : captureBy(captureBy), hook(hook), nonLocalEnv(nonLocalEnv),
           closureDataName(closureDataName), freeVars(freeVars) {}
 };
 
@@ -98,12 +100,13 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
     llvm::SmallString<128> buf;
     llvm::raw_svector_ostream ostr(buf);
     ostr << "%closureData:" << lname;
-    string closureDataName = ostr.str();
 
+    string closureDataName = ostr.str();
     convertFreeVars(x, env, closureDataName, x->freeVars);
     getProcedureMonoTypes(x->mono, env, x->formalArgs, x->hasVarArg);
-        
+
     switch (x->captureBy) {
+    case OVERLOADED:
     case REF_CAPTURE :
     case VALUE_CAPTURE : {
         if (x->freeVars.empty()) {
@@ -218,9 +221,20 @@ static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
     TypePtr t = recordType(r, vector<ObjectPtr>());
     x->lambdaType = t;
     ExprPtr typeExpr = new ObjectExpr(t.ptr());
-    converted->expr = typeExpr;
-    x->converted = converted.ptr();
+    
+    if (x->captureBy == OVERLOADED) {
+        converted->expr = new NameRef(Identifier::get("lambdaPack"));
+        converted->parenArgs->insert(new StaticExpr(typeExpr));
+        converted->parenArgs->insert(new StaticExpr(x->hook.ptr()));
+        ExprPtr conv = static_cast<Expr*>(converted.ptr());
+        TypePtr t =  safeAnalyzeOne(conv, env).type;
+        typeExpr = new ObjectExpr(t.ptr());
+    } else {
+        converted->expr = typeExpr;
+    }
 
+    x->converted = converted.ptr();
+  
     CodePtr code = new Code();
     code->location = x->location;
     IdentifierPtr closureDataIdent = Identifier::get(closureDataName);
@@ -230,8 +244,27 @@ static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
         code->formalArgs.push_back(x->formalArgs[i]);
     }
     code->hasVarArg = x->hasVarArg;
-    code->body = x->body;
+    if (x->captureBy == OVERLOADED) {    
+        BlockPtr bodyWithBindings = new Block();
 
+        vector<FormalArgPtr> left;
+        for (unsigned i = 0; i < x->freeVars.size(); i++) {
+            left.push_back(new FormalArg(Identifier::get(x->freeVars[i]), 
+                                         fields[i]->type));
+        }
+        
+        ExprPtr lambdaUnpack = new NameRef(Identifier::get("lambdaUnpack"));
+        ExprListPtr args = new ExprList();
+        args->exprs.push_back(new StaticExpr(x->hook.ptr()));
+        args->exprs.push_back(new NameRef(closureDataIdent));
+        ExprListPtr right = new ExprList(new Unpack(new Call(lambdaUnpack, args)));
+
+        bodyWithBindings->statements.push_back(new Binding(FORWARD, left, right));
+        bodyWithBindings->statements.push_back(x->body);
+        code->body = static_cast<Statement*>(bodyWithBindings.ptr());
+    } else {
+        code->body = x->body;
+    }
     OverloadPtr overload = new Overload(
         NULL, operator_expr_call(), code, false, IGNORE
     );
@@ -299,7 +332,7 @@ void convertFreeVars(LambdaPtr x, EnvPtr env,
         FormalArgPtr arg = x->formalArgs[i];
         addLocal(env2, arg->name, arg->name.ptr());
     }
-    LambdaContext ctx(x->captureBy, env, closureDataName, freeVars);
+    LambdaContext ctx(x->captureBy, x->hook, env, closureDataName, freeVars);
     convertFreeVars(x->body, env2, ctx);
 }
 
@@ -544,12 +577,18 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
                 }
                 else {
                     addFreeVar(ctx, y->name->str);
+                    if (ctx.captureBy == OVERLOADED) {
+                        break;
+                    }
                     IdentifierPtr a = Identifier::get(ctx.closureDataName, y->location);
                     NameRefPtr b = new NameRef(a);
                     b->location = y->location;
                     FieldRefPtr c = new FieldRef(b.ptr(), y->name);
                     c->location = y->location;
                     switch (ctx.captureBy) {
+                    case OVERLOADED : {
+                        break;
+                    }
                     case REF_CAPTURE : {
                         ExprPtr d = new VariadicOp(DEREFERENCE, new ExprList(c.ptr()));
                         d->location = y->location;
@@ -587,12 +626,18 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
                 }
                 else {
                     addFreeVar(ctx, y->name->str);
+                    if (ctx.captureBy == OVERLOADED) {
+                        break;
+                    }
                     IdentifierPtr a = Identifier::get(ctx.closureDataName, y->location);
                     NameRefPtr b = new NameRef(a);
                     b->location = y->location;
                     FieldRefPtr c = new FieldRef(b.ptr(), y->name);
                     c->location = y->location;
                     switch (ctx.captureBy) {
+                    case OVERLOADED : {
+                        break;
+                    }
                     case REF_CAPTURE : {
                         ExprPtr f =
                             operator_expr_unpackMultiValuedFreeVarAndDereference();
