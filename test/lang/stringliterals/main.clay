@@ -1,6 +1,6 @@
 import printer.(println);
-import strings.*;
-import sequences.operators.*;
+import data.strings.*;
+import data.sequences.operators.*;
 
 test(a) {
     println(a);

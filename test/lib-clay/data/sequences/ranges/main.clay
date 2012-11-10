@@ -1,0 +1,58 @@
+import printer.(println);
+import data.vectors.*;
+import data.sequences.*;
+
+main() {
+    for (i in range(5))
+        println(i);
+    println("size: ", size(range(5)));
+    println("---");
+    for (i in range(1,6))
+        println(i);
+    println("size: ", size(range(1,6)));
+    println("---");
+    for (i in range(1,1))
+        println(i);
+    println("size: ", size(range(1,1)));
+    println("---");
+    for (i in range(1,0))
+        println(i);
+    println("size: ", size(range(1,0)));
+    println("---");
+    for (i in reverseRange(5))
+        println(i);
+    println("size: ", size(reverseRange(5)));
+    println("---");
+    for (i in reverseRange(6,1))
+        println(i);
+    println("size: ", size(reverseRange(6,1)));
+    println("---");
+    for (i in reverseRange(1,1))
+        println(i);
+    println("size: ", size(reverseRange(1,1)));
+    println("---");
+    for (i in reverseRange(0,1))
+        println(i);
+    println("size: ", size(reverseRange(0,1)));
+    println("---");
+    var v = Vector[Int](0,1,2,3,4,5,6);
+    for (i in sliced(v,0,5))
+        println(i);
+    println("---");
+    for (i in sliced(v,0,0))
+        println(i);
+    println("---");
+    println("sliced(v,1,0) size: ", size(sliced(v,1,0)));
+    println("---");
+    for (i in sliced(v,1,0))
+        println(i);
+    println("---");
+    for (i in reversed(sliced(v,0,5)))
+        println(i);
+    println("---");
+    for (i in reversed(sliced(v,0,0)))
+        println(i);
+    println("---");
+    for (i in reversed(sliced(v,1,0)))
+        println(i);
+}

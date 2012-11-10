@@ -1,4 +1,4 @@
-import sequences.lazy.*;
+import data.sequences.lazy.*;
 
 // A comparator is a type which encapsulates the notion of comparing things.
 // It may be used whenever you might want to naturally be able to redefine

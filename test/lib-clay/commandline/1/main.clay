@@ -1,5 +1,5 @@
 import printer.(println);
-import sequences.*;
+import data.sequences.*;
 
 main() {
     for (i, x in enumerated(commandLine()))

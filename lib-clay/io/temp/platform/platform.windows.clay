@@ -1,5 +1,5 @@
 import win32.(GetTempPathA, LPTSTR, DWORD, GetLastError);
-import strings.(String);
+import data.strings.(String);
 import io.errors.(GenericIOError);
 
 // from http://msdn.microsoft.com/en-us/library/windows/desktop/aa364992%28v=vs.85%29.aspx

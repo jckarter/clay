@@ -1,6 +1,6 @@
 import libc;
 import printer.(println);
-import vectors.*;
+import data.vectors.*;
 
 main() {
     var statelessLambda = () => { println("bye!"); };

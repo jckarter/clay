@@ -1,11 +1,11 @@
 +: core.operators
-String: vectors
+String: data.vectors
 Vec: __primitives__
 hash: hash
 Array: __primitives__
 Array[Bool, 10]: __primitives__
-HashMap: hashmaps
-HashMap[Int32, Int32]: hashmaps
-vectors.generic: vectors.generic
+HashMap: data.hashmaps
+HashMap[Int32, Int32]: data.hashmaps
+data.vectors.generic: data.vectors.generic
 Record?: __primitives__
 disp: __main__

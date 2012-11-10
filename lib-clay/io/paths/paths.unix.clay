@@ -2,10 +2,10 @@
 import unix;
 import libc;
 import io.errors.*;
-import algorithms.(reverseFind,reverseFindIf,reverseInPlace,beginsWith?,endsWith?);
-import strings.*;
-import vectors.*;
-import sequences.*;
+import data.algorithms.(reverseFind,reverseFindIf,reverseInPlace,beginsWith?,endsWith?);
+import data.strings.*;
+import data.vectors.*;
+import data.sequences.*;
 
 
 

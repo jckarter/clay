@@ -1,6 +1,6 @@
 
 import parsing.combinators.wrapper.*;
-import strings.*;
+import data.strings.*;
 
 private var combinators = Combinators[Type(iterator(String()))]();
 

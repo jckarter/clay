@@ -1,6 +1,6 @@
 import win32.*;
 
-import strings.*;
+import data.strings.*;
 
 import io.errors.*;
 import io.directories.common.*;

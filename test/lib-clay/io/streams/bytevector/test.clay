@@ -1,6 +1,6 @@
 import io.streams.*;
 
-import vectors.*;
+import data.vectors.*;
 
 import test.*;
 

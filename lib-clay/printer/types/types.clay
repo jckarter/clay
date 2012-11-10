@@ -8,10 +8,10 @@ import printer.platform.(
     formatForPartialInt128,
 );
 import numbers.floats.(nan, nan?);
-import strings.*;
-import strings.encodings.utf8.*;
-import vectors.*;
-import sequences.(interleave);
+import data.strings.*;
+import data.strings.encodings.utf8.*;
+import data.vectors.*;
+import data.sequences.(interleave);
 import simd.(unpackVec);
 
 

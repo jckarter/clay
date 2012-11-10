@@ -4,9 +4,9 @@ import byteorder.*;
 import printer.(printTo,printReprTo);
 import io.files.*;
 import io.streams.*;
-import strings.*;
+import data.strings.*;
 import libc;
-import sequences.*;
+import data.sequences.*;
 
 public import io.sockets.platform.(
     Sockaddr, Sockaddr_in, Sockaddr_storage,

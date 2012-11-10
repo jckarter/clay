@@ -1,0 +1,19 @@
+
+import data.deques.*;
+import printer.(println);
+import data.sequences.*;
+import data.vectors.*;
+
+main() {
+    var a = integerArray(#5);
+    var b = zipped(a, reversed(mapped(x => 2*x, a)));
+
+    var c = Array(b);
+    println(c);
+
+    var d = Vector(b);
+    println(d);
+
+    var e = Deque(d);
+    println(Vector(e));
+}

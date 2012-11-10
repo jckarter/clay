@@ -1,7 +1,7 @@
 // test uses repr to print values that are not equal
 
 import test.*;
-import vectors.*;
+import data.vectors.*;
 
 main() = testMain(
     TestSuite(

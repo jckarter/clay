@@ -1,7 +1,7 @@
 
 import paged.allocator.*;
-import vectors.generic.*;
-import sequences.lazy.*;
+import data.vectors.generic.*;
+import data.sequences.lazy.*;
 
 /// @section  Vector[T] 
 

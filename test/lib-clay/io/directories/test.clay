@@ -4,8 +4,8 @@ import io.errors.*;
 
 import printer.*;
 
-import algorithms.*;
-import vectors.*;
+import data.algorithms.*;
+import data.vectors.*;
 
 import io.directories.*;
 import io.temp.*;

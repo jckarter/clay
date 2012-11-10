@@ -1,4 +1,4 @@
-import strings.*;
+import data.strings.*;
 
 import test.*;
 

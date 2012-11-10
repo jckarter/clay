@@ -1,7 +1,7 @@
-import algorithms.(find,endsWith?,beginsWith?,split,concat,join);
+import data.algorithms.(find,endsWith?,beginsWith?,split,concat,join);
 import printer.(println);
-import strings.*;
-import sequences.*;
+import data.strings.*;
+import data.sequences.*;
 
 main() {
     var a = array("", "foo", "foobar", "afoobarfoo");

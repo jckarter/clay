@@ -1,6 +1,6 @@
 import io.files.easy.*;
 import io.streams.(readLine);
-import strings.*;
+import data.strings.*;
 
 
 /// @section  lines 

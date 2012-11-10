@@ -1,8 +1,8 @@
 import commandline.dispatch.*;
-import algorithms.(reduce);
+import data.algorithms.(reduce);
 import printer.(println,printlnTo);
 import io.files.*;
-import sequences.*;
+import data.sequences.*;
 import numbers.parser.*;
 
 add(args) {

@@ -1,7 +1,7 @@
 import atomics.(Atomic, casValue, load);
 import printer.*;
-import sequences.(map);
-import strings.(String);
+import data.sequences.(map);
+import data.strings.(String);
 import threads.(startThread, joinThread);
 
 var counters = Atomic(Array[UInt8, 4](0uss, 0uss, 0uss, 0uss));

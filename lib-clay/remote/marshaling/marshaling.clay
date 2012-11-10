@@ -1,9 +1,9 @@
-import hashmaps.(HashMap);
-import algorithms.(reduce);
+import data.hashmaps.(HashMap);
+import data.algorithms.(reduce);
 import uniquepointers.(UniquePointer,nullUnique);
 import sharedpointers.*;
-import vectors.*;
-import sequences.*;
+import data.vectors.*;
+import data.sequences.*;
 
 
 //

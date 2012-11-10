@@ -4,7 +4,7 @@ import test.module.(testMainModule);
 import numbers.floats.(nan?);
 import printer.(str);
 import random.(XORShiftRNG);
-import strings.(String);
+import data.strings.(String);
 import complex.*;
 
 TEST_lookForFailures() {

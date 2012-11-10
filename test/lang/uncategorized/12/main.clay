@@ -1,5 +1,5 @@
 import printer.(println);
-import vectors.*;
+import data.vectors.*;
 
 map(f, a) {
     alias ResultType = Type(f(a[0]));

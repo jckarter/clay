@@ -1,9 +1,9 @@
 import printer.formatter.(repr, stringRepr);
 import numbers.floats.(nan, nan?);
 import printer.(println, str);
-import strings.(String);
+import data.strings.(String);
 import complex.*;
-import algorithms.*;
+import data.algorithms.*;
 
 import test.*;
 

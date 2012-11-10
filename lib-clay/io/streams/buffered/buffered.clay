@@ -1,4 +1,4 @@
-import algorithms.(in?);
+import data.algorithms.(in?);
 
 import io.streams.memory.*;
 

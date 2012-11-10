@@ -1,0 +1,55 @@
+import data.sequences.force.*;
+import data.sequences.util.*;
+import data.sequences.lazy.zipped.*;
+
+
+/// @section  filtered 
+
+define filtered(predicate, ..seqs);
+
+forceinline overload filtered(predicate, forward ..seqs) = Filtered(predicate, zipped(..seqs));
+
+forceinline overload filtered(predicate, forward seq) =
+    Filtered(predicate, wrapSequence(seq));
+
+
+private record Filtered[F, A] (
+    predicate : F,
+    seq : A,
+);
+
+[F, A when LightweightSequence?(A)]
+overload LightweightSequence?(#Filtered[F,A]) = true;
+
+[F,A when CallDefined?(UnderlyingContainerConstructor, Static[A])]
+overload UnderlyingContainerConstructor(#Filtered[F,A]) =
+    UnderlyingContainerConstructor(A);
+
+
+
+/// @section  iterator, reverseIterator 
+
+[F, A]
+forceinline overload iterator(a:Filtered[F, A])
+    = FilteredIterator(a.predicate, iterator(a.seq));
+
+[F, A when CallDefined?(reverseIterator, A)]
+forceinline overload reverseIterator(a:Filtered[F, A])
+    = FilteredIterator(a.predicate, reverseIterator(a.seq));
+
+
+/// @section  FilteredIterator 
+
+private record FilteredIterator[F, ITER] (
+    predicate : F,
+    iter : ITER,
+);
+
+[F, ITER]
+forceinline overload nextValue(iter:FilteredIterator[F, ITER]) {
+    var value = nextValue(iter.iter);
+    while (hasValue?(value) and not iter.predicate(..getValue(value)))
+        value = nextValue(iter.iter);
+    return move(value);
+}
+

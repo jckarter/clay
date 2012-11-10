@@ -2,8 +2,8 @@ import io.sockets.*;
 import io.sockets.platform.(s_addr);
 import test.*;
 import byteorder.*;
-import vectors.*;
-import sequences.*;
+import data.vectors.*;
+import data.sequences.*;
 
 define _expectSockaddrIn;
 

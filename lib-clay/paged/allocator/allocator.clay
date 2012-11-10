@@ -2,7 +2,7 @@ import io.mapping.*;
 import io.paths.*;
 import paged.misc.*;
 import io.files.*;
-import strings.*;
+import data.strings.*;
 
 
 /// @section  paged allocator global state 

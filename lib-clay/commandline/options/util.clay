@@ -1,4 +1,4 @@
-import vectors.*;
+import data.vectors.*;
 
 record PushbackIterator[S, T](
   pending : Vector[S],

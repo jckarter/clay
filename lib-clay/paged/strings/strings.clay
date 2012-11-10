@@ -1,6 +1,6 @@
 import paged.vectors.*;
 
-import strings;
+import data.strings;
 
 
 

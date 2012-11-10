@@ -1,5 +1,5 @@
 import byteorder.*;
-import sequences.lazy.*;
+import data.sequences.lazy.*;
 
 public import crypto.digest.*;
 import crypto.digest.internal.*;

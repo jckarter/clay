@@ -1,8 +1,8 @@
 import test.*;
 import commandline.options.table.*;
 import commandline.options.parser.*;
-import strings.*;
-import vectors.*;
+import data.strings.*;
+import data.vectors.*;
 
 fbbSpec() = OptionSpecs(array(
   OptionSpec('f', "foo"),

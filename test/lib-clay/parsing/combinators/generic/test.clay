@@ -1,6 +1,6 @@
 import test.*;
-import vectors.*;
-import strings.*;
+import data.vectors.*;
+import data.strings.*;
 import core.types.*;
 import numbers.parser.*;
 import parsing.combinators.strings.*;
