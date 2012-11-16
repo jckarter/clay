@@ -1,5 +1,6 @@
 #include "clay.hpp"
 #include "lexer.hpp"
+#include "parser.hpp"
 #include "codegen.hpp"
 #include "error.hpp"
 #include "loader.hpp"
@@ -39,6 +40,16 @@ namespace clay {
                 break;
         }
         return s.substr(i, s.length());
+    }
+
+    static vector<Token> addTokens() {
+        char buf[255];
+        string line = fgets(buf, 255, stdin);
+        line = stripSpaces(line);
+        SourcePtr source = new Source(line, 0);
+        vector<Token> tokens;
+        tokenize(source, 0, line.length(), tokens);
+        return tokens;
     }
 
     static void replCommand(string const& line)
@@ -197,6 +208,7 @@ namespace clay {
         llvm::errs() << "Clay interpreter\n";
         llvm::errs() << ":q to exit\n";
         llvm::errs() << ":print {identifier} to print an identifier\n";
+        llvm::errs() << "In multi-line mode empty line to exit\n";
 
         llvm::EngineBuilder eb(llvmModule);
         llvm::TargetOptions targetOptions;
@@ -204,6 +216,8 @@ namespace clay {
         eb.setTargetOptions(targetOptions);
         engine = eb.create();
         engine->runStaticConstructorsDestructors(false);
+
+        setAddTokens(&addTokens);
 
         interactiveLoop();
     }

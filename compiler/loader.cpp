@@ -5,7 +5,7 @@
 #include "codegen.hpp"
 #include "evaluator.hpp"
 #include "constructors.hpp"
-
+#include "parser.hpp"
 
 #pragma clang diagnostic ignored "-Wcovered-switch-default"
 

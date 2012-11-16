@@ -1,5 +1,5 @@
 #include "clay.hpp"
-#include "lexer.hpp"
+#include "parser.hpp"
 
 
 namespace clay {
@@ -11,9 +11,28 @@ static int position;
 static int maxPosition;
 static bool parserOptionKeepDocumentation = false;
 
+static AddTokensCallback addTokens = NULL;
+
+void setAddTokens(AddTokensCallback f) {
+    addTokens = f;
+}
+
+bool inRepl = false;
+
 static bool next(Token *&x) {
-    if (position == (int)tokens->size())
-        return false;
+    if (position == (int)tokens->size()) {
+        if (inRepl) {
+            assert(addTokens != NULL);
+            vector<Token> toks = addTokens();
+            if (toks.size() == 0) {
+                inRepl = false;
+                return false;
+            }
+            tokens->insert(tokens->end(), toks.begin(), toks.end());
+        } else {
+            return false;
+        }
+    }
     x = &(*tokens)[position];
     if (position > maxPosition)
         maxPosition = position;
@@ -3103,19 +3122,27 @@ static bool replItems(REPLitem& x, bool = false) {
     x.stmts.clear();
     ImportPtr importItem;
     StatementPtr stmtItem;
+    inRepl = true;
     while (true) {
+        if (position == (int)tokens->size()) {
+            break;
+        }
+
         int p = save();
+
         if (!topLevelItem(x.toplevels, NULL)) {
             restore(p);
         } else {
             continue;
         }
+
         if (!import(importItem)) {
             restore(p);
         } else {
             x.imports.push_back(importItem);
             continue;
         }
+
         if (!blockItem(stmtItem)) {
             restore(p);
             break;
