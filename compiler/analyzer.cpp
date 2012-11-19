@@ -3298,6 +3298,19 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         return mpv;
     }
 
+    case PRIM_recordVariadicField : {
+        ensureArity(args, 1);
+        RecordTypePtr t = recordTypeOfValue(args, 0);
+        if (!t->hasVarField)
+            argumentError(0, "expecting a record with a variadic field");
+        llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(t);
+        MultiPValuePtr mpv = new MultiPValue();
+        size_t varEnd = t->varFieldPosition + t->varFieldSize();
+        for (unsigned i = t->varFieldPosition; i < varEnd; ++i)
+            mpv->add(PVData(fieldTypes[i], false));
+        return mpv;
+    }
+
     case PRIM_VariantP :
         return new MultiPValue(PVData(boolType, true));
 

@@ -6257,6 +6257,24 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
+    case PRIM_recordVariadicField : {
+        ensureArity(args, 1);
+        RecordTypePtr rt;
+        llvm::Value *vrec = recordValue(args, 0, rt);
+        llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(rt);
+        if (!rt->hasVarField)
+            argumentError(0, "expecting a record with a variadic field");
+        assert(out->size() == rt->varFieldSize());
+        for (unsigned i = 0; i < rt->varFieldSize(); ++i) {
+            size_t k = rt->varFieldPosition + i;
+            CValuePtr outi = out->values[i];
+            assert(outi->type == pointerType(fieldTypes[k]));
+            llvm::Value *ptr = ctx->builder->CreateConstGEP2_32(vrec, 0, k);
+            ctx->builder->CreateStore(ptr, outi->llValue);
+        }
+        break;
+    }
+
     case PRIM_VariantP : {
         ensureArity(args, 1);
         bool isVariantType = false;

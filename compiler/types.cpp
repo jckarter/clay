@@ -1545,8 +1545,60 @@ static void defineLLVMType(TypePtr t) {
             vector<llvm::Value*> members;
             size_t debugOffset = 0;
             for (size_t i = 0; i < fieldNames.size(); ++i) {
-                if (x->hasVarField && i == x->varFieldPosition) {
-                    
+                if (x->hasVarField && i >= x->varFieldPosition) {
+                    if (i == x->varFieldPosition) {
+                        for (size_t j = 0; j < x->varFieldSize(); ++j) {
+                            llvm::SmallString<128> buf;
+                            llvm::raw_svector_ostream sout(buf);
+                            sout << fieldNames[i] << ".." << j;
+                            llvm::Type *memberLLT = llvmType(fieldTypes[i+j]);
+                            size_t debugAlign = debugTypeAlignment(memberLLT);
+                            size_t debugSize = debugTypeSize(memberLLT);
+                            debugOffset = alignedUpTo(debugOffset, debugAlign);
+
+                            Location fieldLocation = fieldNames[i]->location;
+                            if (!fieldLocation.ok())
+                                fieldLocation = x->record->location;
+                            int fieldLine, fieldColumn;
+                            llvm::DIFile fieldFile = getDebugLineCol(fieldLocation, fieldLine, fieldColumn);
+                            members.push_back(llvmDIBuilder->createMemberType(
+                                placeholder,
+                                sout.str(),
+                                fieldFile, // file
+                                fieldLine, // lineNo
+                                debugSize, // size
+                                debugAlign, // align
+                                debugOffset, // offset
+                                0, // flags
+                                llvmTypeDebugInfo(fieldTypes[i+j]) // type
+                                ));
+                            debugOffset += debugSize;
+                        }
+                    } else {
+                        size_t k = i+x->varFieldSize()-1;
+                        llvm::Type *memberLLT = llvmType(fieldTypes[k]);
+                        size_t debugAlign = debugTypeAlignment(memberLLT);
+                        size_t debugSize = debugTypeSize(memberLLT);
+                        debugOffset = alignedUpTo(debugOffset, debugAlign);
+
+                        Location fieldLocation = fieldNames[i]->location;
+                        if (!fieldLocation.ok())
+                            fieldLocation = x->record->location;
+                        int fieldLine, fieldColumn;
+                        llvm::DIFile fieldFile = getDebugLineCol(fieldLocation, fieldLine, fieldColumn);
+                        members.push_back(llvmDIBuilder->createMemberType(
+                            placeholder,
+                            fieldNames[i]->str,
+                            fieldFile, // file
+                            fieldLine, // lineNo
+                            debugSize, // size
+                            debugAlign, // align
+                            debugOffset, // offset
+                            0, // flags
+                            llvmTypeDebugInfo(fieldTypes[k]) // type
+                            ));
+                        debugOffset += debugSize;
+                    }
                 } else {
                     llvm::Type *memberLLT = llvmType(fieldTypes[i]);
                     size_t debugAlign = debugTypeAlignment(memberLLT);

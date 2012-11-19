@@ -4472,6 +4472,26 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
+    case PRIM_recordVariadicField : {
+        ensureArity(args, 1);
+        RecordTypePtr rt;
+        EValuePtr erec = recordValue(args, 0, rt);
+        llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(rt);
+        if (!rt->hasVarField)
+            argumentError(0, "expecting a record with a variadic field");
+        assert(out->size() == fieldTypes.size());
+        const llvm::StructLayout *layout = recordTypeLayout(rt.ptr());
+        assert(out->size() == rt->varFieldSize());
+        for (unsigned i = 0; i < rt->varFieldSize(); ++i) {
+            size_t k = rt->varFieldPosition + i;
+            EValuePtr outi = out->values[i];
+            assert(outi->type == pointerType(fieldTypes[k]));
+            char *ptr = erec->addr + layout->getElementOffset(k);
+            outi->as<void *>() = (void *)ptr;
+        }
+        break;
+    }
+
     case PRIM_VariantP : {
         ensureArity(args, 1);
         bool isVariantType = false;
