@@ -1225,6 +1225,13 @@ void codegenStaticObject(ObjectPtr x,
 {
     switch (x->objKind) {
 
+    case NEW_TYPE_DECL : {
+        NewTypeDecl *y = (NewTypeDecl *)x.ptr();
+        assert(y->type->typeKind == NEW_TYPE);
+        initializeNewType((NewType*)y->type.ptr());
+        break;
+    }
+
     case ENUM_MEMBER : {
         EnumMember *y = (EnumMember *)x.ptr();
         assert(out->size() == 1);
@@ -1766,22 +1773,6 @@ void codegenCompileTimeValue(EValuePtr ev,
         ctx->builder->CreateStore(llv, out0->llValue);
         break;
     }
-
-    // case COMPLEX_TYPE : {
-    //     ComplexType *tt = (ComplexType *)ev->type.ptr();
-    //     const llvm::StructLayout *layout = complexTypeLayout(tt);
-    //     char *srcPtr = ev->addr + layout->getElementOffset(1);
-    //     EValuePtr evSrc = new EValue(floatType(tt->bits), srcPtr);
-    //     llvm::Value *destPtr = ctx->builder->CreateConstGEP2_32(out0->llValue, 0, 0);
-    //     CValuePtr cgDest = new CValue(floatType(tt->bits), destPtr);
-    //     codegenCompileTimeValue(evSrc, ctx, new MultiCValue(cgDest));
-    //     char *srcPtr2 = ev->addr + layout->getElementOffset(0);
-    //     EValuePtr evSrc2 = new EValue(imagType(tt->bits), srcPtr2);
-    //     llvm::Value *destPtr2 = ctx->builder->CreateConstGEP2_32(out0->llValue, 0, 1);
-    //     CValuePtr cgDest2 = new CValue(imagType(tt->bits), destPtr2);
-    //     codegenCompileTimeValue(evSrc2, ctx, new MultiCValue(cgDest2));
-    //     break;
-    // }
 
     case POINTER_TYPE :
     case CODE_POINTER_TYPE :

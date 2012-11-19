@@ -557,7 +557,6 @@ struct Type;
 struct BoolType;
 struct IntegerType;
 struct FloatType;
-// struct ComplexType;
 struct ArrayType;
 struct VecType;
 struct TupleType;
@@ -710,7 +709,6 @@ typedef Pointer<Type> TypePtr;
 typedef Pointer<BoolType> BoolTypePtr;
 typedef Pointer<IntegerType> IntegerTypePtr;
 typedef Pointer<FloatType> FloatTypePtr;
-// typedef Pointer<ComplexType> ComplexTypePtr;
 typedef Pointer<ArrayType> ArrayTypePtr;
 typedef Pointer<VecType> VecTypePtr;
 typedef Pointer<TupleType> TupleTypePtr;
@@ -1997,7 +1995,7 @@ struct IntrinsicSymbol : public TopLevelItem {
 
 struct NewTypeDecl : public TopLevelItem {
     ExprPtr expr;
-    TypePtr type;
+    NewTypePtr type;
     TypePtr baseType;
     bool initialized:1;
     NewTypeDecl(Module *module, IdentifierPtr name,
@@ -2684,7 +2682,6 @@ enum TypeKind {
     BOOL_TYPE,
     INTEGER_TYPE,
     FLOAT_TYPE,
-    // COMPLEX_TYPE,
     POINTER_TYPE,
     CODE_POINTER_TYPE,
     CCODE_POINTER_TYPE,
@@ -2741,13 +2738,6 @@ struct FloatType : public Type {
     FloatType(int bits, bool isImaginary)
         : Type(FLOAT_TYPE), bits(bits), isImaginary(isImaginary){}
 };
-
-// struct ComplexType : public Type {
-//     const llvm::StructLayout *layout;
-//     int bits:15;
-//     ComplexType(int bits)
-//        : Type(COMPLEX_TYPE), layout(NULL), bits(bits) {}
-// };
 
 struct PointerType : public Type {
     TypePtr pointeeType;

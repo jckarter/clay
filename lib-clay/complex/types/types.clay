@@ -1,1 +1,5 @@
 
+private record ComplexBase[R,I](re:R,im:I);
+newtype Complex32 = ComplexBase[Float32,Imag32];
+newtype Complex64 = ComplexBase[Float64,Imag64];
+newtype Complex80 = ComplexBase[Float80,Imag80];

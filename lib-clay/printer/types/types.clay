@@ -13,6 +13,7 @@ import data.strings.encodings.utf8.*;
 import data.vectors.*;
 import data.sequences.(interleave);
 import simd.(unpackVec);
+import complex.types.*;
 
 
 /// @section  printTo 
