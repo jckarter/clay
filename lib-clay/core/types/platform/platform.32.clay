@@ -9,4 +9,3 @@ alias CLong = Int32;
 alias CULong = UInt32;
 
 alias CLongDouble = Float80;
-alias CComplexLongDouble = Complex80;

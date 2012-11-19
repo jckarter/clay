@@ -1087,23 +1087,6 @@ void printValue(llvm::raw_ostream &out, EValuePtr ev)
         }
         break;
     }
-    case COMPLEX_TYPE : {
-        ComplexType *t = (ComplexType *)ev->type.ptr();
-        switch (t->bits) {
-        case 32 :
-            writeFloat(out, ev->as<clay_cfloat>());
-            break;
-        case 64 :
-            writeFloat(out, ev->as<clay_cdouble>());
-            break;
-        case 80 :
-            writeFloat(out, ev->as<clay_cldouble>());
-            break;
-        default :
-            assert(false);
-        }
-        break;
-    }
     case ENUM_TYPE : {
         EnumType *t = (EnumType *)ev->type.ptr();
         llvm::ArrayRef<EnumMemberPtr> members = t->enumeration->members;
@@ -1203,11 +1186,6 @@ void typePrint(llvm::raw_ostream &out, TypePtr t) {
         } else {
             out << "Float" << x->bits;
         }
-        break;
-    }
-    case COMPLEX_TYPE : {
-        ComplexType *x = (ComplexType *)t.ptr();
-        out << "Complex" << x->bits;
         break;
     }
     case POINTER_TYPE : {

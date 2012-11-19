@@ -1,0 +1,6 @@
+import complex.types.(Complex80);
+
+
+/// @section  type aliases for 32-bit platforms 
+
+alias CComplexLongDouble = Complex80;

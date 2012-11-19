@@ -2,7 +2,7 @@
 
 import math.native.kernel.ieee754.*;
 import math.native.protocol.*;
-
+import complex.*;
 
 overload log(x:Double) : Double {
 	alias ZERO = 0.;

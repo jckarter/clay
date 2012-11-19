@@ -26,9 +26,6 @@ extern TypePtr float80Type;
 extern TypePtr imag32Type;
 extern TypePtr imag64Type;
 extern TypePtr imag80Type;
-extern TypePtr complex32Type;
-extern TypePtr complex64Type;
-extern TypePtr complex80Type;
 
 // aliases
 extern TypePtr cIntType;
@@ -42,7 +39,6 @@ TypePtr intType(int bits);
 TypePtr uintType(int bits);
 TypePtr floatType(int bits);
 TypePtr imagType(int bits);
-TypePtr complexType(int bits);
 TypePtr pointerType(TypePtr pointeeType);
 TypePtr codePointerType(llvm::ArrayRef<TypePtr> argTypes,
                         llvm::ArrayRef<uint8_t> returnIsRef,
@@ -81,7 +77,6 @@ void initializeEnumType(EnumTypePtr t);
 void initializeNewType(NewTypePtr t);
 
 const llvm::StructLayout *tupleTypeLayout(TupleType *t);
-const llvm::StructLayout *complexTypeLayout(ComplexType *t);
 const llvm::StructLayout *recordTypeLayout(RecordType *t);
 
 llvm::Type *llvmIntType(int bits);

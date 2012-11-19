@@ -1,0 +1,7 @@
+import complex.types.(Complex64);
+
+
+/// @section  type aliases for 32-bit platforms 
+
+// http://msdn.microsoft.com/en-us/library/9cx8xs15.aspx
+alias CComplexLongDouble = Complex64;

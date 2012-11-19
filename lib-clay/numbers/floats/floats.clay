@@ -246,4 +246,3 @@ define normalized?;
 }
 [T when Float?(T) or Imaginary?(T)] overload subnormal?(x:T) = floatExponent(x)==T(0) and x!=T(0);
 [T when Float?(T) or Imaginary?(T)] overload normalized?(x:T) = not subnormal?(x) and finite?(x);
-
