@@ -353,6 +353,7 @@ TypePtr recordType(RecordDeclPtr record, llvm::ArrayRef<ObjectPtr> params) {
     for (pi = params.begin(), pend = params.end(); pi != pend; ++pi)
         t->params.push_back(*pi);
     recordTypes[h].push_back(t);
+    t->hasVarField = record->body->hasVarField;
     initializeRecordFields(t);
     return t.ptr();
 }
@@ -713,10 +714,21 @@ void initializeRecordFields(RecordTypePtr t) {
     else {
         for (unsigned i = 0; i < body->fields.size(); ++i) {
             RecordField *x = body->fields[i].ptr();
-            t->fieldIndexMap[x->name->str] = i;
-            TypePtr ftype = evaluateType(x->type, env);
-            t->fieldTypes.push_back(ftype);
+            if (x->varField) {
+                LocationContext loc(x->type->location);
+                MultiStaticPtr ms = evaluateExprStatic(x->type, env);
+                for (unsigned j = 0; j < ms->size(); ++j) {
+                    TypePtr z = staticToType(ms, j);
+                    t->fieldTypes.push_back(z);
+                }
+                t->varFieldPosition = i;
+            } else {
+                TypePtr ftype = evaluateType(x->type, env);
+                t->fieldTypes.push_back(ftype);
+            }
             t->fieldNames.push_back(x->name);
+            t->fieldIndexMap[x->name->str] = i;
+            
         }
     }
 }
@@ -943,7 +955,7 @@ static void verifyRecursionCorrectness(TypePtr t,
         RecordType *rt = (RecordType *)t.ptr();
         llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(rt);
         for (unsigned i = 0; i < fieldTypes.size(); ++i)
-            verifyRecursionCorrectness(fieldTypes[i], visited);
+            verifyRecursionCorrectness(fieldTypes[i], visited);  
         break;
     }
     case VARIANT_TYPE : {
@@ -1516,7 +1528,6 @@ static void defineLLVMType(TypePtr t) {
 
         llvm::StructType *theType = llvm::cast<llvm::StructType>(t->llType);
 
-        llvm::ArrayRef<IdentifierPtr> fieldNames = recordFieldNames(x);
         llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(x);
         vector<llvm::Type *> llTypes;
         TypePtr const *i, *end;
@@ -1530,32 +1541,36 @@ static void defineLLVMType(TypePtr t) {
         if (llvmDIBuilder != NULL) {
             llvm::TrackingVH<llvm::MDNode> placeholderNode = (llvm::MDNode*)x->getDebugInfo();
             llvm::DIType placeholder(placeholderNode);
-
+            llvm::ArrayRef<IdentifierPtr> fieldNames = recordFieldNames(x);
             vector<llvm::Value*> members;
             size_t debugOffset = 0;
             for (size_t i = 0; i < fieldNames.size(); ++i) {
-                llvm::Type *memberLLT = llvmType(fieldTypes[i]);
-                size_t debugAlign = debugTypeAlignment(memberLLT);
-                size_t debugSize = debugTypeSize(memberLLT);
-                debugOffset = alignedUpTo(debugOffset, debugAlign);
+                if (x->hasVarField && i == x->varFieldPosition) {
+                    
+                } else {
+                    llvm::Type *memberLLT = llvmType(fieldTypes[i]);
+                    size_t debugAlign = debugTypeAlignment(memberLLT);
+                    size_t debugSize = debugTypeSize(memberLLT);
+                    debugOffset = alignedUpTo(debugOffset, debugAlign);
 
-                Location fieldLocation = fieldNames[i]->location;
-                if (!fieldLocation.ok())
-                    fieldLocation = x->record->location;
-                int fieldLine, fieldColumn;
-                llvm::DIFile fieldFile = getDebugLineCol(fieldLocation, fieldLine, fieldColumn);
-                members.push_back(llvmDIBuilder->createMemberType(
-                    placeholder,
-                    fieldNames[i]->str,
-                    fieldFile, // file
-                    fieldLine, // lineNo
-                    debugSize, // size
-                    debugAlign, // align
-                    debugOffset, // offset
-                    0, // flags
-                    llvmTypeDebugInfo(fieldTypes[i]) // type
-                    ));
-                debugOffset += debugSize;
+                    Location fieldLocation = fieldNames[i]->location;
+                    if (!fieldLocation.ok())
+                        fieldLocation = x->record->location;
+                    int fieldLine, fieldColumn;
+                    llvm::DIFile fieldFile = getDebugLineCol(fieldLocation, fieldLine, fieldColumn);
+                    members.push_back(llvmDIBuilder->createMemberType(
+                        placeholder,
+                        fieldNames[i]->str,
+                        fieldFile, // file
+                        fieldLine, // lineNo
+                        debugSize, // size
+                        debugAlign, // align
+                        debugOffset, // offset
+                        0, // flags
+                        llvmTypeDebugInfo(fieldTypes[i]) // type
+                        ));
+                    debugOffset += debugSize;
+                }
             }
 
             llvm::DIArray memberArray = llvmDIBuilder->getOrCreateArray(

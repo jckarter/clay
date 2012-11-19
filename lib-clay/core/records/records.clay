@@ -3,18 +3,18 @@
 
 [T, FIELD when RecordWithField?(T, FIELD)]
 forceinline overload fieldRef(x:T, #FIELD) {
-    return ref recordFieldRefByName(x, #FIELD);
+    return ref ..recordFieldRefByName(x, #FIELD);
 }
 
 [T, i when Record?(T)]
 forceinline fieldRefByIndex(x:T, #i) =
-    ref recordFieldRef(x, #SizeT(i));
+    ref ..recordFieldRef(x, #SizeT(i));
 
 
 /// @section  RecordFieldType, RecordFieldTypes 
 
 [T,i when Record?(T)]
-RecordFieldType(#T, #i) = Type(fieldRefByIndex(null(T)^, #i));
+RecordFieldType(#T, #i) = ..Type(..fieldRefByIndex(null(T)^, #i));
 
 [T when Record?(T)]
 RecordFieldTypes(#T) = ..Type(..recordFields(null(T)^));
@@ -25,7 +25,7 @@ RecordFieldTypes(#T) = ..Type(..recordFields(null(T)^));
 
 RecordFields(R) {
     alias n = RecordFieldCount(R);
-    var f = i => [RecordFieldName(R,i), RecordFieldType(R,i)];
+    var f = i => [RecordFieldName(R,i), ..RecordFieldType(R,i)];
     return ..mapValues(f, ..staticIntegers(#n));
 }
 
@@ -105,7 +105,7 @@ overload T(src:T) = copyRecord(src);
 moveRecordUnsafe(src:T) --> returned:T {
     alias n = RecordFieldCount(T);
     ..for (i in staticIntegers(#n))
-        fieldRefByIndex(returned, i) <-- moveUnsafe(fieldRefByIndex(src, i));
+        ..fieldRefByIndex(returned, i) <-- moveUnsafe(..fieldRefByIndex(src, i));
 }
 
 [T when RegularRecord?(T) and not BitwiseMovedType?(T)]

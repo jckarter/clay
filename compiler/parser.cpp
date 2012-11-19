@@ -1950,20 +1950,35 @@ bool importVisibility(Visibility &x) {
 // records
 //
 
-static bool recordField(RecordFieldPtr &x) {
+static bool recordField(RecordFieldPtr &x, bool &hasVarField) {
     Location location = currentLocation();
     IdentifierPtr y;
-    if (!identifier(y)) return false;
     ExprPtr z;
-    if (!exprTypeSpec(z)) return false;
+    bool varField = false;
+    int p = save();
+    if (ellipsis()) {
+        if (hasVarField) 
+            return false;    
+        else
+            hasVarField = true;
+        varField = true;
+    } else
+        restore(p);
+    if (!identifier(y)) return false;
+    if (varField) {
+        if (!varArgTypeSpec(z)) return false;
+    } else {
+        if (!exprTypeSpec(z)) return false;
+    }
     x = new RecordField(y, z);
     x->location = location;
+    x->varField = varField;
     return true;
 }
 
-static bool recordFields(vector<RecordFieldPtr> &x) {
+static bool recordFields(vector<RecordFieldPtr> &x, bool &hasVarField) {
     RecordFieldPtr y;
-    if (!recordField(y)) return false;
+    if (!recordField(y, hasVarField)) return false;
     x.clear();
     while (true) {
         x.push_back(y);
@@ -1973,7 +1988,7 @@ static bool recordFields(vector<RecordFieldPtr> &x) {
             break;
         }
         p = save();
-        if (!recordField(y)) {
+        if (!recordField(y, hasVarField)) {
             restore(p);
             break;
         }
@@ -1981,9 +1996,9 @@ static bool recordFields(vector<RecordFieldPtr> &x) {
     return true;
 }
 
-static bool optRecordFields(vector<RecordFieldPtr> &x) {
+static bool optRecordFields(vector<RecordFieldPtr> &x, bool &hasVarField) {
     int p = save();
-    if (!recordFields(x)) {
+    if (!recordFields(x, hasVarField)) {
         restore(p);
         x.clear();
     }
@@ -1994,10 +2009,11 @@ static bool recordBodyFields(RecordBodyPtr &x) {
     Location location = currentLocation();
     if (!symbol("(")) return false;
     vector<RecordFieldPtr> y;
-    if (!optRecordFields(y)) return false;
+    bool hasVarField = false;
+    if (!optRecordFields(y, hasVarField)) return false;
     if (!symbol(")")) return false;
     if (!symbol(";")) return false;
-    x = new RecordBody(y);
+    x = new RecordBody(y, hasVarField);
     x->location = location;
     return true;
 }

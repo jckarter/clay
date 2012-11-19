@@ -6124,8 +6124,7 @@ void codegenPrimOp(PrimOpPtr x,
     case PRIM_RecordFieldCount : {
         ensureArity(args, 1);
         RecordTypePtr rt = valueToRecordType(args, 0);
-        llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(rt);
-        ValueHolderPtr vh = sizeTToValueHolder(fieldTypes.size());
+        ValueHolderPtr vh = sizeTToValueHolder(rt->fieldCount());
         codegenStaticObject(vh.ptr(), ctx, out);
         break;
     }
@@ -6168,14 +6167,35 @@ void codegenPrimOp(PrimOpPtr x,
         llvm::Value *vrec = recordValue(args, 0, rt);
         size_t i = valueToStaticSizeTOrInt(args, 1);
         llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(rt);
-        if (i >= fieldTypes.size())
+        if (i >= rt->fieldCount())
             argumentIndexRangeError(1, "record field index",
-                                    i, fieldTypes.size());
-        llvm::Value *ptr = ctx->builder->CreateConstGEP2_32(vrec, 0, i);
-        assert(out->size() == 1);
-        CValuePtr out0 = out->values[0];
-        assert(out0->type == pointerType(fieldTypes[i]));
-        ctx->builder->CreateStore(ptr, out0->llValue);
+                                    i, rt->fieldCount());
+        
+        if (rt->hasVarField && i >= rt->varFieldPosition) {
+            if (i == rt->varFieldPosition) {
+                assert(out->size() == rt->varFieldSize());
+                for (size_t j = 0; j < rt->varFieldSize(); ++j) {
+                    CValuePtr outi = out->values[j];
+                    assert(outi->type == pointerType(fieldTypes[i+j]));
+                    llvm::Value *ptr = ctx->builder->CreateConstGEP2_32(vrec, 0, i+j);
+                    ctx->builder->CreateStore(ptr, outi->llValue);
+                }
+            } else {
+                size_t k = i+rt->varFieldSize()-1;
+                llvm::Value *ptr = ctx->builder->CreateConstGEP2_32(vrec, 0, k);
+                assert(out->size() == 1);
+                CValuePtr out0 = out->values[0];
+                assert(out0->type == pointerType(fieldTypes[k]));
+                ctx->builder->CreateStore(ptr, out0->llValue);
+            }
+        } else {
+            llvm::Value *ptr = ctx->builder->CreateConstGEP2_32(vrec, 0, i);
+            assert(out->size() == 1);
+            CValuePtr out0 = out->values[0];
+            assert(out0->type == pointerType(fieldTypes[i]));
+            ctx->builder->CreateStore(ptr, out0->llValue);
+        }
+        
         break;
     }
 
@@ -6193,13 +6213,32 @@ void codegenPrimOp(PrimOpPtr x,
             sout << "field not found: " << fname->str;
             argumentError(1, sout.str());
         }
-        size_t index = fi->second;
+        size_t i = fi->second;
         llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(rt);
-        llvm::Value *ptr = ctx->builder->CreateConstGEP2_32(vrec, 0, index);
-        assert(out->size() == 1);
-        CValuePtr out0 = out->values[0];
-        assert(out0->type == pointerType(fieldTypes[index]));
-        ctx->builder->CreateStore(ptr, out0->llValue);
+        if (rt->hasVarField && i >= rt->varFieldPosition) {
+            if (i == rt->varFieldPosition) {
+                assert(out->size() == rt->varFieldSize());
+                for (size_t j = 0; j < rt->varFieldSize(); ++j) {
+                    CValuePtr outi = out->values[j];
+                    assert(outi->type == pointerType(fieldTypes[i+j]));
+                    llvm::Value *ptr = ctx->builder->CreateConstGEP2_32(vrec, 0, i+j);
+                    ctx->builder->CreateStore(ptr, outi->llValue);
+                }
+            } else {
+                size_t k = i+rt->varFieldSize()-1;
+                llvm::Value *ptr = ctx->builder->CreateConstGEP2_32(vrec, 0, k);
+                assert(out->size() == 1);
+                CValuePtr out0 = out->values[0];
+                assert(out0->type == pointerType(fieldTypes[k]));
+                ctx->builder->CreateStore(ptr, out0->llValue);
+            }
+        } else {
+            llvm::Value *ptr = ctx->builder->CreateConstGEP2_32(vrec, 0, i);
+            assert(out->size() == 1);
+            CValuePtr out0 = out->values[0];
+            assert(out0->type == pointerType(fieldTypes[i]));
+            ctx->builder->CreateStore(ptr, out0->llValue);
+        }
         break;
     }
 

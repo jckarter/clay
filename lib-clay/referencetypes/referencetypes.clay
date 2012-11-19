@@ -46,7 +46,7 @@ referenceType(..fields:F) = referenceTypeWithProperties([], ..fields);
 
 [T when ReferenceType?(T)]
 forceinline referencePtr(x:T) =
-    ref recordFieldRef(x, #0);
+    ref ..recordFieldRef(x, #0);
 
 
 

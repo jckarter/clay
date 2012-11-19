@@ -3242,10 +3242,20 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         if (!obj || !staticToSizeTOrInt(obj, i))
             argumentError(1, "expecting static SizeT or Int value");
         llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(t);
-        if (i >= fieldTypes.size())
+        if (i >= t->fieldCount())
             argumentIndexRangeError(1, "record field index",
-                                    i, fieldTypes.size());
-        return new MultiPValue(PVData(fieldTypes[i], false));
+                                    i, t->fieldCount());
+        
+        MultiPValuePtr mpv = new MultiPValue();
+        if (t->hasVarField && i >= t->varFieldPosition)
+            if (i == t->varFieldPosition)
+                for (size_t j=0;j < t->varFieldSize(); ++j)
+                    mpv->add(PVData(fieldTypes[i+j], false));
+            else
+                mpv->add(PVData(fieldTypes[i+t->varFieldSize()-1], false));
+        else
+            mpv->add(PVData(fieldTypes[i], false));
+        return mpv;
     }
 
     case PRIM_recordFieldRefByName : {
@@ -3265,7 +3275,17 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             argumentError(1, sout.str());
         }
         llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(t);
-        return new MultiPValue(PVData(fieldTypes[fi->second], false));
+        MultiPValuePtr mpv = new MultiPValue();
+        size_t i = fi->second;
+        if (t->hasVarField && i >= t->varFieldPosition)
+            if (i == t->varFieldPosition)
+                for (size_t j=0;j < t->varFieldSize(); ++j)
+                    mpv->add(PVData(fieldTypes[i+j], false));
+            else
+                mpv->add(PVData(fieldTypes[i+t->varFieldSize()-1], false));
+        else
+            mpv->add(PVData(fieldTypes[i], false));
+        return mpv;
     }
 
     case PRIM_recordFields : {
