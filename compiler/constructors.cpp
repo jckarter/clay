@@ -125,6 +125,7 @@ void initBuiltinConstructor(RecordDeclPtr x)
 
     CodePtr code = new Code();
     code->location = x->location;
+    code->hasVarArg = y->hasVarField;
     for (unsigned i = 0; i < x->params.size(); ++i) {
         PatternVar pvar(false, x->params[i]);
         code->patternVars.push_back(pvar);
@@ -136,7 +137,7 @@ void initBuiltinConstructor(RecordDeclPtr x)
 
     for (unsigned i = 0; i < y->fields.size(); ++i) {
         RecordFieldPtr f = y->fields[i];
-        FormalArgPtr arg = new FormalArg(f->name, f->type);
+        FormalArgPtr arg = new FormalArg(f->name, f->type, TEMPNESS_DONTCARE, f->varField);
         arg->location = f->location;
         code->formalArgs.push_back(arg.ptr());
     }

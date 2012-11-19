@@ -1070,6 +1070,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(recordFieldRef);
     PRIMITIVE(recordFieldRefByName);
     PRIMITIVE(recordFields);
+    PRIMITIVE(recordVariadicField);
 
     PRIMITIVE(VariantP);
     PRIMITIVE(VariantMemberIndex);

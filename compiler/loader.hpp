@@ -141,6 +141,7 @@ enum PrimOpCode {
     PRIM_recordFieldRef,
     PRIM_recordFieldRefByName,
     PRIM_recordFields,
+    PRIM_recordVariadicField,
 
     PRIM_VariantP,
     PRIM_VariantMemberIndex,

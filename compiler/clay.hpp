@@ -1870,17 +1870,24 @@ struct RecordBody : public ANode {
     ExprListPtr computed; // valid if isComputed == true
     vector<RecordFieldPtr> fields; // valid if isComputed == false
     bool isComputed:1;
+    bool hasVarField:1;
     RecordBody(ExprListPtr computed)
-        : ANode(RECORD_BODY), computed(computed), isComputed(true) {}
+        : ANode(RECORD_BODY), computed(computed), isComputed(true),
+        hasVarField(false) {}
     RecordBody(llvm::ArrayRef<RecordFieldPtr> fields)
-        : ANode(RECORD_BODY), fields(fields), isComputed(false) {}
+        : ANode(RECORD_BODY), fields(fields), isComputed(false), 
+        hasVarField(false) {}
+    RecordBody(llvm::ArrayRef<RecordFieldPtr> fields, bool hasVarField)
+        : ANode(RECORD_BODY), fields(fields), isComputed(false), 
+        hasVarField(hasVarField) {}
 };
 
 struct RecordField : public ANode {
     IdentifierPtr name;
     ExprPtr type;
+    bool varField:1;
     RecordField(IdentifierPtr name, ExprPtr type)
-        : ANode(RECORD_FIELD), name(name), type(type) {}
+        : ANode(RECORD_FIELD), name(name), type(type), varField(false) {}
 };
 
 struct VariantDecl : public TopLevelItem {
@@ -2828,18 +2835,28 @@ struct RecordType : public Type {
 
     vector<IdentifierPtr> fieldNames;
     vector<TypePtr> fieldTypes;
+    
     llvm::StringMap<size_t> fieldIndexMap;
 
     const llvm::StructLayout *layout;
 
+    unsigned varFieldPosition;
+    bool hasVarField:1;
     bool fieldsInitialized:1;
 
     RecordType(RecordDeclPtr record)
         : Type(RECORD_TYPE), record(record),
-          layout(NULL), fieldsInitialized(false) {}
+          layout(NULL), fieldsInitialized(false), hasVarField(false) {}
     RecordType(RecordDeclPtr record, llvm::ArrayRef<ObjectPtr> params)
         : Type(RECORD_TYPE), record(record), params(params),
-          layout(NULL), fieldsInitialized(false) {}
+          layout(NULL), fieldsInitialized(false), hasVarField(false) {}
+
+    unsigned varFieldSize() {
+        return fieldTypes.size() - fieldNames.size() + 1;
+    }
+    unsigned fieldCount() {
+        return fieldNames.size();
+    }
 };
 
 struct VariantType : public Type {

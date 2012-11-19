@@ -4336,8 +4336,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
     case PRIM_RecordFieldCount : {
         ensureArity(args, 1);
         RecordTypePtr rt = valueToRecordType(args, 0);
-        llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(rt);
-        ValueHolderPtr vh = sizeTToValueHolder(fieldTypes.size());
+        ValueHolderPtr vh = sizeTToValueHolder(rt->fieldCount());
         evalStaticObject(vh.ptr(), out);
         break;
     }
@@ -4380,15 +4379,35 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr erec = recordValue(args, 0, rt);
         size_t i = valueToStaticSizeTOrInt(args, 1);
         llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(rt);
-        if (i >= fieldTypes.size())
+        if (i >= rt->fieldCount())
             argumentIndexRangeError(1, "record field index",
-                                    i, fieldTypes.size());
+                                    i, rt->fieldCount());
         const llvm::StructLayout *layout = recordTypeLayout(rt.ptr());
-        char *ptr = erec->addr + layout->getElementOffset(i);
-        assert(out->size() == 1);
-        EValuePtr out0 = out->values[0];
-        assert(out0->type == pointerType(fieldTypes[i]));
-        out0->as<void *>() = (void *)ptr;
+        
+        if (rt->hasVarField && i >= rt->varFieldPosition) {
+            if (i == rt->varFieldPosition) {
+                assert(out->size() == rt->varFieldSize());
+                for (unsigned j = 0; j < rt->varFieldSize(); ++j) {
+                    char *ptr = erec->addr + layout->getElementOffset(i+j);
+                    EValuePtr out0 = out->values[j];
+                    assert(out0->type == pointerType(fieldTypes[i+j]));
+                    out0->as<void *>() = (void *)ptr;
+                }
+            } else {
+                unsigned k = i+rt->varFieldSize()-1;
+                char *ptr = erec->addr + layout->getElementOffset(k);
+                assert(out->size() == 1);
+                EValuePtr out0 = out->values[0];
+                assert(out0->type == pointerType(fieldTypes[k]));
+                out0->as<void *>() = (void *)ptr;
+            }
+        } else {
+            char *ptr = erec->addr + layout->getElementOffset(i);
+            assert(out->size() == 1);
+            EValuePtr out0 = out->values[0];
+            assert(out0->type == pointerType(fieldTypes[i]));
+            out0->as<void *>() = (void *)ptr;
+        }
         break;
     }
 
@@ -4406,14 +4425,34 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
             sout << "field not found: " << fname->str;
             argumentError(1, sout.str());
         }
-        size_t index = fi->second;
+        size_t i = fi->second;
         llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(rt);
         const llvm::StructLayout *layout = recordTypeLayout(rt.ptr());
-        char *ptr = erec->addr + layout->getElementOffset(index);
-        assert(out->size() == 1);
-        EValuePtr out0 = out->values[0];
-        assert(out0->type == pointerType(fieldTypes[index]));
-        out0->as<void *>() = (void *)ptr;
+        
+        if (rt->hasVarField && i >= rt->varFieldPosition) {
+            if (i == rt->varFieldPosition) {
+                assert(out->size() == rt->varFieldSize());
+                for (unsigned j = 0; j < rt->varFieldSize(); ++j) {
+                    char *ptr = erec->addr + layout->getElementOffset(i+j);
+                    EValuePtr out0 = out->values[j];
+                    assert(out0->type == pointerType(fieldTypes[i+j]));
+                    out0->as<void *>() = (void *)ptr;
+                }
+            } else {
+                unsigned k = i+rt->varFieldSize()-1;
+                char *ptr = erec->addr + layout->getElementOffset(k);
+                assert(out->size() == 1);
+                EValuePtr out0 = out->values[0];
+                assert(out0->type == pointerType(fieldTypes[k]));
+                out0->as<void *>() = (void *)ptr;
+            }
+        } else {
+            char *ptr = erec->addr + layout->getElementOffset(i);
+            assert(out->size() == 1);
+            EValuePtr out0 = out->values[0];
+            assert(out0->type == pointerType(fieldTypes[i]));
+            out0->as<void *>() = (void *)ptr;
+        }
         break;
     }
 
@@ -4428,6 +4467,26 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
             EValuePtr outi = out->values[i];
             assert(outi->type == pointerType(fieldTypes[i]));
             char *ptr = erec->addr + layout->getElementOffset(i);
+            outi->as<void *>() = (void *)ptr;
+        }
+        break;
+    }
+
+    case PRIM_recordVariadicField : {
+        ensureArity(args, 1);
+        RecordTypePtr rt;
+        EValuePtr erec = recordValue(args, 0, rt);
+        llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(rt);
+        if (!rt->hasVarField)
+            argumentError(0, "expecting a record with a variadic field");
+        assert(out->size() == fieldTypes.size());
+        const llvm::StructLayout *layout = recordTypeLayout(rt.ptr());
+        assert(out->size() == rt->varFieldSize());
+        for (unsigned i = 0; i < rt->varFieldSize(); ++i) {
+            size_t k = rt->varFieldPosition + i;
+            EValuePtr outi = out->values[i];
+            assert(outi->type == pointerType(fieldTypes[k]));
+            char *ptr = erec->addr + layout->getElementOffset(k);
             outi->as<void *>() = (void *)ptr;
         }
         break;
