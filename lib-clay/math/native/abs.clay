@@ -1,6 +1,7 @@
 
-import numbers.floats.(imagFromBits,floatFromBits,floatBitsUnsigned);
+import numbers.floats.(floatFromBits,floatBitsUnsigned);
 import math.native.protocol.*;
+import complex.(Imaginary?, imagFromBits);
 
 [I when Integer?(I) ]
 forceinline overload abs(x:I) = if(x >= 0) x else -x;

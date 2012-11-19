@@ -1,5 +1,6 @@
 
 import math.native.protocol.*;
+import complex.*;
 
 [T when Complex?(T) ]
 arg(x:T) = atan2(imagValue(x),real(x));

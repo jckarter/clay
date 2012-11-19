@@ -3,6 +3,7 @@ import printer.(println, str, printlnTo);
 import printer.formatter.(repr);
 import random.(RNG?, XORShiftRNG, generate, uniform);
 import data.vectors.(Vector);
+import complex.core.*;
 
 // protocol for generating arbitrary values of a type
 

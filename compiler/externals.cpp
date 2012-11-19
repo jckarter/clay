@@ -360,8 +360,8 @@ struct X86_32_ExternalTarget : public ExternalTarget {
             else
                 return typeSize(type);
 
-        case COMPLEX_TYPE:
-            return typeSize(type);
+        // case COMPLEX_TYPE:
+        //     return typeSize(type);
 
         case VARIANT_TYPE:
         case UNION_TYPE:
@@ -414,7 +414,7 @@ struct X86_32_ExternalTarget : public ExternalTarget {
         case STATIC_TYPE:
         case ENUM_TYPE:
         case VEC_TYPE:
-        case COMPLEX_TYPE:
+        // case COMPLEX_TYPE:
         case VARIANT_TYPE:
             return NULL;
         
@@ -534,7 +534,7 @@ struct X86_64_ExternalTarget : public LLVMExternalTarget {
         case ENUM_TYPE:
         case VEC_TYPE:
             return true;
-        case COMPLEX_TYPE:
+        // case COMPLEX_TYPE:
         case VARIANT_TYPE:
         case UNION_TYPE:
         case RECORD_TYPE:
@@ -685,26 +685,26 @@ static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_
         }
         break;
     }
-    case COMPLEX_TYPE: {
-        ComplexType *complexType = (ComplexType *)type.ptr();
-        switch (complexType->bits) {
-        case 32:
-        case 64:
-            _classifyType(floatType(complexType->bits), begin, offset);
-            _classifyType(imagType(complexType->bits), begin, offset + complexType->bits/8);
-            break;
-        case 80:
-            unifyWordClass(begin + offset/8, COMPLEX_X87);
-            unifyWordClass(begin + offset/8 + 1, COMPLEX_X87);
-            unifyWordClass(begin + offset/8 + 2, COMPLEX_X87);
-            unifyWordClass(begin + offset/8 + 3, COMPLEX_X87);
-            break;
-        default:
-            assert(false);
-            break;
-        }
-        break;
-    }
+    // case COMPLEX_TYPE: {
+    //     ComplexType *complexType = (ComplexType *)type.ptr();
+    //     switch (complexType->bits) {
+    //     case 32:
+    //     case 64:
+    //         _classifyType(floatType(complexType->bits), begin, offset);
+    //         _classifyType(imagType(complexType->bits), begin, offset + complexType->bits/8);
+    //         break;
+    //     case 80:
+    //         unifyWordClass(begin + offset/8, COMPLEX_X87);
+    //         unifyWordClass(begin + offset/8 + 1, COMPLEX_X87);
+    //         unifyWordClass(begin + offset/8 + 2, COMPLEX_X87);
+    //         unifyWordClass(begin + offset/8 + 3, COMPLEX_X87);
+    //         break;
+    //     default:
+    //         assert(false);
+    //         break;
+    //     }
+    //     break;
+    // }
     case ARRAY_TYPE: {
         ArrayType *arrayType = (ArrayType *)type.ptr();
         assert(arrayType->size >= 0);

@@ -557,7 +557,7 @@ struct Type;
 struct BoolType;
 struct IntegerType;
 struct FloatType;
-struct ComplexType;
+// struct ComplexType;
 struct ArrayType;
 struct VecType;
 struct TupleType;
@@ -710,7 +710,7 @@ typedef Pointer<Type> TypePtr;
 typedef Pointer<BoolType> BoolTypePtr;
 typedef Pointer<IntegerType> IntegerTypePtr;
 typedef Pointer<FloatType> FloatTypePtr;
-typedef Pointer<ComplexType> ComplexTypePtr;
+// typedef Pointer<ComplexType> ComplexTypePtr;
 typedef Pointer<ArrayType> ArrayTypePtr;
 typedef Pointer<VecType> VecTypePtr;
 typedef Pointer<TupleType> TupleTypePtr;
@@ -2684,7 +2684,7 @@ enum TypeKind {
     BOOL_TYPE,
     INTEGER_TYPE,
     FLOAT_TYPE,
-    COMPLEX_TYPE,
+    // COMPLEX_TYPE,
     POINTER_TYPE,
     CODE_POINTER_TYPE,
     CCODE_POINTER_TYPE,
@@ -2742,12 +2742,12 @@ struct FloatType : public Type {
         : Type(FLOAT_TYPE), bits(bits), isImaginary(isImaginary){}
 };
 
-struct ComplexType : public Type {
-    const llvm::StructLayout *layout;
-    int bits:15;
-    ComplexType(int bits)
-        : Type(COMPLEX_TYPE), layout(NULL), bits(bits) {}
-};
+// struct ComplexType : public Type {
+//     const llvm::StructLayout *layout;
+//     int bits:15;
+//     ComplexType(int bits)
+//        : Type(COMPLEX_TYPE), layout(NULL), bits(bits) {}
+// };
 
 struct PointerType : public Type {
     TypePtr pointeeType;

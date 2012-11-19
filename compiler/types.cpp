@@ -31,9 +31,9 @@ TypePtr float80Type;
 TypePtr imag32Type;
 TypePtr imag64Type;
 TypePtr imag80Type;
-TypePtr complex32Type;
-TypePtr complex64Type;
-TypePtr complex80Type;
+// TypePtr complex32Type;
+// TypePtr complex64Type;
+// TypePtr complex80Type;
 
 TypePtr cIntType;
 TypePtr cSizeTType;
@@ -88,9 +88,9 @@ void initTypes() {
     imag32Type = new FloatType(32, true);
     imag64Type = new FloatType(64, true);
     imag80Type = new FloatType(80, true);
-    complex32Type = new ComplexType(32);
-    complex64Type = new ComplexType(64);
-    complex80Type = new ComplexType(80);
+    // complex32Type = new ComplexType(32);
+    // complex64Type = new ComplexType(64);
+    // complex80Type = new ComplexType(80);
 
     cIntType = int32Type;
     switch (llvmTargetData->getPointerSizeInBits()) {
@@ -174,16 +174,16 @@ TypePtr imagType(int bits) {
     }
 }
 
-TypePtr complexType(int bits) {
-    switch (bits) {
-    case 32 : return complex32Type;
-    case 64 : return complex64Type;
-    case 80 : return complex80Type;
-    default :
-        assert(false);
-        return NULL;
-    }
-}
+// TypePtr complexType(int bits) {
+//     switch (bits) {
+//     case 32 : return complex32Type;
+//     case 64 : return complex64Type;
+//     case 80 : return complex80Type;
+//     default :
+//         assert(false);
+//         return NULL;
+//     }
+// }
 
 static int pointerHash(void *p) {
     return int(size_t(p));
@@ -443,7 +443,7 @@ bool isPrimitiveType(TypePtr t)
     case BOOL_TYPE :
     case INTEGER_TYPE :
     case FLOAT_TYPE :
-    case COMPLEX_TYPE :
+    // case COMPLEX_TYPE :
     case POINTER_TYPE :
     case CODE_POINTER_TYPE :
     case CCODE_POINTER_TYPE :
@@ -462,7 +462,7 @@ bool isPrimitiveAggregateType(TypePtr t)
     case BOOL_TYPE :
     case INTEGER_TYPE :
     case FLOAT_TYPE :
-    case COMPLEX_TYPE :
+    // case COMPLEX_TYPE :
     case POINTER_TYPE :
     case CODE_POINTER_TYPE :
     case CCODE_POINTER_TYPE :
@@ -493,7 +493,7 @@ bool isPrimitiveAggregateTooLarge(TypePtr t)
     case BOOL_TYPE :
     case INTEGER_TYPE :
     case FLOAT_TYPE :
-    case COMPLEX_TYPE :
+    // case COMPLEX_TYPE :
     case POINTER_TYPE :
     case CODE_POINTER_TYPE :
     case CCODE_POINTER_TYPE :
@@ -873,14 +873,14 @@ const llvm::StructLayout *tupleTypeLayout(TupleType *t) {
     return t->layout;
 }
 
-const llvm::StructLayout *complexTypeLayout(ComplexType *t) {
-    if (t->layout == NULL) {
-        llvm::StructType *st =
-            llvm::cast<llvm::StructType>(llvmType(t));
-        t->layout = llvmTargetData->getStructLayout(st);
-    }
-    return t->layout;
-}
+// const llvm::StructLayout *complexTypeLayout(ComplexType *t) {
+//     if (t->layout == NULL) {
+//         llvm::StructType *st =
+//             llvm::cast<llvm::StructType>(llvmType(t));
+//         t->layout = llvmTargetData->getStructLayout(st);
+//     }
+//     return t->layout;
+// }
 
 const llvm::StructLayout *recordTypeLayout(RecordType *t) {
     if (t->layout == NULL) {
@@ -1113,22 +1113,22 @@ static void declareLLVMType(TypePtr t) {
                 x->isImaginary ? llvm::dwarf::DW_ATE_imaginary_float : llvm::dwarf::DW_ATE_float);
         break;
     }
-    case COMPLEX_TYPE : {
-        ComplexType *x = (ComplexType *)t.ptr();
-        vector<llvm::Type *> llTypes;
-        TypePtr realT = floatType(x->bits), imagT = imagType(x->bits);
-        llTypes.push_back(llvmType(realT));
-        llTypes.push_back(llvmType(imagT));
-        t->llType = llvm::StructType::create(llvm::getGlobalContext(), llTypes, typeName(t));
-        if (llvmDIBuilder != NULL) {
-            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createBasicType(
-                typeName(t),
-                debugTypeSize(t->llType),
-                debugTypeAlignment(t->llType),
-                llvm::dwarf::DW_ATE_complex_float);
-        }
-        break;
-    }
+    // case COMPLEX_TYPE : {
+    //     ComplexType *x = (ComplexType *)t.ptr();
+    //     vector<llvm::Type *> llTypes;
+    //     TypePtr realT = floatType(x->bits), imagT = imagType(x->bits);
+    //     llTypes.push_back(llvmType(realT));
+    //     llTypes.push_back(llvmType(imagT));
+    //     t->llType = llvm::StructType::create(llvm::getGlobalContext(), llTypes, typeName(t));
+    //     if (llvmDIBuilder != NULL) {
+    //         t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createBasicType(
+    //             typeName(t),
+    //             debugTypeSize(t->llType),
+    //             debugTypeAlignment(t->llType),
+    //             llvm::dwarf::DW_ATE_complex_float);
+    //     }
+    //     break;
+    // }
     case POINTER_TYPE : {
         PointerType *x = (PointerType *)t.ptr();
         t->llType = llvmPointerType(x->pointeeType);
@@ -1358,7 +1358,7 @@ static void defineLLVMType(TypePtr t) {
     case BOOL_TYPE :
     case INTEGER_TYPE :
     case FLOAT_TYPE :
-    case COMPLEX_TYPE :
+    // case COMPLEX_TYPE :
     case POINTER_TYPE :
     case CODE_POINTER_TYPE :
     case CCODE_POINTER_TYPE :

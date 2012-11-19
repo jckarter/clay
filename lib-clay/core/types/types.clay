@@ -36,17 +36,6 @@ alias CDouble = Float64;
 
 // CLongDouble is different on different platforms
 
-alias ComplexFloat = Complex32;
-alias ComplexDouble = Complex64;
-alias ComplexLongDouble = Complex80;
-
-alias CComplexFloat = ComplexFloat;
-alias CComplexDouble = ComplexDouble;
-
-alias IFloat = Imag32;
-alias IDouble = Imag64;
-alias ILongDouble = Imag80;
-
 alias RawPointer = Pointer[Byte];
 alias OpaquePointer = Pointer[Byte];
 
@@ -167,27 +156,6 @@ forceinline overload LeastPositiveNormalized(#Float80) : Float80
     = 0x1.0000_0000_0000_0000p-16382l;
 forceinline overload GreatestPositiveFinite(#Float80) : Float80
     = 0x1.FFFF_FFFF_FFFF_FFFEp16383l;
-
-forceinline overload LeastPositive(#Imag32) : Imag32
-    = numericConvert(Imag32,LeastPositive(Float32));
-forceinline overload LeastPositiveNormalized(#Imag32) : Imag32
-    = numericConvert(Imag32,LeastPositiveNormalized(Float32));
-forceinline overload GreatestPositiveFinite(#Imag32) : Imag32
-    = numericConvert(Imag32,GreatestPositiveFinite(Float32));
-
-forceinline overload LeastPositive(#Imag64) : Imag64
-    = numericConvert(Imag64,LeastPositive(Float64));
-forceinline overload LeastPositiveNormalized(#Imag64) : Imag64
-    = numericConvert(Imag64,LeastPositiveNormalized(Float64));
-forceinline overload GreatestPositiveFinite(#Imag64) : Imag64
-    = numericConvert(Imag64,GreatestPositiveFinite(Float64));
-
-forceinline overload LeastPositive(#Imag80) : Imag80
-    = numericConvert(Imag80,LeastPositive(Float80));
-forceinline overload LeastPositiveNormalized(#Imag80) : Imag80
-    = numericConvert(Imag80,LeastPositiveNormalized(Float80));
-forceinline overload GreatestPositiveFinite(#Imag80) : Imag80
-    = numericConvert(Imag80,GreatestPositiveFinite(Float80));
 
 
 /// @section  valueSize() 

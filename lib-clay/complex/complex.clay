@@ -1,6 +1,140 @@
-
+public import complex.core.*;
 import numbers.floats.*;
-import math.native.abscomplex.(abs);
+import math.native.protocol.(abs);
+
+
+overload floatBits(f:ILongDouble) = bitcast(Float80Bits, f);
+overload floatBits(f:IDouble) = bitcast(UInt64, f);
+overload floatBits(f:IFloat) = bitcast(UInt32, f);
+
+
+define imagFromBits;
+overload imagFromBits(m:UInt64,e:UInt64) = bitcast(ILongDouble, Float80Bits(m,e));
+overload imagFromBits(b:UInt64) = bitcast(IDouble, b);
+overload imagFromBits(b:UInt32) = bitcast(IFloat, b);
+
+[I when Integer?(I)]
+overload floatFromParts(#ILongDouble, neg?:Bool, exp:I, mant:UInt64)
+    = imagFromBits(mant, bitor( UInt64(exp),
+        if (neg?) 0x0000_0000_0000_8000_ul else 0_ul));
+
+[I when Integer?(I)]
+overload floatFromParts(#IDouble, neg?:Bool, exp:I, mant:UInt64)
+    = imagFromBits(bitor(bitand(mant, mantissaMask(IDouble)),
+        bitshl(bitand(UInt64(exp), exponentMask(IDouble)), mantissaSize(IDouble)),
+        if (neg?) 0x8000_0000_0000_0000_ul else 0_ul));
+
+[I when Integer?(I)]
+overload floatFromParts(#IFloat ,neg?:Bool, exp:I, mant:UInt32)
+    = imagFromBits(bitor(
+        bitand(mant, mantissaMask(IFloat)),
+        bitshl(bitand(UInt32(exp), exponentMask(IFloat)), mantissaSize(IFloat)),
+        if (neg?) 0x8000_0000u else 0u ));
+
+overload floatNegative?(f:ILongDouble) = bitand(floatBits(f).exponent, 0x8000u) != 0;
+overload floatNegative?(f:IDouble) = bitand(floatBits(f), 0x8000_0000_0000_0000_ul) != 0;
+overload floatNegative?(f:IFloat) = bitand(floatBits(f), 0x8000_0000u) != 0;
+
+
+[T when Imaginary?(T)]
+overload floatExponent(f:T) = bitand(bitshr(floatBits(f), mantissaSize(T)), exponentMask(T));
+overload floatExponent(f:ILongDouble) = bitand(floatBits(f).exponent, 0x7FFFu);
+
+overload floatMantissa(f:ILongDouble) = floatBits(f).mantissa;
+overload floatMantissa(f:IDouble) = bitand(floatBits(f), mantissaMask(IDouble));
+overload floatMantissa(f:IFloat) = bitand(floatBits(f), mantissaMask(IFloat));
+
+overload infinity(#ILongDouble) = imagFromBits(0x8000_0000_0000_0000_ul,0x0000_0000_0000_7FFF_ul);
+overload infinity(#IDouble) = imagFromBits(0x7FF0_0000_0000_0000_ul);
+overload infinity(#IFloat) = imagFromBits(0x7F80_0000u);
+
+overload negativeInfinity(#ILongDouble) = imagFromBits(0x8000_0000_0000_0000_ul,0x0000_0000_0000_FFFF_ul);
+overload negativeInfinity(#IDouble) = imagFromBits(0xFFF0_0000_0000_0000_ul);
+overload negativeInfinity(#IFloat) = imagFromBits(0xFF80_0000u);
+
+overload nan(#ILongDouble) = imagFromBits(0xC000_0000_0000_0000_ul,0x0000_0000_0000_7FFF_ul);
+overload nan(#IDouble) = imagFromBits(0x7FF8_0000_0000_0000_ul);
+overload nan(#IFloat) = imagFromBits(0x7FC0_0000u);
+
+overload snan(#ILongDouble) = imagFromBits(0x8000_0000_0000_0001_ul,0x0000_0000_0000_7FFF_ul);
+overload snan(#IDouble) = imagFromBits(0x7FF0_0000_0000_0001_ul);
+overload snan(#IFloat) = imagFromBits(0x7F80_0001u);
+
+overload nan(#ILongDouble, sign?:Bool, payload:UInt64) = floatFromParts(ILongDouble,sign?, exponentMask(ILongDouble), payload);
+overload nan(#IDouble, sign?:Bool, payload:UInt64) = floatFromParts(IDouble,sign?, exponentMask(IDouble), payload);
+overload nan(#IFloat, sign?:Bool, payload:UInt32) = floatFromParts(IFloat,sign?, exponentMask(IFloat), payload);
+
+overload qnanMask(#ILongDouble) = wrapBitshl(0x1ul,mantissaSize(ILongDouble)-1);
+overload qnanMask(#IDouble) = wrapBitshl(0x1ul,mantissaSize(IDouble)-1);
+overload qnanMask(#IFloat) = wrapBitshl(0x1u,mantissaSize(IFloat)-1);
+
+overload snanMask(#ILongDouble) = bitshr(mantissaMask(ILongDouble),1);
+overload snanMask(#IDouble) = bitshr(mantissaMask(IDouble),1);
+overload snanMask(#IFloat) = bitshr(mantissaMask(IFloat),1);
+
+[T when Imaginary?(T)]
+overload nan(sign?:Bool, payload:T) = floatFromParts(T, sign?, exponentMask(T), bitor(floatMantissa(payload),qnanMask(T)));
+
+[T when Imaginary?(T)]
+overload snan(sign?:Bool, payload:T) = floatFromParts(T, sign?, exponentMask(T), bitand(floatMantissa(payload),snanMask(T)));
+
+overload exponentBias(#ILongDouble) = 16383;
+overload exponentBias(#IDouble) = 1023;
+overload exponentBias(#IFloat) = 127;
+
+overload mantissaSize(#ILongDouble) = 64;
+overload mantissaSize(#IDouble) = 52;
+overload mantissaSize(#IFloat) = 23;
+
+overload mantissaMask(#ILongDouble) = 0xFFFF_FFFF_FFFF_FFFFul;
+overload mantissaMask(#IDouble) = 0x000F_FFFF_FFFF_FFFFul;
+overload mantissaMask(#IFloat) = 0x007F_FFFFu;
+
+overload exponentSize(#ILongDouble) = 15;
+overload exponentSize(#IDouble) = 11;
+overload exponentSize(#IFloat) = 8;
+
+overload exponentMask(#ILongDouble) = 0x7FFFul;
+overload exponentMask(#IDouble) = 0x7FFul;
+overload exponentMask(#IFloat) = 0xFFu;
+
+overload signMask(#ILongDouble) = 0x8000ul;
+overload signMask(#IDouble) = 0x8000_0000_0000_0000_ul;
+overload signMask(#IFloat) = 0x8000_0000_ul;
+
+overload floatMantissaZero(#ILongDouble) = 0x8000_0000_0000_0000_ul;
+overload floatMantissaZero(#IDouble) = 0x0000_0000_0000_0000_ul;
+overload floatMantissaZero(#IFloat) = 0x0000_0000_u;
+
+overload signbit(x:ILongDouble) = Int(bitshr(floatBits(x).exponent,15));
+overload signbit(x:IDouble) = Int(bitshr(floatBits(x),63));
+overload signbit(x:IFloat) = Int(bitshr(floatBits(x),31));
+
+overload floatBitsUnsigned(x:ILongDouble) {
+    var tmp = floatBits(x);
+    tmp.exponent = bitand(tmp.exponent,0x7FFFu);
+    return tmp;
+}
+overload floatBitsUnsigned(x:IDouble) = bitand(floatBits(x),0x7FFF_FFFF_FFFF_FFFFul);
+overload floatBitsUnsigned(x:IFloat) = bitand(floatBits(x),0x7FFF_FFFFu);
+
+[T when Imaginary?(T)] overload finite?(x:T) = floatExponent(x) != exponentMask(T);
+[T when Imaginary?(T)] overload infinity?(x:T) = floatExponent(x) == exponentMask(T) and floatMantissa(x)==0;
+[T when Imaginary?(T)] overload positiveInfinity?(x:T) = x == infinity(T);
+[T when Imaginary?(T)] overload negativeInfinity?(x:T) = x == negativeInfinity(T);
+[T when Imaginary?(T)] overload nan?(x:T) = floatExponent(x) == exponentMask(T) and floatMantissa(x)!=0;
+[T when Imaginary?(T)] qnan?(x:T) {
+    var m = floatMantissa(x);
+    return floatExponent(x) == exponentMask(T) and m!=0 and bitshr(m,mantissaSize(T)-1)==1;
+}
+[T when Imaginary?(T)] snan?(x:T) {
+    var m = floatMantissa(x);
+    return floatExponent(x) == exponentMask(T) and m!=0 and bitshr(m,mantissaSize(T)-1)==0;
+}
+[T when Imaginary?(T)] overload subnormal?(x:T) = floatExponent(x)==T(0) and x!=T(0);
+[T when Imaginary?(T)] overload normalized?(x:T) = not subnormal?(x) and finite?(x);
+
+
 
 
 /// @section  (==), (!=), less?, lessEquals?, (>), (>=) 

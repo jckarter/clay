@@ -85,20 +85,9 @@ overload Float?(#Float80) : Bool  = true;
 BuiltinFloatTypes() = Float32, Float64, Float80;
 
 
-define Imaginary?(..T) : Bool;
-overload Imaginary?(T) : Bool = false;
-overload Imaginary?(#Imag32) : Bool = true;
-overload Imaginary?(#Imag64) : Bool = true;
-overload Imaginary?(#Imag80) : Bool = true;
-[A, B] overload Imaginary?(#A, #B) : Bool = Imaginary?(A) and Imaginary?(B);
-
-
-/// builtin imaginary types
-BuiltinImaginaryTypes() = Imag32, Imag64, Imag80;
-
 
 define Numeric?(..T) : Bool;
-[T] overload Numeric?(#T) : Bool = Integer?(T) or Float?(T) or Imaginary?(T);
+[T] overload Numeric?(#T) : Bool = Integer?(T) or Float?(T);
 [A, B] overload Numeric?(#A, #B) : Bool = Numeric?(A) and Numeric?(B);
 
 
@@ -113,30 +102,22 @@ private BiggerInteger?(#A, #B) : Bool =
 
 private define BiggerFloat?;
 
-[A,B when Float?(A,B) or Imaginary?(A,B)]
+[A,B when Float?(A,B)]
 overload BiggerFloat?(#A, #B) : Bool  = TypeSize(A) > TypeSize(B);
-
-[A,B when (Float?(A) and Imaginary?(B)) or (Float?(B) and Imaginary?(A))]
-overload BiggerFloat?(#A, #B) : Bool  = TypeSize(A) > TypeSize(B);
-
 
 private define BiggerNumeric?;
 
-[A,B when (Float?(A) or Imaginary?(A)) and Integer?(B)]
+[A,B when Float?(A) and Integer?(B)]
 overload BiggerNumeric?(#A, #B) : Bool  = true;
 
-[A,B when Integer?(A) and (Float?(B) or Imaginary?(B))]
+[A,B when Integer?(A) and Float?(B)]
 overload BiggerNumeric?(#A, #B) : Bool = false;
 
 [A,B when Integer?(A,B)]
 overload BiggerNumeric?(#A, #B): Bool = BiggerInteger?(A,B);
 
-[A,B when Float?(A,B) or Imaginary?(A,B)]
+[A,B when Float?(A,B)]
 overload BiggerNumeric?(#A, #B) : Bool = BiggerFloat?(A,B);
-
-[A,B when (Float?(A) and Imaginary?(B)) or (Float?(B) and Imaginary?(A))]
-overload BiggerNumeric?(#A, #B) : Bool = BiggerFloat?(A,B);
-
 
 
 
@@ -164,11 +145,6 @@ forceinline overload wrapToBiggerNumericType(#A, #B, v) : A = wrapCast(A, v);
 [A,B when Numeric?(A,B) and BiggerNumeric?(B,A)]
 forceinline overload wrapToBiggerNumericType(#A, #B, v) : B = wrapCast(B, v);
 
-define ImagBaseType;
-overload ImagBaseType(#Imag32) = Float;
-overload ImagBaseType(#Imag64) = Double;
-overload ImagBaseType(#Imag80) = LongDouble;
-
 
 
 /// @section  constructors 
@@ -178,12 +154,6 @@ forceinline overload T() : T = numericConvert(T, 0);
 
 [T1,T2 when Numeric?(T1,T2)]
 forceinline overload T1(src:T2) : T1 = numericConvert(T1, src);
-
-[T,I when Float?(T) and Imaginary?(I)]
-forceinline overload T(a:I) : T = T(0.);
-
-[T,I when Float?(T) and Imaginary?(I)]
-forceinline overload I(a:T) : I = I(0.j);
 
 
 
@@ -210,7 +180,7 @@ forceinline overload (==)(a:A, b:B) : Bool  =
 [A when Numeric?(A)]
 forceinline overload (==)(a:A, b:A) : Bool = integerEquals?(a, b);
 
-[A when Float?(A) or Imaginary?(A)]
+[A when Float?(A)]
 forceinline overload (==)(a:A, b:A) : Bool  = floatOrderedEquals?(a, b);
 
 
@@ -221,9 +191,8 @@ forceinline overload (!=)(a:A, b:B) : Bool  =
 [A when Numeric?(A)]
 forceinline overload (!=)(a:A, b:A) : Bool = not (==)(a, b);
 
-[A when Float?(A) or Imaginary?(A)]
+[A when Float?(A)]
 forceinline overload (!=)(a:A, b:A) : Bool = floatUnorderedNotEquals?(a, b);
-
 
 [A,B when Numeric?(A,B)]
 forceinline overload (<)(a:A, b:B) : Bool =
@@ -232,9 +201,8 @@ forceinline overload (<)(a:A, b:B) : Bool =
 [A when Numeric?(A)]
 forceinline overload (<)(a:A, b:A) : Bool = integerLesser?(a, b);
 
-[A when Float?(A) or Imaginary?(A)]
+[A when Float?(A)]
 forceinline overload (<)(a:A, b:A) : Bool = floatOrderedLesser?(a, b);
-
 
 [A, B when Numeric?(A, B)]
 forceinline overload (<=)(a:A, b:B) : Bool =
@@ -243,9 +211,8 @@ forceinline overload (<=)(a:A, b:B) : Bool =
 [A when Numeric?(A)]
 forceinline overload (<=)(a:A, b:A) : Bool  = not (<)(b, a);
 
-[A when Float?(A) or Imaginary?(A)]
+[A when Float?(A)]
 forceinline overload (<=)(a:A, b:A) : Bool = floatOrderedLesserEquals?(a, b);
-
 
 [A,B when Numeric?(A,B)]
 forceinline overload (>)(a:A, b:B) : Bool =
@@ -254,9 +221,8 @@ forceinline overload (>)(a:A, b:B) : Bool =
 [A when Numeric?(A)]
 forceinline overload (>)(a:A, b:A) : Bool = (<)(b, a);
 
-[A when Float?(A) or Imaginary?(A)]
+[A when Float?(A)]
 forceinline overload (>)(a:A, b:A) : Bool = floatOrderedGreater?(a, b);
-
 
 [A, B when Numeric?(A, B)]
 forceinline overload (>=)(a:A, b:B) : Bool =
@@ -265,7 +231,7 @@ forceinline overload (>=)(a:A, b:B) : Bool =
 [A when Numeric?(A)]
 forceinline overload (>=)(a:A, b:A) : Bool = not (<)(a, b);
 
-[A when Float?(A) or Imaginary?(A)]
+[A when Float?(A)]
 forceinline overload (>=)(a:A, b:A) : Bool = floatOrderedGreaterEquals?(a, b);
 
 forceinline inRange?(x,l,u) : Bool =  (<)(x,u) and (<=)(l,x);
@@ -346,26 +312,7 @@ forceinline overload (\)(a:A, ..aa:AA) : A = foldlValues((\), a, ..aa);
 [A, ..AA when countValues(..AA) != 1]
 forceinline overload (%)(a:A, ..aa:AA) : A = foldlValues((%), a, ..aa);
 
-/// @section  Imaginary binary ops 
 
-
-[A,B when Numeric?(A) and Imaginary?(B)]
-forceinline overload (*)(a:A, b:B) = numericMultiply(numericConvert(B,a), b);
-
-[A,B when Numeric?(B) and Imaginary?(A)]
-forceinline overload (*)(a:A, b:B) = numericMultiply(a, numericConvert(A,b));
-
-[A when Imaginary?(A)]
-forceinline overload (*)(a:A, b:A) = numericConvert(ImagBaseType(A),(-)(numericMultiply(a, b)));
-
-[A,B when Numeric?(A) and Imaginary?(B)]
-forceinline overload (/)(a:A, b:B) = (/)(numericConvert(B,-a), b);
-
-[A,B when Numeric?(B) and Imaginary?(A)]
-forceinline overload (/)(a:A, b:B) = (/)(a, numericConvert(A,b));
-
-[A when Imaginary?(A)]
-forceinline overload (/)(a:A, b:A) = numericConvert(ImagBaseType(A),floatDivide(a, b));
 
 
 /// @section  unary ops 

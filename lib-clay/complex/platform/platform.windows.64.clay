@@ -1,0 +1,6 @@
+
+
+/// @section  type aliases for 64-bit platforms 
+
+// http://msdn.microsoft.com/en-us/library/9cx8xs15.aspx
+alias CComplexLongDouble = Complex64;

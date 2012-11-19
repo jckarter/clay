@@ -1,5 +1,6 @@
 import test.module.(testMainModule);
 import test.fuzz.(expectForAll);
+import complex.*;
 import numbers.floats.(nan?);
 
 TEST_imag_real_constructor() {

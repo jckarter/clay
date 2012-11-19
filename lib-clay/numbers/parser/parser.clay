@@ -27,11 +27,6 @@ overload ConvFuncForType(#CLongDouble) = libc.strtold;
 overload ConvFuncForType(#CDouble) = libc.strtod;
 overload ConvFuncForType(#CFloat) = (nptr, endptr) -> CFloat(libc.strtod(nptr, endptr));
 
-[T when Imaginary?(T)]
-overload ConvFuncForType(#T) = ConvFuncForType(ImagBaseType(T));
-
-
-
 [T, S when Numeric?(T) and String?(S)]
 define parse(#T, s:S): T;
 
@@ -65,19 +60,3 @@ overload parse(#FloatType, s:S) {
         error(typeName ++ " out of range: ", repr(s));
     return FloatType(value);
 }
-
-[S, ImagType when String?(S) and Imaginary?(ImagType)]
-overload parse(#ImagType, s:S) {
-    alias convFunc = ConvFuncForType(ImagType);
-    var temp = tempCString(s);
-    var p = temp.ptr;
-    var end = null(CChar);
-    var value = convFunc(p, @end);
-    var typeName = StaticName(ImagType);
-    if (end^ != 0)
-        error("invalid " ++ typeName ++ ": ", repr(s));
-    if (errno() == ERANGE)
-        error(typeName ++ " out of range: ", repr(s));
-    return numericConvert(ImagType,value);
-}
-
