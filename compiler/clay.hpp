@@ -2835,13 +2835,13 @@ struct RecordType : public Type {
 
     vector<IdentifierPtr> fieldNames;
     vector<TypePtr> fieldTypes;
-    unsigned varFieldPosition;
-    bool hasVarField:1;
-
+    
     llvm::StringMap<size_t> fieldIndexMap;
 
     const llvm::StructLayout *layout;
 
+    unsigned varFieldPosition;
+    bool hasVarField:1;
     bool fieldsInitialized:1;
 
     RecordType(RecordDeclPtr record)
