@@ -422,7 +422,7 @@ TypePtr newType(NewTypeDeclPtr newtype)
 {
     if (!newtype->type)
         newtype->type = new NewType(newtype);
-    return newtype->type;
+    return newtype->type.ptr();
 }
 
 TypePtr newtypeReprType(NewTypePtr t)
@@ -967,7 +967,7 @@ static void verifyRecursionCorrectness(TypePtr t,
     }
     case NEW_TYPE : {
         NewType *nt = (NewType *)t.ptr();
-        verifyRecursionCorrectness(nt->newtype->baseType, visited);
+        verifyRecursionCorrectness(newtypeReprType(nt), visited);
         break;
     }
     default :
@@ -1052,8 +1052,8 @@ llvm::Type *CCodePointerType::getCallType() {
 
 static void makeLLVMType(TypePtr t) {
     if (t->llType == NULL) {
-        declareLLVMType(t);
         verifyRecursionCorrectness(t);
+        declareLLVMType(t);
     }
     if (!t->defined) {
         defineLLVMType(t);

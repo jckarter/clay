@@ -2004,7 +2004,7 @@ struct IntrinsicSymbol : public TopLevelItem {
 
 struct NewTypeDecl : public TopLevelItem {
     ExprPtr expr;
-    TypePtr type;
+    NewTypePtr type;
     TypePtr baseType;
     bool initialized:1;
     NewTypeDecl(Module *module, IdentifierPtr name,

@@ -869,9 +869,9 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
     case NEW_TYPE_DECL : {
         NewTypeDecl *y = (NewTypeDecl *)x.ptr();
         assert(y->type->typeKind == NEW_TYPE);
-        initializeNewType((NewType*)y->type.ptr());
+        initializeNewType(y->type);
 
-        return new MultiPValue(PVData(y->type, true));
+        return new MultiPValue(PVData(y->type.ptr(), true));
     }
 
     case ENUM_MEMBER : {
