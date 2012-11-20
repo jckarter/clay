@@ -16,8 +16,8 @@ void getProcedureMonoTypes(ProcedureMono &mono, EnvPtr env,
 
 void initLoader();
 void setSearchPath(const llvm::ArrayRef<PathString> path);
-ModulePtr loadProgram(llvm::StringRef fileName, vector<string> *sourceFiles, bool verbose);
-ModulePtr loadProgramSource(llvm::StringRef name, llvm::StringRef source, bool verbose);
+ModulePtr loadProgram(llvm::StringRef fileName, vector<string> *sourceFiles, bool verbose, bool repl);
+ModulePtr loadProgramSource(llvm::StringRef name, llvm::StringRef source, bool verbose, bool repl);
 ModulePtr loadedModule(llvm::StringRef module);
 ModulePtr preludeModule();
 ModulePtr primitivesModule();
