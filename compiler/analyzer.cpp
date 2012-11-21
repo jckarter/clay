@@ -1666,7 +1666,6 @@ struct IntrinsicAnalyzer {
             
             if (expectArgType < 0) {
                 size_t matchIndex = size_t(~expectArgType);
-                size_t matchFlags = matchIndex & (ExtendedElementVectorType | TruncatedElementVectorType);
                 matchIndex &= ~(ExtendedElementVectorType | TruncatedElementVectorType);
                 assert(matchIndex < ai + numReturnValues);
                 

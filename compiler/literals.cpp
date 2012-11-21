@@ -45,7 +45,6 @@ static double floatFromParts(bool negp, int exponent, unsigned long long mantiss
 template<typename F>
 static F parseHexFloat(char *number, char **end) {
     bool negp = false;
-    bool negExponentp = false;
     unsigned long long mantissa = 0;
     int mantissaBits = 0;
     int usedMantissaBits = 0;

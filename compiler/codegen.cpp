@@ -3956,10 +3956,6 @@ bool codegenStatement(StatementPtr stmt,
         int marker = cgMarkStack(ctx);
         CValuePtr cv = codegenOneAsRef(x->condition, env2, ctx);
         BoolKind condBoolKind = typeBoolKind(cv->type);
-        llvm::Value *cond;
-        if (condBoolKind == BOOL_EXPR) {
-            cond = codegenToBoolFlag(cv, ctx);
-        }
         cgDestroyAndPopStack(marker, ctx, false);
         clearTemps(tempMarker, ctx);
 
@@ -3974,6 +3970,7 @@ bool codegenStatement(StatementPtr stmt,
         }
 
         if (condBoolKind == BOOL_EXPR) {
+            llvm::Value *cond = codegenToBoolFlag(cv, ctx);
             ctx->builder->CreateCondBr(cond, trueBlock, falseBlock);
         } else {
             ctx->builder->CreateBr(condBoolKind == BOOL_STATIC_TRUE ? trueBlock : falseBlock);

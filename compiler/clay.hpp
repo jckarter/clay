@@ -2841,9 +2841,9 @@ struct RecordType : public Type {
     const llvm::StructLayout *layout;
 
     unsigned varFieldPosition;
-    bool hasVarField:1;
     bool fieldsInitialized:1;
-
+    bool hasVarField:1;
+    
     RecordType(RecordDeclPtr record)
         : Type(RECORD_TYPE), record(record),
           layout(NULL), fieldsInitialized(false), hasVarField(false) {}

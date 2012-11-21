@@ -227,7 +227,7 @@ enum PrimOpCode {
 
     PRIM_GetOverload,
 
-    PRIM_usuallyEquals,
+    PRIM_usuallyEquals
 };
 
 struct PrimOp : public Object {

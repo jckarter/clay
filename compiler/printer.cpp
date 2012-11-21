@@ -587,7 +587,7 @@ static void print(llvm::raw_ostream &out, const Object *x) {
         break;
     }
     case INTRINSIC : {
-        const IntrinsicSymbol *intrin = (const IntrinsicSymbol *)intrin;
+        const IntrinsicSymbol *intrin = (const IntrinsicSymbol *)x;
         out << "IntrinsicSymbol(" << intrin->name << ", " << intrin->id << ")";
         break;
     }
