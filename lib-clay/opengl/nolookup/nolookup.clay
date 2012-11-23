@@ -4,8 +4,9 @@ import opengl.platform.*;
 import opengl.nolookup as self;
 import data.sequences.*;
 
-initGLFunctions(x) { }
+define initGLFunctions;
 overload initGLFunctions() { }
+overload initGLFunctions(x) { }
 
 external (GLAPI) glAccum(_op: GLenum, _value: GLfloat);
 external (GLAPI) glActiveTexture(_texture: GLenum);

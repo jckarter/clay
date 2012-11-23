@@ -772,7 +772,8 @@ overload destroy(gl: GLFunctions) { }
 
 private var globalGL = GLFunctions();
 
-initGLFunctions(gl: GLFunctions) {
+define initGLFunctions;
+overload initGLFunctions(gl: GLFunctions) {
     gl.Accum = findGLFunction([GLenum, GLfloat], [], "glAccum");
     gl.ActiveTexture = findGLFunction((GLenum), [], "glActiveTexture", "glActiveTextureARB");
     gl.AlphaFunc = findGLFunction([GLenum, GLclampf], [], "glAlphaFunc");
