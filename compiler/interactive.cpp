@@ -174,14 +174,11 @@ namespace clay {
                 replCommand(line.substr(1, line.size() - 1));
             } else {
                 SourcePtr source = new Source(line, 0);
-                vector<StatementPtr> stmts;
-                vector<TopLevelItemPtr> toplevels;
-                vector<ImportPtr> imports;
                 try {
-                    parseInteractive(source, 0, source->size(), toplevels, imports, stmts);
-                    loadImports(imports);
-                    jitTopLevel(toplevels);
-                    jitStatements(stmts);
+                    ReplItem x = parseInteractive(source, 0, source->size());
+                    loadImports(x.imports);
+                    jitTopLevel(x.toplevels);
+                    jitStatements(x.stmts);
                 }
                 catch (CompilerError) {
                     continue;

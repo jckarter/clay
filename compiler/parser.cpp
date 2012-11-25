@@ -3110,13 +3110,7 @@ static bool module(llvm::StringRef moduleName, ModulePtr &x) {
 // REPL
 //
 
-struct REPLitem {
-    vector<TopLevelItemPtr> toplevels;
-    vector<ImportPtr> imports;
-    vector<StatementPtr> stmts;
-};
-
-static bool replItems(REPLitem& x, bool = false) {
+static bool replItems(ReplItem& x, bool = false) {
     x.toplevels.clear();
     x.imports.clear();
     x.stmts.clear();
@@ -3244,16 +3238,11 @@ void parseTopLevelItems(SourcePtr source, int offset, int length,
 // parseInteractive
 //
 
-void parseInteractive(SourcePtr source, int offset, int length,
-                      vector<TopLevelItemPtr>& toplevels,
-                      vector<ImportPtr>& imports,
-                      vector<StatementPtr>& stmts)
+ReplItem parseInteractive(SourcePtr source, int offset, int length)
 {
-    REPLitem x;
+    ReplItem x;
     applyParser(source, offset, length, replItems, false, x);
-    toplevels = x.toplevels;
-    imports = x.imports;
-    stmts = x.stmts;
+    return x;
 }
 
 }
