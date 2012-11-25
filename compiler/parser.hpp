@@ -13,6 +13,8 @@ enum ParserFlags
 };
 
 struct ReplItem {
+    bool isExprSet;
+    ExprPtr expr;
     vector<TopLevelItemPtr> toplevels;
     vector<ImportPtr> imports;
     vector<StatementPtr> stmts;

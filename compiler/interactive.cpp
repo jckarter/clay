@@ -87,7 +87,7 @@ namespace clay {
         }
     }
 
-    static void loadImports(llvm::ArrayRef<ImportPtr>  imports)
+    static void loadImports(llvm::ArrayRef<ImportPtr> imports)
     {
         for (size_t i = 0; i < imports.size(); ++i) {
             module->imports.push_back(imports[i]);
@@ -100,7 +100,7 @@ namespace clay {
         }
     }
 
-    static void jitTopLevel(llvm::ArrayRef<TopLevelItemPtr>  toplevels)
+    static void jitTopLevel(llvm::ArrayRef<TopLevelItemPtr> toplevels)
     {
         if (toplevels.empty()) {
             return;
@@ -113,7 +113,7 @@ namespace clay {
         addGlobals(module, toplevels);
     }
 
-    static void jitStatements(llvm::ArrayRef<StatementPtr>  statements)
+    static void jitStatements(llvm::ArrayRef<StatementPtr> statements)
     {
         if (statements.empty()) {
             return;
@@ -160,6 +160,14 @@ namespace clay {
         engine->runFunction(entryProc->llvmFunc, std::vector<llvm::GenericValue>());
     }
 
+    static void jitAndPrintExpr(ExprPtr expr) {
+        //expr -> println(expr);
+        NameRefPtr println = new NameRef(Identifier::get("println"));
+        ExprPtr call = new Call(println.ptr(), new ExprList(expr));
+        ExprStatementPtr callStmt = new ExprStatement(call);
+        jitStatements(vector<StatementPtr>(1, callStmt.ptr()));
+    }
+
     static void interactiveLoop()
     {
         setjmp(recovery);
@@ -176,9 +184,13 @@ namespace clay {
                 SourcePtr source = new Source(line, 0);
                 try {
                     ReplItem x = parseInteractive(source, 0, source->size());
-                    loadImports(x.imports);
-                    jitTopLevel(x.toplevels);
-                    jitStatements(x.stmts);
+                    if (x.isExprSet) {
+                        jitAndPrintExpr(x.expr);
+                    } else {
+                        loadImports(x.imports);
+                        jitTopLevel(x.toplevels);
+                        jitStatements(x.stmts);
+                    }
                 }
                 catch (CompilerError) {
                     continue;

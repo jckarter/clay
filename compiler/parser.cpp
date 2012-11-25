@@ -9,6 +9,7 @@ map<llvm::StringRef, IdentifierPtr> Identifier::freeIdentifiers;
 static vector<Token> *tokens;
 static int position;
 static int maxPosition;
+static int sourceSize;
 static bool parserOptionKeepDocumentation = false;
 
 static AddTokensCallback addTokens = NULL;
@@ -17,7 +18,7 @@ void setAddTokens(AddTokensCallback f) {
     addTokens = f;
 }
 
-bool inRepl = false;
+static bool inRepl = false;
 
 static bool next(Token *&x) {
     if (position == (int)tokens->size()) {
@@ -3111,12 +3112,21 @@ static bool module(llvm::StringRef moduleName, ModulePtr &x) {
 //
 
 static bool replItems(ReplItem& x, bool = false) {
+    inRepl = false;
+    int p = save();
+    if (expression(x.expr) && position == sourceSize) {
+        x.isExprSet = true;
+        return true;
+    }
+    restore(p);
+
+    inRepl = true;
     x.toplevels.clear();
     x.imports.clear();
     x.stmts.clear();
     ImportPtr importItem;
     StatementPtr stmtItem;
-    inRepl = true;
+
     while (true) {
         if (position == (int)tokens->size()) {
             break;
@@ -3144,6 +3154,9 @@ static bool replItems(ReplItem& x, bool = false) {
             x.stmts.push_back(stmtItem);
         }
     }
+
+    x.isExprSet = false;
+
     return true;
 }
 
@@ -3160,6 +3173,7 @@ void applyParser(SourcePtr source, int offset, int length, Parser parser, Parser
 
     tokens = &t;
     position = maxPosition = 0;
+    sourceSize = t.size();
 
     if (!parser(node, parserParam) || (position < (int)t.size())) {
         Location location;
