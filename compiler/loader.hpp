@@ -8,6 +8,7 @@ namespace clay {
 
 extern llvm::StringMap<ModulePtr> globalModules;
 extern llvm::StringMap<string> globalFlags;
+extern set<string > globalLibraries;
 extern ModulePtr globalMainModule;
 
 void addProcedureOverload(ProcedurePtr proc, EnvPtr Env, OverloadPtr x);

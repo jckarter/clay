@@ -147,6 +147,7 @@ static bool linkLibraries(llvm::Module *module, llvm::ArrayRef<string>  libSearc
     llvm::Linker linker("clay", llvmModule, llvm::Linker::Verbose);
     linker.addSystemPaths();
     linker.addPaths(libSearchPaths);
+    for(int i = 0; i < libSearchPaths.size(); ++i){llvm::errs() << libSearchPaths[i];}
     for (size_t i = 0; i < libs.size(); ++i){
         string lib = libs[i];
         llvmModule->addLibrary(lib);
@@ -1101,6 +1102,12 @@ int main2(int argc, char **argv, char const* const* envp) {
             m = loadProgram(clayFile, &sourceFiles, verbose, repl);
         else
             m = loadProgram(clayFile, NULL, verbose, repl);
+
+        set<string >::const_iterator autolibs = globalLibraries.begin();
+        for (; autolibs != globalLibraries.end(); ++autolibs) {
+            libraries.push_back(*autolibs);
+            librariesArgs.push_back("-l" + *autolibs);    
+        }
 
         loadTimer.stop();
         compileTimer.start();

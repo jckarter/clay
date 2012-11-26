@@ -19,6 +19,7 @@ static vector<llvm::SmallString<32> > moduleSuffixes;
 
 llvm::StringMap<ModulePtr> globalModules;
 llvm::StringMap<string> globalFlags;
+set<string> globalLibraries;
 ModulePtr globalMainModule;
 
 
@@ -335,6 +336,7 @@ static ModulePtr loadModuleByName(DottedNamePtr name, vector<string> *sourceFile
 void loadDependent(ModulePtr m, vector<string> *sourceFiles, ImportPtr dependent, bool verbose) {
     ImportPtr x = dependent;
     x->module = loadModuleByName(x->dottedName, sourceFiles, verbose);
+    
     switch (x->importKind) {
     case IMPORT_MODULE : {
             ImportModule *im = (ImportModule *)x.ptr();
@@ -394,6 +396,12 @@ static void loadDependents(ModulePtr m, vector<string> *sourceFiles, bool verbos
     for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii) {
         loadDependent(m, sourceFiles, *ii, verbose);
     }
+  
+    vector<ImportLibraryPtr>::iterator ii2, iend2;
+    for (ii2 = m->libs.begin(), iend2 = m->libs.end(); ii2 != iend2; ++ii2) {
+        globalLibraries.insert((*ii2)->name->value->str.str());
+    }    
+
 }
 
 static ModulePtr loadPrelude(vector<string> *sourceFiles, bool verbose, bool repl) {
