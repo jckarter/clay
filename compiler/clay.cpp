@@ -140,16 +140,25 @@ static void addOptimizationPasses(llvm::PassManager &passes,
     }
 }
 
-static bool linkLibraries(llvm::Module *module, llvm::ArrayRef<string>  libSearchPaths, llvm::ArrayRef<string>  libs)
+static bool linkLibraries(llvm::Module *module, llvm::ArrayRef<string>  libSearchPaths, llvm::ArrayRef<string>  libs, bool verbose)
 {
     if (libs.empty())
         return true;
     llvm::Linker linker("clay", llvmModule, llvm::Linker::Verbose);
     linker.addSystemPaths();
     linker.addPaths(libSearchPaths);
-    for(int i = 0; i < libSearchPaths.size(); ++i){llvm::errs() << libSearchPaths[i];}
+    vector< llvm::sys::Path> a = linker.getLibPaths();
+    if (verbose) {
+        llvm::errs() << "Linking search paths:\n"; 
+        for (int i = 0; i < a.size(); ++i) {
+            llvm::errs() << a[i].str()<<"\n";
+        }
+    }
     for (size_t i = 0; i < libs.size(); ++i){
-        string lib = libs[i];
+        string lib = libs[i] + ".so";
+        if (verbose) {
+            llvm::errs() << "Linking " << lib << "...\n";
+        }
         llvmModule->addLibrary(lib);
         //as in cling/lib/Interpreter/Interpreter.cpp
         bool isNative = true;
@@ -178,8 +187,7 @@ static bool linkLibraries(llvm::Module *module, llvm::ArrayRef<string>  libSearc
         } else if (isNative) {
             // native shared library, load it!
             llvm::sys::Path SoFile = linker.FindLib(lib);
-            if (SoFile.isEmpty())
-            {
+            if (SoFile.isEmpty()) {
                 llvm::errs() << "Couldn't find shared library " << lib << "\n";
                 linker.releaseModule();
                 return false;
@@ -205,9 +213,10 @@ static bool runModule(llvm::Module *module,
                       vector<string> &argv,
                       char const* const* envp,
                       llvm::ArrayRef<string>  libSearchPaths,
-                      llvm::ArrayRef<string>  libs)
+                      llvm::ArrayRef<string>  libs,
+                      bool verbose)
 {
-    if (!linkLibraries(module, libSearchPaths, libs)) {
+    if (!linkLibraries(module, libSearchPaths, libs, verbose)) {
         return false;
     }
     llvm::EngineBuilder eb(llvmModule);
@@ -1152,10 +1161,10 @@ int main2(int argc, char **argv, char const* const* envp) {
         if (run) {
             vector<string> argv;
             argv.push_back(clayFile);
-            runModule(llvmModule, argv, envp, libSearchPath, libraries);
+            runModule(llvmModule, argv, envp, libSearchPath, libraries, verbose);
         }
         else if (repl) {
-            linkLibraries(llvmModule, libSearchPath, libraries);
+            linkLibraries(llvmModule, libSearchPath, libraries, verbose);
             runInteractive(llvmModule, m);
         }
         else if (emitLLVM || emitAsm || emitObject) {
