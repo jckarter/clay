@@ -9,7 +9,6 @@ map<llvm::StringRef, IdentifierPtr> Identifier::freeIdentifiers;
 static vector<Token> *tokens;
 static int position;
 static int maxPosition;
-static int sourceSize;
 static bool parserOptionKeepDocumentation = false;
 
 static AddTokensCallback addTokens = NULL;
@@ -3114,7 +3113,7 @@ static bool module(llvm::StringRef moduleName, ModulePtr &x) {
 static bool replItems(ReplItem& x, bool = false) {
     inRepl = false;
     int p = save();
-    if (expression(x.expr) && position == sourceSize) {
+    if (expression(x.expr) && position == tokens->size()) {
         x.isExprSet = true;
         return true;
     }
@@ -3173,7 +3172,6 @@ void applyParser(SourcePtr source, int offset, int length, Parser parser, Parser
 
     tokens = &t;
     position = maxPosition = 0;
-    sourceSize = t.size();
 
     if (!parser(node, parserParam) || (position < (int)t.size())) {
         Location location;
