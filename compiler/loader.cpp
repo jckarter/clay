@@ -5,7 +5,7 @@
 #include "codegen.hpp"
 #include "evaluator.hpp"
 #include "constructors.hpp"
-
+#include "parser.hpp"
 
 #pragma clang diagnostic ignored "-Wcovered-switch-default"
 
@@ -396,15 +396,24 @@ static void loadDependents(ModulePtr m, vector<string> *sourceFiles, bool verbos
     }
 }
 
-static ModulePtr loadPrelude(vector<string> *sourceFiles, bool verbose) {
-    DottedNamePtr dottedName = new DottedName();
-    dottedName->parts.push_back(Identifier::get("prelude"));
-    return loadModuleByName(dottedName, sourceFiles, verbose);
+static ModulePtr loadPrelude(vector<string> *sourceFiles, bool verbose, bool repl) {
+    if (!repl) {
+        DottedNamePtr dottedName = new DottedName();
+        dottedName->parts.push_back(Identifier::get("prelude"));
+        return loadModuleByName(dottedName, sourceFiles, verbose);
+    } else {
+        DottedNamePtr dottedName = new DottedName();
+        dottedName->parts.push_back(Identifier::get("prelude"));
+        dottedName->parts.push_back(Identifier::get("repl"));
+        ModulePtr m = loadModuleByName(dottedName, sourceFiles, verbose);
+        globalModules["prelude"] = m;
+        return m;
+    }
 }
 
-ModulePtr loadProgram(llvm::StringRef fileName, vector<string> *sourceFiles, bool verbose) {
+ModulePtr loadProgram(llvm::StringRef fileName, vector<string> *sourceFiles, bool verbose, bool repl) {
     globalMainModule = parse("", loadFile(fileName, sourceFiles));
-    ModulePtr prelude = loadPrelude(sourceFiles, verbose);
+    ModulePtr prelude = loadPrelude(sourceFiles, verbose, repl);
     loadDependents(globalMainModule, sourceFiles, verbose);
     installGlobals(globalMainModule);
     initModule(prelude);
@@ -412,7 +421,7 @@ ModulePtr loadProgram(llvm::StringRef fileName, vector<string> *sourceFiles, boo
     return globalMainModule;
 }
 
-ModulePtr loadProgramSource(llvm::StringRef name, llvm::StringRef source, bool verbose) {
+ModulePtr loadProgramSource(llvm::StringRef name, llvm::StringRef source, bool verbose, bool repl) {
     SourcePtr mainSource = new Source(name,
         llvm::MemoryBuffer::getMemBufferCopy(source));
     if (llvmDIBuilder != NULL) {
@@ -423,7 +432,7 @@ ModulePtr loadProgramSource(llvm::StringRef name, llvm::StringRef source, bool v
 
     globalMainModule = parse("", mainSource);
     // Don't keep track of source files for -e script
-    ModulePtr prelude = loadPrelude(NULL, verbose);
+    ModulePtr prelude = loadPrelude(NULL, verbose, repl);
     loadDependents(globalMainModule, NULL, verbose);
     installGlobals(globalMainModule);
     initModule(prelude);
