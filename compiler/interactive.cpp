@@ -4,6 +4,7 @@
 #include "codegen.hpp"
 #include "error.hpp"
 #include "loader.hpp"
+#include "invoketables.hpp"
 
 #include <setjmp.h>
 #include <signal.h>
@@ -91,6 +92,29 @@ namespace clay {
         }
     }
 
+    static void cmdOverloads(const vector<Token>& tokens) {
+        for (size_t i = 1; i < tokens.size(); ++i) {
+            if (tokens[i].tokenKind == T_IDENTIFIER) {
+                Str identStr = tokens[i].str;
+
+                ObjectPtr obj = lookupPrivate(module, Identifier::get(identStr));
+                if (obj == NULL || obj->objKind != PROCEDURE) {
+                    llvm::errs() << identStr << " is not a procedure name\n";
+                    continue;
+                }
+
+                vector<InvokeSet*> sets = lookupInvokeSets(obj.ptr());
+                for (size_t k = 0; k < sets.size(); ++k) {
+                    llvm::errs() << "        ";
+                    for (size_t l = 0; l < sets[k]->argsKey.size(); ++l) {
+                        llvm::errs() << sets[k]->argsKey[l] << " : ";
+                    }
+                    llvm::errs() << "\n";
+                }
+            }
+        }
+    }
+
     static void cmdPrint(const vector<Token>& tokens) {
         for (size_t i = 1; i < tokens.size(); ++i) {
             if (tokens[i].tokenKind == T_IDENTIFIER) {
@@ -120,6 +144,8 @@ namespace clay {
             cmdGlobals(tokens);
         } else if (cmd == "modules") {
             cmdModules(tokens);
+        } else if (cmd == "overloads") {
+            cmdOverloads(tokens);
         } else if (cmd == "print") {
             cmdPrint(tokens);
         } else if (cmd == "ast_on") {
