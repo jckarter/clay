@@ -2886,17 +2886,6 @@ static bool importMembers(ImportPtr &x) {
     return true;
 }
 
-static bool importLibrary(ImportLibraryPtr &x) {
-    Location location = currentLocation();
-    if (!keyword("import")) return false;
-    ExprPtr y;
-    if (!stringLiteral(y)) return false;
-    if (!symbol(";")) return false;
-    x = new ImportLibrary((StringLiteral*)y.ptr());
-    x->location = location;
-    return true;
-}
-
 static bool import(ImportPtr &x) {
     int p = save();
     if (importModule(x)) return true;
@@ -2905,23 +2894,16 @@ static bool import(ImportPtr &x) {
     return false;
 }
 
-static bool imports(vector<ImportPtr> &x, vector<ImportLibraryPtr> &l) {
+static bool imports(vector<ImportPtr> &x) {
     x.clear();
     while (true) {
         int p = save();
         ImportPtr y;
-        ImportLibraryPtr z;
-        if (import(y)) {
-            x.push_back(y);
-            continue;
+        if (!import(y)) {
+            restore(p);
+            break;
         }
-        restore(p);
-        if (importLibrary(z)) {
-            l.push_back(z);
-            continue;
-        }
-        restore(p);
-        break;
+        x.push_back(y);
     }
     return true;
 }
@@ -3115,7 +3097,7 @@ static bool optTopLevelLLVM(LLVMCodePtr &x) {
 static bool module(llvm::StringRef moduleName, ModulePtr &x) {
     Location location = currentLocation();
     ModulePtr y = new Module(moduleName);
-    if (!imports(y->imports, y->libs)) return false;
+    if (!imports(y->imports)) return false;
     if (!optModuleDeclaration(y->declaration)) return false;
     if (!optTopLevelLLVM(y->topLevelLLVM)) return false;
     if (!topLevelItems(y->topLevelItems, y.ptr())) return false;

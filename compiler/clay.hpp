@@ -391,7 +391,6 @@ enum ObjectKind {
     GLOBAL_ALIAS,
 
     IMPORT,
-    IMPORT_LIBRARY,
     MODULE_DECLARATION,
     MODULE,
 
@@ -547,7 +546,6 @@ struct Import;
 struct ImportModule;
 struct ImportStar;
 struct ImportMembers;
-struct ImportLibrary;
 struct Module;
 struct ModuleDeclaration;
 
@@ -701,7 +699,6 @@ typedef Pointer<Import> ImportPtr;
 typedef Pointer<ImportModule> ImportModulePtr;
 typedef Pointer<ImportStar> ImportStarPtr;
 typedef Pointer<ImportMembers> ImportMembersPtr;
-typedef Pointer<ImportLibrary> ImportLibraryPtr;
 typedef Pointer<Module> ModulePtr;
 typedef Pointer<ModuleDeclaration> ModuleDeclarationPtr;
 
@@ -2313,11 +2310,6 @@ struct ImportMembers : public Import {
         : Import(IMPORT_MEMBERS, dottedName, visibility) {}
 };
 
-struct ImportLibrary : public ANode {
-    StringLiteralPtr name;
-    ImportLibrary(StringLiteralPtr name) : ANode(IMPORT_LIBRARY), name(name) {}
-};
-
 
 //
 // Module
@@ -2369,7 +2361,6 @@ struct Module : public ANode {
     SourcePtr source;
     string moduleName;
     vector<ImportPtr> imports;
-    vector<ImportLibraryPtr> libs;
     ModuleDeclarationPtr declaration;
     LLVMCodePtr topLevelLLVM;
     vector<TopLevelItemPtr> topLevelItems;
@@ -2382,6 +2373,7 @@ struct Module : public ANode {
     EnvPtr env;
     InitState initState;
     vector<llvm::SmallString<16> > attrBuildFlags;
+    llvm::StringMap<vector<llvm::SmallString<16> > > attrParameters; 
     IntegerTypePtr attrDefaultIntegerType;
     FloatTypePtr attrDefaultFloatType;
 

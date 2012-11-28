@@ -336,7 +336,6 @@ static ModulePtr loadModuleByName(DottedNamePtr name, vector<string> *sourceFile
 void loadDependent(ModulePtr m, vector<string> *sourceFiles, ImportPtr dependent, bool verbose) {
     ImportPtr x = dependent;
     x->module = loadModuleByName(x->dottedName, sourceFiles, verbose);
-    
     switch (x->importKind) {
     case IMPORT_MODULE : {
             ImportModule *im = (ImportModule *)x.ptr();
@@ -396,12 +395,6 @@ static void loadDependents(ModulePtr m, vector<string> *sourceFiles, bool verbos
     for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii) {
         loadDependent(m, sourceFiles, *ii, verbose);
     }
-  
-    vector<ImportLibraryPtr>::iterator ii2, iend2;
-    for (ii2 = m->libs.begin(), iend2 = m->libs.end(); ii2 != iend2; ++ii2) {
-        globalLibraries.insert((*ii2)->name->value->str.str());
-    }    
-
 }
 
 static ModulePtr loadPrelude(vector<string> *sourceFiles, bool verbose, bool repl) {
@@ -730,6 +723,17 @@ static void initModule(ModulePtr m, llvm::ArrayRef<string>  importChain) {
     m->initState = Module::DONE;
 
     verifyAttributes(m);
+
+    llvm::StringMap<vector<llvm::SmallString<16> > >::iterator ii2 = m->attrParameters.begin();
+    llvm::StringMap<vector<llvm::SmallString<16> > >::iterator iend2 = m->attrParameters.end();
+    for (; ii2 != iend2; ++ii2) {
+        if (ii2->getKey() == "LinkLibrary") {
+            vector<llvm::SmallString<16> >& v = ii2->getValue();
+            for (int i = 0; i < v.size(); ++i) {
+                globalLibraries.insert(v[i].str());
+            }
+        }
+    }
 
     llvm::ArrayRef<TopLevelItemPtr> items = m->topLevelItems;
     TopLevelItemPtr const *ti, *tend;
