@@ -171,6 +171,19 @@ InvokeSet* lookupInvokeSet(ObjectPtr callable,
     return invokeSet;
 }
 
+vector<InvokeSet*> lookupInvokeSets(ObjectPtr callable) {
+    assert(invokeTablesInitialized);
+    vector<InvokeSet*> r;
+    for (size_t i = 0; i < invokeTable.size(); ++i) {
+        for (size_t j = 0; j < invokeTable[i].size(); ++j) {
+            InvokeSet* set = invokeTable[i][j];
+            if (objectEquals(set->callable, callable)) {
+                r.push_back(set);
+            }
+        }
+    }
+    return r;
+}
 
 
 //

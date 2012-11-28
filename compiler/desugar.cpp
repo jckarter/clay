@@ -3,7 +3,7 @@
 #include "evaluator.hpp"
 #include "analyzer.hpp"
 #include "desugar.hpp"
-
+#include "parser.hpp"
 
 namespace clay {
 

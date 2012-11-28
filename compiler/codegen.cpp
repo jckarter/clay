@@ -11,7 +11,7 @@
 #include "literals.hpp"
 #include "desugar.hpp"
 #include "constructors.hpp"
-
+#include "parser.hpp"
 
 
 #pragma clang diagnostic ignored "-Wcovered-switch-default"

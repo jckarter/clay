@@ -1096,11 +1096,11 @@ int main2(int argc, char **argv, char const* const* envp) {
         vector<string> sourceFiles;
         if (!clayScript.empty()) {
             clayScriptSource = clayScriptImports + "main() {\n" + clayScript + "}";
-            m = loadProgramSource("-e", clayScriptSource, verbose);
+            m = loadProgramSource("-e", clayScriptSource, verbose, repl);
         } else if (generateDeps)
-            m = loadProgram(clayFile, &sourceFiles, verbose);
+            m = loadProgram(clayFile, &sourceFiles, verbose, repl);
         else
-            m = loadProgram(clayFile, NULL, verbose);
+            m = loadProgram(clayFile, NULL, verbose, repl);
 
         loadTimer.stop();
         compileTimer.start();
