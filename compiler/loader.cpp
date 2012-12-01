@@ -20,6 +20,7 @@ static vector<llvm::SmallString<32> > moduleSuffixes;
 llvm::StringMap<ModulePtr> globalModules;
 llvm::StringMap<string> globalFlags;
 set<string> globalLibraries;
+set<string> globalLinkSearchPath;
 ModulePtr globalMainModule;
 
 llvm::sys::Path tmpDir;	
@@ -317,10 +318,12 @@ static void installGlobals(ModulePtr m) {
 static void makeModuleFromCHeaders(ModulePtr m,
                                    vector<string> *sourceFiles,
                                    bool verbose) {
+
     vector<SourcePtr > cFiles;
     vector<ImportPtr>::iterator ii, iend;
     iend = m->imports.end();
     set<llvm::SmallString<16> > headers;
+    searchPath.push_back(llvm::SmallString<260u>(m->path));
     for (ii = m->imports.begin(); ii != iend; ++ii) {
         if ((*ii)->importKind == IMPORT_EXTERNAL) {
             ImportExternal* x = (ImportExternal *)((*ii).ptr());
@@ -424,6 +427,7 @@ static ModulePtr loadModuleByName(DottedNamePtr name, vector<string> *sourceFile
             llvm::errs() << "loading module " << name->join() << " from " << path << "\n";
         }
         module = parse(key, loadFile(path, sourceFiles));
+        module->path = path;
     }
 
     globalModules[key] = module;
@@ -524,6 +528,7 @@ static ModulePtr loadPrelude(vector<string> *sourceFiles, bool verbose, bool rep
 ModulePtr loadProgram(llvm::StringRef fileName, vector<string> *sourceFiles, bool verbose, bool repl) {
     tmpDir = llvm::sys::Path::GetTemporaryDirectory();
     globalMainModule = parse("", loadFile(fileName, sourceFiles));
+    globalMainModule->path = llvm::sys::path::parent_path(fileName).str();
     ModulePtr prelude = loadPrelude(sourceFiles, verbose, repl);
     loadDependents(globalMainModule, sourceFiles, verbose);
     installGlobals(globalMainModule);
@@ -842,6 +847,15 @@ static void initModule(ModulePtr m, llvm::ArrayRef<string>  importChain) {
             for (int i = 0; i < v.size(); ++i) {
                 globalLibraries.insert(v[i].str());
             }
+        } else if (ii2->getKey() == "LibSearchPath") {
+            vector<llvm::SmallString<16> >& v = ii2->getValue();
+            for (int i = 0; i < v.size(); ++i) {
+                PathString p(m->path.str());
+                if (llvm::sys::path::is_relative(p + "")) {
+                    llvm::sys::path::append(p, v[i].str());
+                }
+                globalLinkSearchPath.insert(p.str());
+            }            
         }
     }
 

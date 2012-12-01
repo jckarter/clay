@@ -13,9 +13,9 @@ int getX() {
 }
 
 void sayX() {
-    printf("%d", x);
+    printf("%d\n", x);
 }
 
 void sayDoubleX() {
-    printf("%d", x * 2);
+    printf("%d\n", x * 2);
 }

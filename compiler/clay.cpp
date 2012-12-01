@@ -1118,6 +1118,13 @@ int main2(int argc, char **argv, char const* const* envp) {
             librariesArgs.push_back("-l" + *autolibs);    
         }
 
+        
+        set<string >::const_iterator libsearchs = globalLinkSearchPath.begin();
+        for (; libsearchs != globalLinkSearchPath.end(); ++libsearchs) {
+            libSearchPath.push_back(*libsearchs);
+            libSearchPathArgs.push_back("-L" + *libsearchs);   
+        }
+
         loadTimer.stop();
         compileTimer.start();
         codegenEntryPoints(m, codegenExternals);

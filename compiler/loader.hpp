@@ -8,7 +8,8 @@ namespace clay {
 
 extern llvm::StringMap<ModulePtr> globalModules;
 extern llvm::StringMap<string> globalFlags;
-extern set<string > globalLibraries;
+extern set<string> globalLibraries;
+extern set<string> globalLinkSearchPath;
 extern ModulePtr globalMainModule;
 
 extern void setClayDir(const string& value);

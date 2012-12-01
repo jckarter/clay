@@ -5,12 +5,11 @@ external "hello.h" import hello.(setX, sayX, getX);
 external "hello2.h" import hello1;
 external "hello2.h" import hello1.*;
 
-in main (LinkLibrary : "hello");
+in main (LinkLibrary : "hello", LibSearchPath : ".");
 
 main() {
-    hello.setX(5);
-    hello1.sayX();
-    hello1.setX(hello1.getX() + 1);
-    another.sayHello();
-    sayDoubleX();
+    hello.setX(50);
+    hello.sayX();//50
+    another.say();
+    hello1.sayDoubleX();
 }

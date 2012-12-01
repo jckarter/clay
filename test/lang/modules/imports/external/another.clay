@@ -1,7 +1,5 @@
 external "hello.h" import hello;
 
-sayHello(){
-    hello.setX(5);
+say(){
     hello.sayX();
 }
-main(){sayHello();}

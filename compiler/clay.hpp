@@ -2394,6 +2394,8 @@ struct Module : public ANode {
 
     set<string> importedNames;
 
+    llvm::SmallString<260u> path;
+
     int publicSymbolsLoading:3;
     int allSymbolsLoading:3;
     bool attributesVerified:1;
