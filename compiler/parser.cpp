@@ -2886,6 +2886,20 @@ static bool importMembers(ImportPtr &x) {
     return true;
 }
 
+/*static bool importExternal(ImportPtr &x) {
+    Location location = currentLocation();
+    Visibility vis;
+    if (!importVisibility(vis)) return false;
+    if (!keyword("external")) return false;
+    if (!keyword("import")) return false;
+    ExprPtr fileName;
+    if (!stringLiteral(fileName)) return false;
+    if (!symbol(";")) return false;
+    x = z.ptr();
+    x->location = location;
+    return true;
+}*/
+
 static bool import(ImportPtr &x) {
     int p = save();
     if (importModule(x)) return true;
@@ -2894,12 +2908,46 @@ static bool import(ImportPtr &x) {
     return false;
 }
 
+static bool optExternalImport() {
+    int p = save();
+    if (keyword("external")) {
+        return true;
+    } else {
+        restore(p);
+        return false;
+    }
+}
+
+static bool importInternalOrExternal(ImportPtr &x) {   
+    bool external = false;
+    ImportExternalPtr e;
+
+    if (optExternalImport()) {
+        external = true;
+        ExprPtr fileName;
+        if (!stringLiteral(fileName)) return false;
+        e = new ImportExternal((StringLiteral*) fileName.ptr());
+    }
+   
+    ImportPtr y;
+    if (!import(y)) return false;
+
+    if (external) {
+        e->aggr = y;
+        x = e.ptr();
+    } else {
+        x = y;
+    }
+
+    return true;
+}
+
 static bool imports(vector<ImportPtr> &x) {
     x.clear();
     while (true) {
         int p = save();
         ImportPtr y;
-        if (!import(y)) {
+        if (!importInternalOrExternal(y)) {
             restore(p);
             break;
         }

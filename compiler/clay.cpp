@@ -1021,7 +1021,7 @@ int main2(int argc, char **argv, char const* const* envp) {
     // Add the relative path from the executable
     PathString clayExe(llvm::sys::Path::GetMainExecutable(argv[0], (void *)(uintptr_t)&usage).c_str());
     llvm::StringRef clayDir = llvm::sys::path::parent_path(clayExe);
-
+    setClayDir(clayDir);
     PathString libDirDevelopment(clayDir);
     PathString libDirProduction1(clayDir);
     PathString libDirProduction2(clayDir);

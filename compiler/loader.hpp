@@ -11,6 +11,8 @@ extern llvm::StringMap<string> globalFlags;
 extern set<string > globalLibraries;
 extern ModulePtr globalMainModule;
 
+extern void setClayDir(const string& value);
+
 void addProcedureOverload(ProcedurePtr proc, EnvPtr Env, OverloadPtr x);
 void getProcedureMonoTypes(ProcedureMono &mono, EnvPtr env,
     llvm::ArrayRef<FormalArgPtr> formalArgs, bool hasVarArg);

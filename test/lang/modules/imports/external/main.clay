@@ -1,0 +1,16 @@
+import another;
+external "hello.h" import hello;
+external "hello.h" import hello.(setX, sayX, getX);
+//in fact star pollutes namespace with all __c__ module
+external "hello2.h" import hello1;
+external "hello2.h" import hello1.*;
+
+in main (LinkLibrary : "hello");
+
+main() {
+    hello.setX(5);
+    hello1.sayX();
+    hello1.setX(hello1.getX() + 1);
+    another.sayHello();
+    sayDoubleX();
+}
