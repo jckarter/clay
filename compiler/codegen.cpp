@@ -1503,10 +1503,18 @@ void codegenExternalVariable(ExternalVariablePtr x)
         linkage = llvm::GlobalVariable::DLLExportLinkage;
     else
         linkage = llvm::GlobalVariable::ExternalLinkage;
-    x->llGlobal =
-        new llvm::GlobalVariable(
-            *llvmModule, llvmType(pv.type), false,
-            linkage, NULL, x->name->str.str());
+
+    llvm::StringRef name = x->name->str.str();
+    llvm::GlobalVariable* gvar;
+    if (gvar = llvmModule->getGlobalVariable(name)) {
+        x->llGlobal = gvar;
+    } else {
+        x->llGlobal =
+            new llvm::GlobalVariable(
+                *llvmModule, llvmType(pv.type), false,
+                linkage, NULL, name);
+    }
+
     if (llvmDIBuilder != NULL) {
         int line, column;
         llvm::DIFile file = getDebugLineCol(x->location, line, column);

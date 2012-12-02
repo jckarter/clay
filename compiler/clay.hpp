@@ -348,7 +348,6 @@ public :
     }
 };
 
-
 //
 // ObjectKind
 //
@@ -546,6 +545,7 @@ struct Import;
 struct ImportModule;
 struct ImportStar;
 struct ImportMembers;
+struct ImportExternal;
 struct Module;
 struct ModuleDeclaration;
 
@@ -699,6 +699,7 @@ typedef Pointer<Import> ImportPtr;
 typedef Pointer<ImportModule> ImportModulePtr;
 typedef Pointer<ImportStar> ImportStarPtr;
 typedef Pointer<ImportMembers> ImportMembersPtr;
+typedef Pointer<ImportExternal> ImportExternalPtr;
 typedef Pointer<Module> ModulePtr;
 typedef Pointer<ModuleDeclaration> ModuleDeclarationPtr;
 
@@ -2268,7 +2269,8 @@ struct GlobalAlias : public TopLevelItem {
 enum ImportKind {
     IMPORT_MODULE,
     IMPORT_STAR,
-    IMPORT_MEMBERS
+    IMPORT_MEMBERS,
+    IMPORT_EXTERNAL
 };
 
 struct Import : public ANode {
@@ -2308,6 +2310,15 @@ struct ImportMembers : public Import {
     llvm::StringMap<IdentifierPtr> aliasMap;
     ImportMembers(DottedNamePtr dottedName, Visibility visibility)
         : Import(IMPORT_MEMBERS, dottedName, visibility) {}
+};
+
+struct ImportExternal : public Import {
+    ImportPtr aggr;
+    llvm::SmallString<16> fileName;
+    ImportExternal(StringLiteralPtr fileName_)
+        : Import(IMPORT_EXTERNAL, NULL, visibility), fileName(fileName) {
+        fileName = fileName_->value->str;
+    }
 };
 
 
@@ -2373,6 +2384,7 @@ struct Module : public ANode {
     EnvPtr env;
     InitState initState;
     vector<llvm::SmallString<16> > attrBuildFlags;
+    llvm::StringMap<vector<llvm::SmallString<16> > > attrParameters; 
     IntegerTypePtr attrDefaultIntegerType;
     FloatTypePtr attrDefaultFloatType;
 
@@ -2381,6 +2393,8 @@ struct Module : public ANode {
     llvm::StringMap<ImportSet> allSymbols;
 
     set<string> importedNames;
+
+    llvm::SmallString<260u> path;
 
     int publicSymbolsLoading:3;
     int allSymbolsLoading:3;

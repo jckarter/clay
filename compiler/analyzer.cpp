@@ -1292,6 +1292,40 @@ void verifyAttributes(ModulePtr mod)
                 mod->attrBuildFlags.push_back(y->str);
                 break;
             }
+            case VALUE_HOLDER: {
+                ValueHolder* vh = (ValueHolder *)obj.ptr();
+                if(vh->type->typeKind == TUPLE_TYPE) {
+                    TupleType* t = (TupleType*)vh->type.ptr();
+                    if (t->elementTypes.size() < 2) {
+                        error(mod->declaration, "Attribute tuple must have one key and at least one value");
+                    }
+                    StaticType* keyStatic = (StaticType*) t->elementTypes[0].ptr();
+                    if (keyStatic->typeKind != STATIC_TYPE) {
+                        error(mod->declaration, "Attribute tuple values must be static strings");
+                    }
+                    Identifier* key = (Identifier*)keyStatic->obj.ptr();
+                    if (key->objKind != IDENTIFIER) {
+                        error(mod->declaration, "Attribute tuple values must be static strings");
+                    }
+                    llvm::StringMapEntry<vector<llvm::SmallString<16> > >& v = 
+                        mod->attrParameters.GetOrCreateValue(key->str);
+                    for (int i = 1; i < t->elementTypes.size(); ++i) {
+                        StaticType* valueStatic = (StaticType*)t->elementTypes[i].ptr();
+                        if (valueStatic->typeKind != STATIC_TYPE) {
+                            error(mod->declaration, "Attribute tuple values must be static strings");
+                        }
+                        Identifier* value = (Identifier*)valueStatic->obj.ptr();
+                        if (value->objKind != IDENTIFIER) {
+                            error(mod->declaration, "Attribute tuple values must be static strings");
+                        }
+                        v.getValue().push_back(value->str);
+                    }
+                    break;
+                }
+                else {
+                    //fallthrough
+                }
+            }
             default:
                 string buf;
                 llvm::raw_string_ostream os(buf);

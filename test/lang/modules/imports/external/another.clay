@@ -1,0 +1,5 @@
+external "hello.h" import hello;
+
+say(){
+    hello.sayX();
+}

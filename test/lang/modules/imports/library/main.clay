@@ -1,0 +1,7 @@
+in main (LinkLibrary: "curl");
+
+external curl_easy_init(): OpaquePointer;
+
+main() {
+    curl_easy_init();
+}

@@ -6,7 +6,7 @@
 #include "evaluator.hpp"
 #include "constructors.hpp"
 #include "parser.hpp"
-
+#include "pipes.hpp"
 #pragma clang diagnostic ignored "-Wcovered-switch-default"
 
 
@@ -19,7 +19,17 @@ static vector<llvm::SmallString<32> > moduleSuffixes;
 
 llvm::StringMap<ModulePtr> globalModules;
 llvm::StringMap<string> globalFlags;
+set<string> globalLibraries;
+set<string> globalLinkSearchPath;
 ModulePtr globalMainModule;
+
+llvm::sys::Path tmpDir;	
+
+string clayDir;
+
+void setClayDir(const string& value) {
+    clayDir = value;
+}
 
 
 //
@@ -154,14 +164,18 @@ void setSearchPath(llvm::ArrayRef<PathString>  path) {
     searchPath = path;
 }
 
-static bool locateFile(llvm::StringRef relativePath, PathString &path) {
+static bool locateFile(llvm::StringRef relativePath,
+                       PathString &path,
+                       bool notClayFile = false) {
     // relativePath has no suffix
     for (unsigned i = 0; i < searchPath.size(); ++i) {
         PathString pathWOSuffix(searchPath[i]);
         llvm::sys::path::append(pathWOSuffix, relativePath);
         for (unsigned j = 0; j < moduleSuffixes.size(); ++j) {
             path = pathWOSuffix;
-            path.append(moduleSuffixes[j].begin(), moduleSuffixes[j].end());
+            if (!notClayFile) {
+                path.append(moduleSuffixes[j].begin(), moduleSuffixes[j].end());
+            }
             if (llvm::sys::fs::exists(path.str()))
                 return true;
         }
@@ -301,6 +315,96 @@ static void installGlobals(ModulePtr m) {
     }
 }
 
+static void makeModuleFromCHeaders(ModulePtr m,
+                                   vector<string> *sourceFiles,
+                                   bool verbose) {
+
+    vector<SourcePtr > cFiles;
+    vector<ImportPtr>::iterator ii, iend;
+    iend = m->imports.end();
+    set<llvm::SmallString<16> > headers;
+    searchPath.push_back(llvm::SmallString<260u>(m->path));
+    for (ii = m->imports.begin(); ii != iend; ++ii) {
+        if ((*ii)->importKind == IMPORT_EXTERNAL) {
+            ImportExternal* x = (ImportExternal *)((*ii).ptr());
+            PathString path;
+            if (!locateFile(x->fileName, path, true)) {
+                error("Couldn't locate file " + x->fileName);
+            }
+            if (headers.count(x->fileName) == 0) {
+                cFiles.push_back(new Source(path.str()));
+                headers.insert(x->fileName);
+            }
+        }
+    }
+    
+    if (cFiles.size() > 0) {
+        //FIXME: replace bindgen pipe call with internal bingen *
+        string name = "__c__" + m->moduleName + ".h";
+        string nameWithPath = tmpDir.str() + name.c_str();
+        FILE* f = fopen(nameWithPath.c_str(), "w");
+        for (size_t i = 0; i < cFiles.size(); ++i) {
+            fwrite((const void*)cFiles[i]->buffer->getBufferStart(),
+                   cFiles[i]->buffer->getBufferSize(), 1, f);
+        }
+        fclose(f);
+
+        string buf;
+        llvm::raw_string_ostream args(buf);
+        args << clayDir << "/../tools/clay-bindgen ";
+        args << "-builtins ";
+        //bug #443
+        //FIXME: shouldn't be need in llvm 3.2
+        args << "-I/usr/include/clang/3.0/include/ "; 
+        args << nameWithPath;
+
+        FILE* pipe = popen(args.str().c_str(), "r");
+        if (pipe == NULL) {
+            llvm::errs() << args.str() << "\n";
+            error("Couldn't create clay-bindgen pipe\n");
+        } 
+        string buf2;
+        llvm::raw_string_ostream bindgen(buf2);
+        char buf3[256];
+        while(!feof(pipe))
+        {
+            if(fgets(buf3, 256, pipe) != NULL ) {
+                bindgen << buf3;
+            }
+        }
+        pclose(pipe);
+
+        SourcePtr source = new Source(bindgen.str(), 0);
+        //*
+
+        ModulePtr cModule;
+        cModule = parse(name, source, ParserFlags());
+
+        for (ii = m->imports.begin(); ii != iend; ++ii) {
+            //magically replace external header with __c__ module
+            if ((*ii)->importKind == IMPORT_EXTERNAL) {
+                ImportExternalPtr y = (ImportExternal *)ii->ptr();
+                (*ii) = y->aggr.ptr();
+                (*ii)->module = cModule;
+            }
+        }
+        
+        llvm::StringMap<ModulePtr>::iterator i = globalModules.find(name);
+        if (i != globalModules.end()) {
+            error(m->location, "module " + name + "already exists");
+        }
+
+        if (verbose) {
+            llvm::errs() << "loading generated module " << name;
+        }
+
+        globalModules[name] = cModule;
+        loadDependents(cModule, sourceFiles, verbose);
+        installGlobals(cModule);
+        
+    }
+}
+
 static ModulePtr loadModuleByName(DottedNamePtr name, vector<string> *sourceFiles, bool verbose) {
     string key = toKey(name);
 
@@ -323,6 +427,7 @@ static ModulePtr loadModuleByName(DottedNamePtr name, vector<string> *sourceFile
             llvm::errs() << "loading module " << name->join() << " from " << path << "\n";
         }
         module = parse(key, loadFile(path, sourceFiles));
+        module->path = path;
     }
 
     globalModules[key] = module;
@@ -332,9 +437,15 @@ static ModulePtr loadModuleByName(DottedNamePtr name, vector<string> *sourceFile
     return module;
 }
 
+
 void loadDependent(ModulePtr m, vector<string> *sourceFiles, ImportPtr dependent, bool verbose) {
     ImportPtr x = dependent;
-    x->module = loadModuleByName(x->dottedName, sourceFiles, verbose);
+
+    //is not null when was IMPORT_EXTERNAL
+    if (x->module == NULL) {
+        x->module = loadModuleByName(x->dottedName, sourceFiles, verbose);
+    }
+
     switch (x->importKind) {
     case IMPORT_MODULE : {
             ImportModule *im = (ImportModule *)x.ptr();
@@ -383,15 +494,18 @@ void loadDependent(ModulePtr m, vector<string> *sourceFiles, ImportPtr dependent
                 y->aliasMap[aliasStr] = z.name;
             }
             break;
-        }
+    }
     default :
             assert(false);
 }
 }
 
 static void loadDependents(ModulePtr m, vector<string> *sourceFiles, bool verbose) {
+    makeModuleFromCHeaders(m, sourceFiles, verbose);
+    
     vector<ImportPtr>::iterator ii, iend;
-    for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii) {
+    iend = m->imports.end();
+    for (ii = m->imports.begin(); ii != iend; ++ii) {
         loadDependent(m, sourceFiles, *ii, verbose);
     }
 }
@@ -412,7 +526,9 @@ static ModulePtr loadPrelude(vector<string> *sourceFiles, bool verbose, bool rep
 }
 
 ModulePtr loadProgram(llvm::StringRef fileName, vector<string> *sourceFiles, bool verbose, bool repl) {
+    tmpDir = llvm::sys::Path::GetTemporaryDirectory();
     globalMainModule = parse("", loadFile(fileName, sourceFiles));
+    globalMainModule->path = llvm::sys::path::parent_path(fileName).str();
     ModulePtr prelude = loadPrelude(sourceFiles, verbose, repl);
     loadDependents(globalMainModule, sourceFiles, verbose);
     installGlobals(globalMainModule);
@@ -722,6 +838,26 @@ static void initModule(ModulePtr m, llvm::ArrayRef<string>  importChain) {
     m->initState = Module::DONE;
 
     verifyAttributes(m);
+
+    llvm::StringMap<vector<llvm::SmallString<16> > >::iterator ii2 = m->attrParameters.begin();
+    llvm::StringMap<vector<llvm::SmallString<16> > >::iterator iend2 = m->attrParameters.end();
+    for (; ii2 != iend2; ++ii2) {
+        if (ii2->getKey() == "LinkLibrary") {
+            vector<llvm::SmallString<16> >& v = ii2->getValue();
+            for (int i = 0; i < v.size(); ++i) {
+                globalLibraries.insert(v[i].str());
+            }
+        } else if (ii2->getKey() == "LibSearchPath") {
+            vector<llvm::SmallString<16> >& v = ii2->getValue();
+            for (int i = 0; i < v.size(); ++i) {
+                PathString p(m->path.str());
+                if (llvm::sys::path::is_relative(p + "")) {
+                    llvm::sys::path::append(p, v[i].str());
+                }
+                globalLinkSearchPath.insert(p.str());
+            }            
+        }
+    }
 
     llvm::ArrayRef<TopLevelItemPtr> items = m->topLevelItems;
     TopLevelItemPtr const *ti, *tend;
