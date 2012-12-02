@@ -2620,21 +2620,25 @@ void codegenLowlevelCall(llvm::Value *llCallable,
     if (!ctx->checkExceptions)
         return;
     llvm::Value *noException = noExceptionReturnValue();
+    llvm::Value *intNoException = llvm::ConstantInt::get(llvmType(cSizeTType), 0);
+    llvm::Value *intResult = ctx->builder->CreatePtrToInt(
+        result, llvmType(cSizeTType));
     llvm::Function *expect = llvm::Intrinsic::getDeclaration(
         llvmModule,
         llvm::Intrinsic::expect,
-        result->getType());
-    llvm::Value *expectArgs[2] = {result, noException};
-    result = ctx->builder->CreateCall(expect, expectArgs);
+        llvmType(cSizeTType));
+    llvm::Value *expectArgs[2] = {intResult, intNoException};
+    llvm::Value *expectResult = ctx->builder->CreateCall(expect, expectArgs);
+    llvm::Value *ptrResult = ctx->builder->CreateIntToPtr(expectResult, exceptionReturnType());
 
-    llvm::Value *cond = ctx->builder->CreateICmpEQ(result, noException);
+    llvm::Value *cond = ctx->builder->CreateICmpEQ(ptrResult, noException);
     llvm::BasicBlock *landing = newBasicBlock("landing", ctx);
     llvm::BasicBlock *normal = newBasicBlock("normal", ctx);
     ctx->builder->CreateCondBr(cond, normal, landing);
 
     ctx->builder->SetInsertPoint(landing);
     assert(ctx->exceptionValue != NULL);
-    ctx->builder->CreateStore(result, ctx->exceptionValue);
+    ctx->builder->CreateStore(ptrResult, ctx->exceptionValue);
     JumpTarget *jt = &ctx->exceptionTargets.back();
     cgDestroyStack(jt->stackMarker, ctx, true);
     // jt might be invalidated at this point
