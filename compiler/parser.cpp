@@ -1,5 +1,5 @@
 #include "clay.hpp"
-#include "lexer.hpp"
+#include "parser.hpp"
 
 
 namespace clay {
@@ -11,9 +11,28 @@ static int position;
 static int maxPosition;
 static bool parserOptionKeepDocumentation = false;
 
+static AddTokensCallback addTokens = NULL;
+
+void setAddTokens(AddTokensCallback f) {
+    addTokens = f;
+}
+
+static bool inRepl = false;
+
 static bool next(Token *&x) {
-    if (position == (int)tokens->size())
-        return false;
+    if (position == (int)tokens->size()) {
+        if (inRepl) {
+            assert(addTokens != NULL);
+            vector<Token> toks = addTokens();
+            if (toks.size() == 0) {
+                inRepl = false;
+                return false;
+            }
+            tokens->insert(tokens->end(), toks.begin(), toks.end());
+        } else {
+            return false;
+        }
+    }
     x = &(*tokens)[position];
     if (position > maxPosition)
         maxPosition = position;
@@ -3150,31 +3169,42 @@ static bool module(llvm::StringRef moduleName, ModulePtr &x) {
 // REPL
 //
 
-struct REPLitem {
-    vector<TopLevelItemPtr> toplevels;
-    vector<ImportPtr> imports;
-    vector<StatementPtr> stmts;
-};
+static bool replItems(ReplItem& x, bool = false) {
+    inRepl = false;
+    int p = save();
+    if (expression(x.expr) && position == tokens->size()) {
+        x.isExprSet = true;
+        return true;
+    }
+    restore(p);
 
-static bool replItems(REPLitem& x, bool = false) {
+    inRepl = true;
     x.toplevels.clear();
     x.imports.clear();
     x.stmts.clear();
     ImportPtr importItem;
     StatementPtr stmtItem;
+
     while (true) {
+        if (position == (int)tokens->size()) {
+            break;
+        }
+
         int p = save();
+
         if (!topLevelItem(x.toplevels, NULL)) {
             restore(p);
         } else {
             continue;
         }
+
         if (!import(importItem)) {
             restore(p);
         } else {
             x.imports.push_back(importItem);
             continue;
         }
+
         if (!blockItem(stmtItem)) {
             restore(p);
             break;
@@ -3182,6 +3212,9 @@ static bool replItems(REPLitem& x, bool = false) {
             x.stmts.push_back(stmtItem);
         }
     }
+
+    x.isExprSet = false;
+
     return true;
 }
 
@@ -3276,16 +3309,11 @@ void parseTopLevelItems(SourcePtr source, int offset, int length,
 // parseInteractive
 //
 
-void parseInteractive(SourcePtr source, int offset, int length,
-                      vector<TopLevelItemPtr>& toplevels,
-                      vector<ImportPtr>& imports,
-                      vector<StatementPtr>& stmts)
+ReplItem parseInteractive(SourcePtr source, int offset, int length)
 {
-    REPLitem x;
+    ReplItem x;
     applyParser(source, offset, length, replItems, false, x);
-    toplevels = x.toplevels;
-    imports = x.imports;
-    stmts = x.stmts;
+    return x;
 }
 
 }

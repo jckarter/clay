@@ -105,6 +105,7 @@ struct MatchFailureError {
 
 InvokeSet *lookupInvokeSet(ObjectPtr callable,
                            llvm::ArrayRef<TypePtr> argsKey);
+vector<InvokeSet*> lookupInvokeSets(ObjectPtr callable);
 InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
                                llvm::ArrayRef<TypePtr> argsKey,
                                llvm::ArrayRef<ValueTempness> argsTempness,

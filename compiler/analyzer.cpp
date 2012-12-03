@@ -2600,7 +2600,7 @@ static StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, Analysi
             return SA_RECURSIVE;
         }
 
-        MultiPValue *cond = analyzeExpr(x->condition, env2).ptr();
+        MultiPValuePtr cond = analyzeExpr(x->condition, env2);
 
         if (cond->values.size() != 1) {
             arityError(1, cond->values.size());

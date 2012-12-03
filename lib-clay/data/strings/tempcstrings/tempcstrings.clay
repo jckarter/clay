@@ -1,4 +1,6 @@
 import data.strings.*;
+import data.vectors.(moveVectorBuffer);
+import libc;
 
 
 [Owned when Type(Owned) == Bool]
