@@ -1886,6 +1886,25 @@ static bool optPatternVarsWithCond(vector<PatternVar> &x, ExprPtr &y) {
     return true;
 }
 
+static void skipOptPatternVar() {
+    int p = save();
+    if (!symbol("[")) {
+        restore(p);
+        return;
+    }
+    int bracket = 1;
+    while (bracket) {
+        int p = save();
+        if (symbol("[")) {
+            ++bracket;
+            continue;
+        }
+        restore(p);
+        if(symbol("]"))
+            --bracket;
+    }
+}
+
 static bool exprBody(StatementPtr &x) {
     if (!opsymbol("=")) return false;
     Location location = currentLocation();
@@ -2038,12 +2057,17 @@ static bool recordBody(RecordBodyPtr &x) {
 
 static bool record(TopLevelItemPtr &x, Module *module) {
     Location location = currentLocation();
-    vector<PatternVar> patternVars;
-    ExprPtr predicate;
+    int s = save();
+    skipOptPatternVar();
     Visibility vis;
-    if (!optPatternVarsWithCond(patternVars, predicate)) return false;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("record")) return false;
+    int e = save();
+    restore(s);
+    vector<PatternVar> patternVars;
+    ExprPtr predicate;
+    if (!optPatternVarsWithCond(patternVars, predicate)) return false;    
+    restore(e);
     RecordDeclPtr y = new RecordDecl(module, vis, patternVars, predicate);
     if (!identifier(y->name)) return false;
     if (!optStaticParams(y->params, y->varParam)) return false;
@@ -2078,12 +2102,17 @@ static bool optInstances(ExprListPtr &x, bool &open) {
 
 static bool variant(TopLevelItemPtr &x, Module *module) {
     Location location = currentLocation();
-    vector<PatternVar> patternVars;
-    ExprPtr predicate;
+    int s = save();
+    skipOptPatternVar();
     Visibility vis;
-    if (!optPatternVarsWithCond(patternVars, predicate)) return false;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("variant")) return false;
+    int e = save();
+    restore(s);
+    vector<PatternVar> patternVars;
+    ExprPtr predicate;
+    if (!optPatternVarsWithCond(patternVars, predicate)) return false;    
+    restore(e);
     IdentifierPtr name;
     if (!identifier(name)) return false;
     vector<IdentifierPtr> params;
@@ -2100,10 +2129,15 @@ static bool variant(TopLevelItemPtr &x, Module *module) {
 
 static bool instance(TopLevelItemPtr &x, Module *module) {
     Location location = currentLocation();
+    int s = save();
+    skipOptPatternVar();
+    if (!keyword("instance")) return false;
+    int e = save();
+    restore(s);
     vector<PatternVar> patternVars;
     ExprPtr predicate;
-    if (!optPatternVarsWithCond(patternVars, predicate)) return false;
-    if (!keyword("instance")) return false;
+    if (!optPatternVarsWithCond(patternVars, predicate)) return false;    
+    restore(e);
     ExprPtr target;
     if (!pattern(target)) return false;
     ExprListPtr members;
@@ -2377,11 +2411,16 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x, Module *module) {
 
 static bool procedureWithInterface(vector<TopLevelItemPtr> &x, Module *module) {
     Location location = currentLocation();
-    CodePtr interfaceCode = new Code();
-    if (!optPatternVarsWithCond(interfaceCode->patternVars, interfaceCode->predicate)) return false;
+    int s = save();
+    skipOptPatternVar();
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("define")) return false;
+    int e = save();
+    restore(s);
+    CodePtr interfaceCode = new Code();
+    if (!optPatternVarsWithCond(interfaceCode->patternVars, interfaceCode->predicate)) return false;
+    restore(e);
     IdentifierPtr name;
     Location targetStartLocation = currentLocation();
     if (!identifier(name)) return false;
@@ -2472,13 +2511,18 @@ static bool procedure(TopLevelItemPtr &x, Module *module) {
 
 static bool overload(TopLevelItemPtr &x, Module *module) {
     Location location = currentLocation();
-    CodePtr code = new Code();
-    if (!optPatternVarsWithCond(code->patternVars, code->predicate)) return false;
+    int s = save();
+    skipOptPatternVar();
     InlineAttribute isInline;
     if (!optInline(isInline)) return false;
     bool callByName;
     if (!optCallByName(callByName)) return false;
     if (!keyword("overload")) return false;
+    int e = save();
+    restore(s);
+    CodePtr code = new Code();
+    if (!optPatternVarsWithCond(code->patternVars, code->predicate)) return false;
+    restore(e);
     ExprPtr target;
     Location targetStartLocation = currentLocation();
     if (!pattern(target)) return false;
@@ -2546,12 +2590,17 @@ static bool enumMemberList(vector<EnumMemberPtr> &x) {
 
 static bool enumeration(TopLevelItemPtr &x, Module *module) {
     Location location = currentLocation();
-    vector<PatternVar> patternVars;
-    ExprPtr predicate;
+    int s = save();
+    skipOptPatternVar();
     Visibility vis;
-    if (!optPatternVarsWithCond(patternVars, predicate)) return false;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("enum")) return false;
+    int e = save();
+    restore(s);
+    vector<PatternVar> patternVars;
+    ExprPtr predicate;
+    if (!optPatternVarsWithCond(patternVars, predicate)) return false;    
+    restore(e);
     IdentifierPtr y;
     if (!identifier(y)) return false;
     EnumDeclPtr z = new EnumDecl(module, y, vis, patternVars, predicate);
@@ -2572,12 +2621,17 @@ static bool enumeration(TopLevelItemPtr &x, Module *module) {
 
 static bool globalVariable(TopLevelItemPtr &x, Module *module) {
     Location location = currentLocation();
-    vector<PatternVar> patternVars;
-    ExprPtr predicate;
+    int s = save();
+    skipOptPatternVar();
     Visibility vis;
-    if (!optPatternVarsWithCond(patternVars, predicate)) return false;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("var")) return false;
+    int e = save();
+    restore(s);
+    vector<PatternVar> patternVars;
+    ExprPtr predicate;
+    if (!optPatternVarsWithCond(patternVars, predicate)) return false;    
+    restore(e);
     IdentifierPtr name;
     if (!identifier(name)) return false;
     vector<IdentifierPtr> params;
@@ -2751,12 +2805,17 @@ static bool externalVariable(TopLevelItemPtr &x, Module *module) {
 
 static bool globalAlias(TopLevelItemPtr &x, Module *module) {
     Location location = currentLocation();
-    vector<PatternVar> patternVars;
-    ExprPtr predicate;
+    int s = save();
+    skipOptPatternVar();
     Visibility vis;
-    if (!optPatternVarsWithCond(patternVars, predicate)) return false;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("alias")) return false;
+    int e = save();
+    restore(s);
+    vector<PatternVar> patternVars;
+    ExprPtr predicate;
+    if (!optPatternVarsWithCond(patternVars, predicate)) return false;    
+    restore(e);
     IdentifierPtr name;
     if (!identifier(name)) return false;
     vector<IdentifierPtr> params;
