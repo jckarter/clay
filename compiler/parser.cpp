@@ -398,10 +398,10 @@ static bool evalExpr(ExprPtr &ev) {
 
 static bool atomicExpr(ExprPtr &x) {
     int p = save();
-    if (parenExpr(x)) return true;
-    if (restore(p), tupleExpr(x)) return true;
-    if (restore(p), nameRef(x)) return true;
+    if (nameRef(x)) return true;
+    if (restore(p), parenExpr(x)) return true;
     if (restore(p), literal(x)) return true;
+    if (restore(p), tupleExpr(x)) return true;
     if (restore(p), fileExpr(x)) return true;
     if (restore(p), lineExpr(x)) return true;
     if (restore(p), columnExpr(x)) return true;
@@ -1539,22 +1539,22 @@ static bool statement(StatementPtr &x, bool) {
     if (restore(p), updateAssignment(x)) return true;
     if (restore(p), prefixUpdate(x)) return true;
     if (restore(p), ifStatement(x)) return true;
-    if (restore(p), gotoStatement(x)) return true;
     if (restore(p), switchStatement(x)) return true;
     if (restore(p), returnStatement(x)) return true;
     if (restore(p), evalStatement(x)) return true;
-    if (restore(p), staticAssertStatement(x)) return true;
     if (restore(p), exprStatement(x)) return true;
     if (restore(p), whileStatement(x)) return true;
     if (restore(p), breakStatement(x)) return true;
     if (restore(p), continueStatement(x)) return true;
     if (restore(p), forStatement(x)) return true;
+    if (restore(p), staticFor(x)) return true;
     if (restore(p), tryStatement(x)) return true;
     if (restore(p), throwStatement(x)) return true;
-    if (restore(p), staticFor(x)) return true;
     if (restore(p), finallyStatement(x)) return true;
     if (restore(p), onerrorStatement(x)) return true;
-
+    if (restore(p), staticAssertStatement(x)) return true;
+    if (restore(p), gotoStatement(x)) return true;
+    
     return false;
 }
 
@@ -1909,18 +1909,18 @@ static void skipOptPatternVar() {
     int p = save();
     if (!symbol("[")) {
         restore(p);
-        return;
-    }
-    int bracket = 1;
-    while (bracket) {
-        int p = save();
-        if (symbol("[")) {
-            ++bracket;
-            continue;
+    } else {
+        int bracket = 1;
+        while (bracket) {
+            int p = save();
+            if (symbol("[")) {
+                ++bracket;
+                continue;
+            }
+            restore(p);
+            if(symbol("]"))
+                --bracket;
         }
-        restore(p);
-        if(symbol("]"))
-            --bracket;
     }
 }
 
@@ -2074,15 +2074,13 @@ static bool recordBody(RecordBodyPtr &x) {
     return false;
 }
 
-static bool record(TopLevelItemPtr &x, Module *module) {
-    Location location = currentLocation();
-    int s = save();
-    skipOptPatternVar();
+static bool record(TopLevelItemPtr &x, Module *module, int s) {
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("record")) return false;
     int e = save();
     restore(s);
+    Location location = currentLocation();
     vector<PatternVar> patternVars;
     ExprPtr predicate;
     if (!optPatternVarsWithCond(patternVars, predicate)) return false;    
@@ -2119,15 +2117,13 @@ static bool optInstances(ExprListPtr &x, bool &open) {
     }
 }
 
-static bool variant(TopLevelItemPtr &x, Module *module) {
-    Location location = currentLocation();
-    int s = save();
-    skipOptPatternVar();
+static bool variant(TopLevelItemPtr &x, Module *module, int s) {
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("variant")) return false;
     int e = save();
     restore(s);
+    Location location = currentLocation();
     vector<PatternVar> patternVars;
     ExprPtr predicate;
     if (!optPatternVarsWithCond(patternVars, predicate)) return false;    
@@ -2146,13 +2142,11 @@ static bool variant(TopLevelItemPtr &x, Module *module) {
     return true;
 }
 
-static bool instance(TopLevelItemPtr &x, Module *module) {
-    Location location = currentLocation();
-    int s = save();
-    skipOptPatternVar();
+static bool instance(TopLevelItemPtr &x, Module *module, int s) {
     if (!keyword("instance")) return false;
     int e = save();
     restore(s);
+    Location location = currentLocation();
     vector<PatternVar> patternVars;
     ExprPtr predicate;
     if (!optPatternVarsWithCond(patternVars, predicate)) return false;    
@@ -2428,15 +2422,13 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x, Module *module) {
     return true;
 }
 
-static bool procedureWithInterface(vector<TopLevelItemPtr> &x, Module *module) {
-    Location location = currentLocation();
-    int s = save();
-    skipOptPatternVar();
+static bool procedureWithInterface(vector<TopLevelItemPtr> &x, Module *module, int s) {
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("define")) return false;
     int e = save();
     restore(s);
+    Location location = currentLocation();
     CodePtr interfaceCode = new Code();
     if (!optPatternVarsWithCond(interfaceCode->patternVars, interfaceCode->predicate)) return false;
     restore(e);
@@ -2469,10 +2461,7 @@ static bool procedureWithInterface(vector<TopLevelItemPtr> &x, Module *module) {
     return true;
 }
 
-static bool procedureWithBody(vector<TopLevelItemPtr> &x, Module *module) {
-    Location location = currentLocation();
-    CodePtr code = new Code();
-    if (!optPatternVarsWithCond(code->patternVars, code->predicate)) return false;
+static bool procedureWithBody(vector<TopLevelItemPtr> &x, Module *module, int s) {
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     InlineAttribute isInline;
@@ -2483,6 +2472,12 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x, Module *module) {
     Location targetStartLocation = currentLocation();
     if (!identifier(name)) return false;
     Location targetEndLocation = currentLocation();
+    int e = save();
+    restore(s);
+    Location location = currentLocation();
+    CodePtr code = new Code();
+    if (!optPatternVarsWithCond(code->patternVars, code->predicate)) return false;
+    restore(e);
     bool hasVarArg = false;
     if (!arguments(code->formalArgs, hasVarArg)) return false;
     code->hasVarArg = hasVarArg;
@@ -2528,10 +2523,7 @@ static bool procedure(TopLevelItemPtr &x, Module *module) {
     return true;
 }
 
-static bool overload(TopLevelItemPtr &x, Module *module) {
-    Location location = currentLocation();
-    int s = save();
-    skipOptPatternVar();
+static bool overload(TopLevelItemPtr &x, Module *module, int s) {
     InlineAttribute isInline;
     if (!optInline(isInline)) return false;
     bool callByName;
@@ -2539,6 +2531,7 @@ static bool overload(TopLevelItemPtr &x, Module *module) {
     if (!keyword("overload")) return false;
     int e = save();
     restore(s);
+    Location location = currentLocation();
     CodePtr code = new Code();
     if (!optPatternVarsWithCond(code->patternVars, code->predicate)) return false;
     restore(e);
@@ -2607,15 +2600,13 @@ static bool enumMemberList(vector<EnumMemberPtr> &x) {
     return true;
 }
 
-static bool enumeration(TopLevelItemPtr &x, Module *module) {
-    Location location = currentLocation();
-    int s = save();
-    skipOptPatternVar();
+static bool enumeration(TopLevelItemPtr &x, Module *module, int s) {
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("enum")) return false;
     int e = save();
     restore(s);
+    Location location = currentLocation();
     vector<PatternVar> patternVars;
     ExprPtr predicate;
     if (!optPatternVarsWithCond(patternVars, predicate)) return false;    
@@ -2638,15 +2629,13 @@ static bool enumeration(TopLevelItemPtr &x, Module *module) {
 // global variable
 //
 
-static bool globalVariable(TopLevelItemPtr &x, Module *module) {
-    Location location = currentLocation();
-    int s = save();
-    skipOptPatternVar();
+static bool globalVariable(TopLevelItemPtr &x, Module *module, int s) {
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("var")) return false;
     int e = save();
     restore(s);
+    Location location = currentLocation();
     vector<PatternVar> patternVars;
     ExprPtr predicate;
     if (!optPatternVarsWithCond(patternVars, predicate)) return false;    
@@ -2822,15 +2811,13 @@ static bool externalVariable(TopLevelItemPtr &x, Module *module) {
 // global alias
 //
 
-static bool globalAlias(TopLevelItemPtr &x, Module *module) {
-    Location location = currentLocation();
-    int s = save();
-    skipOptPatternVar();
+static bool globalAlias(TopLevelItemPtr &x, Module *module, int s) {
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("alias")) return false;
     int e = save();
     restore(s);
+    Location location = currentLocation();
     vector<PatternVar> patternVars;
     ExprPtr predicate;
     if (!optPatternVarsWithCond(patternVars, predicate)) return false;    
@@ -3069,20 +3056,22 @@ static bool topLevelItem(vector<TopLevelItemPtr> &x, Module *module) {
     int p = save();
 
     TopLevelItemPtr y;
-    if (documentation(y, module)) goto success;
-    if (restore(p), record(y, module)) goto success;
-    if (restore(p), variant(y, module)) goto success;
-    if (restore(p), instance(y, module)) goto success;
+    skipOptPatternVar();
+    int q = save();
+    if (restore(q), overload(y, module, p)) goto success;
+    if (restore(q), procedureWithInterface(x, module, p)) goto success2;
+    if (restore(q), procedureWithBody(x, module, p)) goto success2;
+    if (restore(q), record(y, module, p)) goto success;
+    if (restore(q), variant(y, module, p)) goto success;
+    if (restore(q), instance(y, module, p)) goto success;
+    if (restore(q), enumeration(y, module, p)) goto success;
+    if (restore(q), globalVariable(y, module, p)) goto success;
+    if (restore(q), globalAlias(y, module, p)) goto success;
     if (restore(p), procedure(y, module)) goto success;
-    if (restore(p), procedureWithInterface(x, module)) goto success2;
-    if (restore(p), procedureWithBody(x, module)) goto success2;
+    if (restore(p), documentation(y, module)) goto success;
     if (restore(p), llvmProcedure(x, module)) goto success2;
-    if (restore(p), overload(y, module)) goto success;
-    if (restore(p), enumeration(y, module)) goto success;
-    if (restore(p), globalVariable(y, module)) goto success;
     if (restore(p), external(y, module)) goto success;
     if (restore(p), externalVariable(y, module)) goto success;
-    if (restore(p), globalAlias(y, module)) goto success;
     if (restore(p), newtype(y, module)) goto success;
     if (restore(p), evalTopLevel(y, module)) goto success;
     if (restore(p), staticAssertTopLevel(y, module)) goto success;
