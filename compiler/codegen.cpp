@@ -4272,6 +4272,20 @@ void codegenCollectLabels(llvm::ArrayRef<StatementPtr> statements,
 // codegenBinding
 //
 
+llvm::SmallString<16> getBindingVariableName(BindingPtr x, int i)
+{
+    if (i >= x->args.size()){
+        assert(x->hasVarArg);
+
+        llvm::SmallString<16> buf;
+        llvm::raw_svector_ostream ostr(buf);
+        ostr << x->args.back()->name->str << "_" << (i - x->args.size() + 1);
+        return ostr.str();
+    } else {
+        return x->args[i]->name->str;
+    }
+}
+
 EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
 {
     
@@ -4298,7 +4312,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
                 llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
                     llvm::dwarf::DW_TAG_auto_variable, // tag
                     debugBlock, // scope
-                    x->args[i]->name->str, // name
+                    getBindingVariableName(x, i), // name
                     file, // file
                     line, // line
                     llvmTypeDebugInfo(cv->type), // type
@@ -4332,7 +4346,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
                 }
                 --j;
                 addLocal(env2, x->args[i]->name, varArgs.ptr());  
-            }else{
+            } else {
                 CValuePtr cv = mcv->values[i+j];
                 cgPushStackValue(cv, ctx);
                 addLocal(env2, x->args[i]->name, cv.ptr());
@@ -4367,7 +4381,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
                 llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
                     llvm::dwarf::DW_TAG_auto_variable, // tag
                     debugBlock, // scope
-                    x->args[i]->name->str, // name
+                    getBindingVariableName(x, i), // name
                     file, // file
                     line, // line
                     llvmDIBuilder->createReferenceType(
@@ -4440,7 +4454,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
                 llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
                     llvm::dwarf::DW_TAG_auto_variable, // tag
                     debugBlock, // scope
-                    x->args[i]->name->str, // name
+                    getBindingVariableName(x, i), // name
                     file, // file
                     line, // line
                     pv.isTemp
