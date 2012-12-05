@@ -2620,21 +2620,25 @@ void codegenLowlevelCall(llvm::Value *llCallable,
     if (!ctx->checkExceptions)
         return;
     llvm::Value *noException = noExceptionReturnValue();
+    llvm::Value *intNoException = llvm::ConstantInt::get(llvmType(cSizeTType), 0);
+    llvm::Value *intResult = ctx->builder->CreatePtrToInt(
+        result, llvmType(cSizeTType));
     llvm::Function *expect = llvm::Intrinsic::getDeclaration(
         llvmModule,
         llvm::Intrinsic::expect,
-        result->getType());
-    llvm::Value *expectArgs[2] = {result, noException};
-    result = ctx->builder->CreateCall(expect, expectArgs);
+        llvmType(cSizeTType));
+    llvm::Value *expectArgs[2] = {intResult, intNoException};
+    llvm::Value *expectResult = ctx->builder->CreateCall(expect, expectArgs);
+    llvm::Value *ptrResult = ctx->builder->CreateIntToPtr(expectResult, exceptionReturnType());
 
-    llvm::Value *cond = ctx->builder->CreateICmpEQ(result, noException);
+    llvm::Value *cond = ctx->builder->CreateICmpEQ(ptrResult, noException);
     llvm::BasicBlock *landing = newBasicBlock("landing", ctx);
     llvm::BasicBlock *normal = newBasicBlock("normal", ctx);
     ctx->builder->CreateCondBr(cond, normal, landing);
 
     ctx->builder->SetInsertPoint(landing);
     assert(ctx->exceptionValue != NULL);
-    ctx->builder->CreateStore(result, ctx->exceptionValue);
+    ctx->builder->CreateStore(ptrResult, ctx->exceptionValue);
     JumpTarget *jt = &ctx->exceptionTargets.back();
     cgDestroyStack(jt->stackMarker, ctx, true);
     // jt might be invalidated at this point
@@ -4269,6 +4273,20 @@ void codegenCollectLabels(llvm::ArrayRef<StatementPtr> statements,
 // codegenBinding
 //
 
+llvm::SmallString<16> getBindingVariableName(BindingPtr x, int i)
+{
+    if (i >= x->args.size()){
+        assert(x->hasVarArg);
+
+        llvm::SmallString<16> buf;
+        llvm::raw_svector_ostream ostr(buf);
+        ostr << x->args.back()->name->str << "_" << (i - x->args.size() + 1);
+        return ostr.str();
+    } else {
+        return x->args[i]->name->str;
+    }
+}
+
 EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
 {
     int line, column;
@@ -4296,7 +4314,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
                 llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
                     llvm::dwarf::DW_TAG_auto_variable, // tag
                     debugBlock, // scope
-                    x->args[i]->name->str, // name
+                    getBindingVariableName(x, i), // name
                     file, // file
                     line, // line
                     llvmTypeDebugInfo(cv->type), // type
@@ -4330,7 +4348,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
                 }
                 --j;
                 addLocal(env2, x->args[i]->name, varArgs.ptr());  
-            }else{
+            } else {
                 CValuePtr cv = mcv->values[i+j];
                 cgPushStackValue(cv, ctx);
                 addLocal(env2, x->args[i]->name, cv.ptr());
@@ -4365,7 +4383,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
                 llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
                     llvm::dwarf::DW_TAG_auto_variable, // tag
                     debugBlock, // scope
-                    x->args[i]->name->str, // name
+                    getBindingVariableName(x, i), // name
                     file, // file
                     line, // line
                     llvmDIBuilder->createReferenceType(
@@ -4438,7 +4456,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
                 llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
                     llvm::dwarf::DW_TAG_auto_variable, // tag
                     debugBlock, // scope
-                    x->args[i]->name->str, // name
+                    getBindingVariableName(x, i), // name
                     file, // file
                     line, // line
                     pv.isTemp
