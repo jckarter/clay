@@ -3722,7 +3722,8 @@ bool codegenStatement(StatementPtr stmt,
                       EnvPtr env,
                       CodegenContext* ctx)
 {
-    DebugLocationContext loc(stmt->location, ctx);
+    if (llvmDIBuilder != NULL)
+        DebugLocationContext loc(stmt->location, ctx);
     
     switch (stmt->stmtKind) {
 
@@ -4270,11 +4271,12 @@ void codegenCollectLabels(llvm::ArrayRef<StatementPtr> statements,
 
 EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
 {
-    
-    DebugLocationContext loc(x->location, ctx);
-
     int line, column;
-    llvm::DIFile file = getDebugLineCol(x->location, line, column);
+    llvm::DIFile file;
+    if (llvmDIBuilder != NULL) {
+        DebugLocationContext loc(x->location, ctx);
+        getDebugLineCol(x->location, line, column);
+    }
     switch(x->bindingKind){
     case VAR : {
 
