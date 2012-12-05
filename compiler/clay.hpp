@@ -2703,6 +2703,10 @@ struct Type : public Object {
           typeInfoInitialized(false)
     {}
 
+    void *operator new(size_t num_bytes) {
+        return ANodeAllocator->Allocate(num_bytes, llvm::AlignOf<Type>::Alignment);
+    }
+    virtual void dealloc() { ANodeAllocator->Deallocate(this); }
     llvm::DIType getDebugInfo() { return llvm::DIType(debugInfo); }
 };
 
@@ -2886,6 +2890,7 @@ struct Pattern : public Object {
     PatternKind kind;
     Pattern(PatternKind kind)
         : Object(PATTERN), kind(kind) {}
+
 };
 
 struct PatternCell : public Pattern {

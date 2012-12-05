@@ -10,11 +10,6 @@
 
 namespace clay {
 
-static llvm::SpecificBumpPtrAllocator<InvokeEntry> *invokeEntryAllocator
-    = new llvm::SpecificBumpPtrAllocator<InvokeEntry>();
-static llvm::SpecificBumpPtrAllocator<InvokeSet> *invokeSetAllocator
-    = new llvm::SpecificBumpPtrAllocator<InvokeSet>();
-
 
 static llvm::ArrayRef<OverloadPtr> callableOverloads(ObjectPtr x);
 
@@ -163,8 +158,7 @@ InvokeSet* lookupInvokeSet(ObjectPtr callable,
     }
     OverloadPtr interface = callableInterface(callable);
     llvm::ArrayRef<OverloadPtr> overloads = callableOverloads(callable);
-    InvokeSet* invokeSet = invokeSetAllocator->Allocate();
-    new ((void*)invokeSet) InvokeSet(callable, argsKey, interface, overloads);
+    InvokeSet* invokeSet = new InvokeSet(callable, argsKey, interface, overloads);
     invokeSet->shouldLog = shouldLogCallable(callable);
 
     bucket.push_back(invokeSet);
@@ -321,8 +315,7 @@ static InvokeEntry* newInvokeEntry(InvokeSet* parent,
                                    MatchSuccessPtr match,
                                    MatchSuccessPtr interfaceMatch)
 {
-    InvokeEntry* entry = invokeEntryAllocator->Allocate();
-    new ((void*)entry) InvokeEntry(parent, match->callable, match->argsKey);
+    InvokeEntry* entry = new InvokeEntry(parent, match->callable, match->argsKey);
     entry->origCode = match->code;
     entry->code = clone(match->code);
     entry->env = match->env;

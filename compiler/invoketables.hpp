@@ -9,7 +9,12 @@ namespace clay {
 
 
 struct InvokeSet;
+struct InvokeEntry;
 
+static llvm::SpecificBumpPtrAllocator<InvokeEntry> *invokeEntryAllocator
+    = new llvm::SpecificBumpPtrAllocator<InvokeEntry>();
+static llvm::SpecificBumpPtrAllocator<InvokeSet> *invokeSetAllocator
+    = new llvm::SpecificBumpPtrAllocator<InvokeSet>();
 
 struct InvokeEntry {
     InvokeSet *parent;
@@ -61,7 +66,10 @@ struct InvokeEntry {
         for (size_t i = 0; i < CC_Count; ++i)
             llvmCWrappers[i] = NULL;
     }
-
+    void *operator new(size_t num_bytes) {
+        return invokeEntryAllocator->Allocate();
+    }
+    virtual void dealloc() { ANodeAllocator->Deallocate(this); }
     llvm::DISubprogram getDebugInfo() { return llvm::DISubprogram(debugInfo); }
 };
 
@@ -92,6 +100,10 @@ struct InvokeSet {
     {
         overloads.insert(overloads.end(), patternOverloads.begin(), patternOverloads.end());
     }
+    void *operator new(size_t num_bytes) {
+        return invokeSetAllocator->Allocate();
+    }
+    virtual void dealloc() { ANodeAllocator->Deallocate(this); }
 };
 
 typedef vector< pair<OverloadPtr, MatchResultPtr> > MatchFailureVector;
