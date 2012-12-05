@@ -5,7 +5,7 @@ import __operators__;
 
 [T]
 define Tuple?(#T) : Bool private overload;
-overload Tuple?(x) = false;
+overload Tuple?(x) : Bool = false;
 [..T] overload Tuple?(#Tuple[..T]) : Bool = true;
 
 
@@ -48,7 +48,7 @@ forceinline unpack(x) = ..unpackRef(x);
 /// @section  Tuple type inferring constructor 
 
 [..T]
-alias overload Tuple(..args:T) = Tuple[..T](..args);
+alias overload Tuple(..args:T) : Tuple[..T] = Tuple[..T](..args);
 
 
 

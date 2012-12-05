@@ -70,7 +70,7 @@ alias RValue?(x) : Bool = not LValue?(x);
 define initialize;
 [T] define ImplicitlyCopyable?(#T) : Bool;
 
-overload ImplicitlyCopyable?(T) = true;
+overload ImplicitlyCopyable?(T) : Bool = true;
 
 [T]
 forceinline overload initialize(a:T) : {
@@ -543,7 +543,7 @@ bitror(x:I, n:J) = (|)((>>)(x, n), wrapBitshl(x, TypeSize(I)*8 - n));
 
 [T]
 define PrimitiveType?(#T) : Bool;
-overload PrimitiveType?(X) = false;
+overload PrimitiveType?(X) : Bool = false;
 overload PrimitiveType?(#Bool) : Bool = true;
 overload PrimitiveType?(#Int8) : Bool = true;
 overload PrimitiveType?(#Int16) : Bool = true;

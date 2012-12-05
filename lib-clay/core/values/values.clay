@@ -120,11 +120,11 @@ private record CapturedRValue[T] (
 
 define CapturedValue?(a) : Bool private overload;
 
-overload CapturedValue?(a) = false;
+overload CapturedValue?(a) : Bool = false;
 [T]
-overload CapturedValue?(#CapturedLValue[T]) = true;
+overload CapturedValue?(#CapturedLValue[T]) : Bool = true;
 [T]
-overload CapturedValue?(#CapturedRValue[T]) = true;
+overload CapturedValue?(#CapturedRValue[T]) : Bool = true;
 
 define captureValue(v) private overload;
 forceinline overload captureValue(rvalue x) = CapturedRValue(move(x));
@@ -205,11 +205,11 @@ overload assocValue(#key, forward kv: Tuple[Static[key], ..T], ..kvs)
 [key]
 define assocValue?(#key, ..kvs) : Bool private overload;
 [key]
-overload assocValue?(#key) = false;
+overload assocValue?(#key) : Bool = false;
 [key]
-overload assocValue?(#key, kv, ..kvs) = assocValue?(key, ..kvs);
+overload assocValue?(#key, kv, ..kvs) : Bool = assocValue?(key, ..kvs);
 [key, ..T]
-overload assocValue?(#key, kv: Tuple[Static[key], ..T], ..kvs) = true;
+overload assocValue?(#key, kv: Tuple[Static[key], ..T], ..kvs) : Bool = true;
 
 define assocCountValues private overload;
 [key]

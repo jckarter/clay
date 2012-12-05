@@ -47,7 +47,7 @@ overload VariantNestingPaths3(Vs:T, M, Prefix, #i) = ;
 /// @section  nestedVariantIs? 
 
 [V, T when Variant?(V)]
-forceinline nestedVariantIs?(x:V, #T) {
+forceinline nestedVariantIs?(x:V, #T) : Bool {
     var ptr = nestedVariantAsPtr(x, T);
     return not null?(ptr);
 }

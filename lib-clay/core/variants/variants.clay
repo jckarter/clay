@@ -90,7 +90,7 @@ overload moveUnsafe(src:V) --> returned:V {
 }
 
 [V when Variant?(V) and not ResetDoesNothingType?(V)]
-forceinline overload resetUnsafe(x:V) {
+forceinline overload resetUnsafe(x:V) : {
     ref repr = variantRepr(x);
     repr.tag = 0;
     resetUnsafe(staticIndex(repr.data, #0));
@@ -101,7 +101,7 @@ forceinline overload resetUnsafe(x:V) {
 /// @section  assign 
 
 [V when Variant?(V) and not BitwiseAssignedType?(V)]
-overload assign(ref dest:V, ref src:V) {
+overload assign(ref dest:V, ref src:V) : {
     ref destRepr = variantRepr(dest);
     ref srcRepr = variantRepr(src);
     var tag = destRepr.tag;
@@ -137,7 +137,7 @@ overload assign(ref dest:V, ref src:V) {
 /// @section  destroy 
 
 [V when Variant?(V) and not DestroyDoesNothingType?(V)]
-overload destroy(x:V) {
+overload destroy(x:V) : {
     ref repr = variantRepr(x);
     var tag = repr.tag;
     ref data = repr.data;
@@ -157,7 +157,7 @@ overload destroy(x:V) {
 /// @section  equals? 
 
 [V when Variant?(V)]
-overload equals?(a:V, b:V) {
+overload equals?(a:V, b:V) : Bool {
     ref aRepr, bRepr = variantRepr(a), variantRepr(b);
     var tag = aRepr.tag;
     if (tag != bRepr.tag)
@@ -177,7 +177,7 @@ overload equals?(a:V, b:V) {
 /// @section  variantIs? 
 
 [V,T when Variant?(V) and VariantMember?(V, T)]
-forceinline variantIs?(x:V, #T) {
+forceinline variantIs?(x:V, #T) : Bool {
     ref repr = variantRepr(x);
     alias index = Int(VariantMemberIndex(V, T));
     return repr.tag == index;

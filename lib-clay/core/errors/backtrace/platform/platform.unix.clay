@@ -26,10 +26,10 @@ forceinline overload captureBacktrace() --> returned: Backtrace {
         Int(size(returned.callstack)));
 }
 
-forceinline overload printBacktraceToStderr(backtrace: Backtrace) { }
+forceinline overload printBacktraceToStderr(backtrace: Backtrace) : { }
 
 [when BacktraceSupported?]
-overload printBacktraceToStderr(bt: Backtrace) {
+overload printBacktraceToStderr(bt: Backtrace) : {
     backtrace_symbols_fd(begin(bt.callstack), bt.size, 2);
 }
 

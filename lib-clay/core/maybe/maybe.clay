@@ -10,16 +10,16 @@ record Nothing ();
 /// @section  constructors 
 
 [T]
-forceinline overload Maybe(x:T) = Maybe[T](x);
+forceinline overload Maybe(x:T) : Maybe[T] = Maybe[T](x);
 
 [T]
-forceinline overload Maybe[T]() = Maybe[T](Nothing());
+forceinline overload Maybe[T]() : Maybe[T] = Maybe[T](Nothing());
 
 forceinline nothing(T) = Maybe[T]();
 
 [T]
 define Maybe?(#T) : Bool;
-overload Maybe?(T) = false;
+overload Maybe?(T) : Bool = false;
 [T] overload Maybe?(#Maybe[T]) : Bool = true;
 
 

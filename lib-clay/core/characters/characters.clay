@@ -31,9 +31,9 @@ forceinline overload UniChar(c:I) --> returned:UniChar {
 }
 
 // this operation fails if character is not in ASCII range
-forceinline overload UniChar(c:Char) = UniChar(c.code);
+forceinline overload UniChar(c:Char) : UniChar = UniChar(c.code);
 // this operation fails if character is not in ASCII range
-forceinline overload Char(c:UniChar) = Char(Int8(c.code));
+forceinline overload Char(c:UniChar) : Char = Char(Int8(c.code));
 
 [I when Integer?(I)]
 forceinline overload I(c:Char) : I = wrapCast(I, c.code);
@@ -50,7 +50,8 @@ forceinline overload lesser?(x:C, y:D) : Bool = lesser?(x.code, y.code);
 
 /// @section  asciiSpace? 
 
-asciiSpace?(c) {
+[C when Character?(C)]
+asciiSpace?(c:C) {
     switch (c) case (' ', '\r', '\n', '\t', '\f')
         return true;
     else

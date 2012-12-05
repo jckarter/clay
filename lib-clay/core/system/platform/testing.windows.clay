@@ -1,2 +1,2 @@
-Windows?() = true;
-Unix?() = false;
+Windows?() : Bool = true;
+Unix?() : Bool = false;

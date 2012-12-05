@@ -5,7 +5,7 @@ public import core.errors.backtrace.platform.(
     );
 
 // noinline because http://llvm.org/bugs/show_bug.cgi?id=13700
-noinline showBacktrace() {
+noinline showBacktrace() : {
     var bt = captureBacktrace();
     printBacktraceToStderr(bt);
 }

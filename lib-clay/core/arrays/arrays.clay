@@ -2,45 +2,46 @@
 /// @section  predicates 
 
 [T,n]
-overload ContiguousSequence?(#Array[T,n]) = true;
+overload ContiguousSequence?(#Array[T,n]) : Bool = true;
 
 [T,n]
-overload SequenceContainer?(#Array[T,n]) = true;
+overload SequenceContainer?(#Array[T,n]) : Bool = true;
 
 
 
 /// @section  size, index, iterator, begin, end, front, back 
 
 [T,n]
-forceinline overload size(a:Array[T,n]) = SizeT(n);
+forceinline overload size(a:Array[T,n]) : SizeT = SizeT(n);
 
 [T,n]
-forceinline overload StaticSize(#Array[T,n]) = SizeT(n);
+forceinline overload StaticSize(#Array[T,n]) : SizeT = SizeT(n);
 
 [T,n,I when Integer?(I)]
-forceinline overload index(a:Array[T,n], i:I) {
+forceinline overload index(a:Array[T,n], i:I) : ByRef[T] {
     assert["boundsChecks"](i >= 0 and SizeT(i) < size(a), Array[T,n], " access out of bounds");
     return ref arrayRef(a, SizeT(i));
 }
 
 [T,n]
-forceinline overload iterator(a:Array[T,n]) = coordinateRange(begin(a), end(a));
+forceinline overload iterator(a:Array[T,n])
+    = coordinateRange(begin(a), end(a));
 
 [T,n]
-forceinline overload reverseIterator(a:Array[T,n]) =
-    reverseCoordinateRange(end(a), begin(a));
+forceinline overload reverseIterator(a:Array[T,n]) 
+    = reverseCoordinateRange(end(a), begin(a));
 
 [T,n]
-forceinline overload begin(a:Array[T,n]) = Pointer[T](@a);
+forceinline overload begin(a:Array[T,n]) : Pointer[T] = Pointer[T](@a);
 
 [T,n]
-forceinline overload end(a:Array[T,n]) = Pointer[T](@a + 1);
+forceinline overload end(a:Array[T,n]) : Pointer[T] = Pointer[T](@a + 1);
 
 [T,n]
-forceinline overload front(a:Array[T,n]) = ref a[0];
+forceinline overload front(a:Array[T,n]) : ByRef[T] = ref a[0];
 
 [T,n]
-forceinline overload back(a:Array[T,n]) = ref a[n-1];
+forceinline overload back(a:Array[T,n]) : ByRef[T] = ref a[n-1];
 
 
 
@@ -187,12 +188,12 @@ overload moveUnsafe(src:Array[T,n]) --> returned:Array[T,n] {
 }
 
 [T,n when not ResetDoesNothingType?(T)]
-overload resetUnsafe(a:Array[T,n]) {
+overload resetUnsafe(a:Array[T,n]) : {
     resetMemoryUnsafe(begin(a), end(a));
 }
 
 [T,n when not DestroyDoesNothingType?(T)]
-overload destroy(a:Array[T,n]) {
+overload destroy(a:Array[T,n]) : {
     destroyMemory(begin(a), end(a));
 }
 
@@ -223,12 +224,12 @@ integerArray(#n) = array(..integers(#n));
 /// @section  array assignment 
 
 [T,U,n when not (T == U and BitwiseAssignedType?(T)) and CallDefined?(assign, T, U)]
-overload assign(ref left: Array[T,n], ref right: Array[U, n]) {
+overload assign(ref left: Array[T,n], ref right: Array[U, n]) : {
     assignNonoverlappingMemory(begin(left), begin(right), end(right));
 }
 
 [T,U,n when not (T == U and BitwiseMoveAssignedType?(T)) and CallDefined?(assign, T, U)]
-overload assign(ref left: Array[T,n], rvalue right: Array[U, n]) {
+overload assign(ref left: Array[T,n], rvalue right: Array[U, n]) : {
     moveAssignNonoverlappingMemory(begin(left), begin(right), end(right));
 }
 
@@ -242,8 +243,8 @@ overload assign(ref left: Array[T,n], rvalue right: Array[U, n]) {
 alias ArrayRef[T] = CoordinateRange[Pointer[T]];
 
 [T]
-overload ArrayRef(begin: Pointer[T], end: Pointer[T]) = CoordinateRange(begin, end);
+overload ArrayRef(begin: Pointer[T], end: Pointer[T]) : ArrayRef[T] = CoordinateRange(begin, end);
 
 [T,N]
-overload ArrayRef(a: Array[T,N]) = ArrayRef(begin(a), end(a));
+overload ArrayRef(a: Array[T,N]) : ArrayRef[T] = ArrayRef(begin(a), end(a));
 

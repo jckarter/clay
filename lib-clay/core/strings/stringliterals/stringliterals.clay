@@ -8,9 +8,9 @@ record StringLiteralRef (
 
 /// @section  predicates 
 
-overload ContiguousSequence?(#StringLiteralRef) = true;
+overload ContiguousSequence?(#StringLiteralRef) : Bool = true;
 [s when StringLiteral?(s)]
-overload ContiguousSequence?(#Static[s]) = true;
+overload ContiguousSequence?(#Static[s]) : Bool = true;
 
 
 
@@ -25,11 +25,11 @@ forceinline overload StringLiteralRef() = StringLiteralRef(stringTableConstant("
 
 forceinline overload size(a:StringLiteralRef) = a.sizep^;
 
-forceinline overload begin(a:StringLiteralRef) = Pointer[Char](a.sizep + 1);
+forceinline overload begin(a:StringLiteralRef) : Pointer[Char] = Pointer[Char](a.sizep + 1);
 forceinline overload end(a:StringLiteralRef) = begin(a) + size(a);
 
 [I when Integer?(I)]
-forceinline overload index(a:StringLiteralRef, i:I) {
+forceinline overload index(a:StringLiteralRef, i:I) : ByRef[Char] {
     assert["boundsChecks"](i >= 0 and i < size(a), "StringLiteralRef index out of bounds");
     return ref (begin(a) + i)^;
 }
@@ -37,20 +37,19 @@ forceinline overload index(a:StringLiteralRef, i:I) {
 [s when StringLiteral?(s)]
 forceinline overload size(#s) = stringLiteralByteSize(s);
 [s when StringLiteral?(s)]
-forceinline overload begin(#s) = Pointer[Char](stringTableConstant(s) + 1);
+forceinline overload begin(#s) : Pointer[Char] = Pointer[Char](stringTableConstant(s) + 1);
 [s when StringLiteral?(s)]
 forceinline overload end(#s) = begin(s) + size(s);
 
 [s, I when StringLiteral?(s) and Integer?(I)]
-forceinline overload index(#s, i:I) {
+forceinline overload index(#s, i:I) : ByRef[Char] {
     assert["boundsChecks"](i >= 0 and i < size(s), "literal \"", s, "\" index out of bounds");
     return ref (begin(s) + i)^;
 }
 
 [s, n when StringLiteral?(s) and n >= 0 and n < size(s)]
-forceinline overload staticIndex(#s, #n) {
-    return Char(stringLiteralByteIndex(#s,#n));
-}
+forceinline overload staticIndex(#s, #n) : Char 
+    = Char(stringLiteralByteIndex(#s,#n));
 
 
 
@@ -58,10 +57,11 @@ forceinline overload staticIndex(#s, #n) {
 
 define cstring(a) : Pointer[Int8];
 
-forceinline overload cstring(a:StringLiteralRef) = Pointer[Int8](begin(a));
+forceinline overload cstring(a:StringLiteralRef) : Pointer[Int8]
+    = Pointer[Int8](begin(a));
 
 [s when StringLiteral?(s)]
-forceinline overload cstring(#s) = Pointer[Int8](begin(s));
+forceinline overload cstring(#s) : Pointer[Int8] = Pointer[Int8](begin(s));
 
 
 /// @section  coordinates and iteration 
@@ -80,11 +80,11 @@ forceinline overload reverseIterator(#s) =
 /// @section  string literal concatenation 
 
 private define StringLiteralStatic?(s) : Bool;
-overload StringLiteralStatic?(s) = false;
+overload StringLiteralStatic?(s) : Bool = false;
 [s]
-overload StringLiteralStatic?(#Static[s]) = StringLiteral?(s);
+overload StringLiteralStatic?(#Static[s]) : Bool = StringLiteral?(s);
 
-StringLiteralType?(..SS) = allValues?(S -> StringLiteralStatic?(S), ..SS);
+StringLiteralType?(..SS) : Bool = allValues?(S -> StringLiteralStatic?(S), ..SS);
 
 [..SS when StringLiteralType?(..SS)]
 forceinline overload (++)(..ss:SS) = stringLiteralConcat(..ss);
@@ -94,9 +94,9 @@ forceinline overload (++)(..ss:SS) = stringLiteralConcat(..ss);
 
 // stringLiteralStartsWith?
 
-define stringLiteralStartsWith?;
+define stringLiteralStartsWith?(..a) : Bool;
 
-overload stringLiteralStartsWith?(a, b) = false;
+overload stringLiteralStartsWith?(a, b) : Bool = false;
 
 [identifier, startsWith when size(identifier) >= size(startsWith)]
 overload stringLiteralStartsWith?(#identifier, #startsWith)
@@ -107,10 +107,10 @@ overload stringLiteralStartsWith?(#identifier, #startsWith)
 
 define stringLiteralEndsWith?;
 
-overload stringLiteralEndsWith?(a, b) = false;
+overload stringLiteralEndsWith?(a, b) : Bool = false;
 
 [identifier, endsWith when size(identifier) >= size(endsWith)]
-overload stringLiteralEndsWith?(#identifier, #endsWith)
+overload stringLiteralEndsWith?(#identifier, #endsWith) : Bool
     = stringLiteralByteSlice(identifier,
           #(size(identifier) - size(endsWith)),
           #size(identifier)

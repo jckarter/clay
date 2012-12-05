@@ -9,7 +9,7 @@ record CStringRef (ptr : Pointer[Int8]);
 
 /// @section  predicates 
 
-overload ContiguousSequence?(#CStringRef) = true;
+overload ContiguousSequence?(#CStringRef) : Bool = true;
 
 
 
@@ -27,7 +27,7 @@ forceinline overload CStringRef(#S) = CStringRef(cstring(S));
 
 /// @section  size, index 
 
-forceinline overload size(a:CStringRef) = SizeT(strlen(a.ptr));
+forceinline overload size(a:CStringRef) : SizeT = SizeT(strlen(a.ptr));
 
 [I when Integer?(I)]
 forceinline overload index(a:CStringRef, i:I) {

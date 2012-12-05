@@ -25,7 +25,8 @@ record GenericException (
     message: StringLiteralRef,
 );
 [S when StringLiteral?(S)]
-overload GenericException(#S) = GenericException(StringLiteralRef(S));
+overload GenericException(#S) : GenericException 
+    = GenericException(StringLiteralRef(S));
 
 instance Exception (GenericException);
 
@@ -42,7 +43,8 @@ private record ExceptionData (
     context: ExceptionContext,
 );
 
-private exceptionObject(exp:RawPointer) = ref Pointer[ExceptionData](exp)^;
+private exceptionObject(exp:RawPointer) : ByRef[ExceptionData] 
+    = ref Pointer[ExceptionData](exp)^;
 
 
 
@@ -56,7 +58,7 @@ private exceptionObject(exp:RawPointer) = ref Pointer[ExceptionData](exp)^;
 // more sophisticated version.
 define printUnhandledExceptionToStderr(e) :;
 
-overload printUnhandledExceptionToStderr(e) {
+overload printUnhandledExceptionToStderr(e) : {
     libc.fprintf(libc.stderr, cstring("unhandled %s exception\n"), cstring(MemberTypeName(e)));
 }
 
@@ -69,7 +71,7 @@ overload throwValue(x:T) : {
     errorWithPrintfNoThrow(stringLiteralConcat("exception of type ", StaticName(T)," thrown with exceptions disabled"));
 }
 
-private allocateExceptionData(forward x, file, line) =
+private allocateExceptionData(forward x, file, line) : Pointer[ExceptionData] =
     allocateObject(ExceptionData(Exception(x), ExceptionContext(Backtrace(), file, line)));
 
 [ when ExceptionsEnabled?]
@@ -83,7 +85,7 @@ alias overload throwValue(x) : {
 }
 
 [S when StringLiteral?(S)]
-alias overload throwValue(#S) {
+alias overload throwValue(#S) : {
     throwValue(GenericException(S));
 }
 
@@ -91,7 +93,7 @@ overload continueException(exp:RawPointer) : {
     signalException(exp);
 }
 
-private signalException(exp:RawPointer) __llvm__{
+private signalException(exp:RawPointer) __llvm__ {
     %expv = load i8** %exp
     ret i8* %expv
 }

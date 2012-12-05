@@ -66,7 +66,7 @@ alias overload Vector[T](..args:A) {
 /// @section  moveUnsafe, resetUnsafe, assign, destroy 
 
 [T]
-overload BitwiseMovedType?(#Vector[T]) = true;
+overload BitwiseMovedType?(#Vector[T]) : Bool = true;
 
 [T]
 overload resetUnsafe(a:Vector[T]) {
@@ -93,7 +93,7 @@ overload destroy(a:Vector[T]) {
 /// @section  generic vector requirements 
 
 [T]
-overload Vector?(#Vector[T]) = true;
+overload Vector?(#Vector[T]) : Bool = true;
 
 [T]
 overload vectorData(a:Vector[T]) = @(a.data^);

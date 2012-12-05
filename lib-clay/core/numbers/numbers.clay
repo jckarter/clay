@@ -5,7 +5,7 @@ import core.platform.(OSFamily, Unix, CPU, X86_64);
 
 [T]
 define SignedInteger?(#T) : Bool;
-overload SignedInteger?(T) = false;
+overload SignedInteger?(T) : Bool = false;
 overload SignedInteger?(#Int8) : Bool = true;
 overload SignedInteger?(#Int16) : Bool = true;
 overload SignedInteger?(#Int32) : Bool = true;
@@ -15,7 +15,7 @@ overload SignedInteger?(#Int128) : Bool = true;
 
 [T]
 define UnsignedInteger?(#T) : Bool;
-overload UnsignedInteger?(T) = false;
+overload UnsignedInteger?(T) : Bool = false;
 overload UnsignedInteger?(#UInt8) : Bool = true;
 overload UnsignedInteger?(#UInt16) : Bool = true;
 overload UnsignedInteger?(#UInt32) : Bool = true;

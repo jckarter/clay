@@ -4,7 +4,7 @@ import core.coordinates.*;
 /// @section  type predicates 
 
 [T]
-overload ContiguousCoordinate?(#Pointer[T]) = true;
+overload ContiguousCoordinate?(#Pointer[T]) : Bool = true;
 
 
 
@@ -17,67 +17,59 @@ define null?;
 /// @section  Pointer - constructor 
 
 [T]
-forceinline overload Pointer[T]() = nullPointer(Pointer[T]);
+forceinline overload Pointer[T]() : Pointer[T] = nullPointer(Pointer[T]);
 
 
 
 /// @section  Pointer - convert to/from integers and other pointers 
 
 [I,T when Integer?(I)]
-forceinline overload I(a:Pointer[T]) = pointerToInt(I, a);
+forceinline overload I(a:Pointer[T]) : I = pointerToInt(I, a);
 
 [I,T when Integer?(I)]
-forceinline overload Pointer[T](a:I) = intToPointer(Pointer[T], a);
+forceinline overload Pointer[T](a:I) : Pointer[T] = intToPointer(Pointer[T], a);
 
 [DEST, SRC]
-forceinline overload Pointer[DEST](a:Pointer[SRC]) =
-    bitcast(Pointer[DEST], a);
+forceinline overload Pointer[DEST](a:Pointer[SRC]) : Pointer[DEST] 
+    = bitcast(Pointer[DEST], a);
 
 
 
 /// @section  Pointer - assign, equals?, lesser? 
 
 [T]
-forceinline overload equals?(a:Pointer[T], b:Pointer[T]) {
-    return integerEquals?(a, b);
-}
+forceinline overload equals?(a:Pointer[T], b:Pointer[T]) : Bool
+    = integerEquals?(a, b);
 
 [T]
-forceinline overload lesser?(a:Pointer[T], b:Pointer[T]) {
-    return integerLesser?(a, b);
-}
+forceinline overload lesser?(a:Pointer[T], b:Pointer[T]) : Bool 
+    = integerLesser?(a, b);
 
 
 
 /// @section  Pointer - arithmetic 
 
 [T,I when Integer?(I)]
-forceinline overload add(p:Pointer[T], i:I) {
-    return pointerOffset(p, i);
-}
+forceinline overload add(p:Pointer[T], i:I) : Pointer[T] = pointerOffset(p, i);
 
 [T,I when Integer?(I)]
-forceinline overload add(i:I, p:Pointer[T]) {
-    return pointerOffset(p, i);
-}
+forceinline overload add(i:I, p:Pointer[T]) : Pointer[T]= pointerOffset(p, i);
 
 [T,I when Integer?(I)]
-forceinline overload subtract(p:Pointer[T], i:I) {
-    return pointerOffset(p, wrapSubtract(PtrInt(i)));
-}
+forceinline overload subtract(p:Pointer[T], i:I) : Pointer[T] 
+    = pointerOffset(p, wrapSubtract(PtrInt(i)));
 
 [T]
-forceinline overload subtract(a:Pointer[T], b:Pointer[T]) {
-    return wrapQuotient(wrapSubtract(PtrInt(a), PtrInt(b)), PtrInt(TypeSize(T)));
-}
+forceinline overload subtract(a:Pointer[T], b:Pointer[T]) : PtrInt
+    = wrapQuotient(wrapSubtract(PtrInt(a), PtrInt(b)), PtrInt(TypeSize(T)));
 
 [T]
-forceinline overload inc(ref a:Pointer[T]) {
+forceinline overload inc(ref a:Pointer[T]) : {
     a +: 1;
 }
 
 [T]
-forceinline overload dec(ref a:Pointer[T]) {
+forceinline overload dec(ref a:Pointer[T]) : {
     a -: 1;
 }
 
@@ -89,25 +81,25 @@ forceinline overload dec(ref a:Pointer[T]) {
 forceinline null(#T) = nullPointer(Pointer[T]);
 
 [T]
-forceinline overload null?(x:Pointer[T]) = x == null(T);
+forceinline overload null?(x:Pointer[T]) : Bool = x == null(T);
 
 [T]
-forceinline overload dereference(p:Pointer[T]) = ref pointerDereference(p);
+forceinline overload dereference(p:Pointer[T]) : ByRef[T] = ref pointerDereference(p);
 
 [T, I when Integer?(I)]
-forceinline overload index(p:Pointer[T], i:I) = ref (p + i)^;
+forceinline overload index(p:Pointer[T], i:I) : ByRef[T] = ref (p + i)^;
 
 
 
 /// @section  CodePointer?, ExternalCodePointer? 
 
 define CodePointer?(x) : Bool;
-overload CodePointer?(x) = false;
-[In,Out] overload CodePointer?(#CodePointer[In,Out]) = true;
+overload CodePointer?(x) : Bool = false;
+[In,Out] overload CodePointer?(#CodePointer[In,Out]) : Bool = true;
 
 define ExternalCodePointer?(x) : Bool;
-overload ExternalCodePointer?(x) = false;
-[CC,V?,In,Out] overload ExternalCodePointer?(#ExternalCodePointer[CC,V?,In,Out]) = true;
+overload ExternalCodePointer?(x) : Bool = false;
+[CC,V?,In,Out] overload ExternalCodePointer?(#ExternalCodePointer[CC,V?,In,Out]) : Bool = true;
 
 
 /// @section  CodePointer - constructor 
@@ -120,22 +112,22 @@ forceinline overload CodePointer[In,Out]() = nullPointer(CodePointer[In,Out]);
 /// @section  CodePointer - convert to/from other pointers/integers 
 
 [T, In, Out]
-forceinline overload Pointer[T](a:CodePointer[In,Out]) = bitcast(Pointer[T], a);
+forceinline overload Pointer[T](a:CodePointer[In,Out]) : Pointer[T] = bitcast(Pointer[T], a);
 
 [T, In, Out]
-forceinline overload CodePointer[In,Out](a:Pointer[T]) =
-    bitcast(CodePointer[In,Out], a);
+forceinline overload CodePointer[In,Out](a:Pointer[T]) : CodePointer[In,Out]
+    = bitcast(CodePointer[In,Out], a);
 
 [In1, Out1, In2, Out2]
-forceinline overload CodePointer[In1,Out1](a:CodePointer[In2,Out2]) =
-    bitcast(CodePointer[In1,Out1], a);
+forceinline overload CodePointer[In1,Out1](a:CodePointer[In2,Out2]) : CodePointer[In1,Out1]
+    = bitcast(CodePointer[In1,Out1], a);
 
 [In, Out, I when Integer?(I)]
-forceinline overload CodePointer[In,Out](i:I) =
-    intToPointer(CodePointer[In,Out], i);
+forceinline overload CodePointer[In,Out](i:I) : CodePointer[In,Out]
+    = intToPointer(CodePointer[In,Out], i);
 
 [In, Out, I when Integer?(I)]
-forceinline overload I(a:CodePointer[In,Out]) = pointerToInt(I, a);
+forceinline overload I(a:CodePointer[In,Out]) : I = pointerToInt(I, a);
 
 
 
@@ -143,17 +135,16 @@ forceinline overload I(a:CodePointer[In,Out]) = pointerToInt(I, a);
 // CodePointer - equals?, lesser?, null?
 
 [In, Out]
-forceinline overload equals?(a:CodePointer[In,Out], b:CodePointer[In,Out]) {
-    return integerEquals?(a, b);
-}
+forceinline overload equals?(a:CodePointer[In,Out], b:CodePointer[In,Out]) : Bool
+    = integerEquals?(a, b);
 
 [In, Out]
-forceinline overload lesser?(a:CodePointer[In,Out], b:CodePointer[In,Out]) {
-    return integerLesser?(a, b);
-}
+forceinline overload lesser?(a:CodePointer[In,Out], b:CodePointer[In,Out]) : Bool
+    = integerLesser?(a, b);
 
 [In, Out]
-forceinline overload null?(p:CodePointer[In,Out]) = p == nullPointer(CodePointer[In,Out]);
+forceinline overload null?(p:CodePointer[In,Out]) : Bool 
+    = p == nullPointer(CodePointer[In,Out]);
 
 
 
@@ -168,41 +159,43 @@ forceinline overload ExternalCodePointer[CC,V?,I,O]() =
 /// @section  ExternalCodePointer - convert to/from other pointers/integers 
 
 [T, CC,V?,I,O]
-forceinline overload Pointer[T](a:ExternalCodePointer[CC,V?,I,O]) = bitcast(Pointer[T], a);
+forceinline overload Pointer[T](a:ExternalCodePointer[CC,V?,I,O]) : Pointer[T] 
+    = bitcast(Pointer[T], a);
 
 [T, CC,V?,I,O]
-forceinline overload ExternalCodePointer[CC,V?,I,O](a:Pointer[T]) =
-    bitcast(ExternalCodePointer[CC,V?,I,O], a);
+forceinline overload ExternalCodePointer[CC,V?,I,O](a:Pointer[T]) 
+    : ExternalCodePointer[CC,V?,I,O]
+        = bitcast(ExternalCodePointer[CC,V?,I,O], a);
 
 [CC1,V1?,I1,O1, CC2,V2?,I2,O2]
-forceinline overload ExternalCodePointer[CC1,V1?,I1,O1](a:ExternalCodePointer[CC2,V2?,I2,O2]) =
-    bitcast(ExternalCodePointer[CC1,V1?,I1,O1], a);
+forceinline overload ExternalCodePointer[CC1,V1?,I1,O1](a:ExternalCodePointer[CC2,V2?,I2,O2]) 
+    : ExternalCodePointer[CC1,V1?,I1,O1]
+        = bitcast(ExternalCodePointer[CC1,V1?,I1,O1], a);
 
 [CC,V?,In,Out,I when Integer?(I)]
-forceinline overload ExternalCodePointer[CC,V?,In,Out](i:I) =
-    intToPointer(ExternalCodePointer[CC,V?,In,Out], i);
+forceinline overload ExternalCodePointer[CC,V?,In,Out](i:I) : ExternalCodePointer[CC,V?,In,Out]
+    = intToPointer(ExternalCodePointer[CC,V?,In,Out], i);
 
 [CC,V?,In,Out,I when Integer?(I)]
-forceinline overload I(a:ExternalCodePointer[CC,V?,In,Out]) =
-    pointerToInt(I, a);
+forceinline overload I(a:ExternalCodePointer[CC,V?,In,Out]) : I 
+    = pointerToInt(I, a);
 
 
 /// @section  ExternalCodePointer - equals?, lesser?, null? 
 
 [C,V,I,O]
-forceinline overload equals?(a:ExternalCodePointer[C,V,I,O], b:ExternalCodePointer[C,V,I,O]) {
-    return integerEquals?(a, b);
-}
+forceinline overload equals?(a:ExternalCodePointer[C,V,I,O], b:ExternalCodePointer[C,V,I,O])
+    : Bool 
+        = integerEquals?(a, b);
 
 [C,V,I,O]
-forceinline overload lesser?(a:ExternalCodePointer[C,V,I,O], b:ExternalCodePointer[C,V,I,O]) {
-    return integerLesser?(a, b);
-}
+forceinline overload lesser?(a:ExternalCodePointer[C,V,I,O], b:ExternalCodePointer[C,V,I,O]) 
+    : Bool
+        = integerLesser?(a, b);
 
 [C,V,I,O]
-forceinline overload null?(p:ExternalCodePointer[C,V,I,O]) {
-    return p == nullPointer(ExternalCodePointer[C,V,I,O]);
-}
+forceinline overload null?(p:ExternalCodePointer[C,V,I,O]) : Bool 
+    = p == nullPointer(ExternalCodePointer[C,V,I,O]);
 
 
 /// @section  ExternalCodePointer - call 
@@ -210,25 +203,25 @@ forceinline overload null?(p:ExternalCodePointer[C,V,I,O]) {
 private define CCastable?;
 
 [F, T when Type?(F) and Type?(T)]
-overload CCastable?(#F, #T) = false;
+overload CCastable?(#F, #T) : Bool = false;
 
 [F, T when Integer?(F) and Integer?(T) and TypeSize(T) >= TypeSize(F)]
-overload CCastable?(#F, #T) = true;
+overload CCastable?(#F, #T) : Bool = true;
 
 [F, T when Integer?(F) and Integer?(T) and TypeSize(T) == TypeSize(F)]
-overload CCastable?(#Pointer[F], #Pointer[T]) = true;
+overload CCastable?(#Pointer[F], #Pointer[T]) : Bool = true;
 
 [F]
-overload CCastable?(#Pointer[F], #RawPointer) = true;
+overload CCastable?(#Pointer[F], #RawPointer) : Bool = true;
 
 [From, To]
 private define cCast(from:From, #To) : To;
 
 [F, T when CCastable?(F, T)]
-overload cCast(from:F, #T) = T(from);
+overload cCast(from:F, #T) : T = T(from);
 
 [S when Sequence?(S) and (Char == SequenceElementType(S))]
-overload cCast(s:S, #Pointer[CChar]) = cstring(s);
+overload cCast(s:S, #Pointer[CChar]) : Pointer[CChar] = cstring(s);
 
 [F]
 overload cCast(forward from:F, #F) = forward from;

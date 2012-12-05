@@ -5,7 +5,7 @@
 [T]
 define Union?(#T) : Bool;
 
-overload Union?(x) = false;
+overload Union?(x) : Bool = false;
 [..T] overload Union?(#Union[..T]) : Bool = true;
 
 

@@ -53,9 +53,9 @@ AssertionEnabled?(tag) : Bool = not Flag?(stringLiteralConcat("clay.DisableAsser
 record assert[..tags] ();
 
 [..tags]
-alias overload assert[..tags](..whatever) {}
+alias overload assert[..tags](..whatever) : {}
 
-alias overload assert(..whatever) {}
+alias overload assert(..whatever) : {}
 
 [file, line, column, cond]
 private assertStringLiteral(#file, #line, #column, #cond, ..etc)

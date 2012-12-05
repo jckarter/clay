@@ -2,6 +2,6 @@ alias BacktraceSupported? = false;
 
 record Backtrace ();
 
-forceinline captureBacktrace() = Backtrace();
+forceinline captureBacktrace() : Backtrace = Backtrace();
 
-forceinline printBacktraceToStderr(backtrace: Backtrace) { }
+forceinline printBacktraceToStderr(backtrace: Backtrace) : { }
