@@ -9,15 +9,15 @@ import data.sequences.*;
 
 /// @section  separators 
 
-alias PATH_SEPARATOR1 = '\\';
-alias PATH_SEPARATOR2 = '/';
+private alias PATH_SEPARATOR1 = '\\';
+private alias PATH_SEPARATOR2 = '/';
 
-alias DRIVE_SEPARATOR = ':';
+private alias DRIVE_SEPARATOR = ':';
 
 alias PATH_LIST_SEPARATOR = ';';
 
 pathSeparator?(c) = (c == PATH_SEPARATOR1) or (c == PATH_SEPARATOR2);
-pathOrDriveSeparator?(c) = pathSeparator?(c) or (c == DRIVE_SEPARATOR);
+private pathOrDriveSeparator?(c) = pathSeparator?(c) or (c == DRIVE_SEPARATOR);
 
 private beginsWithPathSeparator?(s) = (not empty?(s)) and pathSeparator?(front(s));
 private endsWithPathSeparator?(s) = (not empty?(s)) and pathSeparator?(back(s));
