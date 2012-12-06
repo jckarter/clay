@@ -11,7 +11,7 @@ import data.sequences.*;
 
 /// @section  PATH_SEPARATOR, PATH_LIST_SEPARATOR, rootDirectory?, absolutePath? 
 
-alias PATH_SEPARATOR = '/';
+private alias PATH_SEPARATOR = '/';
 alias PATH_LIST_SEPARATOR = ':';
 
 rootDirectory?(s) = (s == "/");
