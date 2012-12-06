@@ -1,9 +1,8 @@
 import data.vectors.(Vector);
 import data.strings.(String);
+import data.strings.tempcstrings.(tempCString);
 
 import io.directories.platform.*;
-
-public import io.directories.platform.(makeDirectory, deleteDirectory);
 
 
 /// @section  listDirectory
@@ -17,3 +16,10 @@ listDirectory(x) {
     return r;
 }
 
+makeDirectory(path) {
+    makeDirectoryImpl(tempCString(path).cstring);
+}
+
+deleteDirectory(path) {
+    deleteDirectoryImpl(tempCString(path).cstring);
+}

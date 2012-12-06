@@ -65,15 +65,15 @@ overload nextValue(it: DirectoryIterator) {
 
 /// @section makeDirectory, deleteDirectory
 
-makeDirectory(path) {
-    var ok = CreateDirectoryA(cstring(path), null(SECURITY_ATTRIBUTES));
+makeDirectoryImpl(path: CStringRef) {
+    var ok = CreateDirectoryA(path.ptr, null(SECURITY_ATTRIBUTES));
     if (ok == 0) {
         throw GenericIOError(GetLastError(), "CreateDirectoryA");
     }
 }
 
-deleteDirectory(path) {
-    var ok = RemoveDirectoryA(cstring(path));
+deleteDirectoryImpl(path: CStringRef) {
+    var ok = RemoveDirectoryA(path.ptr);
     if (ok == 0) {
         throw GenericIOError(GetLastError(), "RemoveDirectoryA");
     }

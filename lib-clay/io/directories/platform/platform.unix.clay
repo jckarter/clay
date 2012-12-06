@@ -55,16 +55,16 @@ overload nextValue(x:DirectoryIterator) {
 
 /// @section makeDirectory, deleteDirectory
 
-makeDirectory(path) {
+makeDirectoryImpl(path: CStringRef) {
     alias oct777 = 511;
-    var r = mkdir(cstring(path), mode_t(oct777));
+    var r = mkdir(path.ptr, mode_t(oct777));
     if (r < 0) {
         throw GenericIOError(errno(), "mkdir");
     }
 }
 
-deleteDirectory(path) {
-    var r = rmdir(cstring(path));
+deleteDirectoryImpl(path: CStringRef) {
+    var r = rmdir(path.ptr);
     if (r < 0) {
         throw GenericIOError(errno(), "rmdir");
     }
