@@ -1,18 +1,18 @@
 import win32.*;
 import io.errors.*;
 
-moveFile(fromPath, toPath) {
-    var ok = MoveFileA(cstring(fromPath), cstring(toPath));
+moveFileImpl(fromPath: CStringRef, toPath: CStringRef) {
+    var ok = MoveFileA(fromPath.ptr, toPath.ptr);
     if (ok == 0)
         throw GenericIOError(GetLastError(), "MoveFileA");
 }
 
-deleteFile(path) {
-    var ok = DeleteFileA(cstring(path));
+deleteFileImpl(path: CStringRef) {
+    var ok = DeleteFileA(path.ptr);
     if (ok == 0)
         throw GenericIOError(GetLastError(), "DeleteFileA");
 }
 
-readLink(path) {
+readLinkImpl(path: CStringRef) {
     throw UnsupportedOperationIOError("readLink");
 }

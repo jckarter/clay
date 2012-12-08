@@ -1,0 +1,14 @@
+public import io.filesystem.executable.*;
+
+import data.strings.tempcstrings.*;
+import io.filesystem.platform.*;
+
+moveFile(fromPath, toPath) =
+    moveFileImpl(tempCString(fromPath).cstring, tempCString(toPath).cstring);
+
+deleteFile(path) =
+    deleteFileImpl(tempCString(path).cstring);
+
+readLink(path) =
+    readLinkImpl(tempCString(path).cstring);
+

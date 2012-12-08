@@ -1,18 +1,17 @@
 import unix.*;
 import io.errors.*;
-public import io.filesystem.executable.*;
 import data.strings.*;
 import libc;
 
-readLink(x) {
-    var path_max = pathconf(cstring(x), _PC_PATH_MAX);
+readLink(x: CStringRef) {
+    var path_max = pathconf(x.ptr, _PC_PATH_MAX);
     if (path_max < 0)
         path_max = 4096;
 
     var buf = String();
     resize(buf, path_max);
 
-    var size = readlink(cstring(x), Pointer[CChar](begin(buf)), size_t(path_max));
+    var size = readlink(x.ptr, Pointer[CChar](begin(buf)), size_t(path_max));
     if (size < 0)
         throw GenericIOError(errno(), "readlink");
 
@@ -20,14 +19,14 @@ readLink(x) {
     return move(buf);
 }
 
-moveFile(fromPath, toPath) {
-    var ok = libc.rename(cstring(fromPath), cstring(toPath));
+moveFile(fromPath: CStringRef, toPath: CStringRef) {
+    var ok = libc.rename(fromPath.ptr, toPath.ptr);
     if (ok != 0)
         throw GenericIOError(errno(), "rename");
 }
 
-deleteFile(path) {
-    var ok = unlink(cstring(path));
+deleteFile(path: CStringRef) {
+    var ok = unlink(path.ptr);
     if (ok != 0)
         throw GenericIOError(errno(), "unlink");
 }
