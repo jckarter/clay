@@ -4,7 +4,14 @@ public import io.paths.platform.(
     pathBasename,
     pathComponents,
     joinPath,
-    pathExists?,
-    pathIsDirectory?,
-    pathIsRegularFile?,
 );
+
+import io.paths.platform.*;
+import data.strings.tempcstrings.*;
+
+pathExists?(p) = pathExistsImpl?(tempCString(p).cstring);
+
+pathIsDirectory?(p) = pathIsDirectoryImpl?(tempCString(p).cstring);
+
+pathIsRegularFile?(p) = pathIsRegularFileImpl?(tempCString(p).cstring);
+

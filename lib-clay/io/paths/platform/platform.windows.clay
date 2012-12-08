@@ -177,17 +177,17 @@ private appendComponent(base:String, suffix) {
 
 /// @section  pathExists? 
 
-pathExists?(p) {
-    var result = win32.GetFileAttributesA(cstring(p));
+pathExistsImpl?(p: CStringRef) {
+    var result = win32.GetFileAttributesA(p.ptr);
     return result != win32.INVALID_FILE_ATTRIBUTES;
 }
 
-pathIsDirectory?(p) {
-    var result = win32.GetFileAttributesA(cstring(p));
+pathIsDirectoryImpl?(p: CStringRef) {
+    var result = win32.GetFileAttributesA(p.ptr);
     return result != win32.INVALID_FILE_ATTRIBUTES and (result & win32.FILE_ATTRIBUTE_DIRECTORY) != 0;
 }
 
-pathIsRegularFile?(p) {
-    var result = win32.GetFileAttributesA(cstring(p));
+pathIsRegularFileImpl?(p: CStringRef) {
+    var result = win32.GetFileAttributesA(p.ptr);
     return result != win32.INVALID_FILE_ATTRIBUTES and (result & win32.FILE_ATTRIBUTE_DIRECTORY) == 0;
 }

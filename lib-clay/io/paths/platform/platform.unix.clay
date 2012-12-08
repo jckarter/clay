@@ -98,9 +98,9 @@ private trimDirectoryTail(path:String) {
 
 /// @section  pathExists? 
 
-pathExists?(p) {
+pathExistsImpl?(p: CStringRef) {
     var statBuf = unix.Struct_stat();
-    var result = unix.lstat(cstring(p), @statBuf);
+    var result = unix.lstat(p.ptr, @statBuf);
     return result == 0;
 }
 
@@ -109,9 +109,9 @@ pathExists?(p) {
 private alias S_IFDIR = 0x4000;
 private alias S_IFREG = 0x8000;
 
-pathIsDirectory?(p) {
+pathIsDirectoryImpl?(p: CStringRef) {
     var statBuf = unix.Struct_stat();
-    var result = unix.lstat(cstring(p), @statBuf);
+    var result = unix.lstat(p.ptr, @statBuf);
     if (result != 0) {
         // TODO: throw if anything except ENOENT
         return false;
@@ -119,9 +119,9 @@ pathIsDirectory?(p) {
     return (statBuf.st_mode & S_IFDIR) != 0;
 }
 
-pathIsRegularFile?(p) {
+pathIsRegularFileImpl?(p: CStringRef) {
     var statBuf = unix.Struct_stat();
-    var result = unix.lstat(cstring(p), @statBuf);
+    var result = unix.lstat(p.ptr, @statBuf);
     if (result != 0) {
         // TODO: throw if anything except ENOENT
         return false;
@@ -172,7 +172,7 @@ overload pathToExecutable(arg0) {
     insert(searchDirs, 0, currentDirectory());
     for (pathDir in searchDirs) {
         var p = joinPath(pathDir, arg0);
-        if (pathExists?(p))
+        if (pathExistsImpl?(CStringRef(p)))
             return move(p);
     }
     return String();
