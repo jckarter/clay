@@ -1,0 +1,10 @@
+public import io.paths.platform.(
+    splitPath,
+    pathDirname,
+    pathBasename,
+    pathComponents,
+    joinPath,
+    pathExists?,
+    pathIsDirectory?,
+    pathIsRegularFile?,
+);

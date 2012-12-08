@@ -14,6 +14,7 @@ import data.sequences.*;
 private alias PATH_SEPARATOR = '/';
 alias PATH_LIST_SEPARATOR = ':';
 
+// TODO: implement on windows
 rootDirectory?(s) = (s == "/");
 absolutePath?(s) = beginsWith?(s, '/');
 
@@ -132,11 +133,13 @@ pathIsRegularFile?(p) {
 
 /// @section  systemPath, currentDirectory 
 
+// TODO: implement on windows
 systemPath() {
     var pathList = CStringRef(libc.getenv(cstring("PATH")));
     return split(pathList, PATH_LIST_SEPARATOR);
 }
 
+// TODO: implement on windows
 currentDirectory() {
     var buf = String();
     resize(buf, 1024);
@@ -159,6 +162,7 @@ currentDirectory() {
 
 /// @section  pathToExecutable 
 
+// TODO: implement on windows
 define pathToExecutable;
 
 overload pathToExecutable() = pathToExecutable(commandLine()[0]);
