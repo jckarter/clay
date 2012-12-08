@@ -1,5 +1,19 @@
 import win32.*;
+import win32;
 import io.errors.*;
+
+import data.strings.*;
+
+import io.errors.*;
+import io.filesystem.platform.common.*;
+
+import data.algorithms.(findIf,reverseFindIf,reverseInPlace,beginsWith?);
+import data.strings.*;
+import data.vectors.*;
+import data.sequences.*;
+
+
+
 
 moveFileImpl(fromPath: CStringRef, toPath: CStringRef) {
     var ok = MoveFileA(fromPath.ptr, toPath.ptr);
@@ -16,3 +30,266 @@ deleteFileImpl(path: CStringRef) {
 readLinkImpl(path: CStringRef) {
     throw UnsupportedOperationIOError("readLink");
 }
+
+
+
+/// @section DirectoryIterator
+
+
+record DirectoryIterator (
+    handle: HANDLE,
+    first: Bool,
+    findData: WIN32_FIND_DATA,
+);
+
+overload RegularRecord?(#DirectoryIterator) = false;
+overload BitwiseMovedType?(#DirectoryIterator) = true;
+
+[S when CCompatibleString?(S)]
+overload DirectoryIterator(dir: S) --> returned: DirectoryIterator {
+    var pattern = String() ++ dir ++ "\\*";
+
+    returned.first = true;
+    returned.handle = INVALID_HANDLE_VALUE;
+
+    returned.handle = FindFirstFileA(cstring(pattern), @returned.findData);
+    if (returned.handle == INVALID_HANDLE_VALUE) {
+        throw GenericIOError(GetLastError(), "FindFirstFileA");
+    }
+}
+
+overload destroy(it: DirectoryIterator) {
+    if (it.handle != INVALID_HANDLE_VALUE) {
+        var result = FindClose(it.handle);
+        assert(result != 0);
+    }
+}
+
+overload resetUnsafe(it: DirectoryIterator) {
+    it.handle = INVALID_HANDLE_VALUE;
+}
+
+overload iterator(it: DirectoryIterator) = forward it;
+
+overload nextValue(it: DirectoryIterator) {
+    if (it.first) {
+        it.first = false;
+    } else {
+        var ok = FindNextFileA(it.handle, @it.findData);
+        if (ok == 0) {
+            if (GetLastError() == ERROR_NO_MORE_FILES) {
+                return nothing(DirectoryEntry);
+            } else {
+                throw GenericIOError(GetLastError(), "FindNextFileA");
+            }
+        }
+    }
+
+    return Maybe(DirectoryEntry(CStringRef(begin(it.findData.cFileName))));
+}
+
+
+
+/// @section makeDirectory, deleteDirectory
+
+makeDirectoryImpl(path: CStringRef) {
+    var ok = CreateDirectoryA(path.ptr, null(SECURITY_ATTRIBUTES));
+    if (ok == 0) {
+        throw GenericIOError(GetLastError(), "CreateDirectoryA");
+    }
+}
+
+deleteDirectoryImpl(path: CStringRef) {
+    var ok = RemoveDirectoryA(path.ptr);
+    if (ok == 0) {
+        throw GenericIOError(GetLastError(), "RemoveDirectoryA");
+    }
+}
+
+
+
+/// @section  separators 
+
+private alias PATH_SEPARATOR1 = '\\';
+private alias PATH_SEPARATOR2 = '/';
+
+private alias DRIVE_SEPARATOR = ':';
+
+alias PATH_LIST_SEPARATOR = ';';
+
+pathSeparator?(c) = (c == PATH_SEPARATOR1) or (c == PATH_SEPARATOR2);
+private pathOrDriveSeparator?(c) = pathSeparator?(c) or (c == DRIVE_SEPARATOR);
+
+private beginsWithPathSeparator?(s) = (not empty?(s)) and pathSeparator?(front(s));
+private endsWithPathSeparator?(s) = (not empty?(s)) and pathSeparator?(back(s));
+
+private endsWithPathOrDriveSeparator?(s) =
+    (not empty?(s)) and pathOrDriveSeparator?(back(s));
+
+private findPathSeparator(path) = findIf(path, pathSeparator?);
+private reverseFindPathSeparator(path) = reverseFindIf(path, pathSeparator?);
+
+private absoluteDirectory?(s) = beginsWithPathSeparator?(s);
+
+
+
+/// @section  path predicates 
+
+private uppercaseLetter?(c) = (c >= 'A') and (c <= 'Z');
+private lowercaseLetter?(c) = (c >= 'a') and (c <= 'z');
+private letter?(c) = lowercaseLetter?(c) or uppercaseLetter?(c);
+
+private hasDrive?(path) = (size(path) >= 2) and letter?(path[0]) and (path[1] == ':');
+
+private uncPath?(path) = beginsWith?(path, "//") or beginsWith?(path, "\\\\");
+
+
+
+/// @section  slicedWindowsPath. returns (volume, directory, name) 
+
+slicedWindowsPath(path) {
+    if (uncPath?(path))
+        return ..slicedUNCPath(path);
+    if (hasDrive?(path)) {
+        var volume = slicedUpto(path, 2);
+        var rest = slicedFrom(path, 2);
+        return volume, ..slicedVolumeRelativePath(rest);
+    }
+    return slicedUpto(path,0), ..slicedVolumeRelativePath(path);
+}
+
+private slicedUNCPath(path) {
+    var pathEnd = end(path);
+    var machineEnd = findPathSeparator(slicedFrom(path, 2));
+    if ((machineEnd == pathEnd) or (machineEnd+1 == pathEnd))
+        badUNCPath(path);
+    var shareEnd = findPathSeparator(slicedFrom(path, machineEnd+1));
+    var volume, rest = slicedUpto(path, shareEnd), slicedFrom(path, shareEnd);
+    return volume, ..slicedVolumeRelativePath(rest);
+}
+
+record InvalidUNCPath(path:String);
+instance IOError (InvalidUNCPath);
+
+private badUNCPath(path) {
+    throw InvalidUNCPath(String(path));
+}
+
+private slicedVolumeRelativePath(path) {
+    var path2 = directoryTailTrimmed(path);
+    var p = reverseFindPathSeparator(path2);
+    var parent, child = slicedUpto(path2, p), slicedFrom(path2, p);
+    return directoryTailTrimmed(parent), child;
+}
+
+private directoryTailTrimmed(path) {
+    if (empty?(path))
+        return slicedUpto(path, 0);
+    var p = reverseFindIf(begin(path)+1, end(path), c => not pathSeparator?(c));
+    return slicedUpto(path, p);
+}
+
+
+
+/// @section  splitWindowsPath, slicedPath, splitPath, pathComponents 
+
+splitWindowsPath(path) = ..mapValues(force, ..slicedWindowsPath(path));
+
+slicedPath(path) {
+    var volume, directory, name = ..slicedWindowsPath(path);
+    return sliced(path, begin(volume), end(directory)), name;
+}
+
+pathDirname(path) = String(nthValue(#0, ..slicedPath(path)));
+pathBasename(path) = String(nthValue(#1, ..slicedPath(path)));
+
+splitPath(path) = ..mapValues(force, ..slicedPath(path));
+
+pathComponents(path) {
+    var parts = Vector[String]();
+    var volume, directory, name = ..slicedWindowsPath(path);
+    var parent, child = directory, name;
+    while (not empty?(child)) {
+        push(parts, String(child));
+        parent, child = ..slicedPath(parent);
+    }
+    if (not empty?(parent))
+        push(parts, String(parent));
+    if (not empty?(volume))
+        push(parts, String(volume));
+    reverseInPlace(parts);
+    return move(parts);
+}
+
+
+
+/// @section  joinPath 
+
+define joinPath;
+
+[..S when allValues?(String?, ..S)]
+overload joinPath(..parts:S) {
+    var volume, directory, name = String(), String(), String();
+    ..for (part in parts)
+        appendPath(volume, directory, name, part);
+    ref result = volume;
+    appendComponent(result, directory);
+    appendComponent(result, name);
+    return move(result);
+}
+
+[A when String?(SequenceElementType(A))]
+overload joinPath(parts:A) {
+    var volume, directory, name = String(), String(), String();
+    for (part in parts)
+        appendPath(volume, directory, name, part);
+    ref result = volume;
+    appendComponent(result, directory);
+    appendComponent(result, name);
+    return move(result);
+}
+
+private appendPath(volume:String, directory:String, name:String, part) {
+    var volume2, directory2, name2 = ..slicedWindowsPath(part);
+    if (not empty?(volume2)) {
+        volume, directory, name = ..mapValues(String, volume2, directory2, name2);
+        return;
+    }
+    if (absoluteDirectory?(directory2)) {
+        directory, name = ..mapValues(String, directory2, name2);
+        return;
+    }
+    appendComponent(directory, name);
+    appendComponent(directory, directory2);
+    name = String(name2);
+}
+
+private appendComponent(base:String, suffix) {
+    if ((not empty?(base))
+        and (not endsWithPathOrDriveSeparator?(base))
+        and (not beginsWithPathSeparator?(suffix)))
+    {
+        push(base, '\\');
+    }
+    push(base, suffix);
+}
+
+
+
+/// @section  pathExists? 
+
+pathExistsImpl?(p: CStringRef) {
+    var result = win32.GetFileAttributesA(p.ptr);
+    return result != win32.INVALID_FILE_ATTRIBUTES;
+}
+
+pathIsDirectoryImpl?(p: CStringRef) {
+    var result = win32.GetFileAttributesA(p.ptr);
+    return result != win32.INVALID_FILE_ATTRIBUTES and (result & win32.FILE_ATTRIBUTE_DIRECTORY) != 0;
+}
+
+pathIsRegularFileImpl?(p: CStringRef) {
+    var result = win32.GetFileAttributesA(p.ptr);
+    return result != win32.INVALID_FILE_ATTRIBUTES and (result & win32.FILE_ATTRIBUTE_DIRECTORY) == 0;
+}
+
