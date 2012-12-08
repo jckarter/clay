@@ -13,3 +13,6 @@ deleteFile(path) {
         throw GenericIOError(GetLastError(), "DeleteFileA");
 }
 
+readLink(path) {
+    throw UnsupportedOperationIOError("readLink");
+}
