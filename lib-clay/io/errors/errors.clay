@@ -20,11 +20,17 @@ overload printReprTo(stream, x:GenericIOError) {
     printTo(stream, "GenericIOError(", errorCodeName(x.code), ", ", repr(x.where), ")");
 }
 
+record UnsupportedOperationIOError(where:StringLiteralRef);
+
+[S when StringLiteral?(S)]
+overload UnsupportedOperationIOError(#S) =
+    UnsupportedOperationIOError(StringLiteralRef(S));
+
 variant IOError;
 
 instance OSError (IOError);
 
-instance IOError (GenericIOError);
+instance IOError (GenericIOError, UnsupportedOperationIOError);
 
 [T when VariantMember?(IOError, T)]
 overload Exception(forward x:T) = Exception(IOError(x));
