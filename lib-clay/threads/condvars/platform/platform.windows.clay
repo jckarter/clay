@@ -10,28 +10,28 @@ import win32.(
 );
 
 record ConditionVariable (_cv:CONDITION_VARIABLE);
-overload RegularRecord?(#ConditionVariable) = false;
-overload DestroyDoesNothingType?(#ConditionVariable) = true;
+RegularRecord?(#ConditionVariable) = false;
+DestroyDoesNothingType?(#ConditionVariable) = true;
 
-overload ConditionVariable() --> returned:ConditionVariable
+ConditionVariable() --> returned:ConditionVariable
 {
     InitializeConditionVariable(@returned._cv);
 }
 
-overload ConditionVariableMutex(#ConditionVariable) = Mutex;
+ConditionVariableMutex(#ConditionVariable) = Mutex;
 
-overload wait(cv:ConditionVariable, m:Mutex)
+wait(cv:ConditionVariable, m:Mutex)
 {
     var ok = SleepConditionVariableCS(@cv._cv, @m._cs, INFINITE);
     assert(ok != 0);
 }
 
-overload notifyOne(cv:ConditionVariable)
+notifyOne(cv:ConditionVariable)
 {
     WakeConditionVariable(@cv._cv);
 }
 
-overload notifyAll(cv:ConditionVariable)
+notifyAll(cv:ConditionVariable)
 {
     WakeAllConditionVariable(@cv._cv);
 }

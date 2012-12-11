@@ -16,46 +16,46 @@ define hash;
 /// @section  booleans, integers, floats, pointers, characters 
 
 [when TypeSize(SizeT) == 4]
-forceinline overload hash(x:Bool) = if (x) SizeT(1235232835u) else SizeT(3786054923u);
+forceinline hash(x:Bool) = if (x) SizeT(1235232835u) else SizeT(3786054923u);
 [when TypeSize(SizeT) == 8]
-forceinline overload hash(x:Bool) =
+forceinline hash(x:Bool) =
     if (x) SizeT(2068536678500253190ul)
     else SizeT(12193288086786919936ul);
 
 [T when Integer?(T)]
-forceinline overload hash(x:T) = wrapCast(SizeT, x);
+forceinline hash(x:T) = wrapCast(SizeT, x);
 
-forceinline overload hash(x:Float32) =
+forceinline hash(x:Float32) =
     if (x == 0.0f) SizeT(0)
     else wrapCast(SizeT, floatBits(x));
 [when TypeSize(SizeT) == 8]
-forceinline overload hash(x:Float64) =
+forceinline hash(x:Float64) =
     if (x == 0.0f) SizeT(0)
     else wrapCast(SizeT, floatBits(x));
 [when TypeSize(SizeT) == 4]
-forceinline overload hash(x:Float64) = wrapCast(SizeT, bitshr(floatBits(x), 32));
+forceinline hash(x:Float64) = wrapCast(SizeT, bitshr(floatBits(x), 32));
 
-forceinline overload hash(x:Float80) =
+forceinline hash(x:Float80) =
     wrapCast(SizeT, wrapAdd(floatBits(x).mantissa, floatBits(x).exponent));
 
 [T when Imaginary?(T)]
-forceinline overload hash(z:T) = hash(imagValue(z));
+forceinline hash(z:T) = hash(imagValue(z));
 
 [T when Complex?(T)]
-forceinline overload hash(z:T) = wrapAdd(
+forceinline hash(z:T) = wrapAdd(
     hash(real(z)), wrapMultiply(hash(imagValue(z)), SizeT(31321)));
 
 [T]
-forceinline overload hash(x:Pointer[T]) = bitcast(SizeT, x);
+forceinline hash(x:Pointer[T]) = bitcast(SizeT, x);
 
-forceinline overload hash(x:Char) = wrapCast(SizeT, x);
+forceinline hash(x:Char) = wrapCast(SizeT, x);
 
 
 
 /// @section  arrays 
 
 [T,n]
-forceinline overload hash(a:Array[T,n]) = hashSequence(a);
+forceinline hash(a:Array[T,n]) = hashSequence(a);
 
 
 
@@ -63,50 +63,50 @@ forceinline overload hash(a:Array[T,n]) = hashSequence(a);
 
 define hashValues;
 
-forceinline overload hashValues(..values) {
+forceinline hashValues(..values) {
     var h = SizeT(0);
     ..for (x in values)
         h = wrapAdd(wrapMultiply(SizeT(7), h), wrapMultiply(SizeT(13), hash(x)));
     return h;
 }
-forceinline overload hashValues(value) = hash(value);
+forceinline hashValues(value) = hash(value);
 
 [..T]
-forceinline overload hash(x:Tuple[..T]) = hashValues(..tupleElements(x));
+forceinline hash(x:Tuple[..T]) = hashValues(..tupleElements(x));
 
 
 /// @section  records 
 
 [T when Record?(T)]
-forceinline overload hash(x:T) = hashValues(..recordFields(x));
+forceinline hash(x:T) = hashValues(..recordFields(x));
 
 
 
 /// @section  enumerations 
 
 [T when Enum?(T)]
-forceinline overload hash(x:T) = SizeT(x);
+forceinline hash(x:T) = SizeT(x);
 
 
 
 /// @section  shared pointers 
 
 [T]
-forceinline overload hash(x:SharedPointer[T]) = hash(x.ptr);
+forceinline hash(x:SharedPointer[T]) = hash(x.ptr);
 
 
 
 /// @section  strings 
 
-forceinline overload hash(a:String) = hashSequence(a);
-forceinline overload hash(a:StringLiteralRef) = hashSequence(a);
+forceinline hash(a:String) = hashSequence(a);
+forceinline hash(a:StringLiteralRef) = hashSequence(a);
 
 
 
 /// @section  vectors 
 
 [T]
-forceinline overload hash(a:Vector[T]) = hashSequence(a);
+forceinline hash(a:Vector[T]) = hashSequence(a);
 
 
 
@@ -127,20 +127,20 @@ hashSequence(a) {
 /// @section  variants 
 
 [T when Variant?(T)]
-overload hash(x:T) = wrapAdd(SizeT(wrapMultiply(23, variantTag(x))), hash(*x));
+hash(x:T) = wrapAdd(SizeT(wrapMultiply(23, variantTag(x))), hash(*x));
 
 
 
 /// @section  reference types 
 
 [T when ReferenceType?(T)]
-overload hash(x:T) = hash(referencePtr(x));
+hash(x:T) = hash(referencePtr(x));
 
 
 /// @section  statics 
 
 [x]
-forceinline overload hash(s:Static[x]) = SizeT(0);
+forceinline hash(s:Static[x]) = SizeT(0);
 
 [x when StringLiteral?(x)]
-forceinline overload hash(#x) = hashSequence(iterator(x));
+forceinline hash(#x) = hashSequence(iterator(x));

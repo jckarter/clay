@@ -3,19 +3,19 @@ import printer.(errorNoThrow, println);
 
 record LessThanThree (index:Int);
 
-overload __operators__.DispatchTagCount(#LessThanThree) = 3;
-overload __operators__.dispatchTag(x:LessThanThree) = x.index;
+__operators__.DispatchTagCount(#LessThanThree) = 3;
+__operators__.dispatchTag(x:LessThanThree) = x.index;
 [n]
-overload __operators__.dispatchIndex(x:LessThanThree, #n) = #n;
+__operators__.dispatchIndex(x:LessThanThree, #n) = #n;
 
-overload __operators__.invalidDispatch(x:LessThanThree) {
+__operators__.invalidDispatch(x:LessThanThree) {
     errorNoThrow("invalid LessThanThree, tag = ", x.index);
 }
 
 define foo;
-overload foo(#0) = StringLiteralRef("zero");
-overload foo(#1) = StringLiteralRef("one");
-overload foo(#2) = StringLiteralRef("two");
+foo(#0) = StringLiteralRef("zero");
+foo(#1) = StringLiteralRef("one");
+foo(#2) = StringLiteralRef("two");
 
 main() {
     var x, y, z = LessThanThree(0), LessThanThree(1), LessThanThree(2);

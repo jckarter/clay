@@ -67,16 +67,16 @@ alias Type(..x:T) = ..T;
 /// @section  typeToLValue, typeToRValue, typesToLValues, typesToRValues 
 
 forceinline typeToLValue(a) = ref null(a)^;
-[T] forceinline overload typeToRValue(#T) --> returned:T {}
+[T] forceinline typeToRValue(#T) --> returned:T {}
 
 forceinline typesToLValues(..a) = forward ..mapValues(typeToLValue, ..a);
-forceinline overload typesToRValues(..a) = ..mapValues(typeToRValue, ..a);
+forceinline typesToRValues(..a) = ..mapValues(typeToRValue, ..a);
 
 
 
 /// @section  ByRef[T] - return-by-reference type helper from __primitives__ 
 
-[T] overload RegularRecord?(#ByRef[T]) : Bool = false;
+[T] RegularRecord?(#ByRef[T]) : Bool = false;
 
 
 
@@ -87,21 +87,21 @@ alias ReturnType(..x) = ..Type(..returnValues(..x));
 
 private define returnValues;
 
-[T] forceinline overload returnValues(ref first:T, forward ..rest) =
+[T] forceinline returnValues(ref first:T, forward ..rest) =
     typeToLValue(ByRef[T]), ..returnValues(..rest);
 
-[T] forceinline overload returnValues(rvalue first:T, forward ..rest) =
+[T] forceinline returnValues(rvalue first:T, forward ..rest) =
     typeToLValue(T), ..returnValues(..rest);
 
-forceinline overload returnValues() = ;
+forceinline returnValues() = ;
 
 
 
 /// @section  returnTypeToValue, returnTypesToValues 
 
 define returnTypeToValue private overload;
-[T] forceinline overload returnTypeToValue(#T) = typeToRValue(T);
-[T] forceinline overload returnTypeToValue(#ByRef[T]) = ref typeToLValue(T);
+[T] forceinline returnTypeToValue(#T) = typeToRValue(T);
+[T] forceinline returnTypeToValue(#ByRef[T]) = ref typeToLValue(T);
 
 forceinline returnTypesToValues(..a) = forward ..mapValues(returnTypeToValue, ..a);
 
@@ -112,36 +112,36 @@ forceinline returnTypesToValues(..a) = forward ..mapValues(returnTypeToValue, ..
 define Least;
 define Greatest;
 
-forceinline overload Least(#Int8) : Int8 = -128_ss;
-forceinline overload Greatest(#Int8) : Int8 = 127_ss;
+forceinline Least(#Int8) : Int8 = -128_ss;
+forceinline Greatest(#Int8) : Int8 = 127_ss;
 
-forceinline overload Least(#UInt8) : UInt8 = 0_uss;
-forceinline overload Greatest(#UInt8) : UInt8 = 255_uss;
+forceinline Least(#UInt8) : UInt8 = 0_uss;
+forceinline Greatest(#UInt8) : UInt8 = 255_uss;
 
-forceinline overload Least(#Int16) : Int16 = -0x8000_s;
-forceinline overload Greatest(#Int16) : Int16 = 0x7FFF_s;
+forceinline Least(#Int16) : Int16 = -0x8000_s;
+forceinline Greatest(#Int16) : Int16 = 0x7FFF_s;
 
-forceinline overload Least(#UInt16) : UInt16 = 0_us;
-forceinline overload Greatest(#UInt16) : UInt16 = 0xFFFF_us;
+forceinline Least(#UInt16) : UInt16 = 0_us;
+forceinline Greatest(#UInt16) : UInt16 = 0xFFFF_us;
 
-forceinline overload Least(#Int32) : Int32 = -0x8000_0000_i;
-forceinline overload Greatest(#Int32) : Int32 = 0x7FFF_FFFF_i;
+forceinline Least(#Int32) : Int32 = -0x8000_0000_i;
+forceinline Greatest(#Int32) : Int32 = 0x7FFF_FFFF_i;
 
-forceinline overload Least(#UInt32) : UInt32 = 0_u;
-forceinline overload Greatest(#UInt32) : UInt32 = 0xFFFF_FFFF_u;
+forceinline Least(#UInt32) : UInt32 = 0_u;
+forceinline Greatest(#UInt32) : UInt32 = 0xFFFF_FFFF_u;
 
-forceinline overload Least(#Int64) : Int64 = -0x8000_0000_0000_0000_l;
-forceinline overload Greatest(#Int64) : Int64 = 0x7FFF_FFFF_FFFF_FFFF_l;
+forceinline Least(#Int64) : Int64 = -0x8000_0000_0000_0000_l;
+forceinline Greatest(#Int64) : Int64 = 0x7FFF_FFFF_FFFF_FFFF_l;
 
-forceinline overload Least(#UInt64) : UInt64 = 0_ul;
-forceinline overload Greatest(#UInt64) : UInt64 = 0xFFFF_FFFF_FFFF_FFFF_ul;
+forceinline Least(#UInt64) : UInt64 = 0_ul;
+forceinline Greatest(#UInt64) : UInt64 = 0xFFFF_FFFF_FFFF_FFFF_ul;
 
-forceinline overload Least(#Int128) : Int128 = wrapBitshl(1_ll, 127);
-forceinline overload Greatest(#Int128) : Int128
+forceinline Least(#Int128) : Int128 = wrapBitshl(1_ll, 127);
+forceinline Greatest(#Int128) : Int128
     = numericSubtract(Least(Int128), 1ll);
 
-forceinline overload Least(#UInt128) : UInt128 = 0_ull;
-forceinline overload Greatest(#UInt128) : UInt128 = numericSubtract(0_ull, 1_ull);
+forceinline Least(#UInt128) : UInt128 = 0_ull;
+forceinline Greatest(#UInt128) : UInt128 = numericSubtract(0_ull, 1_ull);
 
 
 /// @section  float limits 
@@ -150,43 +150,43 @@ define LeastPositive;
 define LeastPositiveNormalized;
 define GreatestPositiveFinite;
 
-forceinline overload LeastPositive(#Float32) : Float32 = 0x0.0000_02p-126f;
-forceinline overload LeastPositiveNormalized(#Float32) : Float32 = 0x1.0000_00p-126f;
-forceinline overload GreatestPositiveFinite(#Float32) : Float32 = 0x1.FFFF_FEp127f;
+forceinline LeastPositive(#Float32) : Float32 = 0x0.0000_02p-126f;
+forceinline LeastPositiveNormalized(#Float32) : Float32 = 0x1.0000_00p-126f;
+forceinline GreatestPositiveFinite(#Float32) : Float32 = 0x1.FFFF_FEp127f;
 
-forceinline overload LeastPositive(#Float64) : Float64
+forceinline LeastPositive(#Float64) : Float64
     = 0x0.0000_0000_0000_1p-1022;
-forceinline overload LeastPositiveNormalized(#Float64) : Float64
+forceinline LeastPositiveNormalized(#Float64) : Float64
     = 0x1.0000_0000_0000_0p-1022;
-forceinline overload GreatestPositiveFinite(#Float64) : Float64
+forceinline GreatestPositiveFinite(#Float64) : Float64
     = 0x1.FFFF_FFFF_FFFF_Fp1023;
 
-forceinline overload LeastPositive(#Float80) : Float80
+forceinline LeastPositive(#Float80) : Float80
     = 0x0.0000_0000_0000_0001p-16318l;
-forceinline overload LeastPositiveNormalized(#Float80) : Float80
+forceinline LeastPositiveNormalized(#Float80) : Float80
     = 0x1.0000_0000_0000_0000p-16382l;
-forceinline overload GreatestPositiveFinite(#Float80) : Float80
+forceinline GreatestPositiveFinite(#Float80) : Float80
     = 0x1.FFFF_FFFF_FFFF_FFFEp16383l;
 
-forceinline overload LeastPositive(#Imag32) : Imag32
+forceinline LeastPositive(#Imag32) : Imag32
     = numericConvert(Imag32,LeastPositive(Float32));
-forceinline overload LeastPositiveNormalized(#Imag32) : Imag32
+forceinline LeastPositiveNormalized(#Imag32) : Imag32
     = numericConvert(Imag32,LeastPositiveNormalized(Float32));
-forceinline overload GreatestPositiveFinite(#Imag32) : Imag32
+forceinline GreatestPositiveFinite(#Imag32) : Imag32
     = numericConvert(Imag32,GreatestPositiveFinite(Float32));
 
-forceinline overload LeastPositive(#Imag64) : Imag64
+forceinline LeastPositive(#Imag64) : Imag64
     = numericConvert(Imag64,LeastPositive(Float64));
-forceinline overload LeastPositiveNormalized(#Imag64) : Imag64
+forceinline LeastPositiveNormalized(#Imag64) : Imag64
     = numericConvert(Imag64,LeastPositiveNormalized(Float64));
-forceinline overload GreatestPositiveFinite(#Imag64) : Imag64
+forceinline GreatestPositiveFinite(#Imag64) : Imag64
     = numericConvert(Imag64,GreatestPositiveFinite(Float64));
 
-forceinline overload LeastPositive(#Imag80) : Imag80
+forceinline LeastPositive(#Imag80) : Imag80
     = numericConvert(Imag80,LeastPositive(Float80));
-forceinline overload LeastPositiveNormalized(#Imag80) : Imag80
+forceinline LeastPositiveNormalized(#Imag80) : Imag80
     = numericConvert(Imag80,LeastPositiveNormalized(Float80));
-forceinline overload GreatestPositiveFinite(#Imag80) : Imag80
+forceinline GreatestPositiveFinite(#Imag80) : Imag80
     = numericConvert(Imag80,GreatestPositiveFinite(Float80));
 
 

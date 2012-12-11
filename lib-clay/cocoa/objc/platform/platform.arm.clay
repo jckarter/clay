@@ -3,12 +3,12 @@ import cocoa.objc.runtime.(Class);
 define FpRet?;
 deinfe StRet?;
 
-overload FpRet?(type) = false;
-overload StRet?(type) = false;
+FpRet?(type) = false;
+StRet?(type) = false;
 //Fp2Ret?(type) = false;
 
 // XXX not tested!
-[T when Type?(T)] overload StRet?(#T) = not inValues?(TypeSize(T), 1, 2, 4, 8);
+[T when Type?(T)] StRet?(#T) = not inValues?(TypeSize(T), 1, 2, 4, 8);
 
 external __CFConstantStringClassReference : Opaque;
 

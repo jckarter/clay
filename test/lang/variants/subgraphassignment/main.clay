@@ -7,7 +7,7 @@ record Branch(left:SharedPointer[Tree], right:SharedPointer[Tree]);
 record Leaf(value:Int);
 
 [T when VariantMember?(Tree, T)]
-alias overload Branch(l:T, r:T)
+alias Branch(l:T, r:T)
     = Branch(new(Tree(l)), new(Tree(r)));
 
 main() {

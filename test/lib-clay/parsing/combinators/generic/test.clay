@@ -12,16 +12,16 @@ var number = modify(x -> parse(Int, x), oneOrMore(digit));
 
 // (strict, opt)
 define makeSeparatedListParser;
-overload makeSeparatedListParser(#false, #false) {
+makeSeparatedListParser(#false, #false) {
     return separatedList('.', number);
 }
-overload makeSeparatedListParser(#true, #false) {
+makeSeparatedListParser(#true, #false) {
     return separatedListStrict('.', number);
 }
-overload makeSeparatedListParser(#false, #true) {
+makeSeparatedListParser(#false, #true) {
     return optSeparatedList('.', number);
 }
-overload makeSeparatedListParser(#true, #true) {
+makeSeparatedListParser(#true, #true) {
     return optSeparatedListStrict('.', number);
 }
 

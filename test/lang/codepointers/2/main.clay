@@ -11,7 +11,7 @@ main() {
 define info;
 
 [In,Out]
-overload info(x:VarArgsCCodePointer[In,Out]) {
+info(x:VarArgsCCodePointer[In,Out]) {
     println();
     println("VarArgsCCodePointer");
     println("In = ", ..unpack(In));
@@ -19,7 +19,7 @@ overload info(x:VarArgsCCodePointer[In,Out]) {
 }
 
 [In,Out]
-overload info(x:CCodePointer[In,Out]) {
+info(x:CCodePointer[In,Out]) {
     println();
     println("CCodePointer");
     println("In = ", ..unpack(In));

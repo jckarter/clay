@@ -4,7 +4,7 @@ record Canary (
     value: Int,
 );
 
-overload RegularRecord?(#Canary) = false;
+RegularRecord?(#Canary) = false;
 
 private alias WATERMARK = 0x12344321;
 private assertAlive(x:Canary) { assert(x.value == WATERMARK); }
@@ -29,31 +29,31 @@ private beginLifeMaybeThrow(x:Canary) {
     beginLife(x);
 }
 
-overload Canary() --> returned:Canary {
+Canary() --> returned:Canary {
     beginLifeMaybeThrow(returned);
 }
 
-overload Canary(src:Canary) --> returned:Canary {
+Canary(src:Canary) --> returned:Canary {
     assertAlive(src);
     beginLifeMaybeThrow(returned);
 }
 
-overload assign(ref dest:Canary, src:Canary) {
+assign(ref dest:Canary, src:Canary) {
     assertAlive(dest);
     assertAlive(src);
 }
 
-overload moveUnsafe(src:Canary) --> returned:Canary {
+moveUnsafe(src:Canary) --> returned:Canary {
     assertAlive(src);
     beginLife(returned);
     endLife(src);
 }
 
-overload resetUnsafe(dest:Canary) {
+resetUnsafe(dest:Canary) {
     beginLife(dest);
 }
 
-overload destroy(x:Canary) {
+destroy(x:Canary) {
     endLife(x);
 }
 

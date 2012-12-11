@@ -37,7 +37,7 @@ lookForFailures(g:G, numberOfTries:UInt, f:F)
 define expectForAll private overload;
 
 [F when MonoType?(F)]
-overload expectForAll(numberOfTries:UInt, f:F)
+expectForAll(numberOfTries:UInt, f:F)
 {
     var g = XORShiftRNG();
     var failedInputs = lookForFailures(g, numberOfTries, f);
@@ -61,40 +61,40 @@ overload expectForAll(numberOfTries:UInt, f:F)
 alias DEFAULT_NUMBER_OF_TRIES = 1000u;
 
 [F when MonoType?(F)]
-overload expectForAll(f:F) { expectForAll(DEFAULT_NUMBER_OF_TRIES, f); }
+expectForAll(f:F) { expectForAll(DEFAULT_NUMBER_OF_TRIES, f); }
 
 // `arbitrary` for builtin types and aggregates
 
-overload arbitrary(g, #Bool) = generate(g, UInt32) & 0x8000_0000u != 0;
+arbitrary(g, #Bool) = generate(g, UInt32) & 0x8000_0000u != 0;
 [I when Integer?(I) and TypeSize(I) <= TypeSize(UInt32)]
-overload arbitrary(g, #I) = wrapCast(I, generate(g, UInt32));
+arbitrary(g, #I) = wrapCast(I, generate(g, UInt32));
 [I when I == Int64 or I == UInt64]
-overload arbitrary(g, #I) =
+arbitrary(g, #I) =
     wrapCast(I, (UInt64(generate(g, UInt32)) << 32) | UInt64(generate(g, UInt32)));
-overload arbitrary(g, #Float32) = bitcast(Float32, generate(g, UInt32));
-overload arbitrary(g, #Float64) = bitcast(Float64, arbitrary(g, UInt64));
+arbitrary(g, #Float32) = bitcast(Float32, generate(g, UInt32));
+arbitrary(g, #Float64) = bitcast(Float64, arbitrary(g, UInt64));
 
-overload arbitrary(g, #Imag32) = bitcast(Imag32, arbitrary(g, Float32));
-overload arbitrary(g, #Imag64) = bitcast(Imag64, arbitrary(g, Float64));
+arbitrary(g, #Imag32) = bitcast(Imag32, arbitrary(g, Float32));
+arbitrary(g, #Imag64) = bitcast(Imag64, arbitrary(g, Float64));
 
 [C when Complex?(C)]
-overload arbitrary(g, #C) = C(
+arbitrary(g, #C) = C(
     arbitrary(g, ComplexBaseType(C)), arbitrary(g, ComplexBaseType(C)));
 
 [E when Enum?(E)]
-overload arbitrary(g, #E) = bitcast(E, uniform(g, 0, Int(EnumMemberCount(E))));
+arbitrary(g, #E) = bitcast(E, uniform(g, 0, Int(EnumMemberCount(E))));
 
-[X] overload arbitrary(g, #Static[X]) = Static[X]();
+[X] arbitrary(g, #Static[X]) = Static[X]();
 
 [..T]
-overload arbitrary(g, #Tuple[..T]) = [..arbitraryValues(g, ..T)];
+arbitrary(g, #Tuple[..T]) = [..arbitraryValues(g, ..T)];
 
 [R when RegularRecord?(R)]
-overload arbitrary(g, #R) =
+arbitrary(g, #R) =
     initializeRecord(R, ..arbitraryValues(g, ..RecordFieldTypes(R)));
 
 [V when Variant?(V)]
-overload arbitrary(g, #V)
+arbitrary(g, #V)
 {
     var tag = uniform(g, SizeT(0), VariantMemberCount(V));
     ..for (t in staticIntegers(VariantMemberCount(V)))
@@ -105,7 +105,7 @@ overload arbitrary(g, #V)
 alias DEFAULT_MAXIMUM_ARBITRARY_SEQUENCE_LENGTH = SizeT(1000);
 
 [C when Sequence?(C) and CallDefined?(push, C, SequenceElementType(C))]
-overload arbitrary(g, #C)
+arbitrary(g, #C)
 {
     var length = uniform(g, SizeT(0), DEFAULT_MAXIMUM_ARBITRARY_SEQUENCE_LENGTH);
     var seq = C();

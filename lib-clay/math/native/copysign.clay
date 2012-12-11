@@ -3,11 +3,11 @@ import numbers.floats.*;
 import math.native.protocol.*;
 
 [T,U when Float?(T,U) ]
-overload copysign(a:T,b:U) = floatFromBits(bitor(floatBitsUnsigned(a),
+copysign(a:T,b:U) = floatFromBits(bitor(floatBitsUnsigned(a),
     bitand(floatBits(b),signMask(T))));
 
 [T when Float?(T) ]
-overload copysign(a:LongDouble,b:T) {
+copysign(a:LongDouble,b:T) {
     var tmp = floatBitsUnsigned(a);
     return floatFromBits(tmp.mantissa,bitor(tmp.exponent,
         wrapBitshl(signbit(b),exponentSize(LongDouble))));

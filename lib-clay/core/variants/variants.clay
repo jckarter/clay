@@ -9,7 +9,7 @@ record VariantRepr[..T] (
 );
 
 [V when Variant?(V)]
-overload __operators__.variantReprType(#V) = VariantRepr[..VariantMembers(V)];
+__operators__.variantReprType(#V) = VariantRepr[..VariantMembers(V)];
 
 
 /// @section  VariantMember?, VariantMembers 
@@ -30,10 +30,10 @@ alias initializeVariant(#V, x:T) --> returned:V {
 }
 
 [V,T when Variant?(V) and VariantMember?(V, T)]
-alias overload V(x:T) = initializeVariant(V, x);
+alias V(x:T) = initializeVariant(V, x);
 
 [V,T,..AA when Variant?(V) and VariantMember?(V, T) and CallDefined?(T, ..AA)]
-alias overload V(#T, ..args:AA) = V(T(..args));
+alias V(#T, ..args:AA) = V(T(..args));
 
 private abortInvalidTag(tag:Int) {
     errorWithPrintfNoThrow("invalid variant, tag = %d", tag);
@@ -41,7 +41,7 @@ private abortInvalidTag(tag:Int) {
 
 
 [V when Variant?(V) and not BitwiseCopiedType?(V)]
-overload V(src:V) --> returned:V {
+V(src:V) --> returned:V {
     ref destRepr = variantRepr(returned);
     ref srcRepr = variantRepr(src);
     var tag = srcRepr.tag;
@@ -62,14 +62,14 @@ overload V(src:V) --> returned:V {
 }
 
 [V when Variant?(V) and not (BitwiseMovedType?(V) and ResetDoesNothingType?(V))]
-forceinline overload V(rvalue src:V) = move(src);
+forceinline V(rvalue src:V) = move(src);
 
 
 
 /// @section  moveUnsafe, resetUnsafe 
 
 [V when Variant?(V) and not BitwiseMovedType?(V)]
-overload moveUnsafe(src:V) --> returned:V {
+moveUnsafe(src:V) --> returned:V {
     ref destRepr = variantRepr(returned);
     ref srcRepr = variantRepr(src);
     var tag = srcRepr.tag;
@@ -90,7 +90,7 @@ overload moveUnsafe(src:V) --> returned:V {
 }
 
 [V when Variant?(V) and not ResetDoesNothingType?(V)]
-forceinline overload resetUnsafe(x:V) : {
+forceinline resetUnsafe(x:V) : {
     ref repr = variantRepr(x);
     repr.tag = 0;
     resetUnsafe(staticIndex(repr.data, #0));
@@ -101,7 +101,7 @@ forceinline overload resetUnsafe(x:V) : {
 /// @section  assign 
 
 [V when Variant?(V) and not BitwiseAssignedType?(V)]
-overload assign(ref dest:V, ref src:V) : {
+assign(ref dest:V, ref src:V) : {
     ref destRepr = variantRepr(dest);
     ref srcRepr = variantRepr(src);
     var tag = destRepr.tag;
@@ -137,7 +137,7 @@ overload assign(ref dest:V, ref src:V) : {
 /// @section  destroy 
 
 [V when Variant?(V) and not DestroyDoesNothingType?(V)]
-overload destroy(x:V) : {
+destroy(x:V) : {
     ref repr = variantRepr(x);
     var tag = repr.tag;
     ref data = repr.data;
@@ -157,7 +157,7 @@ overload destroy(x:V) : {
 /// @section  equals? 
 
 [V when Variant?(V)]
-overload equals?(a:V, b:V) : Bool {
+equals?(a:V, b:V) : Bool {
     ref aRepr, bRepr = variantRepr(a), variantRepr(b);
     var tag = aRepr.tag;
     if (tag != bRepr.tag)
@@ -190,7 +190,7 @@ forceinline variantIs?(x:V, #T) : Bool {
 define variantAs private overload;
 
 [V,T when Variant?(V) and VariantMember?(V, T)]
-forceinline overload variantAs(ref x:V, #T) {
+forceinline variantAs(ref x:V, #T) {
     ref repr = variantRepr(x);
     alias index = Int(VariantMemberIndex(V, T));
     assert(repr.tag == index, "invalid cast");
@@ -198,7 +198,7 @@ forceinline overload variantAs(ref x:V, #T) {
 }
 
 [V,T when Variant?(V) and VariantMember?(V, T)]
-forceinline overload variantAs(rvalue x:V, #T) {
+forceinline variantAs(rvalue x:V, #T) {
     return move(variantAs(x, T));
 }
 
@@ -227,18 +227,18 @@ forceinline variantTag(x:V) = variantRepr(x).tag;
 /// @section  dispatch operators 
 
 [V when Variant?(V)]
-forceinline overload __operators__.DispatchTagCount(#V) =
+forceinline __operators__.DispatchTagCount(#V) =
     countValues(..VariantMembers(V));
 
 [V when Variant?(V)]
-forceinline overload __operators__.dispatchTag(x:V) = variantRepr(x).tag;
+forceinline __operators__.dispatchTag(x:V) = variantRepr(x).tag;
 
 [V,i when Variant?(V)]
-forceinline overload __operators__.dispatchIndex(x:V, #i) =
+forceinline __operators__.dispatchIndex(x:V, #i) =
     ref staticIndex(variantRepr(x).data, #i);
 
 [V]
-forceinline overload __operators__.invalidDispatch(x:V) {
+forceinline __operators__.invalidDispatch(x:V) {
     errorWithPrintfNoThrow(
         stringLiteralConcat("invalid ", StaticName(V), ", tag = %d"),
         __operators__.dispatchTag(x));
@@ -249,10 +249,10 @@ forceinline overload __operators__.invalidDispatch(x:V) {
 
 private define matchValue;
 [T]
-forceinline overload matchValue(forward x:T, forward f, forward ..fs)
+forceinline matchValue(forward x:T, forward f, forward ..fs)
     = forward ..matchValue(x, ..fs);
 [T, F when CallDefined?(call, F, T)]
-forceinline overload matchValue(forward x:T, forward f:F, forward ..fs)
+forceinline matchValue(forward x:T, forward f:F, forward ..fs)
     = forward ..f(x);
 
 forceinline match(forward v, forward ..fs) = forward ..matchValue(*v, ..fs);
@@ -264,30 +264,30 @@ forceinline match(forward v, forward ..fs) = forward ..matchValue(*v, ..fs);
 record VariantRef[V] = tag:Int, data:Pointer[Union[..VariantMembers(V)]];
 
 [V]
-overload VariantRef[V]();
+VariantRef[V]();
 
 [V]
-forceinline overload VariantRef[V](ref v:V) {
+forceinline VariantRef[V](ref v:V) {
     ref repr = variantRepr(v);
     return VariantRef[V](repr.tag, @repr.data);
 }
 
 [V]
-forceinline overload VariantRef(ref v:V) = VariantRef[V](v);
+forceinline VariantRef(ref v:V) = VariantRef[V](v);
 
 [V, T when VariantMember?(V, T)]
-forceinline overload VariantRef[V](ref v:T) {
+forceinline VariantRef[V](ref v:T) {
     alias DataPointer = Pointer[Union[..VariantMembers(V)]];
     return VariantRef[V](Int(VariantMemberIndex(V, T)), DataPointer(@v));
 }
 
 [V]
-forceinline overload __operators__.DispatchTagCount(#VariantRef[V]) =
+forceinline __operators__.DispatchTagCount(#VariantRef[V]) =
     __operators__.DispatchTagCount(V);
 [V]
-forceinline overload __operators__.dispatchTag(vr:VariantRef[V]) = vr.tag;
+forceinline __operators__.dispatchTag(vr:VariantRef[V]) = vr.tag;
 [V, i]
-forceinline overload __operators__.dispatchIndex(vr:VariantRef[V], #i) =
+forceinline __operators__.dispatchIndex(vr:VariantRef[V], #i) =
     ref staticIndex(vr.data^, #i);
 
 

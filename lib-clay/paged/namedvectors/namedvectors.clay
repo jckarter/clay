@@ -26,9 +26,9 @@ record Header (
 
 /// @section  predicates 
 
-[T] overload RegularRecord?(#NamedVector[T]) = false;
+[T] RegularRecord?(#NamedVector[T]) = false;
 
-[T] overload ContiguousSequence?(#NamedVector[T]) = true;
+[T] ContiguousSequence?(#NamedVector[T]) = true;
 
 
 
@@ -41,7 +41,7 @@ private requiredFileSize(#T, capacity) =
     capacity*TypeSize(T) + headerSpace();
 
 [S,T when String?(S)]
-overload NamedVector[T](fileName:S) {
+NamedVector[T](fileName:S) {
     if (pathExists?(fileName)) {
         var f = File(fileName, READ_WRITE);
         var mapping = FileMapping(f, MAP_READ_WRITE);
@@ -69,7 +69,7 @@ overload NamedVector[T](fileName:S) {
 /// @section  destroy 
 
 [T]
-overload destroy(x:NamedVector[T]) {
+destroy(x:NamedVector[T]) {
     destroy(x.mapping);
     destroy(x.file);
     destroy(x.fileName);
@@ -80,24 +80,24 @@ overload destroy(x:NamedVector[T]) {
 /// @section  generic vector requirements 
 
 [T]
-overload Vector?(#NamedVector[T]) = true;
+Vector?(#NamedVector[T]) = true;
 
 [T]
-overload vectorData(a:NamedVector[T]) = @(a.data^);
+vectorData(a:NamedVector[T]) = @(a.data^);
 
 [T]
-overload vectorSize(a:NamedVector[T]) = a.header^.size;
+vectorSize(a:NamedVector[T]) = a.header^.size;
 
 [T]
-overload vectorSetSize(a:NamedVector[T], n:SizeT) {
+vectorSetSize(a:NamedVector[T], n:SizeT) {
     a.header^.size = n;
 }
 
 [T]
-overload vectorCapacity(a:NamedVector[T]) = a.header^.capacity;
+vectorCapacity(a:NamedVector[T]) = a.header^.capacity;
 
 [T]
-overload vectorRequestCapacity(a:NamedVector[T], capacity:SizeT) {
+vectorRequestCapacity(a:NamedVector[T], capacity:SizeT) {
     assert(capacity >= vectorSize(a));
     if (capacity < vectorCapacity(a))
         return;

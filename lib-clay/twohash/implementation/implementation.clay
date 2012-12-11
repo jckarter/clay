@@ -42,18 +42,18 @@ record TwoHash[E]
 );
 
 [E]
-overload EntryType(#TwoHash[E]) = E;
+EntryType(#TwoHash[E]) = E;
 
 define TwoHash?;
 
 [T]
-overload TwoHash?(#T) = false;
+TwoHash?(#T) = false;
 
 [E]
-overload TwoHash?(#TwoHash[E]) = true;
+TwoHash?(#TwoHash[E]) = true;
 
 [E]
-overload RegularRecord?(#TwoHash[E]) = false;
+RegularRecord?(#TwoHash[E]) = false;
 
 record Table[B]
 (
@@ -62,7 +62,7 @@ record Table[B]
 );
 
 [B]
-overload RegularRecord?(#Table[B]) = false;
+RegularRecord?(#Table[B]) = false;
 
 record Bucket[E]
 (
@@ -71,14 +71,14 @@ record Bucket[E]
 );
 
 [E]
-overload RegularRecord?(#Bucket[E]) = false;
+RegularRecord?(#Bucket[E]) = false;
 
 //
 // ctors
 //
 
 [E]
-overload TwoHash[E]() 
+TwoHash[E]() 
 {
     var tableA = Table[Bucket[E]](0);
     var tableB = Table[Bucket[E]](0);
@@ -86,7 +86,7 @@ overload TwoHash[E]()
 }
 
 [B]
-overload Table[B](ln2_size: Int) 
+Table[B](ln2_size: Int) 
 {
     var size = bitshl(SizeT(1), ln2_size);
     var ptr = allocateRawMemoryAligned(B, size, 16);
@@ -95,7 +95,7 @@ overload Table[B](ln2_size: Int)
 }
 
 [E]
-overload initialize(b: Bucket[E])
+initialize(b: Bucket[E])
 {
     for (x in b.hashBytes) x = 255uss;
 }
@@ -105,13 +105,13 @@ overload initialize(b: Bucket[E])
 //
 
 [B]
-forceinline overload moveUnsafe(src: Table[B]) --> returned: Table[B] {
+forceinline moveUnsafe(src: Table[B]) --> returned: Table[B] {
     returned.ptr = src.ptr;
     returned.ln2_size = src.ln2_size;
 }
 
 [B]
-forceinline overload resetUnsafe(t: Table[B]) {
+forceinline resetUnsafe(t: Table[B]) {
     t.ptr = null(B);
     t.ln2_size = 0; // actually -infinity
 }
@@ -121,14 +121,14 @@ forceinline overload resetUnsafe(t: Table[B]) {
 //
 
 [E]
-overload destroy(th: TwoHash[E]) 
+destroy(th: TwoHash[E]) 
 {
     for (t in th.tables)
         destroy(t);
 }
 
 [B]
-overload destroy(t: Table[B])
+destroy(t: Table[B])
 {
     if (not null?(t.ptr))
     {
@@ -138,7 +138,7 @@ overload destroy(t: Table[B])
 }
 
 [E]
-overload destroy(b: Bucket[E])
+destroy(b: Bucket[E])
 {
     for (i in range(16))
     {
@@ -214,10 +214,10 @@ retry:
 define inside;
 
 [P]
-overload inside(v, p: P) = (SizeT(p) >= SizeT(@v) and SizeT(p) < SizeT(@v+1));
+inside(v, p: P) = (SizeT(p) >= SizeT(@v) and SizeT(p) < SizeT(@v+1));
 
 [R, P when CallDefined?(begin, R)]
-overload inside(range: R, p: P) = (SizeT(p) >= SizeT(begin(range)) and SizeT(p) < SizeT(end(range)));
+inside(range: R, p: P) = (SizeT(p) >= SizeT(begin(range)) and SizeT(p) < SizeT(end(range)));
 
 [E]
 freeEntry(th: TwoHash[E], pEntry: Pointer[E])
@@ -254,7 +254,7 @@ record TwoHashEntry[E, F]
 );
 
 [E, F]
-overload TwoHashEntries[E, F](th: TwoHash[E])
+TwoHashEntries[E, F](th: TwoHash[E])
 {
     var x = TwoHashEntries[E, F](@th, 0, 0, 0);
     refillMask(x);
@@ -262,10 +262,10 @@ overload TwoHashEntries[E, F](th: TwoHash[E])
 }
 
 [E, F]
-overload iterator(x: TwoHashEntries[E, F]) = x;
+iterator(x: TwoHashEntries[E, F]) = x;
 
 [E, F]
-overload nextValue(x: TwoHashEntries[E, F])
+nextValue(x: TwoHashEntries[E, F])
 {
     if (x.entryMask != 0) {
         var k = lowBit(x.entryMask);
@@ -282,9 +282,9 @@ overload nextValue(x: TwoHashEntries[E, F])
 }
 
 [E, F]
-overload hasValue?(x: TwoHashEntry[E, F]) = not null?(x.entry);
+hasValue?(x: TwoHashEntry[E, F]) = not null?(x.entry);
 [E, F]
-overload getValue(x: TwoHashEntry[E, F]) = forward ..F(@x.entry);
+getValue(x: TwoHashEntry[E, F]) = forward ..F(@x.entry);
 
 [E, F]
 nextBucket(x: TwoHashEntries[E, F])
@@ -319,19 +319,19 @@ refillMask(x: TwoHashEntries[E, F])
 //
 
 [B]
-overload iterator(t: Table[B]) = CoordinateRange(begin(t), end(t));
+iterator(t: Table[B]) = CoordinateRange(begin(t), end(t));
 
 [B]
-overload size(t: Table[B]) = bitshl(SizeT(1), t.ln2_size);
+size(t: Table[B]) = bitshl(SizeT(1), t.ln2_size);
 
 [B]
-overload index(t: Table[B], idx) = ref t.ptr[idx];
+index(t: Table[B], idx) = ref t.ptr[idx];
 
 [B]
-overload begin(t: Table[B]) = @t.ptr[0];
+begin(t: Table[B]) = @t.ptr[0];
 
 [B]
-overload end(t: Table[B]) = begin(t) + size(t);
+end(t: Table[B]) = begin(t) + size(t);
 
 //
 // hashing
@@ -346,7 +346,7 @@ largeHash(x)
 
 define baseSplitHash;
 
-overload baseSplitHash(hash: UInt64)
+baseSplitHash(hash: UInt64)
 {
     var lowHash = wrapCast(SizeT, bitand(hash, 127));
     var hash1 = wrapCast(SizeT, bitshr(hash, 8));
@@ -355,7 +355,7 @@ overload baseSplitHash(hash: UInt64)
 }
 
 [E]
-overload baseSplitHash(th: TwoHash[E], hash: UInt64)
+baseSplitHash(th: TwoHash[E], hash: UInt64)
 {
     var sh = baseSplitHash(hash);
     
@@ -367,10 +367,10 @@ overload baseSplitHash(th: TwoHash[E], hash: UInt64)
 define splitHash;
 
 [E, K]
-overload splitHash(th: TwoHash[E], key: K) = baseSplitHash(th, largeHash(key));
+splitHash(th: TwoHash[E], key: K) = baseSplitHash(th, largeHash(key));
 
 [E]
-overload splitHash(th: TwoHash[E], entry: E) = baseSplitHash(th, entryHash(entry));
+splitHash(th: TwoHash[E], entry: E) = baseSplitHash(th, entryHash(entry));
 
 //
 // helpers
@@ -378,7 +378,7 @@ overload splitHash(th: TwoHash[E], entry: E) = baseSplitHash(th, entryHash(entry
 
 define moveEntry;
 
-overload moveEntry(entry, th) = move(entry);
+moveEntry(entry, th) = move(entry);
 
 [E]
 allocateInBucket(th, b: Bucket[E], entry: E, hashByte)

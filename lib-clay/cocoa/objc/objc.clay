@@ -50,51 +50,51 @@ define Void; // stand-in symbol for "no return value"
 
 define encodeIdentifier;
 
-overload encodeIdentifier() = "";
+encodeIdentifier() = "";
 
-[X] overload encodeIdentifier(#X) = "?";
-[T] overload encodeIdentifier(#Pointer[T])
+[X] encodeIdentifier(#X) = "?";
+[T] encodeIdentifier(#Pointer[T])
     = "^" ++ encodeIdentifier(T);
 
 // XXX distinguish raw pointer from Pointer[UInt8]
-overload encodeIdentifier(#RawPointer) = "^v";
+encodeIdentifier(#RawPointer) = "^v";
 
 [T when Record?(T)]
-overload encodeIdentifier(#Pointer[Pointer[T]])
+encodeIdentifier(#Pointer[Pointer[T]])
     = "^^{" ++ StaticName(T) ++ "}";
 [T when Tuple?(T)]
-overload encodeIdentifier(#Pointer[Pointer[T]]) = "^^{Tuple}";
+encodeIdentifier(#Pointer[Pointer[T]]) = "^^{Tuple}";
 [T when Union?(T)]
-overload encodeIdentifier(#Pointer[Pointer[T]]) = "^^(Union)";
+encodeIdentifier(#Pointer[Pointer[T]]) = "^^(Union)";
 
-[T when RegularRecord?(T)] overload encodeIdentifier(#T) =
+[T when RegularRecord?(T)] encodeIdentifier(#T) =
     "{" ++ StaticName(T) ++ "=" ++ encodeIdentifier(..RecordFieldTypes(T)) ++ "}";
-[..Members] overload encodeIdentifier(#Tuple[..Members])
+[..Members] encodeIdentifier(#Tuple[..Members])
     = "{Tuple=" ++ encodeIdentifier(..RecordFieldTypes(T)) ++ "}";
-[..Members] overload encodeIdentifier(#Union[..Members])
+[..Members] encodeIdentifier(#Union[..Members])
     = "(Union=" ++ encodeIdentifier(..Members) ++ ")";
 
-overload encodeIdentifier(#Pointer[CChar]) = "*";
-overload encodeIdentifier(#ObjectHandle) = "@";
-overload encodeIdentifier(#ClassHandle) = "#";
-overload encodeIdentifier(#SEL) = ":";
+encodeIdentifier(#Pointer[CChar]) = "*";
+encodeIdentifier(#ObjectHandle) = "@";
+encodeIdentifier(#ClassHandle) = "#";
+encodeIdentifier(#SEL) = ":";
 
-overload encodeIdentifier(#Int8) = "c";
-overload encodeIdentifier(#Int16) = "s";
-overload encodeIdentifier(#Int32) = "i";
-overload encodeIdentifier(#Int64) = "q";
-overload encodeIdentifier(#UInt8) = "C";
-overload encodeIdentifier(#UInt16) = "S";
-overload encodeIdentifier(#UInt32) = "I";
-overload encodeIdentifier(#UInt64) = "Q";
-overload encodeIdentifier(#Float32) = "f";
-overload encodeIdentifier(#Float64) = "d";
-overload encodeIdentifier(#Bool) = "c";
-overload encodeIdentifier(#Void) = "v";
-overload encodeIdentifier(#[]) = "v";
+encodeIdentifier(#Int8) = "c";
+encodeIdentifier(#Int16) = "s";
+encodeIdentifier(#Int32) = "i";
+encodeIdentifier(#Int64) = "q";
+encodeIdentifier(#UInt8) = "C";
+encodeIdentifier(#UInt16) = "S";
+encodeIdentifier(#UInt32) = "I";
+encodeIdentifier(#UInt64) = "Q";
+encodeIdentifier(#Float32) = "f";
+encodeIdentifier(#Float64) = "d";
+encodeIdentifier(#Bool) = "c";
+encodeIdentifier(#Void) = "v";
+encodeIdentifier(#[]) = "v";
 
 [..T when countValues(..T) > 1]
-overload encodeIdentifier(..types: T)
+encodeIdentifier(..types: T)
     = cat(..mapValues(encodeIdentifier, ..types));
 
 // fixme
@@ -136,24 +136,24 @@ private retain(x) {
 define ObjectType?;
 define nil;
 
-overload ObjectType?(T) = false;
+ObjectType?(T) = false;
 
-[O when ObjectType?(O)] overload objectHandle(x: O) : ObjectHandle = x.__handle__;
-[O when ObjectType?(O)] overload ObjectParameterType(#O) = O;
+[O when ObjectType?(O)] objectHandle(x: O) : ObjectHandle = x.__handle__;
+[O when ObjectType?(O)] ObjectParameterType(#O) = O;
 
-[O when ObjectRef?(O)] overload nil(#O) = O();
+[O when ObjectRef?(O)] nil(#O) = O();
 [O when ObjectRef?(O)] nil?(obj: O) = null?(obj.__handle__);
 
-[O when ObjectType?(O)] overload O() = O(nilHandle);
+[O when ObjectType?(O)] O() = O(nilHandle);
 
 [O1, O2 when ObjectType?(O1) and ObjectType?(O2)]
-overload O1(obj: O2) = O1(obj.__handle__);
+O1(obj: O2) = O1(obj.__handle__);
 
 private AssignableObjectTypes?(O1, O2)
     = ObjectType?(O1) and ObjectType?(O2);
 
 [O1, O2 when AssignableObjectTypes?(O1, O2)]
-overload assign(ref left: O1, right: O2) {
+assign(ref left: O1, right: O2) {
     left.__handle__ = right.__handle__;
 }
 
@@ -163,21 +163,21 @@ overload assign(ref left: O1, right: O2) {
 
 record Id (__handle__: ObjectHandle);
 
-overload ObjectType?(#Id) = true;
+ObjectType?(#Id) = true;
 
-overload nil() = nil(Id);
+nil() = nil(Id);
 
 [T when ObjectParameterType?(T) and T != Id and T != ObjectHandle]
-overload Id(object: T) = Id(objectHandle(object));
+Id(object: T) = Id(objectHandle(object));
 
 
 
 /// @section  cast between raw pointer and object types 
 
 [O when ObjectType?(O)]
-overload RawPointer(o: O) = RawPointer(o.__handle__);
+RawPointer(o: O) = RawPointer(o.__handle__);
 [O when ObjectType?(O)]
-overload O(o: RawPointer) = O(ObjectHandle(o));
+O(o: RawPointer) = O(ObjectHandle(o));
 
 
 
@@ -185,59 +185,59 @@ overload O(o: RawPointer) = O(ObjectHandle(o));
 
 record Retained[O] (__handle__: ObjectHandle);
 
-[O when ObjectType?(O)] overload RegularRecord?(#Retained[O]) = false;
+[O when ObjectType?(O)] RegularRecord?(#Retained[O]) = false;
 
-[O when ObjectType?(O)] overload objectHandle(obj: Retained[O]) : ObjectHandle = obj.__handle__;
-[O when ObjectType?(O)] overload ObjectParameterType(#Retained[O]) = O;
+[O when ObjectType?(O)] objectHandle(obj: Retained[O]) : ObjectHandle = obj.__handle__;
+[O when ObjectType?(O)] ObjectParameterType(#Retained[O]) = O;
 
-[O when ObjectType?(O)] overload Retained[O]() = Retained[O](nilHandle);
+[O when ObjectType?(O)] Retained[O]() = Retained[O](nilHandle);
 
 // copying managed <-> unmanaged
 [O1, O2 when ObjectType?(O1) and ObjectType?(O2)]
-overload Retained[O1](obj: O2) = Retained[O1](obj.__handle__);
+Retained[O1](obj: O2) = Retained[O1](obj.__handle__);
 [O1, O2 when ObjectType?(O1) and ObjectType?(O2)]
-overload O1(obj: Retained[O2]) = O1(obj.__handle__);
+O1(obj: Retained[O2]) = O1(obj.__handle__);
 
 // copying managed to managed
 [O1, O2 when ObjectType?(O1) and ObjectType?(O2)]
-overload Retained[O1](ref obj: Retained[O2]) = Retained[O1](retain(obj.__handle__));
+Retained[O1](ref obj: Retained[O2]) = Retained[O1](retain(obj.__handle__));
 [O1, O2 when ObjectType?(O1) and ObjectType?(O2)]
-overload Retained[O1](rvalue obj: Retained[O2]) --> r: Retained[O1] {
+Retained[O1](rvalue obj: Retained[O2]) --> r: Retained[O1] {
     r.__handle__ <-- obj.__handle__;
     resetUnsafe(obj);
 }
 
 // shorthand copying
 [O when ObjectType?(O)]
-overload Retained(obj: O) = Retained[O](obj);
+Retained(obj: O) = Retained[O](obj);
 [O when ObjectType?(O)]
-overload Retained(forward obj: Retained[O]) = Retained[O](obj);
+Retained(forward obj: Retained[O]) = Retained[O](obj);
 
 [O when ObjectType?(O)]
 weak(obj: Retained[O]) = O(obj);
 
 // assigning managed <-> unmanaged
 [O1, O2 when AssignableObjectTypes?(O1, O2)]
-overload assign(ref left: Retained[O1], right: O2) {
+assign(ref left: Retained[O1], right: O2) {
     var oldHandle = left.__handle__;
     left.__handle__ = retain(right.__handle__);
     release(oldHandle);
 }
 [O1, O2 when AssignableObjectTypes?(O1, O2)]
-overload assign(ref left: O1, right: Retained[O2]) {
+assign(ref left: O1, right: Retained[O2]) {
     left.__handle__ = right.__handle__;
 }
 
 // assigning managed to managed
 [O1, O2 when AssignableObjectTypes?(O1, O2)]
-overload assign(ref left: Retained[O1], ref right: Retained[O2]) {
+assign(ref left: Retained[O1], ref right: Retained[O2]) {
     var oldHandle = left.__handle__;
     left.__handle__ = retain(right.__handle__);
     release(oldHandle);
 }
 // assigning managed to managed
 [O1, O2 when AssignableObjectTypes?(O1, O2)]
-overload assign(ref left: Retained[O1], rvalue right: Retained[O2]) {
+assign(ref left: Retained[O1], rvalue right: Retained[O2]) {
     var oldHandle = left.__handle__;
     left.__handle__ = right.__handle__;
     resetUnsafe(right);
@@ -245,20 +245,20 @@ overload assign(ref left: Retained[O1], rvalue right: Retained[O2]) {
 }
 
 [O when ObjectType?(O)] 
-overload destroy(obj: Retained[O]) { release(obj.__handle__); }
+destroy(obj: Retained[O]) { release(obj.__handle__); }
 
 [O when ObjectType?(O)] 
-overload BitwiseMovedType?(#Retained[O]) = true;
+BitwiseMovedType?(#Retained[O]) = true;
 
 [O when ObjectType?(O)] 
-overload resetUnsafe(obj: Retained[O]) { obj.__handle__ = nilHandle; }
+resetUnsafe(obj: Retained[O]) { obj.__handle__ = nilHandle; }
 
 
 
 /// @section  raw object handles as parameters 
 
-overload objectHandle(x: ObjectHandle) : ObjectHandle = x;
-overload ObjectParameterType(#ObjectHandle) = Id;
+objectHandle(x: ObjectHandle) : ObjectHandle = x;
+ObjectParameterType(#ObjectHandle) = Id;
 
 
 
@@ -268,11 +268,11 @@ define SuperclassType;
 define Subclass?;
 
 [Super, Sub]
-overload Subclass?(#Super, #Sub)
+Subclass?(#Super, #Sub)
     = Subclass?(Super, SuperclassType(Sub));
 
-[Super] overload Subclass?(#Super, #Super) = true;
-[Super] overload Subclass?(#Super, #Void) = false;
+[Super] Subclass?(#Super, #Super) = true;
+[Super] Subclass?(#Super, #Void) = false;
 
 
 
@@ -282,9 +282,9 @@ record InstanceVars[T] (value: T);
 record ClassMethods[T] (value: T);
 record InstanceMethods[T] (value: T);
 
-overload InstanceVars(..values) = InstanceVars[Type(Tuple(..values))](Tuple(..values));
-overload ClassMethods(..values) = ClassMethods[Type(Tuple(..values))](Tuple(..values));
-overload InstanceMethods(..values) = InstanceMethods[Type(Tuple(..values))](Tuple(..values));
+InstanceVars(..values) = InstanceVars[Type(Tuple(..values))](Tuple(..values));
+ClassMethods(..values) = ClassMethods[Type(Tuple(..values))](Tuple(..values));
+InstanceMethods(..values) = InstanceMethods[Type(Tuple(..values))](Tuple(..values));
 
 
 
@@ -296,8 +296,8 @@ define ClassClassMethods;
 define ClassInstanceMethods;
 
 define MangledModuleChar;
-overload MangledModuleChar(c) = stringLiteralFromChars(c);
-overload MangledModuleChar(#'.') = "__";
+MangledModuleChar(c) = stringLiteralFromChars(c);
+MangledModuleChar(#'.') = "__";
 
 MangledModuleName(T) = cat(..mapValues(
     MangledModuleChar,
@@ -306,38 +306,38 @@ MangledModuleName(T) = cat(..mapValues(
 
 define ClassName;
 [T when ClayClass?(T)]
-overload ClassName(#T) = "clay__" ++ MangledModuleName(T) ++ "__" ++ StaticName(T);
+ClassName(#T) = "clay__" ++ MangledModuleName(T) ++ "__" ++ StaticName(T);
 
 [T when ExternalClass?(T) or ExternalClayClass?(T)]
-overload ClassName(#T) = StaticName(T);
+ClassName(#T) = StaticName(T);
 
 define ClassStaticName;
 
 [T when CallDefined?(ClassStaticName, Static[T])]
-overload ClassName(#T) = StaticName(ClassStaticName(T));
+ClassName(#T) = StaticName(ClassStaticName(T));
 
 define ClassIvarType;
 [T, name when Class?(T) and SuperclassType(T) != Void and StringLiteral?(name)]
-overload ClassIvarType(#T, #name) = ClassIvarType(SuperclassType(T), name);
+ClassIvarType(#T, #name) = ClassIvarType(SuperclassType(T), name);
 [T, name when Class?(T) and StringLiteral?(name) and assocValue?(name, ..ClassInstanceVars(T))]
-overload ClassIvarType(#T, #name) = firstValue(..assocValue(name, ..ClassInstanceVars(T)));
+ClassIvarType(#T, #name) = firstValue(..assocValue(name, ..ClassInstanceVars(T)));
 
 ClassIvarNames(T) = ..mapValues(ivar => ivar.0, ..ClassInstanceVars(T));
 ClassIvarTypes(T) = ..mapValues(ivar => ivar.1, ..ClassInstanceVars(T));
 
 define ClassInstanceVar?;
-overload ClassInstanceVar?(T, ivar) = false;
+ClassInstanceVar?(T, ivar) = false;
 [T, ivar when Class?(T) and StringLiteral?(ivar)]
-overload ClassInstanceVar?(#T, #ivar) = ClassInstanceVar?(SuperclassType(T), ivar);
+ClassInstanceVar?(#T, #ivar) = ClassInstanceVar?(SuperclassType(T), ivar);
 [T, ivar when Class?(T) and StringLiteral?(ivar) and assocValue?(ivar, ..ClassInstanceVars(T))]
-overload ClassInstanceVar?(#T, #ivar) = true;
+ClassInstanceVar?(#T, #ivar) = true;
 
 
 
 /// @section  bindings to external classes 
 
 Class?(T) = Type?(T) and CallDefined?(SuperclassType, Static[T]);
-[T when Class?(T)] overload ObjectType?(#T) = true;
+[T when Class?(T)] ObjectType?(#T) = true;
 ExternalClass?(T) = false;
 
 define classObjcName;
@@ -347,7 +347,7 @@ ValidSuperclass?(T) = Class?(T) or T == Void;
 define externalClass;
 
 [Super when ValidSuperclass?(Super)]
-overload externalClass(#Super) = recordWithProperties(
+externalClass(#Super) = recordWithProperties(
     [
         [SuperclassType, Super],
         [ExternalClass?, #true],
@@ -356,7 +356,7 @@ overload externalClass(#Super) = recordWithProperties(
 );
 
 [name, Super when StringLiteral?(name) and ValidSuperclass?(Super)]
-overload externalClass(#name, #Super) = recordWithProperties(
+externalClass(#name, #Super) = recordWithProperties(
     [
         [SuperclassType, Super],
         [ExternalClass?, #true],
@@ -376,16 +376,16 @@ private _objcExternalClassMake(name) {
 }
 
 [T when ExternalClass?(T)]
-overload objcClassMake(#T) {
+objcClassMake(#T) {
     return _objcExternalClassMake(ClassName(T));
 }
 
 [T when ExternalClass?(T)]
-overload objcInitIvar(#T, ivarName)
+objcInitIvar(#T, ivarName)
     = class_getInstanceVariable(objcClass[Class], cstring(StaticName(ivarName)));
 
 [T when ExternalClass?(T)]
-overload objcInitIvarOffset(#T, ivarName)
+objcInitIvarOffset(#T, ivarName)
     = ivar_getOffset(objcIvar[Class, ivarName]);
 
 
@@ -398,7 +398,7 @@ ExternalClayClass?(T) = false;
 define newClass;
 
 [Super, IV, CM, IM] // XXX when ValidSuperclass?(Super)]
-overload newClass(#Super,
+newClass(#Super,
     instancevars: InstanceVars[IV],
     classmethods: ClassMethods[CM],
     instancemethods: InstanceMethods[IM]
@@ -414,7 +414,7 @@ overload newClass(#Super,
 );
 
 [name, Super, IV, CM, IM] // XXX ValidSuperclass?(Super)]
-overload newClass(#name, #Super,
+newClass(#name, #Super,
     instancevars: InstanceVars[IV],
     classmethods: ClassMethods[CM],
     instancemethods: InstanceMethods[IM]
@@ -621,7 +621,7 @@ private _objcNewClassMake(
 }
 
 [T when ClayClass?(T)]
-forceinline overload objcClassMake(#T) : ClassHandle {
+forceinline objcClassMake(#T) : ClassHandle {
     var handle = _objcNewClassMake(
         objcClass[SuperclassType(T)],
         StringLiteralRef(ClassName(T)),
@@ -645,20 +645,20 @@ forceinline overload objcClassMake(#T) : ClassHandle {
 }
 
 [T when ClayClass?(T)]
-overload objcInitIvar(#T, ivarName) = Ivar();
+objcInitIvar(#T, ivarName) = Ivar();
 
 [T when ClayClass?(T)]
-overload objcInitIvarOffset(#T, ivarName) = PtrInt();
+objcInitIvarOffset(#T, ivarName) = PtrInt();
 
 
 
 /// @section  Class objects as objc params 
 
 [T when Class?(T)] classHandle(#T) = objcClass[T];
-[T when Class?(T)] overload objectHandle(#T) = ObjectHandle(classHandle(T));
-[T when Class?(T)] overload ObjectParameterType(#Static[T]) = Id; // XXX Class
+[T when Class?(T)] objectHandle(#T) = ObjectHandle(classHandle(T));
+[T when Class?(T)] ObjectParameterType(#Static[T]) = Id; // XXX Class
 
-[T when ObjectRef?(T)] overload encodeIdentifier(#T) = "@";
+[T when ObjectRef?(T)] encodeIdentifier(#T) = "@";
 
 // XXX class container
 
@@ -685,9 +685,9 @@ SelectorArgumentCount(#sel) = countValues(..GenericSelector(sel)) - 1;
 
 define GenericSelector;
 [sel when FixedSelector?(sel)]
-overload GenericSelector(#sel) = ..selector(sel);
+GenericSelector(#sel) = ..selector(sel);
 [sel when VarargSelector?(sel)]
-overload GenericSelector(#sel) = ..varargSelector(sel);
+GenericSelector(#sel) = ..varargSelector(sel);
 
 
 
@@ -695,41 +695,41 @@ overload GenericSelector(#sel) = ..varargSelector(sel);
 
 define TypedSelector;
 [T, sel when ExternalClass?(T) and FixedSelector?(sel)]
-overload TypedSelector(#T, #sel) = ..externalInstanceMethod(T, sel);
+TypedSelector(#T, #sel) = ..externalInstanceMethod(T, sel);
 [T, sel when ExternalClass?(T) and FixedSelector?(sel)]
-overload TypedSelector(#Static[T], #sel) = ..externalClassMethod(T, sel);
+TypedSelector(#Static[T], #sel) = ..externalClassMethod(T, sel);
 [T, sel when ClayClass?(T) and FixedSelector?(sel)]
-overload TypedSelector(#T, #sel)
+TypedSelector(#T, #sel)
     = ..restValues(..assocValue(sel, ..ClassInstanceMethods(T)));
 [T, sel when ClayClass?(T) and FixedSelector?(sel)]
-overload TypedSelector(#Static[T], #sel)
+TypedSelector(#Static[T], #sel)
     = ..restValues(..assocValue(sel, ..ClassClassMethods(T)));
 
 define TypedSelector?;
 [T, sel when ExternalClass?(T) and FixedSelector?(sel)]
-overload TypedSelector?(#T, #sel)
+TypedSelector?(#T, #sel)
     = CallDefined?(externalInstanceMethod, Static[T], Static[sel]);
 [T, sel when ExternalClass?(T) and FixedSelector?(sel)]
-overload TypedSelector?(#Static[T], #sel)
+TypedSelector?(#Static[T], #sel)
     = CallDefined?(externalClassMethod, Static[Static[T]], Static[sel]);
 [T, sel when ClayClass?(T) and FixedSelector?(sel)]
-overload TypedSelector?(#T, #sel)
+TypedSelector?(#T, #sel)
     = assocCountValues(sel, ..ClassInstanceMethods(T)) > 1;
 [T, sel when ClayClass?(T) and FixedSelector?(sel)]
-overload TypedSelector?(#Static[T], #sel)
+TypedSelector?(#Static[T], #sel)
     = assocCountValues(sel, ..ClassClassMethods(T)) > 1;
 
 
 [T, sel when ExternalClass?(T) and VarargSelector?(sel)]
-overload TypedSelector(#T, #sel) = ..externalVarargInstanceMethod(T, sel);
+TypedSelector(#T, #sel) = ..externalVarargInstanceMethod(T, sel);
 [T, sel when ExternalClass?(T) and VarargSelector?(sel)]
-overload TypedSelector(#Static[T], #sel) = ..externalVarargClassMethod(T, sel);
+TypedSelector(#Static[T], #sel) = ..externalVarargClassMethod(T, sel);
 
 [T, sel when ExternalClass?(T) and VarargSelector?(sel)]
-overload TypedSelector?(#T, #sel)
+TypedSelector?(#T, #sel)
     = CallDefined?(externalVarargInstanceMethod, Static[T], Static[sel]);
 [T, sel when ExternalClass?(T) and VarargSelector?(sel)]
-overload TypedSelector?(#Static[T], #sel)
+TypedSelector?(#Static[T], #sel)
     = CallDefined?(externalVarargClassMethod, Static[Static[T]], Static[sel]);
  
 
@@ -738,33 +738,33 @@ overload TypedSelector?(#Static[T], #sel)
 
 private define Selector;
 [sel when Selector?(sel)]
-overload Selector(#Id, #sel) = ..GenericSelector(sel);
+Selector(#Id, #sel) = ..GenericSelector(sel);
 
 [T, sel when Class?(T) and Selector?(sel)]
-overload Selector(#T, #sel) = ..GenericSelector(sel);
+Selector(#T, #sel) = ..GenericSelector(sel);
 [T, sel when Class?(T) and Selector?(sel)]
-overload Selector(#Static[T], #sel) = ..GenericSelector(sel);
+Selector(#Static[T], #sel) = ..GenericSelector(sel);
 
 [T, sel when Class?(T) and SuperclassType(T) != Void]
-overload Selector(#T, #sel) = ..Selector(SuperclassType(T), sel);
+Selector(#T, #sel) = ..Selector(SuperclassType(T), sel);
 [T, sel when
     Class?(T)
     and TypedSelector?(T, sel)
 ]
-overload Selector(#T, #sel) = ..TypedSelector(T, sel);
+Selector(#T, #sel) = ..TypedSelector(T, sel);
 
 [T, sel when Class?(T) and SuperclassType(T) != Void]
-overload Selector(#Static[T], #sel) = ..Selector(Static[SuperclassType(T)], sel);
+Selector(#Static[T], #sel) = ..Selector(Static[SuperclassType(T)], sel);
 [T, sel when
     Class?(T)
     and TypedSelector?(Static[T], sel)
 ]
-overload Selector(#Static[T], #sel) = ..TypedSelector(Static[T], sel);
+Selector(#Static[T], #sel) = ..TypedSelector(Static[T], sel);
 
 define SelectorReturnType;
 
 [T, sel]
-overload SelectorReturnType(#T, #sel) = firstValue(..Selector(T, sel));
+SelectorReturnType(#T, #sel) = firstValue(..Selector(T, sel));
 
 [T, sel]
 SelectorArgumentTypes(#T, #sel) = ..restValues(..Selector(T, sel));
@@ -775,57 +775,57 @@ SelectorArgumentTypes(#T, #sel) = ..restValues(..Selector(T, sel));
 
 define AllocatingSelector?;
 
-overload AllocatingSelector?(sel) = false;
+AllocatingSelector?(sel) = false;
 [sel when
     stringLiteralStartsWith?(sel, "alloc")
     or stringLiteralStartsWith?(sel, "new")
 ]
-overload AllocatingSelector?(#sel) = true;
+AllocatingSelector?(#sel) = true;
 
 define RetainingSelector?;
 
-overload RetainingSelector?(sel) = false;
+RetainingSelector?(sel) = false;
 [sel when
     stringLiteralStartsWith?(sel, "copy")
     or stringLiteralStartsWith?(sel, "mutableCopy")
     or sel == "retain"
 ]
-overload RetainingSelector?(#sel) = true;
+RetainingSelector?(#sel) = true;
 
 define ForwardingSelector?;
 
-overload ForwardingSelector?(sel) = false;
+ForwardingSelector?(sel) = false;
 [sel when stringLiteralStartsWith?(sel, "init")]
-overload ForwardingSelector?(#sel) = true;
+ForwardingSelector?(#sel) = true;
 
 define AutoreleasingSelector?;
-overload AutoreleasingSelector?(sel) = false;
-overload AutoreleasingSelector?("autorelease") = true;
+AutoreleasingSelector?(sel) = false;
+AutoreleasingSelector?("autorelease") = true;
 
 [T, sel when Class?(T) and AllocatingSelector?(sel)]
-overload SelectorReturnType(#Static[T], #sel) = T;
+SelectorReturnType(#Static[T], #sel) = T;
 
 [T, sel when ObjectType?(T) and (
     RetainingSelector?(sel)
     or ForwardingSelector?(sel)
     or AutoreleasingSelector?(sel)
 )]
-overload SelectorReturnType(#T, #sel) = T;
+SelectorReturnType(#T, #sel) = T;
 
 
 
 /// @section  argument conversion 
 
 define ObjectRef?;
-overload ObjectRef?(T) = false;
+ObjectRef?(T) = false;
 [T when ObjectType?(T)]
-overload ObjectRef?(#T) = true;
+ObjectRef?(#T) = true;
 [T when ObjectType?(T)]
-overload ObjectRef?(#Retained[T]) = true;
+ObjectRef?(#Retained[T]) = true;
 
 define MsgSendCompatible?;
-overload MsgSendCompatible?(ParamType, ValueType) = false;
-[T] overload MsgSendCompatible?(#T, #T) = true;
+MsgSendCompatible?(ParamType, ValueType) = false;
+[T] MsgSendCompatible?(#T, #T) = true;
 
 [Param, Value when
     ObjectRef?(Param)
@@ -835,48 +835,48 @@ overload MsgSendCompatible?(ParamType, ValueType) = false;
         or Subclass?(ObjectParameterType(Param), ObjectParameterType(Value))
     )
 ]
-overload MsgSendCompatible?(#Param, #Value) = true;
+MsgSendCompatible?(#Param, #Value) = true;
 
 [Value when ObjectParameterType?(Value)]
-overload MsgSendCompatible?(#Id, #Value) = true;
+MsgSendCompatible?(#Id, #Value) = true;
 
 [Value when ObjectParameterType?(Value)]
-overload MsgSendCompatible?(#Retained[Id], #Value) = true;
+MsgSendCompatible?(#Retained[Id], #Value) = true;
 
 
 // XXX selector container
 
 define MsgSendParamType;
-overload MsgSendParamType(Param) = Param;
+MsgSendParamType(Param) = Param;
 
 [Param when ObjectRef?(Param)]
-overload MsgSendParamType(#Param) = ObjectHandle;
+MsgSendParamType(#Param) = ObjectHandle;
 
-overload MsgSendParamType(#Void) = #[];
-overload MsgSendParamType(#Bool) = BOOL;
+MsgSendParamType(#Void) = #[];
+MsgSendParamType(#Bool) = BOOL;
 
 /* private */ define msgSendUnbox1;
 [Param]
-overload msgSendUnbox1(#Param, forward x: Param) = forward x;
+msgSendUnbox1(#Param, forward x: Param) = forward x;
 [Param, Value when ObjectRef?(Param)]
-overload msgSendUnbox1(#Param, forward x: Value) = objectHandle(x);
+msgSendUnbox1(#Param, forward x: Value) = objectHandle(x);
 
-overload msgSendUnbox1(#Bool, forward x: Bool) = if (x) BOOL(1) else BOOL(0);
+msgSendUnbox1(#Bool, forward x: Bool) = if (x) BOOL(1) else BOOL(0);
 
 private define varArgUnbox1;
-overload varArgUnbox1(forward x) = forward x;
+varArgUnbox1(forward x) = forward x;
 [Param when ObjectRef?(Param)]
-overload varArgUnbox1(forward x: Param) = objectHandle(x);
+varArgUnbox1(forward x: Param) = objectHandle(x);
 
 /*XXX private*/ define msgSendUnbox;
 [T, S when FixedSelector?(S)]
-overload msgSendUnbox(#T, #S, forward ..args)
+msgSendUnbox(#T, #S, forward ..args)
     = forward ..mapValues2(msgSendUnbox1, #SelectorArgumentCount(S),
         ..SelectorArgumentTypes(T, S),
         ..args
     );
 [T, S when VarargSelector?(S)]
-overload msgSendUnbox(#T, #S, forward ..args) {
+msgSendUnbox(#T, #S, forward ..args) {
     var argCount = #SelectorArgumentCount(S);
     return forward
         ..mapValues2(msgSendUnbox1, argCount, ..SelectorArgumentTypes(T, S), ..args),
@@ -886,14 +886,14 @@ overload msgSendUnbox(#T, #S, forward ..args) {
 
 /*XXX private*/ define msgSendBox1;
 [Return]
-overload msgSendBox1(#Return, forward x: Return) = forward x;
+msgSendBox1(#Return, forward x: Return) = forward x;
 
-overload msgSendBox1(#Void) = ;
+msgSendBox1(#Void) = ;
 
-overload msgSendBox1(#Bool, forward x: BOOL) = x != NO;
+msgSendBox1(#Bool, forward x: BOOL) = x != NO;
 
 [T when ObjectRef?(T)]
-overload msgSendBox1(#T, forward x: ObjectHandle)
+msgSendBox1(#T, forward x: ObjectHandle)
     = T(x);
 
 [T, S when FixedSelector?(S)]
@@ -918,34 +918,34 @@ SelectorTypeEncoding(T, S)
 
 private define objc_msgSend_for;
 [T, S when Selector?(S)]
-overload objc_msgSend_for(#T, #S) = objc_msgSend;
+objc_msgSend_for(#T, #S) = objc_msgSend;
 [T, S when Selector?(S) and StRet?(SelectorReturnParamType(T, S))]
-overload objc_msgSend_for(#T, #S) = objc_msgSend_stret;
+objc_msgSend_for(#T, #S) = objc_msgSend_stret;
 [T, S when Selector?(S) and FpRet?(SelectorReturnParamType(T, S))]
-overload objc_msgSend_for(#T, #S) = objc_msgSend_fpret;
+objc_msgSend_for(#T, #S) = objc_msgSend_fpret;
 
 private define objc_msgSendSuper_for;
 [T, S when Selector?(S)]
-overload objc_msgSendSuper_for(#T, #S) = objc_msgSendSuper;
+objc_msgSendSuper_for(#T, #S) = objc_msgSendSuper;
 [T, S when Selector?(S) and StRet?(SelectorReturnParamType(T, S))]
-overload objc_msgSendSuper_for(#T, #S) = objc_msgSendSuper_stret;
+objc_msgSendSuper_for(#T, #S) = objc_msgSendSuper_stret;
 
 private define class_getMethodImplementation_for;
 [T, S when Selector?(S)]
-overload class_getMethodImplementation_for(#T, #S) = class_getMethodImplementation;
+class_getMethodImplementation_for(#T, #S) = class_getMethodImplementation;
 [T, S when Selector?(S) and StRet?(SelectorReturnParamType(T, S))]
-overload class_getMethodImplementation_for(#T, #S) = class_getMethodImplementation_stret;
+class_getMethodImplementation_for(#T, #S) = class_getMethodImplementation_stret;
 
 define SelectorCallableWith?;
 
-overload SelectorCallableWith?(C, S, ..T) = false;
+SelectorCallableWith?(C, S, ..T) = false;
 
 [C, S, ..TT when FixedSelector?(S) and countValues(..TT) == SelectorArgumentCount(S)]
-overload SelectorCallableWith?(#C, #S, ..T: TT)
+SelectorCallableWith?(#C, #S, ..T: TT)
     = _SelectorCallableWith?(C, S, ..T);
 
 [C, S, ..TT when VarargSelector?(S) and countValues(..TT) >= SelectorArgumentCount(S)]
-overload SelectorCallableWith?(#C, #S, ..T: TT)
+SelectorCallableWith?(#C, #S, ..T: TT)
     = _SelectorCallableWith?(C, S, ..takeValues(#(countValues(..varargSelector(S)) - 1), ..T));
 
 private _SelectorCallableWith?(C, S, ..T) {
@@ -961,13 +961,13 @@ private _SelectorCallableWith?(C, S, ..T) {
 define SelectorImpType;
 
 [C, S when FixedSelector?(S)]
-overload SelectorImpType(#C, #S) = CCodePointer[
+SelectorImpType(#C, #S) = CCodePointer[
         [ObjectHandle, SelectorHandle, ..SelectorArgumentParamTypes(C, S)],
         SelectorReturnParamType(C, S)
     ];
 
 [C, S when VarargSelector?(S)]
-overload SelectorImpType(#C, #S) = VarArgsCCodePointer[
+SelectorImpType(#C, #S) = VarArgsCCodePointer[
         [ObjectHandle, SelectorHandle, ..SelectorArgumentParamTypes(C, S)],
         SelectorReturnParamType(C, S)
     ];
@@ -978,14 +978,14 @@ private msgSender(C, S)
 private define msgSenderSuper;
 
 [C, S when FixedSelector?(S)]
-overload msgSenderSuper(#C, #S)
+msgSenderSuper(#C, #S)
     = CCodePointer[
         [Pointer[ObjcSuper], SelectorHandle, ..SelectorArgumentParamTypes(C, S)],
         SelectorReturnParamType(C, S)
     ](objc_msgSendSuper_for(C, S));
 
 [C, S when VarargSelector?(S)]
-overload msgSenderSuper(#C, #S)
+msgSenderSuper(#C, #S)
     = VarArgsCCodePointer[
         [Pointer[ObjcSuper], SelectorHandle, ..SelectorArgumentParamTypes(C, S)],
         SelectorReturnParamType(C, S)
@@ -1005,18 +1005,18 @@ msgSend(#SelfT, imp, self, #S, forward ..args: T) {
 /// @section  identifier-selector conversion 
 
 private define _identifierSelectorChar;
-overload _identifierSelectorChar(c) = stringLiteralFromChars(c);
-overload _identifierSelectorChar(#'_') = ":";
+_identifierSelectorChar(c) = stringLiteralFromChars(c);
+_identifierSelectorChar(#'_') = ":";
 
 private define _extraColon;
 [argCount, underscoreCount, lastCharacter]
-overload _extraColon(#argCount, #underscoreCount, #lastCharacter) = ;
+_extraColon(#argCount, #underscoreCount, #lastCharacter) = ;
 [argCount, underscoreCount, lastCharacter when
     argCount > underscoreCount
     and lastCharacter != '_'
     and lastCharacter != ':'
 ]
-overload _extraColon(#argCount, #underscoreCount, #lastCharacter)
+_extraColon(#argCount, #underscoreCount, #lastCharacter)
     = ":";
 
 [argCount] private _identifierSelector(#argCount, ..chars) {
@@ -1051,19 +1051,19 @@ ValidMethodIdentifier?(#identifier) = true;
 
 private record MethodRef[T, Captured, identifier] (self: Captured);
 
-overload MethodRef(T, forward value, identifier)
+MethodRef(T, forward value, identifier)
     = MethodRef[T, Type(captureValue(value)), identifier](captureValue(value));
 
 [T, cmd when ObjectRef?(T) and cmd != "__handle__" and ValidMethodIdentifier?(cmd)]
-overload fieldRef(forward self: T, #cmd)
+fieldRef(forward self: T, #cmd)
     = MethodRef(ObjectParameterType(T), self, cmd);
 [T, cmd when Class?(T) and ValidMethodIdentifier?(cmd)]
-overload fieldRef(#T, #cmd) = MethodRef(Static[T], T, cmd);
+fieldRef(#T, #cmd) = MethodRef(Static[T], T, cmd);
 
 define callMethod;
 
 [T, selector, ..Args when ObjectParameterType?(T) and Selector?(selector)]
-overload callMethod(forward self: T, #selector, forward ..args: Args)
+callMethod(forward self: T, #selector, forward ..args: Args)
     = forward ..msgSend(
         T,
         msgSender(T, selector),
@@ -1080,7 +1080,7 @@ overload callMethod(forward self: T, #selector, forward ..args: Args)
         ..Args
     )
 ]
-overload call(method: MethodRef[T, Captured, identifier], forward ..args: Args) {
+call(method: MethodRef[T, Captured, identifier], forward ..args: Args) {
     var selector = identifierSelector(identifier, #countValues(..Args));
     return forward ..msgSend(
         T,
@@ -1098,7 +1098,7 @@ overload call(method: MethodRef[T, Captured, identifier], forward ..args: Args) 
 record MethodDelegate[T, selector] (self: ObjectHandle, imp: IMP);
 
 [T, selector when ObjectParameterType?(T) and Selector?(selector)]
-overload MethodDelegate(self: T, #selector) {
+MethodDelegate(self: T, #selector) {
     var selfHandle = objectHandle(self);
     var imp = class_getMethodImplementation_for(T, selector)(
         object_getClass(selfHandle), 
@@ -1108,7 +1108,7 @@ overload MethodDelegate(self: T, #selector) {
 }
 
 [T, selector]
-overload call(delegate: MethodDelegate[T, selector], forward ..args)
+call(delegate: MethodDelegate[T, selector], forward ..args)
     = forward ..msgSend(
         T,
         SelectorImpType(T, selector)(delegate.imp),
@@ -1124,13 +1124,13 @@ overload call(delegate: MethodDelegate[T, selector], forward ..args)
 private record IvarsRef[T] (__handle__: ObjectHandle);
 
 [T when Class?(T)]
-overload dereference(obj: T) = IvarsRef[T](objectHandle(obj));
+dereference(obj: T) = IvarsRef[T](objectHandle(obj));
 [T when Class?(T)]
-overload dereference(obj: Retained[T]) = IvarsRef[T](objectHandle(obj));
+dereference(obj: Retained[T]) = IvarsRef[T](objectHandle(obj));
 
 
 [T, ivar when Class?(T) and ivar != "__handle__" and ClassInstanceVar?(T, ivar)]
-overload fieldRef(ivars: IvarsRef[T], #ivar)
+fieldRef(ivars: IvarsRef[T], #ivar)
     = ref Pointer[ClassIvarType(T, ivar)](
         Pointer[UInt8](ivars.__handle__) + objcIvarOffset[T, ivar]
     )^;
@@ -1144,23 +1144,23 @@ private record SuperRef[T, Captured] (__self__: Captured);
 define super;
 
 [T when Class?(T) and SuperclassType(T) != Void]
-overload super(forward obj: T) = SuperRef[T, Type(captureValue(obj))](captureValue(obj));
+super(forward obj: T) = SuperRef[T, Type(captureValue(obj))](captureValue(obj));
 
 [T when Class?(T) and SuperclassType(T) != Void]
-overload super(forward obj: Retained[T]) = SuperRef[T, Type(captureValue(obj))](captureValue(obj));
+super(forward obj: Retained[T]) = SuperRef[T, Type(captureValue(obj))](captureValue(obj));
 
 private record SuperMethodRef[T, Captured, identifier] (__self__: Captured);
 
 [T, Captured]
-overload SuperMethodRef(forward super: SuperRef[T, Captured], identifier)
+SuperMethodRef(forward super: SuperRef[T, Captured], identifier)
     = SuperMethodRef[T, Captured, identifier](super.__self__);
 
 [T, Captured, cmd when Class?(T) and cmd != "__self__"]
-overload fieldRef(sup: SuperRef[T, Captured], #cmd)
+fieldRef(sup: SuperRef[T, Captured], #cmd)
     = SuperMethodRef(sup, cmd);
 
 [T, Captured, selector, ..Args when Class?(T) and Selector?(selector)]
-overload callMethod(sup: SuperRef[T, Captured], #selector, forward ..args: Args) {
+callMethod(sup: SuperRef[T, Captured], #selector, forward ..args: Args) {
     var super = ObjcSuper(
         objectHandle(forwardValue(sup.__self__)),
         classHandle(SuperclassType(T))
@@ -1175,7 +1175,7 @@ overload callMethod(sup: SuperRef[T, Captured], #selector, forward ..args: Args)
 }
 
 [T, Captured, identifier, ..Args]
-overload call(method: SuperMethodRef[T, Captured, identifier], forward ..args: Args) {
+call(method: SuperMethodRef[T, Captured, identifier], forward ..args: Args) {
     var selector = identifierSelector(identifier, #countValues(..Args));
     var super = ObjcSuper(
         objectHandle(forwardValue(method.__self__)),

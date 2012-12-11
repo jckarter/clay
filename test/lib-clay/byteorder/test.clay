@@ -5,7 +5,7 @@ import test.*;
 define testNetworkToHost;
 
 [IntType]
-overload testNetworkToHost(#IntType, function, expectReversed?) {
+testNetworkToHost(#IntType, function, expectReversed?) {
     alias S = #TypeSize(IntType);
     var digits = array(..mapValues(i -> UInt8(250 - i), ..integers(S)));
     var digitsReversed = array(..reverseValues(..arrayElements(digits)));
@@ -16,7 +16,7 @@ overload testNetworkToHost(#IntType, function, expectReversed?) {
 }
 
 [IntType when not IntegerAvailable?(IntType)]
-overload testNetworkToHost(#IntType, function, expectReversed?) {
+testNetworkToHost(#IntType, function, expectReversed?) {
 }
 
 main() = testMain(

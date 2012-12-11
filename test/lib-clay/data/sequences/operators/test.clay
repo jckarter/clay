@@ -5,10 +5,10 @@ record MyAnotherSequenceWithoutSize ();
 
 record DummyIterator ();
 
-overload iterator(s: MySequenceWithoutSize) = DummyIterator();
-overload iterator(s: MyAnotherSequenceWithoutSize) = DummyIterator();
+iterator(s: MySequenceWithoutSize) = DummyIterator();
+iterator(s: MyAnotherSequenceWithoutSize) = DummyIterator();
 
-overload nextValue(iter: DummyIterator): Maybe[Int] = nothing(Int);
+nextValue(iter: DummyIterator): Maybe[Int] = nothing(Int);
 
 testEqualsOnSequencesWithoutSize() {
     expectEqual(MySequenceWithoutSize(), MyAnotherSequenceWithoutSize());

@@ -8,47 +8,47 @@ record StringLiteralRef (
 
 /// @section  predicates 
 
-overload ContiguousSequence?(#StringLiteralRef) : Bool = true;
+ContiguousSequence?(#StringLiteralRef) : Bool = true;
 [s when StringLiteral?(s)]
-overload ContiguousSequence?(#Static[s]) : Bool = true;
+ContiguousSequence?(#Static[s]) : Bool = true;
 
 
 
 /// @section  constructors 
 
 [s when StringLiteral?(s)]
-forceinline overload StringLiteralRef(#s) = StringLiteralRef(stringTableConstant(s));
-forceinline overload StringLiteralRef() = StringLiteralRef(stringTableConstant(""));
+forceinline StringLiteralRef(#s) = StringLiteralRef(stringTableConstant(s));
+forceinline StringLiteralRef() = StringLiteralRef(stringTableConstant(""));
 
 
 /// @section  size, begin, end, index 
 
-forceinline overload size(a:StringLiteralRef) = a.sizep^;
+forceinline size(a:StringLiteralRef) = a.sizep^;
 
-forceinline overload begin(a:StringLiteralRef) : Pointer[Char] = Pointer[Char](a.sizep + 1);
-forceinline overload end(a:StringLiteralRef) = begin(a) + size(a);
+forceinline begin(a:StringLiteralRef) : Pointer[Char] = Pointer[Char](a.sizep + 1);
+forceinline end(a:StringLiteralRef) = begin(a) + size(a);
 
 [I when Integer?(I)]
-forceinline overload index(a:StringLiteralRef, i:I) : ByRef[Char] {
+forceinline index(a:StringLiteralRef, i:I) : ByRef[Char] {
     assert["boundsChecks"](i >= 0 and i < size(a), "StringLiteralRef index out of bounds");
     return ref (begin(a) + i)^;
 }
 
 [s when StringLiteral?(s)]
-forceinline overload size(#s) = stringLiteralByteSize(s);
+forceinline size(#s) = stringLiteralByteSize(s);
 [s when StringLiteral?(s)]
-forceinline overload begin(#s) : Pointer[Char] = Pointer[Char](stringTableConstant(s) + 1);
+forceinline begin(#s) : Pointer[Char] = Pointer[Char](stringTableConstant(s) + 1);
 [s when StringLiteral?(s)]
-forceinline overload end(#s) = begin(s) + size(s);
+forceinline end(#s) = begin(s) + size(s);
 
 [s, I when StringLiteral?(s) and Integer?(I)]
-forceinline overload index(#s, i:I) : ByRef[Char] {
+forceinline index(#s, i:I) : ByRef[Char] {
     assert["boundsChecks"](i >= 0 and i < size(s), "literal \"", s, "\" index out of bounds");
     return ref (begin(s) + i)^;
 }
 
 [s, n when StringLiteral?(s) and n >= 0 and n < size(s)]
-forceinline overload staticIndex(#s, #n) : Char 
+forceinline staticIndex(#s, #n) : Char 
     = Char(stringLiteralByteIndex(#s,#n));
 
 
@@ -57,37 +57,37 @@ forceinline overload staticIndex(#s, #n) : Char
 
 define cstring(a) : Pointer[Int8];
 
-forceinline overload cstring(a:StringLiteralRef) : Pointer[Int8]
+forceinline cstring(a:StringLiteralRef) : Pointer[Int8]
     = Pointer[Int8](begin(a));
 
 [s when StringLiteral?(s)]
-forceinline overload cstring(#s) : Pointer[Int8] = Pointer[Int8](begin(s));
+forceinline cstring(#s) : Pointer[Int8] = Pointer[Int8](begin(s));
 
 
 /// @section  coordinates and iteration 
 
-forceinline overload iterator(a:StringLiteralRef) = coordinateRange(begin(a), end(a));
+forceinline iterator(a:StringLiteralRef) = coordinateRange(begin(a), end(a));
 [s when StringLiteral?(s)]
-forceinline overload iterator(#s) = coordinateRange(begin(s), end(s));
+forceinline iterator(#s) = coordinateRange(begin(s), end(s));
 
-forceinline overload reverseIterator(a:StringLiteralRef) =
+forceinline reverseIterator(a:StringLiteralRef) =
     reverseCoordinateRange(end(a), begin(a));
 [s when StringLiteral?(s)]
-forceinline overload reverseIterator(#s) =
+forceinline reverseIterator(#s) =
     reverseCoordinateRange(end(a), begin(a));
 
 
 /// @section  string literal concatenation 
 
 private define StringLiteralStatic?(s) : Bool;
-overload StringLiteralStatic?(s) : Bool = false;
+StringLiteralStatic?(s) : Bool = false;
 [s]
-overload StringLiteralStatic?(#Static[s]) : Bool = StringLiteral?(s);
+StringLiteralStatic?(#Static[s]) : Bool = StringLiteral?(s);
 
 StringLiteralType?(..SS) : Bool = allValues?(S -> StringLiteralStatic?(S), ..SS);
 
 [..SS when StringLiteralType?(..SS)]
-forceinline overload (++)(..ss:SS) = stringLiteralConcat(..ss);
+forceinline (++)(..ss:SS) = stringLiteralConcat(..ss);
 
 
 /// @section  string literal manipulation 
@@ -96,10 +96,10 @@ forceinline overload (++)(..ss:SS) = stringLiteralConcat(..ss);
 
 define stringLiteralStartsWith?(..a) : Bool;
 
-overload stringLiteralStartsWith?(a, b) : Bool = false;
+stringLiteralStartsWith?(a, b) : Bool = false;
 
 [identifier, startsWith when size(identifier) >= size(startsWith)]
-overload stringLiteralStartsWith?(#identifier, #startsWith)
+stringLiteralStartsWith?(#identifier, #startsWith)
       = stringLiteralByteSlice(identifier, #0, #size(startsWith))
         == startsWith;
 
@@ -107,10 +107,10 @@ overload stringLiteralStartsWith?(#identifier, #startsWith)
 
 define stringLiteralEndsWith?;
 
-overload stringLiteralEndsWith?(a, b) : Bool = false;
+stringLiteralEndsWith?(a, b) : Bool = false;
 
 [identifier, endsWith when size(identifier) >= size(endsWith)]
-overload stringLiteralEndsWith?(#identifier, #endsWith) : Bool
+stringLiteralEndsWith?(#identifier, #endsWith) : Bool
     = stringLiteralByteSlice(identifier,
           #(size(identifier) - size(endsWith)),
           #size(identifier)
@@ -123,14 +123,14 @@ define stringLiteralFind;
 [identifier, sub, start when
     StringLiteral?(identifier) and StringLiteral?(sub)
 ]
-overload stringLiteralFind(#identifier, #sub, #start)
+stringLiteralFind(#identifier, #sub, #start)
     = stringLiteralFind(identifier, sub, #(start + 1));
 
 [identifier, sub, start when
     StringLiteral?(identifier) and StringLiteral?(sub)
     and size(identifier) < size(sub) + start
 ]
-overload stringLiteralFind(#identifier, #sub, #start) = -1;
+stringLiteralFind(#identifier, #sub, #start) = -1;
 
 [identifier, sub, start when
     StringLiteral?(identifier) and StringLiteral?(sub)
@@ -138,36 +138,36 @@ overload stringLiteralFind(#identifier, #sub, #start) = -1;
     and stringLiteralByteSlice(identifier, #start, #(start + size(sub)))
         == sub
 ]
-overload stringLiteralFind(#identifier, #sub, #start) = start;
+stringLiteralFind(#identifier, #sub, #start) = start;
 
-overload stringLiteralFind(identifier, sub) = stringLiteralFind(identifier, sub, #0);
+stringLiteralFind(identifier, sub) = stringLiteralFind(identifier, sub, #0);
 
 // strl
 
 define strl;
 
-overload strl(..xx) = stringLiteralConcat(..mapValues(strl, ..xx));
+strl(..xx) = stringLiteralConcat(..mapValues(strl, ..xx));
 
 [x]
-overload strl(#x) = StaticName(#x);
+strl(#x) = StaticName(#x);
 [i when StringLiteral?(i)]
-overload strl(#i) = i;
+strl(#i) = i;
 
-overload strl() = "";
+strl() = "";
 
 // stringLiteralCapitalize, stringLiteralDecapitalize
 
 define stringLiteralCapitalize;
 define stringLiteralDecapitalize;
 
-overload stringLiteralCapitalize("") = "";
+stringLiteralCapitalize("") = "";
 [s when StringLiteral?(s) and size(s) >= 1]
-overload stringLiteralCapitalize(#s)
+stringLiteralCapitalize(#s)
     = stringLiteralConcat(stringLiteralFromBytes(#(Int(asciiUpper(s.0)))), stringLiteralByteSlice(s, #1, #size(s)));
 
-overload stringLiteralDecapitalize("") = "";
+stringLiteralDecapitalize("") = "";
 [s when StringLiteral?(s) and size(s) >= 1]
-overload stringLiteralDecapitalize(#s)
+stringLiteralDecapitalize(#s)
     = stringLiteralConcat(stringLiteralFromBytes(#(Int(asciiLower(s.0)))), stringLiteralByteSlice(s, #1, #size(s)));
 
 // stringLiteralChars, stringLiteralStaticChars, stringLiteralFromChars

@@ -1,5 +1,5 @@
 define foo(a, b);
 
-overload foo() = 1;
+foo() = 1;
 
 main() {}

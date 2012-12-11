@@ -7,9 +7,9 @@ record Thingy[XX] ();
 
 define foo;
 
-overload foo(x) { println("not a tuple"); }
+foo(x) { println("not a tuple"); }
 
-[..X] overload foo(#Thingy[[..X]]) { println(repr(..X)); }
+[..X] foo(#Thingy[[..X]]) { println(repr(..X)); }
 
 main() {
     foo(Thingy[[]]);

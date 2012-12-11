@@ -1,5 +1,5 @@
 define foo(a): Int, Int;
 
-overload foo(a): {}
+foo(a): {}
 
 main() {}

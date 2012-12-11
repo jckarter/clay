@@ -49,56 +49,56 @@ __llvm__{
 [T when Integer?(T)] define integerQuotientWithOverflow(x:T, y:T) : T, Bool;
 
 [T when SignedInteger?(T) and T != Int8 and T != Int128]
-forceinline overload integerAddWithOverflow(x:T, y:T) : T, Bool
+forceinline integerAddWithOverflow(x:T, y:T) : T, Bool
     = ..overflowIntrinsic("sadd", x, y);
 [T when SignedInteger?(T) and T != Int8 and T != Int128]
-forceinline overload integerSubtractWithOverflow(x:T, y:T) : T, Bool
+forceinline integerSubtractWithOverflow(x:T, y:T) : T, Bool
     = ..overflowIntrinsic("ssub", x, y);
 [T when SignedInteger?(T) and T != Int8 and T != Int128]
-forceinline overload integerMultiplyWithOverflow(x:T, y:T) : T, Bool
+forceinline integerMultiplyWithOverflow(x:T, y:T) : T, Bool
     = ..overflowIntrinsic("smul", x, y);
 
 [T when UnsignedInteger?(T) and T != UInt8 and T != UInt128]
-forceinline overload integerAddWithOverflow(x:T, y:T) : T, Bool
+forceinline integerAddWithOverflow(x:T, y:T) : T, Bool
     = ..overflowIntrinsic("uadd", x, y);
 [T when UnsignedInteger?(T) and T != UInt8 and T != UInt128]
-forceinline overload integerSubtractWithOverflow(x:T, y:T) : T, Bool
+forceinline integerSubtractWithOverflow(x:T, y:T) : T, Bool
     = ..overflowIntrinsic("usub", x, y);
 [T when UnsignedInteger?(T) and T != UInt8 and T != UInt128]
-forceinline overload integerMultiplyWithOverflow(x:T, y:T) : T, Bool
+forceinline integerMultiplyWithOverflow(x:T, y:T) : T, Bool
     = ..overflowIntrinsic("umul", x, y);
 
 // LLVM doesn't provide intrinsics for 8- or 128-bit math with overflow
 
 private forceinline overflow?(T, x) = x < Least(T) or x > Greatest(T);
 
-forceinline overload integerAddWithOverflow(x:Int8, y:Int8) : Int8, Bool
+forceinline integerAddWithOverflow(x:Int8, y:Int8) : Int8, Bool
 {
     var out = numericAdd(Int16(x), Int16(y));
     return numericConvert(Int8, out), overflow?(Int8, out);
 }
-forceinline overload integerSubtractWithOverflow(x:Int8, y:Int8) : Int8, Bool
+forceinline integerSubtractWithOverflow(x:Int8, y:Int8) : Int8, Bool
 {
     var out = numericSubtract(Int16(x), Int16(y));
     return numericConvert(Int8, out), overflow?(Int8, out);
 }
-forceinline overload integerMultiplyWithOverflow(x:Int8, y:Int8) : Int8, Bool
+forceinline integerMultiplyWithOverflow(x:Int8, y:Int8) : Int8, Bool
 {
     var out = numericMultiply(Int16(x), Int16(y));
     return numericConvert(Int8, out), overflow?(Int8, out);
 }
 
-forceinline overload integerAddWithOverflow(x:UInt8, y:UInt8) : UInt8, Bool
+forceinline integerAddWithOverflow(x:UInt8, y:UInt8) : UInt8, Bool
 {
     var out = numericAdd(UInt16(x), UInt16(y));
     return numericConvert(UInt8, out), overflow?(UInt8, out);
 }
-forceinline overload integerSubtractWithOverflow(x:UInt8, y:UInt8) : UInt8, Bool
+forceinline integerSubtractWithOverflow(x:UInt8, y:UInt8) : UInt8, Bool
 {
     var out = numericSubtract(UInt16(x), UInt16(y));
     return numericConvert(UInt8, out), overflow?(UInt8, out);
 }
-forceinline overload integerMultiplyWithOverflow(x:UInt8, y:UInt8) : UInt8, Bool
+forceinline integerMultiplyWithOverflow(x:UInt8, y:UInt8) : UInt8, Bool
 {
     var out = numericMultiply(UInt16(x), UInt16(y));
     return numericConvert(UInt8, out), overflow?(UInt8, out);
@@ -107,48 +107,48 @@ forceinline overload integerMultiplyWithOverflow(x:UInt8, y:UInt8) : UInt8, Bool
 // XXX LLVM *mul.with.overflow.i64 intrinsics are broken on 32-bit systems
 // see jckarter/clay#377, llvm pr13839
 [when TypeSize(RawPointer) < 8]
-forceinline overload integerMultiplyWithOverflow(x:Int64, y:Int64) : Int64, Bool
+forceinline integerMultiplyWithOverflow(x:Int64, y:Int64) : Int64, Bool
     = numericMultiply(x, y), false;
 [when TypeSize(RawPointer) < 8]
-forceinline overload integerMultiplyWithOverflow(x:UInt64, y:UInt64) : UInt64, Bool
+forceinline integerMultiplyWithOverflow(x:UInt64, y:UInt64) : UInt64, Bool
     = numericMultiply(x, y), false;
 
-forceinline overload integerAddWithOverflow(x:Int128, y:Int128) : Int128, Bool
+forceinline integerAddWithOverflow(x:Int128, y:Int128) : Int128, Bool
     = numericAdd(x, y), false;
-forceinline overload integerSubtractWithOverflow(x:Int128, y:Int128) : Int128, Bool
+forceinline integerSubtractWithOverflow(x:Int128, y:Int128) : Int128, Bool
     = numericSubtract(x, y), false;
-forceinline overload integerMultiplyWithOverflow(x:Int128, y:Int128) : Int128, Bool
+forceinline integerMultiplyWithOverflow(x:Int128, y:Int128) : Int128, Bool
     = numericMultiply(x, y), false;
-forceinline overload integerAddWithOverflow(x:UInt128, y:UInt128) : UInt128, Bool
+forceinline integerAddWithOverflow(x:UInt128, y:UInt128) : UInt128, Bool
     = numericAdd(x, y), false;
-forceinline overload integerSubtractWithOverflow(x:UInt128, y:UInt128) : UInt128, Bool
+forceinline integerSubtractWithOverflow(x:UInt128, y:UInt128) : UInt128, Bool
     = numericSubtract(x, y), false;
-forceinline overload integerMultiplyWithOverflow(x:UInt128, y:UInt128) : UInt128, Bool
+forceinline integerMultiplyWithOverflow(x:UInt128, y:UInt128) : UInt128, Bool
     = numericMultiply(x, y), false;
 
 // XXX need to do int128 overflow checking properly
 
-forceinline overload integerAddWithOverflow(x:Int128, y:Int128) : Int128, Bool
+forceinline integerAddWithOverflow(x:Int128, y:Int128) : Int128, Bool
     = numericAdd(x, y), false;
-forceinline overload integerSubtractWithOverflow(x:Int128, y:Int128) : Int128, Bool
+forceinline integerSubtractWithOverflow(x:Int128, y:Int128) : Int128, Bool
     = numericSubtract(x, y), false;
-forceinline overload integerMultiplyWithOverflow(x:Int128, y:Int128) : Int128, Bool
+forceinline integerMultiplyWithOverflow(x:Int128, y:Int128) : Int128, Bool
     = numericMultiply(x, y), false;
-forceinline overload integerAddWithOverflow(x:UInt128, y:UInt128) : UInt128, Bool
+forceinline integerAddWithOverflow(x:UInt128, y:UInt128) : UInt128, Bool
     = numericAdd(x, y), false;
-forceinline overload integerSubtractWithOverflow(x:UInt128, y:UInt128) : UInt128, Bool
+forceinline integerSubtractWithOverflow(x:UInt128, y:UInt128) : UInt128, Bool
     = numericSubtract(x, y), false;
-forceinline overload integerMultiplyWithOverflow(x:UInt128, y:UInt128) : UInt128, Bool
+forceinline integerMultiplyWithOverflow(x:UInt128, y:UInt128) : UInt128, Bool
     = numericMultiply(x, y), false;
 
 // division, remainder, negation
 
 [T when SignedInteger?(T)]
-forceinline overload integerQuotientWithOverflow(x:T, y:T) : T, Bool
+forceinline integerQuotientWithOverflow(x:T, y:T) : T, Bool
     = integerQuotient(x, y), y == 0 or (x == Least(T) and y == -1);
 
 [T when UnsignedInteger?(T)]
-forceinline overload integerQuotientWithOverflow(x:T, y:T) : T, Bool
+forceinline integerQuotientWithOverflow(x:T, y:T) : T, Bool
     = integerQuotient(x, y), y == 0;
 
 [T when Integer?(T)]
@@ -163,7 +163,7 @@ forceinline integerNegateWithOverflow(x:T) : T, Bool
 
 private define shiftOverflow?;
 [T when SignedInteger?(T)]
-forceinline overload shiftOverflow?(x:T, y:T, bits:T) : Bool {
+forceinline shiftOverflow?(x:T, y:T, bits:T) : Bool {
     var nonSignBits = bits; dec(nonSignBits);
     if (y > nonSignBits) return true;
     var testx = if (x < 0) integerBitwiseNot(x) else x;
@@ -171,7 +171,7 @@ forceinline overload shiftOverflow?(x:T, y:T, bits:T) : Bool {
     return head != numericConvert(T, 0);
 }
 [T when UnsignedInteger?(T)]
-forceinline overload shiftOverflow?(x:T, y:T, bits:T) : Bool {
+forceinline shiftOverflow?(x:T, y:T, bits:T) : Bool {
     if (y > bits) return true;
     var head = integerShiftRight(x, bits - y);
     return head != numericConvert(T, 0);
@@ -192,63 +192,63 @@ forceinline integerShiftLeftWithOverflow(x:T, y:T) : T, Bool {
 define integerConvertWithOverflow(#A, b:B) : A, Bool;
 
 [A, B when SignedInteger?(A) and SignedInteger?(B) and TypeSize(A) >= TypeSize(B)]
-forceinline overload integerConvertWithOverflow(#A, b:B) : A, Bool
+forceinline integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), false;
 
 [A, B when SignedInteger?(A) and SignedInteger?(B) and TypeSize(A) < TypeSize(B)]
-forceinline overload integerConvertWithOverflow(#A, b:B) : A, Bool
+forceinline integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), b < Least(A) or b > Greatest(A);
 
 [A, B when SignedInteger?(A) and UnsignedInteger?(B) and TypeSize(A) > TypeSize(B)]
-forceinline overload integerConvertWithOverflow(#A, b:B) : A, Bool
+forceinline integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), false;
 
 [A, B when SignedInteger?(A) and UnsignedInteger?(B) and TypeSize(A) <= TypeSize(B)]
-forceinline overload integerConvertWithOverflow(#A, b:B) : A, Bool
+forceinline integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), b > B(Greatest(A));
 
 [A, B when UnsignedInteger?(A) and SignedInteger?(B) and TypeSize(A) >= TypeSize(B)]
-forceinline overload integerConvertWithOverflow(#A, b:B) : A, Bool
+forceinline integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), b < 0;
 
 [A, B when UnsignedInteger?(A) and SignedInteger?(B) and TypeSize(A) < TypeSize(B)]
-forceinline overload integerConvertWithOverflow(#A, b:B) : A, Bool
+forceinline integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), b < 0 or b > Greatest(A);
 
 [A, B when UnsignedInteger?(A) and UnsignedInteger?(B) and TypeSize(A) >= TypeSize(B)]
-forceinline overload integerConvertWithOverflow(#A, b:B) : A, Bool
+forceinline integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), false;
 
 [A, B when UnsignedInteger?(A) and UnsignedInteger?(B) and TypeSize(A) < TypeSize(B)]
-forceinline overload integerConvertWithOverflow(#A, b:B) : A, Bool
+forceinline integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), b > Greatest(A);
 
 [A, B when Integer?(A) and Float?(B)]
-forceinline overload integerConvertWithOverflow(#A, b:B) : A, Bool
+forceinline integerConvertWithOverflow(#A, b:B) : A, Bool
     = numericConvert(A, b), b < B(Least(A)) or b > B(Greatest(A));
 
 // callbacks for integer*Checked primitives
 
 private define PrintfFmt;
-[T] overload PrintfFmt(#T) = "%d";
-overload PrintfFmt(#UInt32) = "%u";
+[T] PrintfFmt(#T) = "%d";
+PrintfFmt(#UInt32) = "%u";
 
-overload PrintfFmt(#Int64) = "%lld";
-overload PrintfFmt(#UInt64) = "%llu";
+PrintfFmt(#Int64) = "%lld";
+PrintfFmt(#UInt64) = "%llu";
 
 [when OSFamily == Windows]
-overload PrintfFmt(#Int64) = "%I64d";
+PrintfFmt(#Int64) = "%I64d";
 [when OSFamily == Windows]
-overload PrintfFmt(#UInt64) = "%I64u";
+PrintfFmt(#UInt64) = "%I64u";
 
 // XXX
-overload PrintfFmt(#Int128) = "<Int128>";
-overload PrintfFmt(#UInt128) = "<UInt128>";
+PrintfFmt(#Int128) = "<Int128>";
+PrintfFmt(#UInt128) = "<UInt128>";
 
 private define checked;
 
 [T]
-forceinline overload checked(checkedFn, arg:T) {
+forceinline checked(checkedFn, arg:T) {
     var out, overflow? = checkedFn(arg);
     if (unlikely(overflow?))
         errorWithPrintfNoThrow(stringLiteralConcat(
@@ -259,7 +259,7 @@ forceinline overload checked(checkedFn, arg:T) {
 }
 
 [T]
-forceinline overload checked(checkedFn, arg1:T, arg2:T) {
+forceinline checked(checkedFn, arg1:T, arg2:T) {
     var out, overflow? = checkedFn(arg1, arg2);
     if (unlikely(overflow?))
         errorWithPrintfNoThrow(stringLiteralConcat(
@@ -270,7 +270,7 @@ forceinline overload checked(checkedFn, arg1:T, arg2:T) {
 }
 
 [T, U]
-forceinline overload checked(checkedFn, #T, arg2:U) {
+forceinline checked(checkedFn, #T, arg2:U) {
     var out, overflow? = checkedFn(T, arg2);
     if (unlikely(overflow?))
         errorWithPrintfNoThrow(stringLiteralConcat(
@@ -281,28 +281,28 @@ forceinline overload checked(checkedFn, #T, arg2:U) {
 }
 
 [A when Integer?(A)]
-forceinline overload __operators__.doIntegerAddChecked(a:A, b:A) : A
+forceinline __operators__.doIntegerAddChecked(a:A, b:A) : A
     = checked(integerAddWithOverflow, a, b);
 [A when Integer?(A)]
-forceinline overload __operators__.doIntegerSubtractChecked(a:A, b:A) : A
+forceinline __operators__.doIntegerSubtractChecked(a:A, b:A) : A
     = checked(integerSubtractWithOverflow, a, b);
 [A when Integer?(A)]
-forceinline overload __operators__.doIntegerMultiplyChecked(a:A, b:A) : A
+forceinline __operators__.doIntegerMultiplyChecked(a:A, b:A) : A
     = checked(integerMultiplyWithOverflow, a, b);
 [A when Integer?(A)]
-forceinline overload __operators__.doIntegerQuotientChecked(a:A, b:A) : A
+forceinline __operators__.doIntegerQuotientChecked(a:A, b:A) : A
     = checked(integerQuotientWithOverflow, a, b);
 [A when Integer?(A)]
-forceinline overload __operators__.doIntegerRemainderChecked(a:A, b:A) : A
+forceinline __operators__.doIntegerRemainderChecked(a:A, b:A) : A
     = checked(integerRemainderWithOverflow, a, b);
 [A when Integer?(A)]
-forceinline overload __operators__.doIntegerShiftLeftChecked(a:A, b:A) : A
+forceinline __operators__.doIntegerShiftLeftChecked(a:A, b:A) : A
     = checked(integerShiftLeftWithOverflow, a, b);
 
 [A when SignedInteger?(A)]
-forceinline overload __operators__.doIntegerNegateChecked(a:A) : A
+forceinline __operators__.doIntegerNegateChecked(a:A) : A
     = checked(integerNegateWithOverflow, a);
 
 [A, B when Integer?(A) and Numeric?(B)]
-forceinline overload __operators__.doIntegerConvertChecked(#A, b:B) : A
+forceinline __operators__.doIntegerConvertChecked(#A, b:B) : A
     = checked(integerConvertWithOverflow, A, b);

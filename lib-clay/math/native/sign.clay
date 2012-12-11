@@ -1,9 +1,9 @@
 import math.native.protocol.*;
 
-forceinline overload sign(x:Int64) = bitor(bitshr(x,63),Int64(bitshr(wrapCast(UInt64,wrapSubtract(x)),63)));
+forceinline sign(x:Int64) = bitor(bitshr(x,63),Int64(bitshr(wrapCast(UInt64,wrapSubtract(x)),63)));
 
-forceinline overload sign(x:Int32) = bitor(bitshr(x,31),Int32(bitshr(wrapCast(UInt32,wrapSubtract(x)),31)));
+forceinline sign(x:Int32) = bitor(bitshr(x,31),Int32(bitshr(wrapCast(UInt32,wrapSubtract(x)),31)));
 
-forceinline overload sign(x:Int16) = bitor(bitshr(x,15),Int16(bitshr(wrapCast(UInt16,wrapSubtract(x)),15)));
+forceinline sign(x:Int16) = bitor(bitshr(x,15),Int16(bitshr(wrapCast(UInt16,wrapSubtract(x)),15)));
 
-forceinline overload sign(x:Int8) = bitor(bitshr(x,7),Int8(bitshr(wrapCast(UInt8,wrapSubtract(x)),7)));
+forceinline sign(x:Int8) = bitor(bitshr(x,7),Int8(bitshr(wrapCast(UInt8,wrapSubtract(x)),7)));

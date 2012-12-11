@@ -60,7 +60,7 @@ pathComponents(path) {
 define joinPath;
 
 [..S when allValues?(String?, ..S)]
-overload joinPath(..parts:S) {
+joinPath(..parts:S) {
     var result = String();
     ..for (part in parts)
         appendPath(result, part);
@@ -69,7 +69,7 @@ overload joinPath(..parts:S) {
 }
 
 [A when String?(SequenceElementType(A))]
-overload joinPath(parts:A) {
+joinPath(parts:A) {
     var result = String();
     for (part in parts)
         appendPath(result, part);
@@ -161,9 +161,9 @@ currentDirectory() {
 
 define pathToExecutable;
 
-overload pathToExecutable() = pathToExecutable(commandLine()[0]);
+pathToExecutable() = pathToExecutable(commandLine()[0]);
 
-overload pathToExecutable(arg0) {
+pathToExecutable(arg0) {
     var searchDirs = systemPath();
     insert(searchDirs, 0, currentDirectory());
     for (pathDir in searchDirs) {

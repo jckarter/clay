@@ -16,13 +16,13 @@ import test.*;
 define testListDirectory():;
 
 [when OSFamily == Unix]
-overload testListDirectory() {
+testListDirectory() {
     var l = listDirectory("/");
     expectTrue(in?(l, "bin"));
 }
 
 [when OSFamily == Windows]
-overload testListDirectory() {
+testListDirectory() {
     var l = listDirectory("c:\\");
     expectTrue(in?(l, "System Volume Information"));
 }

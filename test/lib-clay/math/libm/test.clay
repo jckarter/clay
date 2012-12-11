@@ -19,7 +19,7 @@ alias C2[T] = CodePointer[[T,T],[T]];
 
 define oneArgFuncs;
 
-overload oneArgFuncs(T) = array(T(abs),T(sqrt),T(cbrt),T(trunc),T(round),
+oneArgFuncs(T) = array(T(abs),T(sqrt),T(cbrt),T(trunc),T(round),
                             T(ceil),T(floor),T(rint),T(sin),
                             T(cos),T(tan),T(asin),T(acos),T(atan),T(sinh),
                             T(cosh),T(tanh),T(exp),T(expm1),
@@ -28,7 +28,7 @@ overload oneArgFuncs(T) = array(T(abs),T(sqrt),T(cbrt),T(trunc),T(round),
 
 
 [when OS == FreeBSD]
-overload oneArgFuncs(T) = array(T(abs),T(sqrt),T(cbrt),T(trunc),T(round),
+oneArgFuncs(T) = array(T(abs),T(sqrt),T(cbrt),T(trunc),T(round),
                             T(ceil),T(floor),T(rint),T(sin),
                             T(cos),T(tan),T(asin),T(acos),T(atan),T(sinh),
                             T(cosh),T(tanh),T(exp),T(expm1),
@@ -36,7 +36,7 @@ overload oneArgFuncs(T) = array(T(abs),T(sqrt),T(cbrt),T(trunc),T(round),
                             T(gamma),T(lgamma));
 
 [when OS == Windows]
-overload oneArgFuncs(T) = array(T(abs),T(sqrt),T(floor),T(sin),
+oneArgFuncs(T) = array(T(abs),T(sqrt),T(floor),T(sin),
                             T(cos),T(tan),T(asin),T(acos),T(atan),T(sinh),
                             T(cosh),T(tanh),T(exp),T(log),T(log10));
 

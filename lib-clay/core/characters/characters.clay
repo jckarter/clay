@@ -2,50 +2,50 @@ import __operators__;
 
 record Char (code:Int8);
 
-forceinline overload __operators__.charLiteral(code) = Char(code);
+forceinline __operators__.charLiteral(code) = Char(code);
 
 record UniChar (code:UInt32);
 
 [T]
 define Character?(#T) : Bool;
 
-overload Character?(x) : Bool = false;
-overload Character?(#Char) : Bool = true;
-overload Character?(#UniChar) : Bool = true;
+Character?(x) : Bool = false;
+Character?(#Char) : Bool = true;
+Character?(#UniChar) : Bool = true;
 
 // signed integer must be in range -128..128, otherwise this operation fails
 [I when SignedInteger?(I)]
-forceinline overload Char(c:I) --> returned:Char {
+forceinline Char(c:I) --> returned:Char {
     returned.code = Int8(c);
 }
 
 // unsigned integer must be in range 0..256, otherwise this operation fails
 [I when UnsignedInteger?(I)]
-forceinline overload Char(c:I) --> returned:Char {
+forceinline Char(c:I) --> returned:Char {
     returned.code = wrapCast(Int8, UInt8(c));
 }
 
 [I when Integer?(I)]
-forceinline overload UniChar(c:I) --> returned:UniChar {
+forceinline UniChar(c:I) --> returned:UniChar {
     returned.code = UInt32(c);
 }
 
 // this operation fails if character is not in ASCII range
-forceinline overload UniChar(c:Char) : UniChar = UniChar(c.code);
+forceinline UniChar(c:Char) : UniChar = UniChar(c.code);
 // this operation fails if character is not in ASCII range
-forceinline overload Char(c:UniChar) : Char = Char(Int8(c.code));
+forceinline Char(c:UniChar) : Char = Char(Int8(c.code));
 
 [I when Integer?(I)]
-forceinline overload I(c:Char) : I = wrapCast(I, c.code);
+forceinline I(c:Char) : I = wrapCast(I, c.code);
 
 [I when Integer?(I)]
-forceinline overload I(c:UniChar) : I = I(c.code);
+forceinline I(c:UniChar) : I = I(c.code);
 
 [C, D when Character?(C) and Character?(D)]
-forceinline overload equals?(x:C, y:D) : Bool = equals?(x.code, y.code);
+forceinline equals?(x:C, y:D) : Bool = equals?(x.code, y.code);
 
 [C, D when Character?(C) and Character?(D)]
-forceinline overload lesser?(x:C, y:D) : Bool = lesser?(x.code, y.code);
+forceinline lesser?(x:C, y:D) : Bool = lesser?(x.code, y.code);
 
 
 /// @section  asciiSpace? 

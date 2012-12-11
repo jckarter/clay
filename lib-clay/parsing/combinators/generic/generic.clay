@@ -21,11 +21,11 @@ Parser?(#TokenInput, x) =
 define Parsers?;
 
 [TokenInput]
-overload Parsers?(#TokenInput, first, ..rest) =
+Parsers?(#TokenInput, first, ..rest) =
     Parser?(TokenInput, first) and Parsers?(TokenInput, ..rest);
 
 [TokenInput]
-overload Parsers?(#TokenInput) = true;
+Parsers?(#TokenInput) = true;
 
 
 
@@ -34,18 +34,18 @@ overload Parsers?(#TokenInput) = true;
 define SimpleParser?;
 
 [TokenInput, Parser]
-overload SimpleParser?(#TokenInput, #Parser) = false;
+SimpleParser?(#TokenInput, #Parser) = false;
 
 [TokenInput, Parser when CallDefined?(call, Parser, TokenInput)]
-overload SimpleParser?(#TokenInput, #Parser) {
+SimpleParser?(#TokenInput, #Parser) {
     alias parser = typeToLValue(Parser);
     alias input = typeToLValue(TokenInput);
     return MaybeType?(..ReturnType(..parser(input)));
 }
 
 private define MaybeType?;
-overload MaybeType?(..args) = false;
-[T] overload MaybeType?(#Maybe[T]) = true;
+MaybeType?(..args) = false;
+[T] MaybeType?(#Maybe[T]) = true;
 
 
 
@@ -54,16 +54,16 @@ overload MaybeType?(..args) = false;
 define ConvertibleParser?;
 
 [TokenInput]
-overload ConvertibleParser?(#TokenInput, x) = false;
+ConvertibleParser?(#TokenInput, x) = false;
 
 [TokenInput, Token when TokenType(TokenInput) == Token]
-overload ConvertibleParser?(#TokenInput, #Token) = true;
+ConvertibleParser?(#TokenInput, #Token) = true;
 
 [TokenInput, A when Sequence?(A) and (TokenType(TokenInput) == SequenceElementType(A))]
-overload ConvertibleParser?(#TokenInput, #A) = true;
+ConvertibleParser?(#TokenInput, #A) = true;
 
 [TokenInput, ..T when Parsers?(TokenInput, ..T)]
-overload ConvertibleParser?(#TokenInput, #Tuple[..T]) = true;
+ConvertibleParser?(#TokenInput, #Tuple[..T]) = true;
 
 
 
@@ -72,23 +72,23 @@ overload ConvertibleParser?(#TokenInput, #Tuple[..T]) = true;
 define convertParser;
 
 [TokenInput, Token when TokenType(TokenInput) == Token]
-overload convertParser(#TokenInput, token:Token) =
+convertParser(#TokenInput, token:Token) =
     literal(TokenInput, token);
 
 [TokenInput, A when Sequence?(A) and (SequenceElementType(A) == TokenType(TokenInput))]
-overload convertParser(#TokenInput, forward a:A) =
+convertParser(#TokenInput, forward a:A) =
     literalString(TokenInput, a);
 
 [TokenInput, ..T when Parsers?(TokenInput, ..T)]
-overload convertParser(#TokenInput, parsers:Tuple[..T]) =
+convertParser(#TokenInput, parsers:Tuple[..T]) =
     sequence(TokenInput, ..convertParsers(TokenInput, ..unpackRef(parsers)));
 
 [TokenInput, Parser when SimpleParser?(TokenInput, Parser)]
-overload convertParser(#TokenInput, ref parser:Parser) =
+convertParser(#TokenInput, ref parser:Parser) =
     parser;
 
 [TokenInput, Parser when SimpleParser?(TokenInput, Parser)]
-overload convertParser(#TokenInput, rvalue parser:Parser) =
+convertParser(#TokenInput, rvalue parser:Parser) =
     move(parser);
 
 
@@ -96,7 +96,7 @@ overload convertParser(#TokenInput, rvalue parser:Parser) =
 /// @section  convertParsers 
 
 private record Converter[TokenInput]();
-[TokenInput] overload call(x:Converter[TokenInput], forward p) =
+[TokenInput] call(x:Converter[TokenInput], forward p) =
     forward convertParser(TokenInput, p);
 
 [TokenInput, ..T when Parsers?(TokenInput, ..T)]
@@ -171,7 +171,7 @@ literal(#TokenInput, expected:Token) =
 define literalString;
 
 [TokenInput, A when Sequence?(A) and (SequenceElementType(A) == TokenType(TokenInput))]
-overload literalString(#TokenInput, forward a:A) {
+literalString(#TokenInput, forward a:A) {
     return input => {
         var saved = input;
         for (item in a) {
@@ -190,7 +190,7 @@ overload literalString(#TokenInput, forward a:A) {
 
 [TokenInput, S when
     StringLiteral?(S) and Sequence?(Type(S)) and (SequenceElementType(Type(S)) == TokenType(TokenInput))]
-overload literalString(#TokenInput, #S) =
+literalString(#TokenInput, #S) =
     literalString(#TokenInput, StringLiteralRef(S));
     
 

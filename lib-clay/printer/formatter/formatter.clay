@@ -6,7 +6,7 @@ import data.strings.*;
 /// @section  Formatter types 
 
 define Formatter?;
-overload Formatter?(X) = false;
+Formatter?(X) = false;
 
 formatter(F, forward x, forward ..params)
     = F[Type(captureValue(x))](captureValue(x), ..params);
@@ -15,7 +15,7 @@ formatter(F, forward x, forward ..params)
 define formatTo;
 
 [F when Formatter?(F)]
-overload printTo(stream, forward formatter: F) {
+printTo(stream, forward formatter: F) {
     formatTo(stream, formatter, forwardValue(formatter.value));
 }
 
@@ -27,7 +27,7 @@ private record ReprFormatter[T] (values: T);
 
 repr(forward ..values) = ReprFormatter(captureValues(..values));
 
-[T] overload printTo(stream, f:ReprFormatter[T]) {
+[T] printTo(stream, f:ReprFormatter[T]) {
     printReprValuesTo(stream, ..forwardValues(f.values));
 }
 
@@ -38,7 +38,7 @@ private record StringReprFormatter[T] (value: T);
 
 stringRepr(forward value) = StringReprFormatter(captureValue(value));
 
-[T] overload printTo(stream, f:StringReprFormatter[T]) {
+[T] printTo(stream, f:StringReprFormatter[T]) {
     printStringReprTo(stream, forwardValue(f.value));
 }
 
@@ -49,9 +49,9 @@ private record HexFormatter[T] (value: T);
 private record HEXFormatter[T] (value: T);
 private record OctFormatter[T] (value: T);
 
-[T] overload Formatter?(#HexFormatter[T]) = true;
-[T] overload Formatter?(#HEXFormatter[T]) = true;
-[T] overload Formatter?(#OctFormatter[T]) = true;
+[T] Formatter?(#HexFormatter[T]) = true;
+[T] Formatter?(#HEXFormatter[T]) = true;
+[T] Formatter?(#OctFormatter[T]) = true;
 
 [I when Integer?(I)]
 hex(forward x: I) = formatter(HexFormatter, x);
@@ -62,7 +62,7 @@ oct(forward x: I) = formatter(OctFormatter, x);
 
 private define _formatBase;
 
-overload _formatBase(stream, value, fmt) {
+_formatBase(stream, value, fmt) {
     if (value < 0) {
         printWithSprintf(stream, strl("-", fmt), wrapNegate(value));
     } else {
@@ -71,28 +71,28 @@ overload _formatBase(stream, value, fmt) {
 }
 
 [U when UnsignedInteger?(U)]
-overload _formatBase(stream, value:U, fmt) {
+_formatBase(stream, value:U, fmt) {
     printWithSprintf(stream, fmt, value);
 }
 
 private define formatBase;
 
-overload formatBase(stream, value, fmt, fmt64) {
+formatBase(stream, value, fmt, fmt64) {
     _formatBase(stream, value, fmt);
 }
-overload formatBase(stream, value: Int64, fmt, fmt64) {
+formatBase(stream, value: Int64, fmt, fmt64) {
     _formatBase(stream, value, fmt64);
 }
-overload formatBase(stream, value: UInt64, fmt, fmt64) {
+formatBase(stream, value: UInt64, fmt, fmt64) {
     printWithSprintf(stream, fmt64, value);
 }
 
-[T] overload formatTo(stream, f: HexFormatter[T], value) {
+[T] formatTo(stream, f: HexFormatter[T], value) {
     formatBase(stream, value, "%x", formatForHexInt64);
 }
 
 private define formatBase128(stream, value, wideFormat, narrowFormat) :;
-overload formatBase128(stream, value: UInt128, wideFormat, narrowFormat)
+formatBase128(stream, value: UInt128, wideFormat, narrowFormat)
 {
     var hi = UInt64(bitshr(value,64));
     if (hi != 0)
@@ -101,7 +101,7 @@ overload formatBase128(stream, value: UInt128, wideFormat, narrowFormat)
         printWithSprintf(stream, narrowFormat, wrapCast(UInt64, value));
 }
 
-overload formatBase128(stream, value: Int128, wideFormat, narrowFormat)
+formatBase128(stream, value: Int128, wideFormat, narrowFormat)
 {
     if (value < -Int128(Greatest(UInt64))) {
         var neg = wrapNegate(value);
@@ -119,30 +119,30 @@ overload formatBase128(stream, value: Int128, wideFormat, narrowFormat)
 
 // FIXME should use formatForHexInt64 instead of hardcoding %llx
 // Not really a priority since LLVM doesn't support i128 types on windows yet
-[T] overload formatTo(stream, f: HexFormatter[T], value: UInt128) {
+[T] formatTo(stream, f: HexFormatter[T], value: UInt128) {
     formatBase128(stream, value, "%llx%016llx", "%llx");
 }
-[T] overload formatTo(stream, f: HexFormatter[T], value: Int128) {
+[T] formatTo(stream, f: HexFormatter[T], value: Int128) {
     formatBase128(stream, value, "%llx%016llx", "%llx");
 }
 
-[T] overload formatTo(stream, f: HEXFormatter[T], value: UInt128) {
+[T] formatTo(stream, f: HEXFormatter[T], value: UInt128) {
     formatBase128(stream, value, "%llX%016llX", "%llX");
 }
-[T] overload formatTo(stream, f: HEXFormatter[T], value: Int128) {
+[T] formatTo(stream, f: HEXFormatter[T], value: Int128) {
     formatBase128(stream, value, "%llX%016llX", "%llX");
 }
 
 // FIXME implement octal printing for Int128
 // Not really a priority because nobody uses octal
-[T] overload formatTo(stream, f: OctFormatter[T], value: Int128);
-[T] overload formatTo(stream, f: OctFormatter[T], value: UInt128);
+[T] formatTo(stream, f: OctFormatter[T], value: Int128);
+[T] formatTo(stream, f: OctFormatter[T], value: UInt128);
 
-[T] overload formatTo(stream, f: HEXFormatter[T], value) {
+[T] formatTo(stream, f: HEXFormatter[T], value) {
     formatBase(stream, value, "%X", formatForHEXInt64);
 }
 
-[T] overload formatTo(stream, f: OctFormatter[T], value) {
+[T] formatTo(stream, f: OctFormatter[T], value) {
     formatBase(stream, value, "%o", formatForOctInt64);
 }
 
@@ -151,14 +151,14 @@ overload formatBase128(stream, value: Int128, wideFormat, narrowFormat)
 /// @section  hexString 
 
 record HexStringFormatter[T] (value: T);
-[T] overload Formatter?(#HexStringFormatter[T]) = true;
+[T] Formatter?(#HexStringFormatter[T]) = true;
 
 HexStringSequence?(S) = Sequence?(S) and TypeSize(SequenceElementType(S)) == 1;
 
 [S when HexStringSequence?(S)]
 hexString(forward s:S) = formatter(HexStringFormatter, s);
 
-[T] overload formatTo(stream, f: HexStringFormatter[T], value) {
+[T] formatTo(stream, f: HexStringFormatter[T], value) {
     for (b in value)
         printWithSprintf(stream, "%02x", bitcast(UInt8, b));
 }
@@ -171,7 +171,7 @@ hexString(forward s:S) = formatter(HexStringFormatter, s);
 define printedWidth;
 
 [S when String?(S)]
-overload printedWidth(s: S) = size(s);
+printedWidth(s: S) = size(s);
 
 [N, B when Integer?(N) and Integer?(B)]
 widthInBase(n:N, base:B) {
@@ -193,17 +193,17 @@ widthInBase(n:N, base:B) {
 }
 
 [I when Integer?(I)]
-overload printedWidth(n: I) = widthInBase(n, 10);
+printedWidth(n: I) = widthInBase(n, 10);
 
 [T]
-overload printedWidth(f: HexFormatter[T]) = widthInBase(capturedRef(f.value), 16);
+printedWidth(f: HexFormatter[T]) = widthInBase(capturedRef(f.value), 16);
 [T]
-overload printedWidth(f: HEXFormatter[T]) = widthInBase(capturedRef(f.value), 16);
+printedWidth(f: HEXFormatter[T]) = widthInBase(capturedRef(f.value), 16);
 [T]
-overload printedWidth(f: OctFormatter[T]) = widthInBase(capturedRef(f.value),  8);
+printedWidth(f: OctFormatter[T]) = widthInBase(capturedRef(f.value),  8);
 
-overload printedWidth(c: Char) = 1;
-overload printedWidth(b: Bool) = if (b) 4 else 5;
+printedWidth(c: Char) = 1;
+printedWidth(b: Bool) = if (b) 4 else 5;
 
 
 
@@ -225,15 +225,15 @@ private record RightAlignedFormatter[..C] (
 );
 
 private define AlignedFormatter?;
-overload AlignedFormatter?(T) = false;
-[..C] overload AlignedFormatter?(#LeftAlignedFormatter[..C]) = true;
-[..C] overload AlignedFormatter?(#RightAlignedFormatter[..C]) = true;
-[T when AlignedFormatter?(T)] overload Formatter?(#T) = true;
+AlignedFormatter?(T) = false;
+[..C] AlignedFormatter?(#LeftAlignedFormatter[..C]) = true;
+[..C] AlignedFormatter?(#RightAlignedFormatter[..C]) = true;
+[T when AlignedFormatter?(T)] Formatter?(#T) = true;
 
 private define alignedFormatter;
 
 [I when Integer?(I)]
-overload alignedFormatter(F, width: I, pad: Char, forward ..values) {
+alignedFormatter(F, width: I, pad: Char, forward ..values) {
     // If printedWidth isn't available for all objects, print them to a string
     // and use the width of that
     var s = str(..values);
@@ -245,7 +245,7 @@ private filledWidth(..values)
     = foldValues(add, SizeT(0), ..mapValues(printedWidth, ..values));
 
 [I, ..TT when Integer?(I) and allValues?(T => CallDefined?(printedWidth, T), ..TT)]
-overload alignedFormatter(F, width: I, pad: Char, forward ..values: TT) {
+alignedFormatter(F, width: I, pad: Char, forward ..values: TT) {
     var cvalues = captureValues(..values);
     return F(cvalues, SizeT(width), filledWidth(..capturedRefs(cvalues)), pad);
 }
@@ -261,7 +261,7 @@ rightAligned(width, forward ..values)
     = alignedFormatter(RightAlignedFormatter, width, ' ', ..values);
 
 [..C]
-overload printTo(stream, f: LeftAlignedFormatter[..C]) {
+printTo(stream, f: LeftAlignedFormatter[..C]) {
     printTo(stream, ..forwardValues(f.value));
     var i = f.filledWidth;
     while (i < f.width) {
@@ -270,7 +270,7 @@ overload printTo(stream, f: LeftAlignedFormatter[..C]) {
     }
 }
 [..C]
-overload printTo(stream, f: RightAlignedFormatter[..C]) {
+printTo(stream, f: RightAlignedFormatter[..C]) {
     var i = f.filledWidth;
     while (i < f.width) {
         printTo(stream, f.pad);

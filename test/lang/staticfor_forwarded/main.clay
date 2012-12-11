@@ -2,26 +2,26 @@ import printer.(println);
 
 record Foo(value:Int);
 
-overload RegularRecord?(#Foo) = false;
+RegularRecord?(#Foo) = false;
 
 var _nextId = 1;
 
-overload Foo() --> returned:Foo {
+Foo() --> returned:Foo {
     returned.value = _nextId;
     _nextId +: 1;
     println("Foo(): ", returned);
 }
 
-overload moveUnsafe(src:Foo) --> returned:Foo {
+moveUnsafe(src:Foo) --> returned:Foo {
     returned.value = src.value;
     println("moveUnsafe(): ", returned);
 }
 
-overload resetUnsafe(x:Foo) {
+resetUnsafe(x:Foo) {
     x.value = -1;
 }
 
-overload destroy(x:Foo) {
+destroy(x:Foo) {
     if (x.value != -1)
         println("destroy(): ", x);
 }

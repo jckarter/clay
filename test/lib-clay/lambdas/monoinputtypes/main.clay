@@ -4,7 +4,7 @@ import printer.(println);
 mono1() {}
 mono2(x:Int) = x, x;
 define mono3;
-overload mono3(x:Int, y:Float) = y;
+mono3(x:Int, y:Float) = y;
 
 showMono(f) {
     println("(", repr(..MonoInputTypes(f)), ") -> (", repr(..MonoOutputTypes(f)), ")");

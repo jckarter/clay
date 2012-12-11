@@ -14,29 +14,29 @@ record DirectoryIterator (
 );
 
 [S when CCompatibleString?(S)]
-overload DirectoryIterator(dir: S) --> returned: DirectoryIterator {
+DirectoryIterator(dir: S) --> returned: DirectoryIterator {
     returned.dir = opendir(cstring(dir));
     if (null?(returned.dir))
         throw GenericIOError(errno(), "opendir");
 }
 
 
-overload RegularRecord?(#DirectoryIterator) = false;
-overload BitwiseMovedType?(#DirectoryIterator) = true;
+RegularRecord?(#DirectoryIterator) = false;
+BitwiseMovedType?(#DirectoryIterator) = true;
 
-overload destroy(s: DirectoryIterator) {
+destroy(s: DirectoryIterator) {
     if (not null?(s.dir)) {
         var result = closedir(s.dir);
         assert(result != wrapCast(Type(result), -1));
     }
 }
-overload resetUnsafe(s: DirectoryIterator) {
+resetUnsafe(s: DirectoryIterator) {
     s.dir = null(DIR);
 }
 
-overload iterator(x:DirectoryIterator) = forward x;
+iterator(x:DirectoryIterator) = forward x;
 
-overload nextValue(x:DirectoryIterator) {
+nextValue(x:DirectoryIterator) {
     while (true) {
     var ptr = Pointer[Struct_dirent]();
     var returnCode = readdir_r(x.dir, @x.dirent, @ptr);

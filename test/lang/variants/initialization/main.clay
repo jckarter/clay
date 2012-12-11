@@ -6,7 +6,7 @@ record Banana();
 variant Fruit (Apple, Orange, Banana);
 
 [F when VariantMember?(Fruit, F) and F != Banana]
-overload Fruit(fruit: F) {
+Fruit(fruit: F) {
     println("Nope! Bananas!");
     return initializeVariant(Fruit, Banana());
 }

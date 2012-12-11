@@ -6,10 +6,10 @@ import data.vectors.*;
 define UnderlyingContainerConstructor;
 
 [T,n]
-overload UnderlyingContainerConstructor(#Array[T,n]) = Array;
+UnderlyingContainerConstructor(#Array[T,n]) = Array;
 
 [T]
-overload UnderlyingContainerConstructor(#Vector[T]) = Vector;
+UnderlyingContainerConstructor(#Vector[T]) = Vector;
 
 
 
@@ -17,16 +17,16 @@ overload UnderlyingContainerConstructor(#Vector[T]) = Vector;
 
 define ForcedContainerConstructor;
 
-overload ForcedContainerConstructor(T) = Vector;
+ForcedContainerConstructor(T) = Vector;
 
 [T when CallDefined?(UnderlyingContainerConstructor, Static[T])]
-overload ForcedContainerConstructor(#T) = UnderlyingContainerConstructor(T);
+ForcedContainerConstructor(#T) = UnderlyingContainerConstructor(T);
 
 
 [T when CallDefined?(UnderlyingContainerConstructor, Static[T])
      and (UnderlyingContainerConstructor(T) == Array)
      and not StaticSizedSequence?(T)]
-overload ForcedContainerConstructor(#T) = Vector;
+ForcedContainerConstructor(#T) = Vector;
 
 
 

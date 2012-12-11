@@ -4,7 +4,7 @@ record UTF8Decoder[Iterator] (
     iter: Iterator
 );
 
-[T] overload iterator(u: UTF8Decoder[T]) = u;
+[T] iterator(u: UTF8Decoder[T]) = u;
 
 alias REPLACEMENT_CHAR = UniChar(0xFFFDu);
 alias MAX_CODE_POINT = UniChar(0x10FFFFu);
@@ -66,7 +66,7 @@ private NEXT_VALUE_OR_EOF(varName) = stringLiteralConcat("""
     var """, varName, """ = getByte(v);
 """);
 
-[T] overload nextValue(decoder: UTF8Decoder[T]) {
+[T] nextValue(decoder: UTF8Decoder[T]) {
     var v = nextValue(decoder.iter);
     if (not hasValue?(v))
         return nothing(UniChar);
@@ -99,7 +99,7 @@ record UTF8[Sequence] (
     encoded: Sequence
 );
 
-[T] overload iterator(u: UTF8[T]) = UTF8Decoder(iterator(u.encoded));
+[T] iterator(u: UTF8[T]) = UTF8Decoder(iterator(u.encoded));
 
 private encodeTwo(code)
     = bitor(0xC0, bitshr(bitand(code, 0x7C0), 6)),
@@ -143,7 +143,7 @@ encodeUniChar(c, callback) {
     }
 }
 
-[T] overload push(u: UTF8[T], uc) {
+[T] push(u: UTF8[T], uc) {
     encodeUniChar(uc, c -> ..push(u.encoded, c));
 }
 

@@ -2461,53 +2461,6 @@ static bool procedureWithInterface(vector<TopLevelItemPtr> &x, Module *module, i
     return true;
 }
 
-static bool procedureWithBody(vector<TopLevelItemPtr> &x, Module *module, int s) {
-    Visibility vis;
-    if (!topLevelVisibility(vis)) return false;
-    InlineAttribute isInline;
-    if (!optInline(isInline)) return false;
-    bool callByName;
-    if (!optCallByName(callByName)) return false;
-    IdentifierPtr name;
-    Location targetStartLocation = currentLocation();
-    if (!identifier(name)) return false;
-    Location targetEndLocation = currentLocation();
-    int e = save();
-    restore(s);
-    Location location = currentLocation();
-    CodePtr code = new Code();
-    if (!optPatternVarsWithCond(code->patternVars, code->predicate)) return false;
-    restore(e);
-    bool hasVarArg = false;
-    if (!arguments(code->formalArgs, hasVarArg)) return false;
-    code->hasVarArg = hasVarArg;
-    bool exprRetSpecs = false;
-    code->returnSpecsDeclared = allReturnSpecsWithFlag(code->returnSpecs, code->varReturnSpec, exprRetSpecs);
-    if (!body(code->body)) return false;
-    code->location = location;
-    if(exprRetSpecs && code->body->stmtKind == RETURN){
-        Return *x = (Return *)code->body.ptr();    
-        if(x->isExprReturn)
-            x->isReturnSpecs = true;
-    }
-
-    ProcedurePtr proc = new Procedure(module, name, vis, true);
-    proc->location = location;
-    x.push_back(proc.ptr());
-
-    ExprPtr target = new NameRef(name);
-    target->location = location;
-    target->startLocation = targetStartLocation;
-    target->endLocation = targetEndLocation;
-    OverloadPtr oload = new Overload(module, target, code, callByName, isInline);
-    oload->location = location;
-    x.push_back(oload.ptr());
-
-    proc->singleOverload = oload;
-
-    return true;
-}
-
 static bool procedure(TopLevelItemPtr &x, Module *module) {
     Location location = currentLocation();
     Visibility vis;
@@ -2524,21 +2477,25 @@ static bool procedure(TopLevelItemPtr &x, Module *module) {
 }
 
 static bool overload(TopLevelItemPtr &x, Module *module, int s) {
+    Visibility vis;
+    if (!topLevelVisibility(vis)) return false;
     InlineAttribute isInline;
     if (!optInline(isInline)) return false;
     bool callByName;
     if (!optCallByName(callByName)) return false;
-    if (!keyword("overload")) return false;
+    // if (!keyword("overload")) return false;
+    ExprPtr target;
+    Location targetStartLocation = currentLocation();
+    if (!pattern(target)) return false;
+    Location targetEndLocation = currentLocation();
+
     int e = save();
     restore(s);
     Location location = currentLocation();
     CodePtr code = new Code();
     if (!optPatternVarsWithCond(code->patternVars, code->predicate)) return false;
     restore(e);
-    ExprPtr target;
-    Location targetStartLocation = currentLocation();
-    if (!pattern(target)) return false;
-    Location targetEndLocation = currentLocation();
+    
     bool hasVarArg = false;
     if (!arguments(code->formalArgs, hasVarArg)) return false;
     code->hasVarArg = hasVarArg;
@@ -2559,9 +2516,9 @@ static bool overload(TopLevelItemPtr &x, Module *module, int s) {
     target->startLocation = targetStartLocation;
     target->endLocation = targetEndLocation;
     code->location = location;
-    x = new Overload(module, target, code, callByName, isInline);
+    x = new Overload(module, target, code, callByName, isInline, vis);
     x->location = location;
-    NameRefPtr name = (NameRef *)target.ptr();
+    
     return true;
 }
 
@@ -3060,7 +3017,6 @@ static bool topLevelItem(vector<TopLevelItemPtr> &x, Module *module) {
     int q = save();
     if (restore(q), overload(y, module, p)) goto success;
     if (restore(q), procedureWithInterface(x, module, p)) goto success2;
-    if (restore(q), procedureWithBody(x, module, p)) goto success2;
     if (restore(q), record(y, module, p)) goto success;
     if (restore(q), variant(y, module, p)) goto success;
     if (restore(q), instance(y, module, p)) goto success;

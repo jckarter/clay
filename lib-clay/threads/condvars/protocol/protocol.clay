@@ -6,8 +6,8 @@ define notifyAll(cv) :;
 
 [C] define ConditionVariable?(#C);
 [C when not CallDefined?(ConditionVariableMutex, Static[C])]
-overload ConditionVariable?(#C) = false;
+ConditionVariable?(#C) = false;
 [C when CallDefined?(ConditionVariableMutex, Static[C])]
-overload ConditionVariable?(#C) = CallDefined?(wait, C, ConditionVariableMutex(C))
+ConditionVariable?(#C) = CallDefined?(wait, C, ConditionVariableMutex(C))
     and CallDefined?(notifyOne, C)
     and CallDefined?(notifyAll, C);

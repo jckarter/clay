@@ -12,20 +12,20 @@ alias String = Vector[Char];
 /// @section  construct from sequences of bytes 
 
 [A when Sequence?(A) and ByteSizedInteger?(SequenceElementType(A))]
-overload String(a:A) = String(mapped(Char, a));
+String(a:A) = String(mapped(Char, a));
 
 
 
 /// @section  construct from c-string 
 
 [T when ByteSizedInteger?(T)]
-overload String(cstr : Pointer[T]) = String(CStringRef(cstr));
+String(cstr : Pointer[T]) = String(CStringRef(cstr));
 
 
 
 /// @section  cstring 
 
-overload cstring(s:String) {
+cstring(s:String) {
     reserve(s, size(s) + 1);
     s[size(s)] = Char(0);
     return Pointer[Int8](@(begin(s)^));

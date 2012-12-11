@@ -19,13 +19,13 @@ record Vector[T] (
 
 /// @section predicates
 
-[T] overload RegularRecord?(#Vector[T]) = false;
+[T] RegularRecord?(#Vector[T]) = false;
 
 [T]
-overload ContiguousSequence?(#Vector[T]) = true;
+ContiguousSequence?(#Vector[T]) = true;
 
 [T]
-overload SequenceContainer?(#Vector[T]) = true;
+SequenceContainer?(#Vector[T]) = true;
 
 
 /// @section constructors
@@ -34,21 +34,21 @@ overload SequenceContainer?(#Vector[T]) = true;
 /// @overload Vector[T]()
 /// construct an empty Vector.
 [T]
-overload Vector[T]() = Vector[T](SizeT(0), SizeT(0), null(T));
+Vector[T]() = Vector[T](SizeT(0), SizeT(0), null(T));
 
-/// @overload  Vector[T](forward a:A)
+/// @overload Vector[T](forward a:A)
 /// construct Vector from a sequence element
 [T,A when Sequence?(A) and (T == SequenceElementType(A))]
-overload Vector[T](forward a:A) {
+Vector[T](forward a:A) {
     var v = Vector[T]();
     pushAll(v, a);
     return move(v);
 }
 
-/// @overload  Vector[T](forward a:A)
+/// @overload Vector[T](forward a:A)
 /// construct Vector from a sequence.
 [A when Sequence?(A)]
-overload Vector(forward a:A) {
+Vector(forward a:A) {
     alias T = SequenceElementType(A);
     return Vector[T](a);
 }
@@ -56,7 +56,7 @@ overload Vector(forward a:A) {
 /// @section varargs constructor
 
 [T, ..A when (countValues(..A) > 0) and equalValues?(T, ..A)]
-alias overload Vector[T](..elements:A) {
+alias Vector[T](..elements:A) {
     var v = Vector[T]();
     push(v, ..elements);
     return move(v);
@@ -64,21 +64,21 @@ alias overload Vector[T](..elements:A) {
 
 /// @section moveUnsafe, resetUnsafe, assign, destroy
 
-[T] overload BitwiseMovedType?(#Vector[T]) = true;
+[T] BitwiseMovedType?(#Vector[T]) = true;
 
 [T]
-forceinline overload resetUnsafe(a:Vector[T]) {
+forceinline resetUnsafe(a:Vector[T]) {
     a <-- Vector[T]();
 }
 
 [T]
-overload assign(ref dest:Vector[T], ref src:Vector[T]) {
+assign(ref dest:Vector[T], ref src:Vector[T]) {
     resizeUnsafe(dest, size(src));
     assignNonoverlappingMemory(begin(dest), begin(src), end(src));
 }
 
 [T]
-overload destroy(a:Vector[T]) {
+destroy(a:Vector[T]) {
     destroyMemory(begin(a), end(a));
     freeRawMemory(a.data);
 }
@@ -93,24 +93,24 @@ moveVectorBuffer(a:Vector[T]) {
 /// @section generic vector requirements
 
 [T]
-overload Vector?(#Vector[T]) = true;
+Vector?(#Vector[T]) = true;
 
 [T]
-forceinline overload vectorData(a:Vector[T]) = a.data;
+forceinline vectorData(a:Vector[T]) = a.data;
 
 [T]
-forceinline overload vectorSize(a:Vector[T]) = a.size;
+forceinline vectorSize(a:Vector[T]) = a.size;
 
 [T]
-forceinline overload vectorSetSize(a:Vector[T], n:SizeT) {
+forceinline vectorSetSize(a:Vector[T], n:SizeT) {
     a.size = n;
 }
 
 [T]
-forceinline overload vectorCapacity(a:Vector[T]) = a.capacity;
+forceinline vectorCapacity(a:Vector[T]) = a.capacity;
 
 [T]
-overload vectorRequestCapacity(a:Vector[T], capacity:SizeT) {
+vectorRequestCapacity(a:Vector[T], capacity:SizeT) {
     assert(capacity >= a.size);
     if (capacity < a.capacity)
         return;
@@ -122,7 +122,7 @@ overload vectorRequestCapacity(a:Vector[T], capacity:SizeT) {
 private define reallocVector;
 
 [T]
-overload reallocVector(a:Vector[T], capacity:SizeT) {
+reallocVector(a:Vector[T], capacity:SizeT) {
     var data = allocateRawMemory(T, capacity);
     moveNonoverlappingMemoryUnsafe(data, a.data, a.data + a.size);
     freeRawMemory(a.data);
@@ -131,7 +131,7 @@ overload reallocVector(a:Vector[T], capacity:SizeT) {
 }
 
 [T when BitwiseMovedType?(T) and CallDefined?(reallocateRawMemory, Pointer[T], SizeT)]
-overload reallocVector(a:Vector[T], capacity:SizeT) {
+reallocVector(a:Vector[T], capacity:SizeT) {
     a.data = reallocateRawMemory(a.data, capacity);
     a.capacity = capacity;
 }

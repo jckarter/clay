@@ -3,16 +3,16 @@ import cocoa.objc.runtime.(Class);
 define FpRet?;
 define StRet?;
 
-overload FpRet?(type) = false;
-overload StRet?(type) = false;
+FpRet?(type) = false;
+StRet?(type) = false;
 //Fp2Ret?(type) = false;
 
-overload FpRet?(#Float32) = true;
-overload FpRet?(#Float64) = true;
+FpRet?(#Float32) = true;
+FpRet?(#Float64) = true;
 //FpRet?(#Float80) = true;
 
 // note: structs never return in registers on linux, netbsd, solaris
-[T when Type?(T)] overload StRet?(#T) = not inValues?(TypeSize(T), 1, 2, 4, 8);
+[T when Type?(T)] StRet?(#T) = not inValues?(TypeSize(T), 1, 2, 4, 8);
 
 external __CFConstantStringClassReference : Opaque;
 

@@ -15,7 +15,7 @@ private record LineSequence (
     f : File,
 );
 
-overload iterator(x:LineSequence) = LineIterator(@x.f);
+iterator(x:LineSequence) = LineIterator(@x.f);
 
 
 
@@ -23,7 +23,7 @@ overload iterator(x:LineSequence) = LineIterator(@x.f);
 
 private record LineIterator (file : Pointer[File]);
 
-overload nextValue(x:LineIterator) {
+nextValue(x:LineIterator) {
     var line = String();
     readLine(x.file^, line);
     if (empty?(line))

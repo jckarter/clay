@@ -15,11 +15,11 @@ record DirectoryIterator (
     findData: WIN32_FIND_DATA,
 );
 
-overload RegularRecord?(#DirectoryIterator) = false;
-overload BitwiseMovedType?(#DirectoryIterator) = true;
+RegularRecord?(#DirectoryIterator) = false;
+BitwiseMovedType?(#DirectoryIterator) = true;
 
 [S when CCompatibleString?(S)]
-overload DirectoryIterator(dir: S) --> returned: DirectoryIterator {
+DirectoryIterator(dir: S) --> returned: DirectoryIterator {
     var pattern = String() ++ dir ++ "\\*";
 
     returned.first = true;
@@ -31,20 +31,20 @@ overload DirectoryIterator(dir: S) --> returned: DirectoryIterator {
     }
 }
 
-overload destroy(it: DirectoryIterator) {
+destroy(it: DirectoryIterator) {
     if (it.handle != INVALID_HANDLE_VALUE) {
         var result = FindClose(it.handle);
         assert(result != 0);
     }
 }
 
-overload resetUnsafe(it: DirectoryIterator) {
+resetUnsafe(it: DirectoryIterator) {
     it.handle = INVALID_HANDLE_VALUE;
 }
 
-overload iterator(it: DirectoryIterator) = forward it;
+iterator(it: DirectoryIterator) = forward it;
 
-overload nextValue(it: DirectoryIterator) {
+nextValue(it: DirectoryIterator) {
     if (it.first) {
         it.first = false;
     } else {

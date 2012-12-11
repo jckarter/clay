@@ -6,7 +6,6 @@ namespace clay {
 
 using namespace std;
 
-typedef llvm::StringMap<ObjectPtr>::iterator MapIter;
 
 
 
@@ -56,7 +55,7 @@ static void ambiguousImportError(IdentifierPtr name, ImportSet const &candidates
     {
         moduleNames.insert(staticModule(*i)->moduleName);
     }
-
+    
     err << "\n  disambiguate with one of:";
     suggestModules(err, moduleNames, name);
     error(name, err.str());
@@ -91,7 +90,6 @@ static void undefinedNameError(IdentifierPtr name) {
 //
 
 
-static const llvm::StringMap<ImportSet> &getPublicSymbols(ModulePtr module);
 static const llvm::StringMap<ImportSet> &getAllSymbols(ModulePtr module);
 
 static void addImportedSymbols(ModulePtr module, bool publicOnly);
@@ -133,7 +131,7 @@ static void getIntrinsicSymbols(ModulePtr module)
     module->allSymbolsLoaded = 1;
 }
 
-static const llvm::StringMap<ImportSet> &getPublicSymbols(ModulePtr module)
+ const llvm::StringMap<ImportSet> &getPublicSymbols(ModulePtr module)
 {
     if (module->publicSymbolsLoaded)
         return module->publicSymbols;
@@ -236,8 +234,8 @@ static void addImportedSymbols(ModulePtr module,
                 mmend = symbols2.end();
             for (; mmi != mmend; ++mmi) {
                 const ObjectPtr *oi = mmi->second.begin(), *oend = mmi->second.end();
+                IdentifierPtr fakeIdent = Identifier::get(mmi->getKey(), y->location);
                 for (; oi != oend; ++oi) {
-                    IdentifierPtr fakeIdent = Identifier::get(mmi->getKey(), y->location);
                     insertImported(fakeIdent, *oi, globals, result, specificImported, false);
                 }
             }

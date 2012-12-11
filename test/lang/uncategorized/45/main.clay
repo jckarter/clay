@@ -1,19 +1,19 @@
 import printer.(println);
 
 define PointerTypes;
-overload PointerTypes(a, ..b) = Pointer[a], ..PointerTypes(..b);
-overload PointerTypes() = ;
+PointerTypes(a, ..b) = Pointer[a], ..PointerTypes(..b);
+PointerTypes() = ;
 
 define pointerValues;
-overload pointerValues(a, ..b) = @a, ..pointerValues(..b);
-overload pointerValues() = ;
+pointerValues(a, ..b) = @a, ..pointerValues(..b);
+pointerValues() = ;
 
 record PtrTuple[..T] (
     ptrs : Tuple[..PointerTypes(..T)]
 );
 
 [..T]
-overload PtrTuple(..args:T) =
+PtrTuple(..args:T) =
     PtrTuple[..T]( [..pointerValues(..args)] );
 
 main() {

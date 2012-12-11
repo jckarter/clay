@@ -9,17 +9,17 @@ import data.strings.*;
 define permissiveAssign;
 
 [DEST, SRC]
-overload permissiveAssign(dest:DEST, src:SRC) {
+permissiveAssign(dest:DEST, src:SRC) {
     dest = DEST(src);         // convert to DEST type
 }
 
 [S when CCompatibleString?(S)]
-overload permissiveAssign(dest:Pointer[Int8], src:S) {
+permissiveAssign(dest:Pointer[Int8], src:S) {
     dest = cstring(src);      // convert String to Pointer[Int8]
 }
 
 [T]
-overload permissiveAssign(dest:T, src:T) {
+permissiveAssign(dest:T, src:T) {
     dest = src;               // default behaviour, use normal assignment
 }
 
@@ -32,7 +32,7 @@ overload permissiveAssign(dest:T, src:T) {
 [R]
 define PermissiveRecordConstructor?(#R) : Bool;
 
-overload PermissiveRecordConstructor?(x) = false;
+PermissiveRecordConstructor?(x) = false;
 
 [T, ..A when Record?(T)
            and PermissiveRecordConstructor?(T)
@@ -59,7 +59,7 @@ record Foo (
     d : Pointer[Int8],
 );
 
-overload PermissiveRecordConstructor?(#Foo) = true;
+PermissiveRecordConstructor?(#Foo) = true;
 
 main() {
     var f = Foo(1, 2, 0, "hello");

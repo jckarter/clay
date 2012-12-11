@@ -5,8 +5,8 @@
 [T]
 define Union?(#T) : Bool;
 
-overload Union?(x) : Bool = false;
-[..T] overload Union?(#Union[..T]) : Bool = true;
+Union?(x) : Bool = false;
+[..T] Union?(#Union[..T]) : Bool = true;
 
 
 /// @section  UnionMembers 
@@ -18,11 +18,11 @@ overload Union?(x) : Bool = false;
 /// @section  constructors, resetUnsafe, destroy 
 
 [..T]
-forceinline overload Union[..T]() --> returned:Union[..T] {
+forceinline Union[..T]() --> returned:Union[..T] {
 }
 
 [..T,U when inValues?(U,..T)]
-forceinline overload Union[..T](x:U) --> returned:Union[..T] {
+forceinline Union[..T](x:U) --> returned:Union[..T] {
     alias i = #valueIndex(U, ..UnionMembers(Union[..T]));
     staticIndex(returned, i) <-- x;
 }
@@ -32,7 +32,7 @@ forceinline overload Union[..T](x:U) --> returned:Union[..T] {
 /// @section  staticIndex 
 
 [..T, i]
-forceinline overload staticIndex(x:Union[..T], #i) {
+forceinline staticIndex(x:Union[..T], #i) {
     alias T = nthValue(#SizeT(i), ..UnionMembers(Union[..T]));
     return ref Pointer[T](@x)^;
 }

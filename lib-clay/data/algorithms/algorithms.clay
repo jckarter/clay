@@ -19,7 +19,7 @@ private getNext(iter) {
 define reduce;
 
 [F, A when Sequence?(A)]
-overload reduce(f:F, a:A) {
+reduce(f:F, a:A) {
     var iter = iterator(a);
     var result = getNext(iter);
     for (x in iter)
@@ -28,7 +28,7 @@ overload reduce(f:F, a:A) {
 }
 
 [F, A, X when Sequence?(A) and CallDefined?(call, F, X, SequenceElementType(A))]
-overload reduce(f:F, initial:X, a:A) {
+reduce(f:F, initial:X, a:A) {
     var result = initial;
     for (x in a)
         result = f(result, x);
@@ -83,7 +83,7 @@ count(pred, a:A) {
 private define select;
 
 [A when Sequence?(A)]
-overload select(a:A, f) {
+select(a:A, f) {
     var iter = iterator(a);
     var result = getNext(iter);
     for (x in iter)
@@ -93,7 +93,7 @@ overload select(a:A, f) {
 }
 
 [A when LValueSequence?(A)]
-overload select(a:A, f) {
+select(a:A, f) {
     var iter = iterator(a);
     var result = @getNext(iter);
     for (x in iter)
@@ -118,11 +118,11 @@ selectMax(a:A) = forward select(a, greater?);
 
 define findIf;
 
-overload findIf(seq, pred) {
+findIf(seq, pred) {
     return findIf(begin(seq), end(seq), pred);
 }
 
-overload findIf(_first, _last, pred) {
+findIf(_first, _last, pred) {
     var cur, last = _first, _last;
     while ((cur != last) and not pred(cur^))
         inc(cur);
@@ -131,11 +131,11 @@ overload findIf(_first, _last, pred) {
 
 define reverseFindIf;
 
-overload reverseFindIf(seq, pred) {
+reverseFindIf(seq, pred) {
     return reverseFindIf(begin(seq), end(seq), pred);
 }
 
-overload reverseFindIf(_first, _last, pred) {
+reverseFindIf(_first, _last, pred) {
     var first, cur = _first, _last;
     while (cur != first) {
         var prev = cur;
@@ -156,12 +156,12 @@ all?(seq, pred) = findIf(seq, x -> not pred(x)) != end(seq);
 define find;
 
 [A, T when Sequence?(A) and CallDefined?(equals?, SequenceElementType(A), T)]
-overload find(a:A, x:T) {
+find(a:A, x:T) {
     return find(begin(a), end(a), x);
 }
 
 [C, T when Coordinate?(C) and CallDefined?(equals?, CoordinateTargetType(C), T)]
-overload find(begin:C, end:C, x:T) {
+find(begin:C, end:C, x:T) {
     var i = begin;
     while (i != end) {
         if (i^ == x)
@@ -174,13 +174,13 @@ overload find(begin:C, end:C, x:T) {
 
 [A, B when SizedSequence?(A) and SizedSequence?(B)
         and (SequenceElementType(A) == SequenceElementType(B))]
-overload find(a:A, b:B) {
+find(a:A, b:B) {
     return find(begin(a), end(a), b);
 }
 
 [C, B when Coordinate?(C) and SizedSequence?(B)
         and (CoordinateTargetType(C) == SequenceElementType(B))]
-overload find(begin_:C, end_:C, b:B) {
+find(begin_:C, end_:C, b:B) {
     // FIXME: use something like boyer-moore.
     var begin, end = begin_, end_;
     var bsize = size(b);
@@ -202,12 +202,12 @@ overload find(begin_:C, end_:C, b:B) {
 define reverseFind;
 
 [A, T when Sequence?(A) and CallDefined?(equals?, SequenceElementType(A), T)]
-overload reverseFind(a:A, x:T) {
+reverseFind(a:A, x:T) {
     return reverseFind(begin(a), end(a), x);
 }
 
 [C, T when Coordinate?(C) and CallDefined?(equals?, CoordinateTargetType(C), T)]
-overload reverseFind(begin:C, end:C, x:T) {
+reverseFind(begin:C, end:C, x:T) {
     var i = end;
     while (i != begin) {
         var j = i;
@@ -232,21 +232,21 @@ define beginsWith?;
 define endsWith?;
 
 [A, B when Sequence?(A) and Sequence?(B) and (SequenceElementType(A) == SequenceElementType(B))]
-overload beginsWith?(seq:A, prefix:B) =
+beginsWith?(seq:A, prefix:B) =
     (size(seq) >= size(prefix)) and (slicedUpto(seq, size(prefix)) == prefix);
 
 [A, T when Sequence?(A) and (T == SequenceElementType(A))]
-overload beginsWith?(seq:A, x:T) =
+beginsWith?(seq:A, x:T) =
     (size(seq) > 0) and (seq[0] == x);
 
 
 [A, B when Sequence?(A) and Sequence?(B) and (SequenceElementType(A) == SequenceElementType(B))]
-overload endsWith?(seq:A, suffix:B) =
+endsWith?(seq:A, suffix:B) =
     (size(seq) >= size(suffix))
     and (slicedFrom(seq, size(seq)-size(suffix)) == suffix);
 
 [A, T when Sequence?(A) and (T == SequenceElementType(A))]
-overload endsWith?(seq:A, x:T) =
+endsWith?(seq:A, x:T) =
     (size(seq) > 0) and (seq[size(seq)-1] == x);
 
 
@@ -283,12 +283,12 @@ private define advancePast;
 
 [C, S when Coordinate?(C) and Sequence?(S)
         and (CoordinateTargetType(C) == SequenceElementType(S))]
-overload advancePast(pos:C, x:S) {
+advancePast(pos:C, x:S) {
     return pos + size(x);
 }
 
 [C, T when Coordinate?(C) and (CoordinateTargetType(C) == T)]
-overload advancePast(pos:C, x:T) {
+advancePast(pos:C, x:T) {
     return pos + 1;
 }
 
@@ -299,7 +299,7 @@ overload advancePast(pos:C, x:T) {
 define concat(seq);
 
 [A when Sequence?(A) and Sequence?(SequenceElementType(A))]
-overload concat(a:A) {
+concat(a:A) {
     alias T = SequenceElementType(SequenceElementType(A));
     var result = Vector[T]();
     for (x in a) {
@@ -312,7 +312,7 @@ define join(sep, seq);
 
 [S, A when Sequence?(A) and Sequence?(SequenceElementType(A))
     and Sequence?(S) and (SequenceElementType(S) == SequenceElementType(SequenceElementType(A)))]
-overload join(sep:S, a:A) {
+join(sep:S, a:A) {
     alias T = SequenceElementType(SequenceElementType(A));
     var result = Vector[T]();
     var first = true;
@@ -328,7 +328,7 @@ overload join(sep:S, a:A) {
 
 [S, A when Sequence?(A) and Sequence?(SequenceElementType(A))
         and S == SequenceElementType(SequenceElementType(A))]
-overload join(sep:S, a:A) = ..join(array(sep), a);
+join(sep:S, a:A) = ..join(array(sep), a);
 
 
 
@@ -339,26 +339,26 @@ define binarySearchLowerBound;
 define binarySearchUpperBound;
 
 [A when Sequence?(A)]
-overload binarySearch(a:A, x) {
+binarySearch(a:A, x) {
     return ..binarySearch(begin(a), end(a), x);
 }
 
 [A when Sequence?(A)]
-overload binarySearchLowerBound(a:A, x) {
+binarySearchLowerBound(a:A, x) {
     return binarySearchLowerBound(begin(a), end(a), x);
 }
 
 [A when Sequence?(A)]
-overload binarySearchUpperBound(a:A, x) {
+binarySearchUpperBound(a:A, x) {
     return binarySearchUpperBound(begin(a), end(a), x);
 }
 
-overload binarySearch(begin, end, x) {
+binarySearch(begin, end, x) {
     var i = binarySearchLowerBound(begin, end, x);
     return i, binarySearchUpperBound(i, end, x);
 }
 
-overload binarySearchLowerBound(begin_, end_, x) {
+binarySearchLowerBound(begin_, end_, x) {
     var begin, end = begin_, end_;
     while (begin < end) {
         var mid = begin + (end - begin) \ 2;
@@ -370,7 +370,7 @@ overload binarySearchLowerBound(begin_, end_, x) {
     return begin;
 }
 
-overload binarySearchUpperBound(begin_, end_, x) {
+binarySearchUpperBound(begin_, end_, x) {
     var begin, end = begin_, end_;
     while (begin < end) {
         var mid = begin + (end - begin) \ 2;
@@ -393,10 +393,10 @@ sortBy(a, comparator : C) {
 
 define sort;
 
-overload sort(a){
+sort(a){
   sortBy(a, natural());
 }
 
-overload sort(xs, f){
+sort(xs, f){
   sortBy(xs, comparing(f));
 }

@@ -18,14 +18,14 @@ define hostToLittle(n:I): I;
 define hostToBig(n:I): I;
 
 [I when Integer?(I) and LittleEndian?]
-overload hostToLittle(n:I) = n;
+hostToLittle(n:I) = n;
 [I when Integer?(I) and LittleEndian?]
-overload hostToBig(n:I) = reverseBytes(n);
+hostToBig(n:I) = reverseBytes(n);
 
 [I when Integer?(I) and BigEndian?]
-overload hostToLittle(n:I) = reverseBytes(n);
+hostToLittle(n:I) = reverseBytes(n);
 [I when Integer?(I) and BigEndian?]
-overload hostToBig(n:I) = n;
+hostToBig(n:I) = n;
 
 
 [I when Integer?(I)]
@@ -40,7 +40,7 @@ networkToHost(n:I) = bigToHost(n);
 
 
 [I when Integer?(I) and LittleEndian?]
-overload reverseBytes(n:I) --> returned:I {
+reverseBytes(n:I) --> returned:I {
     alias A = Array[UInt8, Int(TypeSize(I))];
     ref bytes = bitcast(A, n);
     ref returnedBytes = bitcast(A, returned);
@@ -48,6 +48,6 @@ overload reverseBytes(n:I) --> returned:I {
 }
 
 [I8 when inValues?(I8, Int8, UInt8)]
-overload reverseBytes(n:I8) = n;
+reverseBytes(n:I8) = n;
 
 

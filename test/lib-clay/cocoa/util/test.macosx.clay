@@ -8,14 +8,14 @@ import data.strings.(String);
 
 record Foo (x: Int64, y: Double);
 [I when Integer?(I) and I != Int64]
-overload Foo(x: I, y: Double) = Foo(Int64(x), y);
+Foo(x: I, y: Double) = Foo(Int64(x), y);
 
-overload selector("lifecycleTest") = Id;
-overload selector("lifecycleTestWithCanary:") = Id, Canary;
-overload selector("lifecycleTestWithCanary:subcanary:") = Id, Canary, Canary;
-overload selector("initWithCanary:") = Id, Canary;
-overload selector("initWithCanary:subcanary:") = Id, Canary, Canary;
-overload selector("initWithSubcanary:") = Id, Canary;
+selector("lifecycleTest") = Id;
+selector("lifecycleTestWithCanary:") = Id, Canary;
+selector("lifecycleTestWithCanary:subcanary:") = Id, Canary, Canary;
+selector("initWithCanary:") = Id, Canary;
+selector("initWithCanary:subcanary:") = Id, Canary, Canary;
+selector("initWithSubcanary:") = Id, Canary;
 
 record LifecycleTest = newClass(NSObject,
     InstanceVars(
@@ -51,14 +51,14 @@ record LifecycleSubTest = newClass(LifecycleTest,
     ),
 );
 
-overload selector("foo") = Int;
-overload selector("setFoo:") = Void, Int;
-overload selector("foo64") = Int;
-overload selector("setFoo64:") = Void, Int;
-overload selector("bar") = Float;
-overload selector("setBar:") = Void, Float;
-overload selector("isBas") = Bool;
-overload selector("setBas:") = Void, Bool;
+selector("foo") = Int;
+selector("setFoo:") = Void, Int;
+selector("foo64") = Int;
+selector("setFoo64:") = Void, Int;
+selector("bar") = Float;
+selector("setBar:") = Void, Float;
+selector("isBas") = Bool;
+selector("setBas:") = Void, Bool;
 
 record PropertyTest = newClass(NSObject,
     InstanceVars(
@@ -79,7 +79,7 @@ record PropertyTest = newClass(NSObject,
     )
 );
 
-overload selector("initWithFoo:bar:") = Id, Id, Id;
+selector("initWithFoo:bar:") = Id, Id, Id;
 
 record RegularTest = regularClass(["foo", String], ["bar", Char]);
 record RegularCanary = regularClass(["foo", Canary], ["bar", Canary]);

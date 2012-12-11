@@ -1,5 +1,5 @@
 record Foo ();
 
-overload Foo() {}
+Foo() {}
 
 main() { var a = Foo(); }

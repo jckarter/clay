@@ -261,6 +261,7 @@ static ModulePtr makePrimitivesModule();
 static ModulePtr makeOperatorsModule();
 static ModulePtr makeIntrinsicsModule();
 
+
 static void installGlobals(ModulePtr m) {
     m->env = new Env(m);
     vector<TopLevelItemPtr>::iterator i, end;
@@ -278,6 +279,8 @@ static void installGlobals(ModulePtr m) {
                 member->index = (int)i;
                 member->type = t;
                 addGlobal(m, member->name, enumer->visibility, member);
+                if (enumer->visibility == PUBLIC)
+                    m->publicNames.insert(member->name->str.str());
             }
             break;
         }
@@ -285,6 +288,8 @@ static void installGlobals(ModulePtr m) {
             NewTypeDecl *nt = (NewTypeDecl *)x;
             TypePtr t = newType(nt);
             addGlobal(m, nt->name, nt->visibility, t.ptr());
+            if (nt->visibility == PUBLIC)
+                m->publicNames.insert(nt->name->str.str());
             break;
         }
         case PROCEDURE : {
@@ -294,16 +299,113 @@ static void installGlobals(ModulePtr m) {
             // fallthrough
         }
         default :
-            if (x->name.ptr())
+            if (x->name.ptr()) {
                 addGlobal(m, x->name, x->visibility, x);
+                if (x->visibility == PUBLIC && x->objKind != EXTERNAL_PROCEDURE && x->objKind != EXTERNAL_VARIABLE)
+                    m->publicNames.insert(x->name->str.str());
+           
+            }
             break;
         }
     }
 }
 
+static void circularImportsError(llvm::ArrayRef<string>  modules) {
+    string s;
+    llvm::raw_string_ostream ss(s);
+    ss << "import loop:\n";
+    for (string const *it = modules.begin(); it != modules.end(); ++it) {
+        ss << "    " << *it;
+        if (it + 1 != modules.end()) {
+            // because error() function adds trailing newline
+            ss << "\n";
+        }
+    }
+    return error(ss.str());
+}
+
+static void initStandalones(ModulePtr m, llvm::ArrayRef<string>  importChain) {
+    if (m->initState == Module::SECOND) return;
+
+    if (m->declaration != NULL) {
+        if (m->moduleName == "")
+            m->moduleName = toKey(m->declaration->name);
+        else if (m->moduleName != toKey(m->declaration->name))
+            error(m->declaration,
+                "module imported by name " + m->moduleName
+                + " but declared with name " + toKey(m->declaration->name)
+            );
+    } else if (m->moduleName == "")
+        m->moduleName = "__main__";
+
+    if (m->initState == Module::RUNNING && !importChain.empty()) {
+        // allow prelude to import self
+        if (importChain.back() == m->moduleName) {
+            return;
+        }
+    }
+
+    vector<string> importChainNext = importChain;
+    importChainNext.push_back(m->moduleName);
+
+    if (m->initState == Module::RUNNING) {
+        circularImportsError(importChainNext);
+    }
+    
+    m->initState = Module::RUNNING;
+
+    vector<ImportPtr>::iterator ii, iend;
+    for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii)
+        initStandalones((*ii)->module, importChainNext);
+
+    m->initState = Module::SECOND;
+
+    llvm::ArrayRef<TopLevelItemPtr> items = m->topLevelItems;
+    TopLevelItemPtr const *ti, *tend;
+    for (ti = items.begin(), tend = items.end(); ti != tend; ++ti) {
+        Object *obj = ti->ptr();
+        if (obj->objKind == OVERLOAD) {
+            Overload *x = (Overload *)obj;      
+            if (x->target->exprKind == NAME_REF) {
+                NameRef *z = (NameRef *)x->target.ptr();
+                bool isPattern = false;
+                vector<PatternVar>::iterator ii, iend;
+                for (ii = x->code->patternVars.begin(), iend = x->code->patternVars.end(); 
+                    ii != iend; ++ii)
+                {
+                    if (isPattern = objectEquals(z->name.ptr(), (*ii).name.ptr()))
+                        break;
+                }
+                if (!isPattern) {
+                    MapIter i = x->module->globals.find(z->name->str);
+                    if (i == x->module->globals.end()) {
+                        string nameStr(z->name->str.begin(), z->name->str.end());
+                        ModulePtr p = preludeModule();
+                        if (!p->importedNames.count(nameStr) && !p->importedStarNames.count(nameStr)) {
+                             if (!m->importedNames.count(nameStr) && !m->importedStarNames.count(nameStr)) {  
+                                ProcedurePtr proc = new Procedure(x->module, z->name, x->vis, true);
+                                proc->location = x->location;
+                                proc->singleOverload = x;
+                                proc->env = x->module->env;   
+                                addGlobal(m, proc->name, x->vis, proc.ptr());
+                                if (x->vis == PUBLIC)
+                                    m->publicNames.insert(nameStr);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void initStandalones(ModulePtr m) {
+    initStandalones(m, vector<string>());
+}
+
 static ModulePtr loadModuleByName(DottedNamePtr name, vector<string> *sourceFiles, bool verbose) {
     string key = toKey(name);
-
+                            
     llvm::StringMap<ModulePtr>::iterator i = globalModules.find(key);
     if (i != globalModules.end())
         return i->second;
@@ -328,7 +430,6 @@ static ModulePtr loadModuleByName(DottedNamePtr name, vector<string> *sourceFile
     globalModules[key] = module;
     loadDependents(module, sourceFiles, verbose);
     installGlobals(module);
-
     return module;
 }
 
@@ -337,56 +438,67 @@ void loadDependent(ModulePtr m, vector<string> *sourceFiles, ImportPtr dependent
     x->module = loadModuleByName(x->dottedName, sourceFiles, verbose);
     switch (x->importKind) {
     case IMPORT_MODULE : {
-            ImportModule *im = (ImportModule *)x.ptr();
-            IdentifierPtr name = NULL;
-            if (im->alias.ptr()) {
-                name = im->alias;
-                m->importedModuleNames[im->alias->str].module = x->module;
-            } else {
-                llvm::ArrayRef<IdentifierPtr> parts = im->dottedName->parts;
-                if (parts.size() == 1)
-                    name = parts[0];
-                else if (x->visibility == PUBLIC)
-                    error(x->location,
-                          "public imports of dotted module paths must have an \"as <name>\" alias");
-                llvm::StringMap<ModuleLookup> *node = &m->importedModuleNames;
-                for (size_t i = parts.size() - 1; i >= 1; --i) {
-                    node = &(*node)[parts[i]->str].parents;
-                }
-                (*node)[parts[0]->str].module = x->module;
+        ImportModule *im = (ImportModule *)x.ptr();
+        IdentifierPtr name = NULL;
+        if (im->alias.ptr()) {
+            name = im->alias;
+            m->importedModuleNames[im->alias->str].module = x->module;
+        } else {
+            llvm::ArrayRef<IdentifierPtr> parts = im->dottedName->parts;
+            if (parts.size() == 1)
+                name = parts[0];
+            else if (x->visibility == PUBLIC)
+                error(x->location,
+                      "public imports of dotted module paths must have an \"as <name>\" alias");
+            llvm::StringMap<ModuleLookup> *node = &m->importedModuleNames;
+            for (size_t i = parts.size() - 1; i >= 1; --i) {
+                node = &(*node)[parts[i]->str].parents;
             }
-            
-            if (name.ptr()) {
-                string nameStr(name->str.begin(), name->str.end());
-                if (m->importedNames.count(nameStr))
-                    error(name, "name imported already: " + nameStr);
-                m->importedNames.insert(nameStr);
-                m->allSymbols[nameStr].insert(x->module.ptr());
-                if (x->visibility == PUBLIC)
-                    m->publicSymbols[nameStr].insert(x->module.ptr());
-            }
-            
-            break;
+            (*node)[parts[0]->str].module = x->module;
         }
-    case IMPORT_STAR :
+        
+        if (name.ptr()) {
+            string nameStr(name->str.begin(), name->str.end());
+            if (m->importedNames.count(nameStr))
+                error(name, "name imported already: " + nameStr);
+            m->importedNames.insert(nameStr);
+            m->allSymbols[nameStr].insert(x->module.ptr());
+            if (x->visibility == PUBLIC) {
+                m->publicSymbols[nameStr].insert(x->module.ptr());
+                m->publicNames.insert(nameStr);
+            }
+        }
+        
         break;
+    }
+    case IMPORT_STAR : {
+        ImportStar *y = (ImportStar *)x.ptr();
+        set<string>::iterator i = y->module->publicNames.begin(), 
+                            end = y->module->publicNames.end();
+        m->importedStarNames.insert(i, end);
+        if (x->visibility == PUBLIC)
+            m->publicNames.insert(i, end);
+        break;
+    }
     case IMPORT_MEMBERS : {
-            ImportMembers *y = (ImportMembers *)x.ptr();
-            for (unsigned i = 0; i < y->members.size(); ++i) {
-                ImportedMember &z = y->members[i];
-                IdentifierPtr alias = z.alias.ptr() ? z.alias : z.name;
-                string aliasStr(alias->str.begin(), alias->str.end());
-                if (m->importedNames.count(aliasStr))
-                    error(alias, "name imported already: " + aliasStr);
-                assert(y->aliasMap.count(aliasStr) == 0);
-                m->importedNames.insert(aliasStr);
-                y->aliasMap[aliasStr] = z.name;
-            }
-            break;
+        ImportMembers *y = (ImportMembers *)x.ptr();
+        for (unsigned i = 0; i < y->members.size(); ++i) {
+            ImportedMember &z = y->members[i];
+            IdentifierPtr alias = z.alias.ptr() ? z.alias : z.name;
+            string aliasStr(alias->str.begin(), alias->str.end());
+            if (m->importedNames.count(aliasStr))
+                error(alias, "name imported already: " + aliasStr);
+            assert(y->aliasMap.count(aliasStr) == 0);
+            m->importedNames.insert(aliasStr);
+            if (x->visibility == PUBLIC)
+                m->publicNames.insert(aliasStr);
+            y->aliasMap[aliasStr] = z.name;
         }
+        break;
+    }
     default :
             assert(false);
-}
+    }
 }
 
 static void loadDependents(ModulePtr m, vector<string> *sourceFiles, bool verbose) {
@@ -414,8 +526,10 @@ static ModulePtr loadPrelude(vector<string> *sourceFiles, bool verbose, bool rep
 ModulePtr loadProgram(llvm::StringRef fileName, vector<string> *sourceFiles, bool verbose, bool repl) {
     globalMainModule = parse("", loadFile(fileName, sourceFiles));
     ModulePtr prelude = loadPrelude(sourceFiles, verbose, repl);
+    initStandalones(prelude);
     loadDependents(globalMainModule, sourceFiles, verbose);
     installGlobals(globalMainModule);
+    initStandalones(globalMainModule);
     initModule(prelude);
     initModule(globalMainModule);
     return globalMainModule;
@@ -433,8 +547,10 @@ ModulePtr loadProgramSource(llvm::StringRef name, llvm::StringRef source, bool v
     globalMainModule = parse("", mainSource);
     // Don't keep track of source files for -e script
     ModulePtr prelude = loadPrelude(NULL, verbose, repl);
+    initStandalones(prelude);
     loadDependents(globalMainModule, NULL, verbose);
     installGlobals(globalMainModule);
+    initStandalones(globalMainModule);
     initModule(prelude);
     initModule(globalMainModule);
     return globalMainModule;
@@ -576,7 +692,7 @@ void addProcedureOverload(ProcedurePtr proc, EnvPtr env, OverloadPtr x) {
 }
 
 static void initOverload(OverloadPtr x) {
-    EnvPtr env = overloadPatternEnv(x);
+    EnvPtr env = overloadPatternEnv(x);        
     PatternPtr pattern = evaluateOnePattern(x->target, env);
     ObjectPtr obj = derefDeep(pattern);
     if (obj == NULL) {
@@ -670,54 +786,21 @@ static void checkStaticAssert(StaticAssertTopLevelPtr a) {
     evaluateStaticAssert(a->location, a->cond, a->message, a->env);
 }
 
-static void circularImportsError(llvm::ArrayRef<string>  modules) {
-    string s;
-    llvm::raw_string_ostream ss(s);
-    ss << "import loop:\n";
-    for (string const *it = modules.begin(); it != modules.end(); ++it) {
-        ss << "    " << *it;
-        if (it + 1 != modules.end()) {
-            // because error() function adds trailing newline
-            ss << "\n";
-        }
-    }
-    return error(ss.str());
-}
-
-static void initModule(ModulePtr m, llvm::ArrayRef<string>  importChain) {
+void initModule(ModulePtr m) {
     if (m->initState == Module::DONE) return;
 
-    if (m->declaration != NULL) {
-        if (m->moduleName == "")
-            m->moduleName = toKey(m->declaration->name);
-        else if (m->moduleName != toKey(m->declaration->name))
-            error(m->declaration,
-                "module imported by name " + m->moduleName
-                + " but declared with name " + toKey(m->declaration->name)
-            );
-    } else if (m->moduleName == "")
-        m->moduleName = "__main__";
-
-
-    if (m->initState == Module::RUNNING && !importChain.empty()) {
+    if (m->initState == Module::RUNNING) {
         // allow prelude to import self
-        if (importChain.back() == m->moduleName) {
+        if (m == preludeModule()) {
             return;
         }
-    }
-
-    vector<string> importChainNext = importChain;
-    importChainNext.push_back(m->moduleName);
-
-    if (m->initState == Module::RUNNING) {
-        circularImportsError(importChainNext);
     }
 
     m->initState = Module::RUNNING;
 
     vector<ImportPtr>::iterator ii, iend;
     for (ii = m->imports.begin(), iend = m->imports.end(); ii != iend; ++ii)
-        initModule((*ii)->module, importChainNext);
+        initModule((*ii)->module);
 
     m->initState = Module::DONE;
 
@@ -728,9 +811,10 @@ static void initModule(ModulePtr m, llvm::ArrayRef<string>  importChain) {
     for (ti = items.begin(), tend = items.end(); ti != tend; ++ti) {
         Object *obj = ti->ptr();
         switch (obj->objKind) {
-        case OVERLOAD :
+        case OVERLOAD : {
             initOverload((Overload *)obj);
             break;
+        }
         case INSTANCE_DECL :
             initVariantInstance((InstanceDecl *)obj);
             break;
@@ -753,10 +837,6 @@ static void initModule(ModulePtr m, llvm::ArrayRef<string>  importChain) {
             1 // line
             );
     }
-}
-
-void initModule(ModulePtr m) {
-    initModule(m, vector<string>());
 }
 
 
@@ -899,6 +979,8 @@ static void addPrim(ModulePtr m, llvm::StringRef name, ObjectPtr x) {
     m->allSymbols[name].insert(x);
     m->publicGlobals[name] = x;
     m->publicSymbols[name].insert(x);
+    m->publicNames.insert(name);
+           
 }
 
 static void addPrimOp(ModulePtr m, llvm::StringRef name, PrimOpPtr x) {
@@ -1456,9 +1538,10 @@ void addGlobals(ModulePtr m, llvm::ArrayRef<TopLevelItemPtr>  toplevels) {
     for (size_t i = items.size() - toplevels.size(); i < items.size(); ++i) {
         Object *obj = items[i].ptr();
         switch (obj->objKind) {
-        case OVERLOAD :
+        case OVERLOAD : {
             initOverload((Overload *)obj);
             break;
+        }
         case INSTANCE_DECL :
             initVariantInstance((InstanceDecl *)obj);
             break;

@@ -10,14 +10,14 @@ forceinline eachValue(fn, ..xs) {
 }
 
 define mapValues private overload;
-forceinline overload mapValues(fn, forward x, forward ..xs)
+forceinline mapValues(fn, forward x, forward ..xs)
     = forward ..fn(x), ..mapValues(fn, ..xs);
-forceinline overload mapValues(fn) = ;
+forceinline mapValues(fn) = ;
 
 private define _mapIndexedValues;
-[n] forceinline overload _mapIndexedValues(fn, #n, forward x, forward ..xs)
+[n] forceinline _mapIndexedValues(fn, #n, forward x, forward ..xs)
     = forward ..fn(x, n), .._mapIndexedValues(fn, #n+1, ..xs);
-[n] forceinline overload _mapIndexedValues(fn, #n) = ;
+[n] forceinline _mapIndexedValues(fn, #n) = ;
 
 mapIndexedValues(fn, forward ..values) = forward .._mapIndexedValues(fn, #0, ..values);
 
@@ -26,44 +26,44 @@ mapIndexedValues(fn, forward ..values) = forward .._mapIndexedValues(fn, #0, ..v
 [Fn]
 define filterValues(#Fn, ..xs) private overload;
 [Fn, First when Fn(First)]
-overload filterValues(#Fn, #First, ..xs) = #First, ..filterValues(#Fn, ..xs);
+filterValues(#Fn, #First, ..xs) = #First, ..filterValues(#Fn, ..xs);
 [Fn, First when not Fn(First)]
-overload filterValues(#Fn, #First, ..xs) = ..filterValues(#Fn, ..xs);
+filterValues(#Fn, #First, ..xs) = ..filterValues(#Fn, ..xs);
 [Fn]
-overload filterValues(#Fn) = ;
+filterValues(#Fn) = ;
 
 define foldValues private overload;
-forceinline overload foldValues(fn, forward x, forward ..xs)
+forceinline foldValues(fn, forward x, forward ..xs)
     = fn(x, foldValues(fn, ..xs));
-forceinline overload foldValues(fn, forward x) = forward x;
+forceinline foldValues(fn, forward x) = forward x;
 
 define foldlValues private overload;
-forceinline overload foldlValues(fn, forward x1, forward x2, forward ..xs)
+forceinline foldlValues(fn, forward x1, forward x2, forward ..xs)
     = foldlValues(fn, fn(x1, x2), ..xs);
-forceinline overload foldlValues(fn, forward x) = forward x;
+forceinline foldlValues(fn, forward x) = forward x;
 
 define weaveValues private overload;
-forceinline overload weaveValues(between, forward x, forward ..xs)
+forceinline weaveValues(between, forward x, forward ..xs)
     = forward x, between, ..weaveValues(between, ..xs);
-forceinline overload weaveValues(between, forward x, forward y)
+forceinline weaveValues(between, forward x, forward y)
     = forward x, between, y;
-forceinline overload weaveValues(between, forward x) = forward x;
-forceinline overload weaveValues(between) = ;
+forceinline weaveValues(between, forward x) = forward x;
+forceinline weaveValues(between) = ;
 
 define reverseValues private overload;
-forceinline overload reverseValues() = ;
-forceinline overload reverseValues(forward x, forward ..xs) = forward ..reverseValues(..xs), x;
+forceinline reverseValues() = ;
+forceinline reverseValues(forward x, forward ..xs) = forward ..reverseValues(..xs), x;
 
 
 /// @section  countOccurrences, firstValue 
 
 define countOccurrences private overload;
-forceinline overload countOccurrences(value) = 0;
+forceinline countOccurrences(value) = 0;
 [value1, value2]
-forceinline overload countOccurrences(#value1, #value2, forward ..xs)
+forceinline countOccurrences(#value1, #value2, forward ..xs)
     = countOccurrences(#value1, ..xs);
 [value]
-forceinline overload countOccurrences(#value, #value, forward ..xs)
+forceinline countOccurrences(#value, #value, forward ..xs)
     = 1 + countOccurrences(#value, ..xs);
 
 forceinline firstValue(forward a, ..rest) = forward a;
@@ -80,9 +80,9 @@ forceinline lastValue(..a, forward last) = forward last;
 define replicateValue(a, #n) private overload;
 
 [n when n > 0]
-forceinline overload replicateValue(a, #n) = a, ..replicateValue(a, #(n-1));
+forceinline replicateValue(a, #n) = a, ..replicateValue(a, #(n-1));
 [n when n == 0]
-forceinline overload replicateValue(a, #n) = ;
+forceinline replicateValue(a, #n) = ;
 
 forceinline allValues?(pred, ..rest) {
     ..for (x in rest) {
@@ -120,25 +120,25 @@ private record CapturedRValue[T] (
 
 define CapturedValue?(a) : Bool private overload;
 
-overload CapturedValue?(a) : Bool = false;
+CapturedValue?(a) : Bool = false;
 [T]
-overload CapturedValue?(#CapturedLValue[T]) : Bool = true;
+CapturedValue?(#CapturedLValue[T]) : Bool = true;
 [T]
-overload CapturedValue?(#CapturedRValue[T]) : Bool = true;
+CapturedValue?(#CapturedRValue[T]) : Bool = true;
 
 define captureValue(v) private overload;
-forceinline overload captureValue(rvalue x) = CapturedRValue(move(x));
-forceinline overload captureValue(ref x) = CapturedLValue(@x);
+forceinline captureValue(rvalue x) = CapturedRValue(move(x));
+forceinline captureValue(ref x) = CapturedLValue(@x);
 
 [V when CapturedValue?(V)]
 define forwardValue(v:V) private overload;
-[T] forceinline overload forwardValue(x:CapturedRValue[T]) = move(x.value);
-[T] forceinline overload forwardValue(x:CapturedLValue[T]) = ref x.ptr^;
+[T] forceinline forwardValue(x:CapturedRValue[T]) = move(x.value);
+[T] forceinline forwardValue(x:CapturedLValue[T]) = ref x.ptr^;
 
 [V when CapturedValue?(V)]
 define capturedRef(v:V) private overload;
-[T] forceinline overload capturedRef(x:CapturedRValue[T]) = ref x.value;
-[T] forceinline overload capturedRef(x:CapturedLValue[T]) = ref x.ptr^;
+[T] forceinline capturedRef(x:CapturedRValue[T]) = ref x.value;
+[T] forceinline capturedRef(x:CapturedLValue[T]) = ref x.ptr^;
 
 // captureValues, forwardValues, capturedRefs
 
@@ -161,9 +161,9 @@ sequenceValues(seq: S, #n) = forward ..iteratorValues(iterator(seq), #n);
 [I, n when Iterator?(I)]
 define iteratorValues(iter:I, #n) private overload;
 
-overload iteratorValues(iter, #0) = ;
+iteratorValues(iter, #0) = ;
 [n when n > 0]
-overload iteratorValues(iter, #n) {
+iteratorValues(iter, #n) {
     var v = nextValue(iter);
     assert["boundsChecks"](hasValue?(v));
     return forward ..getValue(v), ..iteratorValues(iter, #(n-1));
@@ -175,18 +175,18 @@ overload iteratorValues(iter, #n) {
 define eachValue2 private overload;
 
 [n when n > 0]
-overload eachValue2(fn, #n, forward x, forward ..xs) {
+eachValue2(fn, #n, forward x, forward ..xs) {
     fn(x, nthValue(#(n-1), ..xs));
     return ..eachValue2(fn, #(n-1), ..withoutNthValue(#(n-1), ..xs));
 }
-overload eachValue2(fn, #0, forward ..xs) { }
+eachValue2(fn, #0, forward ..xs) { }
 
 define mapValues2 private overload;
 [n when n > 0]
-overload mapValues2(fn, #n, forward x, forward ..xs)
+mapValues2(fn, #n, forward x, forward ..xs)
     = forward fn(x, nthValue(#(n-1), ..xs)),
       ..mapValues2(fn, #(n-1), ..withoutNthValue(#(n-1), ..xs));
-overload mapValues2(fn, #0, forward ..xs) = ;
+mapValues2(fn, #0, forward ..xs) = ;
 
 
 
@@ -195,29 +195,29 @@ overload mapValues2(fn, #0, forward ..xs) = ;
 define assocValue private overload;
 
 [key]
-overload assocValue(#key, kv, forward ..kvs) = forward ..assocValue(#key, ..kvs);
+assocValue(#key, kv, forward ..kvs) = forward ..assocValue(#key, ..kvs);
 
 [key, ..T]
-overload assocValue(#key, forward kv: Tuple[Static[key], ..T], ..kvs)
+assocValue(#key, forward kv: Tuple[Static[key], ..T], ..kvs)
     = forward ..restValues(..unpack(kv));
 
 
 [key]
 define assocValue?(#key, ..kvs) : Bool private overload;
 [key]
-overload assocValue?(#key) : Bool = false;
+assocValue?(#key) : Bool = false;
 [key]
-overload assocValue?(#key, kv, ..kvs) : Bool = assocValue?(key, ..kvs);
+assocValue?(#key, kv, ..kvs) : Bool = assocValue?(key, ..kvs);
 [key, ..T]
-overload assocValue?(#key, kv: Tuple[Static[key], ..T], ..kvs) : Bool = true;
+assocValue?(#key, kv: Tuple[Static[key], ..T], ..kvs) : Bool = true;
 
 define assocCountValues private overload;
 [key]
-overload assocCountValues(#key) = -1;
+assocCountValues(#key) = -1;
 [key]
-overload assocCountValues(#key, kv, ..kvs) = assocCountValues(key, ..kvs);
+assocCountValues(#key, kv, ..kvs) = assocCountValues(key, ..kvs);
 [key, ..T]
-overload assocCountValues(#key, kv: Tuple[Static[key], ..T], ..kvs) = countValues(..T);
+assocCountValues(#key, kv: Tuple[Static[key], ..T], ..kvs) = countValues(..T);
 
 
 
@@ -225,9 +225,9 @@ overload assocCountValues(#key, kv: Tuple[Static[key], ..T], ..kvs) = countValue
 
 private define _valueIndex;
 [n, value, other]
-overload _valueIndex(#n, #value, #other, ..etc)
+_valueIndex(#n, #value, #other, ..etc)
     = _valueIndex(#(n+1), #value, ..etc);
 [n, value]
-overload _valueIndex(#n, #value, #value, ..etc) = n;
+_valueIndex(#n, #value, #value, ..etc) = n;
 [value]
 valueIndex(#value, ..etc) = _valueIndex(#0, #value, ..etc);

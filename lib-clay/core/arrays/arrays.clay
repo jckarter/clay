@@ -2,53 +2,53 @@
 /// @section  predicates 
 
 [T,n]
-overload ContiguousSequence?(#Array[T,n]) : Bool = true;
+ContiguousSequence?(#Array[T,n]) : Bool = true;
 
 [T,n]
-overload SequenceContainer?(#Array[T,n]) : Bool = true;
+SequenceContainer?(#Array[T,n]) : Bool = true;
 
 
 
 /// @section  size, index, iterator, begin, end, front, back 
 
 [T,n]
-forceinline overload size(a:Array[T,n]) : SizeT = SizeT(n);
+forceinline size(a:Array[T,n]) : SizeT = SizeT(n);
 
 [T,n]
-forceinline overload StaticSize(#Array[T,n]) : SizeT = SizeT(n);
+forceinline StaticSize(#Array[T,n]) : SizeT = SizeT(n);
 
 [T,n,I when Integer?(I)]
-forceinline overload index(a:Array[T,n], i:I) : ByRef[T] {
+forceinline index(a:Array[T,n], i:I) : ByRef[T] {
     assert["boundsChecks"](i >= 0 and SizeT(i) < size(a), Array[T,n], " access out of bounds");
     return ref arrayRef(a, SizeT(i));
 }
 
 [T,n]
-forceinline overload iterator(a:Array[T,n])
+forceinline iterator(a:Array[T,n])
     = coordinateRange(begin(a), end(a));
 
 [T,n]
-forceinline overload reverseIterator(a:Array[T,n]) 
+forceinline reverseIterator(a:Array[T,n]) 
     = reverseCoordinateRange(end(a), begin(a));
 
 [T,n]
-forceinline overload begin(a:Array[T,n]) : Pointer[T] = Pointer[T](@a);
+forceinline begin(a:Array[T,n]) : Pointer[T] = Pointer[T](@a);
 
 [T,n]
-forceinline overload end(a:Array[T,n]) : Pointer[T] = Pointer[T](@a + 1);
+forceinline end(a:Array[T,n]) : Pointer[T] = Pointer[T](@a + 1);
 
 [T,n]
-forceinline overload front(a:Array[T,n]) : ByRef[T] = ref a[0];
+forceinline front(a:Array[T,n]) : ByRef[T] = ref a[0];
 
 [T,n]
-forceinline overload back(a:Array[T,n]) : ByRef[T] = ref a[n-1];
+forceinline back(a:Array[T,n]) : ByRef[T] = ref a[n-1];
 
 
 
 /// @section  basic constructor 
 
 [T,n,..A when (countValues(..A) == n) and equalValues?(T, ..A)]
-alias overload Array[T,n](..args:A) --> returned:Array[T,n] {
+alias Array[T,n](..args:A) --> returned:Array[T,n] {
     ..arrayElements(returned) <-- ..args;
 }
 
@@ -58,7 +58,7 @@ alias overload Array[T,n](..args:A) --> returned:Array[T,n] {
 
 [T, n, S when Sequence?(S)
            and (SequenceElementType(S) == T)]
-overload Array[T,n](s:S) --> returned:Array[T,n] {
+Array[T,n](s:S) --> returned:Array[T,n] {
     var first, last = begin(returned), end(returned);
     var ptr = first;
     try {
@@ -79,7 +79,7 @@ overload Array[T,n](s:S) --> returned:Array[T,n] {
 
 [T, n, S when SequenceContainer?(S)
            and (SequenceElementType(S) == T)]
-overload Array[T,n](rvalue s:S) --> returned:Array[T,n] {
+Array[T,n](rvalue s:S) --> returned:Array[T,n] {
     var first, last = begin(returned), end(returned);
     var ptr = first;
     try {
@@ -99,7 +99,7 @@ overload Array[T,n](rvalue s:S) --> returned:Array[T,n] {
 }
 
 [T,n]
-overload Array[T,n](elt: T) --> returned:Array[T,n] {
+Array[T,n](elt: T) --> returned:Array[T,n] {
     var first, last = begin(returned), end(returned);
     var ptr = first;
     try {
@@ -115,7 +115,7 @@ overload Array[T,n](elt: T) --> returned:Array[T,n] {
 }
 
 [n, S when Sequence?(S)]
-overload Array(#n, forward s:S) {
+Array(#n, forward s:S) {
     alias T = SequenceElementType(S);
     return Array[T,n](s);
 }
@@ -127,7 +127,7 @@ overload Array(#n, forward s:S) {
 [T,n,S when StaticSizedSequence?(S)
          and (SequenceElementType(S) == T)
          and (n == StaticSize(S))]
-overload Array[T,n](s:S) --> returned:Array[T,n] {
+Array[T,n](s:S) --> returned:Array[T,n] {
     var first, last = begin(returned), end(returned);
     var ptr = first;
     try {
@@ -146,7 +146,7 @@ overload Array[T,n](s:S) --> returned:Array[T,n] {
          and SequenceContainer?(S)
          and (SequenceElementType(S) == T)
          and (n == StaticSize(S))]
-overload Array[T,n](rvalue s:S) --> returned:Array[T,n] {
+Array[T,n](rvalue s:S) --> returned:Array[T,n] {
     var first, last = begin(returned), end(returned);
     var ptr = first;
     try {
@@ -162,7 +162,7 @@ overload Array[T,n](rvalue s:S) --> returned:Array[T,n] {
 }
 
 [S when StaticSizedSequence?(S)]
-alias overload Array(s:S) {
+alias Array(s:S) {
     alias T = SequenceElementType(S);
     alias n = #Int(StaticSize(S));
     return Array[T,n](s);
@@ -173,27 +173,27 @@ alias overload Array(s:S) {
 /// @section  other constructors, moveUnsafe, resetUnsafe, destroy 
 
 [T,n]
-overload Array[T,n]() --> returned:Array[T,n] {
+Array[T,n]() --> returned:Array[T,n] {
     initializeMemory(begin(returned), end(returned));
 }
 
 [T,n when not BitwiseCopiedType?(T)]
-overload Array[T,n](src:Array[T,n]) --> returned:Array[T,n] {
+Array[T,n](src:Array[T,n]) --> returned:Array[T,n] {
     copyNonoverlappingMemory(begin(returned), begin(src), end(src));
 }
 
 [T,n when not BitwiseMovedType?(T)]
-overload moveUnsafe(src:Array[T,n]) --> returned:Array[T,n] {
+moveUnsafe(src:Array[T,n]) --> returned:Array[T,n] {
     moveNonoverlappingMemoryUnsafe(begin(returned), begin(src), end(src));
 }
 
 [T,n when not ResetDoesNothingType?(T)]
-overload resetUnsafe(a:Array[T,n]) : {
+resetUnsafe(a:Array[T,n]) : {
     resetMemoryUnsafe(begin(a), end(a));
 }
 
 [T,n when not DestroyDoesNothingType?(T)]
-overload destroy(a:Array[T,n]) : {
+destroy(a:Array[T,n]) : {
     destroyMemory(begin(a), end(a));
 }
 
@@ -204,12 +204,12 @@ overload destroy(a:Array[T,n]) : {
 define array private overload;
 
 [..A when countValues(..A) > 0 and equalValues?(..A)]
-alias overload array(..args:A) {
+alias array(..args:A) {
     return Array[takeValues(#1, ..A), countValues(..A)](..args);
 }
 
 [..SS when countValues(..SS) > 0 and StringLiteralType?(..SS)]
-alias overload array(..strings:SS) {
+alias array(..strings:SS) {
     return array(..mapValues(StringLiteralRef, ..strings));
 }
 
@@ -224,12 +224,12 @@ integerArray(#n) = array(..integers(#n));
 /// @section  array assignment 
 
 [T,U,n when not (T == U and BitwiseAssignedType?(T)) and CallDefined?(assign, T, U)]
-overload assign(ref left: Array[T,n], ref right: Array[U, n]) : {
+assign(ref left: Array[T,n], ref right: Array[U, n]) : {
     assignNonoverlappingMemory(begin(left), begin(right), end(right));
 }
 
 [T,U,n when not (T == U and BitwiseMoveAssignedType?(T)) and CallDefined?(assign, T, U)]
-overload assign(ref left: Array[T,n], rvalue right: Array[U, n]) : {
+assign(ref left: Array[T,n], rvalue right: Array[U, n]) : {
     moveAssignNonoverlappingMemory(begin(left), begin(right), end(right));
 }
 
@@ -243,8 +243,8 @@ overload assign(ref left: Array[T,n], rvalue right: Array[U, n]) : {
 alias ArrayRef[T] = CoordinateRange[Pointer[T]];
 
 [T]
-overload ArrayRef(begin: Pointer[T], end: Pointer[T]) : ArrayRef[T] = CoordinateRange(begin, end);
+ArrayRef(begin: Pointer[T], end: Pointer[T]) : ArrayRef[T] = CoordinateRange(begin, end);
 
 [T,N]
-overload ArrayRef(a: Array[T,N]) : ArrayRef[T] = ArrayRef(begin(a), end(a));
+ArrayRef(a: Array[T,N]) : ArrayRef[T] = ArrayRef(begin(a), end(a));
 

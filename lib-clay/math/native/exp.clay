@@ -11,7 +11,7 @@ private var ln2HI = array(6.93147180369123816490e-01,-6.93147180369123816490e-01
 private var ln2LO = array(1.90821492927058770002e-10,-1.90821492927058770002e-10);// 0x3dea39ef, 0x35793c76 
 
 
-overload exp(a:Double) : Double { // default IEEE double exp 
+exp(a:Double) : Double { // default IEEE double exp 
 	alias o_threshold	= 7.09782712893383973096e+02;// 0x40862E42, 0xFEFA39EF 
 	alias u_threshold 	= -7.45133219101941108420e+02;  // 0xc0874910, 0xD52D3051 
 	alias TWOM1000 = 9.33263618503218878990e-302;     // 2**-1000=0x01700000,0
@@ -83,7 +83,7 @@ private var fln2HI = array(6.9314575195e-01f,-6.9314575195e-01f); //0x3f317200, 
 private var fln2LO = array(1.4286067653e-06f,-1.4286067653e-06f); //0x35bfbe8e,0xb5bfbe8e 
 	
 
-overload exp(a:Float) : Float {
+exp(a:Float) : Float {
 	alias fo_threshold=  8.8721679688e+01f; // 0x42b17180 
 	alias fu_threshold= -1.0397208405e+02f;  // 0xc2cff1b5 
 	alias finvln2 =  1.4426950216e+00f; 		// 0x3fb8aa3b 
@@ -158,7 +158,7 @@ overload exp(a:Float) : Float {
 private alias exp_ovfl  = 0x40862e42u;			// high bits of MAX_EXP * ln2 ~= 710 
 private alias cexp_ovfl = 0x4096b8e4u;			// (MAX_EXP - MIN_DENORM_EXP) * ln2 
 
-overload exp(z:ComplexDouble) {
+exp(z:ComplexDouble) {
 	
 	var x,y = real(z), imagValue(z);
 	var ydb = MAKE_IEEE( y);

@@ -14,7 +14,7 @@ alias Opaque = Int;
 
 define display;
 
-overload display(x) {
+display(x) {
     println(x);
 }
 
@@ -53,12 +53,12 @@ record Displayable (
     vtable : Pointer[DisplayableVTable],
 );
 
-overload RegularRecord?(#Displayable) = false;
+RegularRecord?(#Displayable) = false;
 
 
 // constructor
 [T]
-overload Displayable(x:T) {
+Displayable(x:T) {
     var obj = allocateRawMemoryAligned(T, 1, TypeAlignment(T));
     obj^ <-- x;
     var vtable = allocateRawMemory(DisplayableVTable, 1);
@@ -67,10 +67,10 @@ overload Displayable(x:T) {
 }
 
 // default constructor
-overload Displayable() = Displayable(null(Opaque), null(DisplayableVTable));
+Displayable() = Displayable(null(Opaque), null(DisplayableVTable));
 
 // copy constructor
-overload Displayable(x:Displayable) {
+Displayable(x:Displayable) {
     if (null?(x.obj))
         return Displayable();
     var vt = x.vtable;
@@ -83,17 +83,17 @@ overload Displayable(x:Displayable) {
 }
 
 // moveUnsafe
-overload moveUnsafe(src:Displayable) --> returned:Displayable {
+moveUnsafe(src:Displayable) --> returned:Displayable {
     returned <-- Displayable(src.obj, src.vtable);
 }
 
 // resetUnsafe
-overload resetUnsafe(x:Displayable) {
+resetUnsafe(x:Displayable) {
     x <-- Displayable();
 }
 
 // destructor
-overload destroy(x:Displayable) {
+destroy(x:Displayable) {
     if (not null?(x.obj)) {
         x.vtable^.destructor(x.obj^);
         freeRawMemoryAligned(x.obj);
@@ -102,7 +102,7 @@ overload destroy(x:Displayable) {
 }
 
 
-overload display(x:Displayable) {
+display(x:Displayable) {
     x.vtable^.display(x.obj^);
 }
 

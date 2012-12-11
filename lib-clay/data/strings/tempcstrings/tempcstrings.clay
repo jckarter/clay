@@ -9,22 +9,22 @@ record CStringHolder[Owned] (
 );
 
 [Owned]
-overload fieldRef(s: CStringHolder[Owned], #"ptr") = s.cstring.ptr;
+fieldRef(s: CStringHolder[Owned], #"ptr") = s.cstring.ptr;
 
 [Owned]
-overload PODType?(#CStringHolder[Owned]) = false;
+PODType?(#CStringHolder[Owned]) = false;
 [Owned]
-overload RegularRecord?(#CStringHolder[Owned]) = false;
+RegularRecord?(#CStringHolder[Owned]) = false;
 [Owned]
-overload BitwiseMovedType?(#CStringHolder[Owned]) = true;
+BitwiseMovedType?(#CStringHolder[Owned]) = true;
 
 [Owned]
-overload resetUnsafe(s: CStringHolder[Owned]) {
+resetUnsafe(s: CStringHolder[Owned]) {
     s.cstring = CStringRef();
 }
 
 [Owned]
-overload destroy(holder: CStringHolder[Owned]) {
+destroy(holder: CStringHolder[Owned]) {
     if (#Owned) {
         libc.free(holder.cstring.ptr);
     }

@@ -10,23 +10,23 @@ import crypto.digest.internal.*;
 
 alias SHA256_NAME = #"SHA-256";
 
-overload Algorithm?(#SHA256_NAME) = true;
+Algorithm?(#SHA256_NAME) = true;
 
-overload DigestSize(#SHA256_NAME) = 32u;
+DigestSize(#SHA256_NAME) = 32u;
 
-overload Word(#SHA256_NAME) = UInt32;
+Word(#SHA256_NAME) = UInt32;
 
-overload WordIsBigEndian?(#SHA256_NAME) = true;
+WordIsBigEndian?(#SHA256_NAME) = true;
 
-overload StateSizeWords(#SHA256_NAME) = 8;
+StateSizeWords(#SHA256_NAME) = 8;
 
-overload BlockSizeWords(#SHA256_NAME) = 16;
+BlockSizeWords(#SHA256_NAME) = 16;
 
-overload BitCountWord(#SHA256_NAME) = UInt64;
+BitCountWord(#SHA256_NAME) = UInt64;
 
 record SHA256 = MakeDigest(#SHA256_NAME);
 record SHA256Context = MakeDigestContext(#SHA256_NAME);
-overload AlgorithmTypes(#SHA256_NAME) = #SHA256, #SHA256Context;
+AlgorithmTypes(#SHA256_NAME) = #SHA256, #SHA256Context;
 
 var sha256Initial = array(
         0x6a09e667_u,
@@ -39,7 +39,7 @@ var sha256Initial = array(
         0x5be0cd19_u,
     );
 
-overload stateInitial(#SHA256_NAME) = ref sha256Initial;
+stateInitial(#SHA256_NAME) = ref sha256Initial;
 
 private var sha256RoundConstants = array(
    0x428a2f98_u, 0x71374491_u, 0xb5c0fbcf_u, 0xe9b5dba5_u,
@@ -63,7 +63,7 @@ private var sha256RoundConstants = array(
 private alias SHA256State = State(#SHA256_NAME);
 private alias SHA256BlockBytes = BlockBytes(#SHA256_NAME);
 
-overload processBlock(#SHA256_NAME, state: SHA256State, chunkBytes: SHA256BlockBytes) {
+processBlock(#SHA256_NAME, state: SHA256State, chunkBytes: SHA256BlockBytes) {
     var chunkSpace = Array[UInt32, 64]();
     
     ref chunkSpaceFirstWords = Pointer[Array[UInt32, 16]](@chunkSpace)^;
@@ -119,7 +119,7 @@ overload processBlock(#SHA256_NAME, state: SHA256State, chunkBytes: SHA256BlockB
         stateWord = wrapAdd(stateWord, tempStateWord);
 }
 
-overload digestFinish(context: SHA256Context) = digestFinishGeneric(context);
+digestFinish(context: SHA256Context) = digestFinishGeneric(context);
 
 sha256(message) = digest(message, #SHA256_NAME);
 
@@ -128,23 +128,23 @@ sha256(message) = digest(message, #SHA256_NAME);
 
 alias SHA512_NAME = #"SHA-512";
 
-overload Algorithm?(#SHA512_NAME) = true;
+Algorithm?(#SHA512_NAME) = true;
 
-overload DigestSize(#SHA512_NAME) = 64u;
+DigestSize(#SHA512_NAME) = 64u;
 
-overload Word(#SHA512_NAME) = UInt64;
+Word(#SHA512_NAME) = UInt64;
 
-overload WordIsBigEndian?(#SHA512_NAME) = true;
+WordIsBigEndian?(#SHA512_NAME) = true;
 
-overload StateSizeWords(#SHA512_NAME) = 8;
+StateSizeWords(#SHA512_NAME) = 8;
 
-overload BlockSizeWords(#SHA512_NAME) = 16;
+BlockSizeWords(#SHA512_NAME) = 16;
 
-overload BitCountWord(#SHA512_NAME) = PoorManUInt128;
+BitCountWord(#SHA512_NAME) = PoorManUInt128;
 
 record SHA512 = MakeDigest(#SHA512_NAME);
 record SHA512Context = MakeDigestContext(#SHA512_NAME);
-overload AlgorithmTypes(#SHA512_NAME) = #SHA512, #SHA512Context;
+AlgorithmTypes(#SHA512_NAME) = #SHA512, #SHA512Context;
 
 var sha512Initial = array(
         0x6a09e667f3bcc908_ul,
@@ -157,7 +157,7 @@ var sha512Initial = array(
         0x5be0cd19137e2179_ul,
     );
 
-overload stateInitial(#SHA512_NAME) = ref sha512Initial;
+stateInitial(#SHA512_NAME) = ref sha512Initial;
 
 private var sha512RoundConstants = array(
         0x428A2F98D728AE22_ul, 0x7137449123EF65CD_ul, 0xB5C0FBCFEC4D3B2F_ul, 0xE9B5DBA58189DBBC_ul,
@@ -185,7 +185,7 @@ private var sha512RoundConstants = array(
 private alias SHA512State = State(#SHA512_NAME);
 private alias SHA512BlockBytes = BlockBytes(#SHA512_NAME);
 
-overload processBlock(#SHA512_NAME, state: SHA512State, chunkBytes: SHA512BlockBytes) {
+processBlock(#SHA512_NAME, state: SHA512State, chunkBytes: SHA512BlockBytes) {
     var chunkSpace = Array[UInt64, 80]();
     
     ref chunkSpaceFirstWords = Pointer[Array[UInt64, 16]](@chunkSpace)^;
@@ -241,7 +241,7 @@ overload processBlock(#SHA512_NAME, state: SHA512State, chunkBytes: SHA512BlockB
         stateWord = wrapAdd(stateWord, tempStateWord);
 }
 
-overload digestFinish(context: SHA512Context) = digestFinishGeneric(context);
+digestFinish(context: SHA512Context) = digestFinishGeneric(context);
 
 sha512(message) = digest(message, #SHA512_NAME);
 

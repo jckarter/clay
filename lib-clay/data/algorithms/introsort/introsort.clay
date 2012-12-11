@@ -2,11 +2,11 @@ import data.algorithms.heaps.*;
 
 define introSort;
 
-overload introSort(a, compareLess?) {
+introSort(a, compareLess?) {
     introSort(begin(a), end(a), compareLess?);
 }
 
-overload introSort(first, last, compareLess?) {
+introSort(first, last, compareLess?) {
     if (first != last) {
         introSortLoop(first, last, log2(last-first)*2, compareLess?);
         finalInsertionSort(first, last, compareLess?);
@@ -95,11 +95,11 @@ finalInsertionSort(first_, last_, compareLess?) {
 
 define insertionSort;
 
-overload insertionSort(a, compareLess?) {
+insertionSort(a, compareLess?) {
     insertionSort(begin(a), end(a), compareLess?);
 }
 
-overload insertionSort(first_, last_, compareLess?) {
+insertionSort(first_, last_, compareLess?) {
     var first, last = first_, last_;
     if (first == last)
         return;
@@ -151,11 +151,11 @@ moveBackward(first_, last_, newLast_) {
 
 define heapSort;
 
-overload heapSort(a) {
+heapSort(a) {
     heapSort(begin(a), end(a));
 }
 
-overload heapSort(first, last, compareLess?) {
+heapSort(first, last, compareLess?) {
     partialSort(first, last, last, compareLess?);
 }
 
