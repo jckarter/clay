@@ -23,7 +23,7 @@ printReprTo(stream, x:GenericIOError) {
 record UnsupportedOperationIOError(where:StringLiteralRef);
 
 [S when StringLiteral?(S)]
-overload UnsupportedOperationIOError(#S) =
+UnsupportedOperationIOError(#S) =
     UnsupportedOperationIOError(StringLiteralRef(S));
 
 variant IOError;
