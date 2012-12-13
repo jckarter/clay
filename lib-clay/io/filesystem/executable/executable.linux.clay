@@ -1,3 +1,3 @@
-import io.filesystem.*;
+import io.filesystem.platform.*;
 
-pathToExecutable() = readLink("/proc/self/exe");
+pathToExecutable() = readLinkImpl(CStringRef("/proc/self/exe"));

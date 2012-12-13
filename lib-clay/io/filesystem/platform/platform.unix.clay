@@ -1,19 +1,121 @@
-
+import unix.*;
 import unix;
+import io.errors.*;
+import data.strings.*;
 import libc;
 import io.errors.*;
+import io.filesystem.platform.common.*;
 import data.algorithms.(reverseFind,reverseFindIf,reverseInPlace,beginsWith?,endsWith?);
-import data.strings.*;
 import data.vectors.*;
 import data.sequences.*;
+
+
+
+readLink(x: CStringRef) {
+    var path_max = pathconf(x.ptr, _PC_PATH_MAX);
+    if (path_max < 0)
+        path_max = 4096;
+
+    var buf = String();
+    resize(buf, path_max);
+
+    var size = readlink(x.ptr, Pointer[CChar](begin(buf)), size_t(path_max));
+    if (size < 0)
+        throw GenericIOError(errno(), "readlink");
+
+    resize(buf, size);
+    return move(buf);
+}
+
+moveFile(fromPath: CStringRef, toPath: CStringRef) {
+    var ok = libc.rename(fromPath.ptr, toPath.ptr);
+    if (ok != 0)
+        throw GenericIOError(errno(), "rename");
+}
+
+deleteFile(path: CStringRef) {
+    var ok = unlink(path.ptr);
+    if (ok != 0)
+        throw GenericIOError(errno(), "unlink");
+}
+
+
+
+
+
+/// @section DirectoryIterator
+
+record DirectoryIterator (
+    dir : Pointer[DIR],
+    dirent: Struct_dirent,
+);
+
+[S when CCompatibleString?(S)]
+overload DirectoryIterator(dir: S) --> returned: DirectoryIterator {
+    returned.dir = opendir(cstring(dir));
+    if (null?(returned.dir))
+        throw GenericIOError(errno(), "opendir");
+}
+
+
+overload RegularRecord?(#DirectoryIterator) = false;
+overload BitwiseMovedType?(#DirectoryIterator) = true;
+
+overload destroy(s: DirectoryIterator) {
+    if (not null?(s.dir)) {
+        var result = closedir(s.dir);
+        assert(result != wrapCast(Type(result), -1));
+    }
+}
+overload resetUnsafe(s: DirectoryIterator) {
+    s.dir = null(DIR);
+}
+
+overload iterator(x:DirectoryIterator) = forward x;
+
+overload nextValue(x:DirectoryIterator) {
+    while (true) {
+    var ptr = Pointer[Struct_dirent]();
+    var returnCode = readdir_r(x.dir, @x.dirent, @ptr);
+    if (returnCode != 0)
+        throw GenericIOError(errno(), "readdir_r");
+    if (null?(ptr))
+        return nothing(DirectoryEntry);
+        var name = CStringRef(begin(x.dirent.d_name));
+        if (name == "." or name == "..")
+            continue;
+        return Maybe(DirectoryEntry(name));
+    }
+}
+
+
+
+/// @section makeDirectory, deleteDirectory
+
+makeDirectoryImpl(path: CStringRef) {
+    alias oct777 = 511;
+    var r = mkdir(path.ptr, mode_t(oct777));
+    if (r < 0) {
+        throw GenericIOError(errno(), "mkdir");
+    }
+}
+
+deleteDirectoryImpl(path: CStringRef) {
+    var r = rmdir(path.ptr);
+    if (r < 0) {
+        throw GenericIOError(errno(), "rmdir");
+    }
+}
+
 
 
 
 /// @section  PATH_SEPARATOR, PATH_LIST_SEPARATOR, rootDirectory?, absolutePath? 
 
-alias PATH_SEPARATOR = '/';
+private alias PATH_SEPARATOR = '/';
 alias PATH_LIST_SEPARATOR = ':';
 
+// TODO: implement on windows
 rootDirectory?(s) = (s == "/");
 absolutePath?(s) = beginsWith?(s, '/');
 
@@ -97,9 +199,9 @@ private trimDirectoryTail(path:String) {
 
 /// @section  pathExists? 
 
-pathExists?(p) {
+pathExistsImpl?(p: CStringRef) {
     var statBuf = unix.Struct_stat();
-    var result = unix.lstat(cstring(p), @statBuf);
+    var result = unix.lstat(p.ptr, @statBuf);
     return result == 0;
 }
 
@@ -108,9 +210,9 @@ pathExists?(p) {
 private alias S_IFDIR = 0x4000;
 private alias S_IFREG = 0x8000;
 
-pathIsDirectory?(p) {
+pathIsDirectoryImpl?(p: CStringRef) {
     var statBuf = unix.Struct_stat();
-    var result = unix.lstat(cstring(p), @statBuf);
+    var result = unix.lstat(p.ptr, @statBuf);
     if (result != 0) {
         // TODO: throw if anything except ENOENT
         return false;
@@ -118,9 +220,9 @@ pathIsDirectory?(p) {
     return (statBuf.st_mode & S_IFDIR) != 0;
 }
 
-pathIsRegularFile?(p) {
+pathIsRegularFileImpl?(p: CStringRef) {
     var statBuf = unix.Struct_stat();
-    var result = unix.lstat(cstring(p), @statBuf);
+    var result = unix.lstat(p.ptr, @statBuf);
     if (result != 0) {
         // TODO: throw if anything except ENOENT
         return false;
@@ -132,11 +234,13 @@ pathIsRegularFile?(p) {
 
 /// @section  systemPath, currentDirectory 
 
+// TODO: implement on windows
 systemPath() {
     var pathList = CStringRef(libc.getenv(cstring("PATH")));
     return split(pathList, PATH_LIST_SEPARATOR);
 }
 
+// TODO: implement on windows
 currentDirectory() {
     var buf = String();
     resize(buf, 1024);
@@ -150,7 +254,7 @@ currentDirectory() {
             throw GenericIOError(err, "getcwd");
         resize(buf, 2*size(buf));
     }
- 
+
     resize(buf, libc.strlen(Pointer[CChar](begin(buf))));
     return move(buf);
 }
@@ -159,6 +263,7 @@ currentDirectory() {
 
 /// @section  pathToExecutable 
 
+// TODO: implement on windows
 define pathToExecutable;
 
 pathToExecutable() = pathToExecutable(commandLine()[0]);
@@ -168,8 +273,9 @@ pathToExecutable(arg0) {
     insert(searchDirs, 0, currentDirectory());
     for (pathDir in searchDirs) {
         var p = joinPath(pathDir, arg0);
-        if (pathExists?(p))
+        if (pathExistsImpl?(CStringRef(p)))
             return move(p);
     }
     return String();
 }
+

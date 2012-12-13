@@ -1,0 +1,54 @@
+import data.strings.tempcstrings.*;
+import io.filesystem.platform.*;
+
+import data.vectors.*;
+import data.strings.*;
+import data.strings.tempcstrings.*;
+
+public import io.filesystem.executable.*;
+public import io.filesystem.platform.(
+    splitPath,
+    pathDirname,
+    pathBasename,
+    pathComponents,
+    joinPath,
+);
+
+
+moveFile(fromPath, toPath) =
+    moveFileImpl(tempCString(fromPath).cstring, tempCString(toPath).cstring);
+
+deleteFile(path) =
+    deleteFileImpl(tempCString(path).cstring);
+
+readLink(path) =
+    readLinkImpl(tempCString(path).cstring);
+
+
+
+/// @section  listDirectory
+
+listDirectory(x) {
+    var r = Vector[String]();
+    var it = DirectoryIterator(x);
+    for (entry in it) {
+        push(r, String(entry.name));
+    }
+    return r;
+}
+
+makeDirectory(path) {
+    makeDirectoryImpl(tempCString(path).cstring);
+}
+
+deleteDirectory(path) {
+    deleteDirectoryImpl(tempCString(path).cstring);
+}
+
+pathExists?(p) = pathExistsImpl?(tempCString(p).cstring);
+
+pathIsDirectory?(p) = pathIsDirectoryImpl?(tempCString(p).cstring);
+
+pathIsRegularFile?(p) = pathIsRegularFileImpl?(tempCString(p).cstring);
+
+

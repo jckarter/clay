@@ -7,9 +7,8 @@ import printer.*;
 import data.algorithms.*;
 import data.vectors.*;
 
-import io.directories.*;
+import io.filesystem.*;
 import io.temp.*;
-import io.paths.*;
 
 import test.*;
 

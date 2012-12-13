@@ -1,6 +1,6 @@
 
 import test.*;
-import io.paths.*;
+import io.filesystem.*;
 import printer.(printTo);
 import data.strings.*;
 import data.vectors.*;
