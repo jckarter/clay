@@ -131,7 +131,7 @@ static void getIntrinsicSymbols(ModulePtr module)
     module->allSymbolsLoaded = 1;
 }
 
- const llvm::StringMap<ImportSet> &getPublicSymbols(ModulePtr module)
+static const llvm::StringMap<ImportSet> &getPublicSymbols(ModulePtr module)
 {
     if (module->publicSymbolsLoaded)
         return module->publicSymbols;
