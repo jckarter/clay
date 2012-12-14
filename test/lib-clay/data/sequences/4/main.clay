@@ -39,7 +39,7 @@ variant List[T] (Cons[T], Nil);
 cons(l: SharedPointer[List[T]], forward value: T) = new(List[T](Cons[T](value, l)));
 
 [T]
-overload printTo(s, c: Cons[T]) {
+override printTo(s, c: Cons[T]) {
     printTo(s, c.car, "::", c.cdr^);
 }
 

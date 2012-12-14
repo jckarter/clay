@@ -6,23 +6,23 @@ public import __primitives__.(Static);
 /// @section  Static? predicate 
 
 define Static?(x) : Bool private overload;
-alias overload Static?(x) : Bool = false;
-[T] alias overload Static?(#T) : Bool = true;
+alias override Static?(x) : Bool = false;
+[T] alias override Static?(#T) : Bool = true;
 
 
 
 /// @section  constructors, moveUnsafe, resetUnsafe, destroy 
 
 [A]
-forceinline overload Static[A]() --> returned:Static[A] {
+forceinline override Static[A]() --> returned:Static[A] {
 }
 
 [A]
-forceinline overload Static[A](src:Static[A]) --> returned:Static[A] {
+forceinline override Static[A](src:Static[A]) --> returned:Static[A] {
 }
 
 [A]
-forceinline overload moveUnsafe(src:Static[A]) --> returned:Static[A] {
+forceinline override moveUnsafe(src:Static[A]) --> returned:Static[A] {
 }
 
 
@@ -30,13 +30,13 @@ forceinline overload moveUnsafe(src:Static[A]) --> returned:Static[A] {
 /// @section  equals?, lesser? 
 
 [A, B]
-forceinline overload equals?(a:Static[A], b:Static[B]) : Bool = false;
+forceinline override equals?(a:Static[A], b:Static[B]) : Bool = false;
 
 [A]
-forceinline overload equals?(a:Static[A], b:Static[A]) : Bool = true;
+forceinline override equals?(a:Static[A], b:Static[A]) : Bool = true;
 
 [A]
-forceinline overload lesser?(a:Static[A], b:Static[A]) : Bool = false;
+forceinline override lesser?(a:Static[A], b:Static[A]) : Bool = false;
 
 
 
@@ -50,7 +50,7 @@ forceinline unwrapStatic(#A) = A;
 /// @section  call 
 
 [F, ..AA when CallDefined?(F, ..AA)]
-forceinline overload call(#F, forward ..args:AA) =
+forceinline override call(#F, forward ..args:AA) =
     forward ..F(..args);
 
 
@@ -58,5 +58,5 @@ forceinline overload call(#F, forward ..args:AA) =
 /// @section  fieldRef 
 
 [Module, Ident]
-forceinline overload fieldRef(#Module, #Ident) =
+forceinline override fieldRef(#Module, #Ident) =
     forward staticFieldRef(Module, Ident);

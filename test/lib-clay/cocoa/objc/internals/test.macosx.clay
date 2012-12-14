@@ -9,57 +9,57 @@ import zim.zang.(ZangClass);
 
 record NSZone ();
 
-overload selector("alloc") = Id;
-overload selector("allocWithZone:") = Id, NSZone;
-overload selector("new") = Id;
+override selector("alloc") = Id;
+override selector("allocWithZone:") = Id, NSZone;
+override selector("new") = Id;
 
-overload selector("init") = Id;
-overload selector("class") = Id; // XXX Class
-overload selector("copy") = Id;
-overload selector("copyWithZone:") = Id, NSZone;
-overload selector("mutableCopy") = Id;
-overload selector("retain") = Id;
-overload selector("release") = Void;
-overload selector("autorelease") = Id;
-overload selector("dealloc") = Void;
+override selector("init") = Id;
+override selector("class") = Id; // XXX Class
+override selector("copy") = Id;
+override selector("copyWithZone:") = Id, NSZone;
+override selector("mutableCopy") = Id;
+override selector("retain") = Id;
+override selector("release") = Void;
+override selector("autorelease") = Id;
+override selector("dealloc") = Void;
 
-overload selector("stringWithUTF8String:") = Id, Pointer[CChar];
-overload selector("initWithUTF8String:") = Id, Pointer[CChar];
-overload selector("UTF8String") = Pointer[CChar];
-overload selector("description") = NSString;
-overload varargSelector("stringWithFormat:") = Id, NSString;
-overload varargSelector("initWithFormat:") = Id, NSString;
+override selector("stringWithUTF8String:") = Id, Pointer[CChar];
+override selector("initWithUTF8String:") = Id, Pointer[CChar];
+override selector("UTF8String") = Pointer[CChar];
+override selector("description") = NSString;
+override varargSelector("stringWithFormat:") = Id, NSString;
+override varargSelector("initWithFormat:") = Id, NSString;
 
-overload selector("drain") = Void;
+override selector("drain") = Void;
 
-overload selector("isEnabled") = Bool;
-overload selector("setEnabled:") = Void, Bool;
+override selector("isEnabled") = Bool;
+override selector("setEnabled:") = Void, Bool;
 
-overload selector("version") = Id;
-overload selector("classVersion") = Id;
+override selector("version") = Id;
+override selector("classVersion") = Id;
 
 record NSObject = externalClass(Void);
-overload externalClassMethod(#NSObject, "alloc") = Id;
-overload externalClassMethod(#NSObject, "allocWithZone:") = Id, NSZone;
-overload externalClassMethod(#NSObject, "new") = Id;
-overload externalInstanceMethod(#NSObject, "init") = Id;
-overload externalInstanceMethod(#NSObject, "copy") = Id;
-overload externalInstanceMethod(#NSObject, "copyWithZone:") = Id, NSZone;
-overload externalInstanceMethod(#NSObject, "mutableCopy") = Id;
-overload externalInstanceMethod(#NSObject, "retain") = Id;
+override externalClassMethod(#NSObject, "alloc") = Id;
+override externalClassMethod(#NSObject, "allocWithZone:") = Id, NSZone;
+override externalClassMethod(#NSObject, "new") = Id;
+override externalInstanceMethod(#NSObject, "init") = Id;
+override externalInstanceMethod(#NSObject, "copy") = Id;
+override externalInstanceMethod(#NSObject, "copyWithZone:") = Id, NSZone;
+override externalInstanceMethod(#NSObject, "mutableCopy") = Id;
+override externalInstanceMethod(#NSObject, "retain") = Id;
 
 record NSString = externalClass(NSObject);
-overload externalClassMethod(#NSString, "stringWithUTF8String:")
+override externalClassMethod(#NSString, "stringWithUTF8String:")
     = Id, Pointer[CChar];
-overload externalVarargClassMethod(#NSString, "stringWithFormat:")
+override externalVarargClassMethod(#NSString, "stringWithFormat:")
     = Id, NSString;
-overload externalInstanceMethod(#NSString, "initWithUTF8String:")
+override externalInstanceMethod(#NSString, "initWithUTF8String:")
     = Id, Pointer[CChar];
-overload externalVarargInstanceMethod(#NSString, "initWithFormat:")
+override externalVarargInstanceMethod(#NSString, "initWithFormat:")
     = Id, NSString;
-overload externalInstanceMethod(#NSString, "UTF8String")
+override externalInstanceMethod(#NSString, "UTF8String")
     = Pointer[CChar];
-overload externalInstanceMethod(#NSString, "description")
+override externalInstanceMethod(#NSString, "description")
     = NSString;
 
 record NSMutableString = externalClass(NSString);
@@ -175,21 +175,21 @@ __expectMsgSendCompatible(expectTF, ParamType, ValueType) {
 }
 
 define _expectMsgSendCompatible;
-overload _expectMsgSendCompatible(expectTF, ParamType, ValueType) {
+override _expectMsgSendCompatible(expectTF, ParamType, ValueType) {
     __expectMsgSendCompatible(expectTF, ParamType, ValueType);
 }
 [ParamType when ObjectType?(ParamType)]
-overload _expectMsgSendCompatible(expectTF, #ParamType, ValueType) {
+override _expectMsgSendCompatible(expectTF, #ParamType, ValueType) {
     __expectMsgSendCompatible(expectTF, ParamType, ValueType);
     __expectMsgSendCompatible(expectTF, Retained[ParamType], ValueType);
 }
 [ValueType when ObjectType?(ValueType)]
-overload _expectMsgSendCompatible(expectTF, ParamType, #ValueType) {
+override _expectMsgSendCompatible(expectTF, ParamType, #ValueType) {
     __expectMsgSendCompatible(expectTF, ParamType, ValueType);
     __expectMsgSendCompatible(expectTF, ParamType, Retained[ValueType]);
 }
 [ParamType, ValueType when ObjectType?(ParamType) and ObjectType?(ValueType)]
-overload _expectMsgSendCompatible(expectTF, #ParamType, #ValueType) {
+override _expectMsgSendCompatible(expectTF, #ParamType, #ValueType) {
     __expectMsgSendCompatible(expectTF, ParamType, ValueType);
     __expectMsgSendCompatible(expectTF, Retained[ParamType], ValueType);
     __expectMsgSendCompatible(expectTF, ParamType, Retained[ValueType]);

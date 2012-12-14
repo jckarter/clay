@@ -7,62 +7,62 @@ alias db_zero = ieee_db(0.0);
 // Get two 32 bit ints from a double.  
 
 define MAKE_IEEE;
-alias overload MAKE_IEEE(d:Double) = ieee_db(d);
-alias overload MAKE_IEEE(l:Int64) = ieee_db(l);
-alias overload MAKE_IEEE(hi:Int32,lo:Int32) = ieee_db(array(lo,hi));
-alias overload MAKE_IEEE(lo:UInt32,hi:UInt32) 
+alias override MAKE_IEEE(d:Double) = ieee_db(d);
+alias override MAKE_IEEE(l:Int64) = ieee_db(l);
+alias override MAKE_IEEE(hi:Int32,lo:Int32) = ieee_db(array(lo,hi));
+alias override MAKE_IEEE(lo:UInt32,hi:UInt32) 
     = MAKE_IEEE(bitcast(Int32,hi),bitcast(Int32,lo));
 
 // Get a 64-bit int from a double. 
 define GET_IEEE_L;
-alias overload GET_IEEE_L(d:Double) = ieee_db(d).1;
-alias overload GET_IEEE_L(x:ieee_db) = ref x.1; 
-alias overload GET_IEEE_L(hi,lo) = ieee_db(array(lo,hi)).1;
+alias override GET_IEEE_L(d:Double) = ieee_db(d).1;
+alias override GET_IEEE_L(x:ieee_db) = ref x.1; 
+alias override GET_IEEE_L(hi,lo) = ieee_db(array(lo,hi)).1;
 
 // Get the more significant 32 bit int from a double.  
 define GET_IEEE_HIGH;
-alias overload GET_IEEE_HIGH(d:Double) = ieee_db(d).0[1];
-alias overload GET_IEEE_HIGH(x:ieee_db) = ref x.0[1]; 
-alias overload GET_IEEE_HIGH(l:Int64) = ieee_db(l).0[1]; 
+alias override GET_IEEE_HIGH(d:Double) = ieee_db(d).0[1];
+alias override GET_IEEE_HIGH(x:ieee_db) = ref x.0[1]; 
+alias override GET_IEEE_HIGH(l:Int64) = ieee_db(l).0[1]; 
 
 // Get the less significant 32 bit int from a double.  
 define GET_IEEE_LOW;
-alias overload GET_IEEE_LOW(d:Double) = ieee_db(d).0[0];
-alias overload GET_IEEE_LOW(x:ieee_db) = ref x.0[0]; 
-alias overload GET_IEEE_LOW(l:Int64) = ieee_db(l).0[0]; 
+alias override GET_IEEE_LOW(d:Double) = ieee_db(d).0[0];
+alias override GET_IEEE_LOW(x:ieee_db) = ref x.0[0]; 
+alias override GET_IEEE_LOW(l:Int64) = ieee_db(l).0[0]; 
 
 define GET_IEEE_DB;
-alias overload GET_IEEE_DB(l:Int64) = ieee_db(l).2;
-alias overload GET_IEEE_DB(hi,lo) = ieee_db(array(lo,hi)).2;
-alias overload GET_IEEE_DB(x:ieee_db) = ref x.2;
+alias override GET_IEEE_DB(l:Int64) = ieee_db(l).2;
+alias override GET_IEEE_DB(hi,lo) = ieee_db(array(lo,hi)).2;
+alias override GET_IEEE_DB(x:ieee_db) = ref x.2;
 
 define SET_IEEE;
-alias overload SET_IEEE(x:ieee_db,v:Double) { x.2 = v; }
-alias overload SET_IEEE(x:ieee_db,v:Int64) { x.1 = v; }
-alias overload SET_IEEE(x:ieee_db,hi:Int32,lo:Int32) {x.0[1],x.0[0] = hi,lo;}
+alias override SET_IEEE(x:ieee_db,v:Double) { x.2 = v; }
+alias override SET_IEEE(x:ieee_db,v:Int64) { x.1 = v; }
+alias override SET_IEEE(x:ieee_db,hi:Int32,lo:Int32) {x.0[1],x.0[0] = hi,lo;}
 
 // Set the more significant 32 bits of a double from an int.  
 define SET_IEEE_HIGH;
-alias overload SET_IEEE_HIGH(x:ieee_db,v:Int32) { x.0[1] = v; }
-alias overload SET_IEEE_HIGH(d:Double,v:Int32) {
+alias override SET_IEEE_HIGH(x:ieee_db,v:Int32) { x.0[1] = v; }
+alias override SET_IEEE_HIGH(d:Double,v:Int32) {
     var x = ieee_db(d);
     x.0[1] = v;
     return move(x).2;
 }
-alias overload SET_IEEE_HIGH(l:Int64,v:Int32) {
+alias override SET_IEEE_HIGH(l:Int64,v:Int32) {
     var x = ieee_db(l);
     x.0[1] = v;
     return move(x).1;
 }
 
 define SET_IEEE_LOW;
-alias overload SET_IEEE_LOW(x:ieee_db,v:Int32) { x.0[0] = v; }
-alias overload SET_IEEE_LOW(d:Double,v:Int32) {
+alias override SET_IEEE_LOW(x:ieee_db,v:Int32) { x.0[0] = v; }
+alias override SET_IEEE_LOW(d:Double,v:Int32) {
     var x = ieee_db(d);
     x.0[0] = v;
     return move(x).2;
 }
-alias overload SET_IEEE_LOW(l:Int64,v:Int32) {
+alias override SET_IEEE_LOW(l:Int64,v:Int32) {
     var x = ieee_db(l);
     x.0[0] = v;
     return move(x).1;

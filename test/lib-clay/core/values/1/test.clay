@@ -9,13 +9,13 @@ even?(x) = x % 2 == 0;
 // non-copyable, non-constructible record
 record NonConstructibleRecord ();
 
-overload RegularRecord?(#NonConstructibleRecord) = false;
+override RegularRecord?(#NonConstructibleRecord) = false;
 
 makeNonConstructibleRecord(foo: Int) --> returned: NonConstructibleRecord { }
 
-overload moveUnsafe(src: NonConstructibleRecord) --> returned: NonConstructibleRecord { }
-overload resetUnsafe(foo: NonConstructibleRecord) { }
-overload destroy(foo: NonConstructibleRecord) { }
+override moveUnsafe(src: NonConstructibleRecord) --> returned: NonConstructibleRecord { }
+override resetUnsafe(foo: NonConstructibleRecord) { }
+override destroy(foo: NonConstructibleRecord) { }
 
 expectRef(ref a) {}
 expectRValue(rvalue a) {}

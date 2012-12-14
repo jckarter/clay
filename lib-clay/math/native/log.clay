@@ -4,7 +4,7 @@ import math.native.kernel.ieee754.*;
 import math.native.protocol.*;
 
 
-overload log(x:Double) : Double {
+override log(x:Double) : Double {
 	alias ZERO = 0.;
 	alias HALF = 0.5;
 	alias ONE = 1.;
@@ -56,7 +56,7 @@ alias Lg3 =      0x91e9ee.0p-25f;	// 0.28498786688
 alias Lg4 =      0xf89e26.0p-26f;	// 0.24279078841 
 
 
-overload log(x:Float) : Float {
+override log(x:Float) : Float {
 	alias ZERO = 0.f;
 	var ix = GET_FLOAT_SIGNED(x);
 	var k = 0;
@@ -91,7 +91,7 @@ overload log(x:Float) : Float {
 	    return if(k==0) f-s*(f-R) else k*ln2_hi-((s*(f-R)-k*ln2_lo)-f);
 }
 
-overload log(b,x) = log(x) / log(b);
+override log(b,x) = log(x) / log(b);
 
 
 //  Complex natural logarithm
@@ -133,7 +133,7 @@ overload log(b,x) = log(x) / log(b);
 
 
 [T when Complex?(T) ]
-overload log(z:T){
+override log(z:T){
     var rr = abs(z);
     var p = log(rr);
     rr = atan2(imagValue(z), real(z));

@@ -11,12 +11,12 @@ record OptionValue(
 );
 
 [T when String?(T) ]
-overload OptionValue(x : T) = move(
+override OptionValue(x : T) = move(
   OptionValue(String(x), nothing(String))
 );
 
 [S, T when String?(S) and String?(T)]
-overload OptionValue(x : S, y : T) = move(
+override OptionValue(x : S, y : T) = move(
   OptionValue(String(x), Maybe(String(y)))
 );
 
@@ -143,11 +143,11 @@ private addArgument(pr, arg){
 
 private define addOption;
 
-overload addOption(pr, spec){
+override addOption(pr, spec){
   addPT(pr, OptionValue(spec, nothing(String)));
 }
 
-overload addOption(pr, spec, op){
+override addOption(pr, spec, op){
   addPT(pr, OptionValue(spec, Maybe(op)));
 }
 

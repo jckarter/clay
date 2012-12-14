@@ -4,7 +4,7 @@ import math.native.kernel.ieee754.*;
 import math.native.protocol.*;
 import numbers.floats.(nan?,nan,infinity);
 
-overload hypot(x:Double, y:Double) : Double {
+override hypot(x:Double, y:Double) : Double {
 	alias ZERO = 0.;
 	alias ONE = 1.;
 	var ha = GET_IEEE_HIGH(x);
@@ -69,7 +69,7 @@ overload hypot(x:Double, y:Double) : Double {
 		return w;
 }
 
-overload hypot(x:Float, y:Float) : Float {
+override hypot(x:Float, y:Float) : Float {
 	alias ZERO = 0.f;
 	alias ONE = 1.f;
 	var ha = GET_FLOAT_WORD(x);

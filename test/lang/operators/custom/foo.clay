@@ -2,4 +2,4 @@ import printer.(println);
 
 define (~~);
 
-overload (~~)(a, b) { println("~~"); }
+override (~~)(a, b) { println("~~"); }

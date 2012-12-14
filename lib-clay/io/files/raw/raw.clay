@@ -9,23 +9,23 @@ record RawFilePointer (
     rawFile: SharedPointer[RawFile],
 );
 
-overload writeBytes(f: RawFilePointer, ..args) = ..writeBytes(f.rawFile^, ..args);
-overload readBytes (f: RawFilePointer, ..args) = ..readBytes (f.rawFile^, ..args);
-overload flush     (f: RawFilePointer, ..args) = ..flush     (f.rawFile^, ..args);
-overload fileSize  (f: RawFilePointer, ..args) = ..fileSize  (f.rawFile^, ..args);
-overload seek      (f: RawFilePointer, ..args) = ..seek      (f.rawFile^, ..args);
-overload fileHandle(f: RawFilePointer, ..args) = ..fileHandle(f.rawFile^, ..args);
+override writeBytes(f: RawFilePointer, ..args) = ..writeBytes(f.rawFile^, ..args);
+override readBytes (f: RawFilePointer, ..args) = ..readBytes (f.rawFile^, ..args);
+override flush     (f: RawFilePointer, ..args) = ..flush     (f.rawFile^, ..args);
+override fileSize  (f: RawFilePointer, ..args) = ..fileSize  (f.rawFile^, ..args);
+override seek      (f: RawFilePointer, ..args) = ..seek      (f.rawFile^, ..args);
+override fileHandle(f: RawFilePointer, ..args) = ..fileHandle(f.rawFile^, ..args);
 
-overload RawFilePointer(..args) =
+override RawFilePointer(..args) =
     initializeRecord(RawFilePointer, new(RawFile(..args)));
 
-overload RawFilePointer(rvalue rawFile: RawFile) =
+override RawFilePointer(rvalue rawFile: RawFile) =
     initializeRecord(RawFilePointer, new(move(rawFile)));
 
-overload RawFilePointer() =
+override RawFilePointer() =
     initializeRecord(RawFilePointer);
 
-overload RawFilePointer(original: RawFilePointer) =
+override RawFilePointer(original: RawFilePointer) =
     copyRecord(original);
 
 staticassert(OutputStream?(RawFile));

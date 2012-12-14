@@ -9,8 +9,8 @@ variant Animal;
 instance Animal (Human, Dog);
 
 define what;
-overload what(x:Human) = "Human";
-overload what(x:Dog) = "Dog";
+override what(x:Human) = "Human";
+override what(x:Dog) = "Dog";
 
 printPair(a, b) {
     println(what(a), ", ", what(b));
@@ -25,7 +25,7 @@ record Cat ();
 
 instance Animal (Cat);
 
-overload what(x:Cat) = "Cat";
+override what(x:Cat) = "Cat";
 
 
 main() {

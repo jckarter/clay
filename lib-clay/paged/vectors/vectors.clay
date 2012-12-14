@@ -15,19 +15,19 @@ record Vector[T] (
 
 /// @section  predicates 
 
-[T] overload RegularRecord?(#Vector[T]) = false;
+[T] override RegularRecord?(#Vector[T]) = false;
 
-[T] overload ContiguousSequence?(#Vector[T]) = true; 
+[T] override ContiguousSequence?(#Vector[T]) = true; 
 
 
 
 /// @section  constructors 
 
 [T]
-overload Vector[T]() = Vector[T](SizeT(0), SizeT(0), nullPaged(T));
+override Vector[T]() = Vector[T](SizeT(0), SizeT(0), nullPaged(T));
 
 [T,A when Sequence?(A) and (T == SequenceElementType(A))]
-overload Vector[T](a:A) {
+override Vector[T](a:A) {
     var v = Vector[T]();
     for (x in a)
         push(v, x);
@@ -35,7 +35,7 @@ overload Vector[T](a:A) {
 }
 
 [T,A when SizedSequence?(A) and (T == SequenceElementType(A))]
-overload Vector[T](a:A) {
+override Vector[T](a:A) {
     var v = Vector[T]();
     reserve(v, size(a));
     for (x in a)
@@ -44,7 +44,7 @@ overload Vector[T](a:A) {
 }
 
 [A when Sequence?(A)]
-overload Vector(a:A) {
+override Vector(a:A) {
     alias T = SequenceElementType(A);
     return Vector[T](a);
 }
@@ -54,7 +54,7 @@ overload Vector(a:A) {
 /// @section  varargs constructor 
 
 [T, ..A when (countValues(..A) > 0) and equalValues?(T, ..A)]
-alias overload Vector[T](..args:A) {
+alias override Vector[T](..args:A) {
     var v = Vector[T]();
     reserve(v, countValues(..A));
     push(v, ..args);
@@ -66,23 +66,23 @@ alias overload Vector[T](..args:A) {
 /// @section  moveUnsafe, resetUnsafe, assign, destroy 
 
 [T]
-overload BitwiseMovedType?(#Vector[T]) : Bool = true;
+override BitwiseMovedType?(#Vector[T]) : Bool = true;
 
 [T]
-overload resetUnsafe(a:Vector[T]) {
+override resetUnsafe(a:Vector[T]) {
     a <-- Vector[T]();
 }
 
 
 [T]
-overload assign(ref dest:Vector[T], ref src:Vector[T]) {
+override assign(ref dest:Vector[T], ref src:Vector[T]) {
     resize(dest, size(src));
     for (x, y in zipped(dest, src))
         assign(x, y);
 }
 
 [T]
-overload destroy(a:Vector[T]) {
+override destroy(a:Vector[T]) {
     for (x in a)
         destroy(x);
     freePaged(a.data);
@@ -93,24 +93,24 @@ overload destroy(a:Vector[T]) {
 /// @section  generic vector requirements 
 
 [T]
-overload Vector?(#Vector[T]) : Bool = true;
+override Vector?(#Vector[T]) : Bool = true;
 
 [T]
-overload vectorData(a:Vector[T]) = @(a.data^);
+override vectorData(a:Vector[T]) = @(a.data^);
 
 [T]
-overload vectorSize(a:Vector[T]) = a.size;
+override vectorSize(a:Vector[T]) = a.size;
 
 [T]
-overload vectorSetSize(a:Vector[T], n:SizeT) {
+override vectorSetSize(a:Vector[T], n:SizeT) {
     a.size = n;
 }
 
 [T]
-overload vectorCapacity(a:Vector[T]) = a.capacity;
+override vectorCapacity(a:Vector[T]) = a.capacity;
 
 [T]
-overload vectorRequestCapacity(a:Vector[T], capacity:SizeT) {
+override vectorRequestCapacity(a:Vector[T], capacity:SizeT) {
     assert(capacity >= a.size);
     if (capacity < a.capacity)
         return;

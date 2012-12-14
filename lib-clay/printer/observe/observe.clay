@@ -7,14 +7,14 @@ import io.files.raw.(stderrRawFile);
 
 define observeTo;
 
-overload observeTo(stream, forward ..x) {
+override observeTo(stream, forward ..x) {
     var captured = captureValues(..x);
     printlnTo(stream, "[observed: ", ..weaveValues(", ", ..capturedRefs(captured)), "]");
     flush(stream);
     return forward ..forwardValues(captured);
 }
 [tag when StringLiteral?(tag)]
-overload observeTo(stream, #tag, forward ..x) {
+override observeTo(stream, #tag, forward ..x) {
     var captured = captureValues(..x);
     printlnTo(stream, "[observed ", tag, ": ", ..weaveValues(", ", ..capturedRefs(captured)), "]");
     flush(stream);

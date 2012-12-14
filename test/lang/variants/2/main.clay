@@ -12,8 +12,8 @@ record Circle (
 variant Shape (Square, Circle);
 
 define show;
-overload show(x:Square) { println("Square(", x.side, ")"); }
-overload show(x:Circle) { println("Circle(", x.radius, ")"); }
+override show(x:Square) { println("Square(", x.side, ")"); }
+override show(x:Circle) { println("Circle(", x.radius, ")"); }
 
 main() {
     var v = Vector[Shape]();

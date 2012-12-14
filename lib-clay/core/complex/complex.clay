@@ -1,22 +1,22 @@
 define Complex?;
 
-overload Complex?(T) : Bool = false;
-overload Complex?(#Complex32) : Bool = true;
-overload Complex?(#Complex64) : Bool = true;
-overload Complex?(#Complex80) : Bool = true;
-[A, B] overload Complex?(#A, #B) : Bool = Complex?(A) and Complex?(B);
+override Complex?(T) : Bool = false;
+override Complex?(#Complex32) : Bool = true;
+override Complex?(#Complex64) : Bool = true;
+override Complex?(#Complex80) : Bool = true;
+[A, B] override Complex?(#A, #B) : Bool = Complex?(A) and Complex?(B);
 
 private define re;
 private define im;
 
-forceinline overload re(z:Complex32) : Pointer[Float] = Pointer[Float](@z);
-forceinline overload re(z:Complex64) : Pointer[Double] = Pointer[Double](@z);
-forceinline overload re(z:Complex80) : Pointer[LongDouble] 
+forceinline override re(z:Complex32) : Pointer[Float] = Pointer[Float](@z);
+forceinline override re(z:Complex64) : Pointer[Double] = Pointer[Double](@z);
+forceinline override re(z:Complex80) : Pointer[LongDouble] 
 	= Pointer[LongDouble](@z);
 
-forceinline overload im(z:Complex32) : Pointer[IFloat] = (Pointer[IFloat](@z)+1);
-forceinline overload im(z:Complex64) : Pointer[IDouble] = (Pointer[IDouble](@z)+1);
-forceinline overload im(z:Complex80) : Pointer[ILongDouble] 
+forceinline override im(z:Complex32) : Pointer[IFloat] = (Pointer[IFloat](@z)+1);
+forceinline override im(z:Complex64) : Pointer[IDouble] = (Pointer[IDouble](@z)+1);
+forceinline override im(z:Complex80) : Pointer[ILongDouble] 
 	= (Pointer[ILongDouble](@z)+1);
 
 [C when Complex?(C)]
@@ -27,88 +27,88 @@ define imag;
 define imagValue;
 
 [C when Complex?(C)]
-forceinline overload imag(z:C) = im(z)^;
+forceinline override imag(z:C) = im(z)^;
 [C when Complex?(C)]
-forceinline overload imagValue(z:C) = numericConvert(ComplexBaseType(C),im(z)^);
+forceinline override imagValue(z:C) = numericConvert(ComplexBaseType(C),im(z)^);
 
 [I when Imaginary?(I)]
-forceinline overload imag(z:I) = z;
-forceinline overload imagValue(z:Imag32) : Float32 = numericConvert(Float32, z);
-forceinline overload imagValue(z:Imag64) : Float64 = numericConvert(Float64, z);
-forceinline overload imagValue(z:Imag80) : Float80 = numericConvert(Float80, z);
+forceinline override imag(z:I) = z;
+forceinline override imagValue(z:Imag32) : Float32 = numericConvert(Float32, z);
+forceinline override imagValue(z:Imag64) : Float64 = numericConvert(Float64, z);
+forceinline override imagValue(z:Imag80) : Float80 = numericConvert(Float80, z);
 
 define Complex;
-forceinline overload Complex(a:Float,b:IFloat) --> r:Complex32 { re(r)^ = a; im(r)^ = b;}
-forceinline overload Complex(a:Double,b:IDouble) --> r:Complex64 { re(r)^ = a; im(r)^ = b;}
-forceinline overload Complex(a:LongDouble,b:ILongDouble) --> r:Complex80 { re(r)^ = a; im(r)^ = b;}
-forceinline overload Complex(a:Float,b:IDouble) --> r:Complex64 { re(r)^ = Double(a); im(r)^ = b;}
-forceinline overload Complex(a:Float,b:ILongDouble) --> r:Complex80 { re(r)^ = LongDouble(a); im(r)^ = b;}
-forceinline overload Complex(a:Double,b:IFloat) --> r:Complex64 { re(r)^ = a; im(r)^ = numericConvert(IDouble,b);}
-forceinline overload Complex(a:Double,b:ILongDouble) --> r:Complex80 { re(r)^ = LongDouble(a); im(r)^ = b;}
-forceinline overload Complex(a:LongDouble,b:IFloat) --> r:Complex80 { re(r)^ = a; im(r)^ = numericConvert(ILongDouble,b);}
-forceinline overload Complex(a:LongDouble,b:IDouble) --> r:Complex80 { re(r)^ = a; im(r)^ = numericConvert(ILongDouble,b);}
-forceinline overload Complex(a:Float,b:Float) : Complex32 = Complex(a, numericConvert(IFloat,b));
-forceinline overload Complex(a:Double,b:Double) : Complex64 = Complex(a, numericConvert(IDouble,b));
-forceinline overload Complex(a:LongDouble,b:LongDouble) : Complex80 = Complex(a, numericConvert(ILongDouble,b));
-forceinline overload Complex(a:Float,b:Double) : Complex64 = Complex(Double(a), numericConvert(IDouble,b));
-forceinline overload Complex(a:Float,b:LongDouble) : Complex80 = Complex(LongDouble(a), numericConvert(ILongDouble,b));
-forceinline overload Complex(a:Double,b:Float) : Complex64 = Complex(a, numericConvert(IDouble,b));
-forceinline overload Complex(a:Double,b:LongDouble) : Complex80 = Complex(LongDouble(a), numericConvert(ILongDouble,b));
-forceinline overload Complex(a:LongDouble,b:Float) : Complex80 = Complex(a, numericConvert(ILongDouble,b));
-forceinline overload Complex(a:LongDouble,b:Double) : Complex80 = Complex(a, numericConvert(ILongDouble,b));
+forceinline override Complex(a:Float,b:IFloat) --> r:Complex32 { re(r)^ = a; im(r)^ = b;}
+forceinline override Complex(a:Double,b:IDouble) --> r:Complex64 { re(r)^ = a; im(r)^ = b;}
+forceinline override Complex(a:LongDouble,b:ILongDouble) --> r:Complex80 { re(r)^ = a; im(r)^ = b;}
+forceinline override Complex(a:Float,b:IDouble) --> r:Complex64 { re(r)^ = Double(a); im(r)^ = b;}
+forceinline override Complex(a:Float,b:ILongDouble) --> r:Complex80 { re(r)^ = LongDouble(a); im(r)^ = b;}
+forceinline override Complex(a:Double,b:IFloat) --> r:Complex64 { re(r)^ = a; im(r)^ = numericConvert(IDouble,b);}
+forceinline override Complex(a:Double,b:ILongDouble) --> r:Complex80 { re(r)^ = LongDouble(a); im(r)^ = b;}
+forceinline override Complex(a:LongDouble,b:IFloat) --> r:Complex80 { re(r)^ = a; im(r)^ = numericConvert(ILongDouble,b);}
+forceinline override Complex(a:LongDouble,b:IDouble) --> r:Complex80 { re(r)^ = a; im(r)^ = numericConvert(ILongDouble,b);}
+forceinline override Complex(a:Float,b:Float) : Complex32 = Complex(a, numericConvert(IFloat,b));
+forceinline override Complex(a:Double,b:Double) : Complex64 = Complex(a, numericConvert(IDouble,b));
+forceinline override Complex(a:LongDouble,b:LongDouble) : Complex80 = Complex(a, numericConvert(ILongDouble,b));
+forceinline override Complex(a:Float,b:Double) : Complex64 = Complex(Double(a), numericConvert(IDouble,b));
+forceinline override Complex(a:Float,b:LongDouble) : Complex80 = Complex(LongDouble(a), numericConvert(ILongDouble,b));
+forceinline override Complex(a:Double,b:Float) : Complex64 = Complex(a, numericConvert(IDouble,b));
+forceinline override Complex(a:Double,b:LongDouble) : Complex80 = Complex(LongDouble(a), numericConvert(ILongDouble,b));
+forceinline override Complex(a:LongDouble,b:Float) : Complex80 = Complex(a, numericConvert(ILongDouble,b));
+forceinline override Complex(a:LongDouble,b:Double) : Complex80 = Complex(a, numericConvert(ILongDouble,b));
 
 [T when Float?(T)]
-forceinline overload Complex(a:T) = Complex(a,0.f);
+forceinline override Complex(a:T) = Complex(a,0.f);
 
 [T when Imaginary?(T)]
-forceinline overload Complex(a:T) = Complex(0.f,a);
+forceinline override Complex(a:T) = Complex(0.f,a);
 
 [C when Complex?(C)]
 define ComplexBaseType(#C);
-overload ComplexBaseType(#Complex32) = Float;
-overload ComplexBaseType(#Complex64) = Double;
-overload ComplexBaseType(#Complex80) = LongDouble;
+override ComplexBaseType(#Complex32) = Float;
+override ComplexBaseType(#Complex64) = Double;
+override ComplexBaseType(#Complex80) = LongDouble;
 
 [C when Complex?(C)]
 define ComplexImagType(#C);
-overload ComplexImagType(#Complex32) = IFloat;
-overload ComplexImagType(#Complex64) = IDouble;
-overload ComplexImagType(#Complex80) = ILongDouble;
+override ComplexImagType(#Complex32) = IFloat;
+override ComplexImagType(#Complex64) = IDouble;
+override ComplexImagType(#Complex80) = ILongDouble;
 
 define ComplexRealType;
 
 [T when Complex?(T)]
-overload ComplexRealType(#T) = ComplexBaseType(T);
+override ComplexRealType(#T) = ComplexBaseType(T);
 
 [T when Complex?(T)]
-overload ComplexRealType(z:T) = Type(real(z));
+override ComplexRealType(z:T) = Type(real(z));
 
 [T when Complex?(T)]
-overload ComplexImagType(z:T) = Type(imag(z));
+override ComplexImagType(z:T) = Type(imag(z));
 
 define ComplexType;
 
 [T when Complex?(T)]
-overload ComplexType(#T) = T;
+override ComplexType(#T) = T;
 
 [T when Float?(T)]
-overload ComplexType(#T) = Type(Complex(T()));
+override ComplexType(#T) = Type(Complex(T()));
 
 [T when Complex?(T)]
-overload T() : T = T(0.);
+override T() : T = T(0.);
 
 [C,T when Complex?(C,T) and C != T]
-forceinline overload C(a:T) : C = Complex(ComplexBaseType(C)(real(a)), ComplexBaseType(C)(imag(a)));
+forceinline override C(a:T) : C = Complex(ComplexBaseType(C)(real(a)), ComplexBaseType(C)(imag(a)));
 
 [T,C when (Float?(T) or Imaginary?(T)) and Complex?(C)]
-forceinline overload C(a:T) : C = Complex(ComplexBaseType(C)(a));
+forceinline override C(a:T) : C = Complex(ComplexBaseType(C)(a));
 
 [U,T,C when Float?(U) and Float?(T) and Complex?(C)]
-forceinline overload C(a:U, b:T) : C = Complex(ComplexBaseType(C)(a), ComplexBaseType(C)(b));
+forceinline override C(a:U, b:T) : C = Complex(ComplexBaseType(C)(a), ComplexBaseType(C)(b));
 [U,T,C when Float?(U) and Imaginary?(T) and Complex?(C)]
-forceinline overload C(a:U, b:T) : C = Complex(ComplexBaseType(C)(a), ComplexImagType(C)(b));
+forceinline override C(a:U, b:T) : C = Complex(ComplexBaseType(C)(a), ComplexImagType(C)(b));
 
 [I,C when Integer?(I) and Complex?(C)]
-forceinline overload C(a:I) : C = Complex(ComplexBaseType(C)(a));
+forceinline override C(a:I) : C = Complex(ComplexBaseType(C)(a));
 
 

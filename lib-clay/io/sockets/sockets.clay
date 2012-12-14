@@ -36,14 +36,14 @@ instance IOError (SocketError);
 instance SocketError (GenericSocketError);
 
 [T when VariantMember?(SocketError, T)]
-overload Exception(forward x:T) = Exception(SocketError(x));
+override Exception(forward x:T) = Exception(SocketError(x));
 
-overload printTo(stream, x:GenericSocketError) {
+override printTo(stream, x:GenericSocketError) {
     printTo(stream, "error(", x.code, "): ");
     printErrorMessageTo(stream, x.code);
 }
 
-overload printReprTo(stream, x:GenericSocketError) {
+override printReprTo(stream, x:GenericSocketError) {
     printTo(stream, "GenericSocketError(", errorCodeName(x.code), ")");
 }
 
@@ -95,13 +95,13 @@ InetHostname?(T) = CallDefined?(lookupInetHostname, T);
 record Inet (host: In_addr, port: UInt16);
 
 [T, I when InetHostname?(T) and T != In_addr and Integer?(I)]
-overload Inet(host: T, port: I)
+override Inet(host: T, port: I)
     = Inet(lookupInetHostname(host), UInt16(port));
 
 record InvalidInetAddress(sockaddr: Sockaddr_storage, szsockaddr: SocklenT);
 instance SocketError (InvalidInetAddress);
 
-overload Inet(sockaddr: Sockaddr_storage, szsockaddr: SocklenT)
+override Inet(sockaddr: Sockaddr_storage, szsockaddr: SocklenT)
     --> addr: Inet
 {
     if (sockaddr.ss_family != AF_INET
@@ -112,30 +112,30 @@ overload Inet(sockaddr: Sockaddr_storage, szsockaddr: SocklenT)
     addr.port <-- networkToHost(psockaddr_in^.sin_port);
 }
 
-overload makeSockaddr(inet: Inet) --> sin: Sockaddr_in {
+override makeSockaddr(inet: Inet) --> sin: Sockaddr_in {
     libc.memset(RawPointer(@sin), 0, TypeSize(Sockaddr_in));
     sin.sin_family = AF_INET;
     sin.sin_port <-- hostToNetwork(inet.port);
     sin.sin_addr <-- inet.host;
 }
 
-overload sockaddrDomain(inet: Inet) = PF_INET;
-overload sockaddrStreamProtocol(inet: Inet) = IPPROTO_TCP;
-overload sockaddrDgramProtocol(inet: Inet) = IPPROTO_UDP;
+override sockaddrDomain(inet: Inet) = PF_INET;
+override sockaddrStreamProtocol(inet: Inet) = IPPROTO_TCP;
+override sockaddrDgramProtocol(inet: Inet) = IPPROTO_UDP;
 
-overload lookupInetHostname(n: UInt32) --> s: In_addr {
+override lookupInetHostname(n: UInt32) --> s: In_addr {
     platform.s_addr(s) <-- hostToNetwork(n);
 }
 
-overload lookupInetHostname(n: In_addr) = n;
+override lookupInetHostname(n: In_addr) = n;
 
 record HostnameLookupError(hostname: String);
 instance SocketError (HostnameLookupError);
 [S when String?(S) and S != String]
-overload HostnameLookupError(name: S) = HostnameLookupError(String(name));
+override HostnameLookupError(name: S) = HostnameLookupError(String(name));
 
 [S when String?(S)]
-overload lookupInetHostname(hostname: S) {
+override lookupInetHostname(hostname: S) {
     var hostent = platform.gethostbyname(tempCString(hostname).ptr);
     if (null?(hostent))
         throw HostnameLookupError(hostname);
@@ -153,39 +153,39 @@ overload lookupInetHostname(hostname: S) {
 
 define Socket?;
 
-overload Socket?(X) = false;
+override Socket?(X) = false;
 
 record ListenSocket[Addr] (raw: platform.RawSocket);
 record StreamSocket (raw: platform.RawSocket);
 
-[Addr] overload Socket?(#ListenSocket[Addr]) = true;
-overload Socket?(#StreamSocket) = true;
+[Addr] override Socket?(#ListenSocket[Addr]) = true;
+override Socket?(#StreamSocket) = true;
 
-[S when Socket?(S)] overload RegularRecord?(#S) = false;
-
-[S when Socket?(S)]
-overload destroy(s: S) { if (s.raw != SOCKET_ERROR) platform.close(s.raw); }
+[S when Socket?(S)] override RegularRecord?(#S) = false;
 
 [S when Socket?(S)]
-overload BitwiseMovedType?(#S) = true;
+override destroy(s: S) { if (s.raw != SOCKET_ERROR) platform.close(s.raw); }
 
 [S when Socket?(S)]
-overload resetUnsafe(s: S) { s.raw = SOCKET_ERROR; }
+override BitwiseMovedType?(#S) = true;
 
 [S when Socket?(S)]
-overload S(x: S);
+override resetUnsafe(s: S) { s.raw = SOCKET_ERROR; }
 
 [S when Socket?(S)]
-overload assign(ref x: S, ref y: S);
+override S(x: S);
 
 [S when Socket?(S)]
-overload fileHandle(s: S) { return s.raw; }
+override assign(ref x: S, ref y: S);
+
+[S when Socket?(S)]
+override fileHandle(s: S) { return s.raw; }
 
 
 
 /// @section  ListenSocket() 
 [T, I when StreamSocketAddress?(T) and Integer?(I)]
-overload ListenSocket(addr: T, backlog: I)
+override ListenSocket(addr: T, backlog: I)
     --> socket: ListenSocket[T]
 {
     socket.raw <-- socketCall(platform.socket,
@@ -208,7 +208,7 @@ overload ListenSocket(addr: T, backlog: I)
 }
 
 [T when StreamSocketAddress?(T)]
-overload ListenSocket(addr: T) = ListenSocket(addr, 1);
+override ListenSocket(addr: T) = ListenSocket(addr, 1);
 
 [T]
 accept(listener: ListenSocket[T])
@@ -232,11 +232,11 @@ accept(listener: ListenSocket[T])
 
 /// @section  StreamSocket() 
 [T]
-overload StreamSocket(listener: ListenSocket[T])
+override StreamSocket(listener: ListenSocket[T])
     = takeValues(#1, ..accept(listener));
 
 [T when StreamSocketAddress?(T)]
-overload StreamSocket(addr: T) --> socket: StreamSocket {
+override StreamSocket(addr: T) --> socket: StreamSocket {
     socket.raw <-- socketCall(platform.socket,
         Int(sockaddrDomain(addr)),
         SOCK_STREAM,
@@ -255,22 +255,22 @@ overload StreamSocket(addr: T) --> socket: StreamSocket {
 
 
 /// @section  StreamSocket implementation of stream protocol 
-overload readBytes(s: StreamSocket, buffer: Pointer[Byte], n: SizeT)
+override readBytes(s: StreamSocket, buffer: Pointer[Byte], n: SizeT)
     = SizeT(socketCall(platform.recv, s.raw,
         platform.DataPointer(buffer), platform.DataSize(n),
         0));
 
-overload writeBytes(s: StreamSocket, buffer: Pointer[Byte], n: SizeT)
+override writeBytes(s: StreamSocket, buffer: Pointer[Byte], n: SizeT)
     = SizeT(socketCall(platform.send, s.raw,
         platform.DataPointer(buffer), platform.DataSize(n),
         0));
 
-overload flush(s: StreamSocket) { }
+override flush(s: StreamSocket) { }
 
 
 
 /// @section  Print support for In_addr 
-overload printTo(stream, addr: In_addr) {
+override printTo(stream, addr: In_addr) {
     var host = networkToHost(platform.s_addr(addr));
     printTo(stream,
                bitshr(host, 24),         ".",

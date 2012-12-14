@@ -130,9 +130,10 @@ static std::set<llvm::StringRef> *keywords = NULL;
 
 static void initKeywords() {
     const char *s[] =
-        {"public", "private", "import", "as",
-         "record", "variant", "instance",
-         "define", "overload", "external", "alias",
+        {"overload", "override", "default",
+         "record", "variant", "instance", "define",
+         "public", "private", "import", "as",
+         "external", "alias",
          "rvalue", "ref", "forward",
          "inline", "noinline", "forceinline",
          "enum", "var", "and", "or", "not",

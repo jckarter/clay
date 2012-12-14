@@ -767,13 +767,13 @@ record GLFunctions (
     WindowPos3sv: GLCodePointer[[Pointer[GLshort]], []],
 );
 
-overload GLFunctions() --> gl: GLFunctions { }
-overload destroy(gl: GLFunctions) { }
+override GLFunctions() --> gl: GLFunctions { }
+override destroy(gl: GLFunctions) { }
 
 private var globalGL = GLFunctions();
 
 define initGLFunctions;
-overload initGLFunctions(gl: GLFunctions) {
+override initGLFunctions(gl: GLFunctions) {
     gl.Accum = findGLFunction([GLenum, GLfloat], [], "glAccum");
     gl.ActiveTexture = findGLFunction((GLenum), [], "glActiveTexture", "glActiveTextureARB");
     gl.AlphaFunc = findGLFunction([GLenum, GLclampf], [], "glAlphaFunc");
@@ -1535,7 +1535,7 @@ overload initGLFunctions(gl: GLFunctions) {
     gl.WindowPos3s = findGLFunction([GLshort, GLshort, GLshort], [], "glWindowPos3s", "glWindowPos3sARB");
     gl.WindowPos3sv = findGLFunction((Pointer[GLshort]), [], "glWindowPos3sv", "glWindowPos3svARB");
 }
-overload initGLFunctions() { initGLFunctions(globalGL); }
+override initGLFunctions() { initGLFunctions(globalGL); }
 
 glAccum(_op: GLenum, _value: GLfloat) { globalGL.Accum(_op, _value); }
 glActiveTexture(_texture: GLenum) { globalGL.ActiveTexture(_texture); }

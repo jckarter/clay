@@ -11,10 +11,10 @@ private VtblSlotOutputTypes(memFun) = ..unpack(memFun.2);
 
 define InterfaceMember?;
 
-overload InterfaceMember?(I, fn) = false;
+override InterfaceMember?(I, fn) = false;
 
 [I, fn when InterfaceType?(I)]
-overload InterfaceMember?(#I, #fn)
+override InterfaceMember?(#I, #fn)
     = inValues?(fn, ..mapValues(VtblSlotFunction, ..InterfaceMembers(I)));
 
 private VtblSlotType(memFun) = CodePointer[
@@ -38,10 +38,10 @@ interfaceType(..memberFunctions) = recordWithProperties(
 );
 
 [I when InterfaceType?(I)]
-overload RegularRecord?(#I) = false;
+override RegularRecord?(#I) = false;
 
 [I when InterfaceType?(I)]
-overload destroy(i: I) { invoke(destroy, @i); }
+override destroy(i: I) { invoke(destroy, @i); }
 
 private vtblSlotMember(T, memFun) = VtblSlotType(memFun)(
     makeCodePointer(VtblSlotFunction(memFun), T, ..VtblSlotInputTypes(memFun))

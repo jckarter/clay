@@ -138,7 +138,7 @@ erfc(x:T){
 //TODO: Fix ierfc function
 //
 // [T when Numeric?(T)]
-// overload ierfc(y:T) --> x:T {
+// override ierfc(y:T) --> x:T {
 //     alias ONE = T(1);
 //     alias HALF = T(0.5);
 //     var z = y;

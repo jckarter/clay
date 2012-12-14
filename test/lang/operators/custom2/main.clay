@@ -6,17 +6,17 @@ import printer.(println);
 (***)(a,b) = pow(a,b);
 (****)(a,b) = pow(a,b);
 
-overload operatorPrecedence(#(**)) = 900;
-overload operatorAssociativity(#(**)) = LEFT;
+override operatorPrecedence(#(**)) = 900;
+override operatorAssociativity(#(**)) = LEFT;
 
-overload operatorPrecedence(#(--)) = 900;
-overload operatorAssociativity(#(--)) = LEFT;
+override operatorPrecedence(#(--)) = 900;
+override operatorAssociativity(#(--)) = LEFT;
 
-overload operatorPrecedence(#(***)) = 900;
-overload operatorAssociativity(#(***)) = RIGHT;
+override operatorPrecedence(#(***)) = 900;
+override operatorAssociativity(#(***)) = RIGHT;
 
-overload operatorPrecedence(#(****)) = 880;
-overload operatorAssociativity(#(****)) = RIGHT;
+override operatorPrecedence(#(****)) = 880;
+override operatorAssociativity(#(****)) = RIGHT;
 
 main() {
     

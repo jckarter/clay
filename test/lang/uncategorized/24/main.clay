@@ -2,12 +2,12 @@ import printer.(println);
 
 define printAll;
 
-overload printAll(a:Int, ..rest) {
+override printAll(a:Int, ..rest) {
     println(a);
     printAll(..rest);
 }
 
-overload printAll() {
+override printAll() {
 }
 
 main() {

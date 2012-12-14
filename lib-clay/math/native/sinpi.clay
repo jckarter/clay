@@ -5,7 +5,7 @@ import math.native.protocol.*;
 import math.native.constants.(M_PI);
 
 
-overload sinpi(x:Double) {
+override sinpi(x:Double) {
 	alias ONE = 1.;
 	alias ZERO = 0.;
 	var ix = GET_IEEE_HIGH(x);

@@ -7,9 +7,9 @@ import math.native.fpclassify.(fpclassify,FP_NAN,FP_ZERO,FP_INFINITE);
 import numbers.floats.(nan,signbit,infinity);
 import complex.*;
 
-overload acosh(x:Float) = Float(acosh(Double(x)));
+override acosh(x:Float) = Float(acosh(Double(x)));
 
-overload acosh(x:Double) {
+override acosh(x:Double) {
 	alias ONE = 1.;
 	var xdb = MAKE_IEEE(x);
 	var t = 0.;
@@ -34,7 +34,7 @@ overload acosh(x:Double) {
 		}
 }
 
-overload acosh(x:ComplexDouble) --> res:ComplexDouble {
+override acosh(x:ComplexDouble) --> res:ComplexDouble {
   
   	var rcls = fpclassify(real(x));
   	var icls = fpclassify(imagValue(x));

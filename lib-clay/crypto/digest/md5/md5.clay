@@ -9,23 +9,23 @@ import crypto.digest.internal.*;
 
 alias MD5_NAME = #"MD5";
 
-overload Algorithm?(#MD5_NAME) = true;
+override Algorithm?(#MD5_NAME) = true;
 
-overload DigestSize(#MD5_NAME) = 16u;
+override DigestSize(#MD5_NAME) = 16u;
 
-overload Word(#MD5_NAME) = UInt32;
+override Word(#MD5_NAME) = UInt32;
 
-overload WordIsBigEndian?(#MD5_NAME) = false;
+override WordIsBigEndian?(#MD5_NAME) = false;
 
-overload StateSizeWords(#MD5_NAME) = 4;
+override StateSizeWords(#MD5_NAME) = 4;
 
-overload BlockSizeWords(#MD5_NAME) = 16;
+override BlockSizeWords(#MD5_NAME) = 16;
 
-overload BitCountWord(#MD5_NAME) = UInt64;
+override BitCountWord(#MD5_NAME) = UInt64;
 
 record MD5 = MakeDigest(#MD5_NAME);
 record MD5Context = MakeDigestContext(#MD5_NAME);
-overload AlgorithmTypes(#MD5_NAME) = #MD5, #MD5Context;
+override AlgorithmTypes(#MD5_NAME) = #MD5, #MD5Context;
 
 var md5Initial = array(
         0x67452301_u,
@@ -34,7 +34,7 @@ var md5Initial = array(
         0x10325476_u,
     );
 
-overload stateInitial(#MD5_NAME) = ref md5Initial;
+override stateInitial(#MD5_NAME) = ref md5Initial;
 
 // rotation constants
 private alias S11 =  7;
@@ -78,7 +78,7 @@ private II(a, b, c, d, x, s, ac) {
 private alias MD5State = State(#MD5_NAME);
 private alias MD5BlockBytes = BlockBytes(#MD5_NAME);
 
-overload processBlock(#MD5_NAME, state: MD5State, chunkBytes: MD5BlockBytes) {
+override processBlock(#MD5_NAME, state: MD5State, chunkBytes: MD5BlockBytes) {
     ref x0 = Pointer[Array[UInt32, 16]](begin(chunkBytes))^;
 
     var x = bytesToWordsLittle(UInt32, chunkBytes);
@@ -168,7 +168,7 @@ overload processBlock(#MD5_NAME, state: MD5State, chunkBytes: MD5BlockBytes) {
     state[3] = wrapAdd(state[3], d);
 }
 
-overload digestFinish(context: MD5Context) = digestFinishGeneric(context);
+override digestFinish(context: MD5Context) = digestFinishGeneric(context);
 
 md5(message) = digest(message, #MD5_NAME);
 

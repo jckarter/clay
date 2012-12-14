@@ -7,7 +7,7 @@ import math.native.kernel.ieee754.*;
 
 define nextafter;
 
-overload nextafter(x:Double, y:Double){
+override nextafter(x:Double, y:Double){
     alias MIN_SUB = LeastPositive(Double);
     var xdb,ydb = MAKE_IEEE(x),MAKE_IEEE(y);
 
@@ -45,8 +45,8 @@ overload nextafter(x:Double, y:Double){
 }
 
 
-overload nextafter(x:Double,y:Float) = nextafter(x,Double(y));
+override nextafter(x:Double,y:Float) = nextafter(x,Double(y));
 
-overload nextafter(x:Float,y:Double) = nextafter(Double(x),y);
+override nextafter(x:Float,y:Double) = nextafter(Double(x),y);
 
 alias nexttoward = nextafter;

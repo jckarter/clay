@@ -8,14 +8,14 @@ import data.strings.(String);
 
 record Foo (x: Int64, y: Double);
 [I when Integer?(I) and I != Int64]
-overload Foo(x: I, y: Double) = Foo(Int64(x), y);
+override Foo(x: I, y: Double) = Foo(Int64(x), y);
 
-overload selector("lifecycleTest") = Id;
-overload selector("lifecycleTestWithCanary:") = Id, Canary;
-overload selector("lifecycleTestWithCanary:subcanary:") = Id, Canary, Canary;
-overload selector("initWithCanary:") = Id, Canary;
-overload selector("initWithCanary:subcanary:") = Id, Canary, Canary;
-overload selector("initWithSubcanary:") = Id, Canary;
+override selector("lifecycleTest") = Id;
+override selector("lifecycleTestWithCanary:") = Id, Canary;
+override selector("lifecycleTestWithCanary:subcanary:") = Id, Canary, Canary;
+override selector("initWithCanary:") = Id, Canary;
+override selector("initWithCanary:subcanary:") = Id, Canary, Canary;
+override selector("initWithSubcanary:") = Id, Canary;
 
 record LifecycleTest = newClass(NSObject,
     InstanceVars(
@@ -51,14 +51,14 @@ record LifecycleSubTest = newClass(LifecycleTest,
     ),
 );
 
-overload selector("foo") = Int;
-overload selector("setFoo:") = Void, Int;
-overload selector("foo64") = Int;
-overload selector("setFoo64:") = Void, Int;
-overload selector("bar") = Float;
-overload selector("setBar:") = Void, Float;
-overload selector("isBas") = Bool;
-overload selector("setBas:") = Void, Bool;
+override selector("foo") = Int;
+override selector("setFoo:") = Void, Int;
+override selector("foo64") = Int;
+override selector("setFoo64:") = Void, Int;
+override selector("bar") = Float;
+override selector("setBar:") = Void, Float;
+override selector("isBas") = Bool;
+override selector("setBas:") = Void, Bool;
 
 record PropertyTest = newClass(NSObject,
     InstanceVars(
@@ -79,7 +79,7 @@ record PropertyTest = newClass(NSObject,
     )
 );
 
-overload selector("initWithFoo:bar:") = Id, Id, Id;
+override selector("initWithFoo:bar:") = Id, Id, Id;
 
 record RegularTest = regularClass(["foo", String], ["bar", Char]);
 record RegularCanary = regularClass(["foo", Canary], ["bar", Canary]);

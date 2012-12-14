@@ -3,16 +3,16 @@ import data.sequences.lazy.zipped.*;
 define enumerated;
 define enumeratedAs;
 
-overload enumerated(ref a) = zipped(range(size(a)), a);
+override enumerated(ref a) = zipped(range(size(a)), a);
 
-overload enumerated(rvalue a) {
+override enumerated(rvalue a) {
     var n = size(a);
     return zipped(range(n), move(a));
 }
 
-overload enumeratedAs(T, ref a) = zipped(range(T(size(a))), a);
+override enumeratedAs(T, ref a) = zipped(range(T(size(a))), a);
 
-overload enumeratedAs(T, rvalue a) {
+override enumeratedAs(T, rvalue a) {
     var n = T(size(a));
     return zipped(range(n), move(a));
 }

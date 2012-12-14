@@ -5,7 +5,7 @@ import printer.(printTo,printReprTo);
 record UniquePointer[T] (ptr: Pointer[T]);
 
 [T]
-overload RegularRecord?(#UniquePointer[T]) = false;
+override RegularRecord?(#UniquePointer[T]) = false;
 
 
 
@@ -26,26 +26,26 @@ alias newUnique(x:T) {
 
 /// @section  constructors, moveUnsafe, resetUnsafe, assign, destroy 
 [T]
-overload UniquePointer[T]() = UniquePointer(null(T));
+override UniquePointer[T]() = UniquePointer(null(T));
 
 // no copying
 [T]
-overload UniquePointer[T](src: UniquePointer[T]);
+override UniquePointer[T](src: UniquePointer[T]);
 
 [T]
-overload BitwiseMovedType?(#UniquePointer[T]) = true;
+override BitwiseMovedType?(#UniquePointer[T]) = true;
 
 [T]
-forceinline overload resetUnsafe(p: UniquePointer[T]) {
+forceinline override resetUnsafe(p: UniquePointer[T]) {
     p.ptr = null(T);
 }
 
 // no assign from ref
 [T]
-forceinline overload assign(ref dest: UniquePointer[T], ref src: UniquePointer[T]);
+forceinline override assign(ref dest: UniquePointer[T], ref src: UniquePointer[T]);
 
 [T]
-forceinline overload destroy(p: UniquePointer[T]) {
+forceinline override destroy(p: UniquePointer[T]) {
     if (not null?(p.ptr)) {
         destroy(p.ptr^);
         freeRawMemory(p.ptr);
@@ -56,10 +56,10 @@ forceinline overload destroy(p: UniquePointer[T]) {
 
 /// @section  dereference, null?, nullUnique 
 [T]
-forceinline overload dereference(p: UniquePointer[T]) = ref p.ptr^;
+forceinline override dereference(p: UniquePointer[T]) = ref p.ptr^;
 
 [T]
-forceinline overload null?(p: UniquePointer[T]) = null?(p.ptr);
+forceinline override null?(p: UniquePointer[T]) = null?(p.ptr);
 
 [T]
 forceinline nullUnique(#T) = UniquePointer[T]();
@@ -68,7 +68,7 @@ forceinline nullUnique(#T) = UniquePointer[T]();
 
 /// @section  equality 
 [T]
-forceinline overload equals?(p: UniquePointer[T], q: UniquePointer[T])
+forceinline override equals?(p: UniquePointer[T], q: UniquePointer[T])
     = p.ptr == q.ptr;
 
 
@@ -77,17 +77,17 @@ forceinline overload equals?(p: UniquePointer[T], q: UniquePointer[T])
 record UniqueValue[T] (ptr: UniquePointer[T]);
 
 [T]
-alias overload UniqueValue(x:T) = UniqueValue[T](newUnique(x));
+alias override UniqueValue(x:T) = UniqueValue[T](newUnique(x));
 
 [T]
-forceinline overload UniqueValue[T](x:UniqueValue[T]) =
+forceinline override UniqueValue[T](x:UniqueValue[T]) =
     if (null?(x))
         nullUniqueValue(T)
     else
         UniqueValue(x^);
 
 [T]
-overload assign(ref to:UniqueValue[T], ref from:UniqueValue[T]) {
+override assign(ref to:UniqueValue[T], ref from:UniqueValue[T]) {
     if (null?(from)) {
         destroy(to.ptr);
         resetUnsafe(to.ptr);
@@ -99,10 +99,10 @@ overload assign(ref to:UniqueValue[T], ref from:UniqueValue[T]) {
 }
 
 [T]
-forceinline overload dereference(p: UniqueValue[T]) = ref p.ptr^;
+forceinline override dereference(p: UniqueValue[T]) = ref p.ptr^;
 
 [T]
-forceinline overload null?(p: UniqueValue[T]) = null?(p.ptr);
+forceinline override null?(p: UniqueValue[T]) = null?(p.ptr);
 
 [T]
 forceinline nullUniqueValue(#T) = UniqueValue[T]();
@@ -113,7 +113,7 @@ forceinline nullUniqueValue(#T) = UniqueValue[T]();
 /// @section  printTo - UniqueValue 
 
 [T]
-overload printTo(stream, v:UniqueValue[T]) {
+override printTo(stream, v:UniqueValue[T]) {
     if (null?(v))
         printTo(stream, UniqueValue[T], "()");
     else {
@@ -127,7 +127,7 @@ overload printTo(stream, v:UniqueValue[T]) {
 /// @section  printReprTo - UniqueValue 
 
 [T]
-overload printReprTo(stream, v:UniqueValue[T]) {
+override printReprTo(stream, v:UniqueValue[T]) {
     if (null?(v))
         printTo(stream, UniqueValue[T], "()");
     else {

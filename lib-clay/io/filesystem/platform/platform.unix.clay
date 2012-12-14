@@ -51,29 +51,29 @@ record DirectoryIterator (
 );
 
 [S when CCompatibleString?(S)]
-overload DirectoryIterator(dir: S) --> returned: DirectoryIterator {
+override DirectoryIterator(dir: S) --> returned: DirectoryIterator {
     returned.dir = opendir(cstring(dir));
     if (null?(returned.dir))
         throw GenericIOError(errno(), "opendir");
 }
 
 
-overload RegularRecord?(#DirectoryIterator) = false;
-overload BitwiseMovedType?(#DirectoryIterator) = true;
+override RegularRecord?(#DirectoryIterator) = false;
+override BitwiseMovedType?(#DirectoryIterator) = true;
 
-overload destroy(s: DirectoryIterator) {
+override destroy(s: DirectoryIterator) {
     if (not null?(s.dir)) {
         var result = closedir(s.dir);
         assert(result != wrapCast(Type(result), -1));
     }
 }
-overload resetUnsafe(s: DirectoryIterator) {
+override resetUnsafe(s: DirectoryIterator) {
     s.dir = null(DIR);
 }
 
-overload iterator(x:DirectoryIterator) = forward x;
+override iterator(x:DirectoryIterator) = forward x;
 
-overload nextValue(x:DirectoryIterator) {
+override nextValue(x:DirectoryIterator) {
     while (true) {
     var ptr = Pointer[Struct_dirent]();
     var returnCode = readdir_r(x.dir, @x.dirent, @ptr);
@@ -162,7 +162,7 @@ pathComponents(path) {
 define joinPath;
 
 [..S when allValues?(String?, ..S)]
-overload joinPath(..parts:S) {
+override joinPath(..parts:S) {
     var result = String();
     ..for (part in parts)
         appendPath(result, part);
@@ -171,7 +171,7 @@ overload joinPath(..parts:S) {
 }
 
 [A when String?(SequenceElementType(A))]
-overload joinPath(parts:A) {
+override joinPath(parts:A) {
     var result = String();
     for (part in parts)
         appendPath(result, part);
@@ -266,9 +266,9 @@ currentDirectory() {
 // TODO: implement on windows
 define pathToExecutable;
 
-overload pathToExecutable() = pathToExecutable(commandLine()[0]);
+override pathToExecutable() = pathToExecutable(commandLine()[0]);
 
-overload pathToExecutable(arg0) {
+override pathToExecutable(arg0) {
     var searchDirs = systemPath();
     insert(searchDirs, 0, currentDirectory());
     for (pathDir in searchDirs) {

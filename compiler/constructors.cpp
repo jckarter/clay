@@ -83,32 +83,6 @@ void addPatternOverload(OverloadPtr x)
     patternOverloads.insert(patternOverloads.begin(), x);
 }
 
-void initTypeOverloads(TypePtr t)
-{
-    assert(!t->overloadsInitialized);
-
-    for (unsigned i = 0; i < patternOverloads.size(); ++i) {
-        OverloadPtr x = patternOverloads[i];
-        EnvPtr env = new Env(x->env);
-        llvm::ArrayRef<PatternVar> pvars = x->code->patternVars;
-        for (unsigned i = 0; i < pvars.size(); ++i) {
-            if (pvars[i].isMulti) {
-                MultiPatternCellPtr cell = new MultiPatternCell(NULL);
-                addLocal(env, pvars[i].name, cell.ptr());
-            }
-            else {
-                PatternCellPtr cell = new PatternCell(NULL);
-                addLocal(env, pvars[i].name, cell.ptr());
-            }
-        }
-        PatternPtr pattern = evaluateOnePattern(x->target, env);
-        if (unifyPatternObj(pattern, t.ptr()))
-            t->overloads.push_back(x);
-    }
-
-    t->overloadsInitialized = true;
-}
-
 void initBuiltinConstructor(RecordDeclPtr x)
 {
     assert(!(x->builtinOverloadInitialized));
@@ -168,7 +142,7 @@ void initBuiltinConstructor(RecordDeclPtr x)
     code->body = new Return(RETURN_VALUE, new ExprList(returnExpr.ptr()));
     code->body->location = returnExpr->location;
 
-    OverloadPtr defaultOverload = new Overload(x->module, recName, code, true, IGNORE);
+    OverloadPtr defaultOverload = new Overload(x->module, recName, code, true, IGNORE, STATUS_OVERRIDE);
     defaultOverload->location = x->location;
     defaultOverload->env = x->env;
     x->overloads.push_back(defaultOverload);

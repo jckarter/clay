@@ -10,7 +10,7 @@ record OptionSpec(
   hasValue      : Bool
 );
 
-overload printTo(out, it : OptionSpec){
+override printTo(out, it : OptionSpec){
   var iter = iterator(it.names);
 
   interleave(it.names,
@@ -22,7 +22,7 @@ overload printTo(out, it : OptionSpec){
 enum Flags( HAS_VALUE, REQUIRED, ALLOWS_REPEATS );
 
 [S when SpecPart?(S)]
-overload OptionSpec(part : S, ..parts) : OptionSpec{
+override OptionSpec(part : S, ..parts) : OptionSpec{
   var result = OptionSpec(Vector[String](), false, false, false);
  
   addSpecPart(result, part); 
@@ -41,11 +41,11 @@ private SpecPart?(#T) = String?(T) or (T == Char) or (T == Flags);
 
 private define addSpecPart;
 
-[T when String?(T) or (T == Char)] overload addSpecPart(spec, t : T){
+[T when String?(T) or (T == Char)] override addSpecPart(spec, t : T){
   push(spec.names, String(t)); 
 }
 
-overload addSpecPart(spec, f : Flags){
+override addSpecPart(spec, f : Flags){
 if (f == HAS_VALUE) spec.hasValue = true;
 else if (f == REQUIRED) spec.required = true;
 else if (f == ALLOWS_REPEATS) spec.allowsRepeats = true;

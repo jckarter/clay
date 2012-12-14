@@ -9,29 +9,29 @@ import win32.(
 import threads.locks.protocol.(lock, unlock, tryLock);
 
 record Mutex (_cs:CRITICAL_SECTION);
-overload RegularRecord?(#Mutex) = false;
+override RegularRecord?(#Mutex) = false;
 
-overload Mutex() --> returned:Mutex
+override Mutex() --> returned:Mutex
 {
     InitializeCriticalSection(@returned._cs);
 }
 
-overload destroy(m:Mutex) :
+override destroy(m:Mutex) :
 {
     DeleteCriticalSection(@m._cs);
 }
 
-overload lock(m:Mutex) :
+override lock(m:Mutex) :
 {
     EnterCriticalSection(@m._cs);
 }
 
-overload unlock(m:Mutex) :
+override unlock(m:Mutex) :
 {
     LeaveCriticalSection(@m._cs);
 }
 
-overload tryLock(m:Mutex) : Bool
+override tryLock(m:Mutex) : Bool
 {
     return TryEnterCriticalSection(@m._cs) != 0;
 }

@@ -2,45 +2,45 @@ import cocoa.objc.*;
 import printer.(println);
 
 
-overload selector("alloc") = Id;
-overload selector("init") = Id;
-overload selector("description") = NSString;
-overload selector("retain") = Id;
-overload selector("release") = Id;
-overload selector("autorelease") = Id;
-overload selector("class") = Id; // XXX class
+override selector("alloc") = Id;
+override selector("init") = Id;
+override selector("description") = NSString;
+override selector("retain") = Id;
+override selector("release") = Id;
+override selector("autorelease") = Id;
+override selector("class") = Id; // XXX class
 
-overload selector("stringWithUTF8String:") = Id, Pointer[CChar];
-overload varargSelector("stringWithFormat:") = Id, NSString; 
-overload selector("UTF8String") = Pointer[CChar];
+override selector("stringWithUTF8String:") = Id, Pointer[CChar];
+override varargSelector("stringWithFormat:") = Id, NSString; 
+override selector("UTF8String") = Pointer[CChar];
 
-overload selector("numberWithInt:") = Id, Int;
+override selector("numberWithInt:") = Id, Int;
 
-overload selector("drain") = Void;
+override selector("drain") = Void;
 
 record NSObject = externalClass(Void);
-overload externalClassMethod(#NSObject, "alloc") = Id;
-overload externalClassMethod(#NSObject, "class") = Id; // XXX Class
-overload externalInstanceMethod(#NSObject, "init") = Id;
-overload externalInstanceMethod(#NSObject, "description") = NSString;
-overload externalInstanceMethod(#NSObject, "retain") = Id;
-overload externalInstanceMethod(#NSObject, "release") = Id;
-overload externalInstanceMethod(#NSObject, "autorelease") = Id;
-overload externalInstanceMethod(#NSObject, "class") = Id; // XXX Class
+override externalClassMethod(#NSObject, "alloc") = Id;
+override externalClassMethod(#NSObject, "class") = Id; // XXX Class
+override externalInstanceMethod(#NSObject, "init") = Id;
+override externalInstanceMethod(#NSObject, "description") = NSString;
+override externalInstanceMethod(#NSObject, "retain") = Id;
+override externalInstanceMethod(#NSObject, "release") = Id;
+override externalInstanceMethod(#NSObject, "autorelease") = Id;
+override externalInstanceMethod(#NSObject, "class") = Id; // XXX Class
 
 record NSString = externalClass(NSObject);
-overload externalClassMethod(#NSString, "stringWithUTF8String:")
+override externalClassMethod(#NSString, "stringWithUTF8String:")
     = Id, Pointer[CChar];
-overload externalVarargClassMethod(#NSString, "stringWithFormat:")
+override externalVarargClassMethod(#NSString, "stringWithFormat:")
     = Id, NSString;
-overload externalInstanceMethod(#NSString, "UTF8String")
+override externalInstanceMethod(#NSString, "UTF8String")
     = Pointer[CChar];
 
 record NSNumber = externalClass(NSObject);
-overload externalClassMethod(#NSNumber, "numberWithInt:") = Id, Int;
+override externalClassMethod(#NSNumber, "numberWithInt:") = Id, Int;
 
 record NSAutoreleasePool = externalClass(NSObject);
-overload externalInstanceMethod(#NSNumber, "drain") = Void;
+override externalInstanceMethod(#NSNumber, "drain") = Void;
 
 main() {
     var pool = NSAutoreleasePool.alloc().init();

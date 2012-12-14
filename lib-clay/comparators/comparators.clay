@@ -6,56 +6,56 @@ import data.sequences.lazy.*;
 
 define Comparator?;
 
-overload Comparator?(T) = false;
+override Comparator?(T) = false;
 
-forceinline overload notEquals?(comparator, a, b) = not equals?(comparator, a, b);
-forceinline overload ordered?(comparator, a, b) = (a <= b) or (b <= a);
-forceinline overload lesserEquals?(comparator, a, b) = not lesser?(b, a);
-forceinline overload greater?(comparator, a, b) = lesser?(b, a);
-forceinline overload greaterEquals?(comparator, a, b) = not lesser?(a, b);
+forceinline override notEquals?(comparator, a, b) = not equals?(comparator, a, b);
+forceinline override ordered?(comparator, a, b) = (a <= b) or (b <= a);
+forceinline override lesserEquals?(comparator, a, b) = not lesser?(b, a);
+forceinline override greater?(comparator, a, b) = lesser?(b, a);
+forceinline override greaterEquals?(comparator, a, b) = not lesser?(a, b);
 
 // The natural comparison
 
 record Natural();
-overload Comparator?(#Natural) = true;
+override Comparator?(#Natural) = true;
 
 natural() = Natural();
 
-forceinline overload equals?(c : Natural, x, y) = equals?(x, y);
-forceinline overload lesser?(c : Natural, x, y) = lesser?(x, y);
-forceinline overload lesserEquals?(c : Natural, x, y) = lesserEquals?(x, y);
-forceinline overload greater?(c : Natural, x, y) = greater?(x, y);
-forceinline overload greaterEquals?(c : Natural, x, y) = greaterEquals?(x, y);
+forceinline override equals?(c : Natural, x, y) = equals?(x, y);
+forceinline override lesser?(c : Natural, x, y) = lesser?(x, y);
+forceinline override lesserEquals?(c : Natural, x, y) = lesserEquals?(x, y);
+forceinline override greater?(c : Natural, x, y) = greater?(x, y);
+forceinline override greaterEquals?(c : Natural, x, y) = greaterEquals?(x, y);
 
 // Comparing on a specific function
 
 record Comparing[F](comparing : F);
-[F] overload Comparator?(#Comparing[F]) = true;
+[F] override Comparator?(#Comparing[F]) = true;
 
 comparing(f) = Comparing(f);
 
 
-[F] forceinline overload equals?(c : Comparing[F], x, y) = equals?(c.comparing(x), c.comparing(y));
-[F] forceinline overload lesser?(c : Comparing[F], x, y) = lesser?(c.comparing(x), c.comparing(y));
-[F] forceinline overload lesserEquals?(c : Comparing[F], x, y) = lesserEquals?(c.comparing(x), c.comparing(y));
-[F] forceinline overload greater?(c : Comparing[F], x, y) = greater?(c.comparing(x), c.comparing(y));
-[F] forceinline overload greaterEquals?(c : Comparing[F], x, y) = greaterEquals?(c.comparing(x), c.comparing(y));
+[F] forceinline override equals?(c : Comparing[F], x, y) = equals?(c.comparing(x), c.comparing(y));
+[F] forceinline override lesser?(c : Comparing[F], x, y) = lesser?(c.comparing(x), c.comparing(y));
+[F] forceinline override lesserEquals?(c : Comparing[F], x, y) = lesserEquals?(c.comparing(x), c.comparing(y));
+[F] forceinline override greater?(c : Comparing[F], x, y) = greater?(c.comparing(x), c.comparing(y));
+[F] forceinline override greaterEquals?(c : Comparing[F], x, y) = greaterEquals?(c.comparing(x), c.comparing(y));
 
 // Comparing in reversed of the normal order
 
 record Reversed[C](original : C);
-[C when Comparator?(C)] overload Comparator?(#Reversed[C]) = true;
+[C when Comparator?(C)] override Comparator?(#Reversed[C]) = true;
 
 define reversed;
-[C when Comparator?(C)] overload reversed(c : C) = Reversed(c);
-[C when Comparator?(C)] overload reversed(c : Reversed[C]) = c.original;
-overload reversed() = reversed(natural());
+[C when Comparator?(C)] override reversed(c : C) = Reversed(c);
+[C when Comparator?(C)] override reversed(c : Reversed[C]) = c.original;
+override reversed() = reversed(natural());
 
-[F] forceinline overload equals?(c : Reversed[F], x, y) = equals?(c.original, x, y);
-[F] forceinline overload notEquals?(c : Reversed[F], x, y) = notEquals?(c.original, x, y);
+[F] forceinline override equals?(c : Reversed[F], x, y) = equals?(c.original, x, y);
+[F] forceinline override notEquals?(c : Reversed[F], x, y) = notEquals?(c.original, x, y);
 
-[F] forceinline overload lesser?(c : Reversed[F], x, y) = greater?(c.original, x, y);
-[F] forceinline overload lesserEquals?(c : Reversed[F], x, y) = greaterEquals?(c.original, x, y);
+[F] forceinline override lesser?(c : Reversed[F], x, y) = greater?(c.original, x, y);
+[F] forceinline override lesserEquals?(c : Reversed[F], x, y) = greaterEquals?(c.original, x, y);
 
-[F] forceinline overload greater?(c : Reversed[F], x, y) = lesser?(c.original, x, y);
-[F] forceinline overload greaterEquals?(c : Reversed[F], x, y) = lesserEquals?(c.original, x, y);
+[F] forceinline override greater?(c : Reversed[F], x, y) = lesser?(c.original, x, y);
+[F] forceinline override greaterEquals?(c : Reversed[F], x, y) = lesserEquals?(c.original, x, y);

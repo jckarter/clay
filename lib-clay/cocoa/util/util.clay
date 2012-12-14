@@ -14,62 +14,62 @@ public import cocoa.util.platform.*;
 
 /// @section  object identity 
 [T1, T2 when ObjectRef?(T1) and ObjectRef?(T2)]
-overload is?(x: T1, y: T2) = objectHandle(x) == objectHandle(y);
+override is?(x: T1, y: T2) = objectHandle(x) == objectHandle(y);
 
 
 
 /// @section  NSNumber overloads 
-overload NSNumber(x: Int8)  = NSNumber.numberWithChar(x);
-overload NSNumber(x: Int16) = NSNumber.numberWithShort(x);
-overload NSNumber(x: Int32) = NSNumber.numberWithInt(x);
-overload NSNumber(x: Int64) = NSNumber.numberWithLongLong(x);
-overload NSNumber(x: UInt8)  = NSNumber.numberWithUnsignedChar(x);
-overload NSNumber(x: UInt16) = NSNumber.numberWithUnsignedShort(x);
-overload NSNumber(x: UInt32) = NSNumber.numberWithUnsignedInt(x);
-overload NSNumber(x: UInt64) = NSNumber.numberWithUnsignedLongLong(x);
-overload NSNumber(x: Float32) = NSNumber.numberWithFloat(x);
-overload NSNumber(x: Float64) = NSNumber.numberWithDouble(x);
-overload NSNumber(x: Bool) = NSNumber.numberWithBool(x);
+override NSNumber(x: Int8)  = NSNumber.numberWithChar(x);
+override NSNumber(x: Int16) = NSNumber.numberWithShort(x);
+override NSNumber(x: Int32) = NSNumber.numberWithInt(x);
+override NSNumber(x: Int64) = NSNumber.numberWithLongLong(x);
+override NSNumber(x: UInt8)  = NSNumber.numberWithUnsignedChar(x);
+override NSNumber(x: UInt16) = NSNumber.numberWithUnsignedShort(x);
+override NSNumber(x: UInt32) = NSNumber.numberWithUnsignedInt(x);
+override NSNumber(x: UInt64) = NSNumber.numberWithUnsignedLongLong(x);
+override NSNumber(x: Float32) = NSNumber.numberWithFloat(x);
+override NSNumber(x: Float64) = NSNumber.numberWithDouble(x);
+override NSNumber(x: Bool) = NSNumber.numberWithBool(x);
 
-[O when ObjectRef?(O)] overload Int8(o: O)  = o.intValue();
-[O when ObjectRef?(O)] overload Int16(o: O) = o.shortValue();
-[O when ObjectRef?(O)] overload Int32(o: O) = o.intValue();
-[O when ObjectRef?(O)] overload Int64(o: O) = o.longLongValue();
-[O when ObjectRef?(O)] overload UInt8(o: O)  = o.unsignedIntValue();
-[O when ObjectRef?(O)] overload UInt16(o: O) = o.unsignedShortValue();
-[O when ObjectRef?(O)] overload UInt32(o: O) = o.unsignedIntValue();
-[O when ObjectRef?(O)] overload UInt64(o: O) = o.unsignedLongLongValue();
-[O when ObjectRef?(O)] overload Float32(o: O) = o.floatValue();
-[O when ObjectRef?(O)] overload Float64(o: O) = o.doubleValue();
-[O when ObjectRef?(O)] overload Bool(o: O) = o.boolValue();
+[O when ObjectRef?(O)] override Int8(o: O)  = o.intValue();
+[O when ObjectRef?(O)] override Int16(o: O) = o.shortValue();
+[O when ObjectRef?(O)] override Int32(o: O) = o.intValue();
+[O when ObjectRef?(O)] override Int64(o: O) = o.longLongValue();
+[O when ObjectRef?(O)] override UInt8(o: O)  = o.unsignedIntValue();
+[O when ObjectRef?(O)] override UInt16(o: O) = o.unsignedShortValue();
+[O when ObjectRef?(O)] override UInt32(o: O) = o.unsignedIntValue();
+[O when ObjectRef?(O)] override UInt64(o: O) = o.unsignedLongLongValue();
+[O when ObjectRef?(O)] override Float32(o: O) = o.floatValue();
+[O when ObjectRef?(O)] override Float64(o: O) = o.doubleValue();
+[O when ObjectRef?(O)] override Bool(o: O) = o.boolValue();
 
 
 
 /// @section  NSString overloads 
 [ident when StringLiteral?(ident)]
-overload NSString(#ident) = NSString(NSSTR(ident));
+override NSString(#ident) = NSString(NSSTR(ident));
 
 [S when CCompatibleString?(S)]
-overload NSString(s: S) = NSString(NSString.stringWithUTF8String(cstring(s)));
+override NSString(s: S) = NSString(NSString.stringWithUTF8String(cstring(s)));
 
 [O when ObjectRef?(O)]
-overload String(o: O) = String(CStringRef(o.description().UTF8String()));
+override String(o: O) = String(CStringRef(o.description().UTF8String()));
 
 [O when Class?(O) and Subclass?(NSString, O)]
-overload String(o: O) = String(CStringRef(o.UTF8String()));
+override String(o: O) = String(CStringRef(o.UTF8String()));
 
 [O when Class?(O) and Subclass?(NSString, O)]
-overload cstring(o: O) = o.UTF8String();
+override cstring(o: O) = o.UTF8String();
 
 
 
 /// @section  NSValue overloads 
 define makeNSValue;
 [T]
-overload makeNSValue(value: T)
+override makeNSValue(value: T)
     = NSValue.valueWithBytes_objCType(RawPointer(@value), cstring(encode(T)));
 [T when ObjectRef?(T)]
-overload makeNSValue(obj: T) = NSValue.valueWithNonretainedObject(obj);
+override makeNSValue(obj: T) = NSValue.valueWithNonretainedObject(obj);
 
 record NSValueTypeMismatch (object: Id);
 instance Exception (NSValueTypeMismatch);
@@ -85,64 +85,64 @@ fromNSValue(#T, o: O) {
 define fromNSValueUnsafe;
 
 [T, O when ObjectRef?(O)]
-overload fromNSValueUnsafe(#T, o: O) --> returned: T {
+override fromNSValueUnsafe(#T, o: O) --> returned: T {
     o.getValue(RawPointer(@returned));
 }
 
 [T, O when ObjectRef?(O)]
-overload fromNSValueUnsafe(#Pointer[T], o: O) = Pointer[T](o.pointerValue());
+override fromNSValueUnsafe(#Pointer[T], o: O) = Pointer[T](o.pointerValue());
 
 
 /// @section  primitive-as-object boxing 
 
 [N when Numeric?(N) or N == Bool]
-overload ObjectParameterType(#N) = NSNumber;
+override ObjectParameterType(#N) = NSNumber;
 [N when Numeric?(N) or N == Bool]
-overload objectHandle(n: N) = objectHandle(NSNumber(n));
+override objectHandle(n: N) = objectHandle(NSNumber(n));
 
 [T when RegularRecord?(T) and not ObjectRef?(T)]
-overload ObjectParameterType(#T) = NSValue;
+override ObjectParameterType(#T) = NSValue;
 [T when RegularRecord?(T) and not ObjectRef?(T)]
-overload objectHandle(r: T) = objectHandle(makeNSValue(r));
+override objectHandle(r: T) = objectHandle(makeNSValue(r));
 
 [S when CCompatibleString?(S)]
-overload ObjectParameterType(#S) = NSString;
+override ObjectParameterType(#S) = NSString;
 [S when CCompatibleString?(S)]
-overload objectHandle(s: S) = objectHandle(NSString(s));
+override objectHandle(s: S) = objectHandle(NSString(s));
 
 [i when StringLiteral?(i)]
-overload ObjectParameterType(#Static[i]) = NSString;
+override ObjectParameterType(#Static[i]) = NSString;
 [i when StringLiteral?(i)]
-overload objectHandle(#i) = NSSTR(i);
+override objectHandle(#i) = NSSTR(i);
 
 
 
 /// @section  object equality and comparison 
 
 [O1, O2 when ObjectRef?(O1) and ObjectRef?(O2)]
-overload equals?(o1: O1, o2: O2) = o1.isEqual(o2);
+override equals?(o1: O1, o2: O2) = o1.isEqual(o2);
 
 [O1, O2 when ObjectRef?(O1) and ObjectRef?(O2)]
-overload lesser?(o1: O1, o2: O2) = o1.compare(o2) < 0;
+override lesser?(o1: O1, o2: O2) = o1.compare(o2) < 0;
 
 [O, T when ObjectRef?(O) and not ObjectRef?(T) and ObjectParameterType?(T)]
-overload equals?(o: O, v: T) = o.isEqual(objectHandle(v));
+override equals?(o: O, v: T) = o.isEqual(objectHandle(v));
 
 [O, T when ObjectRef?(O) and not ObjectRef?(T) and ObjectParameterType?(T)]
-overload equals?(v: T, o: O) = o.isEqual(objectHandle(v));
+override equals?(v: T, o: O) = o.isEqual(objectHandle(v));
 
 [O, T when ObjectRef?(O) and not ObjectRef?(T) and ObjectParameterType?(T)]
-overload lesser?(o: O, v: T) = o.compare(objectHandle(v)) < 0;
+override lesser?(o: O, v: T) = o.compare(objectHandle(v)) < 0;
 
 [O, T when ObjectRef?(O) and not ObjectRef?(T) and ObjectParameterType?(T)]
-overload lesser?(v: T, o: O) = o.compare(objectHandle(v)) > 0;
+override lesser?(v: T, o: O) = o.compare(objectHandle(v)) > 0;
 
 
 
 /// @section  object hashing 
 
 [O when ObjectRef?(O)]
-overload hash(o: O) = o.hash();
+override hash(o: O) = o.hash();
 
 
 
@@ -158,7 +158,7 @@ record NSFastEnumerationIterator (
     objects: Array[Id, FAST_ENUMERATION_BUFFER_SIZE]
 );
 
-overload iterator(x:NSFastEnumerationIterator) = x;
+override iterator(x:NSFastEnumerationIterator) = x;
 
 private refreshIterator(i: NSFastEnumerationIterator) {
     i.n = NSUInteger(0);
@@ -168,13 +168,13 @@ private refreshIterator(i: NSFastEnumerationIterator) {
 }
 
 [O when ObjectRef?(O)]
-overload iterator(o: O) --> returned: NSFastEnumerationIterator {
+override iterator(o: O) --> returned: NSFastEnumerationIterator {
     returned.delegate = MethodDelegate(Id(o), "countByEnumeratingWithState:objects:count:");
     returned.state.state = 0;
     refreshIterator(returned);
 }
 
-overload nextValue(i: NSFastEnumerationIterator) --> returned: Maybe[Id] {
+override nextValue(i: NSFastEnumerationIterator) --> returned: Maybe[Id] {
     if (i.count != 0) {
         returned <-- Maybe(i.state.itemsPtr[i.n]);
         inc(i.n);
@@ -186,17 +186,17 @@ overload nextValue(i: NSFastEnumerationIterator) --> returned: Maybe[Id] {
 }
 
 [O when ObjectRef?(O)]
-overload size(o: O) = SizeT(o.count());
+override size(o: O) = SizeT(o.count());
 
 
 
 /// @section  object indexing as array, dictionary 
 
 [OD, OK when ObjectRef?(OD) and ObjectParameterType?(OK)]
-overload index(o: OD, k: OK) = o.objectForKey(objectHandle(k));
+override index(o: OD, k: OK) = o.objectForKey(objectHandle(k));
 
 [O, I when ObjectRef?(O) and Integer?(I)]
-overload index(o: O, n: I) = o.objectAtIndex(NSUInteger(n));
+override index(o: O, n: I) = o.objectAtIndex(NSUInteger(n));
 
 
 
@@ -213,8 +213,8 @@ makeNSMutableArray(forward ..elements: E)
     = makeArrayOfClass(NSMutableArray, ..elements);
 
 private define swapValuePairs;
-overload swapValuePairs() = ;
-overload swapValuePairs(forward x, forward y, forward ..xys)
+override swapValuePairs() = ;
+override swapValuePairs(forward x, forward y, forward ..xys)
     = forward y, x, ..swapValuePairs(..xys);
 
 private ValidDictionaryKVs?(..E)
@@ -240,22 +240,22 @@ makeNSMutableDictionary(forward ..kvs: E)
 /// @section  push, insert, remove operations on objects as arrays 
 
 [O, OV when ObjectRef?(O) and ObjectParameterType?(OV)]
-overload push(o: O, v: OV) { o.addObject(objectHandle(v)); }
+override push(o: O, v: OV) { o.addObject(objectHandle(v)); }
 
 [O, I, OV when ObjectRef?(O) and Integer?(I) and ObjectParameterType?(OV)]
-overload insert(o: O, n: I, v: OV) {
+override insert(o: O, n: I, v: OV) {
     o.insertObject_atIndex(objectHandle(v), NSUInteger(n));
 }
 
 [O, I when ObjectRef?(O) and Integer?(I)]
-overload remove(o: O, n: I) { o.removeObjectAtIndex(NSUInteger(n)); }
+override remove(o: O, n: I) { o.removeObjectAtIndex(NSUInteger(n)); }
 
 
 
 /// @section  withAutoreleasePool 
 
 private record Drained (pool: NSAutoreleasePool);
-overload destroy(x: Drained) { x.pool.drain(); }
+override destroy(x: Drained) { x.pool.drain(); }
 
 withAutoreleasePool(fn) {
     var pool = Drained(NSAutoreleasePool(NSAutoreleasePool.alloc().init()));
@@ -294,9 +294,9 @@ initObjectWith(
 
 define initObject;
 
-overload initObject(self) = initObjectWith(self, "init", self => self);
+override initObject(self) = initObjectWith(self, "init", self => self);
 
-overload initObject(self, superSelector, forward ..args)
+override initObject(self, superSelector, forward ..args)
     = initObjectWith(self, superSelector, initObjectMembers, ..args);
 
 [O when Class?(O)]
@@ -306,14 +306,14 @@ private objectMembers(self: O)
 define initObjectMembers;
 
 [O when Class?(O)]
-overload initObjectMembers(self: O) {
+override initObjectMembers(self: O) {
     ..for (member in objectMembers(self))
         member <-- Type(member)();
     return self;
 }
 
 [O, ..A when Class?(O) and (Tuple[..ClassIvarTypes(O)] == Tuple[..A])]
-overload initObjectMembers(self: O, forward ..args: A) {
+override initObjectMembers(self: O, forward ..args: A) {
     ..objectMembers(self) <-- ..args;
     return self;
 }
@@ -348,11 +348,11 @@ deallocObject(self: O) {
 define AutoreleasedClassMethod;
 
 [selector when Selector?(selector)]
-overload AutoreleasedClassMethod(#selector)
+override AutoreleasedClassMethod(#selector)
     = [selector, class => class.alloc().init().autorelease()];
 
 [selector, instanceSelector when Selector?(selector) and Selector?(instanceSelector)]
-overload AutoreleasedClassMethod(#selector, #instanceSelector)
+override AutoreleasedClassMethod(#selector, #instanceSelector)
     = [selector, (class, ..args) =>
         callMethod(class.alloc(), instanceSelector, ..args).autorelease()
     ];
@@ -360,11 +360,11 @@ overload AutoreleasedClassMethod(#selector, #instanceSelector)
 define InitInstanceMethod;
 
 [selector, superSelector when Selector?(selector) and Selector?(superSelector)]
-overload InitInstanceMethod(#selector, #superSelector, ..Types)
+override InitInstanceMethod(#selector, #superSelector, ..Types)
     = [selector, (self, ..args) => initObject(self, superSelector, ..args), ..Types];
 
-overload InitInstanceMethod(selector) = InitInstanceMethod(selector, "init");
-overload InitInstanceMethod() = InitInstanceMethod("init", "init");
+override InitInstanceMethod(selector) = InitInstanceMethod(selector, "init");
+override InitInstanceMethod() = InitInstanceMethod("init", "init");
 
 // symbols for CopyInstanceMethod
 define CopyRoot;
@@ -374,43 +374,43 @@ define CopyImmutable;
 define CopyInstanceMethod;
 
 [selector when Selector?(selector)]
-overload CopyInstanceMethod(#selector, #CopyRoot)
+override CopyInstanceMethod(#selector, #CopyRoot)
     = [selector, copyRootObject];
 [selector when Selector?(selector)]
-overload CopyInstanceMethod(#selector, #CopyInheriting)
+override CopyInstanceMethod(#selector, #CopyInheriting)
     = [selector, copyInheritingObject];
 [selector when Selector?(selector)]
-overload CopyInstanceMethod(#selector, #CopyImmutable)
+override CopyInstanceMethod(#selector, #CopyImmutable)
     = [selector, copyImmutableObject];
 
 [Flag when Flag == CopyRoot or Flag == CopyInheriting or Flag == CopyImmutable]
-overload CopyInstanceMethod(#Flag)
+override CopyInstanceMethod(#Flag)
     = CopyInstanceMethod("copyWithZone:", Flag);
 
 define DeallocInstanceMethod;
 
 [selector when Selector?(selector)]
-overload DeallocInstanceMethod(#selector) = [selector, deallocObject];
+override DeallocInstanceMethod(#selector) = [selector, deallocObject];
 
-overload DeallocInstanceMethod() = DeallocInstanceMethod("dealloc");
+override DeallocInstanceMethod() = DeallocInstanceMethod("dealloc");
 
 
 define ReaderInstanceMethod;
 
 [ivarName, readerSelector when StringLiteral?(ivarName) and Selector?(readerSelector)]
-overload ReaderInstanceMethod(#ivarName, #readerSelector, T)
+override ReaderInstanceMethod(#ivarName, #readerSelector, T)
     = [readerSelector, self => T(fieldRef(self^, ivarName)), T];
 
 [ivarName when StringLiteral?(ivarName) and Selector?(ivarName)]
-overload ReaderInstanceMethod(#ivarName, T)
+override ReaderInstanceMethod(#ivarName, T)
     = ReaderInstanceMethod(ivarName, ivarName, T);
 
 [ivarName, readerSelector when StringLiteral?(ivarName) and Selector?(readerSelector)]
-overload ReaderInstanceMethod(#ivarName, #readerSelector)
+override ReaderInstanceMethod(#ivarName, #readerSelector)
     = [readerSelector, self => SelectorReturnType(Id, readerSelector)(fieldRef(self^, ivarName))];
 
 [ivarName when StringLiteral?(ivarName) and Selector?(ivarName)]
-overload ReaderInstanceMethod(#ivarName)
+override ReaderInstanceMethod(#ivarName)
     = ReaderInstanceMethod(ivarName, ivarName);
 
 
@@ -420,19 +420,19 @@ defaultWriterSelector(ivarName)
 define WriterInstanceMethod;
 
 [ivarName, writerSelector when StringLiteral?(ivarName) and Selector?(writerSelector)]
-overload WriterInstanceMethod(#ivarName, #writerSelector, T)
+override WriterInstanceMethod(#ivarName, #writerSelector, T)
     = [writerSelector, (self, value) => { fieldRef(self^, ivarName) = value; }, Void, T];
 
 [ivarName when StringLiteral?(ivarName) and Selector?(defaultWriterSelector(ivarName))]
-overload WriterInstanceMethod(#ivarName, T)
+override WriterInstanceMethod(#ivarName, T)
     = WriterInstanceMethod(ivarName, defaultWriterSelector(ivarName), Void, T);
 
 [ivarName, writerSelector when StringLiteral?(ivarName) and Selector?(writerSelector)]
-overload WriterInstanceMethod(#ivarName, #writerSelector)
+override WriterInstanceMethod(#ivarName, #writerSelector)
     = [writerSelector, (self, value) => { fieldRef(self^, ivarName) = value; }];
 
 [ivarName when StringLiteral?(ivarName) and Selector?(defaultWriterSelector(ivarName))]
-overload WriterInstanceMethod(#ivarName)
+override WriterInstanceMethod(#ivarName)
     = WriterInstanceMethod(ivarName, defaultWriterSelector(ivarName));
 
 
@@ -443,7 +443,7 @@ define PropertyInstanceMethods;
     and Selector?(readerSelector)
     and Selector?(writerSelector)
 ]
-overload PropertyInstanceMethods(#ivarName, #readerSelector, #writerSelector, T)
+override PropertyInstanceMethods(#ivarName, #readerSelector, #writerSelector, T)
     = ReaderInstanceMethod(ivarName, readerSelector, T),
       WriterInstanceMethod(ivarName, writerSelector, T);
 
@@ -452,7 +452,7 @@ overload PropertyInstanceMethods(#ivarName, #readerSelector, #writerSelector, T)
     and Selector?(readerSelector)
     and Selector?(defaultWriterSelector(readerSelector))
 ]
-overload PropertyInstanceMethods(#ivarName, #readerSelector, T)
+override PropertyInstanceMethods(#ivarName, #readerSelector, T)
     = ..PropertyInstanceMethods(ivarName, readerSelector, defaultWriterSelector(readerSelector), T);
 
 [ivarName when
@@ -460,7 +460,7 @@ overload PropertyInstanceMethods(#ivarName, #readerSelector, T)
     and Selector?(ivarName)
     and Selector?(defaultWriterSelector(ivarName))
 ]
-overload PropertyInstanceMethods(#ivarName, T)
+override PropertyInstanceMethods(#ivarName, T)
     = ..PropertyInstanceMethods(ivarName, ivarName, defaultWriterSelector(ivarName), T);
 
 [ivarName, readerSelector, writerSelector when
@@ -468,7 +468,7 @@ overload PropertyInstanceMethods(#ivarName, T)
     and Selector?(readerSelector)
     and Selector?(writerSelector)
 ]
-overload PropertyInstanceMethods(#ivarName, #readerSelector, #writerSelector)
+override PropertyInstanceMethods(#ivarName, #readerSelector, #writerSelector)
     = ReaderInstanceMethod(ivarName, readerSelector),
       WriterInstanceMethod(ivarName, writerSelector);
 
@@ -477,7 +477,7 @@ overload PropertyInstanceMethods(#ivarName, #readerSelector, #writerSelector)
     and Selector?(readerSelector)
     and Selector?(defaultWriterSelector(readerSelector))
 ]
-overload PropertyInstanceMethods(#ivarName, #readerSelector)
+override PropertyInstanceMethods(#ivarName, #readerSelector)
     = ..PropertyInstanceMethods(ivarName, readerSelector, defaultWriterSelector(readerSelector));
 
 [ivarName when
@@ -485,7 +485,7 @@ overload PropertyInstanceMethods(#ivarName, #readerSelector)
     and Selector?(ivarName)
     and Selector?(defaultWriterSelector(ivarName))
 ]
-overload PropertyInstanceMethods(#ivarName)
+override PropertyInstanceMethods(#ivarName)
     = ..PropertyInstanceMethods(ivarName, ivarName, defaultWriterSelector(ivarName));
 
 
@@ -493,7 +493,7 @@ overload PropertyInstanceMethods(#ivarName)
 /// @section  printing 
 
 [O when ObjectRef?(O)]
-overload printTo(stream, o: O) {
+override printTo(stream, o: O) {
     if (nil?(o))
         printTo(stream, "(nil)");
     else
@@ -524,8 +524,8 @@ private regularClassInstanceMethods(..fields)
       ..regularClassPropertyMethods(..fields);
 
 private define regularClassInitMethod;
-overload regularClassInitMethod() = ;
-overload regularClassInitMethod(..fields)
+override regularClassInitMethod() = ;
+override regularClassInitMethod(..fields)
     = InitInstanceMethod(regularClassInitMethodName(..fields), "init",
         Id, ..mapValues(x => x.1, ..fields)
     );

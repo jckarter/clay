@@ -10,10 +10,10 @@
 define String?(#T) : Bool;
 
 [A]
-overload String?(#A) : Bool = false;
+override String?(#A) : Bool = false;
 
 [A when Sequence?(A) and (Char == SequenceElementType(A))]
-overload String?(#A) : Bool = true;
+override String?(#A) : Bool = true;
 
 
 
@@ -23,10 +23,10 @@ overload String?(#A) : Bool = true;
 define SizedString?(#A) : Bool;
 
 [A]
-overload SizedString?(#A) : Bool = false;
+override SizedString?(#A) : Bool = false;
 
 [A when SizedSequence?(A) and (Char == SequenceElementType(A))]
-overload SizedString?(#A) : Bool = true;
+override SizedString?(#A) : Bool = true;
 
 
 
@@ -36,10 +36,10 @@ overload SizedString?(#A) : Bool = true;
 define ContiguousString?(#A) : Bool;
 
 [A]
-overload ContiguousString?(#A) : Bool = false;
+override ContiguousString?(#A) : Bool = false;
 
 [A when ContiguousSequence?(A) and (Char == SequenceElementType(A))]
-overload ContiguousString?(#A) : Bool = true;
+override ContiguousString?(#A) : Bool = true;
 
 
 

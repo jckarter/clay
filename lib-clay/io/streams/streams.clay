@@ -11,10 +11,10 @@ public import io.streams.bytevector.*;
 /// @section  read, write wrappers to readBytes, writeBytes
 
 [B, N when ByteLike?(B) and Integer?(N)]
-overload read(stream, buf:Pointer[B], n:N) = readBytes(stream, Pointer[Byte](buf), SizeT(n));
+override read(stream, buf:Pointer[B], n:N) = readBytes(stream, Pointer[Byte](buf), SizeT(n));
 
 [B, N when ByteLike?(B) and Integer?(N)]
-overload write(stream, buf:Pointer[B], n:N) {
+override write(stream, buf:Pointer[B], n:N) {
     var pos = SizeT(0);
     while (pos < n) {
         pos +: writeBytes(stream, Pointer[Byte](buf) + pos, SizeT(n) - pos);
@@ -55,7 +55,7 @@ writeChar(stream, c: Char) {
 /// @section  read - read into byte vector 
 
 [V when ByteVector?(V)]
-overload read(stream, n:SizeT, buf:V) {
+override read(stream, n:SizeT, buf:V) {
     var current = size(buf);
     resize(buf, current + n);
     var ptr = Pointer[Byte](begin(buf) + current);
@@ -64,7 +64,7 @@ overload read(stream, n:SizeT, buf:V) {
     return numRead;
 }
 
-overload read(stream, n:SizeT) {
+override read(stream, n:SizeT) {
     var buf = String();
     read(stream, n, buf);
     return move(buf);
@@ -79,7 +79,7 @@ instance IOError (PrematureEOF);
 define readN;
 
 [V when ByteVector?(V)]
-overload readN(stream, n:SizeT, buf:V) {
+override readN(stream, n:SizeT, buf:V) {
     var initial = size(buf);
     var current = initial;
     var expected = initial + n;
@@ -91,12 +91,12 @@ overload readN(stream, n:SizeT, buf:V) {
     }
 }
 
-overload readN(stream, buffer:Pointer[Byte], n:SizeT) {
+override readN(stream, buffer:Pointer[Byte], n:SizeT) {
     var bv = BufferVector(buffer, buffer + n);
     readN(stream, n, bv);
 }
 
-overload readN(stream, n:SizeT) {
+override readN(stream, n:SizeT) {
     var buf = String();
     readN(stream, n, buf);
     return move(buf);
@@ -108,7 +108,7 @@ overload readN(stream, n:SizeT) {
 define readAll;
 
 [V when ByteVector?(V)]
-overload readAll(stream, chunkSize:SizeT, buf:V) {
+override readAll(stream, chunkSize:SizeT, buf:V) {
     while (true) {
         var numRead = read(stream, chunkSize, buf);
         if (numRead == 0)
@@ -117,11 +117,11 @@ overload readAll(stream, chunkSize:SizeT, buf:V) {
 }
 
 [V when ByteVector?(V)]
-overload readAll(stream, buf:V) {
+override readAll(stream, buf:V) {
     readAll(stream, SizeT(4096), buf);
 }
 
-overload readAll(stream) : String {
+override readAll(stream) : String {
     var buf = String();
     readAll(stream, buf);
     return move(buf);
@@ -133,7 +133,7 @@ overload readAll(stream) : String {
 define readUpto;
 
 [T, V when ByteLike?(T) and ByteVector?(V)]
-overload readUpto(stream, upto:T, buf:V) {
+override readUpto(stream, upto:T, buf:V) {
     alias ElementType = SequenceElementType(V);
     var uptoByte = Byte(upto);
     while (true) {
@@ -148,7 +148,7 @@ overload readUpto(stream, upto:T, buf:V) {
 }
 
 [T when ByteLike?(T)]
-overload readUpto(stream, upto:T) : String {
+override readUpto(stream, upto:T) : String {
     var v = String();
     readUpto(stream, upto, v);
     return move(v);
@@ -158,22 +158,22 @@ overload readUpto(stream, upto:T) : String {
 define readLine;
 
 [V when ByteVector?(V)]
-overload readLine(stream, buf:V) {
+override readLine(stream, buf:V) {
     readUpto(stream, '\n', buf);
 }
 
-overload readLine(stream) = readUpto(stream, '\n');
+override readLine(stream) = readUpto(stream, '\n');
 
 
 /// @section  write - write one byte 
 
 [I when Integer?(I)]
-overload write(stream, x:I) {
+override write(stream, x:I) {
     var b = Byte(x);
     write(stream, @b, SizeT(1));
 }
 
-overload write(stream, x:Char) {
+override write(stream, x:Char) {
     write(stream, Byte(x));
 }
 
@@ -181,7 +181,7 @@ overload write(stream, x:Char) {
 /// @section  write - write byte buffer 
 
 [V when ByteBuffer?(V)]
-overload write(stream, x:V) {
+override write(stream, x:V) {
     write(stream, Pointer[Byte](begin(x)), size(x));
 }
 
@@ -189,7 +189,7 @@ overload write(stream, x:V) {
 /// @section  write, flush - write to ByteVector 
 
 [V when ByteVector?(V)]
-overload writeBytes(stream:V, buf:Pointer[Byte], n:SizeT) {
+override writeBytes(stream:V, buf:Pointer[Byte], n:SizeT) {
     var currentSize = size(stream);
     resize(stream, currentSize + n);
     var dest = Pointer[Byte](begin(stream)) + currentSize;
@@ -198,7 +198,7 @@ overload writeBytes(stream:V, buf:Pointer[Byte], n:SizeT) {
 }
 
 [V when ByteVector?(V)]
-overload flush(stream:V) {
+override flush(stream:V) {
 }
 
 
@@ -206,15 +206,15 @@ overload flush(stream:V) {
 /// @section  collection protocols
 
 [I when InputStream?(I)]
-overload nextValue(is:I) = readByte(is);
+override nextValue(is:I) = readByte(is);
 
 [O, B when OutputStream?(O) and ByteLike?(B)]
-overload push(os:O, b:B) {
+override push(os:O, b:B) {
     writeByte(os, b);
 }
 
 [O, B when OutputStream?(O) and ByteBuffer?(B)]
-overload push(os:O, bs:B) {
+override push(os:O, bs:B) {
     write(os, bs);
 }
 

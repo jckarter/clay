@@ -13,7 +13,7 @@ record SharedPointer[T] (
 );
 
 [T]
-overload RegularRecord?(#SharedPointer[T]) = false;
+override RegularRecord?(#SharedPointer[T]) = false;
 
 
 
@@ -30,29 +30,29 @@ alias new(x:T) {
 }
 
 [T]
-overload SharedPointer[T]() {
+override SharedPointer[T]() {
     return SharedPointer(nullPaged(RefCounted[T]));
 }
 
 [T]
-overload SharedPointer[T](src:SharedPointer[T]) {
+override SharedPointer[T](src:SharedPointer[T]) {
     if (not null?(src))
         src.ptr^.refCount +: 1;
     return SharedPointer(src.ptr);
 }
 
 [T]
-overload moveUnsafe(src:SharedPointer[T]) --> returned:SharedPointer[T] {
+override moveUnsafe(src:SharedPointer[T]) --> returned:SharedPointer[T] {
     returned.ptr = src.ptr;
 }
 
 [T]
-overload resetUnsafe(p : SharedPointer[T]) {
+override resetUnsafe(p : SharedPointer[T]) {
     p <-- SharedPointer[T]();
 }
 
 [T]
-overload assign(ref dest:SharedPointer[T], ref src:SharedPointer[T]) {
+override assign(ref dest:SharedPointer[T], ref src:SharedPointer[T]) {
     if (dest.ptr == src.ptr)
         return;
     destroy(dest);
@@ -60,7 +60,7 @@ overload assign(ref dest:SharedPointer[T], ref src:SharedPointer[T]) {
 }
 
 [T]
-overload destroy(p : SharedPointer[T]) {
+override destroy(p : SharedPointer[T]) {
     if (not null?(p)) {
         p.ptr^.refCount -: 1;
         if (p.ptr^.refCount == 0) {
@@ -75,14 +75,14 @@ overload destroy(p : SharedPointer[T]) {
 /// @section  dereference 
 
 [T]
-overload dereference(p : SharedPointer[T]) = ref p.ptr^.value;
+override dereference(p : SharedPointer[T]) = ref p.ptr^.value;
 
 
 
 /// @section  null?, nullShared 
 
 [T]
-overload null?(p : SharedPointer[T]) = null?(p.ptr);
+override null?(p : SharedPointer[T]) = null?(p.ptr);
 
 [T]
 nullShared(#T) = SharedPointer[T]();

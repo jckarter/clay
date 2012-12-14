@@ -6,7 +6,7 @@ import data.strings.*;
 import data.vectors.*;
 
 record IrregularRecord ();
-overload RegularRecord?(#IrregularRecord) = false;
+override RegularRecord?(#IrregularRecord) = false;
 
 record PODRecord (x: Int, y: Char);
 record NonPODRecord (x: Int, y: IrregularRecord);

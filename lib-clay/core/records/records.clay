@@ -1,8 +1,10 @@
+import core.operators.(private staticEquals?);
+
 
 /// @section  fieldRef, fieldRefByIndex 
 
 [T, FIELD when RecordWithField?(T, FIELD)]
-forceinline overload fieldRef(x:T, #FIELD) {
+forceinline override fieldRef(x:T, #FIELD) {
     return ref ..recordFieldRefByName(x, #FIELD);
 }
 
@@ -41,14 +43,15 @@ RecordFieldNames(R) = ..mapValues(
 // true if record's value semantics is defined in terms of its fields
 //
 
-[T]
-define RegularRecord?(#T) : Bool;
+define RegularRecord?(T) : Bool;
+
+override RegularRecord?(T) : Bool = false;
 
 [T]
-overload RegularRecord?(#T) : Bool = false;
+override RegularRecord?(#T) : Bool = false;
 
 [T when Record?(T)]
-overload RegularRecord?(#T) : Bool = true;
+override RegularRecord?(#T) : Bool = true;
 
 
 
@@ -57,25 +60,25 @@ overload RegularRecord?(#T) : Bool = true;
 [T, ..A when Record?(T)]
 define initializeRecord(#T, ..args:A): T;
 
-[T, ..A when Record?(T) and (Tuple[..RecordFieldTypes(T)] == Tuple[..A])]
-alias overload initializeRecord(#T, ..args:A) --> returned:T {
+[T, ..A when Record?(T) and staticEquals?(Tuple[..RecordFieldTypes(T)], Tuple[..A])]
+alias override initializeRecord(#T, ..args:A) --> returned:T {
     ..recordFields(returned) <-- ..args;
 }
 
-[T, ..A when Record?(T) and (Tuple[..RecordFieldTypes(T)] == Tuple[..A])]
-alias overload T(..args:A) : T = initializeRecord(T, ..args);
+[T, ..A when Record?(T) and staticEquals?(Tuple[..RecordFieldTypes(T)], Tuple[..A])]
+alias override T(..args:A) : T = initializeRecord(T, ..args);
 
 
 
 /// @section  default constructor 
 
 [T when Record?(T)]
-overload initializeRecord(#T) --> returned:T {
+override initializeRecord(#T) --> returned:T {
     initializeMulti(..recordFields(returned));
 }
 
 [T when RegularRecord?(T)]
-overload T() = initializeRecord(T);
+override T() = initializeRecord(T);
 
 [..A]
 private initializeMulti(..args:A) : {
@@ -83,8 +86,8 @@ private initializeMulti(..args:A) : {
 }
 
 private define initializeTypes;
-forceinline overload initializeTypes(A, ..B) = A(), ..initializeTypes(..B);
-forceinline overload initializeTypes() = ;
+forceinline override initializeTypes(A, ..B) = A(), ..initializeTypes(..B);
+forceinline override initializeTypes() = ;
 
 
 
@@ -96,7 +99,7 @@ copyRecord(src:T) --> returned:T {
 }
 
 [T when RegularRecord?(T) and not BitwiseCopiedType?(T)]
-overload T(src:T) = copyRecord(src);
+override T(src:T) = copyRecord(src);
 
 
 
@@ -110,7 +113,7 @@ moveRecordUnsafe(src:T) --> returned:T {
 }
 
 [T when RegularRecord?(T) and not BitwiseMovedType?(T)]
-overload moveUnsafe(src:T) : T = moveRecordUnsafe(src);
+override moveUnsafe(src:T) : T = moveRecordUnsafe(src);
 
 [T when Record?(T)]
 resetRecordUnsafe(a:T) : {
@@ -119,7 +122,7 @@ resetRecordUnsafe(a:T) : {
 }
 
 [T when RegularRecord?(T) and not ResetDoesNothingType?(T)]
-overload resetUnsafe(a:T) : {
+override resetUnsafe(a:T) : {
     resetRecordUnsafe(a);
 }
 
@@ -134,7 +137,7 @@ destroyRecord(a:T) : {
 }
 
 [T when RegularRecord?(T) and not DestroyDoesNothingType?(T)]
-overload destroy(a:T) : {
+override destroy(a:T) : {
     destroyRecord(a);
 }
 
@@ -143,7 +146,7 @@ overload destroy(a:T) : {
 /// @section  assign 
 
 [T when RegularRecord?(T) and not BitwiseAssignedType?(T)]
-overload assign(ref dest:T, ref src:T) : {
+override assign(ref dest:T, ref src:T) : {
     alias n = RecordFieldCount(T);
     ..for (i in staticIntegers(#n))
         assign(fieldRefByIndex(dest, i), fieldRefByIndex(src, i));
@@ -154,7 +157,7 @@ overload assign(ref dest:T, ref src:T) : {
 /// @section  equals? 
 
 [T when RegularRecord?(T)]
-overload equals?(a:T, b:T) : Bool {
+override equals?(a:T, b:T) : Bool {
     alias n = RecordFieldCount(T);
     ..for (i in staticIntegers(#n)) {
         if (not equals?(fieldRefByIndex(a, i), fieldRefByIndex(b, i)))
@@ -168,7 +171,7 @@ overload equals?(a:T, b:T) : Bool {
 /// @section  lesser? 
 
 [T when RegularRecord?(T)]
-overload lesser?(a:T, b:T) : Bool {
+override lesser?(a:T, b:T) : Bool {
     alias n = RecordFieldCount(T);
     ..for (i in staticIntegers(#n)) {
         ref av = fieldRefByIndex(a, i);

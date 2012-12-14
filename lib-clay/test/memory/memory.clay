@@ -15,11 +15,11 @@ enum CanaryState (DESTROYED, ALIVE, MOVED, RESET, INVALID);
 private var canaryTracker = Vector[CanaryState]();
 record Canary (id: SizeT, throwOnCopy?: Bool);
 
-overload RegularRecord?(#Canary) = false;
+override RegularRecord?(#Canary) = false;
 
-// overload allocateRawMemory(Canary) to initialize memory to an invalid canary index
+// override allocateRawMemory(Canary) to initialize memory to an invalid canary index
 private record CanaryLike ( canary: Canary );
-overload allocateRawMemory(#Canary, n) --> r: Pointer[Canary] {
+override allocateRawMemory(#Canary, n) --> r: Pointer[Canary] {
     r <-- Pointer[Canary](allocateRawMemory(CanaryLike, n));
     for (x in CoordinateRange(r, r+n)) {
         x.id <-- UNINITIALIZED_CANARY;
@@ -38,17 +38,17 @@ private _Canary(r: Canary, throwOnCopy?: Bool) {
     push(canaryTracker, ALIVE);
 }
 
-overload Canary() --> r:Canary {
+override Canary() --> r:Canary {
     _Canary(r, false);
     noisyPrintln("-- constructed ", @r, " ", r.id);
 }
 
-overload Canary(throwOnCopy?: Bool) --> r:Canary {
+override Canary(throwOnCopy?: Bool) --> r:Canary {
     _Canary(r, throwOnCopy?);
     noisyPrintln("-- constructed ", @r, " ", r.id, if (throwOnCopy?) " (throws on copy)" else "");
 }
 
-overload Canary(x: Canary) --> r:Canary {
+override Canary(x: Canary) --> r:Canary {
     if (x.id >= size(canaryTracker)) {
         println("!! tried copy  ", @r, " from ", @x, " uninitialized!");
         r.id <-- UNINITIALIZED_CANARY;
@@ -66,7 +66,7 @@ overload Canary(x: Canary) --> r:Canary {
     noisyPrintln("-- copied      ", @r, " ", r.id, " from ", @x, " ", x.id);
 }
 
-overload destroy(x: Canary) {
+override destroy(x: Canary) {
     if (x.id >= size(canaryTracker)) {
         println("!! destroyed   ", @x, " uninitialized!");
     } else if (canaryTracker[x.id] == DESTROYED) {
@@ -83,7 +83,7 @@ overload destroy(x: Canary) {
     }
 }
 
-overload moveUnsafe(x: Canary) --> r:Canary {
+override moveUnsafe(x: Canary) --> r:Canary {
     if (x.id >= size(canaryTracker)) {
         r.id <-- UNINITIALIZED_CANARY;
         r.throwOnCopy? <-- true;
@@ -95,7 +95,7 @@ overload moveUnsafe(x: Canary) --> r:Canary {
     }
 }
 
-overload resetUnsafe(x: Canary) {
+override resetUnsafe(x: Canary) {
     if (x.id >= size(canaryTracker)) {
         _Canary(x, false);
         noisyPrintln("-- reset       ", @x, " ", x.id, " from uninitialized");
@@ -110,9 +110,9 @@ overload resetUnsafe(x: Canary) {
         canaryTracker[x.id] = RESET;
     }
 }
-overload assign(ref x: Canary, y: Canary) { }
+override assign(ref x: Canary, y: Canary) { }
 
-overload equals?(x: Canary, y: Canary) { return true; }
+override equals?(x: Canary, y: Canary) { return true; }
 
 checkCanariesDestroyed() : Bool {
     var r = true;

@@ -5,18 +5,18 @@ import data.strings.*;
 record GenericOSError(code:Int, where:StringLiteralRef);
 
 [I, S when Integer?(I) and StringLiteral?(S)]
-overload GenericOSError(code:I, #S) --> returned:GenericOSError {
+override GenericOSError(code:I, #S) --> returned:GenericOSError {
     returned.code = Int(code);
     returned.where = StringLiteralRef(S);
 }
 
-overload printTo(stream, x:GenericOSError) {
+override printTo(stream, x:GenericOSError) {
     printTo(stream, x.where, ": ");
     printTo(stream, "error(", x.code, "): ");
     printErrorMessageTo(stream, x.code);
 }
 
-overload printReprTo(stream, x:GenericOSError) {
+override printReprTo(stream, x:GenericOSError) {
     printTo(stream, "GenericOSError(", errorCodeName(x.code), ", ", repr(x.where), ")");
 }
 
@@ -27,7 +27,7 @@ instance Exception (OSError);
 instance OSError (GenericOSError);
 
 [T when VariantMember?(OSError, T)]
-overload Exception(forward x:T) = Exception(OSError(x));
+override Exception(forward x:T) = Exception(OSError(x));
 
 printErrorMessageTo(stream, code:Int) {
     platform.printErrorMessageTo(stream, code);

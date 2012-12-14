@@ -6,7 +6,7 @@ record Test (
     x: Int32
 );
 
-overload destroy(t:Test) {
+override destroy(t:Test) {
     println("Destroyed ", t.x);
 }
 

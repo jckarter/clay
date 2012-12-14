@@ -3,7 +3,7 @@ import printer.*;
 record Cow[..T] (a:Int32, ..data:T, b:Float64);
 
 [..T] 
-overload Cow(a:Int32, ..data:T, b:Float64) = Cow[..T](a, ..data, b);
+override Cow(a:Int32, ..data:T, b:Float64) = Cow[..T](a, ..data, b);
 
 main() {
 	var ..data = 2,6,"pigs",[3.0f,Float32],7.0;

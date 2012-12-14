@@ -15,14 +15,14 @@ record NamedScalar[T] (
 );
 
 [T]
-overload RegularRecord?(#NamedScalar[T]) = false;
+override RegularRecord?(#NamedScalar[T]) = false;
 
 
 
 /// @section  constructor 
 
 [S,T when String?(S)]
-overload NamedScalar[T](fileName:S, initial:T) {
+override NamedScalar[T](fileName:S, initial:T) {
     if (pathExists?(fileName)) {
         var f = File(fileName, READ_WRITE);
         var mapping = FileMapping(f, MAP_READ_WRITE);
@@ -44,7 +44,7 @@ overload NamedScalar[T](fileName:S, initial:T) {
 /// @section  destroy 
 
 [T]
-overload destroy(x:NamedScalar[T]) {
+override destroy(x:NamedScalar[T]) {
     destroy(x.mapping);
     destroy(x.file);
     destroy(x.fileName);
@@ -55,5 +55,5 @@ overload destroy(x:NamedScalar[T]) {
 /// @section  dereference 
 
 [T]
-overload dereference(x:NamedScalar[T]) =
+override dereference(x:NamedScalar[T]) =
     ref Pointer[T](mappingAddress(x.mapping))^;

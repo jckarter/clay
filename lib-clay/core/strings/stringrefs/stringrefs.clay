@@ -4,4 +4,4 @@ import core.strings.*;
 alias StringRef = ArrayRef[Char];
 
 [S when ContiguousString?(S)]
-overload StringRef(s: S) : ArrayRef[Char] = ArrayRef(begin(s), end(s));
+override StringRef(s: S) : ArrayRef[Char] = ArrayRef(begin(s), end(s));

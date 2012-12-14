@@ -12,7 +12,8 @@ import data.sequences.operators.*;
 var clayKeywords = array(
     "public", "private", "import", "as",
     "record", "variant", "instance",
-    "define", "overload", "external", "alias",
+    "define", "override", "overload", "default",
+    "external", "alias",
     "static", "rvalue",
     "inline", "enum", "var", "ref", "forward",
     "and", "or", "not",
@@ -30,7 +31,7 @@ var g_unnamedIndex = 0;
 var g_bindingsOut = stdoutFile();
 var g_visitedSymbols = HashMap[String, Bool]();
 
-overload printTo(stream, s:CXString) : {
+override printTo(stream, s:CXString) : {
     printTo(stream, CStringRef(clang_getCString(s)));
 }
 
@@ -537,7 +538,7 @@ instance Exception (
     MissingMatchPattern
 );
 
-overload printTo(s, _:Usage) {
+override printTo(s, _:Usage) {
     printlnTo(s, "Usage: clay-bindgen [clang options...] [bindgen options...] input.h");
     printlnTo(s, "Bindgen options:");
     printlnTo(s, "  -o <output.clay>   Write bindings to <output.clay> (default stdout)");
@@ -551,15 +552,15 @@ overload printTo(s, _:Usage) {
     printlnTo(s, "Most clang options (such as -I and -D) are also supported.");
 }
 
-overload printTo(s, _:MissingOutputFileName) {
+override printTo(s, _:MissingOutputFileName) {
     printlnTo(s, "no output file specified after -o option");
 }
 
-overload printTo(s, _:MissingImportModuleName) {
+override printTo(s, _:MissingImportModuleName) {
     printlnTo(s, "no module name specified after -import option");
 }
 
-overload printTo(s, _:MissingMatchPattern) {
+override printTo(s, _:MissingMatchPattern) {
     printlnTo(s, "no filename pattern specified after -match option");
 }
 
@@ -570,7 +571,7 @@ record BindgenOptions (
     matchBuiltins:Bool
 );
 
-overload BindgenOptions() = BindgenOptions(
+override BindgenOptions() = BindgenOptions(
     nothing(String), Vector[String](), Vector[String](), false
 );
 

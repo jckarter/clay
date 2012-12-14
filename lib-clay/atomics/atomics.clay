@@ -21,15 +21,15 @@ import printer.(printTo);
 //
 
 [op] define AtomicUpdateOp?(#op);
-/* default */ overload AtomicUpdateOp?(op) = false;
-overload AtomicUpdateOp?(#(+)) = true;
-overload AtomicUpdateOp?(#(-)) = true;
-overload AtomicUpdateOp?(#(&)) = true;
-overload AtomicUpdateOp?(#bitnand) = true;
-overload AtomicUpdateOp?(#(|)) = true;
-overload AtomicUpdateOp?(#(~)) = true;
-overload AtomicUpdateOp?(#min) = true;
-overload AtomicUpdateOp?(#max) = true;
+/* default */ override AtomicUpdateOp?(op) = false;
+override AtomicUpdateOp?(#(+)) = true;
+override AtomicUpdateOp?(#(-)) = true;
+override AtomicUpdateOp?(#(&)) = true;
+override AtomicUpdateOp?(#bitnand) = true;
+override AtomicUpdateOp?(#(|)) = true;
+override AtomicUpdateOp?(#(~)) = true;
+override AtomicUpdateOp?(#min) = true;
+override AtomicUpdateOp?(#max) = true;
 
 //
 // Atomic[T] type
@@ -38,26 +38,26 @@ overload AtomicUpdateOp?(#max) = true;
 [T when PODType?(T) and CallDefined?(AtomicTypeForType, Static[T])]
 record Atomic[T] = _holder:AtomicTypeForType(T);
 
-[T] overload RegularRecord?(#Atomic[T]) = false;
-[T] overload BitwiseMovedType?(#Atomic[T]) = false;
-[T] overload DestroyDoesNothingType?(#Atomic[T]) = true;
-[T] overload ResetDoesNothingType?(#Atomic[T]) = true;
+[T] override RegularRecord?(#Atomic[T]) = false;
+[T] override BitwiseMovedType?(#Atomic[T]) = false;
+[T] override DestroyDoesNothingType?(#Atomic[T]) = true;
+[T] override ResetDoesNothingType?(#Atomic[T]) = true;
 
-[T] overload Atomic[T]() --> returned:Atomic[T]
+[T] override Atomic[T]() --> returned:Atomic[T]
 {
     returned._holder <-- atomicInput(T());
 }
 
 // disable default elementwise constructor
-[T] overload Atomic[T](x);
-[T] overload Atomic(x);
+[T] override Atomic[T](x);
+override Atomic(x);
 
-[T] alias overload Atomic[T](x:T) --> returned:Atomic[T]
+[T] alias override Atomic[T](x:T) --> returned:Atomic[T]
 {
     returned._holder <-- atomicInput(x);
 }
 
-[T] alias overload Atomic(x:T) = Atomic[T](x);
+[T] alias override Atomic(x:T) = Atomic[T](x);
 
 //
 // atomic API
@@ -81,20 +81,20 @@ define fence(..order);
 //
 
 [T] private define atomicInput(x:T) : AtomicTypeForType(T);
-[T when T == AtomicTypeForType(T)] forceinline overload atomicInput(x:T) = ref x;
+[T when T == AtomicTypeForType(T)] forceinline override atomicInput(x:T) = ref x;
 [T when T != AtomicTypeForType(T)
     and TypeSize(T) == TypeSize(AtomicTypeForType(T))
     and TypeAlignment(T) == TypeAlignment(AtomicTypeForType(T))]
-forceinline overload atomicInput(x:T) = ref bitcast(AtomicTypeForType(T), x);
+forceinline override atomicInput(x:T) = ref bitcast(AtomicTypeForType(T), x);
 [T when T != AtomicTypeForType(T)
     and TypeSize(T) == TypeSize(AtomicTypeForType(T))
     and TypeAlignment(T) < TypeAlignment(AtomicTypeForType(T))]
-forceinline overload atomicInput(x:T) --> returned:AtomicTypeForType(T) {
+forceinline override atomicInput(x:T) --> returned:AtomicTypeForType(T) {
     bitcast(T, returned) <-- x;
 }
 [T when T != AtomicTypeForType(T)
     and TypeSize(T) < TypeSize(AtomicTypeForType(T))]
-forceinline overload atomicInput(x:T) --> returned:AtomicTypeForType(T) {
+forceinline override atomicInput(x:T) --> returned:AtomicTypeForType(T) {
     returned <-- AtomicTypeForType(T)(0);
     bitcast(T, returned) <-- x;
 }
@@ -104,88 +104,88 @@ forceinline overload atomicInput(x:T) --> returned:AtomicTypeForType(T) {
 //
 
 [T, Order]
-forceinline overload load(a:Atomic[T], #Order)
+forceinline override load(a:Atomic[T], #Order)
     = bitcast(T, __primitives__.atomicLoad(Order, @a._holder));
 
 [T]
-forceinline overload load(a:Atomic[T]) = load(a, OrderSeqCst);
+forceinline override load(a:Atomic[T]) = load(a, OrderSeqCst);
 
 [T, Order]
-forceinline overload store(a:Atomic[T], value:T, #Order)
+forceinline override store(a:Atomic[T], value:T, #Order)
 {
     __primitives__.atomicStore(Order, @a._holder, atomicInput(value));
 }
 
 [T]
-forceinline overload store(a:Atomic[T], value:T) { store(a, value, OrderSeqCst); }
+forceinline override store(a:Atomic[T], value:T) { store(a, value, OrderSeqCst); }
 
 [T, Order]
-forceinline overload xchg(a:Atomic[T], value:T, #Order)
+forceinline override xchg(a:Atomic[T], value:T, #Order)
 {
     var atomicResult = __primitives__.atomicRMW(Order, RMWXchg, @a._holder, atomicInput(value));
     return bitcast(T, atomicResult);
 }
 
 [T]
-forceinline overload xchg(a:Atomic[T], value:T) = xchg(a, value, OrderSeqCst);
+forceinline override xchg(a:Atomic[T], value:T) = xchg(a, value, OrderSeqCst);
 
 [T, Order]
-forceinline overload rmw(a:Atomic[T], #(+), operand:T, #Order)
+forceinline override rmw(a:Atomic[T], #(+), operand:T, #Order)
 {
     return __primitives__.atomicRMW(Order, RMWAdd, @a._holder, operand);
 }
 [T, Order]
-forceinline overload rmw(a:Atomic[T], #(-), operand:T, #Order)
+forceinline override rmw(a:Atomic[T], #(-), operand:T, #Order)
 {
     return __primitives__.atomicRMW(Order, RMWSubtract, @a._holder, operand);
 }
 [T, Order]
-forceinline overload rmw(a:Atomic[T], #(&), operand:T, #Order)
+forceinline override rmw(a:Atomic[T], #(&), operand:T, #Order)
 {
     return __primitives__.atomicRMW(Order, RMWAnd, @a._holder, operand);
 }
 [T, Order]
-forceinline overload rmw(a:Atomic[T], #bitnand, operand:T, #Order)
+forceinline override rmw(a:Atomic[T], #bitnand, operand:T, #Order)
 {
     return __primitives__.atomicRMW(Order, RMWNAnd, @a._holder, operand);
 }
 [T, Order]
-forceinline overload rmw(a:Atomic[T], #(|), operand:T, #Order)
+forceinline override rmw(a:Atomic[T], #(|), operand:T, #Order)
 {
     return __primitives__.atomicRMW(Order, RMWOr, @a._holder, operand);
 }
 [T, Order]
-forceinline overload rmw(a:Atomic[T], #(~), operand:T, #Order)
+forceinline override rmw(a:Atomic[T], #(~), operand:T, #Order)
 {
     return __primitives__.atomicRMW(Order, RMWXor, @a._holder, operand);
 }
 [T, Order when SignedInteger?(T)]
-forceinline overload rmw(a:Atomic[T], #min, operand:T, #Order)
+forceinline override rmw(a:Atomic[T], #min, operand:T, #Order)
 {
     return __primitives__.atomicRMW(Order, RMWMin, @a._holder, operand);
 }
 [T, Order when SignedInteger?(T)]
-forceinline overload rmw(a:Atomic[T], #max, operand:T, #Order)
+forceinline override rmw(a:Atomic[T], #max, operand:T, #Order)
 {
     return __primitives__.atomicRMW(Order, RMWMax, @a._holder, operand);
 }
 [T, Order when UnsignedInteger?(T) or T == Bool]
-forceinline overload rmw(a:Atomic[T], #min, operand:T, #Order)
+forceinline override rmw(a:Atomic[T], #min, operand:T, #Order)
 {
     return __primitives__.atomicRMW(Order, RMWUMin, @a._holder, operand);
 }
 [T, Order when UnsignedInteger?(T) or T == Bool]
-forceinline overload rmw(a:Atomic[T], #max, operand:T, #Order)
+forceinline override rmw(a:Atomic[T], #max, operand:T, #Order)
 {
     return __primitives__.atomicRMW(Order, RMWUMax, @a._holder, operand);
 }
 
 [T, op]
-forceinline overload rmw(a:Atomic[T], #op, operand:T)
+forceinline override rmw(a:Atomic[T], #op, operand:T)
     = rmw(a, #op, operand, OrderSeqCst);
 
 [T, Order]
-forceinline overload casValue(a:Atomic[T], old:T, new:T, #Order)
+forceinline override casValue(a:Atomic[T], old:T, new:T, #Order)
 {
     var atomicResult = __primitives__.atomicCompareExchange(Order, @a._holder,
                                                             atomicInput(old),
@@ -195,15 +195,15 @@ forceinline overload casValue(a:Atomic[T], old:T, new:T, #Order)
 }
 
 [T]
-forceinline overload casValue(a:Atomic[T], old:T, new:T)
+forceinline override casValue(a:Atomic[T], old:T, new:T)
     = casValue(a, old, new, OrderSeqCst);
 
 [Order]
-forceinline overload fence(#Order) { __primitives__.atomicFence(Order); }
-forceinline overload fence() { __primitives__.atomicFence(OrderSeqCst); }
+forceinline override fence(#Order) { __primitives__.atomicFence(Order); }
+forceinline override fence() { __primitives__.atomicFence(OrderSeqCst); }
 
 //
 // disable printing
 //
 
-[T] overload printTo(stream, a:Atomic[T]);
+[T] override printTo(stream, a:Atomic[T]);

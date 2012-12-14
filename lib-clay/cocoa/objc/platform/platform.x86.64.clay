@@ -3,14 +3,14 @@ import cocoa.objc.runtime.(Class);
 define FpRet?;
 define StRet?;
 
-overload FpRet?(type) = false;
-overload StRet?(type) = false;
+override FpRet?(type) = false;
+override StRet?(type) = false;
 //Fp2Ret?(type) = false;
 
-//overload FpRet?(#Float80) = true;
-//overload Fp2Ret?(#Complex[Float80]) = true;
+//override FpRet?(#Float80) = true;
+//override Fp2Ret?(#Complex[Float80]) = true;
 
-[T when Type?(T)] overload StRet?(#T) = TypeSize(T) > 16;
+[T when Type?(T)] override StRet?(#T) = TypeSize(T) > 16;
 
 external __CFConstantStringClassReference : Opaque;
 

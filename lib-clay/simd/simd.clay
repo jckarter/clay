@@ -4,14 +4,14 @@ import simd.primitives as prims;
 /// @section  index 
 
 [T,n,I when Integer?(I)]
-forceinline overload index(a:Vec[T,n], i:I) = ref prims.vecElementRef(a, Int(i));
+forceinline override index(a:Vec[T,n], i:I) = ref prims.vecElementRef(a, Int(i));
 
 
 
 /// @section  type inferring constructor 
 
 [..A when (countValues(..A) > 0) and equalValues?(..A)]
-forceinline overload Vec(..args:A) {
+forceinline override Vec(..args:A) {
     alias n = #countValues(..A);
     alias T = firstValue(..A);
     return Vec[T, n](..args);
@@ -22,7 +22,7 @@ forceinline overload Vec(..args:A) {
 /// @section  basic constructor 
 
 [T,n,..A when (countValues(..A) == n) and equalValues?(T, ..A)]
-forceinline overload Vec[T,n](..args:A) {
+forceinline override Vec[T,n](..args:A) {
     var a = uninitializedUnsafe(Vec[T,n]);
     var i = 0;
     ..for (x in args) {
@@ -37,7 +37,7 @@ forceinline overload Vec[T,n](..args:A) {
 /// @section  single element replicating constructor 
 
 [T,n]
-forceinline overload Vec[T,n](x:T) {
+forceinline override Vec[T,n](x:T) {
     var a = uninitializedUnsafe(Vec[T,n]);
     ..for (i in integers(#n))
         a[i] = x;
@@ -49,22 +49,22 @@ forceinline overload Vec[T,n](x:T) {
 /// @section  other constructors, moveUnsafe, resetUnsafe, assign, destroy 
 
 [T,n]
-forceinline overload Vec[T,n]() = Vec[T,n](T());
+forceinline override Vec[T,n]() = Vec[T,n](T());
 
 [T,n]
-overload Vec[T,n](src:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
+override Vec[T,n](src:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %src
     store ${Vec[T,n]} %1, ${Vec[T,n]} * %returned
     ret i8* null
 }
 
 [T,n]
-forceinline overload moveUnsafe(src:Vec[T,n]) --> returned:Vec[T,n] {
+forceinline override moveUnsafe(src:Vec[T,n]) --> returned:Vec[T,n] {
     returned <-- src;
 }
 
 [T,n]
-forceinline overload assign(ref dest:Vec[T,n], src:Vec[T,n]) {
+forceinline override assign(ref dest:Vec[T,n], src:Vec[T,n]) {
     dest <-- src;
 }
 
@@ -78,87 +78,87 @@ forceinline unpackVec(a:Vec[T,n]) = ..unpackElements(a, #0);
 private define unpackElements;
 
 [T,n,i]
-forceinline overload unpackElements(a:Vec[T,n], #i) =
+forceinline override unpackElements(a:Vec[T,n], #i) =
     a[i], ..unpackElements(a, #(i+1));
 
 [T,n,i when i == n]
-forceinline overload unpackElements(a:Vec[T,n], #i) = ;
+forceinline override unpackElements(a:Vec[T,n], #i) = ;
 
 
 
 /// @section  numeric ops 
 
 [T,n]
-forceinline overload add(a:Vec[T,n], b:Vec[T,n]) = prims.add(a, b);
+forceinline override add(a:Vec[T,n], b:Vec[T,n]) = prims.add(a, b);
 
 [T,n,X when Numeric?(X)]
-forceinline overload add(a:Vec[T,n], x:X) = a + Vec[T,n](T(x));
+forceinline override add(a:Vec[T,n], x:X) = a + Vec[T,n](T(x));
 
 [T,n,X when Numeric?(X)]
-forceinline overload add(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) + a;
+forceinline override add(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) + a;
 
 
 [T,n]
-forceinline overload subtract(a:Vec[T,n], b:Vec[T,n]) = prims.subtract(a, b);
+forceinline override subtract(a:Vec[T,n], b:Vec[T,n]) = prims.subtract(a, b);
 
 [T,n,X when Numeric?(X)]
-forceinline overload subtract(a:Vec[T,n], x:X) = a - Vec[T,n](T(x));
+forceinline override subtract(a:Vec[T,n], x:X) = a - Vec[T,n](T(x));
 
 [T,n,X when Numeric?(X)]
-forceinline overload subtract(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) - a;
+forceinline override subtract(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) - a;
 
 
 [T,n]
-forceinline overload multiply(a:Vec[T,n], b:Vec[T,n]) = prims.multiply(a, b);
+forceinline override multiply(a:Vec[T,n], b:Vec[T,n]) = prims.multiply(a, b);
 
 [T,n,X when Numeric?(X)]
-forceinline overload multiply(a:Vec[T,n], x:X) = a * Vec[T,n](T(x));
+forceinline override multiply(a:Vec[T,n], x:X) = a * Vec[T,n](T(x));
 
 [T,n,X when Numeric?(X)]
-forceinline overload multiply(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) * a;
+forceinline override multiply(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) * a;
 
 
 [T,n]
-forceinline overload divide(a:Vec[T,n], b:Vec[T,n]) = prims.divide(a, b);
+forceinline override divide(a:Vec[T,n], b:Vec[T,n]) = prims.divide(a, b);
 
 [T,n,X when Numeric?(X)]
-forceinline overload divide(a:Vec[T,n], x:X) = a / Vec[T,n](T(x));
+forceinline override divide(a:Vec[T,n], x:X) = a / Vec[T,n](T(x));
 
 [T,n,X when Numeric?(X)]
-forceinline overload divide(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) / a;
+forceinline override divide(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) / a;
 
 
 [T,n]
-forceinline overload remainder(a:Vec[T,n], b:Vec[T,n]) = prims.remainder(a, b);
+forceinline override remainder(a:Vec[T,n], b:Vec[T,n]) = prims.remainder(a, b);
 
 [T,n,X when Numeric?(X)]
-forceinline overload remainder(a:Vec[T,n], x:X) = a % Vec[T,n](T(x));
+forceinline override remainder(a:Vec[T,n], x:X) = a % Vec[T,n](T(x));
 
 [T,n,X when Numeric?(X)]
-forceinline overload remainder(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) % a;
+forceinline override remainder(x:X, a:Vec[T,n]) = Vec[T,n](T(x)) % a;
 
 
 
 /// @section  bitwise ops 
 
 [T,n]
-forceinline overload bitshl(a:Vec[T,n], b:Vec[T,n]) = prims.bitshl(a, b);
+forceinline override bitshl(a:Vec[T,n], b:Vec[T,n]) = prims.bitshl(a, b);
 
 [T,n,X when Numeric?(X)]
-forceinline overload bitshl(a:Vec[T,n], x:X) = bitshl(a, Vec[T,n](T(x)));
+forceinline override bitshl(a:Vec[T,n], x:X) = bitshl(a, Vec[T,n](T(x)));
 
 [T,n,X when Numeric?(X)]
-forceinline overload bitshl(x:X, a:Vec[T,n]) = bitshl(Vec[T,n](T(x)),  a);
+forceinline override bitshl(x:X, a:Vec[T,n]) = bitshl(Vec[T,n](T(x)),  a);
 
 
 [T,n]
-forceinline overload bitshr(a:Vec[T,n], b:Vec[T,n]) = prims.bitshr(a, b);
+forceinline override bitshr(a:Vec[T,n], b:Vec[T,n]) = prims.bitshr(a, b);
 
 [T,n,X when Numeric?(X)]
-forceinline overload bitshr(a:Vec[T,n], x:X) = bitshr(a, Vec[T,n](T(x)));
+forceinline override bitshr(a:Vec[T,n], x:X) = bitshr(a, Vec[T,n](T(x)));
 
 [T,n,X when Numeric?(X)]
-forceinline overload bitshr(x:X, a:Vec[T,n]) = bitshr(Vec[T,n](T(x)),  a);
+forceinline override bitshr(x:X, a:Vec[T,n]) = bitshr(Vec[T,n](T(x)),  a);
 
 private forceinline bitwiseOp(fn, a, b) {
     alias size = Int(TypeSize(Type(a)));
@@ -169,57 +169,57 @@ private forceinline bitwiseOp(fn, a, b) {
 }
 
 [T,n, U,m when CompatibleVectorTypes?(Vec[T,n], Vec[U,m])]
-forceinline overload bitand(a:Vec[T,n], b:Vec[U,m]) = bitwiseOp(prims.bitand, a, b);
+forceinline override bitand(a:Vec[T,n], b:Vec[U,m]) = bitwiseOp(prims.bitand, a, b);
 
 [T,n,X when Numeric?(X)]
-forceinline overload bitand(a:Vec[T,n], x:X) = bitand(a, Vec[T,n](T(x)));
+forceinline override bitand(a:Vec[T,n], x:X) = bitand(a, Vec[T,n](T(x)));
 
 [T,n,X when Numeric?(X)]
-forceinline overload bitand(x:X, a:Vec[T,n]) = bitand(Vec[T,n](T(x)),  a);
+forceinline override bitand(x:X, a:Vec[T,n]) = bitand(Vec[T,n](T(x)),  a);
 
 
 [T,n, U,m when CompatibleVectorTypes?(Vec[T,n], Vec[U,m])]
-forceinline overload bitor(a:Vec[T,n], b:Vec[U,m]) = bitwiseOp(prims.bitor, a, b);
+forceinline override bitor(a:Vec[T,n], b:Vec[U,m]) = bitwiseOp(prims.bitor, a, b);
 
 [T,n,X when Numeric?(X)]
-forceinline overload bitor(a:Vec[T,n], x:X) = bitor(a, Vec[T,n](T(x)));
+forceinline override bitor(a:Vec[T,n], x:X) = bitor(a, Vec[T,n](T(x)));
 
 [T,n,X when Numeric?(X)]
-forceinline overload bitor(x:X, a:Vec[T,n]) = bitor(Vec[T,n](T(x)),  a);
+forceinline override bitor(x:X, a:Vec[T,n]) = bitor(Vec[T,n](T(x)),  a);
 
 
 [T,n, U,m when CompatibleVectorTypes?(Vec[T,n], Vec[U,m])]
-forceinline overload bitxor(a:Vec[T,n], b:Vec[U,m]) = bitwiseOp(prims.bitxor, a, b);
+forceinline override bitxor(a:Vec[T,n], b:Vec[U,m]) = bitwiseOp(prims.bitxor, a, b);
 
 [T,n,X when Numeric?(X)]
-forceinline overload bitxor(a:Vec[T,n], x:X) = bitxor(a, Vec[T,n](T(x)));
+forceinline override bitxor(a:Vec[T,n], x:X) = bitxor(a, Vec[T,n](T(x)));
 
 [T,n,X when Numeric?(X)]
-forceinline overload bitxor(x:X, a:Vec[T,n]) = bitxor(Vec[T,n](T(x)),  a);
+forceinline override bitxor(x:X, a:Vec[T,n]) = bitxor(Vec[T,n](T(x)),  a);
 
 
 
 /// @section  unary ops 
 
 [T,n]
-forceinline overload add(a:Vec[T,n]) = a;
+forceinline override add(a:Vec[T,n]) = a;
 
 [T,n]
-forceinline overload subtract(a:Vec[T,n]) = Vec[T,n](T(0)) - a;
+forceinline override subtract(a:Vec[T,n]) = Vec[T,n](T(0)) - a;
 
 [T,n]
-forceinline overload bitnot(a:Vec[T,n]) = bitxor(Vec[T,n](componentMask(T)), a);
+forceinline override bitnot(a:Vec[T,n]) = bitxor(Vec[T,n](componentMask(T)), a);
 
 
 /// @section  casting 
 
 define CompatibleVectorTypes?(X, Y) : Bool;
-overload CompatibleVectorTypes?(X, Y) = false;
+override CompatibleVectorTypes?(X, Y) = false;
 [T,n, U,m when TypeSize(Vec[T,n]) == TypeSize(Vec[U,m])]
-overload CompatibleVectorTypes?(#Vec[T,n], #Vec[U,m]) = true;
+override CompatibleVectorTypes?(#Vec[T,n], #Vec[U,m]) = true;
 
 [T,n, U,m when T != U and CompatibleVectorTypes?(Vec[T,n], Vec[U,m])]
-forceinline overload Vec[T,n](v: Vec[U,m]) = bitcast(Vec[T,n], v);
+forceinline override Vec[T,n](v: Vec[U,m]) = bitcast(Vec[T,n], v);
 
 
 
@@ -227,6 +227,6 @@ forceinline overload Vec[T,n](v: Vec[U,m]) = bitcast(Vec[T,n], v);
 
 define componentMask;
 [T when Integer?(T)]
-forceinline overload componentMask(#T) = wrapCast(T, -1);
-forceinline overload componentMask(#Float32) = bitcast(Float32, -1_i);
-forceinline overload componentMask(#Float64) = bitcast(Float64, -1_l);
+forceinline override componentMask(#T) = wrapCast(T, -1);
+forceinline override componentMask(#Float32) = bitcast(Float32, -1_i);
+forceinline override componentMask(#Float64) = bitcast(Float64, -1_l);

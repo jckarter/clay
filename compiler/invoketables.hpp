@@ -48,7 +48,7 @@ struct InvokeEntry {
     bool analyzing:1;
     bool callByName:1; // if callByName the rest of InvokeEntry is not set
     bool runtimeNop:1;
-
+    
     InvokeEntry(InvokeSet *parent,
                 ObjectPtr callable,
                 llvm::ArrayRef<TypePtr> argsKey)
@@ -84,7 +84,7 @@ struct InvokeSet {
     vector<MatchSuccessPtr> matches;
     map<vector<ValueTempness>, InvokeEntry*> tempnessMap;
     map<vector<ValueTempness>, InvokeEntry*> tempnessMap2;
-
+    
     unsigned nextOverloadIndex:31;
 
     bool shouldLog:1;

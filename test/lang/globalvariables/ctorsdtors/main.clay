@@ -1,10 +1,10 @@
 import libc.(printf, fprintf, stdout);
 
 record Foo (value:Int);
-overload RegularRecord?(#Foo) = false;
+override RegularRecord?(#Foo) = false;
 
-overload Foo() --> x:Foo { printf(cstring("ran ctor\n")); x.value = 123; }
-overload destroy(x:Foo) { printf(cstring("ran dtor\n")); }
+override Foo() --> x:Foo { printf(cstring("ran ctor\n")); x.value = 123; }
+override destroy(x:Foo) { printf(cstring("ran dtor\n")); }
 
 var foo = Foo();
 

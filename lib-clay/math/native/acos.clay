@@ -21,7 +21,7 @@ alias qS3 = -6.88283971605453293030e-01; // 0xBFE6066C, 0x1B8D0159
 alias qS4 =  7.70381505559019352791e-02; // 0x3FB3B8C5, 0xB12E9282 
 
 
-overload acos(x:Double) {
+override acos(x:Double) {
 	alias ONE = 1.;
 	var hx = GET_IEEE_HIGH(x);
 	var ix = bitand(hx,MM);
@@ -67,7 +67,7 @@ overload acos(x:Double) {
 // Return cosine of complex double value.
 
 [C when Complex?(C)]
-overload acos(x:C) --> res:C {
+override acos(x:C) --> res:C {
 	alias T = ComplexBaseType(C);
     var y = asin (x);
     res <-- Complex(T(M_PI_2) - real(y), -imagValue(y));

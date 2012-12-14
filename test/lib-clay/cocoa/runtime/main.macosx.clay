@@ -31,13 +31,13 @@ NSNumber(n: Int) {
 
 record AutoreleasePool (pool: Id);
 
-overload AutoreleasePool() --> pool: AutoreleasePool {
+override AutoreleasePool() --> pool: AutoreleasePool {
     var class = objc_getClass(cstring("NSAutoreleasePool"));
     var sel_new = sel_registerName(cstring("new"));
     pool.pool <-- objc_msgSend(Id(class), sel_new);
 }
 
-overload destroy(pool: AutoreleasePool) {
+override destroy(pool: AutoreleasePool) {
     var sel_release = sel_registerName(cstring("release"));
     objc_msgSend(pool.pool, sel_release);
 }

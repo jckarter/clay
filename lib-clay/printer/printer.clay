@@ -33,7 +33,7 @@ forceinline printlnTo(stream, ..x) {
 
 /// @section  str, strln 
 
-overload str(forward ..x) {
+override str(forward ..x) {
     var s = String();
     printTo(s, ..x);
     return move(s);
@@ -52,12 +52,12 @@ errorNoThrow(..e) {
 define error;
 
 [when not ExceptionsEnabled?]
-overload error(..e) {
+override error(..e) {
     errorNoThrow(..e);
 }
 
 [when ExceptionsEnabled?]
-overload error(..e) {
+override error(..e) {
     var buf = String();
     printTo(buf, ..e);
     cstring(buf);
@@ -65,7 +65,7 @@ overload error(..e) {
 }
 
 [when AllAssertionsEnabled?()]
-alias overload assert(cond:Bool, ..args) {
+alias override assert(cond:Bool, ..args) {
     if (not cond)
         errorWithPrintfNoThrow(
             assertStringLiteral(__FILE__, #__LINE__, #__COLUMN__, __ARG__ cond, ": %s"),
@@ -73,7 +73,7 @@ alias overload assert(cond:Bool, ..args) {
 }
 
 [..tags when AllAssertionsEnabled?() and allValues?(AssertionEnabled?, ..tags)]
-alias overload assert[..tags](cond:Bool, ..args) {
+alias override assert[..tags](cond:Bool, ..args) {
     if (not cond)
         errorWithPrintfNoThrow(
             assertStringLiteral(__FILE__, #__LINE__, #__COLUMN__, __ARG__ cond, ": %s"),

@@ -4,11 +4,11 @@ import lambdas.*;
 mono1() {}
 mono2(x:Int) {}
 define mono3;
-overload mono3(x:Int, y:Float) {}
+override mono3(x:Int, y:Float) {}
 
 define notMono1;
-overload notMono1() {}
-overload notMono1(x) {}
+override notMono1() {}
+override notMono1(x) {}
 
 notMono2(x) {}
 notMono3(..x) {}
@@ -16,8 +16,8 @@ notMono3(..x) {}
 notMono4(x:Int, ..y) {}
 
 define notMono5;
-overload notMono5(x:Int) {}
-overload notMono5(x:Float) {}
+override notMono5(x:Int) {}
+override notMono5(x:Float) {}
 
 define notMono6;
 

@@ -14,7 +14,7 @@ record TestStatus (
     xfail: UInt,
 );
 
-overload TestStatus() = TestStatus(UInt(0), UInt(0), UInt(0));
+override TestStatus() = TestStatus(UInt(0), UInt(0), UInt(0));
 
 alias TestFunction = Function[[], []];
 
@@ -25,10 +25,10 @@ record TestCase (
 );
 
 [T, F when String?(T) and CallDefined?(call, F) and (T != String or F != TestFunction)]
-overload TestCase(name:T, _case:F, xfail?)
+override TestCase(name:T, _case:F, xfail?)
     = TestCase(String(name), TestFunction(_case), xfail?);
 
-overload TestCase(name, fn) = TestCase(name, TestFunction(fn), false);
+override TestCase(name, fn) = TestCase(name, TestFunction(fn), false);
 
 XFAILTestCase(name, fn) = TestCase(name, TestFunction(fn), true);
 
@@ -38,7 +38,7 @@ record TestSuite (
 );
 
 [S, T when S != String or T != Vector[TestCase]]
-overload TestSuite(name : S, testCases : T) = TestSuite(String(name), Vector[TestCase](testCases));
+override TestSuite(name : S, testCases : T) = TestSuite(String(name), Vector[TestCase](testCases));
 
 alias TEST_CASE_INDENT = "  ";
 alias TEST_FAILURE_INDENT = TEST_CASE_INDENT++TEST_CASE_INDENT;
@@ -76,11 +76,11 @@ xfailMessage(xfail?: Bool) : String =
 
 define printFailure;
 
-overload printFailure(..xs) {
+override printFailure(..xs) {
     printlnColored(Red, TEST_FAILURE_INDENT, ..xs);
 }
 [when Flag?("test.minimal")]
-overload printFailure(..xs) {
+override printFailure(..xs) {
     println(TEST_FAILURE_INDENT, ..xs);
 }
 
@@ -137,7 +137,7 @@ failed() { just(g_testCaseStatus).failed +: 1; }
 define expect;
 
 // primitive assertion function
-overload expect(passed?: Bool, failReportFn) {
+override expect(passed?: Bool, failReportFn) {
     if (passed?) {
         passed();
     } else {
@@ -147,7 +147,7 @@ overload expect(passed?: Bool, failReportFn) {
     }
 }
 
-overload expect(passed?: Bool, failReportMsg:String) {
+override expect(passed?: Bool, failReportMsg:String) {
     if (passed?) {
         passed();
     } else {
@@ -157,7 +157,7 @@ overload expect(passed?: Bool, failReportMsg:String) {
     }
 }
 
-alias overload expect(passed?:Bool) {
+alias override expect(passed?:Bool) {
     expect(passed?, str("`", __ARG__ passed?, "` returned false"));
 }
 
@@ -198,9 +198,9 @@ alias expectNotEqual(expected, result) {
 }
 
 define expectedResults?;
-overload expectedResults?(expected, result) = false;
+override expectedResults?(expected, result) = false;
 [T when Tuple?(T)]
-overload expectedResults?(expected: T, result: T) = expected == result;
+override expectedResults?(expected: T, result: T) = expected == result;
 
 alias expectEqualValues(expectedTuple, ..results) {
     expect(
@@ -360,9 +360,9 @@ private define runSuite?;
 private define runCase?;
 private define colored?;
 
-overload runSuite?(suite) = optionsInclude?("suite", suite.name);
-overload runCase?(_case) = optionsInclude?("case", _case.name);
-overload colored?() = not(optionGiven?(testOptions(), "no-color"));
+override runSuite?(suite) = optionsInclude?("suite", suite.name);
+override runCase?(_case) = optionsInclude?("case", _case.name);
+override colored?() = not(optionGiven?(testOptions(), "no-color"));
 
 private optionsInclude?(name, elt){
     forward seq = getOptions(testOptions(), name);
@@ -375,9 +375,9 @@ private include?(seq, elt){
 }
 
 [when Flag?("test.minimal")]
-overload runSuite?(suite) = true;
+override runSuite?(suite) = true;
 [when Flag?("test.minimal")]
-overload runCase?(_case) = true;
+override runCase?(_case) = true;
 [when Flag?("test.minimal")]
-overload colored?() = false;
+override colored?() = false;
 

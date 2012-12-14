@@ -3,9 +3,9 @@ import printer.(println);
 [T when T == Int or T == Double]
 define foo(x:T, y:T) : T;
 
-overload foo(x:Int, y:Int) = x + y;
-overload foo(x:Double, y:Double) = x + y;
-overload foo(x:Float, y:Float) = x + y;
+override foo(x:Int, y:Int) = x + y;
+override foo(x:Double, y:Double) = x + y;
+override foo(x:Float, y:Float) = x + y;
 
 main() {
     println(CallDefined?(foo, Int, Int));

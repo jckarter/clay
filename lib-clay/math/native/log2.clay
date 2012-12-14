@@ -13,9 +13,9 @@ import numbers.floats.(negativeInfinity,nan);
 
 define log2;
 
-overload log2(x:Float) = Float(log2(Double(x)));
+override log2(x:Float) = Float(log2(Double(x)));
 
-overload log2(x:Double) {
+override log2(x:Double) {
 	alias ZERO = 0.;
 	var xdb = MAKE_IEEE(x);
 	var k = 0;

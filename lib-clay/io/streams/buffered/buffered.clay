@@ -16,11 +16,11 @@ private record Buffer (
     end: Pointer[Byte],
 );
 
-overload Buffer() --> returned: Buffer {
+override Buffer() --> returned: Buffer {
     reset(returned);
 }
 
-overload size(buffer: Buffer) = SizeT(buffer.end - buffer.begin);
+override size(buffer: Buffer) = SizeT(buffer.end - buffer.begin);
 private capacity(buffer: Buffer) = size(buffer.data);
 private remaining(buffer: Buffer) = SizeT(begin(buffer.data) + capacity(buffer) - buffer.end);
 
@@ -68,24 +68,24 @@ record BufferedOutputStream[S] (
 );
 
 [S]
-overload RegularRecord?(#BufferedOutputStream[S]) = false;
+override RegularRecord?(#BufferedOutputStream[S]) = false;
 [S]
-overload RegularRecord?( #BufferedInputStream[S]) = false;
+override RegularRecord?( #BufferedInputStream[S]) = false;
 
 [S]
-overload moveUnsafe(s: BufferedOutputStream[S]) = moveRecordUnsafe(s);
+override moveUnsafe(s: BufferedOutputStream[S]) = moveRecordUnsafe(s);
 [S]
-overload moveUnsafe( s: BufferedInputStream[S]) = moveRecordUnsafe(s);
+override moveUnsafe( s: BufferedInputStream[S]) = moveRecordUnsafe(s);
 
 [S]
-overload resetUnsafe(s: BufferedOutputStream[S]) = resetRecordUnsafe(s);
+override resetUnsafe(s: BufferedOutputStream[S]) = resetRecordUnsafe(s);
 [S]
-overload resetUnsafe( s: BufferedInputStream[S]) = resetRecordUnsafe(s);
+override resetUnsafe( s: BufferedInputStream[S]) = resetRecordUnsafe(s);
 
 [S]
-overload destroy(s: BufferedOutputStream[S]) = ..destroyRecord(s);
+override destroy(s: BufferedOutputStream[S]) = ..destroyRecord(s);
 [S]
-overload destroy( s: BufferedInputStream[S]) = ..destroyRecord(s);
+override destroy( s: BufferedInputStream[S]) = ..destroyRecord(s);
 
 
 staticassert(not Copyable?(BufferedOutputStream[MemoryOutputStream]));
@@ -95,19 +95,19 @@ staticassert(     Movable?( BufferedInputStream[ MemoryInputStream]));
 
 
 [S when InputStream?(S)]
-overload BufferedInputStream(forward underlying: S) =
+override BufferedInputStream(forward underlying: S) =
     initializeRecord(BufferedInputStream[S], underlying, Buffer());
 
 [S when OutputStream?(S)]
-overload BufferedOutputStream(forward underlying: S, flushOnNewlines?: Bool) =
+override BufferedOutputStream(forward underlying: S, flushOnNewlines?: Bool) =
     initializeRecord(BufferedOutputStream[S], underlying, Buffer(), flushOnNewlines?);
 
 [S when OutputStream?(S)]
-overload BufferedOutputStream(forward underlying: S) = BufferedOutputStream(underlying, false);
+override BufferedOutputStream(forward underlying: S) = BufferedOutputStream(underlying, false);
 
 
 [S]
-overload readBytes(is: BufferedInputStream[S], buf: Pointer[Byte], n: SizeT) {
+override readBytes(is: BufferedInputStream[S], buf: Pointer[Byte], n: SizeT) {
     if (size(is.buffer) == 0) {
         reset(is.buffer);
         var r = readBytes(is.underlying, is.buffer.end, remaining(is.buffer));
@@ -122,7 +122,7 @@ overload readBytes(is: BufferedInputStream[S], buf: Pointer[Byte], n: SizeT) {
 
 
 [S]
-overload flush(os: BufferedOutputStream[S]) {
+override flush(os: BufferedOutputStream[S]) {
     if (size(os.buffer) != 0) {
         write(os.underlying, begin(os.buffer.data), SizeT(os.buffer.end - os.buffer.begin));
         reset(os.buffer);
@@ -131,7 +131,7 @@ overload flush(os: BufferedOutputStream[S]) {
 
 
 [S]
-overload writeBytes(os: BufferedOutputStream[S], buf: Pointer[Byte], n: SizeT) {
+override writeBytes(os: BufferedOutputStream[S], buf: Pointer[Byte], n: SizeT) {
     if (os.flushOnNewlines?) {
         if (in?(coordinateRange(buf, buf + n), Byte('\n'))) {
             flush(os);

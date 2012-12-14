@@ -6,7 +6,7 @@ import sharedpointers.*;
 
 
 define ReferenceType?;
-overload ReferenceType?(x) = false;
+override ReferenceType?(x) = false;
 
 define ReferenceTypeFieldCount;
 define ReferenceTypeFieldNames;
@@ -53,10 +53,10 @@ forceinline referencePtr(x:T) =
 /// @section  fieldRef, staticIndex 
 
 [T when ReferenceType?(T)]
-overload fieldRef(x:T, field);
+override fieldRef(x:T, field);
 
 [T when ReferenceType?(T)]
-overload staticIndex(x:T, i);
+override staticIndex(x:T, i);
 
 
 [T, Field when ReferenceType?(T)]
@@ -66,22 +66,22 @@ private fieldNameIndex(#T, #Field) =
 private define findField;
 
 [pos]
-overload findField(#pos, field, first, ..rest) =
+override findField(#pos, field, first, ..rest) =
     findField(#pos+1, field, ..rest);
 
 [pos, F]
-overload findField(#pos, #F, #F, ..rest) = pos;
+override findField(#pos, #F, #F, ..rest) = pos;
 
 [pos]
-overload findField(#pos, field) = -1;
+override findField(#pos, field) = -1;
 
 
 [T, i when ReferenceType?(T) and (i >= 0) and (i < ReferenceTypeFieldCount(T))]
-overload staticIndex(x:T, #i) =
+override staticIndex(x:T, #i) =
     ref staticIndex(referencePtr(x)^, #i);
 
 [T, Field when ReferenceType?(T) and (fieldNameIndex(T, Field) >= 0)]
-overload fieldRef(x:T, #Field) =
+override fieldRef(x:T, #Field) =
     ref staticIndex(x, #fieldNameIndex(T, Field));
 
 
@@ -96,7 +96,7 @@ referenceTypeFields(x:T) = ref ..tupleElements(referencePtr(x)^);
 /// @section  default constructor 
 
 [T when ReferenceType?(T)]
-overload T() --> returned:T {
+override T() --> returned:T {
     initialize(referencePtr(returned));
 }
 
@@ -105,7 +105,7 @@ overload T() --> returned:T {
 /// @section  field order constructor 
 
 [T, ..A when ReferenceType?(T) and (Tuple[..A] == Tuple[..ReferenceTypeFieldTypes(T)])]
-alias overload T(..args:A) --> returned:T {
+alias override T(..args:A) --> returned:T {
     referencePtr(returned) <-- new(Tuple(..args));
 }
 
@@ -130,7 +130,7 @@ allocateUninitializedRefUnsafe(#T) --> returned:T {
 /// @section  copy constructor 
 
 [T when ReferenceType?(T)]
-overload T(src:T) --> returned:T {
+override T(src:T) --> returned:T {
     referencePtr(returned) <-- referencePtr(src);
 }
 
@@ -139,10 +139,10 @@ overload T(src:T) --> returned:T {
 /// @section  moveUnsafe, resetUnsafe 
 
 [T when ReferenceType?(T)]
-overload BitwiseMovedType?(#T) = true;
+override BitwiseMovedType?(#T) = true;
 
 [T when ReferenceType?(T)]
-overload resetUnsafe(x:T) {
+override resetUnsafe(x:T) {
     resetUnsafe(referencePtr(x));
 }
 
@@ -151,12 +151,12 @@ overload resetUnsafe(x:T) {
 /// @section  destroy, assign 
 
 [T when ReferenceType?(T)]
-overload destroy(x:T) {
+override destroy(x:T) {
     destroy(referencePtr(x));
 }
 
 [T when ReferenceType?(T)]
-overload assign(ref dest:T, ref src:T) {
+override assign(ref dest:T, ref src:T) {
     assign(referencePtr(dest), referencePtr(src));
 }
 
@@ -165,12 +165,12 @@ overload assign(ref dest:T, ref src:T) {
 /// @section  equals?, lesser? 
 
 [T when ReferenceType?(T)]
-overload equals?(a:T, b:T) {
+override equals?(a:T, b:T) {
     return equals?(referencePtr(a), referencePtr(b));
 }
 
 [T when ReferenceType?(T)]
-overload lesser?(a:T, b:T) {
+override lesser?(a:T, b:T) {
     return lesser?(referencePtr(a), referencePtr(b));
 }
 
@@ -179,14 +179,14 @@ overload lesser?(a:T, b:T) {
 /// @section  null? 
 
 [T when ReferenceType?(T)]
-overload null?(x:T) = null?(referencePtr(x));
+override null?(x:T) = null?(referencePtr(x));
 
 
 
 /// @section  is? 
 
 [T when ReferenceType?(T)]
-overload is?(x:T, y:T) = referencePtr(x) == referencePtr(y);
+override is?(x:T, y:T) = referencePtr(x) == referencePtr(y);
 
 
 
@@ -194,7 +194,7 @@ overload is?(x:T, y:T) = referencePtr(x) == referencePtr(y);
 /// @section  printTo - reference types 
 
 [T when ReferenceType?(T)]
-overload printTo(stream, x:T) {
+override printTo(stream, x:T) {
     if (null?(x)) {
         printTo(stream, "null");
         return;
@@ -206,7 +206,7 @@ overload printTo(stream, x:T) {
 /// @section  printReprTo - reference types 
 
 [T when ReferenceType?(T)]
-overload printReprTo(stream, x:T) {
+override printReprTo(stream, x:T) {
     // FIXME: handle cycles
     if (null?(x)) {
         printTo(stream, "null");

@@ -29,7 +29,7 @@ record Timer (
     clock:Int,
 );
 
-overload Timer() = Timer(0l,false,0l,CLOCK);
+override Timer() = Timer(0l,false,0l,CLOCK);
 timer() = Timer();
 
 start(t:Timer) {

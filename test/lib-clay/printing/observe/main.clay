@@ -3,12 +3,12 @@ import printer.observe.*;
 import data.strings.*;
 
 define tellRvalue;
-overload tellRvalue(ref x) = 0;
-overload tellRvalue(rvalue x) = 1;
+override tellRvalue(ref x) = 0;
+override tellRvalue(rvalue x) = 1;
 
 define tellRvalueString;
-overload tellRvalueString(ref x) = "ref";
-overload tellRvalueString(rvalue x) = "rvalue";
+override tellRvalueString(ref x) = "ref";
+override tellRvalueString(rvalue x) = "rvalue";
 
 record AnException ();
 instance Exception (AnException);

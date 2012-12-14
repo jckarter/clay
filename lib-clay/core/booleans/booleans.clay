@@ -1,13 +1,13 @@
 
-forceinline overload Bool() : Bool = false;
+forceinline override Bool() : Bool = false;
 
 [I when Integer?(I)]
-forceinline overload I(a:Bool) : I = if (a) I(1) else I(0);
+forceinline override I(a:Bool) : I = if (a) I(1) else I(0);
 
 [I when Integer?(I)]
-forceinline overload Bool(a:I) : Bool = (a != I(0));
+forceinline override Bool(a:I) : Bool = (a != I(0));
 
-forceinline overload equals?(a:Bool, b:Bool) : Bool 
+forceinline override equals?(a:Bool, b:Bool) : Bool 
 	= if (a) b else not b;
 
-forceinline overload lesser?(a:Bool, b:Bool) : Bool = ((not a) and b);
+forceinline override lesser?(a:Bool, b:Bool) : Bool = ((not a) and b);

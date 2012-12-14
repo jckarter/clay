@@ -9,16 +9,16 @@ keywordArguments(names, forward ..keywords)
 define getKeywordArgument;
 
 [I when StringLiteral?(I)]
-overload getKeywordArgument(#I, forward ..keywords)
+override getKeywordArgument(#I, forward ..keywords)
     = forward assocValue(I, ..keywords);
 
 [I, T when StringLiteral?(I)]
-overload getKeywordArgument(name: Tuple[Static[I], T], forward ..keywords)
+override getKeywordArgument(name: Tuple[Static[I], T], forward ..keywords)
     = name.1;
 
 [I, T] private _Keyword(#Tuple[I, T]) = I;
 Keywords(..K) = ..mapValues(T -> _Keyword(T), ..K);
 
 [I, T, ..K when StringLiteral?(I) and inValues?(Static[I], ..Keywords(..K))]
-overload getKeywordArgument(name: Tuple[Static[I], T], forward ..keywords: K)
+override getKeywordArgument(name: Tuple[Static[I], T], forward ..keywords: K)
     = forward assocValue(name.0, ..keywords);

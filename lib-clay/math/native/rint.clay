@@ -13,10 +13,10 @@ private var TWO52 = array(
 );
 
 
-overload rint(a:Float) = Float(rint(Double(a)));
+override rint(a:Float) = Float(rint(Double(a)));
 
 
-overload rint(a:Double){
+override rint(a:Double){
 	var x = a;
 	var ix = MAKE_IEEE(x);
 	var sx = bitand(bitshr(GET_IEEE_HIGH(ix),31),0x1);

@@ -17,13 +17,13 @@ VariantNestingPaths(#V, #M) =
 private define VariantNestingPaths2;
 
 [V,M]
-overload VariantNestingPaths2(#V, #M, Prefix) {
+override VariantNestingPaths2(#V, #M, Prefix) {
     alias SubV = Tuple(..SubVariants(V));
     return ..VariantNestingPaths3(SubV, M, Prefix, #0);
 }
 
 [V,M when VariantMember?(V,M)]
-overload VariantNestingPaths2(#V, #M, Prefix) {
+override VariantNestingPaths2(#V, #M, Prefix) {
     alias SubV = Tuple(..SubVariants(V));
     return Tuple(..unpack(Prefix), M),
            ..VariantNestingPaths3(SubV, M, Prefix, #0);
@@ -32,7 +32,7 @@ overload VariantNestingPaths2(#V, #M, Prefix) {
 private define VariantNestingPaths3;
 
 [i]
-overload VariantNestingPaths3(Vs, M, Prefix, #i) {
+override VariantNestingPaths3(Vs, M, Prefix, #i) {
     alias V = staticIndex(Vs, #i);
     alias NewPrefix = Tuple(..unpack(Prefix), V);
     return ..VariantNestingPaths2(V, M, NewPrefix),
@@ -40,7 +40,7 @@ overload VariantNestingPaths3(Vs, M, Prefix, #i) {
 }
 
 [T,i when i == TupleElementCount(T)]
-overload VariantNestingPaths3(Vs:T, M, Prefix, #i) = ;
+override VariantNestingPaths3(Vs:T, M, Prefix, #i) = ;
 
 
 
@@ -60,14 +60,14 @@ forceinline nestedVariantIs?(x:V, #T) : Bool {
 define nestedVariantAs(x:V, #T) private overload;
 
 [V, T when Variant?(V)]
-forceinline overload nestedVariantAs(ref x:V, #T) {
+forceinline override nestedVariantAs(ref x:V, #T) {
     var ptr = nestedVariantAsPtr(x, T);
     assert(not null?(ptr));
     return ref ptr^;
 }
 
 [V, T when Variant?(V)]
-forceinline overload nestedVariantAs(rvalue x:V, #T) {
+forceinline override nestedVariantAs(rvalue x:V, #T) {
     var ptr = nestedVariantAsPtr(x, T);
     assert(not null?(ptr));
     return move(ptr^);
@@ -84,18 +84,18 @@ nestedVariantAsPtr(x:V, #Target) {
 
 private define unboxAlongPaths;
 
-forceinline overload unboxAlongPaths(x, Target, firstPath, ..rest) {
+forceinline override unboxAlongPaths(x, Target, firstPath, ..rest) {
     var ptr = unboxAlong(x, Target, ..unpack(firstPath));
     if (not null?(ptr))
         return ptr;
     return unboxAlongPaths(x, Target, ..rest);
 }
 
-forceinline overload unboxAlongPaths(x, Target) = null(Target);
+forceinline override unboxAlongPaths(x, Target) = null(Target);
 
 private define unboxAlong;
 
-forceinline overload unboxAlong(x, Target, first, ..rest) {
+forceinline override unboxAlong(x, Target, first, ..rest) {
     var ptr = variantAsPtr(x, first);
     if (null?(ptr))
         return null(Target);
@@ -103,6 +103,6 @@ forceinline overload unboxAlong(x, Target, first, ..rest) {
 }
 
 [Target]
-forceinline overload unboxAlong(x:Target, #Target) {
+forceinline override unboxAlong(x:Target, #Target) {
     return @x;
 }

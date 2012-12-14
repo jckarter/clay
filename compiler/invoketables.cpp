@@ -4,7 +4,6 @@
 #include "invoketables.hpp"
 #include "constructors.hpp"
 
-
 #pragma clang diagnostic ignored "-Wcovered-switch-default"
 
 
@@ -332,6 +331,7 @@ static InvokeEntry* newInvokeEntry(InvokeSet* parent,
     return entry;
 }
 
+
 InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
                                llvm::ArrayRef<TypePtr> argsKey,
                                llvm::ArrayRef<ValueTempness> argsTempness,
@@ -343,7 +343,7 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
         invokeSet->tempnessMap.find(argsTempness);
     if (iter != invokeSet->tempnessMap.end())
         return iter->second;
-    
+
     MatchResultPtr interfaceResult;
     if (invokeSet->interface != NULL) {
         interfaceResult = matchInvoke(invokeSet->interface,
@@ -355,11 +355,10 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
             return NULL;
         }
     }
-
+    
     MatchSuccessPtr match;
     vector<ValueTempness> tempnessKey;
     vector<uint8_t> forwardedRValueFlags;
-    
     unsigned i = 0;
     while ((match = getMatch(invokeSet,i,failures)).ptr() != NULL) {
         if (matchTempness(match->code,
@@ -374,19 +373,44 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
     }
     if (!match)
         return NULL;
-
+  
     iter = invokeSet->tempnessMap2.find(tempnessKey);
     if (iter != invokeSet->tempnessMap2.end()) {
         invokeSet->tempnessMap[argsTempness] = iter->second;
         return iter->second;
     }
 
+    
     InvokeEntry* entry = newInvokeEntry(invokeSet, match,
         (MatchSuccess*)interfaceResult.ptr());
     entry->forwardedRValueFlags = forwardedRValueFlags;
     
     invokeSet->tempnessMap2[tempnessKey] = entry;
     invokeSet->tempnessMap[argsTempness] = entry;
+    
+    MatchSuccessPtr match2;
+    vector<ValueTempness> tempnessKey2;
+    vector<uint8_t> forwardedRValueFlags2;
+    MatchFailureError failures2;
+    unsigned j = invokeSet->nextOverloadIndex;
+    while ((match2 = findMatchingInvoke(callableOverloads(callable),
+                                       j,
+                                       callable,
+                                       argsKey,
+                                       failures2)).ptr() != NULL) {
+        if (matchTempness(match2->code,
+                          argsTempness,
+                          match2->callByName,
+                          tempnessKey2,
+                          forwardedRValueFlags2))
+        {
+            break;
+        }
+        ++j;
+    }
+        
+    if (match2 != NULL && match2->status != STATUS_DEFAULT && match->status != STATUS_OVERRIDE)
+        ambiguousMatchError(match, match2);
 
     return entry;
 }

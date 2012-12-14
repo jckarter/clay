@@ -1,8 +1,8 @@
 record DestroyedBy[Value, Destructor] (value: Value, destructor: Destructor);
-[V,D] overload RegularRecord?(#DestroyedBy[V,D]) = false;
-[V,D] overload DestroyedBy[V,D]();
-[V,D] overload destroy(d: DestroyedBy[V,D]) { d.destructor(d.value); }
+[V,D] override RegularRecord?(#DestroyedBy[V,D]) = false;
+[V,D] override DestroyedBy[V,D]();
+[V,D] override destroy(d: DestroyedBy[V,D]) { d.destructor(d.value); }
 
-[V,D] overload dereference(d: DestroyedBy[V,D]) = ref d.value;
+[V,D] override dereference(d: DestroyedBy[V,D]) = ref d.value;
 
 alias destroyedBy(value, destructor) = DestroyedBy(value, destructor);
