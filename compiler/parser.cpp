@@ -2363,6 +2363,17 @@ static bool optCallByName(bool &callByName) {
     return true;
 }
 
+static bool optFinal(bool &final) {
+    int p = save();
+    if (!keyword("final")) {
+        restore(p);
+        final = false;
+        return true;
+    }
+    final = true;
+    return true;
+}
+
 static bool optPrivateOverload(bool &privateOverload) {
     int p = save();
     if (!keyword("private")) {
@@ -2413,7 +2424,7 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x, Module *module) {
     target->location = location;
     target->startLocation = targetStartLocation;
     target->endLocation = targetEndLocation;
-    OverloadPtr v = new Overload(module, target, y, false, isInline);
+    OverloadPtr v = new Overload(module, target, y, false, isInline, false);
     v->location = location;
     x.push_back(v.ptr());
 
@@ -2451,7 +2462,7 @@ static bool procedureWithInterface(vector<TopLevelItemPtr> &x, Module *module, i
     target->location = location;
     target->startLocation = targetStartLocation;
     target->endLocation = targetEndLocation;
-    OverloadPtr interface = new Overload(module, target, interfaceCode, false, IGNORE);
+    OverloadPtr interface = new Overload(module, target, interfaceCode, false, IGNORE, false);
     interface->location = location;
 
     ProcedurePtr proc = new Procedure(module, name, vis, privateOverload, interface);
@@ -2499,7 +2510,7 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x, Module *module, int s)
     target->location = location;
     target->startLocation = targetStartLocation;
     target->endLocation = targetEndLocation;
-    OverloadPtr oload = new Overload(module, target, code, callByName, isInline);
+    OverloadPtr oload = new Overload(module, target, code, callByName, isInline, false);
     oload->location = location;
     x.push_back(oload.ptr());
 
@@ -2528,6 +2539,8 @@ static bool overload(TopLevelItemPtr &x, Module *module, int s) {
     if (!optInline(isInline)) return false;
     bool callByName;
     if (!optCallByName(callByName)) return false;
+    bool final;
+    if (!optFinal(final)) return false;
     if (!keyword("overload")) return false;
     int e = save();
     restore(s);
@@ -2559,7 +2572,7 @@ static bool overload(TopLevelItemPtr &x, Module *module, int s) {
     target->startLocation = targetStartLocation;
     target->endLocation = targetEndLocation;
     code->location = location;
-    x = new Overload(module, target, code, callByName, isInline);
+    x = new Overload(module, target, code, callByName, isInline, final);
     x->location = location;
     NameRefPtr name = (NameRef *)target.ptr();
     return true;

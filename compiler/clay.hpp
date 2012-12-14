@@ -1839,7 +1839,7 @@ struct RecordDecl : public TopLevelItem {
     RecordBodyPtr body;
 
     vector<OverloadPtr> overloads;
-
+    OverloadPtr finalOverload;
     LambdaPtr lambda;
 
     bool builtinOverloadInitialized:1;
@@ -1902,7 +1902,7 @@ struct VariantDecl : public TopLevelItem {
     vector<InstanceDeclPtr> instances;
 
     vector<OverloadPtr> overloads;
-
+    OverloadPtr finalOverload;
     bool open:1;
 
     VariantDecl(Module *module, IdentifierPtr name,
@@ -1956,14 +1956,16 @@ struct Overload : public TopLevelItem {
     int patternsInitializedState:2; // 0:notinit, -1:initing, +1:inited
     bool callByName:1;
     bool nameIsPattern:1;
-    
+    bool final:1;
+
     Overload(Module *module, ExprPtr target,
              CodePtr code,
              bool callByName,
-             InlineAttribute isInline)
+             InlineAttribute isInline,
+             bool final)
         : TopLevelItem(OVERLOAD, module), target(target), code(code),
           isInline(isInline), patternsInitializedState(0),
-          callByName(callByName), nameIsPattern(false) {}
+          callByName(callByName), final(final), nameIsPattern(false) {}
 };
 
 struct Procedure : public TopLevelItem {
@@ -1974,7 +1976,7 @@ struct Procedure : public TopLevelItem {
     ObjectTablePtr evaluatorCache; // HACK: used only for predicates
     ProcedureMono mono;
     LambdaPtr lambda;
-
+    OverloadPtr finalOverload;
     bool privateOverload:1;
 
     Procedure(Module *module, IdentifierPtr name, Visibility visibility, bool privateOverload)
@@ -2243,6 +2245,7 @@ struct GlobalAlias : public TopLevelItem {
     ExprPtr expr;
 
     vector<OverloadPtr> overloads;
+    OverloadPtr finalOverload;
 
     GlobalAlias(Module *module, IdentifierPtr name,
                 Visibility visibility,
@@ -2690,6 +2693,7 @@ struct Type : public Object {
     size_t typeAlignment;
 
     vector<OverloadPtr> overloads;
+    OverloadPtr finalOverload;
 
     bool overloadsInitialized:1;
     bool defined:1;
