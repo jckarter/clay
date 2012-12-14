@@ -1,41 +1,43 @@
-public import __primitives__.*;
-public import core.types.*;
-public import core.operators.*;
-public import core.sequences.*;
-public import core.records.*;
-public import core.tuples.*;
-public import core.unions.*;
-public import core.statics.*;
-public import core.booleans.*;
-public import core.memory.*;
-public import core.operators.pod.*;
-public import core.numbers.*;
-public import core.numbers.overflow.*;
-public import core.enumerations.*;
-public import core.pointers.*;
-public import core.values.*;
-public import core.maybe.*;
-public import core.variants.*;
-public import core.variants.nested.*;
+public import {
+	__primitives__.*;
+	core.types.*;
+	core.operators.*;
+	core.sequences.*;
+	core.records.*;
+	core.tuples.*;
+	core.unions.*;
+	core.statics.*;
+	core.booleans.*;
+	core.memory.*;
+	core.operators.pod.*;
+	core.numbers.*;
+	core.numbers.overflow.*;
+	core.enumerations.*;
+	core.pointers.*;
+	core.values.*;
+	core.maybe.*;
+	core.variants.*;
+	core.variants.nested.*;
 
-public import core.arrays.*;
-public import core.coordinates.*;
-public import core.ranges.*;
+	core.arrays.*;
+	core.coordinates.*;
+	core.ranges.*;
 
-public import core.bytes.*;
-public import core.characters.*;
-public import core.strings.*;
-public import core.strings.stringliterals.*;
-public import core.strings.cstringrefs.*;
-public import core.strings.stringrefs.*;
+	core.bytes.*;
+	core.characters.*;
+	core.strings.*;
+	core.strings.stringliterals.*;
+	core.strings.cstringrefs.*;
+	core.strings.stringrefs.*;
 
-public import core.errors.*;
-public import core.exceptions.*;
+	core.errors.*;
+	core.exceptions.*;
 
-public import core.system.*;
-public import core.system.platform.*;
+	core.system.*;
+	core.system.platform.*;
 
-public import core.complex.*;
+	core.complex.*;
+}
 
 alias stdcall = AttributeStdCall;
 alias fastcall = AttributeFastCall;

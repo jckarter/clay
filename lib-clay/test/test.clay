@@ -1,12 +1,14 @@
-import commandline.options.*;
-import console.color.*;
-import printer.(println,print,str);
-import io.streams.*;
-import io.files.*;
-import data.strings.*;
-import lambdas.*;
-import data.vectors.*;
-import printer.formatter.(repr);
+import {
+    commandline.options.*;
+    console.color.*;
+    printer.(println,print,str);
+    io.streams.*;
+    io.files.*;
+    data.strings.*;
+    lambdas.*;
+    data.vectors.*;
+    printer.formatter.(repr);
+}
 
 record TestStatus (
     passed: UInt,

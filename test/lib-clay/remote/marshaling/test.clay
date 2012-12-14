@@ -1,12 +1,14 @@
-import test.*;
-import test.memory.*;
-import remote.marshaling.*;
-import uniquepointers.(UniquePointer,newUnique);
-import printer.(printTo);
-import referencetypes.(referenceType);
-import sharedpointers.*;
-import data.strings.*;
-import data.vectors.*;
+import {
+    test.*;
+    test.memory.*;
+    remote.marshaling.*;
+    uniquepointers.(UniquePointer,newUnique);
+    printer.(printTo);
+    referencetypes.(referenceType);
+    sharedpointers.*;
+    data.strings.*;
+    data.vectors.*;
+}
 
 expectMarshalingInvariants(value) {
     var marshaled = marshal(value);

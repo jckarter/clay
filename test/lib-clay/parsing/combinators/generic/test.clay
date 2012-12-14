@@ -1,11 +1,13 @@
-import test.*;
-import data.vectors.*;
-import data.strings.*;
-import core.types.*;
-import numbers.parser.*;
-import parsing.combinators.strings.*;
-import parsing.combinators.wrapper.*;
-import printer.*;
+import {
+    test.*;
+    data.vectors.*;
+    data.strings.*;
+    core.types.*;
+    numbers.parser.*;
+    parsing.combinators.strings.*;
+    parsing.combinators.wrapper.*;
+    printer.*;
+}
 
 var digit = condition(c -> (c >= '0') and (c <= '9'));
 var number = modify(x -> parse(Int, x), oneOrMore(digit));

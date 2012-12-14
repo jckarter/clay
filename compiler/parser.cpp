@@ -2859,30 +2859,24 @@ static bool optImportAlias(IdentifierPtr &x) {
 
 static bool importModule(ImportPtr &x) {
     Location location = currentLocation();
-    Visibility vis;
-    if (!importVisibility(vis)) return false;
-    if (!keyword("import")) return false;
     DottedNamePtr y;
     if (!dottedName(y)) return false;
     IdentifierPtr z;
     if (!optImportAlias(z)) return false;
     if (!symbol(";")) return false;
-    x = new ImportModule(y, vis, z);
+    x = new ImportModule(y, z);
     x->location = location;
     return true;
 }
 
 static bool importStar(ImportPtr &x) {
     Location location = currentLocation();
-    Visibility vis;
-    if (!importVisibility(vis)) return false;
-    if (!keyword("import")) return false;
     DottedNamePtr y;
     if (!dottedName(y)) return false;
     if (!symbol(".")) return false;
     if (!opsymbol("*")) return false;
     if (!symbol(";")) return false;
-    x = new ImportStar(y, vis);
+    x = new ImportStar(y);
     x->location = location;
     return true;
 }
@@ -2916,14 +2910,11 @@ static bool importedMemberList(vector<ImportedMember> &x) {
 
 static bool importMembers(ImportPtr &x) {
     Location location = currentLocation();
-    Visibility vis;
-    if (!importVisibility(vis)) return false;
-    if (!keyword("import")) return false;
     DottedNamePtr y;
     if (!dottedName(y)) return false;
     if (!symbol(".")) return false;
     if (!symbol("(")) return false;
-    ImportMembersPtr z = new ImportMembers(y, vis);
+    ImportMembersPtr z = new ImportMembers(y);
     if (!importedMemberList(z->members)) return false;
     if (!symbol(")")) return false;
     if (!symbol(";")) return false;
@@ -2933,19 +2924,46 @@ static bool importMembers(ImportPtr &x) {
 }
 
 static bool import(ImportPtr &x) {
+    Visibility vis;
+    if (!importVisibility(vis)) return false;
+    if (!keyword("import")) return false;
     int p = save();
-    if (importModule(x)) return true;
-    if (restore(p), importStar(x)) return true;
-    if (restore(p), importMembers(x)) return true;
+    if (importModule(x)) goto importsuccess;
+    if (restore(p), importStar(x)) goto importsuccess;
+    if (restore(p), importMembers(x)) goto importsuccess;
     return false;
+importsuccess:
+    x->visibility = vis;
+    return true;
+}
+
+static bool importBlock(vector<ImportPtr> &x) {
+    Visibility vis;
+    if (!importVisibility(vis)) return false;
+    if (!keyword("import")) return false;
+    if (!symbol("{")) return false;
+    ImportPtr y;
+    while (true) {
+        int p = save();
+        if (importModule(y)) goto pushimport;
+        if (restore(p), importStar(y)) goto pushimport;
+        if (restore(p), importMembers(y)) goto pushimport;
+        if (restore(p), !symbol("}")) return false;
+        return true;
+    pushimport:
+        y->visibility = vis;
+        x.push_back(y);
+    }
 }
 
 static bool imports(vector<ImportPtr> &x) {
     x.clear();
+    ImportPtr y;
     while (true) {
         int p = save();
-        ImportPtr y;
-        if (!import(y)) {
+        if (importBlock(x))
+            continue;
+        if (restore(p), !import(y)) {
             restore(p);
             break;
         }

@@ -1,9 +1,11 @@
-import commandline.dispatch.*;
-import data.algorithms.(reduce);
-import printer.(println,printlnTo);
-import io.files.*;
-import data.sequences.*;
-import numbers.parser.*;
+import {
+    commandline.dispatch.*;
+    data.algorithms.(reduce);
+    printer.(println,printlnTo);
+    io.files.*;
+    data.sequences.*;
+    numbers.parser.*;
+}
 
 add(args) {
     println(
