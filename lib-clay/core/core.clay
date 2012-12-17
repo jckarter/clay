@@ -1,43 +1,42 @@
-public import {
-	__primitives__.*;
-	core.types.*;
-	core.operators.*;
-	core.sequences.*;
-	core.records.*;
-	core.tuples.*;
-	core.unions.*;
-	core.statics.*;
-	core.booleans.*;
-	core.memory.*;
-	core.operators.pod.*;
-	core.numbers.*;
-	core.numbers.overflow.*;
-	core.enumerations.*;
-	core.pointers.*;
-	core.values.*;
-	core.maybe.*;
-	core.variants.*;
-	core.variants.nested.*;
+public import
+	__primitives__.*,
+	core.types.*,
+	core.operators.*,
+	core.sequences.*,
+	core.records.*,
+	core.tuples.*,
+	core.unions.*,
+	core.statics.*,
+	core.booleans.*,
+	core.memory.*,
+	core.operators.pod.*,
+	core.numbers.*,
+	core.numbers.overflow.*,
+	core.enumerations.*,
+	core.pointers.*,
+	core.values.*,
+	core.maybe.*,
+	core.variants.*,
+	core.variants.nested.*,
 
-	core.arrays.*;
-	core.coordinates.*;
-	core.ranges.*;
+	core.arrays.*,
+	core.coordinates.*,
+	core.ranges.*,
 
-	core.bytes.*;
-	core.characters.*;
-	core.strings.*;
-	core.strings.stringliterals.*;
-	core.strings.cstringrefs.*;
-	core.strings.stringrefs.*;
+	core.bytes.*,
+	core.characters.*,
+	core.strings.*,
+	core.strings.stringliterals.*,
+	core.strings.cstringrefs.*,
+	core.strings.stringrefs.*,
 
-	core.errors.*;
-	core.exceptions.*;
+	core.errors.*,
+	core.exceptions.*,
 
-	core.system.*;
-	core.system.platform.*;
+	core.system.*,
+	core.system.platform.*,
 
 	core.complex.*;
-}
 
 alias stdcall = AttributeStdCall;
 alias fastcall = AttributeFastCall;

@@ -1,10 +1,9 @@
 
-public import {
-	data.sequences.lazy.zipped.*;
-	data.sequences.lazy.mapped.*;
-	data.sequences.lazy.filtered.*;
-	data.sequences.lazy.enumerated.*;
-	data.sequences.lazy.reversed.*;
-	data.sequences.lazy.sliced.*;
+public import
+	data.sequences.lazy.zipped.*,
+	data.sequences.lazy.mapped.*,
+	data.sequences.lazy.filtered.*,
+	data.sequences.lazy.enumerated.*,
+	data.sequences.lazy.reversed.*,
+	data.sequences.lazy.sliced.*,
 	data.sequences.lazy.grouped.*;
-}
