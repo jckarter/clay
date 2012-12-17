@@ -1965,7 +1965,7 @@ struct Overload : public TopLevelItem {
              bool final)
         : TopLevelItem(OVERLOAD, module), target(target), code(code),
           isInline(isInline), patternsInitializedState(0),
-          callByName(callByName), final(final), nameIsPattern(false) {}
+          callByName(callByName), nameIsPattern(false), final(final) {}
 };
 
 struct Procedure : public TopLevelItem {

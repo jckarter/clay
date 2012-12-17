@@ -621,8 +621,6 @@ static void initOverload(OverloadPtr x) {
         }
         case PRIM_OP : {
             if (isOverloadablePrimOp(obj)) {
-                if (x->final)
-                    error(x, "primop overloads cannot be final");
                 addPrimOpOverload((PrimOp *)obj.ptr(), x);
             } else
                 error(x->target, "invalid overload target");
