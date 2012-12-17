@@ -3191,7 +3191,6 @@ static bool replItems(ReplItem& x, bool = false) {
     x.toplevels.clear();
     x.imports.clear();
     x.stmts.clear();
-    ImportPtr importItem;
     StatementPtr stmtItem;
 
     while (true) {
@@ -3210,7 +3209,6 @@ static bool replItems(ReplItem& x, bool = false) {
         if (!import(x.imports)) {
             restore(p);
         } else {
-            x.imports.push_back(importItem);
             continue;
         }
 
