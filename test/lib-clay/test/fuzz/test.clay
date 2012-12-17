@@ -1,13 +1,12 @@
-import {
-    test.*;
-    test.fuzz.(lookForFailures, expectForAll);
-    test.module.(testMainModule);
-    numbers.floats.(nan?);
-    printer.(str);
-    random.(XORShiftRNG);
-    data.strings.(String);
+import
+    test.*,
+    test.fuzz.(lookForFailures, expectForAll),
+    test.module.(testMainModule),
+    numbers.floats.(nan?),
+    printer.(str),
+    random.(XORShiftRNG),
+    data.strings.(String),
     complex.*;
-}
 
 TEST_lookForFailures() {
     var g = XORShiftRNG();

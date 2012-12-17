@@ -1,14 +1,13 @@
 
-public import{
+public import
 	paged.allocator.(initializePaging,
                                PagedPointer,
                                nullPaged,
                                allocatePaged,
                                freePaged,
-                               printPagingState);
-	paged.strings.*;
-	paged.vectors.*;
-	paged.namedvectors.*;
-	paged.namedscalars.*;
+                               printPagingState),
+	paged.strings.*,
+	paged.vectors.*,
+	paged.namedvectors.*,
+	paged.namedscalars.*,
 	paged.sharedpointers.*;
-}

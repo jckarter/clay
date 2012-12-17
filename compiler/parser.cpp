@@ -2863,7 +2863,6 @@ static bool importModule(ImportPtr &x) {
     if (!dottedName(y)) return false;
     IdentifierPtr z;
     if (!optImportAlias(z)) return false;
-    // if (!symbol(";")) return false;
     x = new ImportModule(y, z);
     x->location = location;
     return true;
@@ -2875,7 +2874,6 @@ static bool importStar(ImportPtr &x) {
     if (!dottedName(y)) return false;
     if (!symbol(".")) return false;
     if (!opsymbol("*")) return false;
-    // if (!symbol(";")) return false;
     x = new ImportStar(y);
     x->location = location;
     return true;
@@ -2917,7 +2915,6 @@ static bool importMembers(ImportPtr &x) {
     ImportMembersPtr z = new ImportMembers(y);
     if (!importedMemberList(z->members)) return false;
     if (!symbol(")")) return false;
-    // if (!symbol(";")) return false;
     x = z.ptr();
     x->location = location;
     return true;

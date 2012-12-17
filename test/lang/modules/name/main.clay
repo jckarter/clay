@@ -1,10 +1,10 @@
-import {
-    printer.(println);
-    data.vectors.generic as vg;
-    hash;
-    data.hashmaps.*;
+import
+    printer.(println),
+    data.vectors.generic as vg,
+    hash,
+    data.hashmaps.*,
     data.strings.*;
-}
+
 
 main() {
     disp(add);
