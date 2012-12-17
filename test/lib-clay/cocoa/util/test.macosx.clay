@@ -1,10 +1,11 @@
-import cocoa.*;
-import cocoa.test.*;
-import hash.(hash);
-import printer.(str);
-import test.*;
-import test.memory.*;
-import data.strings.(String);
+import
+    cocoa.*,
+    cocoa.test.*,
+    hash.(hash),
+    printer.(str),
+    test.*,
+    test.memory.*,
+    data.strings.(String);
 
 record Foo (x: Int64, y: Double);
 [I when Integer?(I) and I != Int64]

@@ -1,5 +1,5 @@
 import io.mapping.*;
-import io.paths.*;
+import io.filesystem.*;
 import paged.misc.*;
 import io.files.*;
 import data.strings.*;
