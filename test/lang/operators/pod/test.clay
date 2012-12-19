@@ -1,9 +1,10 @@
-import test.*;
-import uniquepointers.(UniquePointer);
-import sharedpointers.*;
-import simd.*;
-import data.strings.*;
-import data.vectors.*;
+import
+    test.*,
+    uniquepointers.(UniquePointer),
+    sharedpointers.*,
+    simd.*,
+    data.strings.*,
+    data.vectors.*;
 
 record IrregularRecord ();
 overload RegularRecord?(#IrregularRecord) = false;

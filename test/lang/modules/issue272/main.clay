@@ -1,9 +1,10 @@
-import foo;
-import foo.(A, B);
-import foo.bar;
-import printer;
-import printer.(println);
-import __primitives__;
+import
+	foo,
+	foo.(A, B),
+	foo.bar,
+	printer,
+	printer.(println),
+	__primitives__;
 
 main() {
     println(StaticModule(A) == StaticModule(B));
