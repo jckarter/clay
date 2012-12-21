@@ -3820,7 +3820,8 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             new ObjectExpr(proc.ptr()),
             code,
             entry.second->callByName,
-            entry.second->isInline);
+            entry.second->isInline,
+            false);
         overload->env = entry.second->env;
         addProcedureOverload(proc, entry.second->env, overload);
 

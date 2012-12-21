@@ -16,6 +16,15 @@ vector<OverloadPtr> tupleOverloads;
 vector<OverloadPtr> unionOverloads;
 vector<OverloadPtr> staticOverloads;
 
+OverloadPtr finalPointerOverloads;
+OverloadPtr finalCodePointerOverloads;
+OverloadPtr finalCCodePointerOverloads;
+OverloadPtr finalArrayOverloads;
+OverloadPtr finalVecOverloads;
+OverloadPtr finalTupleOverloads;
+OverloadPtr finalUnionOverloads;
+OverloadPtr finalStaticOverloads;
+
 vector<OverloadPtr> patternOverloads;
 
 bool isOverloadablePrimOp(ObjectPtr x)
@@ -72,8 +81,46 @@ vector<OverloadPtr> &primOpOverloads(PrimOpPtr x)
     return *ptr;
 }
 
+static void checkFinalPrimOpOverload(PrimOpPtr x, OverloadPtr overload)
+{
+    OverloadPtr ptr = NULL;
+    switch (x->primOpCode) {
+    case PRIM_Pointer :
+        ptr = finalPointerOverloads;
+        break;
+    case PRIM_CodePointer :
+        ptr = finalCodePointerOverloads;
+        break;
+    case PRIM_ExternalCodePointer :
+        ptr = finalCCodePointerOverloads;
+        break;
+    case PRIM_Array :
+        ptr = finalArrayOverloads;
+        break;
+    case PRIM_Vec :
+        ptr = finalVecOverloads;
+        break;
+    case PRIM_Tuple :
+        ptr = finalTupleOverloads;
+        break;
+    case PRIM_Union :
+        ptr = finalUnionOverloads;
+        break;
+    case PRIM_Static :
+        ptr = finalStaticOverloads;
+        break;
+    default :
+        assert(false);
+    }
+    if (ptr != NULL) 
+        error(overload, "symbol already declared final");        
+    else if (overload->final && !ptr)
+        ptr = overload;
+}
+
 void addPrimOpOverload(PrimOpPtr x, OverloadPtr overload)
 {
+    checkFinalPrimOpOverload(x, overload);   
     vector<OverloadPtr> &v = primOpOverloads(x);
     v.insert(v.begin(), overload);
 }
@@ -168,7 +215,7 @@ void initBuiltinConstructor(RecordDeclPtr x)
     code->body = new Return(RETURN_VALUE, new ExprList(returnExpr.ptr()));
     code->body->location = returnExpr->location;
 
-    OverloadPtr defaultOverload = new Overload(x->module, recName, code, true, IGNORE);
+    OverloadPtr defaultOverload = new Overload(x->module, recName, code, true, IGNORE, false);
     defaultOverload->location = x->location;
     defaultOverload->env = x->env;
     x->overloads.push_back(defaultOverload);

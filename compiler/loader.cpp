@@ -575,11 +575,21 @@ void addProcedureOverload(ProcedurePtr proc, EnvPtr env, OverloadPtr x) {
         x->code->hasVarArg);
 }
 
+
+static void checkFinalOverload(OverloadPtr x, OverloadPtr &final) {
+    if (final != NULL) 
+        error(x, "symbol already declared final");        
+    else if (x->final && !final)
+        final = x;
+}
+
 static void initOverload(OverloadPtr x) {
     EnvPtr env = overloadPatternEnv(x);
     PatternPtr pattern = evaluateOnePattern(x->target, env);
     ObjectPtr obj = derefDeep(pattern);
     if (obj == NULL) {
+        if (x->final)
+            error(x, "pattern overloads cannot be final");
         x->nameIsPattern = true;
         addPatternOverload(x);
     }
@@ -587,28 +597,32 @@ static void initOverload(OverloadPtr x) {
         switch (obj->objKind) {
         case PROCEDURE : {
             Procedure *proc = (Procedure *)obj.ptr();
+            checkFinalOverload(x, proc->finalOverload);
             addProcedureOverload(proc, env, x);
             break;
         }
         case RECORD_DECL : {
             RecordDecl *r = (RecordDecl *)obj.ptr();
+            checkFinalOverload(x, r->finalOverload);
             r->overloads.insert(r->overloads.begin(), x);
             break;
         }
         case VARIANT_DECL : {
             VariantDecl *v = (VariantDecl *)obj.ptr();
+            checkFinalOverload(x, v->finalOverload);
             v->overloads.insert(v->overloads.begin(), x);
             break;
         }
         case TYPE : {
             Type *t = (Type *)obj.ptr();
+            checkFinalOverload(x, t->finalOverload);
             t->overloads.insert(t->overloads.begin(), x);
             break;
         }
         case PRIM_OP : {
-            if (isOverloadablePrimOp(obj))
+            if (isOverloadablePrimOp(obj)) {
                 addPrimOpOverload((PrimOp *)obj.ptr(), x);
-            else
+            } else
                 error(x->target, "invalid overload target");
             break;
         }
@@ -616,6 +630,7 @@ static void initOverload(OverloadPtr x) {
             GlobalAlias *a = (GlobalAlias*)obj.ptr();
             if (!a->hasParams())
                 error(x->target, "invalid overload target");
+            checkFinalOverload(x, a->finalOverload);
             a->overloads.insert(a->overloads.begin(), x);
             break;
         }
