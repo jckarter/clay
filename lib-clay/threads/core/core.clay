@@ -8,8 +8,8 @@ record Thread (
     joined: Bool,
 );
 
-overload RegularRecord?(#Thread) = false;
-overload BitwiseMovedType?(#Thread) = true;
+RegularRecord?(#Thread) = false;
+BitwiseMovedType?(#Thread) = true;
 
 startThread(proc): Thread {
     var launcher = => {
@@ -31,7 +31,7 @@ joinThread(thread: Thread) {
     }
 }
 
-overload resetUnsafe(thread: Thread) { thread.joined = true; }
-overload destroy(thread: Thread) {
+resetUnsafe(thread: Thread) { thread.joined = true; }
+destroy(thread: Thread) {
     joinThread(thread);
 }

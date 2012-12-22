@@ -10,13 +10,13 @@ IteratorTargetType(T) = ..Type(..getValue(nextValue(typeToLValue(T))));
 
 /// @section  Default two-arg hasValue? 
 
-alias overload hasValue?(iter, coord) : Bool = hasValue?(coord);
+alias hasValue?(iter, coord) : Bool = hasValue?(coord);
 
 
 /// @section  pointer as iterator value 
 
-[T] forceinline overload hasValue?(p:Pointer[T]) : Bool = not null?(p);
-[T] forceinline overload getValue(p:Pointer[T]) : ByRef[T] = ref p^;
+[T] forceinline hasValue?(p:Pointer[T]) : Bool = not null?(p);
+[T] forceinline getValue(p:Pointer[T]) : ByRef[T] = ref p^;
 
 
 /// @section  reverse iteration 
@@ -86,14 +86,14 @@ define popFront(s:S);
 
 
 // default implementation using `push`
-overload pushAll(s, vs) : {
+pushAll(s, vs) : {
     for (v in vs) {
         push(s, v);
     }
 }
 
 // default implementation using `insert`
-overload insertAll(s, coord, vs) : {
+insertAll(s, coord, vs) : {
     var insertPoint = coord;
     for (v in vs) {
         insert(v, insertPoint, vs);
@@ -107,9 +107,9 @@ overload insertAll(s, coord, vs) : {
 define StaticSize(#S);
 
 
-overload push(s) : {}
+push(s) : {}
 
-overload push(s, forward v1, forward v2, forward ..vs) : {
+push(s, forward v1, forward v2, forward ..vs) : {
     ..for (v in v1, v2, ..vs) {
         push(s, v);
     }
@@ -136,27 +136,27 @@ SequenceIteratorType(T) = Type(iterator(typeToLValue(T)));
 [T]
 define ContiguousSequence?(#T) : Bool;
 
-overload ContiguousSequence?(T) : Bool = false;
+ContiguousSequence?(T) : Bool = false;
 
 // true if copying the sequence is efficient
 [T]
 define LightweightSequence?(#T) : Bool;
 
-overload LightweightSequence?(T) : Bool = false;
+LightweightSequence?(T) : Bool = false;
 
 // true for sequences which have value semantics.
 [T]
 define SequenceContainer?(#T) : Bool;
 
-overload SequenceContainer?(T) : Bool = false;
+SequenceContainer?(T) : Bool = false;
 
 // true if sequence is not single-valued (0 valued sequences are included).
 MultiValuedSequence?(T) : Bool =
     Sequence?(T) and multiValued?(..Type(..getValue(nextValue(iterator(typeToLValue(T))))));
 
 private define multiValued?(..x) : Bool;
-overload multiValued?(..x) : Bool = true;
-overload multiValued?(x) : Bool = false;
+multiValued?(..x) : Bool = true;
+multiValued?(x) : Bool = false;
 
 
 
@@ -167,7 +167,7 @@ overload multiValued?(x) : Bool = false;
 
 // get pointer to element, null if not available
 define lookup(map, key);
-define put(map, key, value) :;
+define put(map, key, ..value) :;
 // iterate over all items
 define items(map);
 
@@ -180,7 +180,7 @@ forceinline contains?(map, key) : Bool = not null?(lookup(map, key));
 /// @section  generic equals?, lesser? 
 
 [A,B when Sequence?(A) and Sequence?(B) and not StringLiteralType?(A,B)]
-overload equals?(a:A, b:B) : Bool {
+equals?(a:A, b:B) : Bool {
     var i, j = iterator(a), iterator(b);
     while (true) {
         var iv, jv = nextValue(i), nextValue(j);
@@ -195,7 +195,7 @@ overload equals?(a:A, b:B) : Bool {
 }
 
 [A,B when SizedSequence?(A) and SizedSequence?(B) and not StringLiteralType?(A,B)]
-overload equals?(a:A, b:B) : Bool {
+equals?(a:A, b:B) : Bool {
     if (size(a) != size(b))
         return false;
     var i, j = iterator(a), iterator(b);
@@ -210,7 +210,7 @@ overload equals?(a:A, b:B) : Bool {
 
 
 [A,B when Sequence?(A) and Sequence?(B)]
-overload lesser?(a:A, b:B) : Bool {
+lesser?(a:A, b:B) : Bool {
     var i, j = iterator(a), iterator(b);
     while (true) {
         var iv, jv = nextValue(i), nextValue(j);

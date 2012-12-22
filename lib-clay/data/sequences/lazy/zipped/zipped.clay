@@ -12,27 +12,27 @@ private record Zipped[A] (
 );
 
 [..S when allValues?(LightweightSequence?, ..S)]
-overload LightweightSequence?(#Zipped[Tuple[..S]]) = true;
+LightweightSequence?(#Zipped[Tuple[..S]]) = true;
 
 
 
 /// @section  ZippedIterator 
 
 [A]
-forceinline overload iterator(a:Zipped[A]) = ZippedIterator(multiIterators(a.seqs));
+forceinline iterator(a:Zipped[A]) = ZippedIterator(multiIterators(a.seqs));
 
 private record ZippedIterator[ITERS] (iters : ITERS);
 
 private record ZippedValue[..V] (values:Tuple[..V]);
 
 [ITERS]
-forceinline overload nextValue(iter:ZippedIterator[ITERS]) =
+forceinline nextValue(iter:ZippedIterator[ITERS]) =
     ZippedValue([..mapValues(nextValue, ..unpackTupleRef(iter.iters))]);
 
 [..V]
-forceinline overload hasValue?(v:ZippedValue[..V]) = allValues?(hasValue?, ..unpackTuple(v.values));
+forceinline hasValue?(v:ZippedValue[..V]) = allValues?(hasValue?, ..unpackTuple(v.values));
 [..V]
-forceinline overload getValue(forward v:ZippedValue[..V])
+forceinline getValue(forward v:ZippedValue[..V])
     = forward ..mapValues(getValue, ..unpackTuple(v.values));
 
 
@@ -44,7 +44,7 @@ private AllReversible?(A) {
 }
 
 [A when AllReversible?(A)]
-forceinline overload reverseIterator(a:Zipped[A]) =
+forceinline reverseIterator(a:Zipped[A]) =
     ZippedIterator(multiReverseIterators(a.seqs));
 
 
@@ -57,7 +57,7 @@ private AllSized?(A) {
 }
 
 [A when AllSized?(A)]
-forceinline overload size(a:Zipped[A]) {
+forceinline size(a:Zipped[A]) {
     var f = (x => SizeT(size(x)));
     return foldValues(min, ..mapValues(f, ..unpackSequences(a.seqs)));
 }
@@ -68,7 +68,7 @@ private AllStaticSized?(A) {
 }
 
 [A when AllStaticSized?(A)]
-overload StaticSize(#Zipped[A]) =
+StaticSize(#Zipped[A]) =
     foldValues(min, ..mapValues(StaticSize, ..Type(..unpackSequences(null(A)^))));
 
 private AllIndexable?(A, I) {
@@ -77,7 +77,7 @@ private AllIndexable?(A, I) {
 }
 
 [A, I when AllIndexable?(A, I)]
-forceinline overload index(a:Zipped[A], i:I) {
+forceinline index(a:Zipped[A], i:I) {
     var f = (x -> { return forward ..index(x, i); });
     return forward ..mapValues(f, ..unpackSequences(a.seqs));
 }

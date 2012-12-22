@@ -193,39 +193,39 @@ record PagedPointer[T] (
 );
 
 [T]
-overload ContiguousCoordinate?(#PagedPointer[T]) = true;
+ContiguousCoordinate?(#PagedPointer[T]) = true;
 
 [T]
-overload PagedPointer[T]() = PagedPointer[T](SizeT(0));
+PagedPointer[T]() = PagedPointer[T](SizeT(0));
 
 [T,I when Integer?(I)]
-overload add(p:PagedPointer[T], i:I) = PagedPointer[T](p.offset + i*TypeSize(T));
+add(p:PagedPointer[T], i:I) = PagedPointer[T](p.offset + i*TypeSize(T));
 
 [T,I when Integer?(I)]
-overload subtract(p:PagedPointer[T], i:I) = PagedPointer[T](p.offset - i*TypeSize(T));
+subtract(p:PagedPointer[T], i:I) = PagedPointer[T](p.offset - i*TypeSize(T));
 
 [T]
-overload subtract(a:PagedPointer[T], b:PagedPointer[T]) {
+subtract(a:PagedPointer[T], b:PagedPointer[T]) {
     return (PtrInt(a.offset) - PtrInt(b.offset)) / PtrInt(TypeSize(T));
 }
 
 [T]
-overload inc(ref p:PagedPointer[T]) {
+inc(ref p:PagedPointer[T]) {
     p +: 1;
 }
 
 [T]
-overload dec(ref p:PagedPointer[T]) {
+dec(ref p:PagedPointer[T]) {
     p -: 1;
 }
 
 [T]
-overload dereference(p : PagedPointer[T]) {
+dereference(p : PagedPointer[T]) {
     return ref Pointer[T](p.offset + dataBegin())^;
 }
 
 [T]
-overload null?(p : PagedPointer[T]) = (p.offset == 0);
+null?(p : PagedPointer[T]) = (p.offset == 0);
 
 [T]
 nullPaged(#T) = PagedPointer[T]();

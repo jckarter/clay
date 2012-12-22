@@ -28,7 +28,7 @@ frexp(x:T, eptr:Pointer[I]){
 
 
 //[T,I when T==LongDouble and Integer?(I)]
-//overload frexp(x:T, eptr:Pointer[I]){
+//frexp(x:T, eptr:Pointer[I]){
 //    var k = floatExponent(x);                       // extract exponent
 //    eptr^ = 0;
 //    if (k == 0) {                                   // 0 or subnormal x

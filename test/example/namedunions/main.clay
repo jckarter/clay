@@ -24,7 +24,7 @@ record NamedUnion[..fields] (
 );
 
 [..fields]
-overload fieldRef(x:NamedUnion[..fields], name) {
+fieldRef(x:NamedUnion[..fields], name) {
     alias i = fieldIndex(name, ..fields);
     return ref staticIndex(fieldRefByIndex(x, #0), #i);
 }

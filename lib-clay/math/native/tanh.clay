@@ -6,9 +6,9 @@ import math.native.protocol.*;
 import numbers.floats.(infinity?);
 import complex.*;
 
-overload tanh(x:Float) = Float(tanh(Double(x)));
+tanh(x:Float) = Float(tanh(Double(x)));
 
-overload tanh(x:Double) {
+tanh(x:Double) {
 	alias ONE = 1.;
 	alias TWO = 2.;
 	alias HUGE = GreatestPositiveFinite(Double);
@@ -46,7 +46,7 @@ overload tanh(x:Double) {
 }
 
 
-overload tanh(z:ComplexDouble) {
+tanh(z:ComplexDouble) {
 	
 	var x,y = real(z),imagValue(z);
 	var xdb = MAKE_IEEE(x);

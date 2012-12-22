@@ -1,226 +1,226 @@
 record Float80Bits (mantissa:UInt64,exponent:UInt32);
 
 define floatBits;
-overload floatBits(f:ILongDouble) = bitcast(Float80Bits, f);
-overload floatBits(f:IDouble) = bitcast(UInt64, f);
-overload floatBits(f:IFloat) = bitcast(UInt32, f);
-overload floatBits(f:LongDouble) = bitcast(Float80Bits, f);
-overload floatBits(f:Double) = bitcast(UInt64, f);
-overload floatBits(f:Float) = bitcast(UInt32, f);
+floatBits(f:ILongDouble) = bitcast(Float80Bits, f);
+floatBits(f:IDouble) = bitcast(UInt64, f);
+floatBits(f:IFloat) = bitcast(UInt32, f);
+floatBits(f:LongDouble) = bitcast(Float80Bits, f);
+floatBits(f:Double) = bitcast(UInt64, f);
+floatBits(f:Float) = bitcast(UInt32, f);
 
 define floatFromBits;
-overload floatFromBits(m:UInt64,e:UInt32) = bitcast(LongDouble, Float80Bits(m,e));
-overload floatFromBits(b:UInt64) = bitcast(Double, b);
-overload floatFromBits(b:UInt32) = bitcast(Float, b);
+floatFromBits(m:UInt64,e:UInt32) = bitcast(LongDouble, Float80Bits(m,e));
+floatFromBits(b:UInt64) = bitcast(Double, b);
+floatFromBits(b:UInt32) = bitcast(Float, b);
 
 define imagFromBits;
-overload imagFromBits(m:UInt64,e:UInt64) = bitcast(ILongDouble, Float80Bits(m,e));
-overload imagFromBits(b:UInt64) = bitcast(IDouble, b);
-overload imagFromBits(b:UInt32) = bitcast(IFloat, b);
+imagFromBits(m:UInt64,e:UInt64) = bitcast(ILongDouble, Float80Bits(m,e));
+imagFromBits(b:UInt64) = bitcast(IDouble, b);
+imagFromBits(b:UInt32) = bitcast(IFloat, b);
 
 
 define floatFromParts;
 
 [I when Integer?(I)]
-overload floatFromParts(#LongDouble, neg?:Bool, exp:I, mant:UInt64)
+floatFromParts(#LongDouble, neg?:Bool, exp:I, mant:UInt64)
     = floatFromBits(mant, bitor( UInt64(exp),
         if (neg?) 0x0000_0000_0000_8000_ul else 0_ul));
 
 [I when Integer?(I)]
-overload floatFromParts(#Double, neg?:Bool, exp:I, mant:UInt64)
+floatFromParts(#Double, neg?:Bool, exp:I, mant:UInt64)
     = floatFromBits(bitor(bitand(mant, mantissaMask(Double)),
         bitshl(bitand(UInt64(exp), exponentMask(Double)), mantissaSize(Double)),
         if (neg?) 0x8000_0000_0000_0000_ul else 0_ul));
 
 [I when Integer?(I)]
-overload floatFromParts(#Float ,neg?:Bool, exp:I, mant:UInt32)
+floatFromParts(#Float ,neg?:Bool, exp:I, mant:UInt32)
     = floatFromBits(bitor(
         bitand(mant, mantissaMask(Float)),
         bitshl(bitand(UInt32(exp), exponentMask(Float)), mantissaSize(Float)),
         if (neg?) 0x8000_0000u else 0u ));
 
 [I when Integer?(I)]
-overload floatFromParts(#ILongDouble, neg?:Bool, exp:I, mant:UInt64)
+floatFromParts(#ILongDouble, neg?:Bool, exp:I, mant:UInt64)
     = imagFromBits(mant, bitor( UInt64(exp),
         if (neg?) 0x0000_0000_0000_8000_ul else 0_ul));
 
 [I when Integer?(I)]
-overload floatFromParts(#IDouble, neg?:Bool, exp:I, mant:UInt64)
+floatFromParts(#IDouble, neg?:Bool, exp:I, mant:UInt64)
     = imagFromBits(bitor(bitand(mant, mantissaMask(IDouble)),
         bitshl(bitand(UInt64(exp), exponentMask(IDouble)), mantissaSize(IDouble)),
         if (neg?) 0x8000_0000_0000_0000_ul else 0_ul));
 
 [I when Integer?(I)]
-overload floatFromParts(#IFloat ,neg?:Bool, exp:I, mant:UInt32)
+floatFromParts(#IFloat ,neg?:Bool, exp:I, mant:UInt32)
     = imagFromBits(bitor(
         bitand(mant, mantissaMask(IFloat)),
         bitshl(bitand(UInt32(exp), exponentMask(IFloat)), mantissaSize(IFloat)),
         if (neg?) 0x8000_0000u else 0u ));
 
 define floatNegative?;
-overload floatNegative?(f:ILongDouble) = bitand(floatBits(f).exponent, 0x8000u) != 0;
-overload floatNegative?(f:IDouble) = bitand(floatBits(f), 0x8000_0000_0000_0000_ul) != 0;
-overload floatNegative?(f:IFloat) = bitand(floatBits(f), 0x8000_0000u) != 0;
-overload floatNegative?(f:LongDouble) = bitand(floatBits(f).exponent, 0x8000u) != 0;
-overload floatNegative?(f:Double) = bitand(floatBits(f), 0x8000_0000_0000_0000_ul) != 0;
-overload floatNegative?(f:Float) = bitand(floatBits(f), 0x8000_0000u) != 0;
+floatNegative?(f:ILongDouble) = bitand(floatBits(f).exponent, 0x8000u) != 0;
+floatNegative?(f:IDouble) = bitand(floatBits(f), 0x8000_0000_0000_0000_ul) != 0;
+floatNegative?(f:IFloat) = bitand(floatBits(f), 0x8000_0000u) != 0;
+floatNegative?(f:LongDouble) = bitand(floatBits(f).exponent, 0x8000u) != 0;
+floatNegative?(f:Double) = bitand(floatBits(f), 0x8000_0000_0000_0000_ul) != 0;
+floatNegative?(f:Float) = bitand(floatBits(f), 0x8000_0000u) != 0;
 
 define floatExponent;
 [T when Float?(T) or Imaginary?(T)]
-overload floatExponent(f:T) = bitand(bitshr(floatBits(f), mantissaSize(T)), exponentMask(T));
-overload floatExponent(f:ILongDouble) = bitand(floatBits(f).exponent, 0x7FFFu);
-overload floatExponent(f:LongDouble) = bitand(floatBits(f).exponent, 0x7FFFu);
+floatExponent(f:T) = bitand(bitshr(floatBits(f), mantissaSize(T)), exponentMask(T));
+floatExponent(f:ILongDouble) = bitand(floatBits(f).exponent, 0x7FFFu);
+floatExponent(f:LongDouble) = bitand(floatBits(f).exponent, 0x7FFFu);
 
 define floatMantissa;
-overload floatMantissa(f:ILongDouble) = floatBits(f).mantissa;
-overload floatMantissa(f:IDouble) = bitand(floatBits(f), mantissaMask(IDouble));
-overload floatMantissa(f:IFloat) = bitand(floatBits(f), mantissaMask(IFloat));
-overload floatMantissa(f:LongDouble) = floatBits(f).mantissa;
-overload floatMantissa(f:Double) = bitand(floatBits(f), mantissaMask(Double));
-overload floatMantissa(f:Float) = bitand(floatBits(f), mantissaMask(Float));
+floatMantissa(f:ILongDouble) = floatBits(f).mantissa;
+floatMantissa(f:IDouble) = bitand(floatBits(f), mantissaMask(IDouble));
+floatMantissa(f:IFloat) = bitand(floatBits(f), mantissaMask(IFloat));
+floatMantissa(f:LongDouble) = floatBits(f).mantissa;
+floatMantissa(f:Double) = bitand(floatBits(f), mantissaMask(Double));
+floatMantissa(f:Float) = bitand(floatBits(f), mantissaMask(Float));
 
 floatParts(f) = floatNegative?(f), floatExponent(f), floatMantissa(f);
 
 define infinity;
-overload infinity(#ILongDouble) = imagFromBits(0x8000_0000_0000_0000_ul,0x0000_0000_0000_7FFF_ul);
-overload infinity(#IDouble) = imagFromBits(0x7FF0_0000_0000_0000_ul);
-overload infinity(#IFloat) = imagFromBits(0x7F80_0000u);
-overload infinity(#LongDouble) = floatFromBits(0x8000_0000_0000_0000_ul,0x0000_0000_0000_7FFF_ul);
-overload infinity(#Double) = floatFromBits(0x7FF0_0000_0000_0000_ul);
-overload infinity(#Float) = floatFromBits(0x7F80_0000u);
+infinity(#ILongDouble) = imagFromBits(0x8000_0000_0000_0000_ul,0x0000_0000_0000_7FFF_ul);
+infinity(#IDouble) = imagFromBits(0x7FF0_0000_0000_0000_ul);
+infinity(#IFloat) = imagFromBits(0x7F80_0000u);
+infinity(#LongDouble) = floatFromBits(0x8000_0000_0000_0000_ul,0x0000_0000_0000_7FFF_ul);
+infinity(#Double) = floatFromBits(0x7FF0_0000_0000_0000_ul);
+infinity(#Float) = floatFromBits(0x7F80_0000u);
 
 define negativeInfinity;
-overload negativeInfinity(#ILongDouble) = imagFromBits(0x8000_0000_0000_0000_ul,0x0000_0000_0000_FFFF_ul);
-overload negativeInfinity(#IDouble) = imagFromBits(0xFFF0_0000_0000_0000_ul);
-overload negativeInfinity(#IFloat) = imagFromBits(0xFF80_0000u);
-overload negativeInfinity(#LongDouble) = floatFromBits(0x8000_0000_0000_0000_ul,0x0000_0000_0000_FFFF_ul);
-overload negativeInfinity(#Double) = floatFromBits(0xFFF0_0000_0000_0000_ul);
-overload negativeInfinity(#Float) = floatFromBits(0xFF80_0000u);
+negativeInfinity(#ILongDouble) = imagFromBits(0x8000_0000_0000_0000_ul,0x0000_0000_0000_FFFF_ul);
+negativeInfinity(#IDouble) = imagFromBits(0xFFF0_0000_0000_0000_ul);
+negativeInfinity(#IFloat) = imagFromBits(0xFF80_0000u);
+negativeInfinity(#LongDouble) = floatFromBits(0x8000_0000_0000_0000_ul,0x0000_0000_0000_FFFF_ul);
+negativeInfinity(#Double) = floatFromBits(0xFFF0_0000_0000_0000_ul);
+negativeInfinity(#Float) = floatFromBits(0xFF80_0000u);
 
 define nan;
-overload nan(#ILongDouble) = imagFromBits(0xC000_0000_0000_0000_ul,0x0000_0000_0000_7FFF_ul);
-overload nan(#IDouble) = imagFromBits(0x7FF8_0000_0000_0000_ul);
-overload nan(#IFloat) = imagFromBits(0x7FC0_0000u);
-overload nan(#LongDouble) = floatFromBits(0xC000_0000_0000_0000_ul,0x0000_0000_0000_7FFF_ul);
-overload nan(#Double) = floatFromBits(0x7FF8_0000_0000_0000_ul);
-overload nan(#Float) = floatFromBits(0x7FC0_0000u);
+nan(#ILongDouble) = imagFromBits(0xC000_0000_0000_0000_ul,0x0000_0000_0000_7FFF_ul);
+nan(#IDouble) = imagFromBits(0x7FF8_0000_0000_0000_ul);
+nan(#IFloat) = imagFromBits(0x7FC0_0000u);
+nan(#LongDouble) = floatFromBits(0xC000_0000_0000_0000_ul,0x0000_0000_0000_7FFF_ul);
+nan(#Double) = floatFromBits(0x7FF8_0000_0000_0000_ul);
+nan(#Float) = floatFromBits(0x7FC0_0000u);
 
 define snan;
-overload snan(#ILongDouble) = imagFromBits(0x8000_0000_0000_0001_ul,0x0000_0000_0000_7FFF_ul);
-overload snan(#IDouble) = imagFromBits(0x7FF0_0000_0000_0001_ul);
-overload snan(#IFloat) = imagFromBits(0x7F80_0001u);
-overload snan(#LongDouble) = floatFromBits(0x8000_0000_0000_0001_ul,0x0000_0000_0000_7FFF_ul);
-overload snan(#Double) = floatFromBits(0x7FF0_0000_0000_0001_ul);
-overload snan(#Float) = floatFromBits(0x7F80_0001u);
+snan(#ILongDouble) = imagFromBits(0x8000_0000_0000_0001_ul,0x0000_0000_0000_7FFF_ul);
+snan(#IDouble) = imagFromBits(0x7FF0_0000_0000_0001_ul);
+snan(#IFloat) = imagFromBits(0x7F80_0001u);
+snan(#LongDouble) = floatFromBits(0x8000_0000_0000_0001_ul,0x0000_0000_0000_7FFF_ul);
+snan(#Double) = floatFromBits(0x7FF0_0000_0000_0001_ul);
+snan(#Float) = floatFromBits(0x7F80_0001u);
 
-overload nan(#ILongDouble, sign?:Bool, payload:UInt64) = floatFromParts(ILongDouble,sign?, exponentMask(ILongDouble), payload);
-overload nan(#IDouble, sign?:Bool, payload:UInt64) = floatFromParts(IDouble,sign?, exponentMask(IDouble), payload);
-overload nan(#IFloat, sign?:Bool, payload:UInt32) = floatFromParts(IFloat,sign?, exponentMask(IFloat), payload);
-overload nan(#LongDouble, sign?:Bool, payload:UInt64) = floatFromParts(LongDouble,sign?, exponentMask(LongDouble), payload);
-overload nan(#Double, sign?:Bool, payload:UInt64) = floatFromParts(Double,sign?, exponentMask(Double), payload);
-overload nan(#Float, sign?:Bool, payload:UInt32) = floatFromParts(Float,sign?, exponentMask(Float), payload);
+nan(#ILongDouble, sign?:Bool, payload:UInt64) = floatFromParts(ILongDouble,sign?, exponentMask(ILongDouble), payload);
+nan(#IDouble, sign?:Bool, payload:UInt64) = floatFromParts(IDouble,sign?, exponentMask(IDouble), payload);
+nan(#IFloat, sign?:Bool, payload:UInt32) = floatFromParts(IFloat,sign?, exponentMask(IFloat), payload);
+nan(#LongDouble, sign?:Bool, payload:UInt64) = floatFromParts(LongDouble,sign?, exponentMask(LongDouble), payload);
+nan(#Double, sign?:Bool, payload:UInt64) = floatFromParts(Double,sign?, exponentMask(Double), payload);
+nan(#Float, sign?:Bool, payload:UInt32) = floatFromParts(Float,sign?, exponentMask(Float), payload);
 
 define qnanMask;
-overload qnanMask(#ILongDouble) = wrapBitshl(0x1ul,mantissaSize(ILongDouble)-1);
-overload qnanMask(#IDouble) = wrapBitshl(0x1ul,mantissaSize(IDouble)-1);
-overload qnanMask(#IFloat) = wrapBitshl(0x1u,mantissaSize(IFloat)-1);
-overload qnanMask(#LongDouble) = wrapBitshl(0x1ul,mantissaSize(LongDouble)-1);
-overload qnanMask(#Double) = wrapBitshl(0x1ul,mantissaSize(Double)-1);
-overload qnanMask(#Float) = wrapBitshl(0x1u,mantissaSize(Float)-1);
+qnanMask(#ILongDouble) = wrapBitshl(0x1ul,mantissaSize(ILongDouble)-1);
+qnanMask(#IDouble) = wrapBitshl(0x1ul,mantissaSize(IDouble)-1);
+qnanMask(#IFloat) = wrapBitshl(0x1u,mantissaSize(IFloat)-1);
+qnanMask(#LongDouble) = wrapBitshl(0x1ul,mantissaSize(LongDouble)-1);
+qnanMask(#Double) = wrapBitshl(0x1ul,mantissaSize(Double)-1);
+qnanMask(#Float) = wrapBitshl(0x1u,mantissaSize(Float)-1);
 
 define snanMask;
-overload snanMask(#ILongDouble) = bitshr(mantissaMask(ILongDouble),1);
-overload snanMask(#IDouble) = bitshr(mantissaMask(IDouble),1);
-overload snanMask(#IFloat) = bitshr(mantissaMask(IFloat),1);
-overload snanMask(#LongDouble) = bitshr(mantissaMask(LongDouble),1);
-overload snanMask(#Double) = bitshr(mantissaMask(Double),1);
-overload snanMask(#Float) = bitshr(mantissaMask(Float),1);
+snanMask(#ILongDouble) = bitshr(mantissaMask(ILongDouble),1);
+snanMask(#IDouble) = bitshr(mantissaMask(IDouble),1);
+snanMask(#IFloat) = bitshr(mantissaMask(IFloat),1);
+snanMask(#LongDouble) = bitshr(mantissaMask(LongDouble),1);
+snanMask(#Double) = bitshr(mantissaMask(Double),1);
+snanMask(#Float) = bitshr(mantissaMask(Float),1);
 
 [T when Float?(T) or Imaginary?(T)]
-overload nan(sign?:Bool, payload:T) = floatFromParts(T, sign?, exponentMask(T), bitor(floatMantissa(payload),qnanMask(T)));
+nan(sign?:Bool, payload:T) = floatFromParts(T, sign?, exponentMask(T), bitor(floatMantissa(payload),qnanMask(T)));
 
 [T when Float?(T) or Imaginary?(T)]
-overload snan(sign?:Bool, payload:T) = floatFromParts(T, sign?, exponentMask(T), bitand(floatMantissa(payload),snanMask(T)));
+snan(sign?:Bool, payload:T) = floatFromParts(T, sign?, exponentMask(T), bitand(floatMantissa(payload),snanMask(T)));
 
 define exponentBias;
-overload exponentBias(#ILongDouble) = 16383;
-overload exponentBias(#IDouble) = 1023;
-overload exponentBias(#IFloat) = 127;
-overload exponentBias(#LongDouble) = 16383;
-overload exponentBias(#Double) = 1023;
-overload exponentBias(#Float) = 127;
+exponentBias(#ILongDouble) = 16383;
+exponentBias(#IDouble) = 1023;
+exponentBias(#IFloat) = 127;
+exponentBias(#LongDouble) = 16383;
+exponentBias(#Double) = 1023;
+exponentBias(#Float) = 127;
 
 define mantissaSize;
-overload mantissaSize(#ILongDouble) = 64;
-overload mantissaSize(#IDouble) = 52;
-overload mantissaSize(#IFloat) = 23;
-overload mantissaSize(#LongDouble) = 64;
-overload mantissaSize(#Double) = 52;
-overload mantissaSize(#Float) = 23;
+mantissaSize(#ILongDouble) = 64;
+mantissaSize(#IDouble) = 52;
+mantissaSize(#IFloat) = 23;
+mantissaSize(#LongDouble) = 64;
+mantissaSize(#Double) = 52;
+mantissaSize(#Float) = 23;
 
 define mantissaMask;
-overload mantissaMask(#ILongDouble) = 0xFFFF_FFFF_FFFF_FFFFul;
-overload mantissaMask(#IDouble) = 0x000F_FFFF_FFFF_FFFFul;
-overload mantissaMask(#IFloat) = 0x007F_FFFFu;
-overload mantissaMask(#LongDouble) = 0xFFFF_FFFF_FFFF_FFFFul;
-overload mantissaMask(#Double) = 0x000F_FFFF_FFFF_FFFFul;
-overload mantissaMask(#Float) = 0x007F_FFFFu;
+mantissaMask(#ILongDouble) = 0xFFFF_FFFF_FFFF_FFFFul;
+mantissaMask(#IDouble) = 0x000F_FFFF_FFFF_FFFFul;
+mantissaMask(#IFloat) = 0x007F_FFFFu;
+mantissaMask(#LongDouble) = 0xFFFF_FFFF_FFFF_FFFFul;
+mantissaMask(#Double) = 0x000F_FFFF_FFFF_FFFFul;
+mantissaMask(#Float) = 0x007F_FFFFu;
 
 define exponentSize;
-overload exponentSize(#ILongDouble) = 15;
-overload exponentSize(#IDouble) = 11;
-overload exponentSize(#IFloat) = 8;
-overload exponentSize(#LongDouble) = 15;
-overload exponentSize(#Double) = 11;
-overload exponentSize(#Float) = 8;
+exponentSize(#ILongDouble) = 15;
+exponentSize(#IDouble) = 11;
+exponentSize(#IFloat) = 8;
+exponentSize(#LongDouble) = 15;
+exponentSize(#Double) = 11;
+exponentSize(#Float) = 8;
 
 define exponentMask;
-overload exponentMask(#ILongDouble) = 0x7FFFul;
-overload exponentMask(#IDouble) = 0x7FFul;
-overload exponentMask(#IFloat) = 0xFFu;
-overload exponentMask(#LongDouble) = 0x7FFFul;
-overload exponentMask(#Double) = 0x7FFul;
-overload exponentMask(#Float) = 0xFFu;
+exponentMask(#ILongDouble) = 0x7FFFul;
+exponentMask(#IDouble) = 0x7FFul;
+exponentMask(#IFloat) = 0xFFu;
+exponentMask(#LongDouble) = 0x7FFFul;
+exponentMask(#Double) = 0x7FFul;
+exponentMask(#Float) = 0xFFu;
 
 define signMask;
-overload signMask(#ILongDouble) = 0x8000ul;
-overload signMask(#IDouble) = 0x8000_0000_0000_0000_ul;
-overload signMask(#IFloat) = 0x8000_0000_ul;
-overload signMask(#LongDouble) = 0x8000ul;
-overload signMask(#Double) = 0x8000_0000_0000_0000_ul;
-overload signMask(#Float) = 0x8000_0000_u;
+signMask(#ILongDouble) = 0x8000ul;
+signMask(#IDouble) = 0x8000_0000_0000_0000_ul;
+signMask(#IFloat) = 0x8000_0000_ul;
+signMask(#LongDouble) = 0x8000ul;
+signMask(#Double) = 0x8000_0000_0000_0000_ul;
+signMask(#Float) = 0x8000_0000_u;
 
 define floatMantissaZero;
-overload floatMantissaZero(#ILongDouble) = 0x8000_0000_0000_0000_ul;
-overload floatMantissaZero(#IDouble) = 0x0000_0000_0000_0000_ul;
-overload floatMantissaZero(#IFloat) = 0x0000_0000_u;
-overload floatMantissaZero(#LongDouble) = 0x8000_0000_0000_0000_ul;
-overload floatMantissaZero(#Double) = 0x0000_0000_0000_0000_ul;
-overload floatMantissaZero(#Float) = 0x0000_0000_u;
+floatMantissaZero(#ILongDouble) = 0x8000_0000_0000_0000_ul;
+floatMantissaZero(#IDouble) = 0x0000_0000_0000_0000_ul;
+floatMantissaZero(#IFloat) = 0x0000_0000_u;
+floatMantissaZero(#LongDouble) = 0x8000_0000_0000_0000_ul;
+floatMantissaZero(#Double) = 0x0000_0000_0000_0000_ul;
+floatMantissaZero(#Float) = 0x0000_0000_u;
 
 define signbit;
-overload signbit(x:ILongDouble) = Int(bitshr(floatBits(x).exponent,15));
-overload signbit(x:IDouble) = Int(bitshr(floatBits(x),63));
-overload signbit(x:IFloat) = Int(bitshr(floatBits(x),31));
-overload signbit(x:LongDouble) = Int(bitshr(floatBits(x).exponent,15));
-overload signbit(x:Double) = Int(bitshr(floatBits(x),63));
-overload signbit(x:Float) = Int(bitshr(floatBits(x),31));
+signbit(x:ILongDouble) = Int(bitshr(floatBits(x).exponent,15));
+signbit(x:IDouble) = Int(bitshr(floatBits(x),63));
+signbit(x:IFloat) = Int(bitshr(floatBits(x),31));
+signbit(x:LongDouble) = Int(bitshr(floatBits(x).exponent,15));
+signbit(x:Double) = Int(bitshr(floatBits(x),63));
+signbit(x:Float) = Int(bitshr(floatBits(x),31));
 
 define floatBitsUnsigned;
-overload floatBitsUnsigned(x:ILongDouble) {
+floatBitsUnsigned(x:ILongDouble) {
     var tmp = floatBits(x);
     tmp.exponent = bitand(tmp.exponent,0x7FFFu);
     return tmp;
 }
-overload floatBitsUnsigned(x:IDouble) = bitand(floatBits(x),0x7FFF_FFFF_FFFF_FFFFul);
-overload floatBitsUnsigned(x:IFloat) = bitand(floatBits(x),0x7FFF_FFFFu);
-overload floatBitsUnsigned(x:LongDouble) {
+floatBitsUnsigned(x:IDouble) = bitand(floatBits(x),0x7FFF_FFFF_FFFF_FFFFul);
+floatBitsUnsigned(x:IFloat) = bitand(floatBits(x),0x7FFF_FFFFu);
+floatBitsUnsigned(x:LongDouble) {
     var tmp = floatBits(x);
     tmp.exponent = bitand(tmp.exponent,0x7FFFu);
     return tmp;
 }
-overload floatBitsUnsigned(x:Double) = bitand(floatBits(x),0x7FFF_FFFF_FFFF_FFFFul);
-overload floatBitsUnsigned(x:Float) = bitand(floatBits(x),0x7FFF_FFFFu);
+floatBitsUnsigned(x:Double) = bitand(floatBits(x),0x7FFF_FFFF_FFFF_FFFFul);
+floatBitsUnsigned(x:Float) = bitand(floatBits(x),0x7FFF_FFFFu);
 
 
 define finite?;
@@ -231,11 +231,11 @@ define nan?;
 define subnormal?;
 define normalized?;
 
-[T when Float?(T) or Imaginary?(T)] overload finite?(x:T) = floatExponent(x) != exponentMask(T);
-[T when Float?(T) or Imaginary?(T)] overload infinity?(x:T) = floatExponent(x) == exponentMask(T) and floatMantissa(x)==0;
-[T when Float?(T) or Imaginary?(T)] overload positiveInfinity?(x:T) = x == infinity(T);
-[T when Float?(T) or Imaginary?(T)] overload negativeInfinity?(x:T) = x == negativeInfinity(T);
-[T when Float?(T) or Imaginary?(T)] overload nan?(x:T) = floatExponent(x) == exponentMask(T) and floatMantissa(x)!=0;
+[T when Float?(T) or Imaginary?(T)] finite?(x:T) = floatExponent(x) != exponentMask(T);
+[T when Float?(T) or Imaginary?(T)] infinity?(x:T) = floatExponent(x) == exponentMask(T) and floatMantissa(x)==0;
+[T when Float?(T) or Imaginary?(T)] positiveInfinity?(x:T) = x == infinity(T);
+[T when Float?(T) or Imaginary?(T)] negativeInfinity?(x:T) = x == negativeInfinity(T);
+[T when Float?(T) or Imaginary?(T)] nan?(x:T) = floatExponent(x) == exponentMask(T) and floatMantissa(x)!=0;
 [T when Float?(T) or Imaginary?(T)] qnan?(x:T) {
     var m = floatMantissa(x);
     return floatExponent(x) == exponentMask(T) and m!=0 and bitshr(m,mantissaSize(T)-1)==1;
@@ -244,6 +244,6 @@ define normalized?;
     var m = floatMantissa(x);
     return floatExponent(x) == exponentMask(T) and m!=0 and bitshr(m,mantissaSize(T)-1)==0;
 }
-[T when Float?(T) or Imaginary?(T)] overload subnormal?(x:T) = floatExponent(x)==T(0) and x!=T(0);
-[T when Float?(T) or Imaginary?(T)] overload normalized?(x:T) = not subnormal?(x) and finite?(x);
+[T when Float?(T) or Imaginary?(T)] subnormal?(x:T) = floatExponent(x)==T(0) and x!=T(0);
+[T when Float?(T) or Imaginary?(T)] normalized?(x:T) = not subnormal?(x) and finite?(x);
 

@@ -1952,6 +1952,7 @@ struct Overload : public TopLevelItem {
     PatternPtr callablePattern;
     vector<PatternPtr> argPatterns;
     MultiPatternPtr varArgPattern;
+    Visibility vis; // Used for procedure visibility
     InlineAttribute isInline:3;
     int patternsInitializedState:2; // 0:notinit, -1:initing, +1:inited
     bool callByName:1;
@@ -1963,6 +1964,15 @@ struct Overload : public TopLevelItem {
              InlineAttribute isInline)
         : TopLevelItem(OVERLOAD, module), target(target), code(code),
           isInline(isInline), patternsInitializedState(0),
+          callByName(callByName), nameIsPattern(false) {}
+
+    Overload(Module *module, ExprPtr target,
+             CodePtr code,
+             bool callByName,
+             InlineAttribute isInline,
+             Visibility vis)
+        : TopLevelItem(OVERLOAD, module), target(target), code(code),
+          isInline(isInline), vis(vis), patternsInitializedState(0),
           callByName(callByName), nameIsPattern(false) {}
 };
 
@@ -2353,6 +2363,7 @@ struct ModuleLookup {
 struct Module : public ANode {
     enum InitState {
         BEFORE,
+        SECOND,
         RUNNING,
         DONE
     };
@@ -2376,10 +2387,11 @@ struct Module : public ANode {
     FloatTypePtr attrDefaultFloatType;
 
     llvm::StringMap<ImportSet> publicSymbols;
-
     llvm::StringMap<ImportSet> allSymbols;
 
     set<string> importedNames;
+    set<string> importedStarNames;
+    set<string> publicNames;
 
     int publicSymbolsLoading:3;
     int allSymbolsLoading:3;

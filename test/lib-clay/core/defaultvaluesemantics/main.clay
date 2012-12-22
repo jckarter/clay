@@ -5,23 +5,23 @@ import test.memory.(Canary, checkCanariesDestroyed);
 // a throwing or nonthrowing copy constructor
 
 record NonthrowingCopy (c:Canary);
-overload RegularRecord?(#NonthrowingCopy) = false;
-overload CopyDoesNotThrowType?(#NonthrowingCopy) = true;
-overload NonthrowingCopy() = initializeRecord(NonthrowingCopy);
-overload NonthrowingCopy(x:NonthrowingCopy) = copyRecord(x);
-overload moveUnsafe(x:NonthrowingCopy) = moveRecordUnsafe(x);
-overload resetUnsafe(x:NonthrowingCopy) { resetRecordUnsafe(x); }
-overload destroy(x:NonthrowingCopy) { destroyRecord(x); }
+RegularRecord?(#NonthrowingCopy) = false;
+CopyDoesNotThrowType?(#NonthrowingCopy) = true;
+NonthrowingCopy() = initializeRecord(NonthrowingCopy);
+NonthrowingCopy(x:NonthrowingCopy) = copyRecord(x);
+moveUnsafe(x:NonthrowingCopy) = moveRecordUnsafe(x);
+resetUnsafe(x:NonthrowingCopy) { resetRecordUnsafe(x); }
+destroy(x:NonthrowingCopy) { destroyRecord(x); }
 
 record ThrowingCopy (c:Canary);
-overload RegularRecord?(#ThrowingCopy) = false;
-overload CopyDoesNotThrowType?(#ThrowingCopy) = false;
-overload ThrowingCopy() = initializeRecord(ThrowingCopy, Canary(true));
-overload ThrowingCopy(throw?) = initializeRecord(ThrowingCopy, Canary(throw?));
-overload ThrowingCopy(x:ThrowingCopy) = copyRecord(x);
-overload moveUnsafe(x:ThrowingCopy) = moveRecordUnsafe(x);
-overload resetUnsafe(x:ThrowingCopy) { resetRecordUnsafe(x); }
-overload destroy(x:ThrowingCopy) { destroyRecord(x); }
+RegularRecord?(#ThrowingCopy) = false;
+CopyDoesNotThrowType?(#ThrowingCopy) = false;
+ThrowingCopy() = initializeRecord(ThrowingCopy, Canary(true));
+ThrowingCopy(throw?) = initializeRecord(ThrowingCopy, Canary(throw?));
+ThrowingCopy(x:ThrowingCopy) = copyRecord(x);
+moveUnsafe(x:ThrowingCopy) = moveRecordUnsafe(x);
+resetUnsafe(x:ThrowingCopy) { resetRecordUnsafe(x); }
+destroy(x:ThrowingCopy) { destroyRecord(x); }
 
 tryNonthrowing() {
     var a = NonthrowingCopy();

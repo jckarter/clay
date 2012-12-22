@@ -7,7 +7,7 @@ record Address (
     age : Int,
 );
 
-overload printTo(stream, x:Address) {
+printTo(stream, x:Address) {
     print("Address(",
           "name=", x.name,
           ", email=", x.email,

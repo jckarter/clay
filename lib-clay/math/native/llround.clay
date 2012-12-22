@@ -4,7 +4,7 @@ import math.native.kernel.ieee754.*;
 
 define llround;
 
-overload llround(x:Float) {
+llround(x:Float) {
     var result = 0l;
     var i = floatBits(x);
     var j0 = bitand(bitshr(i,23),0xffu) - 0x7fu;
@@ -28,7 +28,7 @@ overload llround(x:Float) {
 }
 
 
-overload llround (x:Double ) {
+llround (x:Double ) {
     var result = 0l;
     var xdb = ieee_db(x);
     var j0 = bitand(bitshr(xdb.0[1] , 20) , 0x7ffu) - 0x3ffu;

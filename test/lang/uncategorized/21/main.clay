@@ -5,16 +5,16 @@ record Foo (
     value:Int
 );
 
-overload Foo() = Foo(0);
+Foo() = Foo(0);
 
-overload Foo(value:Int) --> returned:Foo {
+Foo(value:Int) --> returned:Foo {
     returned.value = value;
     println("constructed value = ", returned.value);
 }
 
-overload Foo(f:Foo) = Foo(f.value);
+Foo(f:Foo) = Foo(f.value);
 
-overload destroy(f:Foo) {
+destroy(f:Foo) {
     println("destroyed value = ", f.value);
 }
 

@@ -7,11 +7,11 @@ import data.sequences.handle.*;
 
 define wrapSequence;
 
-forceinline overload wrapSequence(rvalue x) = move(x);
-forceinline overload wrapSequence(ref x) = sequenceHandle(x);
+forceinline wrapSequence(rvalue x) = move(x);
+forceinline wrapSequence(ref x) = sequenceHandle(x);
 
 [A when LightweightSequence?(A)]
-forceinline overload wrapSequence(ref x:A) = x;
+forceinline wrapSequence(ref x:A) = x;
 
 
 

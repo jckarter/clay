@@ -1,5 +1,5 @@
 foo() {}
 
-overload foo(x) {}
+foo(x) {}
 
 main() {}

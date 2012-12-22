@@ -2,15 +2,15 @@ import printer.(println);
 
 define printValue;
 
-overload printValue(x:Int32) {
+printValue(x:Int32) {
     println("int value = ", x);
 }
 
-overload printValue(x:UInt32) {
+printValue(x:UInt32) {
     println("uint value = ", x);
 }
 
-overload printValue(x:Float64) {
+printValue(x:Float64) {
     println("double value = ", x);
 }
 

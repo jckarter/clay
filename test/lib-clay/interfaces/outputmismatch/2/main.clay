@@ -3,11 +3,11 @@ import printer.(println);
 [T] define byval(x:T) : T;
 [T] define byref(ref x:T) : ByRef[T];
 
-overload byval(x:Int) = ref x;
-overload byval(x:Double) = x;
+byval(x:Int) = ref x;
+byval(x:Double) = x;
 
-overload byref(ref x:Int) = ref x;
-overload byref(ref x:Double) = x;
+byref(ref x:Int) = ref x;
+byref(ref x:Double) = x;
 
 main() {
     println(byval(1));

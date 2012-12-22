@@ -5,7 +5,6 @@
 
 namespace clay {
 
-
 extern llvm::StringMap<ModulePtr> globalModules;
 extern llvm::StringMap<string> globalFlags;
 extern ModulePtr globalMainModule;
@@ -29,7 +28,7 @@ void addGlobals(ModulePtr m, llvm::ArrayRef<TopLevelItemPtr> toplevels);
 void loadDependent(ModulePtr m, vector<string> *sourceFiles, ImportPtr dependent, bool verbose);
 void initModule(ModulePtr m);
 
-
+typedef llvm::StringMap<ObjectPtr>::iterator MapIter;
 
 //
 // PrimOp

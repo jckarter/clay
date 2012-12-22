@@ -14,7 +14,7 @@ captured_catch_type(T, v) = () => {
 
 record OtherException (what: StringLiteralRef);
 instance Exception (OtherException);
-overload printTo(stream, x:OtherException) {
+printTo(stream, x:OtherException) {
     printTo(stream, "<OtherException ", x.what, ">");
 }
 

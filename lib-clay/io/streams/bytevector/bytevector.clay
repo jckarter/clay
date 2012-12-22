@@ -6,7 +6,7 @@ public import io.streams.protocol.*;
 /// @section  write, flush - write to ByteVector 
 
 [V when ByteVector?(V)]
-overload writeBytes(stream:V, buf:Pointer[Byte], n:SizeT) {
+writeBytes(stream:V, buf:Pointer[Byte], n:SizeT) {
     var currentSize = size(stream);
     resize(stream, currentSize + n);
     var dest = Pointer[Byte](begin(stream)) + currentSize;
@@ -15,7 +15,7 @@ overload writeBytes(stream:V, buf:Pointer[Byte], n:SizeT) {
 }
 
 [V when ByteVector?(V)]
-overload flush(stream:V) {
+flush(stream:V) {
 }
 
 staticassert(OutputStream?(Vector[Char]));

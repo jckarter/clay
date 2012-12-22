@@ -41,10 +41,10 @@ private usage(..commandTuples) {
 private define commandName;
 
 [fn when CallDefined?(fn, Vector[String])]
-overload commandName(#fn) = StaticName(fn);
+commandName(#fn) = StaticName(fn);
 
 [fn, ..Description when CallDefined?(fn, Vector[String])]
-overload commandName(commandTuple: Tuple[Static[fn], ..Description])
+commandName(commandTuple: Tuple[Static[fn], ..Description])
     = StaticName(commandTuple.0);
 
 [
@@ -52,16 +52,16 @@ overload commandName(commandTuple: Tuple[Static[fn], ..Description])
     when String?(Name)
       and CallDefined?(call, Callable, Vector[String])
 ]
-overload commandName(commandTuple: Tuple[Name, Callable, ..Description])
+commandName(commandTuple: Tuple[Name, Callable, ..Description])
     = commandTuple.0;
 
 private define commandFunction;
 
 [fn when CallDefined?(fn, Vector[String])]
-overload commandFunction(#fn) = fn;
+commandFunction(#fn) = fn;
 
 [fn, ..Description when CallDefined?(fn, Vector[String])]
-overload commandFunction(commandTuple: Tuple[Static[fn], ..Description])
+commandFunction(commandTuple: Tuple[Static[fn], ..Description])
     = commandTuple.0;
 
 [
@@ -69,17 +69,17 @@ overload commandFunction(commandTuple: Tuple[Static[fn], ..Description])
     when String?(Name)
       and CallDefined?(call, Callable, Vector[String])
 ]
-overload commandFunction(commandTuple: Tuple[Name, Callable, ..Description])
+commandFunction(commandTuple: Tuple[Name, Callable, ..Description])
     = commandTuple.1;
 
 private define commandDescription;
 
 [fn when CallDefined?(fn, Vector[String])]
-overload commandDescription(#fn)
+commandDescription(#fn)
     = ;
 
 [fn, ..Description when CallDefined?(fn, Vector[String])]
-overload commandDescription(commandTuple: Tuple[Static[fn], ..Description])
+commandDescription(commandTuple: Tuple[Static[fn], ..Description])
     = ..dropValues(#1, ..unpack(commandTuple));
 
 [
@@ -87,7 +87,7 @@ overload commandDescription(commandTuple: Tuple[Static[fn], ..Description])
     when String?(Name)
       and CallDefined?(call, Callable, Vector[String])
 ]
-overload commandDescription(commandTuple: Tuple[Name, Callable, ..Description])
+commandDescription(commandTuple: Tuple[Name, Callable, ..Description])
     = ..dropValues(#2, ..unpack(commandTuple));
 
 private commandTypeReturnCount(T)
@@ -96,11 +96,11 @@ private commandTypeReturnCount(T)
 private define invokeCommand;
 
 [CommandTuple when commandTypeReturnCount(CommandTuple) == 1]
-overload invokeCommand(commandTuple: CommandTuple, args)
+invokeCommand(commandTuple: CommandTuple, args)
     = commandFunction(commandTuple)(args);
 
 [CommandTuple when commandTypeReturnCount(CommandTuple) == 0]
-overload invokeCommand(commandTuple: CommandTuple, args) {
+invokeCommand(commandTuple: CommandTuple, args) {
     commandFunction(commandTuple)(args);
     return 0;
 }

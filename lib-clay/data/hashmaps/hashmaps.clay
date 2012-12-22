@@ -22,7 +22,7 @@ private record Node[K,V] (
 /// @section  default constructor 
 
 [K,V]
-overload HashMap[K,V]() --> returned:HashMap[K,V] {
+HashMap[K,V]() --> returned:HashMap[K,V] {
     returned.buckets <-- Vector[NodePtr[K,V]]();
     returned.size = 0;
 
@@ -39,7 +39,7 @@ overload HashMap[K,V]() --> returned:HashMap[K,V] {
 /// @section  clear 
 
 [K,V]
-forceinline overload clear(a:HashMap[K,V]) {
+forceinline clear(a:HashMap[K,V]) {
     a.size = 0;
     for (bucket in a.buckets)
         bucket = nullUniqueValue(Node[K,V]);
@@ -50,14 +50,14 @@ forceinline overload clear(a:HashMap[K,V]) {
 /// @section  size 
 
 [K,V]
-overload size(a:HashMap[K,V]) = a.size;
+size(a:HashMap[K,V]) = a.size;
 
 
 
 /// @section  lookup 
 
 [K,V]
-overload lookup(a:HashMap[K,V], key:K) {
+lookup(a:HashMap[K,V], key:K) {
     var i = bucketId(a, key);
     return findInBucket(a.buckets[i], key);
 }
@@ -67,7 +67,7 @@ overload lookup(a:HashMap[K,V], key:K) {
 /// @section  put 
 
 [K,V]
-overload put(a:HashMap[K,V], key:K, forward value:V) {
+put(a:HashMap[K,V], key:K, forward value:V) {
     var i = bucketId(a, key);
     var ptr = findInBucket(a.buckets[i], key);
     if (not null?(ptr)) {
@@ -87,7 +87,7 @@ overload put(a:HashMap[K,V], key:K, forward value:V) {
 /// @section  index 
 
 [K,V]
-overload index(a:HashMap[K,V], key:K) {
+index(a:HashMap[K,V], key:K) {
     var i = bucketId(a, key);
     var ptr = findInBucket(a.buckets[i], key);
     if (not null?(ptr))
@@ -107,7 +107,7 @@ overload index(a:HashMap[K,V], key:K) {
 /// @section  remove 
 
 [K,V]
-overload remove(a:HashMap[K,V], key:K) {
+remove(a:HashMap[K,V], key:K) {
     var i = bucketId(a, key);
     var prevNode = null(Node[K,V]);
     var node = @a.buckets[i]^;
@@ -132,7 +132,7 @@ overload remove(a:HashMap[K,V], key:K) {
 /// @section  items 
 
 [K,V]
-overload items(forward a:HashMap[K,V]) = HashMapItems(captureValue(a), K, V);
+items(forward a:HashMap[K,V]) = HashMapItems(captureValue(a), K, V);
 
 private record HashMapItems[CapturedMap,K,V] =
     map: CapturedMap,
@@ -142,7 +142,7 @@ private record HashMapItems[CapturedMap,K,V] =
 private record HashMapItem[K,V] (node : WeakNodePtr[K,V]);
 
 [CapturedMap,K,V]
-overload HashMapItems(forward captured:CapturedMap, #K, #V)
+HashMapItems(forward captured:CapturedMap, #K, #V)
     --> returned:HashMapItems[CapturedMap,K,V]
 {
     returned.map <-- captured;
@@ -152,10 +152,10 @@ overload HashMapItems(forward captured:CapturedMap, #K, #V)
 }
 
 [C,K,V]
-overload iterator(x:HashMapItems[C,K,V]) = x;
+iterator(x:HashMapItems[C,K,V]) = x;
 
 [C,K,V]
-overload nextValue(x:HashMapItems[C,K,V]) {
+nextValue(x:HashMapItems[C,K,V]) {
     if (not null?(x.node))
         x.node = @x.node^.next^;
     while (null?(x.node) and not empty?(x.bucketsIter))
@@ -164,16 +164,16 @@ overload nextValue(x:HashMapItems[C,K,V]) {
 }
 
 [K,V]
-overload hasValue?(x:HashMapItem[K,V]) = not null?(x.node);
+hasValue?(x:HashMapItem[K,V]) = not null?(x.node);
 
 [K,V]
-overload getValue(x:HashMapItem[K,V]) = ref x.node^.key, x.node^.value;
+getValue(x:HashMapItem[K,V]) = ref x.node^.key, x.node^.value;
 
 
 /// @section  assignment 
 
 [K,V]
-overload assign(ref to: HashMap[K,V], ref from: HashMap[K,V]) {
+assign(ref to: HashMap[K,V], ref from: HashMap[K,V]) {
     var tmp = from;
     destroy(to);
     to <-- move(tmp);
@@ -219,7 +219,7 @@ private grow(a:HashMap[K,V]) {
 /// @section  printTo - HashMap 
 
 [K,V]
-overload printTo(stream, x:HashMap[K,V]) {
+printTo(stream, x:HashMap[K,V]) {
     printReprTo(stream, x);
 }
 
@@ -227,7 +227,7 @@ overload printTo(stream, x:HashMap[K,V]) {
 /// @section  printReprTo - HashMap 
 
 [K, V]
-overload printReprTo(stream, x:HashMap[K,V]) {
+printReprTo(stream, x:HashMap[K,V]) {
     printTo(stream, HashMap[K,V], '(');
     var first = true;
     for (k, v in items(x)) {

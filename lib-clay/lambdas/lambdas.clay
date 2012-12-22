@@ -14,26 +14,26 @@ record Function[In,Out] (
 /* this comes before Function[In, Out] so that the shim isn't constructed if the object
    natively returns no values */
 [..In, T when CallDefined?(call, T, ..In)]
-alias overload Function[[..In], []](x:T) {
+alias Function[[..In], []](x:T) {
     return Function[[..In],[]](new(FunctionBody[[..In],[]]((forward ..args) => { x(..args); })));
 }
 
 [In, Out, T when CallableWithSignature?(T, In, Out)]
-alias overload Function[In, Out](x:T) {
+alias Function[In, Out](x:T) {
     return Function[In,Out](new(FunctionBody[In,Out](x)));
 }
 
 [T when MonoType?(T)]
-alias overload Function(x:T) {
+alias Function(x:T) {
     return Function[[..MonoInputTypes(x)],[..MonoOutputTypes(x)]](x);
 }
 
 [T] private define CallableWithSignature?(#T, In, Out) : Bool;
 
-[T] overload CallableWithSignature?(#T, In, Out) = false;
+[T] CallableWithSignature?(#T, In, Out) = false;
 
 [T, I, O when CallDefined?(call, T, ..unpack(I()))]
-overload CallableWithSignature?(#T, In:I, Out:O) {
+CallableWithSignature?(#T, In:I, Out:O) {
     var CodePtr = Type(makeCodePointer(call, T, ..unpack(In)));
     return Out == CodePointerReturnTypes(CodePtr);
 }
@@ -46,12 +46,12 @@ private CodePointerReturnTypes(#CodePointer[In,[..Out]]) = [..Out];
 // redefine constructors shadowed by the primary constructor
 
 [In,Out]
-alias overload Function[In,Out](body : SharedPointer[FunctionBody[In,Out]]) --> returned:Function[In,Out] {
+alias Function[In,Out](body : SharedPointer[FunctionBody[In,Out]]) --> returned:Function[In,Out] {
     returned.body <-- body;
 }
 
 [In,Out]
-overload Function[In,Out](x : Function[In,Out]) --> returned:Function[In,Out] {
+Function[In,Out](x : Function[In,Out]) --> returned:Function[In,Out] {
     returned.body <-- x.body;
 }
 
@@ -69,12 +69,12 @@ makeFunction(forward x:T, ..In) {
 // call operator
 
 [..I, ..O]
-overload call(x:Function[[..I], [..O]], forward ..args:I) : ..O {
+call(x:Function[[..I], [..O]], forward ..args:I) : ..O {
     return forward call(x.body^, ..args);
 }
 
 [..I, ..O]
-alias overload MonoInputTypes(x:Function[[..I], [..O]]) = ..I;
+alias MonoInputTypes(x:Function[[..I], [..O]]) = ..I;
 
 
 /// @section  FunctionBody 
@@ -86,12 +86,12 @@ record FunctionBody[In, Out] (
 );
 
 [..I, ..O]
-overload call(x:FunctionBody[[..I], [..O]], forward ..args:I) : ..O {
+call(x:FunctionBody[[..I], [..O]], forward ..args:I) : ..O {
     return forward ..x.code(x.obj^, ..args);
 }
 
 [..I, ..O, T]
-alias overload FunctionBody[[..I],[..O]](x:T) --> returned:FunctionBody[[..I],[..O]] {
+alias FunctionBody[[..I],[..O]](x:T) --> returned:FunctionBody[[..I],[..O]] {
     var codePtr = makeCodePointer(call, T, ..I);
     var destructor = makeCodePointer(destroy, T);
     returned.code = CodePointer[[Opaque, ..I], [..O]](codePtr);
@@ -109,7 +109,7 @@ alias overload FunctionBody[[..I],[..O]](x:T) --> returned:FunctionBody[[..I],[.
 }
 
 [In, Out]
-overload destroy(x:FunctionBody[In, Out]) {
+destroy(x:FunctionBody[In, Out]) {
     x.destructor(x.obj^);
     freeRawMemoryAligned(x.obj);
 }

@@ -3,10 +3,10 @@ import printer.(println);
 record Foo[A](inner: A);
 
 [A]
-overload index(x:Foo[A], i) = x.inner[i] + 1;
+index(x:Foo[A], i) = x.inner[i] + 1;
 
 [A]
-overload indexAssign(x:Foo[A], i, v) { x.inner[i] = v-1; }
+indexAssign(x:Foo[A], i, v) { x.inner[i] = v-1; }
 
 main() {
     var a = Foo(array(1, 2, 3));

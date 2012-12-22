@@ -7,16 +7,16 @@ import threads.threadlocal.platform.(
 );
 
 record ThreadLocal[T] (_handle:TLSHandle);
-[T] overload RegularRecord?(#ThreadLocal[T]) = false;
+[T] RegularRecord?(#ThreadLocal[T]) = false;
 
 [T] private destructor(#T) =
     CCodePointer((p:RawPointer) -> { freeObject(Pointer[T](p)); });
 
-[T] overload ThreadLocal[T]() =
+[T] ThreadLocal[T]() =
     initializeRecord(ThreadLocal[T], makeTLSHandle(destructor(T)));
-[T] overload destroy(tl:ThreadLocal[T]) { deleteTLSHandle(tl._handle); }
+[T] destroy(tl:ThreadLocal[T]) { deleteTLSHandle(tl._handle); }
 
-[T] overload dereference(tl:ThreadLocal[T])
+[T] dereference(tl:ThreadLocal[T])
 {
     var p = Pointer[T](getTLS(tl._handle));
     if (null?(p)) {

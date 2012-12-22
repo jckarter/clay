@@ -6,9 +6,9 @@ import math.native.constants.(M_PI);
 
 define maxGamma;
 
-overload maxGamma(#Float) = 35.04f;
-overload maxGamma(#Double) = 171.6025;
-overload maxGamma(#LongDouble) = 1755.5323977l;
+maxGamma(#Float) = 35.04f;
+maxGamma(#Double) = 171.6025;
+maxGamma(#LongDouble) = 1755.5323977l;
 
 private var signgam = 0;
 
@@ -245,15 +245,15 @@ gamma_r (x:Double, signgamp:Pointer[Int]) {
 }
 
 
-overload lgamma(x:Double) = lgamma_r(x,@signgam);
+lgamma(x:Double) = lgamma_r(x,@signgam);
 
 define tgamma;
 
-overload tgamma(x:Double) = gamma_r(x,@signgam);
+tgamma(x:Double) = gamma_r(x,@signgam);
 
 
-overload lgamma(x:Float) = Float(lgamma(Double(x)));
+lgamma(x:Float) = Float(lgamma(Double(x)));
 
-overload tgamma(x:Float) = Float(tgamma(Double(x)));
+tgamma(x:Float) = Float(tgamma(Double(x)));
 
 alias gamma = tgamma;

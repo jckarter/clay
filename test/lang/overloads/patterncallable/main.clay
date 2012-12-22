@@ -4,13 +4,13 @@ square(x:Double) : Double = x * x;
 cube(x:Double) : Double = x * x * x;
 
 define diverge;
-overload diverge(x:Double) : Double = x + 1;
-overload diverge(x:Float) : Float = x - 1;
+diverge(x:Double) : Double = x + 1;
+diverge(x:Float) : Float = x - 1;
 
 // Should only match square(Float) or cube(Float) since pattern overloads
 // linearize after symbol overloads
 [F when F == square or F == cube or F == diverge]
-overload F(x:Float) : Float = Float(F(Double(x)));
+F(x:Float) : Float = Float(F(Double(x)));
 
 main() {
     println(square(2.0f));

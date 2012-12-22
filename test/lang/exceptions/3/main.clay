@@ -8,13 +8,13 @@ record Test (
     x: Int
 );
 
-overload Test(v, x) --> returned:Test{
+Test(v, x) --> returned:Test{
     if (v)
         throw 1;
     returned.x = x;
 } 
 
-overload destroy(t:Test) {
+destroy(t:Test) {
     println("Destroyed ", t.x);
 }
 

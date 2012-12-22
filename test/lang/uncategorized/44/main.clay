@@ -1,9 +1,9 @@
 import printer.(println);
 
 define wrap;
-overload wrap(rvalue first, forward ..rest) = first, ..wrap(..rest);
-overload wrap(ref first, forward ..rest) = @first, ..wrap(..rest);
-overload wrap() = ;
+wrap(rvalue first, forward ..rest) = first, ..wrap(..rest);
+wrap(ref first, forward ..rest) = @first, ..wrap(..rest);
+wrap() = ;
 
 main() {
     var x = 10;

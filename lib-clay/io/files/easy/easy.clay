@@ -26,16 +26,16 @@ private record FileData (
 /// @section  constructors 
 
 [S when CCompatibleString?(S)]
-overload File(path:S, mode:OpenMode) =
+File(path:S, mode:OpenMode) =
     File(new(FileData(RawFile(path, mode))));
 
 [S when CCompatibleString?(S)]
-overload File(path:S) = File(new(FileData(RawFile(path))));
+File(path:S) = File(new(FileData(RawFile(path))));
 
-overload File(rvalue f:RawFile) =
+File(rvalue f:RawFile) =
     File(new(FileData(move(f))));
 
-overload FileData(rvalue file:RawFile) {
+FileData(rvalue file:RawFile) {
     var lineBuffered? = terminal?(file);
     var file = RawFilePointer(move(file));
     return FileData(
@@ -55,31 +55,31 @@ stderrFile() = File(new(FileData(stderrRawFile())));
 
 /// @section  fileHandle 
 
-overload fileHandle(f:File) = fileHandle(f.ptr^.file);
+fileHandle(f:File) = fileHandle(f.ptr^.file);
 
 
 
 /// @section  read, write, flush 
 
-overload readBytes(f:File, buffer:Pointer[Byte], _requested:SizeT) =
+readBytes(f:File, buffer:Pointer[Byte], _requested:SizeT) =
     readBytes(f.ptr^.inputStream, buffer, _requested);
 
-overload writeBytes(f:File, buffer:Pointer[Byte], n:SizeT) =
+writeBytes(f:File, buffer:Pointer[Byte], n:SizeT) =
     writeBytes(f.ptr^.outputStream, buffer, n);
 
-overload flush(f:File) {
+flush(f:File) {
     flush(f.ptr^.outputStream);
 }
 
 
 /// @section  fileSize, seek 
 
-overload fileSize(f:File) {
+fileSize(f:File) {
     flush(f);
     return fileSize(f.ptr^.file);
 }
 
-overload seek(f:File, offset, whence) {
+seek(f:File, offset, whence) {
     flush(f);
     return seek(f.ptr^.file, offset, whence);
 }
@@ -88,7 +88,7 @@ overload seek(f:File, offset, whence) {
 
 /// @section  terminal? 
 
-overload terminal?(f:File) = terminal?(f.ptr^.file);
+terminal?(f:File) = terminal?(f.ptr^.file);
 
 
 

@@ -1,8 +1,8 @@
 import printer.(println);
 record Foo ();
 
-overload Foo() --> returned:Foo { println("constructing Foo"); }
-overload destroy(x:Foo) { println("destroying Foo"); }
+Foo() --> returned:Foo { println("constructing Foo"); }
+destroy(x:Foo) { println("destroying Foo"); }
 
 var foo = Foo();
 

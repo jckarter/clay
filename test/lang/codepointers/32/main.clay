@@ -14,12 +14,12 @@ alias Opaque = Int;
 
 define display;
 
-overload display(x) {
+display(x) {
     print(x);
 }
 
 [T]
-overload display(a:Vector[T]) {
+display(a:Vector[T]) {
     print("[");
     for (i in range(size(a))) {
         if (i != 0)
@@ -43,12 +43,12 @@ record Displayable (
     display : CodePointer[[Opaque],[]],
 );
 
-overload RegularRecord?(#Displayable) = false;
+RegularRecord?(#Displayable) = false;
 
 
 // primary constructor
 [T]
-overload Displayable(x:T) {
+Displayable(x:T) {
     var obj = allocateRawMemoryAligned(T, 1, TypeAlignment(T));
     obj^ <-- x;
     var destructor = makeCodePointer(destroy, T);
@@ -64,7 +64,7 @@ overload Displayable(x:T) {
 }
 
 // default constructor
-overload Displayable() {
+Displayable() {
     return Displayable(null(Opaque), SizeT(0), SizeT(0),
                        CodePointer[[Opaque],[]](0),
                        CodePointer[[Opaque],[Opaque]](0),
@@ -72,7 +72,7 @@ overload Displayable() {
 }
 
 // copy constructor
-overload Displayable(x:Displayable) {
+Displayable(x:Displayable) {
     var p = allocateRawMemoryAligned(Int8, x.size, x.alignment);
     var obj = Pointer[Opaque](p);
     obj^ <-- x.copyConstructor(x.obj^);
@@ -81,7 +81,7 @@ overload Displayable(x:Displayable) {
 }
 
 // moveUnsafe
-overload moveUnsafe(src:Displayable) --> returned:Displayable {
+moveUnsafe(src:Displayable) --> returned:Displayable {
     returned <-- Displayable(
         src.obj,
         src.size,
@@ -93,23 +93,23 @@ overload moveUnsafe(src:Displayable) --> returned:Displayable {
 }
 
 // resetUnsafe
-overload resetUnsafe(x:Displayable) {
+resetUnsafe(x:Displayable) {
     x <-- Displayable();
 }
 
 // destructor
-overload destroy(x:Displayable) {
+destroy(x:Displayable) {
     if (not null?(x.obj)) {
         x.destructor(x.obj^);
         freeRawMemoryAligned(x.obj);
     }
 }
 
-overload assign(dest:Displayable, ref src:Displayable) {
+assign(dest:Displayable, ref src:Displayable) {
     dest = copy(src);
 }
 
-overload display(x:Displayable) {
+display(x:Displayable) {
     x.display(x.obj^);
 }
 

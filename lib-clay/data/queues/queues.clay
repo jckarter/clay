@@ -5,9 +5,9 @@ record Queue[S] (seq: S);
 
 alias VectorQueue[T] = Queue[Vector[T]];
 
-[S] overload Queue[S]() = Queue(S());
+[S] Queue[S]() = Queue(S());
 
-[S] overload Queue(forward seq: S) --> returned: Queue[S] {
+[S] Queue(forward seq: S) --> returned: Queue[S] {
     returned.seq <-- seq;
     try {
         makeHeap(begin(returned.seq), end(returned.seq), lesser?);
@@ -18,7 +18,7 @@ alias VectorQueue[T] = Queue[Vector[T]];
 }
 
 [S, S2 when SequenceElementType(S) == SequenceElementType(S2)]
-overload Queue[S](forward seq: S2) --> returned: Queue[S] {
+Queue[S](forward seq: S2) --> returned: Queue[S] {
     returned.seq <-- S(seq);
     try {
         makeHeap(begin(returned.seq), end(returned.seq), lesser?);
@@ -29,7 +29,7 @@ overload Queue[S](forward seq: S2) --> returned: Queue[S] {
 }
 
 [S, ..A when countValues(..A) > 0 and equalValues?(SequenceElementType(S), ..A)]
-overload Queue[S](forward ..values: A) --> returned: Queue[S] {
+Queue[S](forward ..values: A) --> returned: Queue[S] {
     returned <-- Queue[S]();
     try {
         ..for (v in values)

@@ -17,7 +17,7 @@ vecElementRef(a:Vec[T,n], i:Int) --> returned:ByRef[T] __llvm__{
 define add;
 
 [T,n when Integer?(T)]
-overload add(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
+add(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %a
     %2 = load ${Vec[T,n]} * %b
     %3 = add ${Vec[T,n]} %1, %2
@@ -26,7 +26,7 @@ overload add(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 }
 
 [T,n when Float?(T)]
-overload add(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
+add(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %a
     %2 = load ${Vec[T,n]} * %b
     %3 = fadd ${Vec[T,n]} %1, %2
@@ -41,7 +41,7 @@ overload add(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 define subtract;
 
 [T,n when Integer?(T)]
-overload subtract(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
+subtract(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %a
     %2 = load ${Vec[T,n]} * %b
     %3 = sub ${Vec[T,n]} %1, %2
@@ -50,7 +50,7 @@ overload subtract(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 }
 
 [T,n when Float?(T)]
-overload subtract(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
+subtract(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %a
     %2 = load ${Vec[T,n]} * %b
     %3 = fsub ${Vec[T,n]} %1, %2
@@ -65,7 +65,7 @@ overload subtract(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 define multiply;
 
 [T,n when Integer?(T)]
-overload multiply(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
+multiply(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %a
     %2 = load ${Vec[T,n]} * %b
     %3 = mul ${Vec[T,n]} %1, %2
@@ -74,7 +74,7 @@ overload multiply(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 }
 
 [T,n when Float?(T)]
-overload multiply(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
+multiply(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %a
     %2 = load ${Vec[T,n]} * %b
     %3 = fmul ${Vec[T,n]} %1, %2
@@ -89,7 +89,7 @@ overload multiply(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 define divide;
 
 [T,n when SignedInteger?(T)]
-overload divide(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
+divide(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %a
     %2 = load ${Vec[T,n]} * %b
     %3 = sdiv ${Vec[T,n]} %1, %2
@@ -98,7 +98,7 @@ overload divide(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 }
 
 [T,n when UnsignedInteger?(T)]
-overload divide(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
+divide(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %a
     %2 = load ${Vec[T,n]} * %b
     %3 = udiv ${Vec[T,n]} %1, %2
@@ -107,7 +107,7 @@ overload divide(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 }
 
 [T,n when Float?(T)]
-overload divide(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
+divide(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %a
     %2 = load ${Vec[T,n]} * %b
     %3 = fdiv ${Vec[T,n]} %1, %2
@@ -122,7 +122,7 @@ overload divide(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 define remainder;
 
 [T,n when SignedInteger?(T)]
-overload remainder(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
+remainder(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %a
     %2 = load ${Vec[T,n]} * %b
     %3 = srem ${Vec[T,n]} %1, %2
@@ -131,7 +131,7 @@ overload remainder(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 }
 
 [T,n when UnsignedInteger?(T)]
-overload remainder(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
+remainder(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %a
     %2 = load ${Vec[T,n]} * %b
     %3 = urem ${Vec[T,n]} %1, %2
@@ -140,7 +140,7 @@ overload remainder(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 }
 
 [T,n when Float?(T)]
-overload remainder(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
+remainder(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %a
     %2 = load ${Vec[T,n]} * %b
     %3 = frem ${Vec[T,n]} %1, %2
@@ -155,7 +155,7 @@ overload remainder(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 define bitshl;
 
 [T,n when Integer?(T)]
-overload bitshl(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
+bitshl(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %a
     %2 = load ${Vec[T,n]} * %b
     %3 = shl ${Vec[T,n]} %1, %2
@@ -170,7 +170,7 @@ overload bitshl(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 define bitshr;
 
 [T,n when SignedInteger?(T)]
-overload bitshr(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
+bitshr(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %a
     %2 = load ${Vec[T,n]} * %b
     %3 = ashr ${Vec[T,n]} %1, %2
@@ -179,7 +179,7 @@ overload bitshr(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 }
 
 [T,n when UnsignedInteger?(T)]
-overload bitshr(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
+bitshr(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %a
     %2 = load ${Vec[T,n]} * %b
     %3 = lshr ${Vec[T,n]} %1, %2
@@ -191,6 +191,8 @@ overload bitshr(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
 
 /// @section  bitand, bitor, bitxor 
 
+define bitand;
+
 [T,n when Integer?(T)]
 bitand(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %a
@@ -200,6 +202,8 @@ bitand(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     ret i8* null
 }
 
+define bitor;
+
 [T,n when Integer?(T)]
 bitor(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     %1 = load ${Vec[T,n]} * %a
@@ -208,6 +212,8 @@ bitor(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{
     store ${Vec[T,n]} %3, ${Vec[T,n]} * %returned
     ret i8* null
 }
+
+define bitxor;
 
 [T,n when Integer?(T)]
 bitxor(a:Vec[T,n], b:Vec[T,n]) --> returned:Vec[T,n] __llvm__{

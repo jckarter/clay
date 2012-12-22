@@ -11,7 +11,7 @@ private record InnerFileMapping (
     length : SizeT,
 );
 
-overload RegularRecord?(#InnerFileMapping) = false;
+RegularRecord?(#InnerFileMapping) = false;
 
 record FileMapping (
     inner : SharedPointer[InnerFileMapping],
@@ -53,7 +53,7 @@ private modeFlags(mode) {
 }
 
 [A,B when Integer?(A,B)]
-overload FileMapping(f:File, mode:MappingMode, offset:A, length:B) {
+FileMapping(f:File, mode:MappingMode, offset:A, length:B) {
     var protection = modeProtection(mode);
     var flags = modeFlags(mode);
     var address = unix.mmap(
@@ -69,10 +69,10 @@ overload FileMapping(f:File, mode:MappingMode, offset:A, length:B) {
     return FileMapping(new(InnerFileMapping(address, SizeT(length))));
 }
 
-overload FileMapping(f:File, mode:MappingMode) =
+FileMapping(f:File, mode:MappingMode) =
     FileMapping(f, mode, 0, fileSize(f));
 
-overload destroy(x:InnerFileMapping) {
+destroy(x:InnerFileMapping) {
     var result = unix.munmap(x.address, x.length);
     assert(result != wrapCast(Type(result), -1));
 }

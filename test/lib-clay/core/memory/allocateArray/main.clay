@@ -19,8 +19,8 @@ main() {
 }
 
 record Foo (bar:Int);
-overload Foo() = Foo(0);
+Foo() = Foo(0);
 
-overload printTo(stream, x:Foo) {
+printTo(stream, x:Foo) {
     printTo(stream, x.bar);
 }

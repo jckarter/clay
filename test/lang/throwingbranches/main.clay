@@ -3,8 +3,8 @@ record FooException ();
 instance Exception (FooException);
 
 define foo;
-overload foo(x: Int) : Int { throw FooException(); }
-overload foo(x: Float) : Int { return 5; }
+foo(x: Int) : Int { throw FooException(); }
+foo(x: Float) : Int { return 5; }
 
 variant Foo (Int, Float);
 

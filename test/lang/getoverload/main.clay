@@ -2,10 +2,10 @@ import printer.(println);
 import data.strings.*;
 
 define foo;
-overload foo(x:Int) {
+foo(x:Int) {
     println("Int", x);
 }
-overload foo(x:Float) {
+foo(x:Float) {
     println("Float ", x);
 }
 

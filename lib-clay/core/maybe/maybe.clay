@@ -10,17 +10,17 @@ record Nothing ();
 /// @section  constructors 
 
 [T]
-forceinline overload Maybe(x:T) : Maybe[T] = Maybe[T](x);
+forceinline Maybe(x:T) : Maybe[T] = Maybe[T](x);
 
 [T]
-forceinline overload Maybe[T]() : Maybe[T] = Maybe[T](Nothing());
+forceinline Maybe[T]() : Maybe[T] = Maybe[T](Nothing());
 
 forceinline nothing(T) = Maybe[T]();
 
 [T]
 define Maybe?(#T) : Bool;
-overload Maybe?(T) : Bool = false;
-[T] overload Maybe?(#Maybe[T]) : Bool = true;
+Maybe?(T) : Bool = false;
+[T] Maybe?(#Maybe[T]) : Bool = true;
 
 
 /// @section  nothing? 
@@ -30,21 +30,21 @@ forceinline just?(x) : Bool = variantIs?(x, Type(just(x)));
 
 define just;
 [T]
-forceinline overload just(forward m: Maybe[T]) = forward variantAs(m, T);
+forceinline just(forward m: Maybe[T]) = forward variantAs(m, T);
 [T]
-forceinline overload just(m: Maybe[T], dflt: T) = maybe(m, v => v, () => dflt);
+forceinline just(m: Maybe[T], dflt: T) = maybe(m, v => v, () => dflt);
 
 
 /// @section  maybe function 
 
 private define maybeValue;
-forceinline overload maybeValue(T, forward x, thenFn, ..elseFn) = forward ..thenFn(x);
-forceinline overload maybeValue(T, forward n: Nothing, thenFn, elseFn) = forward ..elseFn();
+forceinline maybeValue(T, forward x, thenFn, ..elseFn) = forward ..thenFn(x);
+forceinline maybeValue(T, forward n: Nothing, thenFn, elseFn) = forward ..elseFn();
 
 
 // if the thenFn returns Maybe[T]s, have the default else case return nothing(T)s
 [T, F when allValues?(Maybe?, ..CallOutputTypes(call, F, T))]
-forceinline overload maybeValue(#T, forward n: Nothing, thenFn:F)
+forceinline maybeValue(#T, forward n: Nothing, thenFn:F)
     = ..mapValues(call, ..CallOutputTypes(call, F, T));
 
 [T]
@@ -61,14 +61,14 @@ instance Exception (ValueMissing);
 define require;
 
 [T]
-forceinline overload require(forward m:Maybe[T], fn) {
+forceinline require(forward m:Maybe[T], fn) {
     if (nothing?(m))
         throw ValueMissing();
     return forward ..fn(variantAs(m, T));
 }
 
 [T]
-forceinline overload require(forward m:Maybe[T]) {
+forceinline require(forward m:Maybe[T]) {
     if (nothing?(m))
         throw ValueMissing();
     return forward variantAs(m, T);
@@ -77,8 +77,8 @@ forceinline overload require(forward m:Maybe[T]) {
 
 /// @section  maybe as iterator value 
 
-[T] forceinline overload hasValue?(m:Maybe[T]) : Bool = just?(m);
-[T] forceinline overload getValue(forward m:Maybe[T]) = forward just(m);
+[T] forceinline hasValue?(m:Maybe[T]) : Bool = just?(m);
+[T] forceinline getValue(forward m:Maybe[T]) = forward just(m);
 
 forceinline getMaybeValue(v) {
     if (hasValue?(v))

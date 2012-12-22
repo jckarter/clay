@@ -9,28 +9,28 @@ record CStringRef (ptr : Pointer[Int8]);
 
 /// @section  predicates 
 
-overload ContiguousSequence?(#CStringRef) : Bool = true;
+ContiguousSequence?(#CStringRef) : Bool = true;
 
 
 
 /// @section  constructors 
 
 [T when ByteLike?(T)]
-forceinline overload CStringRef(ptr : Pointer[T]) --> returned:CStringRef {
+forceinline CStringRef(ptr : Pointer[T]) --> returned:CStringRef {
     returned.ptr = Pointer[Int8](ptr);
 }
 
 [S when StringLiteral?(S)]
-forceinline overload CStringRef(#S) = CStringRef(cstring(S));
+forceinline CStringRef(#S) = CStringRef(cstring(S));
 
 
 
 /// @section  size, index 
 
-forceinline overload size(a:CStringRef) : SizeT = SizeT(strlen(a.ptr));
+forceinline size(a:CStringRef) : SizeT = SizeT(strlen(a.ptr));
 
 [I when Integer?(I)]
-forceinline overload index(a:CStringRef, i:I) {
+forceinline index(a:CStringRef, i:I) {
     assert["boundsChecks"](i >= 0 and i < size(a), "CStringRef index out of bounds");
     return ref (begin(a) + i)^;
 }
@@ -39,16 +39,16 @@ forceinline overload index(a:CStringRef, i:I) {
 
 /// @section  coordinates and iteration 
 
-forceinline overload begin(a:CStringRef) = Pointer[Char](a.ptr);
-forceinline overload end(a:CStringRef) = Pointer[Char](a.ptr + size(a));
+forceinline begin(a:CStringRef) = Pointer[Char](a.ptr);
+forceinline end(a:CStringRef) = Pointer[Char](a.ptr + size(a));
 
-forceinline overload iterator(a:CStringRef) = coordinateRange(begin(a), end(a));
+forceinline iterator(a:CStringRef) = coordinateRange(begin(a), end(a));
 
-forceinline overload reverseIterator(a:CStringRef) =
+forceinline reverseIterator(a:CStringRef) =
     reverseCoordinateRange(end(a), begin(a));
 
 
 
 /// @section  cstring 
 
-forceinline overload cstring(a:CStringRef) = a.ptr;
+forceinline cstring(a:CStringRef) = a.ptr;

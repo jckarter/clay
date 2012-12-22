@@ -56,13 +56,13 @@ record ComplexRecord (
 enum Enum ( FOO, BAR, BAS );
 
 record UniquePointerRecord (x: UniquePointer[Int]);
-overload UniquePointerRecord(x: Int) = UniquePointerRecord(newUnique(x));
-overload UniquePointerRecord(o: UniquePointerRecord)
+UniquePointerRecord(x: Int) = UniquePointerRecord(newUnique(x));
+UniquePointerRecord(o: UniquePointerRecord)
     = if (null?(o.x)) UniquePointerRecord()
       else UniquePointerRecord(newUnique(o.x^));
-overload equals?(a: UniquePointerRecord, b: UniquePointerRecord)
+equals?(a: UniquePointerRecord, b: UniquePointerRecord)
     = if (null?(a.x)) null?(b.x) else (if (null?(b.x)) false else a.x^ == b.x^);
-overload printTo(stream, o: UniquePointerRecord) {
+printTo(stream, o: UniquePointerRecord) {
     printTo(stream, "UniquePointer(");
     if (not null?(o.x))
         printTo(stream, o.x^);
@@ -75,7 +75,7 @@ record GraphNodeRecord (
 );
 
 record ReferenceRecord = referenceType(x: Int);
-overload equals?(a:ReferenceRecord, b:ReferenceRecord) = a.x == b.x;
+equals?(a:ReferenceRecord, b:ReferenceRecord) = a.x == b.x;
 
 variant TestVariant (Int, Vector[Int], Char, Double);
 

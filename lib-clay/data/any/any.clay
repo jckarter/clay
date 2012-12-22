@@ -27,9 +27,9 @@ record Any (
 );
 
 // disable default value semantics
-overload RegularRecord?(#Any) = false;
+RegularRecord?(#Any) = false;
 
-overload Any() {
+Any() {
     return Any(
         -1,
         null(Byte),
@@ -40,7 +40,7 @@ overload Any() {
     );
 }
 
-overload Any(x:Any) {
+Any(x:Any) {
     var ptr = allocateRawMemoryAligned(Byte, x.size, x.alignment);
     try {
         ptr^ <-- x.copyConstructor(x.ptr^);
@@ -59,20 +59,20 @@ overload Any(x:Any) {
     );
 }
 
-overload BitwiseMovedType?(#Any) = true;
+BitwiseMovedType?(#Any) = true;
 
-overload resetUnsafe(x:Any) {
+resetUnsafe(x:Any) {
     x <-- Any();
 }
 
-overload destroy(x:Any) {
+destroy(x:Any) {
     if (not null?(x.ptr)) {
         x.destructor(x.ptr^);
         freeRawMemoryAligned(x.ptr);
     }
 }
 
-overload assign(ref dest:Any, ref src:Any) {
+assign(ref dest:Any, ref src:Any) {
     if (@dest == @src)
         return;
     dest = Any(src);

@@ -13,7 +13,7 @@ private record InnerFileMapping (
     length : SizeT,
 );
 
-overload RegularRecord?(#InnerFileMapping) = false;
+RegularRecord?(#InnerFileMapping) = false;
 
 record FileMapping (
     inner : SharedPointer[InnerFileMapping],
@@ -58,7 +58,7 @@ private modeAccess(mode) {
 }
 
 [A,B when Integer?(A,B)]
-overload FileMapping(f:File, mode:MappingMode, offset:A, length:B) {
+FileMapping(f:File, mode:MappingMode, offset:A, length:B) {
     var mappingObject = win32.CreateFileMappingA(
         fileHandle(f),
         win32.LPSECURITY_ATTRIBUTES(0),
@@ -86,10 +86,10 @@ overload FileMapping(f:File, mode:MappingMode, offset:A, length:B) {
     return FileMapping(p);
 }
 
-overload FileMapping(f:File, mode:MappingMode) =
+FileMapping(f:File, mode:MappingMode) =
     FileMapping(f, mode, 0, fileSize(f));
 
-overload destroy(x:InnerFileMapping) {
+destroy(x:InnerFileMapping) {
     var result = win32.UnmapViewOfFile(x.address);
     assert(result != 0);
     result = win32.CloseHandle(x.mappingObject);

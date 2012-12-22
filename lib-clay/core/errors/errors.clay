@@ -15,7 +15,7 @@ errorWithPrintfNoThrow(#fmt, ..e) : {
 define errorWithPrintf;
 
 [fmt when not ExceptionsEnabled?]
-overload errorWithPrintf(#fmt, ..e) : {
+errorWithPrintf(#fmt, ..e) : {
     errorWithPrintfNoThrow(fmt, ..e);
 }
 
@@ -23,21 +23,21 @@ overload errorWithPrintf(#fmt, ..e) : {
 /// @section  error (exceptions enabled) 
 
 record Error (msg : CStringRef);
-overload RegularRecord?(#Error) : Bool = false;
-overload BitwiseMovedType?(#Error) : Bool = true;
-overload Error(e:Error) --> ret:Error {
+RegularRecord?(#Error) : Bool = false;
+BitwiseMovedType?(#Error) : Bool = true;
+Error(e:Error) --> ret:Error {
     if (null?(e.msg.ptr))
         ret <-- Error(CStringRef());
     else
         ret <-- Error(CStringRef(libc.strdup(e.msg.ptr)));
 }
-overload resetUnsafe(e:Error) : { e.msg.ptr = Pointer[Int8](); }
-overload destroy(e:Error) : { libc.free(e.msg.ptr); }
+resetUnsafe(e:Error) : { e.msg.ptr = Pointer[Int8](); }
+destroy(e:Error) : { libc.free(e.msg.ptr); }
 
 instance Exception (Error);
 
 [fmt when ExceptionsEnabled?]
-overload errorWithPrintf(#fmt, ..e) : {
+errorWithPrintf(#fmt, ..e) : {
     var bufp = Pointer[CChar]();
     libc.asprintf(@bufp, fmt, ..e);
     throw Error(CStringRef(bufp));
@@ -53,23 +53,23 @@ AssertionEnabled?(tag) : Bool = not Flag?(stringLiteralConcat("clay.DisableAsser
 record assert[..tags] ();
 
 [..tags]
-alias overload assert[..tags](..whatever) : {}
+alias assert[..tags](..whatever) : {}
 
-alias overload assert(..whatever) : {}
+alias assert(..whatever) : {}
 
 [file, line, column, cond]
 private assertStringLiteral(#file, #line, #column, #cond, ..etc)
     = strl(#file, "(", #line, ",", #column, "): assertion ", #cond, " failed", ..etc);
 
 [when AllAssertionsEnabled?()]
-alias overload assert(cond:Bool) : {
+alias assert(cond:Bool) : {
     if (not likely(cond))
         errorWithPrintfNoThrow(
             assertStringLiteral(__FILE__, #__LINE__, #__COLUMN__, __ARG__ cond));
 }
 
 [..tags when AllAssertionsEnabled?() and allValues?(AssertionEnabled?, ..tags)]
-alias overload assert[..tags](cond:Bool) : {
+alias assert[..tags](cond:Bool) : {
     if (not likely(cond))
         errorWithPrintfNoThrow(
             assertStringLiteral(__FILE__, #__LINE__, #__COLUMN__, __ARG__ cond));

@@ -5,8 +5,8 @@ import opengl.nolookup as self;
 import data.sequences.*;
 
 define initGLFunctions;
-overload initGLFunctions() { }
-overload initGLFunctions(x) { }
+initGLFunctions() { }
+initGLFunctions(x) { }
 
 external (GLAPI) glAccum(_op: GLenum, _value: GLfloat);
 external (GLAPI) glActiveTexture(_texture: GLenum);
@@ -771,5 +771,5 @@ external (GLAPI) glWindowPos3sv(_p: Pointer[GLshort]);
 
 record GLFunctions ();
 
-overload fieldRef(gl:GLFunctions, ident) =
+fieldRef(gl:GLFunctions, ident) =
     forward fieldRef(self, "gl" ++ ident);

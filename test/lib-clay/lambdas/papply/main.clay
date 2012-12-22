@@ -14,5 +14,5 @@ record CallableAndArgs[F, ..A] (
 );
 
 [F, ..A]
-overload call(x:CallableAndArgs[F, ..A], ..remainingArgs) =
+call(x:CallableAndArgs[F, ..A], ..remainingArgs) =
     x.f(..unpack(x.args), ..remainingArgs);

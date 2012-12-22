@@ -9,20 +9,20 @@ define trimBegin;
 define trimEnd;
 
 
-overload trim(seq, pred) = Vector(trimmed(seq, pred));
+trim(seq, pred) = Vector(trimmed(seq, pred));
 
-overload trimBegin(seq, pred) = Vector(beginTrimmed(seq, pred));
-overload trimEnd(seq, pred) = Vector(endTrimmed(seq, pred));
+trimBegin(seq, pred) = Vector(beginTrimmed(seq, pred));
+trimEnd(seq, pred) = Vector(endTrimmed(seq, pred));
 
-
-[S when String?(S)]
-overload trim(seq:S) = trim(seq, asciiSpace?);
 
 [S when String?(S)]
-overload trimBegin(seq:S) = trimBegin(seq, asciiSpace?);
+trim(seq:S) = trim(seq, asciiSpace?);
 
 [S when String?(S)]
-overload trimEnd(seq:S) = trimEnd(seq, asciiSpace?);
+trimBegin(seq:S) = trimBegin(seq, asciiSpace?);
+
+[S when String?(S)]
+trimEnd(seq:S) = trimEnd(seq, asciiSpace?);
 
 
 
@@ -32,16 +32,16 @@ define trimmed;
 define beginTrimmed;
 define endTrimmed;
 
-overload trimmed(seq, pred) = beginTrimmed(endTrimmed(seq, pred), pred);
+trimmed(seq, pred) = beginTrimmed(endTrimmed(seq, pred), pred);
 
-overload beginTrimmed(seq, pred) {
+beginTrimmed(seq, pred) {
     var b, e = begin(seq), end(seq);
     while ((b != e) and pred(b^))
         inc(b);
     return coordinateRange(b, e);
 }
 
-overload endTrimmed(seq, pred) {
+endTrimmed(seq, pred) {
     var b, e = begin(seq), end(seq);
     while ((b != e) and pred((e-1)^))
         dec(e);
@@ -50,10 +50,10 @@ overload endTrimmed(seq, pred) {
 
 
 [S when String?(S)]
-overload trimmed(seq:S) = trimmed(seq, asciiSpace?);
+trimmed(seq:S) = trimmed(seq, asciiSpace?);
 
 [S when String?(S)]
-overload beginTrimmed(seq:S) = beginTrimmed(seq, asciiSpace?);
+beginTrimmed(seq:S) = beginTrimmed(seq, asciiSpace?);
 
 [S when String?(S)]
-overload endTrimmed(seq:S) = endTrimmed(seq, asciiSpace?);
+endTrimmed(seq:S) = endTrimmed(seq, asciiSpace?);

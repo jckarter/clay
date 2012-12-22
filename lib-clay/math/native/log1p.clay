@@ -3,9 +3,9 @@
 import math.native.kernel.ieee754.*;
 import math.native.protocol.*;
 
-overload log1p(x:Float) = Float(log1p(Double(x)));
+log1p(x:Float) = Float(log1p(Double(x)));
 
-overload log1p(x:Double) {
+log1p(x:Double) {
 	alias ZERO = 0.;
 	alias HALF = 0.5;
 	alias ONE = 1.;

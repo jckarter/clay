@@ -5,8 +5,8 @@ import __operators__;
 
 [T]
 define Tuple?(#T) : Bool private overload;
-overload Tuple?(x) : Bool = false;
-[..T] overload Tuple?(#Tuple[..T]) : Bool = true;
+Tuple?(x) : Bool = false;
+[..T] Tuple?(#Tuple[..T]) : Bool = true;
 
 
 
@@ -19,7 +19,7 @@ overload Tuple?(x) : Bool = false;
 /// @section  staticIndex 
 
 [..T, i]
-forceinline overload staticIndex(a:Tuple[..T], #i) =
+forceinline staticIndex(a:Tuple[..T], #i) =
     ref tupleRef(a, #SizeT(i));
 
 
@@ -37,9 +37,9 @@ forceinline unpackTupleRef(x:Tuple[..T]) = ref ..tupleElements(x);
 
 define unpackRef private overload;
 
-forceinline overload unpackRef(x) = ref x;
+forceinline unpackRef(x) = ref x;
 [..T]
-forceinline overload unpackRef(x:Tuple[..T]) = ref ..unpackTupleRef(x);
+forceinline unpackRef(x:Tuple[..T]) = ref ..unpackTupleRef(x);
 
 forceinline unpack(x) = ..unpackRef(x);
 
@@ -48,14 +48,14 @@ forceinline unpack(x) = ..unpackRef(x);
 /// @section  Tuple type inferring constructor 
 
 [..T]
-alias overload Tuple(..args:T) : Tuple[..T] = Tuple[..T](..args);
+alias Tuple(..args:T) : Tuple[..T] = Tuple[..T](..args);
 
 
 
 /// @section  basic constructor 
 
 [..T]
-alias overload Tuple[..T](..args:T) --> returned:Tuple[..T] {
+alias Tuple[..T](..args:T) --> returned:Tuple[..T] {
     ..unpackTupleRef(returned) <-- ..args;
 }
 
@@ -64,7 +64,7 @@ alias overload Tuple[..T](..args:T) --> returned:Tuple[..T] {
 /// @section  default constructor 
 
 [..T]
-forceinline overload Tuple[..T]() --> returned:Tuple[..T] {
+forceinline Tuple[..T]() --> returned:Tuple[..T] {
     initializeMulti(..tupleElements(returned));
 }
 
@@ -74,15 +74,15 @@ private forceinline initializeMulti(..args:A) {
 }
 
 private define initializeTypes;
-forceinline overload initializeTypes(A, ..B) = A(), ..initializeTypes(..B);
-forceinline overload initializeTypes() = ;
+forceinline initializeTypes(A, ..B) = A(), ..initializeTypes(..B);
+forceinline initializeTypes() = ;
 
 
 
 /// @section  copy constructor 
 
 [..T when not allValues?(BitwiseCopiedType?, ..T)]
-forceinline overload Tuple[..T](src:Tuple[..T]) --> returned:Tuple[..T] {
+forceinline Tuple[..T](src:Tuple[..T]) --> returned:Tuple[..T] {
     ..tupleElements(returned) <-- ..tupleElements(src);
 }
 
@@ -91,14 +91,14 @@ forceinline overload Tuple[..T](src:Tuple[..T]) --> returned:Tuple[..T] {
 /// @section  moveUnsafe, resetUnsafe 
 
 [..T when not allValues?(BitwiseMovedType?, ..T)]
-forceinline overload moveUnsafe(src:Tuple[..T]) --> returned:Tuple[..T] {
+forceinline moveUnsafe(src:Tuple[..T]) --> returned:Tuple[..T] {
     alias n = TupleElementCount(Tuple[..T]);
     ..for (i in staticIntegers(#n))
         staticIndex(returned, i) <-- moveUnsafe(staticIndex(src, i));
 }
 
 [..T when not allValues?(ResetDoesNothingType?, ..T)]
-forceinline overload resetUnsafe(a:Tuple[..T]) : {
+forceinline resetUnsafe(a:Tuple[..T]) : {
     ..for (x in tupleElements(a))
         resetUnsafe(x);
 }
@@ -108,7 +108,7 @@ forceinline overload resetUnsafe(a:Tuple[..T]) : {
 /// @section  destroy 
 
 [..T when not allValues?(DestroyDoesNothingType?, ..T)]
-forceinline overload destroy(a:Tuple[..T]) : {
+forceinline destroy(a:Tuple[..T]) : {
     ..for (x in tupleElements(a))
         destroy(x);
 }
@@ -118,7 +118,7 @@ forceinline overload destroy(a:Tuple[..T]) : {
 /// @section  assign 
 
 [..T when not allValues?(BitwiseAssignedType?, ..T)]
-forceinline overload assign(ref dest:Tuple[..T], ref src:Tuple[..T]) : {
+forceinline assign(ref dest:Tuple[..T], ref src:Tuple[..T]) : {
     alias n = TupleElementCount(Tuple[..T]);
     ..for (i in staticIntegers(#n))
         assign(staticIndex(dest, i), staticIndex(src, i));
@@ -129,13 +129,13 @@ forceinline overload assign(ref dest:Tuple[..T], ref src:Tuple[..T]) : {
 /// @section  equals? 
 
 [..T, ..U when countValues(..T) != countValues(..U)]
-forceinline overload equals?(a:Tuple[..T], b:Tuple[..U]) : Bool = false;
+forceinline equals?(a:Tuple[..T], b:Tuple[..U]) : Bool = false;
 
 [..T, ..U when countValues(..T) == countValues(..U)
     and allValues?(x -> x,
         ..mapValues2((t, u) -> CallDefined?((==), t, u),
             #countValues(..T), ..T, ..U))]
-forceinline overload equals?(a:Tuple[..T], b:Tuple[..U]) : Bool {
+forceinline equals?(a:Tuple[..T], b:Tuple[..U]) : Bool {
     alias n = TupleElementCount(Tuple[..T]);
     ..for (i in staticIntegers(#n)) {
         if (not equals?(staticIndex(a, i), staticIndex(b, i)))
@@ -145,7 +145,7 @@ forceinline overload equals?(a:Tuple[..T], b:Tuple[..U]) : Bool {
 }
 
 [..T]
-forceinline overload equals?(a:Tuple[..T], b:Tuple[..T]) : Bool {
+forceinline equals?(a:Tuple[..T], b:Tuple[..T]) : Bool {
     alias n = TupleElementCount(Tuple[..T]);
     ..for (i in staticIntegers(#n)) {
         if (not equals?(staticIndex(a, i), staticIndex(b, i)))
@@ -159,7 +159,7 @@ forceinline overload equals?(a:Tuple[..T], b:Tuple[..T]) : Bool {
 /// @section  lesser? 
 
 [..T]
-forceinline overload lesser?(a:Tuple[..T], b:Tuple[..T]) : Bool {
+forceinline lesser?(a:Tuple[..T], b:Tuple[..T]) : Bool {
     alias n = TupleElementCount(Tuple[..T]);
     ..for (i in staticIntegers(#n)) {
         ref av = staticIndex(a, i);
@@ -176,4 +176,4 @@ forceinline overload lesser?(a:Tuple[..T], b:Tuple[..T]) : Bool {
 
 /// @section  tupleLiteral 
 
-alias overload __operators__.tupleLiteral(..args) = Tuple(..args);
+alias __operators__.tupleLiteral(..args) = Tuple(..args);

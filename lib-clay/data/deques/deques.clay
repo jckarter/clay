@@ -11,7 +11,7 @@ record DequeCoordinate[T] (
     node: Pointer[Pointer[T]],
 );
 
-[T] overload DequeCoordinate[T]() = DequeCoordinate[T](
+[T] DequeCoordinate[T]() = DequeCoordinate[T](
     Pointer[T](0),
     Pointer[T](0),
     Pointer[T](0),
@@ -26,10 +26,10 @@ record DequeCoordinate[T] (
     i.last  = nodeEnd(node);
 }
 
-[T] overload DequeCoordinate[T](current: Pointer[T], node: Pointer[Pointer[T]])
+[T] DequeCoordinate[T](current: Pointer[T], node: Pointer[Pointer[T]])
     = DequeCoordinate[T](current, nodeBegin(node), nodeEnd(node), node);
 
-[T] overload inc(ref i: DequeCoordinate[T]) {
+[T] inc(ref i: DequeCoordinate[T]) {
     inc(i.current);
     if(i.current == i.last) {
         setNode(i, i.node + 1);
@@ -37,7 +37,7 @@ record DequeCoordinate[T] (
     }
 }
 
-[T] overload dec(ref i: DequeCoordinate[T]) {
+[T] dec(ref i: DequeCoordinate[T]) {
     if (i.current == i.first) {
         setNode(i, i.node - 1);
         i.current = i.last;
@@ -45,11 +45,11 @@ record DequeCoordinate[T] (
     dec(i.current);
 }
 
-[T, I when Integer?(I)] overload updateAssign(#add, ref i: DequeCoordinate[T], n: I) {
+[T, I when Integer?(I)] updateAssign(#add, ref i: DequeCoordinate[T], n: I) {
     i +: PtrInt(n);
 }
 
-[T] overload updateAssign(#add, ref i: DequeCoordinate[T], n: PtrInt) {
+[T] updateAssign(#add, ref i: DequeCoordinate[T], n: PtrInt) {
     var offset = n + PtrInt(i.current - i.first);
     if (offset >= 0 and offset < DequeBufferSSize(T))
         i.current +: n;
@@ -65,36 +65,36 @@ record DequeCoordinate[T] (
     }
 }
 
-[T, I when Integer?(I)] overload add(i: DequeCoordinate[T], n: I) --> j: DequeCoordinate[T] {
+[T, I when Integer?(I)] add(i: DequeCoordinate[T], n: I) --> j: DequeCoordinate[T] {
     j <-- i;
     j +: n;
 }
 
-[T, I when Integer?(I)] overload updateAssign(#subtract, ref i: DequeCoordinate[T], n: I) {
+[T, I when Integer?(I)] updateAssign(#subtract, ref i: DequeCoordinate[T], n: I) {
     i +: (-PtrInt(n));
 }
 
-[T, I when Integer?(I)] overload subtract(i: DequeCoordinate[T], n: I) --> j: DequeCoordinate[T] {
+[T, I when Integer?(I)] subtract(i: DequeCoordinate[T], n: I) --> j: DequeCoordinate[T] {
     j <-- i;
     j +: (-PtrInt(n));
 }
 
-[T] overload subtract(i: DequeCoordinate[T], j: DequeCoordinate[T]) : PtrInt {
+[T] subtract(i: DequeCoordinate[T], j: DequeCoordinate[T]) : PtrInt {
     var mapDistance = PtrInt(i.node - j.node - 1);
     var iNodeDistance = PtrInt(i.current - i.first);
     var jNodeDistance = PtrInt(j.last - j.current);
     return DequeBufferSSize(T) * mapDistance + iNodeDistance + jNodeDistance;
 }
 
-[T] overload dereference(i: DequeCoordinate[T]) = ref i.current^;
-[T, I when Integer?(I)] overload index(i: DequeCoordinate[T], n: I) = ref (i + n)^;
+[T] dereference(i: DequeCoordinate[T]) = ref i.current^;
+[T, I when Integer?(I)] index(i: DequeCoordinate[T], n: I) = ref (i + n)^;
 
-[T] overload lesser?(x: DequeCoordinate[T], y: DequeCoordinate[T])
+[T] lesser?(x: DequeCoordinate[T], y: DequeCoordinate[T])
     = x.node < y.node
     or (x.node == y.node and x.current < y.current);
 
-[T] forceinline overload hasValue?(i: DequeCoordinate[T]) = not null?(i.current);
-[T] forceinline overload getValue(i: DequeCoordinate[T]) = ref i.current^;
+[T] forceinline hasValue?(i: DequeCoordinate[T]) = not null?(i.current);
+[T] forceinline getValue(i: DequeCoordinate[T]) = ref i.current^;
 
 
 /// @section  Deque object interface 
@@ -109,18 +109,18 @@ record Deque[T] (
     = coord.node >= d.map and coord.node < d.map + d.mapSize
       and coord >= d.begin and coord <= d.end;
 
-[T] overload RegularRecord?(#Deque[T]) = false;
+[T] RegularRecord?(#Deque[T]) = false;
 
-[T] overload SequenceContainer?(#Deque[T]) = true;
+[T] SequenceContainer?(#Deque[T]) = true;
 
-[T] overload UnderlyingContainerConstructor(#Deque[T]) = Deque;
+[T] UnderlyingContainerConstructor(#Deque[T]) = Deque;
 
-[T] overload Deque[T]() --> deque: Deque[T] {
+[T] Deque[T]() --> deque: Deque[T] {
     initializeDequeMap(deque, SizeT(0));
 }
 
 [T, A when Sequence?(A) and T == SequenceElementType(A)]
-overload Deque[T](forward from: A) --> to: Deque[T] {
+Deque[T](forward from: A) --> to: Deque[T] {
     initializeDequeMap(to, SizeT(0));
 
     try {
@@ -134,7 +134,7 @@ overload Deque[T](forward from: A) --> to: Deque[T] {
 }
 
 [T, A when SizedSequence?(A) and T == SequenceElementType(A)]
-overload Deque[T](forward from: A) --> to: Deque[T] {
+Deque[T](forward from: A) --> to: Deque[T] {
     initializeDequeMap(to, size(from));
 
     var i = to.begin;
@@ -151,7 +151,7 @@ overload Deque[T](forward from: A) --> to: Deque[T] {
 }
 
 [T, ..A when countValues(..A) > 0 and equalValues?(T, ..A)]
-overload Deque[T](forward ..from: A) --> to: Deque[T] {
+Deque[T](forward ..from: A) --> to: Deque[T] {
     initializeDequeMap(to, SizeT(countValues(..A)));
 
     var i = to.begin;
@@ -168,15 +168,15 @@ overload Deque[T](forward ..from: A) --> to: Deque[T] {
 }
 
 [A when Sequence?(A)]
-overload Deque(forward from:A) {
+Deque(forward from:A) {
     alias T = SequenceElementType(A);
     return Deque[T](from);
 }
 
 [A when MultiValuedSequence?(A)]
-overload Deque(forward from:A) = Deque(mapped(Tuple, from));
+Deque(forward from:A) = Deque(mapped(Tuple, from));
 
-[T] overload assign(ref to: Deque[T], from: Deque[T]) {
+[T] assign(ref to: Deque[T], from: Deque[T]) {
     resize(to, size(from));
     var toI = to.begin;
     var fromI = from.begin;
@@ -187,45 +187,45 @@ overload Deque(forward from:A) = Deque(mapped(Tuple, from));
     }
 }
 
-[T] overload destroy(deque: Deque[T]) {
+[T] destroy(deque: Deque[T]) {
     if (not null?(deque.map)) {
         destroyDequeValues(deque.begin, deque.end);
         destroyDequeMap(deque);
     }
 }
 
-[T] overload BitwiseMovedType?(#Deque[T]) = true;
+[T] BitwiseMovedType?(#Deque[T]) = true;
 
-[T] overload resetUnsafe(d: Deque[T]) {
+[T] resetUnsafe(d: Deque[T]) {
     d.map <-- Pointer[Pointer[T]](0);
     d.mapSize <-- SizeT(0);
     d.begin <-- DequeCoordinate[T]();
     d.end <-- DequeCoordinate[T]();
 }
 
-[T] overload begin(d: Deque[T]) = d.begin;
-[T] overload end(d: Deque[T]) = d.end;
-[T] overload iterator(d: Deque[T]) = coordinateRange(d.begin, d.end);
-[T] overload reverseIterator(d: Deque[T]) = reverseCoordinateRange(d.end, d.begin);
+[T] begin(d: Deque[T]) = d.begin;
+[T] end(d: Deque[T]) = d.end;
+[T] iterator(d: Deque[T]) = coordinateRange(d.begin, d.end);
+[T] reverseIterator(d: Deque[T]) = reverseCoordinateRange(d.end, d.begin);
 
-[T] overload size(d: Deque[T]) = SizeT(d.end - d.begin);
-[T, I when Integer?(I)] overload index(d: Deque[T], i: I) {
+[T] size(d: Deque[T]) = SizeT(d.end - d.begin);
+[T, I when Integer?(I)] index(d: Deque[T], i: I) {
     assert["boundsChecks"](i >= 0 and i < size(d), Deque[T], " index out of bounds");
     return ref (d.begin + i)^;
 }
 
-[T] overload front(d: Deque[T]) {
+[T] front(d: Deque[T]) {
     assert["boundsChecks"](not empty?(d), "front of empty ", Deque[T]);
     return ref d.begin^;
 }
-[T] overload back(d: Deque[T]) {
+[T] back(d: Deque[T]) {
     assert["boundsChecks"](not empty?(d), "back of empty ", Deque[T]);
     var backi = d.end;
     dec(backi);
     return ref backi^;
 }
 
-[T] overload pushFront(deque: Deque[T], forward value) {
+[T] pushFront(deque: Deque[T], forward value) {
     if (deque.begin.current != deque.begin.first) {
         var newCurrent = deque.begin.current - 1;
         newCurrent^ <-- value;
@@ -237,13 +237,13 @@ overload Deque(forward from:A) = Deque(mapped(Tuple, from));
 define pushFrontAll(s, vs);
 
 [T, S when Sequence?(S) and SequenceElementType(S) == T]
-overload pushFrontAll(deque: Deque[T], forward seq: S) {
+pushFrontAll(deque: Deque[T], forward seq: S) {
     for (x in reversed(seq))
         pushFront(deque, x);
 }
 
 [T, S when SizedSequence?(S) and SequenceElementType(S) == T]
-overload pushFrontAll(deque: Deque[T], forward seq: S) {
+pushFrontAll(deque: Deque[T], forward seq: S) {
     var seqSize = size(seq);
     deque.begin = reserveDequeFrontElements(deque, seqSize);
     var i = deque.begin + seqSize;
@@ -259,7 +259,7 @@ overload pushFrontAll(deque: Deque[T], forward seq: S) {
     }
 }
 
-[T] overload push(deque: Deque[T], forward value: T) {
+[T] push(deque: Deque[T], forward value: T) {
     if (deque.end.current != deque.end.last - 1) {
         deque.end.current^ <-- value;
         deque.end.current +: 1;
@@ -268,7 +268,7 @@ overload pushFrontAll(deque: Deque[T], forward seq: S) {
 }
 
 [T, S when SizedSequence?(S) and SequenceElementType(S) == T]
-overload pushAll(deque: Deque[T], forward seq: S) {
+pushAll(deque: Deque[T], forward seq: S) {
     var seqSize = size(seq);
     deque.end = reserveDequeBackElements(deque, seqSize);
     var i = deque.end - seqSize;
@@ -283,7 +283,7 @@ overload pushAll(deque: Deque[T], forward seq: S) {
     }
 }
 
-[T] overload popFront(deque: Deque[T]) --> value: T {
+[T] popFront(deque: Deque[T]) --> value: T {
     assert["boundsChecks"](not empty?(deque), "popFront of empty ", Deque[T]);
     if (deque.begin.current != deque.begin.last - 1) {
         value <-- moveUnsafe(deque.begin.current^);
@@ -292,7 +292,7 @@ overload pushAll(deque: Deque[T], forward seq: S) {
         value <-- popFrontDeque1(deque);
 }
 
-[T] overload pop(deque: Deque[T]) {
+[T] pop(deque: Deque[T]) {
     assert["boundsChecks"](not empty?(deque), "pop of empty ", Deque[T]);
     if (deque.end.current != deque.end.first) {
         deque.end.current -: 1;
@@ -301,17 +301,17 @@ overload pushAll(deque: Deque[T], forward seq: S) {
         return popDeque1(deque);
 }
 
-[T] overload clear(deque: Deque[T]) {
+[T] clear(deque: Deque[T]) {
     destroyDequeValues(deque.begin, deque.end);
     destroyDequeBackNodes(deque, deque.begin);
 }
 
 [T, I when Integer?(I)]
-overload insert(deque: Deque[T], n: I, forward value: T) {
+insert(deque: Deque[T], n: I, forward value: T) {
     insert(deque, deque.begin + n, value);
 }
 
-[T] overload insert(deque: Deque[T], i: DequeCoordinate[T], forward value: T) {
+[T] insert(deque: Deque[T], i: DequeCoordinate[T], forward value: T) {
     assert["boundsChecks"](validDequeCoordinate?(deque, i),
         "invalid insert coordinate into ", Deque[T]);
     if (i.current == deque.begin.current)
@@ -323,12 +323,12 @@ overload insert(deque: Deque[T], n: I, forward value: T) {
 }
 
 [T, S, I when Sequence?(S) and SequenceElementType(S) == T and Integer?(I)]
-overload insert(deque: Deque[T], n: I, forward seq: S) {
+insert(deque: Deque[T], n: I, forward seq: S) {
     insert(deque, deque.begin + n, seq);
 }
 
 [T, S when Sequence?(S) and SequenceElementType(S) == T]
-overload insertAll(deque: Deque[T], i: DequeCoordinate[T], forward seq: S) {
+insertAll(deque: Deque[T], i: DequeCoordinate[T], forward seq: S) {
     assert["boundsChecks"](validDequeCoordinate?(deque, i),
         "invalid insert coordinate into ", Deque[T]);
     if (i.current == deque.begin.current)
@@ -340,12 +340,12 @@ overload insertAll(deque: Deque[T], i: DequeCoordinate[T], forward seq: S) {
 }
 
 [T, I, J when Integer?(I) and Integer?(J)]
-overload remove(deque: Deque[T], fromN: I, toN: J) {
+remove(deque: Deque[T], fromN: I, toN: J) {
     remove(deque, deque.begin+fromN, deque.begin+toN);
 }
 
 [T]
-overload remove(deque: Deque[T], from: DequeCoordinate[T], to: DequeCoordinate[T]) {
+remove(deque: Deque[T], from: DequeCoordinate[T], to: DequeCoordinate[T]) {
     assert["boundsChecks"](validDequeCoordinate?(deque, from),
         "invalid remove start coordinate into ", Deque[T]);
     assert["boundsChecks"](validDequeCoordinate?(deque, to),
@@ -372,12 +372,12 @@ overload remove(deque: Deque[T], from: DequeCoordinate[T], to: DequeCoordinate[T
 }
 
 [T, I when Integer?(I)]
-overload remove(deque: Deque[T], n: I) {
+remove(deque: Deque[T], n: I) {
     remove(deque, deque.begin+n);
 }
 
 [T]
-overload remove(deque: Deque[T], i: DequeCoordinate[T]) {
+remove(deque: Deque[T], i: DequeCoordinate[T]) {
     assert["boundsChecks"](validDequeCoordinate?(deque, i),
         "invalid remove coordinate into ", Deque[T]);
     destroy(i^);
@@ -403,11 +403,11 @@ overload remove(deque: Deque[T], i: DequeCoordinate[T]) {
     }
 }
 
-[T, I when Integer?(I)] overload resize(deque: Deque[T], newSize: I) {
+[T, I when Integer?(I)] resize(deque: Deque[T], newSize: I) {
     resize(deque, SizeT(newSize));
 }
 
-[T] overload resize(deque: Deque[T], newSize: SizeT) {
+[T] resize(deque: Deque[T], newSize: SizeT) {
     var oldSize = size(deque);
     if (newSize < oldSize) {
         var newEnd = deque.begin + newSize;
@@ -430,7 +430,7 @@ private alias DEQUE_INITIAL_MAP_SIZE = SizeT(8);
 
 define DequeBufferSize;
 
-overload DequeBufferSize(T) {
+DequeBufferSize(T) {
     if (TypeSize(T) < DEQUE_TARGET_BUFFER_SIZE)
         return DEQUE_TARGET_BUFFER_SIZE \ TypeSize(T);
     else
@@ -655,13 +655,13 @@ private printMap(deque) {
 private define insertDequeSequence;
 
 [T, S when Sequence?(S)]
-overload insertDequeSequence(deque: Deque[T], i: DequeCoordinate[T], forward seq: S) {
+insertDequeSequence(deque: Deque[T], i: DequeCoordinate[T], forward seq: S) {
     for (x in reversed(seq))
         insertDequeValue(deque, i, seq);
 }
 
 [T, S when SizedSequence?(S)]
-overload insertDequeSequence(deque: Deque[T], i: DequeCoordinate[T], forward seq: S) {
+insertDequeSequence(deque: Deque[T], i: DequeCoordinate[T], forward seq: S) {
     var index = SizeT(i - deque.begin);
     var seqSize = size(seq);
     if (index < size(deque) \ SizeT(2)) {

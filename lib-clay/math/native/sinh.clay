@@ -8,10 +8,10 @@ import numbers.floats.(infinity);
 import complex.*;
 
 
-overload sinh(x:Float) = Float(sinh(Double(x)));
+sinh(x:Float) = Float(sinh(Double(x)));
 
 
-overload sinh(x:Double) {
+sinh(x:Double) {
 	alias ONE = 1.;
 	alias HUGE = GreatestPositiveFinite(Double);
 
@@ -54,7 +54,7 @@ overload sinh(x:Double) {
 /// These values and the return value were taken from n1124.pdf.
 
 
-overload sinh(z:ComplexDouble) {
+sinh(z:ComplexDouble) {
 	var x,y = real(z),imagValue(z);
 
 	var xdb = MAKE_IEEE(x);

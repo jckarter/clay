@@ -7,8 +7,8 @@ import data.sequences.*;
 
 define _expectSockaddrIn;
 
-overload _expectSockaddrIn(expectedHost, expectedPort, sockaddr) {}
-overload _expectSockaddrIn(expectedHost, expectedPort, sockaddr: Sockaddr_in)
+_expectSockaddrIn(expectedHost, expectedPort, sockaddr) {}
+_expectSockaddrIn(expectedHost, expectedPort, sockaddr: Sockaddr_in)
 {
     expectEqual(AF_INET, sockaddr.sin_family);
     expectEqual(expectedHost, networkToHost(s_addr(sockaddr.sin_addr)));

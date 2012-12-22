@@ -12,7 +12,7 @@ record RawFile (
     owned : Bool,
 );
 
-overload RegularRecord?(#RawFile) = false;
+RegularRecord?(#RawFile) = false;
 
 private stdHandle(x) = win32.GetStdHandle(win32.DWORD(x));
 
@@ -73,7 +73,7 @@ private creationFlags(mode) {
 }
 
 [S when CCompatibleString?(S)]
-overload RawFile(path:S, mode:OpenMode) {
+RawFile(path:S, mode:OpenMode) {
     var handle = win32.CreateFileA(
         cstring(path),
         win32.DWORD(accessFlags(mode)),
@@ -91,9 +91,9 @@ overload RawFile(path:S, mode:OpenMode) {
 }
 
 [S when CCompatibleString?(S)]
-overload RawFile(path:S) = RawFile(path, READ);
+RawFile(path:S) = RawFile(path, READ);
 
-overload destroy(x:RawFile) {
+destroy(x:RawFile) {
     if (x.owned) {
         var result = win32.CloseHandle(x.handle);
         assert(result != 0);
@@ -103,9 +103,9 @@ overload destroy(x:RawFile) {
 
 // moveUnsafe, resetUnsafe
 
-overload BitwiseMovedType?(#RawFile) = true;
+BitwiseMovedType?(#RawFile) = true;
 
-overload resetUnsafe(x:RawFile) {
+resetUnsafe(x:RawFile) {
     x <-- RawFile(win32.HANDLE(0), false);
 }
 
@@ -114,13 +114,13 @@ overload resetUnsafe(x:RawFile) {
 
 /// @section  fileHandle 
 
-overload fileHandle(f:RawFile) = f.handle;
+fileHandle(f:RawFile) = f.handle;
 
 
 
 /// @section  read, write, flush 
 
-overload readBytes(f:RawFile, buffer:Pointer[Byte], n:SizeT) : SizeT {
+readBytes(f:RawFile, buffer:Pointer[Byte], n:SizeT) : SizeT {
     var nRead = win32.DWORD();
     var result = win32.ReadFile(
         f.handle,
@@ -133,7 +133,7 @@ overload readBytes(f:RawFile, buffer:Pointer[Byte], n:SizeT) : SizeT {
     return SizeT(nRead);
 }
 
-overload writeBytes(f:RawFile, buffer:Pointer[Byte], n:SizeT) : SizeT {
+writeBytes(f:RawFile, buffer:Pointer[Byte], n:SizeT) : SizeT {
     var nWritten = win32.DWORD();
     var result = win32.WriteFile(
         f.handle,
@@ -146,7 +146,7 @@ overload writeBytes(f:RawFile, buffer:Pointer[Byte], n:SizeT) : SizeT {
     return SizeT(nWritten);
 }
 
-overload flush(f:RawFile) {
+flush(f:RawFile) {
     win32.FlushFileBuffers(f.handle);
     // Don't check for errors because
     // FlushFileBuffers can legitimately fail for unbuffered
@@ -157,7 +157,7 @@ overload flush(f:RawFile) {
 
 /// @section  fileSize, seek 
 
-overload fileSize(f:RawFile) {
+fileSize(f:RawFile) {
     var size = Int64();
     var result = win32.GetFileSizeEx(f.handle, @size);
     if (result == 0)
@@ -176,7 +176,7 @@ private seekMethod(x) {
     }
 }
 
-overload seek(f:RawFile, offset, whence) {
+seek(f:RawFile, offset, whence) {
     var newPos = Int64();
     var result = win32.SetFilePointerEx(
         f.handle,
@@ -192,4 +192,4 @@ overload seek(f:RawFile, offset, whence) {
 
 /// @section  terminal? 
 
-overload terminal?(f:RawFile) = true; // FIXME: implement it
+terminal?(f:RawFile) = true; // FIXME: implement it

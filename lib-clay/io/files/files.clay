@@ -8,7 +8,7 @@ private record FlushOnDestroy (
     file: File,
 );
 
-overload destroy(f: FlushOnDestroy) {
+destroy(f: FlushOnDestroy) {
     // io.files.easy.File (as well as underlying BufferedOutputStream)
     // does not flush buffers on destroy so we need to flush stdout,
     // stderr buffers on exit explicitly

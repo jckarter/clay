@@ -13,7 +13,7 @@ record RawFile (
 );
 
 
-overload RegularRecord?(#RawFile) = false;
+RegularRecord?(#RawFile) = false;
 
 
 
@@ -44,7 +44,7 @@ private openFlags(mode) {
 }
 
 [S when CCompatibleString?(S)]
-overload RawFile(path:S, mode:OpenMode) {
+RawFile(path:S, mode:OpenMode) {
     var flags = openFlags(mode);
     var handle = Int();
     if (bitand(flags, unix.O_CREAT) != 0)
@@ -57,9 +57,9 @@ overload RawFile(path:S, mode:OpenMode) {
 }
 
 [S when CCompatibleString?(S)]
-overload RawFile(path:S) = RawFile(path, READ);
+RawFile(path:S) = RawFile(path, READ);
 
-overload destroy(x:RawFile) {
+destroy(x:RawFile) {
     if (x.owned) {
         var result = unix.close(x.handle);
         assert(result != wrapCast(Type(result), -1) or unix.errno() != unix.EBADF);
@@ -69,9 +69,9 @@ overload destroy(x:RawFile) {
 
 // moveUnsafe, resetUnsafe
 
-overload BitwiseMovedType?(#RawFile) = true;
+BitwiseMovedType?(#RawFile) = true;
 
-overload resetUnsafe(x:RawFile) {
+resetUnsafe(x:RawFile) {
     x <-- RawFile(-1, false);
 }
 
@@ -79,34 +79,34 @@ overload resetUnsafe(x:RawFile) {
 
 /// @section  fileHandle 
 
-overload fileHandle(f:RawFile) = f.handle;
+fileHandle(f:RawFile) = f.handle;
 
 
 
 /// @section  read, write, flush 
 
-overload readBytes(f:RawFile, buffer:Pointer[Byte], n:SizeT) : SizeT {
+readBytes(f:RawFile, buffer:Pointer[Byte], n:SizeT) : SizeT {
     var result = unix.read(f.handle, buffer, n);
     if (result == Type(result)(-1))
         throw GenericIOError(unix.errno(), "read");
     return SizeT(result);
 }
 
-overload writeBytes(f:RawFile, buffer:Pointer[Byte], n:SizeT) : SizeT {
+writeBytes(f:RawFile, buffer:Pointer[Byte], n:SizeT) : SizeT {
     var result = unix.write(f.handle, buffer, n);
     if (result == Type(result)(-1))
         throw GenericIOError(unix.errno(), "write");
     return SizeT(result);
 }
 
-overload flush(f:RawFile) {
+flush(f:RawFile) {
 }
 
 
 
 /// @section  fileSize, seek 
 
-overload fileSize(f:RawFile) {
+fileSize(f:RawFile) {
     var statBuf = unix.Struct_stat();
     var result = unix.fstat(f.handle, @statBuf);
     if (result == Type(result)(-1))
@@ -125,7 +125,7 @@ private seekWhence(x) {
     }
 }
 
-overload seek(f:RawFile, offset, whence) {
+seek(f:RawFile, offset, whence) {
     var result = unix.lseek(f.handle, Int64(offset), seekWhence(whence));
     if (result == Type(result)(-1))
         throw GenericIOError(unix.errno(), "lseek");
@@ -136,6 +136,6 @@ overload seek(f:RawFile, offset, whence) {
 
 /// @section  terminal? 
 
-overload terminal?(f:RawFile) {
+terminal?(f:RawFile) {
     return Bool(unix.isatty(f.handle));
 }

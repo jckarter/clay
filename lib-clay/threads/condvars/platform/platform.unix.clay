@@ -13,37 +13,37 @@ import unix.(
 import os.errors.(GenericOSError);
 
 record ConditionVariable (_pcond:pthread_cond_t);
-overload RegularRecord?(#ConditionVariable) = false;
+RegularRecord?(#ConditionVariable) = false;
 
-overload ConditionVariable() --> returned:ConditionVariable
+ConditionVariable() --> returned:ConditionVariable
 {
     var ok = pthread_cond_init(@returned._pcond, null(pthread_condattr_t));
     if (ok != 0)
         throw GenericOSError(ok, "pthread_cond_init");
 }
 
-overload destroy(cv:ConditionVariable) :
+destroy(cv:ConditionVariable) :
 {
     // can fail if cv is being waited on; what to do?
     var ok = pthread_cond_destroy(@cv._pcond);
     assert(ok == 0);
 }
 
-overload ConditionVariableMutex(#ConditionVariable) = Mutex;
+ConditionVariableMutex(#ConditionVariable) = Mutex;
 
-overload wait(cv:ConditionVariable, m:Mutex) :
+wait(cv:ConditionVariable, m:Mutex) :
 {
     var ok = pthread_cond_wait(@cv._pcond, @m._pmutex);
     assert(ok == 0);
 }
 
-overload notifyOne(cv:ConditionVariable) :
+notifyOne(cv:ConditionVariable) :
 {
     var ok = pthread_cond_signal(@cv._pcond);
     assert(ok == 0);
 }
 
-overload notifyAll(cv:ConditionVariable) :
+notifyAll(cv:ConditionVariable) :
 {
     var ok = pthread_cond_broadcast(@cv._pcond);
     assert(ok == 0);

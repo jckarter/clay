@@ -2,9 +2,9 @@ import printer.(println);
 
 define foo;
 
-overload foo(x) = 0;
-overload foo(x:Bool) = 1;
-overload foo(x:Int32) = 2;
+foo(x) = 0;
+foo(x:Bool) = 1;
+foo(x:Int32) = 2;
 
 main() {
     var v = true;

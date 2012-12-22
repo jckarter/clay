@@ -1,8 +1,8 @@
 import printer.(println);
 
 define RValue?;
-alias overload RValue?(rvalue x) = 1;
-alias overload RValue?(ref x) = 0;
+alias RValue?(rvalue x) = 1;
+alias RValue?(ref x) = 0;
 
 foo1() {
     println("returning a rvalue");

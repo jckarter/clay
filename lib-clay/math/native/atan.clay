@@ -36,7 +36,7 @@ private var aT = array(
 );
 
 
-overload atan(a:Double){
+atan(a:Double){
 	alias ONE = 1.;
 	alias HUGE = GreatestPositiveFinite(Double);
 	var id,x = 0,a;
@@ -94,7 +94,7 @@ overload atan(a:Double){
 
 // Return arc tangent of complex double value.
 
-overload atan(x:ComplexDouble) --> res:ComplexDouble {
+atan(x:ComplexDouble) --> res:ComplexDouble {
   
     var rcls = fpclassify(real(x));
     var icls = fpclassify(imagValue(x));

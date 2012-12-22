@@ -13,7 +13,7 @@ record SharedPointer[T] (
 );
 
 [T]
-overload RegularRecord?(#SharedPointer[T]) = false;
+RegularRecord?(#SharedPointer[T]) = false;
 
 
 
@@ -39,34 +39,34 @@ alias newShared = new;
 /// @section  constructors, moveUnsafe, resetUnsafe, assign, destroy 
 
 [T]
-forceinline overload SharedPointer[T]() {
+forceinline SharedPointer[T]() {
     return SharedPointer(null(RefCounted[T]));
 }
 
 [T]
-forceinline overload SharedPointer[T](src:SharedPointer[T]) {
+forceinline SharedPointer[T](src:SharedPointer[T]) {
     if (not null?(src))
         src.ptr^.refCount +: 1;
     return SharedPointer(src.ptr);
 }
 
 [T]
-overload BitwiseMovedType?(#SharedPointer[T]) = true;
+BitwiseMovedType?(#SharedPointer[T]) = true;
 
 [T]
-forceinline overload resetUnsafe(p : SharedPointer[T]) {
+forceinline resetUnsafe(p : SharedPointer[T]) {
     p <-- SharedPointer[T]();
 }
 
 [T]
-forceinline overload assign(ref dest:SharedPointer[T], ref src:SharedPointer[T]) {
+forceinline assign(ref dest:SharedPointer[T], ref src:SharedPointer[T]) {
     if (dest.ptr == src.ptr)
         return;
     dest = SharedPointer[T](src);
 }
 
 [T]
-forceinline overload destroy(p : SharedPointer[T]) {
+forceinline destroy(p : SharedPointer[T]) {
     if (not null?(p)) {
         p.ptr^.refCount -: 1;
         if (p.ptr^.refCount == 0) {
@@ -81,10 +81,10 @@ forceinline overload destroy(p : SharedPointer[T]) {
 /// @section  dereference, null?, nullShared 
 
 [T]
-forceinline overload dereference(p : SharedPointer[T]) = ref p.ptr^.value;
+forceinline dereference(p : SharedPointer[T]) = ref p.ptr^.value;
 
 [T]
-forceinline overload null?(p : SharedPointer[T]) = null?(p.ptr);
+forceinline null?(p : SharedPointer[T]) = null?(p.ptr);
 
 [T]
 forceinline nullShared(#T) = SharedPointer[T]();
@@ -93,7 +93,7 @@ forceinline nullShared(#T) = SharedPointer[T]();
 
 /// @section  equality 
 [T]
-forceinline overload equals?(p: SharedPointer[T], q: SharedPointer[T])
+forceinline equals?(p: SharedPointer[T], q: SharedPointer[T])
     = p.ptr == q.ptr;
 
 
@@ -101,7 +101,7 @@ forceinline overload equals?(p: SharedPointer[T], q: SharedPointer[T])
 /// @section  printTo - SharedPointer 
 
 [T]
-overload printTo(stream, x:SharedPointer[T]) {
+printTo(stream, x:SharedPointer[T]) {
     printTo(stream, SharedPointer[T], "(");
     if (not null?(x))
         printTo(stream, x^);
@@ -113,7 +113,7 @@ overload printTo(stream, x:SharedPointer[T]) {
 /// @section  printReprTo - SharedPointer 
 
 [T]
-overload printReprTo(stream, x:SharedPointer[T]) {
+printReprTo(stream, x:SharedPointer[T]) {
     // FIXME: handle cycles
     printTo(stream, SharedPointer[T], "(");
     if (not null?(x))

@@ -5,13 +5,13 @@ import data.sequences.lazy.(enumerated);
 /// @section  prefixOperator, infixOperator, updateAssign 
 
 [S,F when Sequence?(S)]
-overload updateAssign(#F, ret:S, ..args) {
+updateAssign(#F, ret:S, ..args) {
     for (i,r in enumerated(ret))
         updateAssign(F, r, ..reduceToScalar(i,..args));
 }
 
 [..S when anyValues?(s=>Sequence?(s) and Numeric?(SequenceElementType(s)),..S)]
-overload infixOperator(..args:S) {
+infixOperator(..args:S) {
     var ret = Vector[seqType(Int8,..args)]();
     resize(ret,seqSize(SizeT(0),..args));
     for (i,r in enumerated(ret))
@@ -21,10 +21,10 @@ overload infixOperator(..args:S) {
 
 [S,U,F when Sequence?(S) and Sequence?(U) 
     and CompareOpDefined?(F,SequenceElementType(S),SequenceElementType(U))]
-overload infixOperator(a:S, #F, b:U) = F(a,b);
+infixOperator(a:S, #F, b:U) = F(a,b);
 
 [..S when Sequence?(lastValue(..S)) and Numeric?(SequenceElementType(lastValue(..S)))]
-overload prefixOperator(..args:S) {
+prefixOperator(..args:S) {
     var ret = Vector[SequenceElementType(lastValue(..S))]();
     resize(ret,size(lastValue(..args)));
     for (i,r in enumerated(ret))
@@ -35,31 +35,31 @@ overload prefixOperator(..args:S) {
 
 private define seqType;
 [T when Numeric?(T)] 
-forceinline overload seqType(#T,a,..args) = ..seqType(T,..args);
+forceinline seqType(#T,a,..args) = ..seqType(T,..args);
 [T,U when Numeric?(T,U) and BiggerNumeric?(T,U)]
-forceinline overload seqType(#T,a:U,..args) = ..seqType(T,..args);
+forceinline seqType(#T,a:U,..args) = ..seqType(T,..args);
 [T,U when Numeric?(T,U) and BiggerNumeric?(U,T)]
-forceinline overload seqType(#T,a:U,..args) = ..seqType(U,..args);
+forceinline seqType(#T,a:U,..args) = ..seqType(U,..args);
 [T,S when Numeric?(T) and Sequence?(S) and BiggerNumeric?(T,SequenceElementType(S))] 
-forceinline overload seqType(#T,a:S,..args) = ..seqType(T,..args);
+forceinline seqType(#T,a:S,..args) = ..seqType(T,..args);
 [T,S when Numeric?(T) and Sequence?(S) and BiggerNumeric?(SequenceElementType(S),T)] 
-forceinline overload seqType(#T,a:S,..args) = ..seqType(SequenceElementType(S),..args);
-[T when Numeric?(T)] overload seqType(#T) = T;
+forceinline seqType(#T,a:S,..args) = ..seqType(SequenceElementType(S),..args);
+[T when Numeric?(T)] seqType(#T) = T;
 
 private define seqSize;
-forceinline overload seqSize(s,forward a,forward ..args) = forward ..seqSize(s,..args);
+forceinline seqSize(s,forward a,forward ..args) = forward ..seqSize(s,..args);
 [S when Sequence?(S)] 
-forceinline overload seqSize(s,forward a:S,forward ..args) = forward ..seqSize(max(s,size(a)),..args);
-forceinline overload seqSize(s) = s;
+forceinline seqSize(s,forward a:S,forward ..args) = forward ..seqSize(max(s,size(a)),..args);
+forceinline seqSize(s) = s;
 
 private define reduceToScalar;
 [F] 
-forceinline overload reduceToScalar(forward i, #F, forward ..args) = forward F, ..reduceToScalar(i,..args);
+forceinline reduceToScalar(forward i, #F, forward ..args) = forward F, ..reduceToScalar(i,..args);
 [S when Sequence?(S)] 
-forceinline overload reduceToScalar(forward i,forward a:S, forward ..args) = forward a[i],..reduceToScalar(i,..args);
+forceinline reduceToScalar(forward i,forward a:S, forward ..args) = forward a[i],..reduceToScalar(i,..args);
 [T when Numeric?(T)] 
-forceinline overload reduceToScalar(forward i, forward a:T,forward ..args) = forward a,..reduceToScalar(i,..args);
-forceinline overload reduceToScalar(forward i) = ;
+forceinline reduceToScalar(forward i, forward a:T,forward ..args) = forward a,..reduceToScalar(i,..args);
+forceinline reduceToScalar(forward i) = ;
 
 
 
@@ -68,7 +68,7 @@ forceinline overload reduceToScalar(forward i) = ;
 [A, ..B when Sequence?(A) and allValues?(Sequence?,..B)
         and equalValues?(SequenceElementType(A),
             ..mapValues(SequenceElementType,..B)) and not StringLiteralType?(A,..B)]
-overload (++)(forward a:A, forward ..bs:B) {
+(++)(forward a:A, forward ..bs:B) {
     var result = Vector(a);
     ..for (b in bs)
         pushAll(result, b);
@@ -76,28 +76,28 @@ overload (++)(forward a:A, forward ..bs:B) {
 }
 
 [A, ..T when Sequence?(A) and equalValues?(SequenceElementType(A),..T) and not StringLiteralType?(A, ..T)]
-overload (++)(forward a:A, forward ..x:T) {
+(++)(forward a:A, forward ..x:T) {
     var result = Vector(a);
     push(result, ..x);
     return move(result);
 }
 
 [A, T when Sequence?(A) and (SequenceElementType(A) == T)]
-overload (++)(forward x:T, forward a:A) = Vector[T](x) ++ a;
+(++)(forward x:T, forward a:A) = Vector[T](x) ++ a;
 
 private define removeCatFromList;
-overload removeCatFromList(forward a, forward ..args) = forward a, ..removeCatFromList(..args);
-overload removeCatFromList(forward a, #cat, forward ..args) = forward a, ..removeCatFromList(..args);
-overload removeCatFromList(forward a) = forward a;
+removeCatFromList(forward a, forward ..args) = forward a, ..removeCatFromList(..args);
+removeCatFromList(forward a, #cat, forward ..args) = forward a, ..removeCatFromList(..args);
+removeCatFromList(forward a) = forward a;
 
 [A, ..B when Sequence?(A)]
-overload updateAssign(#(++), forward a:A, forward ..bs:B) {
+updateAssign(#(++), forward a:A, forward ..bs:B) {
     ..for (b in ..removeCatFromList(..bs)) {
         pushAll(a, b);
     }
 }
 
 [A, T when Sequence?(A) and (SequenceElementType(A) == T)]
-overload updateAssign(#(++), forward x:T, forward a:A) {
+updateAssign(#(++), forward x:T, forward a:A) {
     insert(a,0,x);
 }

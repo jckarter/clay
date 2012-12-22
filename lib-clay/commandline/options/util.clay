@@ -5,7 +5,7 @@ record PushbackIterator[S, T](
   base : T
 );
 
-[S, T] overload nextValue(it : PushbackIterator[S, T]) {
+[S, T] nextValue(it : PushbackIterator[S, T]) {
   if (not empty?(it.pending)) return Maybe(pop(it.pending));
   else return getMaybeValue(nextValue(it.base));
 }
