@@ -230,12 +230,12 @@ static void optimizeLLVM(llvm::Module *module, unsigned optLevel, bool internali
     llvm::PassManager passes;
 
     string moduleDataLayout = module->getDataLayout();
-    llvm::TargetData *td = new llvm::TargetData(moduleDataLayout);
-    passes.add(td);
+    llvm::DataLayout *dl = new llvm::DataLayout(moduleDataLayout);
+    passes.add(dl);
 
     llvm::FunctionPassManager fpasses(module);
 
-    fpasses.add(new llvm::TargetData(*td));
+    fpasses.add(new llvm::DataLayout(*dl));
 
     addOptimizationPasses(passes, fpasses, optLevel, internalize);
 
@@ -274,7 +274,7 @@ static void generateAssembly(llvm::Module *module,
 
     llvm::FunctionPassManager fpasses(module);
 
-    fpasses.add(new llvm::TargetData(module));
+    fpasses.add(new llvm::DataLayout(module));
     fpasses.add(llvm::createVerifierPass());
 
     targetMachine->setAsmVerbosityDefault(true);
@@ -353,7 +353,7 @@ static bool generateBinary(llvm::Module *module,
     vector<const char *> clangArgs;
     clangArgs.push_back(clangPath.c_str());
 
-    switch (llvmTargetData->getPointerSizeInBits()) {
+    switch (llvmDataLayout->getPointerSizeInBits()) {
     case 32 :
         clangArgs.push_back("-m32");
         break;

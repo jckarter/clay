@@ -31,8 +31,6 @@
 #include <llvm/ADT/StringMap.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/ADT/Triple.h>
-#include <llvm/Analysis/DebugInfo.h>
-#include <llvm/Analysis/DIBuilder.h>
 #include <llvm/Analysis/Passes.h>
 #include <llvm/Assembly/Writer.h>
 #include <llvm/Assembly/Parser.h>
@@ -42,12 +40,16 @@
 #include <llvm/CodeGen/LinkAllAsmWriterComponents.h>
 #include <llvm/CodeGen/LinkAllCodegenComponents.h>
 #include <llvm/CodeGen/ValueTypes.h>
+#include <llvm/DataLayout.h>
+#include <llvm/DebugInfo.h>
 #include <llvm/DerivedTypes.h>
+#include <llvm/DIBuilder.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/GenericValue.h>
 #include <llvm/ExecutionEngine/JIT.h>
 #include <llvm/Function.h>
 #include <llvm/Intrinsics.h>
+#include <llvm/IRBuilder.h>
 #include <llvm/LinkAllVMCore.h>
 #include <llvm/Linker.h>
 #include <llvm/LLVMContext.h>
@@ -58,7 +60,6 @@
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/FormattedStream.h>
 #include <llvm/Support/Host.h>
-#include <llvm/Support/IRBuilder.h>
 #include <llvm/Support/MemoryBuffer.h>
 #include <llvm/Support/Path.h>
 #include <llvm/Support/PathV2.h>
@@ -67,7 +68,6 @@
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/raw_ostream.h>
-#include <llvm/Target/TargetData.h>
 #include <llvm/Target/TargetOptions.h>
 #include <llvm/Transforms/IPO/PassManagerBuilder.h>
 #include <llvm/Transforms/IPO.h>
