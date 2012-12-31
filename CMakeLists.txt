@@ -23,8 +23,8 @@ if(UNIX)
         OUTPUT_VARIABLE LLVM_VERSION
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-    if(NOT ${LLVM_VERSION} STREQUAL "3.1")
-        message(FATAL_ERROR "Clay requires LLVM 3.1.")
+    if(NOT ${LLVM_VERSION} STREQUAL "3.2")
+        message(FATAL_ERROR "Clay requires LLVM 3.2.")
     endif()
 
     execute_process(

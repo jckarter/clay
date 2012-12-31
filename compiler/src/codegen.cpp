@@ -5,7 +5,7 @@ namespace clay {
 llvm::Module *llvmModule = NULL;
 llvm::DIBuilder *llvmDIBuilder = NULL;
 llvm::ExecutionEngine *llvmEngine;
-const llvm::TargetData *llvmTargetData;
+const llvm::DataLayout *llvmDataLayout;
 
 static vector<CValuePtr> initializedGlobals;
 static CodegenContextPtr constructorsCtx;
@@ -2886,7 +2886,10 @@ void codegenCodeBody(InvokeEntryPtr entry)
                                llvmModule);
 
     for (unsigned i = 1; i <= llArgTypes.size(); ++i) {
-        llFunc->addAttribute(i, llvm::Attribute::NoAlias);
+        llvm::Attributes attrs = llvm::Attributes::get(
+            llFunc->getContext(),
+            llvm::Attributes::NoAlias);
+        llFunc->addAttribute(i, attrs);
     }
 
     entry->llvmFunc = llFunc;
@@ -2903,15 +2906,22 @@ void codegenCodeBody(InvokeEntryPtr entry)
         for (unsigned i = 0; i < entry->argsKey.size(); ++i) {
             llvm::DIType argType = llvmTypeDebugInfo(entry->argsKey[i]);
             llvm::DIType argRefType
-                = llvmDIBuilder->createReferenceType(argType);
+                = llvmDIBuilder->createReferenceType(
+                    llvm::dwarf::DW_TAG_reference_type,
+                    argType);
             debugParamTypes.push_back(argRefType);
         }
         for (unsigned i = 0; i < entry->returnTypes.size(); ++i) {
             llvm::DIType returnType = llvmTypeDebugInfo(entry->returnTypes[i]);
             llvm::DIType returnRefType = entry->returnIsRef[i]
                 ? llvmDIBuilder->createReferenceType(
-                    llvmDIBuilder->createReferenceType(returnType))
-                : llvmDIBuilder->createReferenceType(returnType);
+                    llvm::dwarf::DW_TAG_reference_type,
+                    llvmDIBuilder->createReferenceType(
+                        llvm::dwarf::DW_TAG_reference_type,
+                        returnType))
+                : llvmDIBuilder->createReferenceType(
+                    llvm::dwarf::DW_TAG_reference_type,
+                    returnType);
 
             debugParamTypes.push_back(returnRefType);
         }
@@ -2983,6 +2993,7 @@ void codegenCodeBody(InvokeEntryPtr entry)
                 file, // file
                 line, // line
                 llvmDIBuilder->createReferenceType(
+                    llvm::dwarf::DW_TAG_reference_type,
                     llvmTypeDebugInfo(entry->fixedArgTypes[i])), // type
                 true, // alwaysPreserve
                 0, // flags
@@ -3025,6 +3036,7 @@ void codegenCodeBody(InvokeEntryPtr entry)
                     file, // file
                     line, // line
                     llvmDIBuilder->createReferenceType(
+                        llvm::dwarf::DW_TAG_reference_type,
                         llvmTypeDebugInfo(entry->varArgTypes[i])), // type
                     true, // alwaysPreserve
                     0, // flags
@@ -3084,6 +3096,7 @@ void codegenCodeBody(InvokeEntryPtr entry)
                     file, // file
                     line, // line
                     llvmDIBuilder->createReferenceType(
+                        llvm::dwarf::DW_TAG_reference_type,
                         llvmTypeDebugInfo(returns[i].type)), // type
                     true, // alwaysPreserve
                     0, // flags
@@ -4076,6 +4089,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
                     file, // file
                     line, // line
                     llvmDIBuilder->createReferenceType(
+                        llvm::dwarf::DW_TAG_reference_type,
                         llvmTypeDebugInfo(pv->type)), // type
                     true, // alwaysPreserve
                     0, // flags
@@ -4133,6 +4147,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContextPtr ctx)
                     pv->isTemp
                         ? llvmTypeDebugInfo(pv->type)
                         : llvmDIBuilder->createReferenceType(
+                            llvm::dwarf::DW_TAG_reference_type,
                             llvmTypeDebugInfo(pv->type)), // type
                     true, // alwaysPreserve
                     0, // flags
@@ -6464,8 +6479,8 @@ llvm::TargetMachine *initLLVM(std::string const &targetTriple,
         targetTriple, "", "", llvm::TargetOptions(), reloc, codeModel);
 
     if (targetMachine != NULL) {
-        llvmTargetData = targetMachine->getTargetData();
-        llvmModule->setDataLayout(llvmTargetData->getStringRepresentation());
+        llvmDataLayout = targetMachine->getDataLayout();
+        llvmModule->setDataLayout(llvmDataLayout->getStringRepresentation());
     }
 
     return targetMachine;

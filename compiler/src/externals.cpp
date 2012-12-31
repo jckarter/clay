@@ -43,8 +43,12 @@ llvm::Type *ExternalTarget::pushReturnType(CallingConv conv,
     if (type == NULL)
         return llvmVoidType();
     else if (typeReturnsBySretPointer(conv, type)) {
-        llArgTypes.push_back(llvmPointerType(type));
-        llAttributes.push_back(make_pair(llArgTypes.size(), llvm::Attribute::StructRet));
+        llvm::Type *llType = llvmPointerType(type);
+        llArgTypes.push_back(llType);
+        llvm::Attributes attrs = llvm::Attributes::get(
+            llType->getContext(),
+            llvm::Attributes::StructRet);
+        llAttributes.push_back(make_pair(llArgTypes.size(), attrs));
         return llvmVoidType();
     } else {
         llvm::Type *bitcastType = typeReturnsAsBitcastType(conv, type);
@@ -61,8 +65,12 @@ void ExternalTarget::pushArgumentType(CallingConv conv,
                                       vector< pair<unsigned, llvm::Attributes> > &llAttributes)
 {
     if (typePassesByByvalPointer(conv, type, false)) {
-        llArgTypes.push_back(llvmPointerType(type));
-        llAttributes.push_back(make_pair(llArgTypes.size(), llvm::Attribute::ByVal));
+        llvm::Type *llType = llvmPointerType(type);
+        llArgTypes.push_back(llType);
+        llvm::Attributes attrs = llvm::Attributes::get(
+            llType->getContext(),
+            llvm::Attributes::ByVal);
+        llAttributes.push_back(make_pair(llArgTypes.size(), attrs));
     } else {
         llvm::Type *bitcastType = typePassesAsBitcastType(conv, type, false);
         if (bitcastType != NULL)
@@ -171,7 +179,10 @@ void ExternalTarget::loadStructRetArgument(CallingConv conv,
         CValuePtr out0 = out->values[0];
         assert(out0->type == type);
         llArgs.push_back(out0->llValue);
-        llAttributes.push_back(make_pair(llArgs.size(), llvm::Attribute::StructRet));
+        llvm::Attributes attrs = llvm::Attributes::get(
+            out0->llValue->getContext(),
+            llvm::Attributes::StructRet);
+        llAttributes.push_back(make_pair(llArgs.size(), attrs));
     }
 }
 
@@ -183,7 +194,10 @@ void ExternalTarget::loadArgument(CallingConv conv,
 {
     if (typePassesByByvalPointer(conv, cv->type, false)) {
         llArgs.push_back(cv->llValue);
-        llAttributes.push_back(make_pair(llArgs.size(), llvm::Attribute::ByVal));
+        llvm::Attributes attrs = llvm::Attributes::get(
+            cv->llValue->getContext(),
+            llvm::Attributes::ByVal);
+        llAttributes.push_back(make_pair(llArgs.size(), attrs));
     } else {
         llvm::Type *bitcastType = typePassesAsBitcastType(conv, cv->type, false);
         if (bitcastType != NULL) {
@@ -206,7 +220,10 @@ void ExternalTarget::loadVarArgument(CallingConv conv,
 {
     if (typePassesByByvalPointer(conv, cv->type, true)) {
         llArgs.push_back(cv->llValue);
-        llAttributes.push_back(make_pair(llArgs.size(), llvm::Attribute::ByVal));
+        llvm::Attributes attrs = llvm::Attributes::get(
+            cv->llValue->getContext(),
+            llvm::Attributes::ByVal);
+        llAttributes.push_back(make_pair(llArgs.size(), attrs));
     } else {
         llvm::Type *bitcastType = typePassesAsBitcastType(conv, cv->type, true);
         if (bitcastType != NULL) {

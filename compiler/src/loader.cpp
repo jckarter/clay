@@ -70,8 +70,8 @@ static std::string getCPU(llvm::Triple const &triple) {
     }
 }
 
-static std::string getPtrSize(const llvm::TargetData *targetData) {
-    switch (targetData->getPointerSizeInBits()) {
+static std::string getPtrSize(const llvm::DataLayout *dataLayout) {
+    switch (dataLayout->getPointerSizeInBits()) {
     case 32 : return "32";
     case 64 : return "64";
     default : assert(false); return "";
@@ -84,7 +84,7 @@ static void initModuleSuffixes() {
     string os = getOS(triple);
     string osgroup = getOSGroup(triple);
     string cpu = getCPU(triple);
-    string bits = getPtrSize(llvmTargetData);
+    string bits = getPtrSize(llvmDataLayout);
     moduleSuffixes.push_back("." + os + "." + cpu + "." + bits + ".clay");
     moduleSuffixes.push_back("." + os + "." + cpu + ".clay");
     moduleSuffixes.push_back("." + os + "." + bits + ".clay");

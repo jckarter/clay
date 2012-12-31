@@ -43,11 +43,11 @@ static vector<vector<StaticTypePtr> > staticTypes;
 //
 
 static size_t llTypeSize(llvm::Type *llt) {
-    return (size_t)llvmTargetData->getTypeAllocSize(llt);
+    return (size_t)llvmDataLayout->getTypeAllocSize(llt);
 }
 
 static size_t llTypeAlignment(llvm::Type *llt) {
-    return (size_t)llvmTargetData->getABITypeAlignment(llt);
+    return (size_t)llvmDataLayout->getABITypeAlignment(llt);
 }
 
 static size_t debugTypeSize(llvm::Type *llt) {
@@ -81,7 +81,7 @@ void initTypes() {
     complex80Type = new ComplexType(80);
 
     cIntType = int32Type;
-    switch (llvmTargetData->getPointerSizeInBits()) {
+    switch (llvmDataLayout->getPointerSizeInBits()) {
     case 32 :
         cSizeTType = uint32Type;
         cPtrDiffTType = int32Type;
@@ -826,7 +826,7 @@ const llvm::StructLayout *tupleTypeLayout(TupleType *t) {
     if (t->layout == NULL) {
         llvm::StructType *st =
             llvm::cast<llvm::StructType>(llvmType(t));
-        t->layout = llvmTargetData->getStructLayout(st);
+        t->layout = llvmDataLayout->getStructLayout(st);
     }
     return t->layout;
 }
@@ -835,7 +835,7 @@ const llvm::StructLayout *complexTypeLayout(ComplexType *t) {
     if (t->layout == NULL) {
         llvm::StructType *st =
             llvm::cast<llvm::StructType>(llvmType(t));
-        t->layout = llvmTargetData->getStructLayout(st);
+        t->layout = llvmDataLayout->getStructLayout(st);
     }
     return t->layout;
 }
@@ -844,7 +844,7 @@ const llvm::StructLayout *recordTypeLayout(RecordType *t) {
     if (t->layout == NULL) {
         llvm::StructType *st =
             llvm::cast<llvm::StructType>(llvmType(t));
-        t->layout = llvmTargetData->getStructLayout(st);
+        t->layout = llvmDataLayout->getStructLayout(st);
     }
     return t->layout;
 }
@@ -1101,15 +1101,22 @@ static void declareLLVMType(TypePtr t) {
             for (unsigned i = 0; i < x->argTypes.size(); ++i) {
                 llvm::DIType argType = llvmTypeDebugInfo(x->argTypes[i]);
                 llvm::DIType argRefType
-                    = llvmDIBuilder->createReferenceType(argType);
+                    = llvmDIBuilder->createReferenceType(
+                        llvm::dwarf::DW_TAG_reference_type,
+                        argType);
                 debugParamTypes.push_back(argRefType);
             }
             for (unsigned i = 0; i < x->returnTypes.size(); ++i) {
                 llvm::DIType returnType = llvmTypeDebugInfo(x->returnTypes[i]);
                 llvm::DIType returnRefType = x->returnIsRef[i]
                     ? llvmDIBuilder->createReferenceType(
-                        llvmDIBuilder->createReferenceType(returnType))
-                    : llvmDIBuilder->createReferenceType(returnType);
+                        llvm::dwarf::DW_TAG_reference_type,
+                        llvmDIBuilder->createReferenceType(
+                            llvm::dwarf::DW_TAG_reference_type,
+                            returnType))
+                    : llvmDIBuilder->createReferenceType(
+                        llvm::dwarf::DW_TAG_reference_type,
+                        returnType);
 
                 debugParamTypes.push_back(returnRefType);
             }
@@ -1259,7 +1266,8 @@ static void declareLLVMType(TypePtr t) {
                 line,
                 debugTypeSize(t->llType),
                 debugTypeAlignment(t->llType),
-                enumArray);
+                enumArray,
+                llvm::DIType());
         }
         break;
     }
@@ -1358,8 +1366,8 @@ static void defineLLVMType(TypePtr t) {
         size_t maxSize = 0;
         for (unsigned i = 0; i < x->memberTypes.size(); ++i) {
             llvm::Type *llt = llvmType(x->memberTypes[i]);
-            size_t align = (size_t)llvmTargetData->getABITypeAlignment(llt);
-            size_t size = (size_t)llvmTargetData->getTypeAllocSize(llt);
+            size_t align = (size_t)llvmDataLayout->getABITypeAlignment(llt);
+            size_t size = (size_t)llvmDataLayout->getTypeAllocSize(llt);
             if (align > maxAlign) {
                 maxAlign = align;
                 maxAlignType = llt;
