@@ -2281,22 +2281,21 @@ struct Import : public ANode {
     DottedNamePtr dottedName;
     Visibility visibility;
     ModulePtr module;
-    Import(ImportKind importKind, DottedNamePtr dottedName, Visibility visibility)
+    Import(ImportKind importKind, DottedNamePtr dottedName)
         : ANode(IMPORT), importKind(importKind), dottedName(dottedName),
-          visibility(visibility) {}
+          visibility(PRIVATE) {}
 };
 
 struct ImportModule : public Import {
     IdentifierPtr alias;
     ImportModule(DottedNamePtr dottedName,
-                 Visibility visibility,
                  IdentifierPtr alias)
-        : Import(IMPORT_MODULE, dottedName, visibility), alias(alias) {}
+        : Import(IMPORT_MODULE, dottedName), alias(alias) {}
 };
 
 struct ImportStar : public Import {
-    ImportStar(DottedNamePtr dottedName, Visibility visibility)
-        : Import(IMPORT_STAR, dottedName, visibility) {}
+    ImportStar(DottedNamePtr dottedName)
+        : Import(IMPORT_STAR, dottedName) {}
 };
 
 struct ImportedMember {
@@ -2311,8 +2310,8 @@ struct ImportedMember {
 struct ImportMembers : public Import {
     vector<ImportedMember> members;
     llvm::StringMap<IdentifierPtr> aliasMap;
-    ImportMembers(DottedNamePtr dottedName, Visibility visibility)
-        : Import(IMPORT_MEMBERS, dottedName, visibility) {}
+    ImportMembers(DottedNamePtr dottedName)
+        : Import(IMPORT_MEMBERS, dottedName) {}
 };
 
 

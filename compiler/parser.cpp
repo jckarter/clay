@@ -1979,7 +1979,7 @@ bool topLevelVisibility(Visibility &x) {
 }
 
 bool importVisibility(Visibility &x) {
-    return optVisibility(PRIVATE, x);
+    return optVisibility(VISIBILITY_UNDEFINED, x);
 }
 
 
@@ -2873,30 +2873,22 @@ static bool optImportAlias(IdentifierPtr &x) {
 
 static bool importModule(ImportPtr &x) {
     Location location = currentLocation();
-    Visibility vis;
-    if (!importVisibility(vis)) return false;
-    if (!keyword("import")) return false;
     DottedNamePtr y;
     if (!dottedName(y)) return false;
     IdentifierPtr z;
     if (!optImportAlias(z)) return false;
-    if (!symbol(";")) return false;
-    x = new ImportModule(y, vis, z);
+    x = new ImportModule(y, z);
     x->location = location;
     return true;
 }
 
 static bool importStar(ImportPtr &x) {
     Location location = currentLocation();
-    Visibility vis;
-    if (!importVisibility(vis)) return false;
-    if (!keyword("import")) return false;
     DottedNamePtr y;
     if (!dottedName(y)) return false;
     if (!symbol(".")) return false;
     if (!opsymbol("*")) return false;
-    if (!symbol(";")) return false;
-    x = new ImportStar(y, vis);
+    x = new ImportStar(y);
     x->location = location;
     return true;
 }
@@ -2930,40 +2922,68 @@ static bool importedMemberList(vector<ImportedMember> &x) {
 
 static bool importMembers(ImportPtr &x) {
     Location location = currentLocation();
-    Visibility vis;
-    if (!importVisibility(vis)) return false;
-    if (!keyword("import")) return false;
     DottedNamePtr y;
     if (!dottedName(y)) return false;
     if (!symbol(".")) return false;
     if (!symbol("(")) return false;
-    ImportMembersPtr z = new ImportMembers(y, vis);
+    ImportMembersPtr z = new ImportMembers(y);
     if (!importedMemberList(z->members)) return false;
     if (!symbol(")")) return false;
-    if (!symbol(";")) return false;
     x = z.ptr();
     x->location = location;
     return true;
 }
 
-static bool import(ImportPtr &x) {
+static bool import2(ImportPtr &x, Visibility visTop) {
+    Visibility vis;
+    if (!importVisibility(vis)) return false;
     int p = save();
-    if (importModule(x)) return true;
-    if (restore(p), importStar(x)) return true;
-    if (restore(p), importMembers(x)) return true;
+    if (importStar(x)) goto importsuccess;
+    if (restore(p), importMembers(x)) goto importsuccess;
+    if (restore(p), importModule(x)) goto importsuccess;
     return false;
+importsuccess:
+    if (vis == VISIBILITY_UNDEFINED) {
+        if (visTop ==  VISIBILITY_UNDEFINED)
+            x->visibility = PRIVATE;
+        else
+            x->visibility = visTop;
+    } else
+            x->visibility = vis;
+    return true;
+}
+
+static bool importList(vector<ImportPtr> &x, Visibility vis) {
+    ImportPtr y;
+    if (!import2(y, vis)) return false;
+    while (true) {
+        x.push_back(y);
+        int p = save();
+        if (!symbol(",") || !import2(y, vis)) {
+            restore(p);
+            break;
+        }
+    }
+    return true;
+}
+
+static bool import(vector<ImportPtr> &x) {
+    Visibility vis;
+    if (!importVisibility(vis)) return false;
+    if (!keyword("import")) return false;
+    if (!importList(x, vis)) return false;
+    if (!symbol(";")) return false;
+    return true;
 }
 
 static bool imports(vector<ImportPtr> &x) {
     x.clear();
     while (true) {
         int p = save();
-        ImportPtr y;
-        if (!import(y)) {
+        if (!import(x)) {
             restore(p);
             break;
         }
-        x.push_back(y);
     }
     return true;
 }
@@ -3185,7 +3205,6 @@ static bool replItems(ReplItem& x, bool = false) {
     x.toplevels.clear();
     x.imports.clear();
     x.stmts.clear();
-    ImportPtr importItem;
     StatementPtr stmtItem;
 
     while (true) {
@@ -3201,10 +3220,9 @@ static bool replItems(ReplItem& x, bool = false) {
             continue;
         }
 
-        if (!import(importItem)) {
+        if (!import(x.imports)) {
             restore(p);
         } else {
-            x.imports.push_back(importItem);
             continue;
         }
 
