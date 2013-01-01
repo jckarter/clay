@@ -3016,7 +3016,7 @@ static bool documentationAnnotation(std::map<DocumentationAnnotation, string> &a
         ano = SectionAnnotation;
     } else if (key == "module") {
         ano = ModuleAnnotation;
-    } else if (key == "override") {
+    } else if (key == "overload" || key == "override" || key == "default") {
         ano = OverloadAnnotation;
     } else if (key == "record") {
         ano = RecordAnnotion;
