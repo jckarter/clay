@@ -17,6 +17,7 @@ StatementPtr desugarSwitchStatement(SwitchPtr x);
 ExprListPtr desugarEvalExpr(EvalExprPtr eval, EnvPtr env);
 llvm::ArrayRef<StatementPtr> desugarEvalStatement(EvalStatementPtr eval, EnvPtr env);
 llvm::ArrayRef<TopLevelItemPtr> desugarEvalTopLevel(EvalTopLevelPtr eval, EnvPtr env);
+OverloadPtr desugarAsOverload(OverloadPtr &x);
 
 }
 
