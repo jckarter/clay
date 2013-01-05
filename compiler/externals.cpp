@@ -54,8 +54,12 @@ llvm::Type *ExternalTarget::pushReturnType(CallingConv conv,
     if (type == NULL)
         return llvmVoidType();
     else if (typeReturnsBySretPointer(conv, type)) {
-        llArgTypes.push_back(llvmPointerType(type));
-        llAttributes.push_back(make_pair(llArgTypes.size(), llvm::Attribute::StructRet));
+        llvm::Type *llType = llvmPointerType(type);
+        llArgTypes.push_back(llType);
+        llvm::Attributes attrs = llvm::Attributes::get(
+            llType->getContext(),
+            llvm::Attributes::StructRet);
+        llAttributes.push_back(make_pair(llArgTypes.size(), attrs));
         return llvmVoidType();
     } else {
         llvm::Type *bitcastType = typeReturnsAsBitcastType(conv, type);
@@ -72,8 +76,12 @@ void ExternalTarget::pushArgumentType(CallingConv conv,
                                       vector< pair<unsigned, llvm::Attributes> > &llAttributes)
 {
     if (typePassesByByvalPointer(conv, type, false)) {
-        llArgTypes.push_back(llvmPointerType(type));
-        llAttributes.push_back(make_pair(llArgTypes.size(), llvm::Attribute::ByVal));
+        llvm::Type *llType = llvmPointerType(type);
+        llArgTypes.push_back(llType);
+        llvm::Attributes attrs = llvm::Attributes::get(
+            llType->getContext(),
+            llvm::Attributes::ByVal);
+        llAttributes.push_back(make_pair(llArgTypes.size(), attrs));
     } else {
         llvm::Type *bitcastType = typePassesAsBitcastType(conv, type, false);
         if (bitcastType != NULL)
@@ -182,7 +190,10 @@ void ExternalTarget::loadStructRetArgument(CallingConv conv,
         CValuePtr out0 = out->values[0];
         assert(out0->type == type);
         llArgs.push_back(out0->llValue);
-        llAttributes.push_back(make_pair(llArgs.size(), llvm::Attribute::StructRet));
+        llvm::Attributes attrs = llvm::Attributes::get(
+            out0->llValue->getContext(),
+            llvm::Attributes::StructRet);
+        llAttributes.push_back(make_pair(llArgs.size(), attrs));
     }
 }
 
@@ -194,7 +205,10 @@ void ExternalTarget::loadArgument(CallingConv conv,
 {
     if (typePassesByByvalPointer(conv, cv->type, false)) {
         llArgs.push_back(cv->llValue);
-        llAttributes.push_back(make_pair(llArgs.size(), llvm::Attribute::ByVal));
+        llvm::Attributes attrs = llvm::Attributes::get(
+            cv->llValue->getContext(),
+            llvm::Attributes::ByVal);
+        llAttributes.push_back(make_pair(llArgs.size(), attrs));
     } else {
         llvm::Type *bitcastType = typePassesAsBitcastType(conv, cv->type, false);
         if (bitcastType != NULL) {
@@ -217,7 +231,10 @@ void ExternalTarget::loadVarArgument(CallingConv conv,
 {
     if (typePassesByByvalPointer(conv, cv->type, true)) {
         llArgs.push_back(cv->llValue);
-        llAttributes.push_back(make_pair(llArgs.size(), llvm::Attribute::ByVal));
+        llvm::Attributes attrs = llvm::Attributes::get(
+            cv->llValue->getContext(),
+            llvm::Attributes::ByVal);
+        llAttributes.push_back(make_pair(llArgs.size(), attrs));
     } else {
         llvm::Type *bitcastType = typePassesAsBitcastType(conv, cv->type, true);
         if (bitcastType != NULL) {
@@ -873,21 +890,26 @@ llvm::Type *X86_64_ExternalTarget::llvmWordType(TypePtr type)
     llvm::StructType *llType = llvm::StructType::create(llvm::getGlobalContext(), "x86-64 " + typeName(type));
     vector<llvm::Type*> llWordTypes;
     WordClass const *i = wordClasses.begin();
+    size_t size = typeSize(type);
     while (i != wordClasses.end()) {
+        assert(size > 0);
         switch (*i) {
         // docs don't cover this case. is it possible?
         // e.g. struct { __m128 a; __m256 b; };
         case NO_CLASS:
             assert(false);
             break;
-        case INTEGER:
-            llWordTypes.push_back(llvmIntType(64));
+        case INTEGER: {
+            size_t wordSize = size >= 8 ? 64 : size*8;
+            llWordTypes.push_back(llvmIntType(wordSize));
             ++i;
             break;
+        }
         case SSE_INT_VECTOR: {
             int vectorRun = 0;
             do { ++vectorRun; ++i; } while (i != wordClasses.end() && *i == SSEUP);
-            // 8-byte int vectors are allocated to MMX registers
+            // 8-byte int vectors are allocated to MMX registers, so always generate
+            // a <float x n> vector for 64-bit SSE words.
             if (vectorRun == 1)
                 llWordTypes.push_back(llvm::VectorType::get(llvmFloatType(64), vectorRun));
             else
@@ -941,6 +963,8 @@ llvm::Type *X86_64_ExternalTarget::llvmWordType(TypePtr type)
             assert(false);
             break;
         }
+        assert(size >= 8 || i == wordClasses.end());
+        size -= 8;
     }
     llType->setBody(llWordTypes);
     return llType;

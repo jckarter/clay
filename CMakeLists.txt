@@ -32,8 +32,8 @@ if(UNIX)
         message(FATAL_ERROR "${LLVM_CONFIG} failed")
     endif()
 
-    if(NOT ${LLVM_VERSION} MATCHES "^3.1(svn)?$")
-        message(FATAL_ERROR "Clay requires LLVM 3.1.")
+    if(NOT ${LLVM_VERSION} MATCHES "^3.2(svn)?$")
+        message(FATAL_ERROR "Clay requires LLVM 3.2.")
     endif()
 
     execute_process(
