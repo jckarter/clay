@@ -396,27 +396,9 @@ static bool evalExpr(ExprPtr &ev) {
     return true;
 }
 
-static bool pattern(ExprPtr &x);
-static bool atomicPattern(ExprPtr &x);
-
-static bool asExpr(ExprPtr &x) {
-    Location location = currentLocation();
-    ExprPtr y;
-    if (!atomicPattern(y)) return false;
-    if (!keyword("as")) return false;
-    ExprPtr z;
-    if (!pattern(z)) return false;
-    ExprListPtr exprs = new ExprList(y);
-    exprs->add(z);
-    x = new VariadicOp(AS_EXPR, exprs);
-    x->location = location;
-    return true;
-}
-
 static bool atomicExpr(ExprPtr &x) {
     int p = save();
-    if (asExpr(x)) return true;
-    if (restore(p), nameRef(x)) return true;
+    if (nameRef(x)) return true;
     if (restore(p), parenExpr(x)) return true;
     if (restore(p), literal(x)) return true;
     if (restore(p), tupleExpr(x)) return true;
