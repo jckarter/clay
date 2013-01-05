@@ -10,10 +10,6 @@
 
 namespace clay {
 
-
-static llvm::ArrayRef<OverloadPtr> callableOverloads(ObjectPtr x);
-
-
 
 //
 // callableOverloads

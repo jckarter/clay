@@ -396,9 +396,27 @@ static bool evalExpr(ExprPtr &ev) {
     return true;
 }
 
+static bool pattern(ExprPtr &x);
+static bool atomicPattern(ExprPtr &x);
+
+static bool asExpr(ExprPtr &x) {
+    Location location = currentLocation();
+    ExprPtr y;
+    if (!atomicPattern(y)) return false;
+    if (!keyword("as")) return false;
+    ExprPtr z;
+    if (!pattern(z)) return false;
+    ExprListPtr exprs = new ExprList(y);
+    exprs->add(z);
+    x = new VariadicOp(AS_EXPR, exprs);
+    x->location = location;
+    return true;
+}
+
 static bool atomicExpr(ExprPtr &x) {
     int p = save();
-    if (nameRef(x)) return true;
+    if (asExpr(x)) return true;
+    if (restore(p), nameRef(x)) return true;
     if (restore(p), parenExpr(x)) return true;
     if (restore(p), literal(x)) return true;
     if (restore(p), tupleExpr(x)) return true;
@@ -817,10 +835,10 @@ static bool returnExpr(ReturnKind &rkind, ExprPtr &expr) {
 
 static bool block(StatementPtr &x);
 
-static bool arguments(vector<FormalArgPtr> &args, bool &hasVarArg);
+static bool arguments(vector<FormalArgPtr> &args, bool &hasVarArg, bool &hasAsConversion);
 
 static bool lambdaArgs(vector<FormalArgPtr> &formalArgs,
-                       bool &hasVarArg) {
+                       bool &hasVarArg, bool &hasAsConversion) {
     int p = save();
     IdentifierPtr name;
     if (identifier(name)) {
@@ -831,7 +849,7 @@ static bool lambdaArgs(vector<FormalArgPtr> &formalArgs,
         return true;
     }
     restore(p);
-    if (arguments(formalArgs, hasVarArg)) return true;
+    if (arguments(formalArgs, hasVarArg, hasAsConversion)) return true;
     restore(p);
     return true;
 }
@@ -874,12 +892,13 @@ static bool lambda(ExprPtr &x) {
     Location location = currentLocation();
     vector<FormalArgPtr> formalArgs;
     bool hasVarArg = false;
+    bool hasAsConversion = false;
     LambdaCapture captureBy;
     StatementPtr body;
-    if (!lambdaArgs(formalArgs, hasVarArg)) return false;
+    if (!lambdaArgs(formalArgs, hasVarArg, hasAsConversion)) return false;
     if (!lambdaArrow(captureBy)) return false;
     if (!lambdaBody(body)) return false;
-    x = new Lambda(captureBy, formalArgs, hasVarArg, body);
+    x = new Lambda(captureBy, formalArgs, hasVarArg, hasAsConversion, body);
     x->location = location;
     return true;
 }
@@ -948,8 +967,6 @@ success:
 //
 // pattern
 //
-
-static bool pattern(ExprPtr &x);
 
 static bool dottedNameRef(ExprPtr &x) {
     if (!nameRef(x)) return false;
@@ -1685,7 +1702,7 @@ static bool optArgTempness(ValueTempness &tempness) {
     return true;
 }
 
-static bool valueFormalArg(FormalArgPtr &x, bool &hasVarArg) {
+static bool valueFormalArg(FormalArgPtr &x, bool &hasVarArg, bool &hasAsConversion) {
     Location location = currentLocation();
     ValueTempness tempness;
     if (!optArgTempness(tempness)) return false;
@@ -1707,7 +1724,17 @@ static bool valueFormalArg(FormalArgPtr &x, bool &hasVarArg) {
     } else {
         if (!optTypeSpec(z)) return false;
     }
-    x = new FormalArg(y, z, tempness, varArg);
+    p = save();
+    if (keyword("as")) {
+        if (varArg) return false;
+        ExprPtr w;
+        if (!pattern(w)) return false;
+        hasAsConversion = true;
+        x = new FormalArg(y, z, tempness, w);
+    } else {
+        restore(p);
+        x = new FormalArg(y, z, tempness, varArg);
+    } 
     x->location = location;
     return true;
 }
@@ -1754,22 +1781,22 @@ static bool stringFormalArg(unsigned index, FormalArgPtr &x) {
     return true;
 }
 
-static bool formalArg(unsigned index, FormalArgPtr &x, bool &hasVarArg) {
+static bool formalArg(unsigned index, FormalArgPtr &x, bool &hasVarArg, bool &hasAsConversion) {
     int p = save();
-    if (valueFormalArg(x, hasVarArg)) return true;
+    if (valueFormalArg(x, hasVarArg, hasAsConversion)) return true;
     if (restore(p), staticFormalArg(index, x)) return true;
     if (restore(p), stringFormalArg(index, x)) return true;
     return false;
 }
 
-static bool formalArgs(vector<FormalArgPtr> &x, bool &hasVarArg) {
+static bool formalArgs(vector<FormalArgPtr> &x, bool &hasVarArg, bool &hasAsConversion) {
     FormalArgPtr y;
-    if (!formalArg(x.size(), y, hasVarArg)) return false;
+    if (!formalArg(x.size(), y, hasVarArg, hasAsConversion)) return false;
     x.clear();
     while (true) {
         x.push_back(y);
         int p = save();
-        if (!symbol(",") || !formalArg(x.size(), y, hasVarArg)) {
+        if (!symbol(",") || !formalArg(x.size(), y, hasVarArg, hasAsConversion)) {
             restore(p);
             break;
         }
@@ -1777,18 +1804,18 @@ static bool formalArgs(vector<FormalArgPtr> &x, bool &hasVarArg) {
     return true;
 }
 
-static bool argumentsBody(vector<FormalArgPtr> &args, bool &hasVarArg) {
+static bool argumentsBody(vector<FormalArgPtr> &args, bool &hasVarArg, bool &hasAsConversion) {
     int p = save();
-    if (!formalArgs(args, hasVarArg)){
+    if (!formalArgs(args, hasVarArg, hasAsConversion)){
         restore(p);
         args.clear();
     }
     return true;
 }
 
-static bool arguments(vector<FormalArgPtr> &args, bool &hasVarArg) {
+static bool arguments(vector<FormalArgPtr> &args, bool &hasVarArg, bool &hasAsConversion) {
     if (!symbol("(")) return false;
-    if (!argumentsBody(args, hasVarArg)) return false;
+    if (!argumentsBody(args, hasVarArg, hasAsConversion)) return false;
     if (!symbol(")")) return false;
     return true;
 }
@@ -2399,7 +2426,8 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x, Module *module) {
     if (!identifier(z)) return false;
     Location targetEndLocation = currentLocation();
     bool hasVarArg = false;
-    if (!arguments(y->formalArgs, hasVarArg)) return false;
+    bool hasAsConversion = false;
+    if (!arguments(y->formalArgs, hasVarArg, hasAsConversion)) return false;
     y->hasVarArg = hasVarArg;
     y->returnSpecsDeclared = allReturnSpecs(y->returnSpecs, y->varReturnSpec);
     if (!llvmCode(y->llvmBody)) return false;
@@ -2413,7 +2441,7 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x, Module *module) {
     target->location = location;
     target->startLocation = targetStartLocation;
     target->endLocation = targetEndLocation;
-    OverloadPtr v = new Overload(module, target, y, false, isInline);
+    OverloadPtr v = new Overload(module, target, y, false, isInline, hasAsConversion);
     v->location = location;
     x.push_back(v.ptr());
 
@@ -2437,7 +2465,8 @@ static bool procedureWithInterface(vector<TopLevelItemPtr> &x, Module *module, i
     if (!identifier(name)) return false;
     Location targetEndLocation = currentLocation();
     bool hasVarArg = false;
-    if (!arguments(interfaceCode->formalArgs, hasVarArg)) return false;
+    bool hasAsConversion = false;
+    if (!arguments(interfaceCode->formalArgs, hasVarArg, hasAsConversion)) return false;
     interfaceCode->hasVarArg = hasVarArg;
     interfaceCode->returnSpecsDeclared = allReturnSpecs(interfaceCode->returnSpecs, interfaceCode->varReturnSpec);
 
@@ -2479,7 +2508,8 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x, Module *module, int s)
     if (!optPatternVarsWithCond(code->patternVars, code->predicate)) return false;
     restore(e);
     bool hasVarArg = false;
-    if (!arguments(code->formalArgs, hasVarArg)) return false;
+    bool hasAsConversion = false;
+    if (!arguments(code->formalArgs, hasVarArg, hasAsConversion)) return false;
     code->hasVarArg = hasVarArg;
     bool exprRetSpecs = false;
     code->returnSpecsDeclared = allReturnSpecsWithFlag(code->returnSpecs, code->varReturnSpec, exprRetSpecs);
@@ -2499,7 +2529,7 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x, Module *module, int s)
     target->location = location;
     target->startLocation = targetStartLocation;
     target->endLocation = targetEndLocation;
-    OverloadPtr oload = new Overload(module, target, code, callByName, isInline);
+    OverloadPtr oload = new Overload(module, target, code, callByName, isInline, hasAsConversion);
     oload->location = location;
     x.push_back(oload.ptr());
 
@@ -2540,7 +2570,8 @@ static bool overload(TopLevelItemPtr &x, Module *module, int s) {
     if (!pattern(target)) return false;
     Location targetEndLocation = currentLocation();
     bool hasVarArg = false;
-    if (!arguments(code->formalArgs, hasVarArg)) return false;
+    bool hasAsConversion = false;
+    if (!arguments(code->formalArgs, hasVarArg, hasAsConversion)) return false;
     code->hasVarArg = hasVarArg;
     bool exprRetSpecs = false;
     code->returnSpecsDeclared = allReturnSpecsWithFlag(code->returnSpecs, code->varReturnSpec, exprRetSpecs);
@@ -2559,7 +2590,7 @@ static bool overload(TopLevelItemPtr &x, Module *module, int s) {
     target->startLocation = targetStartLocation;
     target->endLocation = targetEndLocation;
     code->location = location;
-    x = new Overload(module, target, code, callByName, isInline);
+    x = new Overload(module, target, code, callByName, isInline, hasAsConversion);
     x->location = location;
     NameRefPtr name = (NameRef *)target.ptr();
     return true;
@@ -3181,7 +3212,7 @@ static bool module(llvm::StringRef moduleName, ModulePtr &x) {
 static bool replItems(ReplItem& x, bool = false) {
     inRepl = false;
     int p = save();
-    if (expression(x.expr) && position == tokens->size()) {
+    if (expression(x.expr) && position == (int)tokens->size()) {
         x.isExprSet = true;
         return true;
     }
