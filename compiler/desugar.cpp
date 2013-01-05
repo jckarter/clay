@@ -416,6 +416,10 @@ OverloadPtr desugarAsOverload(OverloadPtr &x) {
     code->location = x->location;
     clone(x->code->patternVars, code->patternVars);
     
+    //Generate stub body
+    CallPtr returnExpr = new Call(x->target.ptr(), new ExprList());
+    returnExpr->location = x->code->body->location;
+
     //Add patterns as static args
     for (unsigned i = 0; i < x->code->patternVars.size(); ++i) {
         llvm::SmallString<128> buf;
@@ -434,6 +438,10 @@ OverloadPtr desugarAsOverload(OverloadPtr &x) {
         FormalArgPtr arg = new FormalArg(argName, indexing.ptr());
         arg->location = x->code->patternVars[i].name->location;
         code->formalArgs.insert(code->formalArgs.begin(), arg);
+
+        //Add patterns as static call args
+        ExprPtr callArg = new NameRef(x->code->patternVars[i].name);
+        returnExpr->parenArgs->add(callArg);
     }
 
     //Add args
@@ -442,6 +450,16 @@ OverloadPtr desugarAsOverload(OverloadPtr &x) {
         arg->tempness = TEMPNESS_FORWARD;
         if (x->code->formalArgs[i]->asArg) {
             arg->type = x->code->formalArgs[i]->asType;
+            ExprPtr typeArg = x->code->formalArgs[i]->asType;
+            CallPtr callArg = new Call(operator_expr_asExpression(), new ExprList());
+            callArg->parenArgs->add(new NameRef(x->code->formalArgs[i]->name));
+            callArg->parenArgs->add(x->code->formalArgs[i]->asType);
+            callArg->location = x->code->formalArgs[i]->location;
+            returnExpr->parenArgs->add(callArg.ptr());
+        } else {
+            ExprPtr arg0 = new NameRef(x->code->formalArgs[i]->name);
+            arg0->location = x->code->formalArgs[i]->location;
+            returnExpr->parenArgs->add(arg0);
         }
         code->formalArgs.push_back(arg.ptr());
     }
@@ -451,31 +469,6 @@ OverloadPtr desugarAsOverload(OverloadPtr &x) {
     spec->location = x->location;
     spec->env = x->env;
 
-    //Generate stub body
-    CallPtr returnExpr = new Call(x->target.ptr(), new ExprList());
-    returnExpr->location = x->code->body->location;
-
-    //Add patterns as static call args
-    for (unsigned i = 0; i < x->code->patternVars.size(); ++i) {
-        ExprPtr callArg = new NameRef(x->code->patternVars[i].name);
-        returnExpr->parenArgs->add(callArg);
-    }
-    //Add call args
-    for (unsigned i = 0; i < x->code->formalArgs.size(); ++i) {
-        if (x->code->formalArgs[i]->asArg) {
-            ExprPtr typeArg = x->code->formalArgs[i]->asType;
-            CallPtr callArg = new Call(operator_expr_asExpression(), new ExprList());
-            callArg->parenArgs->add(new NameRef(x->code->formalArgs[i]->name));
-            callArg->parenArgs->add(x->code->formalArgs[i]->asType);
-            callArg->location = x->code->formalArgs[i]->location;
-            returnExpr->parenArgs->add(callArg.ptr());
-        } else {
-            ExprPtr arg = new NameRef(x->code->formalArgs[i]->name);
-            arg->location = x->code->formalArgs[i]->location;
-            returnExpr->parenArgs->add(arg);
-        }
-    }
-    
     x->code->body = new Return(RETURN_FORWARD, new ExprList(new Unpack(returnExpr.ptr())), true);
     x->isInline = FORCE_INLINE;
     return spec;
