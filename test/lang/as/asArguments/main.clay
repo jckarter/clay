@@ -1,0 +1,10 @@
+import printer.(println);
+
+[T when Integer?(T)]
+foo(x:T as Int64, y as Float64) = T, Type(x), Type(y);
+
+main() {
+	
+	println(..weaveValues(",", ..foo(3, 7.f)));
+
+}

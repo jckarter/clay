@@ -1,0 +1,6 @@
+import printer.(println);
+
+main() {
+	var a:Int32 = 3;
+	println(Type(a as Int64));
+}

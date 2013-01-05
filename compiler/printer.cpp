@@ -249,6 +249,9 @@ static void printExpr(llvm::raw_ostream &out, const Expr *x) {
         case IF_EXPR :
             out << "IF_EXPR";
             break;
+        case AS_EXPR :
+            out << "AS_EXPR";
+            break;
         default :
             assert(false);
         }
