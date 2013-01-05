@@ -1213,8 +1213,7 @@ enum VariadicOpKind {
     NOT,
     PREFIX_OP,
     INFIX_OP,
-    IF_EXPR,
-    AS_EXPR
+    IF_EXPR
 };
 
 struct VariadicOp : public Expr {

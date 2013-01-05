@@ -87,9 +87,6 @@ ExprPtr lookupCallable(int op) {
     case IF_EXPR :
         callable = operator_expr_ifExpression();
         break;
-    case AS_EXPR :
-        callable = operator_expr_asExpression();
-        break;
     default :
         assert(false);
     }
