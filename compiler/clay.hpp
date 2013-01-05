@@ -1275,6 +1275,7 @@ struct Lambda : public Expr {
     ProcedurePtr lambdaProc;
 
     bool hasVarArg:1;
+    bool hasAsConversion:1;
     bool initialized:1;
 
     Lambda(LambdaCapture captureBy) :
@@ -1282,10 +1283,11 @@ struct Lambda : public Expr {
         hasVarArg(false), initialized(false) {}
     Lambda(LambdaCapture captureBy,
            llvm::ArrayRef<FormalArgPtr> formalArgs,
-           bool hasVarArg, StatementPtr body)
+           bool hasVarArg, bool hasAsConversion, StatementPtr body)
         : Expr(LAMBDA), captureBy(captureBy),
           formalArgs(formalArgs), body(body),
-          hasVarArg(hasVarArg), initialized(false) {}
+          hasVarArg(hasVarArg), hasAsConversion(hasAsConversion),
+          initialized(false) {}
 };
 
 struct Unpack : public Expr {
@@ -1718,16 +1720,21 @@ struct FormalArg : public ANode {
     IdentifierPtr name;
     ExprPtr type;
     ValueTempness tempness;
+    ExprPtr asType;
     bool varArg:1;
+    bool asArg:1;
     FormalArg(IdentifierPtr name, ExprPtr type)
         : ANode(FORMAL_ARG), name(name), type(type),
-          tempness(TEMPNESS_DONTCARE), varArg(false) {}
+          tempness(TEMPNESS_DONTCARE), varArg(false), asArg(false) {}
     FormalArg(IdentifierPtr name, ExprPtr type, ValueTempness tempness)
         : ANode(FORMAL_ARG), name(name), type(type),
-          tempness(tempness), varArg(false) {}
+          tempness(tempness), varArg(false), asArg(false) {}
     FormalArg(IdentifierPtr name, ExprPtr type, ValueTempness tempness, bool varArg)
         : ANode(FORMAL_ARG), name(name), type(type),
-          tempness(tempness), varArg(varArg) {}
+          tempness(tempness), varArg(varArg), asArg(false) {}
+    FormalArg(IdentifierPtr name, ExprPtr type, ValueTempness tempness, ExprPtr asType)
+        : ANode(FORMAL_ARG), name(name), type(type),
+          tempness(tempness), asType(asType), varArg(varArg), asArg(true) {}
 };
 
 struct ReturnSpec : public ANode {
@@ -1956,14 +1963,25 @@ struct Overload : public TopLevelItem {
     int patternsInitializedState:2; // 0:notinit, -1:initing, +1:inited
     bool callByName:1;
     bool nameIsPattern:1;
-    
+    bool hasAsConversion:1;
+
     Overload(Module *module, ExprPtr target,
              CodePtr code,
              bool callByName,
              InlineAttribute isInline)
         : TopLevelItem(OVERLOAD, module), target(target), code(code),
           isInline(isInline), patternsInitializedState(0),
-          callByName(callByName), nameIsPattern(false) {}
+          callByName(callByName), nameIsPattern(false), 
+          hasAsConversion(false) {}
+    Overload(Module *module, ExprPtr target,
+             CodePtr code,
+             bool callByName,
+             InlineAttribute isInline,
+             bool hasAsConversion)
+        : TopLevelItem(OVERLOAD, module), target(target), code(code),
+          isInline(isInline), patternsInitializedState(0),
+          callByName(callByName), nameIsPattern(false), 
+          hasAsConversion(hasAsConversion) {}
 };
 
 struct Procedure : public TopLevelItem {
