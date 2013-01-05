@@ -83,8 +83,8 @@ static llvm::StringRef getCPU(llvm::Triple const &triple) {
     }
 }
 
-static llvm::StringRef getPtrSize(const llvm::TargetData *targetData) {
-    switch (targetData->getPointerSizeInBits()) {
+static llvm::StringRef getPtrSize(const llvm::DataLayout *dataLayout) {
+    switch (dataLayout->getPointerSizeInBits()) {
     case 16 : return "16";
     case 32 : return "32";
     case 64 : return "64";
@@ -98,7 +98,7 @@ static void initModuleSuffixes() {
     llvm::StringRef os = getOS(triple);
     llvm::StringRef osgroup = getOSGroup(triple);
     llvm::StringRef cpu = getCPU(triple);
-    llvm::StringRef bits = getPtrSize(llvmTargetData);
+    llvm::StringRef bits = getPtrSize(llvmDataLayout);
 
     llvm::SmallString<128> buf;
     llvm::raw_svector_ostream sout(buf);
