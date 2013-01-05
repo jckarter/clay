@@ -2434,7 +2434,7 @@ struct Module : public ANode {
 struct PVData {
     TypePtr type;
     bool isTemp:1;
-    PVData() : type(NULL), isTemp(NULL) {}
+    PVData() : type(NULL), isTemp(false) {}
     PVData(TypePtr type, bool isTemp)
         : type(type), isTemp(isTemp) {}
 
