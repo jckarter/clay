@@ -890,21 +890,26 @@ llvm::Type *X86_64_ExternalTarget::llvmWordType(TypePtr type)
     llvm::StructType *llType = llvm::StructType::create(llvm::getGlobalContext(), "x86-64 " + typeName(type));
     vector<llvm::Type*> llWordTypes;
     WordClass const *i = wordClasses.begin();
+    size_t size = typeSize(type);
     while (i != wordClasses.end()) {
+        assert(size > 0);
         switch (*i) {
         // docs don't cover this case. is it possible?
         // e.g. struct { __m128 a; __m256 b; };
         case NO_CLASS:
             assert(false);
             break;
-        case INTEGER:
-            llWordTypes.push_back(llvmIntType(64));
+        case INTEGER: {
+            size_t wordSize = size >= 8 ? 64 : size*8;
+            llWordTypes.push_back(llvmIntType(wordSize));
             ++i;
             break;
+        }
         case SSE_INT_VECTOR: {
             int vectorRun = 0;
             do { ++vectorRun; ++i; } while (i != wordClasses.end() && *i == SSEUP);
-            // 8-byte int vectors are allocated to MMX registers
+            // 8-byte int vectors are allocated to MMX registers, so always generate
+            // a <float x n> vector for 64-bit SSE words.
             if (vectorRun == 1)
                 llWordTypes.push_back(llvm::VectorType::get(llvmFloatType(64), vectorRun));
             else
@@ -958,6 +963,8 @@ llvm::Type *X86_64_ExternalTarget::llvmWordType(TypePtr type)
             assert(false);
             break;
         }
+        assert(size >= 8 || i == wordClasses.end());
+        size -= 8;
     }
     llType->setBody(llWordTypes);
     return llType;
