@@ -405,4 +405,70 @@ llvm::ArrayRef<TopLevelItemPtr> desugarEvalTopLevel(EvalTopLevelPtr eval, EnvPtr
     }
 }
 
+OverloadPtr desugarAsOverload(OverloadPtr &x) {
+    assert(x->hasAsConversion);
+
+    //Generate specialised overload
+    CodePtr code = new Code();
+    code->location = x->location;
+    clone(x->code->patternVars, code->patternVars);
+    
+    //Generate stub body
+    CallPtr returnExpr = new Call(x->target.ptr(), new ExprList());
+    returnExpr->location = x->code->body->location;
+
+    //Add patterns as static args
+    for (unsigned i = 0; i < x->code->patternVars.size(); ++i) {
+        llvm::SmallString<128> buf;
+        llvm::raw_svector_ostream sout(buf);
+        sout << "%arg" << i;
+        IdentifierPtr argName = Identifier::get(sout.str());
+
+        ExprPtr staticName =
+            new ForeignExpr("prelude",
+                            new NameRef(Identifier::get("Static")));
+
+        IndexingPtr indexing = new Indexing(staticName, new ExprList(new NameRef(x->code->patternVars[i].name)));
+        indexing->startLocation = code->patternVars[i].name->location;
+        indexing->endLocation = code->patternVars[i].name->location;
+
+        FormalArgPtr arg = new FormalArg(argName, indexing.ptr());
+        arg->location = x->code->patternVars[i].name->location;
+        code->formalArgs.insert(code->formalArgs.begin(), arg);
+
+        //Add patterns as static call args
+        ExprPtr callArg = new NameRef(x->code->patternVars[i].name);
+        returnExpr->parenArgs->add(callArg);
+    }
+
+    //Add args
+    for (unsigned i = 0; i < x->code->formalArgs.size(); ++i) {
+        FormalArgPtr arg = clone(x->code->formalArgs[i]);
+        arg->tempness = TEMPNESS_FORWARD;
+        if (x->code->formalArgs[i]->asArg) {
+            arg->type = x->code->formalArgs[i]->asType;
+            ExprPtr typeArg = x->code->formalArgs[i]->asType;
+            CallPtr callArg = new Call(operator_expr_asExpression(), new ExprList());
+            callArg->parenArgs->add(new NameRef(x->code->formalArgs[i]->name));
+            callArg->parenArgs->add(x->code->formalArgs[i]->asType);
+            callArg->location = x->code->formalArgs[i]->location;
+            returnExpr->parenArgs->add(callArg.ptr());
+        } else {
+            ExprPtr arg0 = new NameRef(x->code->formalArgs[i]->name);
+            arg0->location = x->code->formalArgs[i]->location;
+            returnExpr->parenArgs->add(arg0);
+        }
+        code->formalArgs.push_back(arg.ptr());
+    }
+
+    code->body = x->code->body;
+    OverloadPtr spec = new Overload(x->module, x->target, code, x->callByName, x->isInline);
+    spec->location = x->location;
+    spec->env = x->env;
+
+    x->code->body = new Return(RETURN_FORWARD, new ExprList(new Unpack(returnExpr.ptr())), true);
+    x->isInline = FORCE_INLINE;
+    return spec;
+}
+
 }

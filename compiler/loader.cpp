@@ -6,6 +6,7 @@
 #include "evaluator.hpp"
 #include "constructors.hpp"
 #include "parser.hpp"
+#include "desugar.hpp"
 
 #pragma clang diagnostic ignored "-Wcovered-switch-default"
 
@@ -83,8 +84,8 @@ static llvm::StringRef getCPU(llvm::Triple const &triple) {
     }
 }
 
-static llvm::StringRef getPtrSize(const llvm::TargetData *targetData) {
-    switch (targetData->getPointerSizeInBits()) {
+static llvm::StringRef getPtrSize(const llvm::DataLayout *dataLayout) {
+    switch (dataLayout->getPointerSizeInBits()) {
     case 16 : return "16";
     case 32 : return "32";
     case 64 : return "64";
@@ -98,7 +99,7 @@ static void initModuleSuffixes() {
     llvm::StringRef os = getOS(triple);
     llvm::StringRef osgroup = getOSGroup(triple);
     llvm::StringRef cpu = getCPU(triple);
-    llvm::StringRef bits = getPtrSize(llvmTargetData);
+    llvm::StringRef bits = getPtrSize(llvmDataLayout);
 
     llvm::SmallString<128> buf;
     llvm::raw_svector_ostream sout(buf);
@@ -535,6 +536,12 @@ static string toString(const T& t) {
     return s;
 }
 
+void addOverload(vector<OverloadPtr> &overloads, OverloadPtr &x) {
+    overloads.insert(overloads.begin(), x);
+    if (x->hasAsConversion)
+        overloads.insert(overloads.begin(), desugarAsOverload(x));
+}
+
 void addProcedureOverload(ProcedurePtr proc, EnvPtr env, OverloadPtr x) {
     if (!!proc->singleOverload && proc->singleOverload != x) {
         // TODO: points to wrong line
@@ -569,7 +576,7 @@ void addProcedureOverload(ProcedurePtr proc, EnvPtr env, OverloadPtr x) {
         }
     }
 
-    proc->overloads.insert(proc->overloads.begin(), x);
+    addOverload(proc->overloads, x);
     getProcedureMonoTypes(proc->mono, env,
         x->code->formalArgs,
         x->code->hasVarArg);
@@ -592,17 +599,17 @@ static void initOverload(OverloadPtr x) {
         }
         case RECORD_DECL : {
             RecordDecl *r = (RecordDecl *)obj.ptr();
-            r->overloads.insert(r->overloads.begin(), x);
+            addOverload(r->overloads, x);
             break;
         }
         case VARIANT_DECL : {
             VariantDecl *v = (VariantDecl *)obj.ptr();
-            v->overloads.insert(v->overloads.begin(), x);
+            addOverload(v->overloads, x);
             break;
         }
         case TYPE : {
             Type *t = (Type *)obj.ptr();
-            t->overloads.insert(t->overloads.begin(), x);
+            addOverload(t->overloads, x);
             break;
         }
         case PRIM_OP : {
@@ -616,7 +623,7 @@ static void initOverload(OverloadPtr x) {
             GlobalAlias *a = (GlobalAlias*)obj.ptr();
             if (!a->hasParams())
                 error(x->target, "invalid overload target");
-            a->overloads.insert(a->overloads.begin(), x);
+            addOverload(a->overloads, x);
             break;
         }
         case INTRINSIC : {
@@ -1228,6 +1235,7 @@ static ModulePtr makeOperatorsModule() {
     OPERATOR(invalidDispatch);
     OPERATOR(stringLiteral);
     OPERATOR(ifExpression);
+    OPERATOR(asExpression);
     OPERATOR(typeToRValue);
     OPERATOR(typesToRValues);
     OPERATOR(doIntegerAddChecked);
@@ -1407,6 +1415,7 @@ DEFINE_OPERATOR_ACCESSOR(dispatchIndex)
 DEFINE_OPERATOR_ACCESSOR(invalidDispatch)
 DEFINE_OPERATOR_ACCESSOR(stringLiteral)
 DEFINE_OPERATOR_ACCESSOR(ifExpression)
+DEFINE_OPERATOR_ACCESSOR(asExpression)
 DEFINE_OPERATOR_ACCESSOR(typeToRValue)
 DEFINE_OPERATOR_ACCESSOR(typesToRValues)
 DEFINE_OPERATOR_ACCESSOR(doIntegerAddChecked)

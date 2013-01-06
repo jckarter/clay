@@ -33,6 +33,7 @@ public import __operators__.(
     getValue,
 
     ifExpression,
+    asExpression,
 
     packMultiValuedFreeVar,
     packMultiValuedFreeVarByRef,
@@ -518,6 +519,19 @@ alias override ifExpression(condition, #consequent, #alternate) --> ret:StringLi
         ret <-- StringLiteralRef(alternate);
 }
 
+/// @section  asExpression 
+
+[T, U]
+forceinline override asExpression(value:T, #U) : U = U(value);
+
+[T, U when Numeric?(T,U)]
+forceinline override asExpression(value:T, #U) : U = numericConvert(U, value);
+
+[T]
+forceinline override asExpression(value:T, #T) : T = ref value;
+
+[T]
+forceinline override asExpression(rvalue value:T, #T) : T = value;
 
 
 /// @section  bitnand, bitandc, bitblend 

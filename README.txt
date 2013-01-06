@@ -14,7 +14,7 @@ is `v0.1`; for normal use you will want to switch to that branch:
 Pre-requisites
 --------------
 
-Clay requires CMake version 2.6 or later, and LLVM and Clang 3.1. Note that
+Clay requires CMake version 2.6 or later, and LLVM and Clang 3.2. Note that
 LLVM versions are not backward-compatible so developer versions of LLVM and/or
 later releases are not compatible with this version of Clay.
 
@@ -27,7 +27,7 @@ be customized by passing cmake arguments of the form
 CMake variables such as CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE, Clay's
 build system uses the following variables:
 
-* LLVM_DIR can be set to the install prefix of an LLVM 3.1 installation.
+* LLVM_DIR can be set to the install prefix of an LLVM 3.2 installation.
   If not set, CMake will look for an 'llvm-config' script on the PATH.
 * PYTHON_EXECUTABLE can be set to the path of a Python 2.x interpreter.
   Clay uses a Python 2 script to drive its test suite. Some platforms
@@ -77,7 +77,7 @@ and the MSVC compiler. There are some issues with Debug builds and
 LLVM, so both LLVM and Clay will need to be built as Release. The
 default LLVM install directory needs Administrator permissions, so
 you may want to set a CMAKE_INSTALL_PREFIX as well. to change it.
-Place the Clang repository in llvm-3.1/tools/clang so that LLVM builds
+Place the Clang repository in llvm-3.2/tools/clang so that LLVM builds
 it automatically and compile LLVM with the following commands:
 
     mkdir build

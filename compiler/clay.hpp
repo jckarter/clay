@@ -31,8 +31,6 @@
 #include <llvm/ADT/StringMap.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/ADT/Triple.h>
-#include <llvm/Analysis/DebugInfo.h>
-#include <llvm/Analysis/DIBuilder.h>
 #include <llvm/Analysis/Passes.h>
 #include <llvm/Assembly/Writer.h>
 #include <llvm/Assembly/Parser.h>
@@ -42,12 +40,16 @@
 #include <llvm/CodeGen/LinkAllAsmWriterComponents.h>
 #include <llvm/CodeGen/LinkAllCodegenComponents.h>
 #include <llvm/CodeGen/ValueTypes.h>
+#include <llvm/DataLayout.h>
+#include <llvm/DebugInfo.h>
 #include <llvm/DerivedTypes.h>
+#include <llvm/DIBuilder.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/GenericValue.h>
 #include <llvm/ExecutionEngine/JIT.h>
 #include <llvm/Function.h>
 #include <llvm/Intrinsics.h>
+#include <llvm/IRBuilder.h>
 #include <llvm/LinkAllVMCore.h>
 #include <llvm/Linker.h>
 #include <llvm/LLVMContext.h>
@@ -58,7 +60,6 @@
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/FormattedStream.h>
 #include <llvm/Support/Host.h>
-#include <llvm/Support/IRBuilder.h>
 #include <llvm/Support/MemoryBuffer.h>
 #include <llvm/Support/Path.h>
 #include <llvm/Support/PathV2.h>
@@ -67,7 +68,6 @@
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/raw_ostream.h>
-#include <llvm/Target/TargetData.h>
 #include <llvm/Target/TargetOptions.h>
 #include <llvm/Transforms/IPO/PassManagerBuilder.h>
 #include <llvm/Transforms/IPO.h>
@@ -1275,6 +1275,7 @@ struct Lambda : public Expr {
     ProcedurePtr lambdaProc;
 
     bool hasVarArg:1;
+    bool hasAsConversion:1;
     bool initialized:1;
 
     Lambda(LambdaCapture captureBy) :
@@ -1282,10 +1283,11 @@ struct Lambda : public Expr {
         hasVarArg(false), initialized(false) {}
     Lambda(LambdaCapture captureBy,
            llvm::ArrayRef<FormalArgPtr> formalArgs,
-           bool hasVarArg, StatementPtr body)
+           bool hasVarArg, bool hasAsConversion, StatementPtr body)
         : Expr(LAMBDA), captureBy(captureBy),
           formalArgs(formalArgs), body(body),
-          hasVarArg(hasVarArg), initialized(false) {}
+          hasVarArg(hasVarArg), hasAsConversion(hasAsConversion),
+          initialized(false) {}
 };
 
 struct Unpack : public Expr {
@@ -1718,16 +1720,21 @@ struct FormalArg : public ANode {
     IdentifierPtr name;
     ExprPtr type;
     ValueTempness tempness;
+    ExprPtr asType;
     bool varArg:1;
+    bool asArg:1;
     FormalArg(IdentifierPtr name, ExprPtr type)
         : ANode(FORMAL_ARG), name(name), type(type),
-          tempness(TEMPNESS_DONTCARE), varArg(false) {}
+          tempness(TEMPNESS_DONTCARE), varArg(false), asArg(false) {}
     FormalArg(IdentifierPtr name, ExprPtr type, ValueTempness tempness)
         : ANode(FORMAL_ARG), name(name), type(type),
-          tempness(tempness), varArg(false) {}
+          tempness(tempness), varArg(false), asArg(false) {}
     FormalArg(IdentifierPtr name, ExprPtr type, ValueTempness tempness, bool varArg)
         : ANode(FORMAL_ARG), name(name), type(type),
-          tempness(tempness), varArg(varArg) {}
+          tempness(tempness), varArg(varArg), asArg(false) {}
+    FormalArg(IdentifierPtr name, ExprPtr type, ValueTempness tempness, ExprPtr asType)
+        : ANode(FORMAL_ARG), name(name), type(type),
+          tempness(tempness), asType(asType), varArg(varArg), asArg(true) {}
 };
 
 struct ReturnSpec : public ANode {
@@ -1961,7 +1968,8 @@ struct Overload : public TopLevelItem {
     int patternsInitializedState:2; // 0:notinit, -1:initing, +1:inited
     bool callByName:1;
     bool nameIsPattern:1;
-    
+    bool hasAsConversion:1;
+
     Overload(Module *module, ExprPtr target,
              CodePtr code,
              bool callByName,
@@ -1969,7 +1977,18 @@ struct Overload : public TopLevelItem {
              OverloadStatus status)
         : TopLevelItem(OVERLOAD, module), target(target), code(code),
           isInline(isInline), status(status), patternsInitializedState(0),
-          callByName(callByName), nameIsPattern(false) {}
+          callByName(callByName), nameIsPattern(false), 
+          hasAsConversion(false) {}
+    Overload(Module *module, ExprPtr target,
+             CodePtr code,
+             bool callByName,
+             InlineAttribute isInline,
+             OverloadStatus status,
+             bool hasAsConversion)
+        : TopLevelItem(OVERLOAD, module), target(target), code(code),
+          isInline(isInline), status(status), patternsInitializedState(0),
+          callByName(callByName), nameIsPattern(false), 
+          hasAsConversion(hasAsConversion) {}
 };
 
 struct Procedure : public TopLevelItem {
@@ -2439,7 +2458,7 @@ struct Module : public ANode {
 struct PVData {
     TypePtr type;
     bool isTemp:1;
-    PVData() : type(NULL), isTemp(NULL) {}
+    PVData() : type(NULL), isTemp(false) {}
     PVData(TypePtr type, bool isTemp)
         : type(type), isTemp(isTemp) {}
 

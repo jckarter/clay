@@ -11,7 +11,7 @@ static const unsigned short DW_LANG_user_CLAY = 0xC1A4;
 
 extern llvm::Module *llvmModule;
 extern llvm::DIBuilder *llvmDIBuilder;
-extern const llvm::TargetData *llvmTargetData;
+extern const llvm::DataLayout *llvmDataLayout;
 
 llvm::PointerType *exceptionReturnType();
 llvm::Value *noExceptionReturnValue();
