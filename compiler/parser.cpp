@@ -2437,7 +2437,7 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x, Module *module) {
     target->location = location;
     target->startLocation = targetStartLocation;
     target->endLocation = targetEndLocation;
-    OverloadPtr v = new Overload(module, target, y, false, isInline, STATUS_OVERRIDE, hasAsConversion);
+    OverloadPtr v = new Overload(module, target, y, false, isInline, STATUS_OVERLOAD, hasAsConversion);
     v->location = location;
     x.push_back(v.ptr());
 
@@ -2476,7 +2476,7 @@ static bool procedureWithInterface(vector<TopLevelItemPtr> &x, Module *module, i
     target->location = location;
     target->startLocation = targetStartLocation;
     target->endLocation = targetEndLocation;
-    OverloadPtr interface = new Overload(module, target, interfaceCode, false, IGNORE, STATUS_OVERRIDE);
+    OverloadPtr interface = new Overload(module, target, interfaceCode, false, IGNORE, STATUS_OVERLOAD);
     interface->location = location;
 
     ProcedurePtr proc = new Procedure(module, name, vis, privateOverload, interface);
@@ -2525,7 +2525,7 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x, Module *module, int s)
     target->location = location;
     target->startLocation = targetStartLocation;
     target->endLocation = targetEndLocation;
-    OverloadPtr oload = new Overload(module, target, code, callByName, isInline, STATUS_OVERRIDE, hasAsConversion);
+    OverloadPtr oload = new Overload(module, target, code, callByName, isInline, STATUS_OVERLOAD, hasAsConversion);
     oload->location = location;
     x.push_back(oload.ptr());
 

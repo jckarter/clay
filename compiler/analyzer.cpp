@@ -3821,7 +3821,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             code,
             entry.second->callByName,
             entry.second->isInline,
-            STATUS_OVERRIDE);
+            STATUS_OVERLOAD);
         overload->env = entry.second->env;
         addProcedureOverload(proc, entry.second->env, overload);
 

@@ -160,11 +160,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
         if (!evaluateBool(code->predicate, staticEnv))
             return new MatchPredicateError(code->predicate);
     
-    MatchSuccessPtr result = new MatchSuccess(
-        overload->callByName, overload->isInline, overload->status, code, staticEnv,
-        callable, argsKey
-    );
-    result->overload = overload;
+    MatchSuccessPtr result = new MatchSuccess(overload, staticEnv, callable, argsKey);
     
     for (unsigned i = 0, j = 0; i < formalArgs.size(); ++i) {
         FormalArgPtr x = formalArgs[i];

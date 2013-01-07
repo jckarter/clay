@@ -311,8 +311,8 @@ static InvokeEntry* newInvokeEntry(InvokeSet* parent,
                                    MatchSuccessPtr interfaceMatch)
 {
     InvokeEntry* entry = new InvokeEntry(parent, match->callable, match->argsKey);
-    entry->origCode = match->code;
-    entry->code = clone(match->code);
+    entry->origCode = match->overload->code;
+    entry->code = clone(match->overload->code);
     entry->env = match->env;
     if (interfaceMatch != NULL)
         entry->interfaceEnv = interfaceMatch->env;
@@ -321,8 +321,8 @@ static InvokeEntry* newInvokeEntry(InvokeSet* parent,
     entry->varArgName = match->varArgName;
     entry->varArgTypes = match->varArgTypes;
     entry->varArgPosition = match->varArgPosition;
-    entry->callByName = match->callByName;
-    entry->isInline = match->isInline;
+    entry->callByName = match->overload->callByName;
+    entry->isInline = match->overload->isInline;
 
     return entry;
 }
@@ -357,9 +357,9 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
     vector<uint8_t> forwardedRValueFlags;
     unsigned i = 0;
     while ((match = getMatch(invokeSet,i,failures)).ptr() != NULL) {
-        if (matchTempness(match->code,
+        if (matchTempness(match->overload->code,
                           argsTempness,
-                          match->callByName,
+                          match->overload->callByName,
                           tempnessKey,
                           forwardedRValueFlags))
         {
@@ -384,29 +384,32 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
     invokeSet->tempnessMap2[tempnessKey] = entry;
     invokeSet->tempnessMap[argsTempness] = entry;
     
-    MatchSuccessPtr match2;
-    vector<ValueTempness> tempnessKey2;
-    vector<uint8_t> forwardedRValueFlags2;
-    MatchFailureError failures2;
-    unsigned j = invokeSet->nextOverloadIndex;
-    while ((match2 = findMatchingInvoke(callableOverloads(callable),
-                                       j,
-                                       callable,
-                                       argsKey,
-                                       failures2)).ptr() != NULL) {
-        if (matchTempness(match2->code,
-                          argsTempness,
-                          match2->callByName,
-                          tempnessKey2,
-                          forwardedRValueFlags2))
-        {
-            break;
+    if (match->overload->status != STATUS_OVERRIDE) {
+
+        MatchSuccessPtr match2;
+        vector<ValueTempness> tempnessKey2;
+        vector<uint8_t> forwardedRValueFlags2;
+        MatchFailureError failures2;
+        unsigned j = invokeSet->nextOverloadIndex;
+        while ((match2 = findMatchingInvoke(callableOverloads(callable),
+                                           j,
+                                           callable,
+                                           argsKey,
+                                           failures2)).ptr() != NULL) {
+            if (matchTempness(match2->overload->code,
+                              argsTempness,
+                              match2->overload->callByName,
+                              tempnessKey2,
+                              forwardedRValueFlags2))
+            {
+                break;
+            }
+            ++j;
         }
-        ++j;
+            
+        if (match2 != NULL && match2->overload->status != STATUS_DEFAULT)
+            ambiguousMatchError(match, match2);
     }
-        
-    if (match2 != NULL && match2->status != STATUS_DEFAULT && match->status != STATUS_OVERRIDE)
-        ambiguousMatchError(match, match2);
 
     return entry;
 }

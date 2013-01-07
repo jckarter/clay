@@ -15,7 +15,7 @@ override Algorithm?(A) = false;
 
 [T]
 define Digest?(#T): Bool;
-override Digest?(T) = false;
+default Digest?(T) = false;
 
 // algorithm name by digest or by digest context
 [T when Digest?(T) or DigestContext?(T)]
@@ -29,7 +29,7 @@ define DigestSize(#A): UInt;
 
 [T]
 define DigestContext?(#T): Bool;
-override DigestContext?(T) = false;
+default DigestContext?(T) = false;
 
 // Hash function input block size. This function is a part of public API
 // because some algorithms (like HMAC) need to know it

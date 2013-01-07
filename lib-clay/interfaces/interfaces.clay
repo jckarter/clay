@@ -1,6 +1,8 @@
 import libc;
 
-InterfaceType?(X) = false;
+define InterfaceType?(X) : Bool;
+default InterfaceType?(X) = false;
+
 define InterfaceMembers;
 
 private ImplicitInterfaceMembers() = [destroy, [], []];

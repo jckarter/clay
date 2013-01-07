@@ -27,9 +27,8 @@ struct MatchResult : public Object {
 };
 
 struct MatchSuccess : public MatchResult {
-    CodePtr code;
+    OverloadPtr overload;    
     EnvPtr env;
-    OverloadPtr overload;
     ObjectPtr callable;
     vector<TypePtr> argsKey;
 
@@ -39,16 +38,12 @@ struct MatchSuccess : public MatchResult {
     vector<TypePtr> varArgTypes;
 
     unsigned varArgPosition;
-    InlineAttribute isInline:3;
-    OverloadStatus status:3;
-    bool callByName:1;
-
-    MatchSuccess(bool callByName, InlineAttribute isInline, OverloadStatus status,  
-                 CodePtr code, EnvPtr env, ObjectPtr callable, llvm::ArrayRef<TypePtr> argsKey)
+    
+    MatchSuccess(OverloadPtr overload,  
+                 EnvPtr env, ObjectPtr callable, llvm::ArrayRef<TypePtr> argsKey)
         : MatchResult(MATCH_SUCCESS),
-          code(code), env(env), callable(callable),
-          argsKey(argsKey), varArgPosition(0),
-          isInline(isInline), status(status), callByName(callByName) {}
+          overload(overload), env(env), callable(callable),
+          argsKey(argsKey), varArgPosition(0) {}
 };
 typedef Pointer<MatchSuccess> MatchSuccessPtr;
 

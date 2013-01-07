@@ -45,13 +45,13 @@ RecordFieldNames(R) = ..mapValues(
 
 define RegularRecord?(T) : Bool;
 
-override RegularRecord?(T) : Bool = false;
+default RegularRecord?(T) : Bool = false;
 
 [T]
-override RegularRecord?(#T) : Bool = false;
+default RegularRecord?(#T) : Bool = false;
 
 [T when Record?(T)]
-override RegularRecord?(#T) : Bool = true;
+default RegularRecord?(#T) : Bool = true;
 
 
 

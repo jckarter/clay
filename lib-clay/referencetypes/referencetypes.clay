@@ -5,8 +5,8 @@ import sharedpointers.*;
 /// @section  reference type properties 
 
 
-define ReferenceType?;
-override ReferenceType?(x) = false;
+define ReferenceType?(x) : Bool;
+default ReferenceType?(x) = false;
 
 define ReferenceTypeFieldCount;
 define ReferenceTypeFieldNames;

@@ -290,8 +290,10 @@ override InstanceMethods(..values) = InstanceMethods[Type(Tuple(..values))](Tupl
 
 /// @section  class properties 
 
+
+define ClassInstanceVars;
 [T when Class?(T)]
-ClassInstanceVars(#T) = [];
+default ClassInstanceVars(#T) = [];
 define ClassClassMethods;
 define ClassInstanceMethods;
 
@@ -338,7 +340,8 @@ override ClassInstanceVar?(#T, #ivar) = true;
 
 Class?(T) = Type?(T) and CallDefined?(SuperclassType, Static[T]);
 [T when Class?(T)] override ObjectType?(#T) = true;
-ExternalClass?(T) = false;
+define ExternalClass?;
+default ExternalClass?(T) = false;
 
 define classObjcName;
 
@@ -392,8 +395,10 @@ override objcInitIvarOffset(#T, ivarName)
 
 /// @section  defining new classes in Clay 
 
-ClayClass?(T) = false;
-ExternalClayClass?(T) = false;
+define ClayClass?;
+default ClayClass?(T) = false;
+define ExternalClayClass?;
+default ExternalClayClass?(T) = false;
 
 define newClass;
 

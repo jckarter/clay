@@ -25,9 +25,9 @@ define Node?;
 define NodeFieldCount;
 define NodeFields;
 
-override Node?(x) = false;
-override NodeFieldCount(x) = -1;
-override NodeFields(x) = false;
+default Node?(x) = false;
+default NodeFieldCount(x) = -1;
+default NodeFields(x) = false;
 
 
 

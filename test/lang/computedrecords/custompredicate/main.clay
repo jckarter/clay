@@ -17,7 +17,7 @@ main() {
 //
 
 define FlexiConstructor?;
-override FlexiConstructor?(x) = false;
+default FlexiConstructor?(x) = false;
 
 
 

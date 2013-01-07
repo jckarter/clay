@@ -72,15 +72,9 @@ vector<OverloadPtr> &primOpOverloads(PrimOpPtr x)
     return *ptr;
 }
 
-void addPrimOpOverload(PrimOpPtr x, OverloadPtr overload)
+vector<OverloadPtr> &getPatternOverloads()
 {
-    vector<OverloadPtr> &v = primOpOverloads(x);
-    v.insert(v.begin(), overload);
-}
-
-void addPatternOverload(OverloadPtr x)
-{
-    patternOverloads.insert(patternOverloads.begin(), x);
+    return patternOverloads;
 }
 
 void initBuiltinConstructor(RecordDeclPtr x)
@@ -142,7 +136,7 @@ void initBuiltinConstructor(RecordDeclPtr x)
     code->body = new Return(RETURN_VALUE, new ExprList(returnExpr.ptr()));
     code->body->location = returnExpr->location;
 
-    OverloadPtr defaultOverload = new Overload(x->module, recName, code, true, IGNORE, STATUS_OVERRIDE);
+    OverloadPtr defaultOverload = new Overload(x->module, recName, code, true, IGNORE, STATUS_OVERLOAD);
     defaultOverload->location = x->location;
     defaultOverload->env = x->env;
     x->overloads.push_back(defaultOverload);

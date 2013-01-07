@@ -1280,7 +1280,7 @@ struct Lambda : public Expr {
 
     Lambda(LambdaCapture captureBy) :
         Expr(LAMBDA), captureBy(captureBy),
-        hasVarArg(false), initialized(false) {}
+        hasVarArg(false), hasAsConversion(false), initialized(false) {}
     Lambda(LambdaCapture captureBy,
            llvm::ArrayRef<FormalArgPtr> formalArgs,
            bool hasVarArg, bool hasAsConversion, StatementPtr body)

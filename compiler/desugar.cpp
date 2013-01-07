@@ -407,7 +407,7 @@ llvm::ArrayRef<TopLevelItemPtr> desugarEvalTopLevel(EvalTopLevelPtr eval, EnvPtr
 
 OverloadPtr desugarAsOverload(OverloadPtr &x) {
     assert(x->hasAsConversion);
-
+    
     //Generate specialised overload
     CodePtr code = new Code();
     code->location = x->location;
@@ -462,7 +462,7 @@ OverloadPtr desugarAsOverload(OverloadPtr &x) {
     }
 
     code->body = x->code->body;
-    OverloadPtr spec = new Overload(x->module, x->target, code, x->callByName, x->isInline);
+    OverloadPtr spec = new Overload(x->module, x->target, code, x->callByName, x->isInline, STATUS_OVERLOAD);
     spec->location = x->location;
     spec->env = x->env;
 
