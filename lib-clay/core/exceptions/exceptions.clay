@@ -76,7 +76,7 @@ private allocateExceptionData(forward x, file, line) : Pointer[ExceptionData] =
 
 [ when ExceptionsEnabled?]
 alias overload throwValue(x) : {
-    // allocateExceptionData cannot be inlined, because allocateExceptionData is also an alias function that throws
+    // allocateExceptionData cannot be inlined, because allocateObject is also an alias function that throws
     var exp = allocateExceptionData(x, StringLiteralRef(__FILE__), UInt(__LINE__));
     if (not Flag?("clay.DisableBacktraceOnThrow")) {
         exp^.context.backtrace = captureBacktrace();
