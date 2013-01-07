@@ -248,7 +248,7 @@ static void addImportedSymbols(ModulePtr module,
                 getPublicSymbols(y->module);
             const llvm::StringMap<ImportSet> &allSymbols =
                 getAllSymbols(y->module);
-            for (unsigned i = 0; i < y->members.size(); ++i) {
+            for (size_t i = 0; i < y->members.size(); ++i) {
                 const ImportedMember &z = y->members[i];
                 const llvm::StringMap<ImportSet> &memberSymbols =
                     z.visibility == PRIVATE ? allSymbols : publicSymbols;

@@ -225,7 +225,7 @@ struct uint128_holder {
     uint128_holder() {}
     explicit uint128_holder(size64_t low) : lowValue(low), highPad(0) {}
     uint128_holder(size64_t low, size64_t high) : lowValue(low), highPad(high) {}
-    explicit uint128_holder(int128_holder y) : lowValue(y.lowValue), highPad(y.highPad) {}
+    explicit uint128_holder(int128_holder y) : lowValue((size64_t)y.lowValue), highPad((size64_t)y.highPad) {}
 
     uint128_holder &operator=(size64_t low) {
         new ((void*)this) uint128_holder(low);
@@ -286,7 +286,7 @@ public:
 namespace clay {
 
 inline int128_holder::int128_holder(uint128_holder y)
-    : lowValue(y.lowValue), highPad(y.highPad) {}
+    : lowValue((ptrdiff64_t)y.lowValue), highPad((ptrdiff64_t)y.highPad) {}
 
 typedef int128_holder clay_int128;
 typedef uint128_holder clay_uint128;
@@ -937,7 +937,7 @@ inline void ensureArity2(T const &args, size_t size, bool hasVarArgs)
 {
     if (!hasVarArgs)
         ensureArity(args, size);
-    else if ((int)args.size() < size)
+    else if (args.size() < size)
         arityError2(size, args.size());
 }
 
@@ -963,11 +963,11 @@ void argumentIndexRangeError(unsigned int index,
                              size_t maxValue);
 
 void getLineCol(Location const &location,
-                int &line,
-                int &column,
-                int &tabColumn);
+                unsigned int &line,
+                unsigned int &column,
+                unsigned int &tabColumn);
 
-llvm::DIFile getDebugLineCol(Location const &location, int &line, int &column);
+llvm::DIFile getDebugLineCol(Location const &location, unsigned int &line, unsigned int &column);
 
 void printFileLineCol(llvm::raw_ostream &out, Location const &location);
 
@@ -1734,7 +1734,7 @@ struct FormalArg : public ANode {
           tempness(tempness), varArg(varArg), asArg(false) {}
     FormalArg(IdentifierPtr name, ExprPtr type, ValueTempness tempness, ExprPtr asType)
         : ANode(FORMAL_ARG), name(name), type(type),
-          tempness(tempness), asType(asType), varArg(varArg), asArg(true) {}
+          tempness(tempness), asType(asType), varArg(false), asArg(true) {}
 };
 
 struct ReturnSpec : public ANode {
@@ -2234,7 +2234,8 @@ enum DocumentationAnnotation
     SectionAnnotation,
     ModuleAnnotation,
     OverloadAnnotation,
-    RecordAnnotion
+    RecordAnnotion,
+    InvalidAnnotation
 };
 
 struct Documentation : public TopLevelItem {
@@ -2630,7 +2631,7 @@ struct ValueHolder : public Object {
 
 
 bool _objectValueEquals(ObjectPtr a, ObjectPtr b);
-int objectHash(ObjectPtr a);
+unsigned objectHash(ObjectPtr a);
 
 inline bool objectEquals(ObjectPtr a, ObjectPtr b) {
     if (a == b)
@@ -2650,8 +2651,8 @@ inline bool objectVectorEquals(ObjectVectorA const &a,
 }
 
 template <typename ObjectVector>
-inline int objectVectorHash(ObjectVector const &a) {
-    int h = 0;
+inline unsigned objectVectorHash(ObjectVector const &a) {
+    unsigned h = 0;
     for (unsigned i = 0; i < a.size(); ++i)
         h += objectHash(a[i].ptr());
     return h;
@@ -2733,23 +2734,23 @@ struct BoolType : public Type {
 };
 
 struct IntegerType : public Type {
-    int bits:15;
+    unsigned int bits:15;
     bool isSigned:1;
-    IntegerType(int bits, bool isSigned)
+    IntegerType(unsigned int bits, bool isSigned)
         : Type(INTEGER_TYPE), bits(bits), isSigned(isSigned) {}
 };
 
 struct FloatType : public Type {
-    int bits:15;
+    unsigned int bits:15;
     bool isImaginary:1;
-    FloatType(int bits, bool isImaginary)
+    FloatType(unsigned int bits, bool isImaginary)
         : Type(FLOAT_TYPE), bits(bits), isImaginary(isImaginary){}
 };
 
 struct ComplexType : public Type {
     const llvm::StructLayout *layout;
-    int bits:15;
-    ComplexType(int bits)
+    unsigned int bits:15;
+    ComplexType(unsigned int bits)
         : Type(COMPLEX_TYPE), layout(NULL), bits(bits) {}
 };
 
@@ -2795,15 +2796,15 @@ struct CCodePointerType : public Type {
 
 struct ArrayType : public Type {
     TypePtr elementType;
-    int size;
-    ArrayType(TypePtr elementType, int size)
+    unsigned int size;
+    ArrayType(TypePtr elementType, unsigned int size)
         : Type(ARRAY_TYPE), elementType(elementType), size(size) {}
 };
 
 struct VecType : public Type {
     TypePtr elementType;
-    int size;
-    VecType(TypePtr elementType, int size)
+    unsigned int size;
+    VecType(TypePtr elementType, unsigned int size)
         : Type(VEC_TYPE), elementType(elementType), size(size) {}
 };
 

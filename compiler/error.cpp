@@ -118,7 +118,7 @@ DebugPrinter::~DebugPrinter()
 // report error
 //
 
-static void computeLineCol(Location const &location, int &line, int &column, int &tabColumn) {
+static void computeLineCol(Location const &location, unsigned int &line, unsigned int &column, unsigned int &tabColumn) {
     const char *p = location.source->data();
     const char *end = p + location.offset;
     line = column = tabColumn = 0;
@@ -136,21 +136,21 @@ static void computeLineCol(Location const &location, int &line, int &column, int
     }
 }
 
-llvm::DIFile getDebugLineCol(Location const &location, int &line, int &column) {
+llvm::DIFile getDebugLineCol(Location const &location, unsigned int &line, unsigned int &column) {
     if (!location.ok()) {
         line = 0;
         column = 0;
         return llvm::DIFile(NULL);
     }
 
-    int tabColumn;
+    unsigned int tabColumn;
     computeLineCol(location, line, column, tabColumn);
     line += 1;
     column += 1;
     return location.source->getDebugInfo();
 }
 
-void getLineCol(Location const &location, int &line, int &column, int &tabColumn) {
+void getLineCol(Location const &location, unsigned int &line, unsigned int &column, unsigned int &tabColumn) {
     if (!location.ok()) {
         line = 0;
         column = 0;
@@ -177,20 +177,21 @@ static bool endsWithNewline(llvm::StringRef s) {
     return s[s.size()-1] == '\n';
 }
 
-static void displayLocation(Location const &location, int &line, int &column) {
-    int tabColumn;
+static void displayLocation(Location const &location, unsigned int &line, unsigned int &column) {
+    unsigned int tabColumn;
     getLineCol(location, line, column, tabColumn);
     vector<string> lines;
     splitLines(location.source, lines);
     llvm::errs() << "###############################\n";
-    for (int i = line-2; i <= line+2; ++i) {
-        if ((i < 0) || (i >= (int)lines.size()))
+    unsigned int i = (line < 2) ? 0 : line-2;
+    for (; i <= line+2; ++i) {
+        if (i >= lines.size())
             continue;
         llvm::errs() << lines[i];
         if (!endsWithNewline(lines[i]))
             llvm::errs() << "\n";
         if (i == line) {
-            for (int j = 0; j < tabColumn; ++j)
+            for (unsigned int j = 0; j < tabColumn; ++j)
                 llvm::errs() << "-";
             llvm::errs() << "^\n";
         }
@@ -256,7 +257,7 @@ void displayError(llvm::Twine const &msg, llvm::StringRef kind) {
 
     Location location = topLocation();
     if (location.ok()) {
-        int line, column;
+        unsigned int line, column;
         displayLocation(location, line, column);
         llvm::errs() << location.source->fileName
             << '(' << line+1 << ',' << column << "): " << kind << ": " << msgString;
@@ -305,10 +306,7 @@ void argumentError(unsigned int index, llvm::StringRef msg) {
 }
 
 static const char *valuesStr(int n) {
-    if (n == 1)
-        return "value";
-    else
-        return "values";
+    return (n == 1) ? "value" : "values";
 }
 
 void arityError(int expected, int received) {
@@ -460,7 +458,7 @@ static void matchFailureMessage(MatchFailureError const &err, string &outBuf)
         }
         sout << "\n    ";
         Location location = overload->location;
-        int line, column, tabColumn;
+        unsigned int line, column, tabColumn;
         getLineCol(location, line, column, tabColumn);
         sout << location.source->fileName.c_str()
             << "(" << line+1 << "," << column << ")"
@@ -495,7 +493,7 @@ void matchFailureLog(MatchFailureError const &err)
 
 void printFileLineCol(llvm::raw_ostream &out, Location const &location)
 {
-    int line, column, tabColumn;
+    unsigned int line, column, tabColumn;
     getLineCol(location, line, column, tabColumn);
     out << location.source->fileName << "(" << line+1 << "," << column << ")";
 }

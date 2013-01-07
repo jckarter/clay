@@ -60,7 +60,7 @@ static void cleanupLexer() {
 }
 
 static Location locationFor(const char *ptr) {
-    ptrdiff_t offset = (ptr - begin) + beginOffset;
+    size_t offset = size_t(ptr - begin) + beginOffset;
     return Location(lexerSource, offset);
 }
 
@@ -204,7 +204,7 @@ static bool opstring(llvm::SmallString<16> &x) {
     }
     restore(q);
     if (p == q) return false;
-    x = llvm::StringRef(p,q-p);
+    x = llvm::StringRef(p, (size_t)(q-p));
     return true;
 }
 
@@ -447,7 +447,7 @@ static bool intToken(Token &x) {
     return false;
 success :
     const char *end = save();
-    x = Token(T_INT_LITERAL, llvm::StringRef(begin, end-begin));
+    x = Token(T_INT_LITERAL, llvm::StringRef(begin, (size_t)(end-begin)));
     return true;
 }
 
@@ -502,7 +502,7 @@ static bool floatToken(Token &x) {
                 return false;
         }
         const char *end = save();
-        x = Token(T_FLOAT_LITERAL, llvm::StringRef(begin, end-begin));
+        x = Token(T_FLOAT_LITERAL, llvm::StringRef(begin, (size_t)(end-begin)));
         return true;
     } else {
         restore(afterSign);
@@ -518,7 +518,7 @@ static bool floatToken(Token &x) {
                     return false;
             }
             const char *end = save();
-            x = Token(T_FLOAT_LITERAL, llvm::StringRef(begin, end-begin));
+            x = Token(T_FLOAT_LITERAL, llvm::StringRef(begin, (size_t)(end-begin)));
             return true;
         } else
             return false;
@@ -637,7 +637,7 @@ static bool llvmToken(Token &x) {
     const char *begin = save();
     if (!llvmBraces()) return false;
     const char *end = save();
-    x = Token(T_LLVM, llvm::StringRef(begin, end-begin));
+    x = Token(T_LLVM, llvm::StringRef(begin, (size_t)(end-begin)));
     x.location = locationFor(begin);
     return true;
 }
@@ -713,13 +713,13 @@ static bool staticIndex(Token &x) {
     const char *begin = save();
     if (hexInt()) {
         const char *end = save();
-        x = Token(T_STATIC_INDEX, llvm::StringRef(begin, end-begin));
+        x = Token(T_STATIC_INDEX, llvm::StringRef(begin, (size_t)(end-begin)));
         return true;
     } else {
         restore(begin);
         if (decimalInt()) {
             const char *end = save();
-            x = Token(T_STATIC_INDEX, llvm::StringRef(begin, end-begin));
+            x = Token(T_STATIC_INDEX, llvm::StringRef(begin, (size_t)(end-begin)));
             return true;
         } else
             return false;
@@ -827,7 +827,7 @@ static bool docProperty(Token &x) {
         if (!next(c)) return false;
 
     const char *end = save();
-    x = Token(T_DOC_PROPERTY, llvm::StringRef(begin, end - begin - 1));
+    x = Token(T_DOC_PROPERTY, llvm::StringRef(begin, (size_t)(end - begin - 1)));
     x.location = locationFor(begin);
     return true;
 }
@@ -865,7 +865,7 @@ static bool docText(Token &x) {
             }
         }
     }
-    x = Token(T_DOC_TEXT, llvm::StringRef(begin, end - begin));
+    x = Token(T_DOC_TEXT, llvm::StringRef(begin, (size_t)(end - begin)));
     return true;
 }
 

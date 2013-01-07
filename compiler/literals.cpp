@@ -80,7 +80,7 @@ static F parseHexFloat(char *number, char **end) {
             if (c != '0')
                 usedMantissaBits = mantissaBits;
             if (mantissaBits <= 64)
-                mantissa = (mantissa << 4) | hexdigit(c);
+                mantissa = (mantissa << 4) | unsigned(hexdigit(c));
         }
     }
 

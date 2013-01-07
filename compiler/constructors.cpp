@@ -81,11 +81,11 @@ void initTypeOverloads(TypePtr t)
 {
     assert(!t->overloadsInitialized);
 
-    for (unsigned i = 0; i < patternOverloads.size(); ++i) {
+    for (size_t i = 0; i < patternOverloads.size(); ++i) {
         OverloadPtr x = patternOverloads[i];
         EnvPtr env = new Env(x->env);
         llvm::ArrayRef<PatternVar> pvars = x->code->patternVars;
-        for (unsigned i = 0; i < pvars.size(); ++i) {
+        for (size_t i = 0; i < pvars.size(); ++i) {
             if (pvars[i].isMulti) {
                 MultiPatternCellPtr cell = new MultiPatternCell(NULL);
                 addLocal(env, pvars[i].name, cell.ptr());
@@ -120,7 +120,7 @@ void initBuiltinConstructor(RecordDeclPtr x)
     CodePtr code = new Code();
     code->location = x->location;
     code->hasVarArg = y->hasVarField;
-    for (unsigned i = 0; i < x->params.size(); ++i) {
+    for (size_t i = 0; i < x->params.size(); ++i) {
         PatternVar pvar(false, x->params[i]);
         code->patternVars.push_back(pvar);
     }
@@ -129,7 +129,7 @@ void initBuiltinConstructor(RecordDeclPtr x)
         code->patternVars.push_back(pvar);
     }
 
-    for (unsigned i = 0; i < y->fields.size(); ++i) {
+    for (size_t i = 0; i < y->fields.size(); ++i) {
         RecordFieldPtr f = y->fields[i];
         FormalArgPtr arg = new FormalArg(f->name, f->type, TEMPNESS_DONTCARE, f->varField);
         arg->location = f->location;
@@ -138,7 +138,7 @@ void initBuiltinConstructor(RecordDeclPtr x)
 
     IndexingPtr retType = new Indexing(recName, new ExprList());
     retType->location = x->location;
-    for (unsigned i = 0; i < x->params.size(); ++i) {
+    for (size_t i = 0; i < x->params.size(); ++i) {
         ExprPtr typeArg = new NameRef(x->params[i]);
         typeArg->location = x->params[i]->location;
         retType->args->add(typeArg);
@@ -153,7 +153,7 @@ void initBuiltinConstructor(RecordDeclPtr x)
 
     CallPtr returnExpr = new Call(retType.ptr(), new ExprList());
     returnExpr->location = x->location;
-    for (unsigned i = 0; i < y->fields.size(); ++i) {
+    for (size_t i = 0; i < y->fields.size(); ++i) {
         ExprPtr callArg = new NameRef(y->fields[i]->name);
         callArg->location = y->fields[i]->location;
         returnExpr->parenArgs->add(callArg);

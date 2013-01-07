@@ -136,7 +136,7 @@ void initLoader() {
 
 static string toKey(DottedNamePtr name) {
     string key;
-    for (unsigned i = 0; i < name->parts.size(); ++i) {
+    for (size_t i = 0; i < name->parts.size(); ++i) {
         if (i != 0)
             key.push_back('.');
         key.append(name->parts[i]->str.begin(), name->parts[i]->str.end());
@@ -157,10 +157,10 @@ void setSearchPath(llvm::ArrayRef<PathString>  path) {
 
 static bool locateFile(llvm::StringRef relativePath, PathString &path) {
     // relativePath has no suffix
-    for (unsigned i = 0; i < searchPath.size(); ++i) {
+    for (size_t i = 0; i < searchPath.size(); ++i) {
         PathString pathWOSuffix(searchPath[i]);
         llvm::sys::path::append(pathWOSuffix, relativePath);
-        for (unsigned j = 0; j < moduleSuffixes.size(); ++j) {
+        for (size_t j = 0; j < moduleSuffixes.size(); ++j) {
             path = pathWOSuffix;
             path.append(moduleSuffixes[j].begin(), moduleSuffixes[j].end());
             if (llvm::sys::fs::exists(path.str()))
@@ -274,7 +274,7 @@ static void installGlobals(ModulePtr m) {
             EnumDecl *enumer = (EnumDecl *)x;
             TypePtr t = enumType(enumer);
             addGlobal(m, enumer->name, enumer->visibility, t.ptr());
-            for (unsigned i = 0 ; i < enumer->members.size(); ++i) {
+            for (size_t i = 0 ; i < enumer->members.size(); ++i) {
                 EnumMember *member = enumer->members[i].ptr();
                 member->index = (int)i;
                 member->type = t;
@@ -373,7 +373,7 @@ void loadDependent(ModulePtr m, vector<string> *sourceFiles, ImportPtr dependent
         break;
     case IMPORT_MEMBERS : {
             ImportMembers *y = (ImportMembers *)x.ptr();
-            for (unsigned i = 0; i < y->members.size(); ++i) {
+            for (size_t i = 0; i < y->members.size(); ++i) {
                 ImportedMember &z = y->members[i];
                 IdentifierPtr alias = z.alias.ptr() ? z.alias : z.name;
                 string aliasStr(alias->str.begin(), alias->str.end());
@@ -456,7 +456,7 @@ ModulePtr loadedModule(llvm::StringRef module) {
 static EnvPtr overloadPatternEnv(OverloadPtr x) {
     EnvPtr env = new Env(x->env);
     llvm::ArrayRef<PatternVar> pvars = x->code->patternVars;
-    for (unsigned i = 0; i < pvars.size(); ++i) {
+    for (size_t i = 0; i < pvars.size(); ++i) {
         if (pvars[i].isMulti) {
             MultiPatternCellPtr cell = new MultiPatternCell(NULL);
             addLocal(env, pvars[i].name, cell.ptr());
@@ -639,7 +639,7 @@ static void initOverload(OverloadPtr x) {
 static void initVariantInstance(InstanceDeclPtr x) {
     EnvPtr env = new Env(x->env);
     llvm::ArrayRef<PatternVar> pvars = x->patternVars;
-    for (unsigned i = 0; i < pvars.size(); ++i) {
+    for (size_t i = 0; i < pvars.size(); ++i) {
         if (pvars[i].isMulti) {
             MultiPatternCellPtr cell = new MultiPatternCell(NULL);
             addLocal(env, pvars[i].name, cell.ptr());
@@ -1439,7 +1439,7 @@ void addGlobals(ModulePtr m, llvm::ArrayRef<TopLevelItemPtr>  toplevels) {
                 EnumDecl *enumer = (EnumDecl *)x;
                 TypePtr t = enumType(enumer);
                 addGlobal(m, enumer->name, enumer->visibility, t.ptr());
-                for (unsigned i = 0 ; i < enumer->members.size(); ++i) {
+                for (size_t i = 0 ; i < enumer->members.size(); ++i) {
                     EnumMember *member = enumer->members[i].ptr();
                     member->index = (int)i;
                     member->type = t;

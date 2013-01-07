@@ -34,10 +34,10 @@ enum TokenKind {
 struct Token {
     Location location;
     llvm::SmallString<16> str;
-    int tokenKind;
+    TokenKind tokenKind;
     Token() : tokenKind(T_NONE) {}
-    explicit Token(int tokenKind) : tokenKind(tokenKind) {}
-    explicit Token(int tokenKind, llvm::StringRef str) : str(str), tokenKind(tokenKind) {}
+    explicit Token(TokenKind tokenKind) : tokenKind(tokenKind) {}
+    explicit Token(TokenKind tokenKind, llvm::StringRef str) : str(str), tokenKind(tokenKind) {}
 };
 
 void tokenize(SourcePtr source, vector<Token> &tokens);

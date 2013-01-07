@@ -206,7 +206,7 @@ StatementPtr desugarCatchBlocks(llvm::ArrayRef<CatchPtr> catchBlocks) {
     bool lastWasAny = false;
     IfPtr lastIf;
     StatementPtr result;
-    for (unsigned i = 0; i < catchBlocks.size(); ++i) {
+    for (size_t i = 0; i < catchBlocks.size(); ++i) {
         CatchPtr x = catchBlocks[i];
         if (lastWasAny)
             error(x, "unreachable catch block");
@@ -322,7 +322,7 @@ StatementPtr desugarSwitchStatement(SwitchPtr x) {
     StatementPtr *nextPtr = &root;
 
     // dispatch logic
-    for (unsigned i = 0; i < x->caseBlocks.size(); ++i) {
+    for (size_t i = 0; i < x->caseBlocks.size(); ++i) {
         CaseBlockPtr caseBlock = x->caseBlocks[i];
 
         ExprListPtr caseArgs = new ExprList(thingRef.ptr());
@@ -354,7 +354,7 @@ static SourcePtr evalToSource(Location const &location, ExprListPtr args, EnvPtr
     llvm::SmallString<128> sourceTextBuf;
     llvm::raw_svector_ostream sourceTextOut(sourceTextBuf);
     MultiStaticPtr values = evaluateMultiStatic(args, env);
-    for (unsigned i = 0; i < values->size(); ++i) {
+    for (size_t i = 0; i < values->size(); ++i) {
         printStaticName(sourceTextOut, values->values[i]);
     }
 
@@ -418,7 +418,7 @@ OverloadPtr desugarAsOverload(OverloadPtr &x) {
     returnExpr->location = x->code->body->location;
 
     //Add patterns as static args
-    for (unsigned i = 0; i < x->code->patternVars.size(); ++i) {
+    for (size_t i = 0; i < x->code->patternVars.size(); ++i) {
         llvm::SmallString<128> buf;
         llvm::raw_svector_ostream sout(buf);
         sout << "%arg" << i;
@@ -442,7 +442,7 @@ OverloadPtr desugarAsOverload(OverloadPtr &x) {
     }
 
     //Add args
-    for (unsigned i = 0; i < x->code->formalArgs.size(); ++i) {
+    for (size_t i = 0; i < x->code->formalArgs.size(); ++i) {
         FormalArgPtr arg = clone(x->code->formalArgs[i]);
         arg->tempness = TEMPNESS_FORWARD;
         if (x->code->formalArgs[i]->asArg) {
