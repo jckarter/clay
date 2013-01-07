@@ -4287,7 +4287,7 @@ void codegenCollectLabels(llvm::ArrayRef<StatementPtr> statements,
 // codegenBinding
 //
 
-llvm::SmallString<16> getBindingVariableName(BindingPtr x, int i)
+llvm::SmallString<16> getBindingVariableName(BindingPtr x, unsigned i)
 {
     if (i >= x->args.size()){
         assert(x->hasVarArg);
