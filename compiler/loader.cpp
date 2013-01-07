@@ -588,7 +588,7 @@ static void initOverload(OverloadPtr x) {
     ObjectPtr obj = derefDeep(pattern);
     if (obj == NULL) {
         x->nameIsPattern = true;
-        addPatternOverload(x);
+        addOverload(getPatternOverloads(), x);
     }
     else {
         switch (obj->objKind) {
@@ -614,7 +614,7 @@ static void initOverload(OverloadPtr x) {
         }
         case PRIM_OP : {
             if (isOverloadablePrimOp(obj))
-                addPrimOpOverload((PrimOp *)obj.ptr(), x);
+                addOverload(primOpOverloads((PrimOp *)obj.ptr()), x);
             else
                 error(x->target, "invalid overload target");
             break;
