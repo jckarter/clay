@@ -18,24 +18,24 @@ record MemoryOutputStream = ..RecordFields(MemoryStreamFields);
 record MemoryInputStream = ..RecordFields(MemoryStreamFields);
 
 [T]
-overload MemoryInputStream(begin: Pointer[T], end: Pointer[T]) =
+override MemoryInputStream(begin: Pointer[T], end: Pointer[T]) =
     initializeRecord(MemoryInputStream, Pointer[Byte](begin), Pointer[Byte](end), Pointer[Byte](begin));
 
 [T]
-overload MemoryOutputStream(begin: Pointer[T], end: Pointer[T]) =
+override MemoryOutputStream(begin: Pointer[T], end: Pointer[T]) =
     initializeRecord(MemoryOutputStream, Pointer[Byte](begin), Pointer[Byte](end), Pointer[Byte](begin));
 
 [T, N]
-overload MemoryInputStream(ref array: Array[T, N]) = MemoryInputStream(begin(array), end(array));
+override MemoryInputStream(ref array: Array[T, N]) = MemoryInputStream(begin(array), end(array));
 [T, N]
-overload MemoryOutputStream(ref array: Array[T, N]) = MemoryOutputStream(begin(array), end(array));
+override MemoryOutputStream(ref array: Array[T, N]) = MemoryOutputStream(begin(array), end(array));
 
 
 private remaining(data) = SizeT(data.end - data.pos);
 
 
 
-overload writeBytes(os: MemoryOutputStream, buf: Pointer[Byte], n: SizeT) {
+override writeBytes(os: MemoryOutputStream, buf: Pointer[Byte], n: SizeT) {
     if (remaining(os) < n) {
         throw GenericIOError();
     }
@@ -44,9 +44,9 @@ overload writeBytes(os: MemoryOutputStream, buf: Pointer[Byte], n: SizeT) {
     return n;
 }
 
-overload flush(os: MemoryOutputStream) {}
+override flush(os: MemoryOutputStream) {}
 
-overload readBytes(is: MemoryInputStream, buf: Pointer[Byte], n: SizeT) {
+override readBytes(is: MemoryInputStream, buf: Pointer[Byte], n: SizeT) {
     var copy = min(remaining(is), n);
     copyNonoverlappingMemory(buf, is.pos, is.pos + copy);
     is.pos +: copy;

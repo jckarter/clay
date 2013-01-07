@@ -6,9 +6,9 @@ record MySequenceForPrecedence (
     
 record MyIteratorForPrecedence();
 
-overload iterator(seq: MySequenceForPrecedence) = MyIteratorForPrecedence();
+override iterator(seq: MySequenceForPrecedence) = MyIteratorForPrecedence();
 
-overload nextValue(iter: MyIteratorForPrecedence) = nothing(Int);
+override nextValue(iter: MyIteratorForPrecedence) = nothing(Int);
 
 testSequenceEqualsHigherThatRecordPrecedence() {
     // if 'equal?' from records has higher precedence, this test fails
@@ -17,6 +17,6 @@ testSequenceEqualsHigherThatRecordPrecedence() {
 
 main() = testMain(
     TestSuite(
-        "sequence equality overload priority", array(
+        "sequence equality override priority", array(
             TestCase("sequence type uses sequence equals? specialization",
                 testSequenceEqualsHigherThatRecordPrecedence))));

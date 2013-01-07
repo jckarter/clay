@@ -22,7 +22,7 @@ record OptionTableEntry(
 );
 
 
-overload OptionTable(os : OptionSpecs){
+override OptionTable(os : OptionSpecs){
   var result = OptionTable(Vector[OptionTableEntry](), Vector[String](), Vector[String]());
 
   reserve(result.options, size(os));
@@ -34,11 +34,11 @@ overload OptionTable(os : OptionSpecs){
   return result;
 }
 
-overload OptionTableEntry(spec : OptionSpec) = move(OptionTableEntry(spec, false, Vector[String]()));
+override OptionTableEntry(spec : OptionSpec) = move(OptionTableEntry(spec, false, Vector[String]()));
 
-overload OptionTable(os : OptionSpecs, arguments) = move(OptionTable(os, parseOptions(os, arguments)));
+override OptionTable(os : OptionSpecs, arguments) = move(OptionTable(os, parseOptions(os, arguments)));
 
-overload OptionTable(os : OptionSpecs, parse : Vector[ParseToken]){
+override OptionTable(os : OptionSpecs, parse : Vector[ParseToken]){
   var result = OptionTable(os);
 
   for(token in parse) addToken(result, token);
@@ -65,12 +65,12 @@ CommandlineOptionTable(specs: OptionSpecs) = move(OptionTable(specs, sliceFrom(c
 
 private define findEntry;
 
-overload findEntry(ot, name : Char, f){
+override findEntry(ot, name : Char, f){
   return ..findEntry(ot, String(name), f);
 }
 
 [T when String?(T)]
-overload findEntry(ot, name : T, f){
+override findEntry(ot, name : T, f){
   for(o in ot.options){
     for(n in o.spec.names){
       if(name == n){
@@ -83,11 +83,11 @@ overload findEntry(ot, name : T, f){
 
 private define addToken;
 
-overload addToken(ot, e : ParseToken){ addToken(ot, *e); }
-overload addToken(ot, e : Separator){}
-overload addToken(ot, e : Error){ push(ot.errors, e.value); }
-overload addToken(ot, e : Argument){ push(ot.arguments, e.value); }
-overload addToken(ot, e : OptionValue){
+override addToken(ot, e : ParseToken){ addToken(ot, *e); }
+override addToken(ot, e : Separator){}
+override addToken(ot, e : Error){ push(ot.errors, e.value); }
+override addToken(ot, e : Argument){ push(ot.arguments, e.value); }
+override addToken(ot, e : OptionValue){
   findEntry(ot, e.option, o -> {
     o.present = true;
 

@@ -5,9 +5,9 @@ import math.native.kernel.k_cexp.(__ldexp_cexp);
 import complex.*;
 
 
-overload cosh(x:Float) = Float(cosh(Double(x)));
+override cosh(x:Float) = Float(cosh(Double(x)));
 
-overload cosh(x:Double) {
+override cosh(x:Double) {
 	alias ONE = 1.;
 	alias HALF = 0.5;
 	alias HUGE = GreatestPositiveFinite(Double);
@@ -44,7 +44,7 @@ overload cosh(x:Double) {
 
 // complex cos, cosh
 
-overload cosh(z:ComplexDouble) {
+override cosh(z:ComplexDouble) {
 	
 	var x,y = real(z),imagValue(z);
 

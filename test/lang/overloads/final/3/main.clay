@@ -1,0 +1,10 @@
+import printer.(println);
+
+define foo;
+
+default foo(x) = true;
+overload foo(x) = false;
+
+main() {
+	println(foo(3));
+}

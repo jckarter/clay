@@ -1846,7 +1846,6 @@ struct RecordDecl : public TopLevelItem {
     RecordBodyPtr body;
 
     vector<OverloadPtr> overloads;
-
     LambdaPtr lambda;
 
     bool builtinOverloadInitialized:1;
@@ -1909,7 +1908,6 @@ struct VariantDecl : public TopLevelItem {
     vector<InstanceDeclPtr> instances;
 
     vector<OverloadPtr> overloads;
-
     bool open:1;
 
     VariantDecl(Module *module, IdentifierPtr name,
@@ -1949,6 +1947,12 @@ enum InlineAttribute {
     NEVER_INLINE
 };
 
+enum OverloadStatus {
+    STATUS_OVERLOAD,
+    STATUS_OVERRIDE,
+    STATUS_DEFAULT
+};
+
 struct Overload : public TopLevelItem {
     ExprPtr target;
     CodePtr code;
@@ -1960,6 +1964,7 @@ struct Overload : public TopLevelItem {
     vector<PatternPtr> argPatterns;
     MultiPatternPtr varArgPattern;
     InlineAttribute isInline:3;
+    OverloadStatus status:3;
     int patternsInitializedState:2; // 0:notinit, -1:initing, +1:inited
     bool callByName:1;
     bool nameIsPattern:1;
@@ -1968,18 +1973,20 @@ struct Overload : public TopLevelItem {
     Overload(Module *module, ExprPtr target,
              CodePtr code,
              bool callByName,
-             InlineAttribute isInline)
+             InlineAttribute isInline,
+             OverloadStatus status)
         : TopLevelItem(OVERLOAD, module), target(target), code(code),
-          isInline(isInline), patternsInitializedState(0),
+          isInline(isInline), status(status), patternsInitializedState(0),
           callByName(callByName), nameIsPattern(false), 
           hasAsConversion(false) {}
     Overload(Module *module, ExprPtr target,
              CodePtr code,
              bool callByName,
              InlineAttribute isInline,
+             OverloadStatus status,
              bool hasAsConversion)
         : TopLevelItem(OVERLOAD, module), target(target), code(code),
-          isInline(isInline), patternsInitializedState(0),
+          isInline(isInline), status(status), patternsInitializedState(0),
           callByName(callByName), nameIsPattern(false), 
           hasAsConversion(hasAsConversion) {}
 };
@@ -1992,7 +1999,6 @@ struct Procedure : public TopLevelItem {
     ObjectTablePtr evaluatorCache; // HACK: used only for predicates
     ProcedureMono mono;
     LambdaPtr lambda;
-
     bool privateOverload:1;
 
     Procedure(Module *module, IdentifierPtr name, Visibility visibility, bool privateOverload)
@@ -2261,7 +2267,7 @@ struct GlobalAlias : public TopLevelItem {
     ExprPtr expr;
 
     vector<OverloadPtr> overloads;
-
+    
     GlobalAlias(Module *module, IdentifierPtr name,
                 Visibility visibility,
                 llvm::ArrayRef<PatternVar> patternVars,
@@ -2708,14 +2714,12 @@ struct Type : public Object {
 
     vector<OverloadPtr> overloads;
 
-    bool overloadsInitialized:1;
     bool defined:1;
     bool typeInfoInitialized:1;
     
     Type(TypeKind typeKind)
         : Object(TYPE), typeKind(typeKind),
           llType(NULL), debugInfo(NULL),
-          overloadsInitialized(false),
           defined(false),
           typeInfoInitialized(false)
     {}

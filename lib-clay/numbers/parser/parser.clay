@@ -15,20 +15,20 @@ import data.sequences.*;
 [T when Type?(T)]
 private define ConvFuncForType(#T);
 
-overload ConvFuncForType(#CLongLong) = libc.strtoll;
-overload ConvFuncForType(#CULongLong) = libc.strtoull;
+override ConvFuncForType(#CLongLong) = libc.strtoll;
+override ConvFuncForType(#CULongLong) = libc.strtoull;
 
 [T when SignedInteger?(T) and TypeSize(T) <= TypeSize(CLong)]
-overload ConvFuncForType(#T) = libc.strtol;
+override ConvFuncForType(#T) = libc.strtol;
 [T when UnsignedInteger?(T) and TypeSize(T) <= TypeSize(CULong)]
-overload ConvFuncForType(#T) = libc.strtoul;
+override ConvFuncForType(#T) = libc.strtoul;
 
-overload ConvFuncForType(#CLongDouble) = libc.strtold;
-overload ConvFuncForType(#CDouble) = libc.strtod;
-overload ConvFuncForType(#CFloat) = (nptr, endptr) -> CFloat(libc.strtod(nptr, endptr));
+override ConvFuncForType(#CLongDouble) = libc.strtold;
+override ConvFuncForType(#CDouble) = libc.strtod;
+override ConvFuncForType(#CFloat) = (nptr, endptr) -> CFloat(libc.strtod(nptr, endptr));
 
 [T when Imaginary?(T)]
-overload ConvFuncForType(#T) = ConvFuncForType(ImagBaseType(T));
+override ConvFuncForType(#T) = ConvFuncForType(ImagBaseType(T));
 
 
 
@@ -37,7 +37,7 @@ define parse(#T, s:S): T;
 
 
 [S, IntType when String?(S) and Integer?(IntType)]
-overload parse(#IntType, s:S) {
+override parse(#IntType, s:S) {
     alias convFunc = ConvFuncForType(IntType);
     var temp = tempCString(s);
     var p = temp.ptr;
@@ -52,7 +52,7 @@ overload parse(#IntType, s:S) {
 }
 
 [S, FloatType when String?(S) and Float?(FloatType)]
-overload parse(#FloatType, s:S) {
+override parse(#FloatType, s:S) {
     alias convFunc = ConvFuncForType(FloatType);
     var temp = tempCString(s);
     var p = temp.ptr;
@@ -67,7 +67,7 @@ overload parse(#FloatType, s:S) {
 }
 
 [S, ImagType when String?(S) and Imaginary?(ImagType)]
-overload parse(#ImagType, s:S) {
+override parse(#ImagType, s:S) {
     alias convFunc = ConvFuncForType(ImagType);
     var temp = tempCString(s);
     var p = temp.ptr;

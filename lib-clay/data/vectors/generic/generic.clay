@@ -4,7 +4,7 @@
 /// @section generic vector requirements
 
 define Vector?;
-overload Vector?(x) = false;
+override Vector?(x) = false;
 
 define vectorData;
 define vectorSize;
@@ -16,16 +16,16 @@ define vectorRequestCapacity;
 /// @section predicates
 
 [V when Vector?(V)]
-overload ContiguousSequence?(#V) = true;
+override ContiguousSequence?(#V) = true;
 
 
 /// @section size, index
 
 [V when Vector?(V)]
-forceinline overload size(a:V) = vectorSize(a);
+forceinline override size(a:V) = vectorSize(a);
 
 [V,I when Vector?(V) and Integer?(I)]
-forceinline overload index(a:V, i:I) {
+forceinline override index(a:V, i:I) {
     assert["boundsChecks"](i >= 0 and i < size(a),
         V, " index out of bounds");
     return ref (vectorData(a) + SizeT(i))^;
@@ -37,48 +37,48 @@ forceinline overload index(a:V, i:I) {
 alias VectorCoordinate[T] = Pointer[T];
 
 [V when Vector?(V)]
-forceinline overload begin(a:V) = vectorData(a);
+forceinline override begin(a:V) = vectorData(a);
 
 [V when Vector?(V)]
-forceinline overload end(a:V) = vectorData(a) + size(a);
+forceinline override end(a:V) = vectorData(a) + size(a);
 
 
 /// @section vector iteration
 
-/// @overload iterator
+/// @override iterator
 /// constructs an iterator on the vector
 /// \a ranges.CoordinateRange
 [V when Vector?(V)]
-forceinline overload iterator(a:V) = coordinateRange(begin(a), end(a));
+forceinline override iterator(a:V) = coordinateRange(begin(a), end(a));
 
-/// @overload reverseIterator
+/// @override reverseIterator
 /// constructs a reverse iterator on the vector
 /// \a ranges.ReverseCoordinateRange
 [V when Vector?(V)]
-forceinline overload reverseIterator(a:V) =
+forceinline override reverseIterator(a:V) =
     reverseCoordinateRange(end(a), begin(a));
 
 
 /// @section front, back, push, pop
 
 [V when Vector?(V)]
-forceinline overload front(a:V) = ref a[0];
+forceinline override front(a:V) = ref a[0];
 
 [V when Vector?(V)]
-forceinline overload back(a:V) = ref a[size(a) - 1];
+forceinline override back(a:V) = ref a[size(a) - 1];
 
 [V, S when Vector?(V) and Sequence?(S) and (SequenceElementType(S) == SequenceElementType(V))]
-overload pushAll(a:V, forward seq:S) {
+override pushAll(a:V, forward seq:S) {
     insertAll(a, size(a), seq);
 }
 
 [V, T when Vector?(V) and (SequenceElementType(V) == T)]
-overload push(a:V, forward x:T) {
+override push(a:V, forward x:T) {
     insert(a, size(a), x);
 }
 
 [V, A1, A2, ..AA when Vector?(V)]
-forceinline overload push(v:V, forward e1:A1, forward e2:A2, forward ..ee:AA) {
+forceinline override push(v:V, forward e1:A1, forward e2:A2, forward ..ee:AA) {
     reserve(v, countValues(A1, A2, ..AA));
     ..for (x in e1, e2, ..ee) {
         push(v, x);
@@ -86,7 +86,7 @@ forceinline overload push(v:V, forward e1:A1, forward e2:A2, forward ..ee:AA) {
 }
 
 [V when Vector?(V)]
-overload pop(a:V) {
+override pop(a:V) {
     assert(not empty?(a), "pop of empty ", V);
     var temp = moveUnsafe(back(a));
     removeLocations(a, end(a)-1, end(a));
@@ -97,18 +97,18 @@ overload pop(a:V) {
 /// @section reserve, resize, resizeUnsafe, ensureSpace
 
 [V, I when Vector?(V) and Integer?(I)]
-overload reserve(a:V, n:I) {
+override reserve(a:V, n:I) {
     if (vectorCapacity(a) < SizeT(n))
         vectorRequestCapacity(a, SizeT(n));
 }
 
 [V, I when Vector?(V) and Integer?(I)]
-forceinline overload resize(a:V, n:I) {
+forceinline override resize(a:V, n:I) {
     resizeInternal(a, SizeT(n), initializeMemory);
 }
 
 [V, I when Vector?(V) and Integer?(I)]
-forceinline overload resizeUnsafe(a:V, n:I) {
+forceinline override resizeUnsafe(a:V, n:I) {
     resizeInternal(a, SizeT(n), resetMemoryUnsafe);
 }
 
@@ -135,11 +135,11 @@ private forceinline ensureSpace(a, space:SizeT) {
 private define insertLocationsUnsafe;
 
 [I, J when Integer?(I) and Integer?(J)]
-overload insertLocationsUnsafe(a, pos:I, n:J) {
+override insertLocationsUnsafe(a, pos:I, n:J) {
     return ..insertLocationsUnsafe(a, SizeT(pos), SizeT(n));
 }
 
-overload insertLocationsUnsafe(a, pos:SizeT, n:SizeT) {
+override insertLocationsUnsafe(a, pos:SizeT, n:SizeT) {
     ensureSpace(a, n);
     var first = begin(a) + pos;
     moveMemoryUnsafe(first+n, first, end(a));
@@ -149,7 +149,7 @@ overload insertLocationsUnsafe(a, pos:SizeT, n:SizeT) {
 
 [V,I,S when Vector?(V) and Integer?(I) and Sequence?(S) and
          (SequenceElementType(S) == SequenceElementType(V))]
-overload insertAll(a:V, i:I, seq:S) {
+override insertAll(a:V, i:I, seq:S) {
     assert(i >= 0 and i <= size(a), "invalid position for insert into ", V);
     var pos = SizeT(i);
     for (x in seq) {
@@ -161,7 +161,7 @@ overload insertAll(a:V, i:I, seq:S) {
 [V,I,S when Vector?(V) and Integer?(I) and SizedSequence?(S) and
          (SequenceElementType(S) == SequenceElementType(V))
          and LValueSequence?(S)]
-overload insertAll(a:V, i:I, seq:S) {
+override insertAll(a:V, i:I, seq:S) {
     assert(i >= 0 and i <= size(a), "invalid position for insert into ", V);
     var first, last = ..insertLocationsUnsafe(a, i, size(seq));
     try {
@@ -179,7 +179,7 @@ overload insertAll(a:V, i:I, seq:S) {
 [V,I,S when Vector?(V) and Integer?(I) and SizedSequence?(S) and
          (SequenceElementType(S) == SequenceElementType(V))
          and RValueSequence?(S)]
-overload insertAll(a:V, i:I, seq:S) {
+override insertAll(a:V, i:I, seq:S) {
     assert(i >= 0 and i <= size(a), "invalid position for insert into ", V);
     var first, last = ..insertLocationsUnsafe(a, i, size(seq));
     try {
@@ -197,7 +197,7 @@ overload insertAll(a:V, i:I, seq:S) {
 [V,I,S when Vector?(V) and Integer?(I)
          and SizedSequence?(S) and ContiguousSequence?(S)
          and (SequenceElementType(S) == SequenceElementType(V))]
-overload insertAll(a:V, i:I, seq:S) {
+override insertAll(a:V, i:I, seq:S) {
     assert(i >= 0 and i <= size(a), "invalid position for insert into ", V);
     var first, last = ..insertLocationsUnsafe(a, i, size(seq));
     try {
@@ -213,7 +213,7 @@ overload insertAll(a:V, i:I, seq:S) {
 [V,I,S when Vector?(V) and Integer?(I)
          and SequenceContainer?(S) and SizedSequence?(S)
          and (SequenceElementType(S) == SequenceElementType(V))]
-overload insertAll(a:V, i:I, rvalue seq:S) {
+override insertAll(a:V, i:I, rvalue seq:S) {
     assert(i >= 0 and i <= size(a), "invalid position for insert into ", V);
     var first, last = ..insertLocationsUnsafe(a, i, size(seq));
     for (x in seq) {
@@ -225,7 +225,7 @@ overload insertAll(a:V, i:I, rvalue seq:S) {
 [V,I,S when Vector?(V) and Integer?(I)
          and SequenceContainer?(S) and ContiguousSequence?(S)
          and (SequenceElementType(S) == SequenceElementType(V))]
-overload insertAll(a:V, i:I, rvalue seq:S) {
+override insertAll(a:V, i:I, rvalue seq:S) {
     assert(i >= 0 and i <= size(a), "invalid position for insert into ", V);
     var first, last = ..insertLocationsUnsafe(a, i, size(seq));
     var src = begin(seq);
@@ -233,36 +233,36 @@ overload insertAll(a:V, i:I, rvalue seq:S) {
 }
 
 [V,I,T when Vector?(V) and Integer?(I) and (SequenceElementType(V) == T)]
-overload insert(a:V, i:I, ref x:T) {
+override insert(a:V, i:I, ref x:T) {
     // NOTE: when 'x' is an lvalue, it _may_ be pointing inside 'a'.
     // so make a copy and insert it as an rvalue.
     insert(a, i, copy(x));
 }
 
 [V,I,T when Vector?(V) and Integer?(I) and (SequenceElementType(V) == T)]
-overload insert(a:V, i:I, rvalue x:T) {
+override insert(a:V, i:I, rvalue x:T) {
     var first, last = ..insertLocationsUnsafe(a, i, 1);
     first^ <-- move(x);
 }
 
 [V,T,S when Vector?(V) and (SequenceElementType(V) == T) and
          Sequence?(S) and (SequenceElementType(S) == T)]
-overload insertAll(a:V, i:VectorCoordinate[T], forward seq:S) {
+override insertAll(a:V, i:VectorCoordinate[T], forward seq:S) {
     insert(a, i-begin(a), seq);
 }
 
 [V,T when Vector?(V) and (SequenceElementType(V) == T)]
-overload insert(a:V, i:VectorCoordinate[T], forward x:T) {
+override insert(a:V, i:VectorCoordinate[T], forward x:T) {
     insert(a, i-begin(a), x);
 }
 
 
 /// @section clear, remove
 
-/// @overload clear
+/// @override clear
 /// remove all items from the vector
 [V when Vector?(V)]
-forceinline overload clear(a:V) {
+forceinline override clear(a:V) {
     remove(a, begin(a), end(a));
 }
 
@@ -281,10 +281,10 @@ private removeLocations(a:V, i:VectorCoordinate[T], j:VectorCoordinate[T]) {
     vectorSetSize(a, vectorSize(a) - (j-i));
 }
 
-/// @overload remove
+/// @override remove
 /// remove all items from the vector within the range \p i to \a j
 [V,T when Vector?(V) and (SequenceElementType(V) == T)]
-overload remove(a:V, i:VectorCoordinate[T], j:VectorCoordinate[T]) {
+override remove(a:V, i:VectorCoordinate[T], j:VectorCoordinate[T]) {
     assert["boundsChecks"](validVectorCoordinate?(a, i),
         "invalid first coordinate for remove from ", V);
     assert["boundsChecks"](validVectorCoordinate?(a, j),
@@ -294,16 +294,16 @@ overload remove(a:V, i:VectorCoordinate[T], j:VectorCoordinate[T]) {
 }
 
 [V,T when Vector?(V) and (SequenceElementType(V) == T)]
-overload remove(a:V, i:VectorCoordinate[T]) {
+override remove(a:V, i:VectorCoordinate[T]) {
     remove(a, i, i+1);
 }
 
 [V,I when Vector?(V) and Integer?(I)]
-overload remove(a:V, i:I) {
+override remove(a:V, i:I) {
     remove(a, begin(a)+i);
 }
 
 [V,I,J when Vector?(V) and Integer?(I) and Integer?(J)]
-overload remove(a:V, i:I, j:J) {
+override remove(a:V, i:I, j:J) {
     remove(a, begin(a)+i, begin(a)+j);
 }

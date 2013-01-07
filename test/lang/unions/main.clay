@@ -28,6 +28,6 @@ main() {
 }
 
 
-overload printTo(stream, p:Point) {
+override printTo(stream, p:Point) {
     printTo(stream, "Point(", p.x, ", ", p.y, ")");
 }

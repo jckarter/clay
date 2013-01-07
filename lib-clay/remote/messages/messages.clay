@@ -57,7 +57,7 @@ private var remoteCode[Protocol, ..Args] = createRemoteCode(Protocol, ..Args);
 define remoteMessage;
 
 [Protocol, ..Args when CallDefined?(Protocol, ..Args)]
-overload remoteMessage(#Protocol, outstream, forward ..args: Args) {
+override remoteMessage(#Protocol, outstream, forward ..args: Args) {
     var mArgs = marshal(..args);
     var mArgsSize = MarshalSize(size(mArgs));
     writeMarshalSize(outstream, remoteCode[Protocol, ..Args]);
@@ -67,7 +67,7 @@ overload remoteMessage(#Protocol, outstream, forward ..args: Args) {
 }
 
 [..Args when CallDefined?(DefaultProtocol, ..Args)]
-overload remoteMessage(outstream, forward ..args: Args) {
+override remoteMessage(outstream, forward ..args: Args) {
     remoteMessage(DefaultProtocol, outstream, ..args);
 }
 
@@ -92,7 +92,7 @@ private consume(stream, bytes_) {
 define answerRemoteMessage;
 
 [Protocol]
-overload answerRemoteMessage(#Protocol, instream, code: MarshalSize) {
+override answerRemoteMessage(#Protocol, instream, code: MarshalSize) {
     if (code < size(remoteEntryPoints[Protocol])) {
         var mArgsSize = readMarshalSize(instream);
 
@@ -108,24 +108,24 @@ overload answerRemoteMessage(#Protocol, instream, code: MarshalSize) {
     }
 }
 
-overload answerRemoteMessage(instream, code: MarshalSize) {
+override answerRemoteMessage(instream, code: MarshalSize) {
     answerRemoteMessage(DefaultProtocol, instream, code);
 }
 
 [Protocol]
-overload answerRemoteMessage(#Protocol, instream) {
+override answerRemoteMessage(#Protocol, instream) {
     var code = readMarshalSize(instream);
     answerRemoteMessage(Protocol, instream, code);
 }
 
-overload answerRemoteMessage(instream) {
+override answerRemoteMessage(instream) {
     answerRemoteMessage(DefaultProtocol, instream);
 }
 
 define answerLoop;
 
 [Protocol]
-overload answerLoop(#Protocol, instream) {
+override answerLoop(#Protocol, instream) {
     var code = maybeReadMarshalSize(instream);
     while(just?(code)) {
         answerRemoteMessage(instream, just(code));
@@ -133,6 +133,6 @@ overload answerLoop(#Protocol, instream) {
     }
 }
 
-overload answerLoop(instream) {
+override answerLoop(instream) {
     answerLoop(DefaultProtocol, instream);
 }

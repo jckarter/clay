@@ -12,10 +12,10 @@ record Circle (
 variant Shape (Square, Circle);
 
 define show;
-overload show(x:Square) { println("Square(", x.side, ")"); }
-overload show(x:Circle) { println("Circle(", x.radius, ")"); }
+override show(x:Square) { println("Square(", x.side, ")"); }
+override show(x:Circle) { println("Circle(", x.radius, ")"); }
 
-overload show(x:Shape) {
+override show(x:Shape) {
     if (variantIs?(x, Square))
         show(variantAs(x, Square));
     else if (variantIs?(x, Circle))

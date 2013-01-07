@@ -19,15 +19,15 @@ define sliceFrom;
 define sliceUpto;
 define group;
 
-alias overload zip(..args) = force(zipped(..args));
-alias overload map(..args) = force(mapped(..args));
-alias overload filter(..args) = force(filtered(..args));
-alias overload enumerate(..args) = force(enumerated(..args));
-alias overload reverse(..args) = force(reversed(..args));
-alias overload slice(..args) = force(sliced(..args));
-alias overload sliceFrom(..args) = force(slicedFrom(..args));
-alias overload sliceUpto(..args) = force(slicedUpto(..args));
-alias overload group(..args) = force(grouped(..args));
+alias override zip(..args) = force(zipped(..args));
+alias override map(..args) = force(mapped(..args));
+alias override filter(..args) = force(filtered(..args));
+alias override enumerate(..args) = force(enumerated(..args));
+alias override reverse(..args) = force(reversed(..args));
+alias override slice(..args) = force(sliced(..args));
+alias override sliceFrom(..args) = force(slicedFrom(..args));
+alias override sliceUpto(..args) = force(slicedUpto(..args));
+alias override group(..args) = force(grouped(..args));
 
 
 
@@ -36,11 +36,11 @@ alias overload group(..args) = force(grouped(..args));
 //
 
 [M when Maybe?(M)]
-overload map(f, m:M) =
+override map(f, m:M) =
     maybe(m, v -> Maybe(f(v)), () -> nothing(Type(f(just(m)))));
 
 [T]
-overload filter(f, m:Maybe[T]) =
+override filter(f, m:Maybe[T]) =
     if (just?(m) and f(just(m)))
         m
     else
@@ -66,10 +66,10 @@ interleave(seq:S, betweenFn, fn) {
 
 
 [S when StaticSizedSequence?(S) and MultiValuedSequence?(S)]
-alias overload Array(s:S) = Array(mapped(Tuple, s));
+alias override Array(s:S) = Array(mapped(Tuple, s));
 
 [n, S when MultiValuedSequence?(S)]
-overload Array(#n, forward s:S) = Array(#n, mapped(Tuple, s));
+override Array(#n, forward s:S) = Array(#n, mapped(Tuple, s));
 
 [A when MultiValuedSequence?(A)]
-overload Vector(forward a:A) = Vector(mapped(Tuple, a));
+override Vector(forward a:A) = Vector(mapped(Tuple, a));

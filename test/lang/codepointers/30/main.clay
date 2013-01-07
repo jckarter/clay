@@ -14,7 +14,7 @@ alias Opaque = Int;
 
 define display;
 
-overload display(x) {
+override display(x) {
     println(x);
 }
 
@@ -32,12 +32,12 @@ record Displayable (
     display : CodePointer[[Opaque],[]],
 );
 
-overload RegularRecord?(#Displayable) = false;
+override RegularRecord?(#Displayable) = false;
 
 
 // primary constructor
 [T]
-overload Displayable(x:T) {
+override Displayable(x:T) {
     var obj = allocateRawMemoryAligned(T, 1, TypeAlignment(T));
     obj^ <-- x;
     var destructor = makeCodePointer(destroy, T);
@@ -53,7 +53,7 @@ overload Displayable(x:T) {
 }
 
 // default constructor
-overload Displayable() {
+override Displayable() {
     return Displayable(null(Opaque), SizeT(0), SizeT(0),
                        CodePointer[[Opaque],[]](0),
                        CodePointer[[Opaque],[Opaque]](0),
@@ -61,7 +61,7 @@ overload Displayable() {
 }
 
 // copy constructor
-overload Displayable(x:Displayable) {
+override Displayable(x:Displayable) {
     var p = allocateRawMemoryAligned(Int8, x.size, x.alignment);
     var obj = Pointer[Opaque](p);
     obj^ <-- x.copyConstructor(x.obj^);
@@ -70,7 +70,7 @@ overload Displayable(x:Displayable) {
 }
 
 // moveUnsafe
-overload moveUnsafe(src:Displayable) --> returned:Displayable {
+override moveUnsafe(src:Displayable) --> returned:Displayable {
     returned <-- Displayable(
         src.obj,
         src.size,
@@ -82,19 +82,19 @@ overload moveUnsafe(src:Displayable) --> returned:Displayable {
 }
 
 // resetUnsafe
-overload resetUnsafe(x:Displayable) {
+override resetUnsafe(x:Displayable) {
     x <-- Displayable();
 }
 
 // destructor
-overload destroy(x:Displayable) {
+override destroy(x:Displayable) {
     if (not null?(x.obj)) {
         x.destructor(x.obj^);
         freeRawMemoryAligned(x.obj);
     }
 }
 
-overload display(x:Displayable) {
+override display(x:Displayable) {
     x.display(x.obj^);
 }
 

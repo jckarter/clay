@@ -3,10 +3,10 @@ import numbers.floats.(imagFromBits,floatFromBits,floatBitsUnsigned);
 import math.native.protocol.*;
 
 [I when Integer?(I) ]
-forceinline overload abs(x:I) = if(x >= 0) x else -x;
+forceinline override abs(x:I) = if(x >= 0) x else -x;
 
 [T when Imaginary?(T) ]
-forceinline overload abs(x:T) = imagFromBits(floatBitsUnsigned(x));
+forceinline override abs(x:T) = imagFromBits(floatBitsUnsigned(x));
 [T when Float?(T) ]
-forceinline overload abs(x:T) = floatFromBits(floatBitsUnsigned(x));
+forceinline override abs(x:T) = floatFromBits(floatBitsUnsigned(x));
 

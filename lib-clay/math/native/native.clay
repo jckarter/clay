@@ -60,9 +60,9 @@ import numbers.floats.(floatFromBits,floatExponent,mantissaSize);
 define recip;
 
 [T when Integer?(T)]
-forceinline overload recip(x:T) = T(0);
+forceinline override recip(x:T) = T(0);
 [T when Float?(T)]
-forceinline overload recip(x:T) = T(1) / x;
+forceinline override recip(x:T) = T(1) / x;
 
 [T when Float?(T)]
 forceinline significand(x:T) = scalbn(x,wrapSubtract(ilogb(x)));
@@ -122,9 +122,9 @@ forceinline rsqrt(x:T) = recip(sqrt(x));
 forceinline sigmoid (x:T) = T(1) / (T(1) + exp (-x));
 
 define normcoeff;
-forceinline overload normcoeff(#LongDouble) = floatFromBits(UInt128(0x4035ul));
-forceinline overload normcoeff(#Double) = floatFromBits(0x435ul);
-forceinline overload normcoeff(#Float) = floatFromBits(0x4Cu);
+forceinline override normcoeff(#LongDouble) = floatFromBits(UInt128(0x4035ul));
+forceinline override normcoeff(#Double) = floatFromBits(0x435ul);
+forceinline override normcoeff(#Float) = floatFromBits(0x4Cu);
 
 [T when Float?(T)]
 forceinline normalize(x:T) 

@@ -1,0 +1,10 @@
+import printer.(println);
+
+define foo;
+
+overload foo(x) = true;
+overload foo(y:Int32) = false;
+
+main() {
+	println(foo(3));
+}

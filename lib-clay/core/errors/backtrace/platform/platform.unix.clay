@@ -15,21 +15,21 @@ define printBacktraceToStderr(backtrace: Backtrace) :;
 
 define captureBacktrace(): Backtrace;
 
-forceinline overload captureBacktrace() --> returned: Backtrace {
+forceinline override captureBacktrace() --> returned: Backtrace {
     returned.size = 0;
 }
 
 [when BacktraceSupported?]
-forceinline overload captureBacktrace() --> returned: Backtrace {
+forceinline override captureBacktrace() --> returned: Backtrace {
     returned.size = backtrace(
         begin(returned.callstack),
         Int(size(returned.callstack)));
 }
 
-forceinline overload printBacktraceToStderr(backtrace: Backtrace) : { }
+forceinline override printBacktraceToStderr(backtrace: Backtrace) : { }
 
 [when BacktraceSupported?]
-overload printBacktraceToStderr(bt: Backtrace) : {
+override printBacktraceToStderr(bt: Backtrace) : {
     backtrace_symbols_fd(begin(bt.callstack), bt.size, 2);
 }
 

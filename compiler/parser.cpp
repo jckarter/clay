@@ -2361,6 +2361,20 @@ static bool optInline(InlineAttribute &isInline) {
     return true;
 }
 
+static bool overloadStatus(OverloadStatus &status) {
+    int p = save();
+    if (keyword("overload"))
+        status = STATUS_OVERLOAD;
+    else if (restore(p), keyword("default"))
+        status = STATUS_DEFAULT;
+    else if (restore(p), keyword("override"))
+        status = STATUS_OVERRIDE;
+    else {
+        return false;
+    }
+    return true;
+}
+
 static bool optCallByName(bool &callByName) {
     int p = save();
     if (!keyword("alias")) {
@@ -2423,7 +2437,7 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x, Module *module) {
     target->location = location;
     target->startLocation = targetStartLocation;
     target->endLocation = targetEndLocation;
-    OverloadPtr v = new Overload(module, target, y, false, isInline, hasAsConversion);
+    OverloadPtr v = new Overload(module, target, y, false, isInline, STATUS_OVERLOAD, hasAsConversion);
     v->location = location;
     x.push_back(v.ptr());
 
@@ -2462,7 +2476,7 @@ static bool procedureWithInterface(vector<TopLevelItemPtr> &x, Module *module, i
     target->location = location;
     target->startLocation = targetStartLocation;
     target->endLocation = targetEndLocation;
-    OverloadPtr interface = new Overload(module, target, interfaceCode, false, IGNORE);
+    OverloadPtr interface = new Overload(module, target, interfaceCode, false, IGNORE, STATUS_OVERLOAD);
     interface->location = location;
 
     ProcedurePtr proc = new Procedure(module, name, vis, privateOverload, interface);
@@ -2511,7 +2525,7 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x, Module *module, int s)
     target->location = location;
     target->startLocation = targetStartLocation;
     target->endLocation = targetEndLocation;
-    OverloadPtr oload = new Overload(module, target, code, callByName, isInline, hasAsConversion);
+    OverloadPtr oload = new Overload(module, target, code, callByName, isInline, STATUS_OVERLOAD, hasAsConversion);
     oload->location = location;
     x.push_back(oload.ptr());
 
@@ -2540,7 +2554,8 @@ static bool overload(TopLevelItemPtr &x, Module *module, int s) {
     if (!optInline(isInline)) return false;
     bool callByName;
     if (!optCallByName(callByName)) return false;
-    if (!keyword("overload")) return false;
+    OverloadStatus status;
+    if (!overloadStatus(status)) return false;
     int e = save();
     restore(s);
     Location location = currentLocation();
@@ -2572,9 +2587,8 @@ static bool overload(TopLevelItemPtr &x, Module *module, int s) {
     target->startLocation = targetStartLocation;
     target->endLocation = targetEndLocation;
     code->location = location;
-    x = new Overload(module, target, code, callByName, isInline, hasAsConversion);
+    x = new Overload(module, target, code, callByName, isInline, status, hasAsConversion);
     x->location = location;
-    NameRefPtr name = (NameRef *)target.ptr();
     return true;
 }
 
@@ -3015,7 +3029,7 @@ static bool documentationAnnotation(std::map<DocumentationAnnotation, string> &a
         ano = SectionAnnotation;
     } else if (key == "module") {
         ano = ModuleAnnotation;
-    } else if (key == "overload") {
+    } else if (key == "overload" || key == "override" || key == "default") {
         ano = OverloadAnnotation;
     } else if (key == "record") {
         ano = RecordAnnotion;

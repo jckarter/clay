@@ -11,9 +11,9 @@ alias ONE = 1.0;
 alias HUGE = GreatestPositiveFinite(Double);
 alias ZERO = 0.0;
 
-overload atanh(x:Float) = Float(atanh(Double(x)));
+override atanh(x:Float) = Float(atanh(Double(x)));
 
-overload atanh(a:Double) {
+override atanh(a:Double) {
 	var x,t = a,0.;
 	var xdb = MAKE_IEEE(x);
 	var ix = bitand(GET_IEEE_HIGH(xdb),MM);
@@ -32,7 +32,7 @@ overload atanh(a:Double) {
 	else return -t;
 }
 
-overload atanh(x:ComplexDouble) --> res:ComplexDouble {
+override atanh(x:ComplexDouble) --> res:ComplexDouble {
 
   	var rcls = fpclassify(real(x));
   	var icls = fpclassify(imagValue(x));

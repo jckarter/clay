@@ -7,21 +7,21 @@ record Proxy ();
 
 record Point (x:Int, y:Int);
 
-overload assign(_:Proxy, p:Point) : {
+override assign(_:Proxy, p:Point) : {
     global_x = p.x;
     global_y = p.y;
 }
 
-overload fieldRefAssign(_:Proxy, "x", x:Int) : {
+override fieldRefAssign(_:Proxy, "x", x:Int) : {
     global_x = x;
 }
 
-overload fieldRefAssign(_:Proxy, "y", y:Int) : {
+override fieldRefAssign(_:Proxy, "y", y:Int) : {
     global_y = y;
 }
 
-overload fieldRef(_:Proxy, "x") : Int = global_x;
-overload fieldRef(_:Proxy, "y") : Int = global_y;
+override fieldRef(_:Proxy, "x") : Int = global_x;
+override fieldRef(_:Proxy, "y") : Int = global_y;
 
 main() {
     Proxy() = Point(1, 2);

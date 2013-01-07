@@ -276,7 +276,7 @@ private var tbl = array(
 );
 
 
-overload exp2(x:Double) {
+override exp2(x:Double) {
 	alias HUGE = GreatestPositiveFinite(Double);
 
 	// Filter out exceptional cases. 

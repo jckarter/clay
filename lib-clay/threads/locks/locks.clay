@@ -12,26 +12,26 @@ withLock(l:L, f) {
 }
 
 record Spinlock (_flag:Atomic[Bool]);
-overload RegularRecord?(#Spinlock) = false;
-overload DestroyDoesNothingType?(#Spinlock) = true;
+override RegularRecord?(#Spinlock) = false;
+override DestroyDoesNothingType?(#Spinlock) = true;
 
-overload Spinlock() = initializeRecord(Spinlock, Atomic(false));
+override Spinlock() = initializeRecord(Spinlock, Atomic(false));
 
-overload lock(l:Spinlock) {
+override lock(l:Spinlock) {
     while (not cas(l._flag, false, true)) { yield(); }
 }
 
-overload unlock(l:Spinlock) {
+override unlock(l:Spinlock) {
     store(l._flag, false);
 }
 
-overload tryLock(l:Spinlock) {
+override tryLock(l:Spinlock) {
     return cas(l._flag, false, true);
 }
 
 record Synchronized[T, L] (_data:T, _lock:L);
-[T, L] alias overload Synchronized[T, L](initial:T) = Synchronized[T, L](initial, L());
-[T] alias overload Synchronized(initial:T) = Synchronized[T, Mutex](initial, Mutex());
+[T, L] alias override Synchronized[T, L](initial:T) = Synchronized[T, L](initial, L());
+[T] alias override Synchronized(initial:T) = Synchronized[T, Mutex](initial, Mutex());
 
 [T, L] synchronized(s:Synchronized[T,L], f)
 {

@@ -14,9 +14,9 @@ alias logb = ilogb;
 
 define ilogb;
 
-overload ilogb(x:Float) = ilogb(Double(x));
+override ilogb(x:Float) = ilogb(Double(x));
 
-overload ilogb(x:Double) {
+override ilogb(x:Double) {
 	
 	var xdb = MAKE_IEEE(x);
 	GET_IEEE_HIGH(xdb) = bitand(GET_IEEE_HIGH(xdb),MM);

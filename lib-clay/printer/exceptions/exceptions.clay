@@ -4,8 +4,8 @@ import io.files.raw.(stderrRawFile);
 
 /// @section  printUnhandledExceptionToStderr
 
-// simple version that uses default printTo of exception
-overload printUnhandledExceptionToStderr(e) {
+// simple version that uses override printTo of exception
+override printUnhandledExceptionToStderr(e) {
     printTo(stderrRawFile(), str("unhandled exception: ", e, "\n"));
 }
 

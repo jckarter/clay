@@ -2,12 +2,12 @@ import printer.*;
 
 define foo private overload;
 
-overload foo() = 0;
-overload foo(x) = 1;
+override foo() = 0;
+override foo(x) = 1;
 
 define bar(a, b) private overload;
 
-overload bar(a, b) = a + b;
+override bar(a, b) = a + b;
 
 main() {
     println(foo());

@@ -8,13 +8,13 @@ record Test (
     x: Int
 );
 
-overload Test(v, x) --> returned:Test{
+override Test(v, x) --> returned:Test{
     if (v)
         throw 1;
     returned.x = x;
 } 
 
-overload destroy(t:Test) {
+override destroy(t:Test) {
     println("Destroyed ", t.x);
 }
 

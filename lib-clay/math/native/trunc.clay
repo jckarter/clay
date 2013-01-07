@@ -9,9 +9,9 @@
 import math.native.kernel.ieee754.*;
 import math.native.protocol.*;
 
-overload trunc(x:Float) = Float(trunc(Double(x)));
+override trunc(x:Float) = Float(trunc(Double(x)));
 
-overload trunc(x:Double) {
+override trunc(x:Double) {
 	alias HUGE = GreatestPositiveFinite(Double);
 	alias ZERO = Double(0);
 	var ix = MAKE_IEEE(x);

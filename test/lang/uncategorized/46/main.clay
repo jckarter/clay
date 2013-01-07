@@ -4,7 +4,7 @@ fields(I) = ["x", I], ["y", I];
 
 record Point[I] = ..fields(I);
 
-[I] overload Point(x:I, y:I) = Point[I](x, y);
+[I] override Point(x:I, y:I) = Point[I](x, y);
 
 main() {
     var a = Point(10, 20);

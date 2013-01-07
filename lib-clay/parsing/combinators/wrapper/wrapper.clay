@@ -8,7 +8,7 @@ import parsing.combinators.generic as generic;
 record Combinators[TokenInput] ();
 
 [TokenInput, Name]
-overload fieldRef(x:Combinators[TokenInput], #Name) {
+override fieldRef(x:Combinators[TokenInput], #Name) {
     var f = fieldRef(generic, Name);
     return partialApply(f, TokenInput);
 }
@@ -25,5 +25,5 @@ private record CallableAndArgs[F, Args] (
 );
 
 [F, Args]
-overload call(x:CallableAndArgs[F, Args], forward ..args) =
+override call(x:CallableAndArgs[F, Args], forward ..args) =
     forward ..x.callable(..unpack(x.args), ..args);

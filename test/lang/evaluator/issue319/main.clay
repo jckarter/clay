@@ -4,8 +4,8 @@ enum Eee (Aaa, Bbb);
 
 [E] define foo(#E);
 
-overload foo(#Aaa) = 1;
-overload foo(#Bbb) = 2;
+override foo(#Aaa) = 1;
+override foo(#Bbb) = 2;
 
 main() {
     println(StaticName(#Aaa));

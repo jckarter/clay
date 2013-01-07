@@ -4,7 +4,7 @@ import math.native.kernel.k_trig.*;
 import math.native.protocol.*;
 import complex.*;
 
-overload tan(x:Double) {
+override tan(x:Double) {
 	var y = Array[Double,2]();
 	
     // High word of x. 
@@ -30,7 +30,7 @@ overload tan(x:Double) {
 }
 
 
-overload tan(z:ComplexDouble) {
+override tan(z:ComplexDouble) {
 	// ctan(z) = -I * ctanh(I * z) 
 	// var y = tanh(Complex(-imagValue(z), real(z)));
 	// return Complex(imagValue(y), real(y));

@@ -6,77 +6,77 @@ import math.native.abscomplex.(abs);
 /// @section  (==), (!=), less?, lessEquals?, (>), (>=) 
 
 [T,C when Numeric?(T) and Complex?(C)]
-forceinline overload (==)(z:C, y:T) = imag(z) != T(0) and (==)(real(z),y);
+forceinline override (==)(z:C, y:T) = imag(z) != T(0) and (==)(real(z),y);
 
 [T,C when Numeric?(T) and Complex?(C)]
-forceinline overload (==)(y:T, z:C) = (==)(z,y);
+forceinline override (==)(y:T, z:C) = (==)(z,y);
 
 [T when Complex?(T)]
-forceinline overload (==)(z:T, y:T) = (==)(real(z),real(y)) and (==)(imag(z),imag(y));
+forceinline override (==)(z:T, y:T) = (==)(real(z),real(y)) and (==)(imag(z),imag(y));
 
 [T,C when Numeric?(T) and Complex?(C)]
-forceinline overload (!=)(z:C, y:T) = not (==)(z, y);
+forceinline override (!=)(z:C, y:T) = not (==)(z, y);
 
 [T,C when Numeric?(T) and Complex?(C)]
-forceinline overload (!=)(y:T,z:C) = not (==)(z, y);
+forceinline override (!=)(y:T,z:C) = not (==)(z, y);
 
 [T when Complex?(T)]
-forceinline overload (!=)(z:T, y:T) = not (==)(z,y);
+forceinline override (!=)(z:T, y:T) = not (==)(z,y);
 
 [T,C when Numeric?(T) and Complex?(C)]
-forceinline overload (<)(a:C, b:T) = (<)(real(a), b);
+forceinline override (<)(a:C, b:T) = (<)(real(a), b);
 
 [T,C when Numeric?(T) and Complex?(C)]
-forceinline overload (<)(a:T, b:C) = (<)(a, real(b));
+forceinline override (<)(a:T, b:C) = (<)(a, real(b));
 
 [C when Complex?(C)]
-forceinline overload (<)(a:C, b:C) = (<)(real(a), real(b));
+forceinline override (<)(a:C, b:C) = (<)(real(a), real(b));
 
 [T,C when Numeric?(T) and Complex?(C)]
-forceinline overload (<=)(a:C, b:T) = (<=)(real(a), b);
+forceinline override (<=)(a:C, b:T) = (<=)(real(a), b);
 
 [T,C when Numeric?(T) and Complex?(C)]
-forceinline overload (<=)(a:T, b:C) = (<=)(a, real(b));
+forceinline override (<=)(a:T, b:C) = (<=)(a, real(b));
 
 [C when Complex?(C)]
-forceinline overload (<=)(a:C, b:C) = (<=)(real(a), real(b));
+forceinline override (<=)(a:C, b:C) = (<=)(real(a), real(b));
 
 [T,C when Numeric?(T) and Complex?(C)]
-forceinline overload (>)(a:C, b:T) = (>)(real(a), b);
+forceinline override (>)(a:C, b:T) = (>)(real(a), b);
 
 [T,C when Numeric?(T) and Complex?(C)]
-forceinline overload (>)(a:T, b:C) = (>)(a, real(b));
+forceinline override (>)(a:T, b:C) = (>)(a, real(b));
 
 [C when Complex?(C)]
-forceinline overload (>)(a:C, b:C) = (>)(real(a), real(b));
+forceinline override (>)(a:C, b:C) = (>)(real(a), real(b));
 
 [T,C when Numeric?(T) and Complex?(C)]
-forceinline overload (>=)(a:C, b:T) = (>=)(real(a), b);
+forceinline override (>=)(a:C, b:T) = (>=)(real(a), b);
 
 [T,C when Numeric?(T) and Complex?(C)]
-forceinline overload (>=)(a:T, b:C) = (>=)(a, real(b));
+forceinline override (>=)(a:T, b:C) = (>=)(a, real(b));
 
 [C when Complex?(C)]
-forceinline overload (>=)(a:C, b:C) = (>=)(real(a), real(b));
+forceinline override (>=)(a:C, b:C) = (>=)(real(a), real(b));
 
 [T when Complex?(T)]
-overload zero?(z:T) = real(z) == 0. and imag(z) == 0.j;
+override zero?(z:T) = real(z) == 0. and imag(z) == 0.j;
 
 /// @section  unary ops 
 
 [T when Complex?(T)]
-forceinline overload (-)(z:T) = Complex(-real(z),-imag(z));
+forceinline override (-)(z:T) = Complex(-real(z),-imag(z));
 
 [T when Complex?(T)]
-forceinline overload (+)(z:T) = z;
+forceinline override (+)(z:T) = z;
 
 [T when Complex?(T)]
 define conj(z:T);
 
-forceinline overload conj(z) = Complex(real(z),-imag(z));
+forceinline override conj(z) = Complex(real(z),-imag(z));
 
 [T when Imaginary?(T)]
-forceinline overload conj(z:T) = -z;
+forceinline override conj(z:T) = -z;
 
 [C when Complex?(C)]
 forceinline rect(c:C) = real(c), imag(c);
@@ -89,13 +89,13 @@ forceinline rectValues(c:C) = real(c), imagValue(c);
 // complex/complex
 
 [T,U when Complex?(T,U)]
-forceinline overload (+)(z:T, y:U) = Complex(real(z)+real(y), imag(z)+imag(y));
+forceinline override (+)(z:T, y:U) = Complex(real(z)+real(y), imag(z)+imag(y));
 
 [T,U when Complex?(T,U)]
-forceinline overload (-)(z:T, y:U) = Complex(real(z)-real(y), imag(z)-imag(y));
+forceinline override (-)(z:T, y:U) = Complex(real(z)-real(y), imag(z)-imag(y));
 
 [T,U when Complex?(T,U)]
-forceinline overload (*)(z:T, y:U) {
+forceinline override (*)(z:T, y:U) {
     alias iy = imagValue(y);
     alias ry = real(y);
     alias iz = imagValue(z);
@@ -105,7 +105,7 @@ forceinline overload (*)(z:T, y:U) {
 }
 
 [T,U when Complex?(T,U)]
-forceinline overload (/)(z:T, y:U) {
+forceinline override (/)(z:T, y:U) {
     alias iy = imagValue(y);
     alias ry = real(y);
     alias iz = imagValue(z);
@@ -125,118 +125,118 @@ forceinline overload (/)(z:T, y:U) {
 // Float/imaginary -> complex
 
 [T,C when Imaginary?(T) and Float?(C)]
-forceinline overload (+)(a:C, z:T) = Complex(a,z);
+forceinline override (+)(a:C, z:T) = Complex(a,z);
 
 [T,C when Imaginary?(T) and Float?(C)]
-forceinline overload (+)(a:T, z:C) = Complex(z,a);
+forceinline override (+)(a:T, z:C) = Complex(z,a);
 
 [T,C when Imaginary?(T) and Float?(C)]
-forceinline overload (-)(a:T, z:C) = Complex(-z,a);
+forceinline override (-)(a:T, z:C) = Complex(-z,a);
 
 [T,C when Imaginary?(T) and Float?(C)]
-forceinline overload (-)(a:C, z:T) = Complex(a,-z);
+forceinline override (-)(a:C, z:T) = Complex(a,-z);
 
 
 // Float/complex -> complex
 
 [T,C when Float?(T) and Complex?(C)]
-forceinline overload (+)(a:T, z:C) = Complex(a + real(z),imag(z));
+forceinline override (+)(a:T, z:C) = Complex(a + real(z),imag(z));
 
 [T,C when Float?(T) and Complex?(C)]
-forceinline overload (+)(z:C, a:T) = (+)(a,z);
+forceinline override (+)(z:C, a:T) = (+)(a,z);
 
 [T,C when Float?(T) and Complex?(C)]
-forceinline overload (-)(z:C, y:T) = Complex(real(z)-y,imag(z));
+forceinline override (-)(z:C, y:T) = Complex(real(z)-y,imag(z));
 
 [T,C when Float?(T) and Complex?(C)]
-forceinline overload (-)(y:T,z:C) = Complex(y + real(z), -imag(z));
+forceinline override (-)(y:T,z:C) = Complex(y + real(z), -imag(z));
 
 [T,C when Float?(T) and Complex?(C)]
-forceinline overload (*)(z:C, y:T) = Complex(real(z)*y,imag(z)*y);
+forceinline override (*)(z:C, y:T) = Complex(real(z)*y,imag(z)*y);
 
 [T,C when Float?(T) and Complex?(C)]
-forceinline overload (*)(y:T,z:C) = (*)(z,y);
+forceinline override (*)(y:T,z:C) = (*)(z,y);
 
 [T,C when Float?(T) and Complex?(C)]
-forceinline overload (/)(z:C, y:T) {
+forceinline override (/)(z:C, y:T) {
     var d = T(1)/y;
     return Complex(real(z)*d,imag(z)*d);
 }
 
 [T,C when Float?(T) and Complex?(C)]
-forceinline overload (/)(y:T,z:C) = (/)(Complex(y,T(0)),z);
+forceinline override (/)(y:T,z:C) = (/)(Complex(y,T(0)),z);
 
 // Imaginary/complex -> complex
 
 [T,C when Imaginary?(T) and Complex?(C)]
-forceinline overload (+)(a:T, z:C) = Complex(real(z), imag(z) + a);
+forceinline override (+)(a:T, z:C) = Complex(real(z), imag(z) + a);
 
 [T,C when Imaginary?(T) and Complex?(C)]
-forceinline overload (+)(z:C, a:T) = (+)(a,z);
+forceinline override (+)(z:C, a:T) = (+)(a,z);
 
 [T,C when Imaginary?(T) and Complex?(C)]
-forceinline overload (-)(z:C, y:T) = Complex(real(z), imag(z) - y);
+forceinline override (-)(z:C, y:T) = Complex(real(z), imag(z) - y);
 
 [T,C when Imaginary?(T) and Complex?(C)]
-forceinline overload (-)(y:T,z:C) = Complex(-real(z), y - imag(z));
+forceinline override (-)(y:T,z:C) = Complex(-real(z), y - imag(z));
 
 [T,C when Imaginary?(T) and Complex?(C)]
-forceinline overload (*)(z:C, y:T) = Complex(imag(z)*y, real(z)*y);
+forceinline override (*)(z:C, y:T) = Complex(imag(z)*y, real(z)*y);
 
 [T,C when Imaginary?(T) and Complex?(C)]
-forceinline overload (*)(y:T,z:C) = (*)(z,y);
+forceinline override (*)(y:T,z:C) = (*)(z,y);
 
 [T,C when Imaginary?(T) and Complex?(C)]
-forceinline overload (/)(z:C, y:T) = Complex(imag(z)/y, -real(z)/y);
+forceinline override (/)(z:C, y:T) = Complex(imag(z)/y, -real(z)/y);
 
 //XXX THESE NEED ATTENTION
 [T when Complex?(T)]
-forceinline overload max(x:T,y:T) = max(abs(x),abs(y));
+forceinline override max(x:T,y:T) = max(abs(x),abs(y));
 
 [C when Complex?(C)]
-forceinline overload min(x:C,y:C) = min(abs(x),abs(y));
+forceinline override min(x:C,y:C) = min(abs(x),abs(y));
 
 [T,C when Numeric?(T) and Complex?(C)]
-forceinline overload max(x:T,y:C) = max(x,abs(y));
+forceinline override max(x:T,y:C) = max(x,abs(y));
 
 [T,C when Numeric?(T) and Complex?(C)]
-forceinline overload max(x:C,y:T) = max(abs(x),y);
+forceinline override max(x:C,y:T) = max(abs(x),y);
 
 [T,C when Numeric?(T) and Complex?(C)]
-forceinline overload min(x:T,y:C) = min(x,abs(y));
+forceinline override min(x:T,y:C) = min(x,abs(y));
 
 [T,C when Numeric?(T) and Complex?(C)]
-forceinline overload min(x:C,y:T) = min(abs(x),y);
+forceinline override min(x:C,y:T) = min(abs(x),y);
 
 [T when Complex?(T)]
-forceinline overload nan?(x:T) = nan?(real(x)) or nan?(imag(x));
+forceinline override nan?(x:T) = nan?(real(x)) or nan?(imag(x));
 
 [T when Complex?(T)]
-forceinline overload finite?(x:T) = floatExponent(abs(x)) != exponentMask((ComplexRealType(T)));
+forceinline override finite?(x:T) = floatExponent(abs(x)) != exponentMask((ComplexRealType(T)));
 
 [T when Complex?(T)]
-forceinline overload infinity?(x:T) = abs(x) == infinity(ComplexBaseType(T));
+forceinline override infinity?(x:T) = abs(x) == infinity(ComplexBaseType(T));
 
 [T when Complex?(T)]
-forceinline overload negativeInfinity?(x:T) = negativeInfinity?(real(x));
+forceinline override negativeInfinity?(x:T) = negativeInfinity?(real(x));
 
 [T when Complex?(T)]
-forceinline overload subnormal?(x:T) = subnormal?(real(x)) or subnormal?(imag(x));
+forceinline override subnormal?(x:T) = subnormal?(real(x)) or subnormal?(imag(x));
 
 [T when Complex?(T)]
-forceinline overload normalized?(x:T) = not subnormal?(x) and finite?(x);
+forceinline override normalized?(x:T) = not subnormal?(x) and finite?(x);
 
 [T when Complex?(T)]
-overload infinity(#T) = Complex(infinity(ComplexRealType(T)),infinity(ComplexImagType(T)));
+override infinity(#T) = Complex(infinity(ComplexRealType(T)),infinity(ComplexImagType(T)));
 
 [T when Complex?(T)]
-overload negativeInfinity(#T) = Complex(negativeInfinity(ComplexRealType(T)),negativeInfinity(ComplexImagType(T)));
+override negativeInfinity(#T) = Complex(negativeInfinity(ComplexRealType(T)),negativeInfinity(ComplexImagType(T)));
 
 [T when Complex?(T)]
-overload nan(#T) = Complex(nan(ComplexRealType(T)),nan(ComplexImagType(T)));
+override nan(#T) = Complex(nan(ComplexRealType(T)),nan(ComplexImagType(T)));
 
 [T when Complex?(T)]
-overload snan(#T) = Complex(snan(ComplexRealType(T)),snan(ComplexImagType(T)));
+override snan(#T) = Complex(snan(ComplexRealType(T)),snan(ComplexImagType(T)));
 
 [T when Float?(T)]
 forceinline fromPolar(m:T,ph:T) = Complex(m*sin(ph),m*cos(ph));

@@ -6,7 +6,7 @@ record Multiplier[N] (
 );
 
 [N]
-overload call(x:Multiplier[N], y) = x.factor * y;
+override call(x:Multiplier[N], y) = x.factor * y;
 
 map(f, a) {
     alias ResultType = Type(f(a[0]));

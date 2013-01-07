@@ -25,17 +25,17 @@ private alias radix_two_double  = floatFromBits(wrapBitshl(1023ul + 2*BF_NB_BITS
 private alias radix_mtwo_double = floatFromBits(wrapBitshl(1023ul - 2*BF_NB_BITS,52));
 private alias radix_rng_double  = floatFromBits(wrapBitshl(1023ul + BF_NB_BITS*BF_MAX_RANGE,52));
 
-overload BigFloat() = BigFloat(array(0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u,
+override BigFloat() = BigFloat(array(0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u,
              0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u),0., 0, 1);
 
-overload BitwiseMovedType?(#BigFloat) = true;
+override BitwiseMovedType?(#BigFloat) = true;
 
-forceinline overload resetUnsafe(a:BigFloat) {
+forceinline override resetUnsafe(a:BigFloat) {
     a <-- BigFloat();
 }
 
 [T] BigFloat?(#T) = false;
-forceinline overload BigFloat?(#BigFloat) = true;
+forceinline override BigFloat?(#BigFloat) = true;
 
 
 alias bf_zero = BigFloat(array(0x00000000u, 0x00000000u, 0x00000000u, 0x00000000u,
@@ -54,7 +54,7 @@ alias bf_sixinv = BigFloat(array(0x0aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaa
     0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau, 0x2aaaaaaau), 1.,  -1,   1 );
 
 
-overload BigFloat(x:Double) : BigFloat {
+override BigFloat(x:Double) : BigFloat {
     var nb, mantissa = db_number(),db_number();
     var result = BigFloat();
     if(x>=0){result.sign = 1;    nb.2 = x;}
@@ -111,7 +111,7 @@ overload BigFloat(x:Double) : BigFloat {
 }
 
 [T when BigFloat?(T)]
-overload Double(x:T) --> result:Double {
+override Double(x:T) --> result:Double {
     var nb, rndcorr = db_number(), db_number();
     var res = 0.;
     // convert the MSB digit into a double, and store it in nb.d
@@ -232,7 +232,7 @@ private forceinline BF_CARRY_PROPAGATE(r1,r0,tmp) {
 
 // This function copies a result into another.
 [T when BigFloat?(T)]
-forceinline overload assign(ref result:T, x:T) : {
+forceinline override assign(ref result:T, x:T) : {
     result.hword = x.hword;
     result.excp = x.excp;
     result.index = x.index;
@@ -240,7 +240,7 @@ forceinline overload assign(ref result:T, x:T) : {
 }
 
 [T when Numeric?(T)]
-forceinline overload assign(ref result:BigFloat, x:T) {
+forceinline override assign(ref result:BigFloat, x:T) {
     if(x == 0){
         resetUnsafe(result.h_word);
         result.excp = 0.;
@@ -253,7 +253,7 @@ forceinline overload assign(ref result:BigFloat, x:T) {
 }
 
 [T when BigFloat?(T)]
-overload multiply(x:T, y:T) --> result:T {
+override multiply(x:T, y:T) --> result:T {
     result.excp = x.excp * y.excp;
     result.sign = x.sign * y.sign;
     result.index = x.index + y.index;
@@ -534,7 +534,7 @@ private do_sub(result, x, y){
 
 // Addition (result is a normalised number).
 [T when BigFloat?(T)]
-overload add(x:T, y:T) : T {
+override add(x:T, y:T) : T {
     var result = BigFloat();
     if (x.excp == 0)
         result = y;
@@ -557,7 +557,7 @@ overload add(x:T, y:T) : T {
 // Subtraction (result is a normalised number).
 // The arguments x, y and result may point to the same memory location.
 [T when BigFloat?(T)]
-overload subtract(x:T, y:T) :T {
+override subtract(x:T, y:T) :T {
     var result = BigFloat();
     if (x.excp == 0){
         result = y;
@@ -587,7 +587,7 @@ overload subtract(x:T, y:T) :T {
 
 // Compute 1/x with a Newton scheme
 [T when BigFloat?(T)]
-overload recip(x:T) --> result:T {
+override recip(x:T) --> result:T {
     var tmp = x;
     tmp.index = 0;
     var app_x = Double(tmp);
@@ -609,7 +609,7 @@ overload recip(x:T) --> result:T {
 
 // Compute result = x/y;
 [T when BigFloat?(T)]
-overload divide(x:T, y:T) :T {
+override divide(x:T, y:T) :T {
     var result = BigFloat();
     if (x.excp != 1.)
         result.excp = x.excp / y.excp;
@@ -622,7 +622,7 @@ overload divide(x:T, y:T) :T {
 
 // Convert an integer number in multiprecision representation
 [I when Integer?(I)]
-overload BigFloat(x:I) :BigFloat {
+override BigFloat(x:I) :BigFloat {
     var result = BigFloat();
     var ux = 0u;
     if(x >= 0){
@@ -652,7 +652,7 @@ overload BigFloat(x:I) :BigFloat {
     return result;
 }
 
-overload printTo(stream, x:BigFloat){
+override printTo(stream, x:BigFloat){
     var d = db_number();
     d.2 = Double(x);
     println("Exception : ", x.excp);

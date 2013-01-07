@@ -5,12 +5,12 @@ import cocoa.applicationservices.*;
 
 import cocoa.objc.runtime.(object_getClassName);
 
-overload selector("ncStringWithInt:") = Id, Int;
-overload selector("ncStringWithNumber:") = Id, NSNumber;
-overload selector("initWithNumber:") = Id, NSNumber;
-overload selector("someCGRect") = CGRect;
-overload selector("someCGPoint") = CGPoint;
-overload selector("someCGSize") = CGSize;
+override selector("ncStringWithInt:") = Id, Int;
+override selector("ncStringWithNumber:") = Id, NSNumber;
+override selector("initWithNumber:") = Id, NSNumber;
+override selector("someCGRect") = CGRect;
+override selector("someCGPoint") = CGPoint;
+override selector("someCGSize") = CGSize;
 
 record NumberConvertingString = newClass(NSString,
     InstanceVars(["value", Int]),

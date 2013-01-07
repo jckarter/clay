@@ -2,11 +2,11 @@ import printer.(println);
 import data.vectors.*;
 
 record NonPODInt (x: Int);
-overload RegularRecord?(#NonPODInt) = false;
-overload NonPODInt(x: NonPODInt) = NonPODInt(x.x);
-overload moveUnsafe(x: NonPODInt) = NonPODInt(x.x);
-overload resetUnsafe(x: NonPODInt) {}
-overload destroy(x: NonPODInt) {}
+override RegularRecord?(#NonPODInt) = false;
+override NonPODInt(x: NonPODInt) = NonPODInt(x.x);
+override moveUnsafe(x: NonPODInt) = NonPODInt(x.x);
+override resetUnsafe(x: NonPODInt) {}
+override destroy(x: NonPODInt) {}
 
 main() {
     alias NP = NonPODInt;

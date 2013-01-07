@@ -1,5 +1,5 @@
 record Foo ();
 
-overload Foo() { return ref null(Foo)^; }
+override Foo() { return ref null(Foo)^; }
 
 main() { var a = Foo(); }

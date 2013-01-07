@@ -1,6 +1,6 @@
 import baz.*;
 
-overload foo() = 1;
+override foo() = 1;
 
 main() {
 }

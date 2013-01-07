@@ -13,14 +13,14 @@ record XORShiftRNG(
   z : UInt32
 );
 
-overload XORShiftRNG() = XORShiftRNG(pr(), pr(), pr(), pr());
+override XORShiftRNG() = XORShiftRNG(pr(), pr(), pr(), pr());
 
 define generate;
 
-[I when Integer?(I) and TypeSize(I) <= 32] overload generate(r, #I)
+[I when Integer?(I) and TypeSize(I) <= 32] override generate(r, #I)
     = wrapCast(I, generate(r, UInt32));
 
-overload generate(r : XORShiftRNG, #UInt32){
+override generate(r : XORShiftRNG, #UInt32){
   var t = xsl(r.x, 15);
   r.x = r.y;
   r.y = r.z;
@@ -30,16 +30,16 @@ overload generate(r : XORShiftRNG, #UInt32){
   return r.w;
 }
 
-overload generate(r, #UInt64){
+override generate(r, #UInt64){
   var x = UInt64(generate(r, UInt32));
   var y = UInt64(generate(r, UInt32));
 
   return bitor(wrapBitshl(x, 32), y);
 }
 
-overload generate(r, #Int64) = wrapCast(Int64, generate(r, UInt64));
+override generate(r, #Int64) = wrapCast(Int64, generate(r, UInt64));
 
-[n, T] overload generate(r, #Array[T, n]){
+[n, T] override generate(r, #Array[T, n]){
   var result = Array[T, n]();
 
   for(i in range(n)) result[i] <-- generate(r, i);
@@ -52,7 +52,7 @@ define uniform;
 // TODO: This is a bit of a rubbish default implementation
 // It works fine for integers (I think) but is almost certainly wrong for floats
 // Either way it could be a lot faster.
-[T when Integer?(T)] overload uniform(rnd, from : T, to : T){
+[T when Integer?(T)] override uniform(rnd, from : T, to : T){
   if(safeFromOverflow?(from, to)){
     var ub = to - from;
     var mask = toMask(ub);
@@ -71,20 +71,20 @@ define uniform;
   }
 }
 
-overload uniform(rnd, from : Float32, to : Float32)
+override uniform(rnd, from : Float32, to : Float32)
     = from + (to - from) * smallFloat(rnd);
 
-overload uniform(rnd, from : Float64, to : Float64)
+override uniform(rnd, from : Float64, to : Float64)
     = from + (to - from) * smallDouble(rnd);
 
-overload uniform(rnd, #Float32) = uniform(rnd, 0.f ,1.f);
-overload uniform(rnd, #Float64) = uniform(rnd, 0. ,1.);
+override uniform(rnd, #Float32) = uniform(rnd, 0.f ,1.f);
+override uniform(rnd, #Float64) = uniform(rnd, 0. ,1.);
 
 define normal;
 
-[T when Numeric?(T)] overload normal(rnd, mean:T, stdev:T)
+[T when Numeric?(T)] override normal(rnd, mean:T, stdev:T)
     = mean + stdev * sqrt(-T(2) * log(uniform(rnd,T(0),T(1)))) * cos(T(2) * M_PI * uniform(rnd,T(0),T(1)));
-[T when Numeric?(T)] overload normal(rnd, mean:T) = normal(rnd, mean, T(1));
+[T when Numeric?(T)] override normal(rnd, mean:T) = normal(rnd, mean, T(1));
 
 private smallDouble(r) =
   bitcast(Double, bitor(mask(generate(r, Int64), 52), bitcast(UInt64,1.0)))-1;
@@ -99,13 +99,13 @@ private pr() = UInt32(libc.random());
 
 private define safeFromOverflow?;
 
-[T when UnsignedInteger?(T)] overload safeFromOverflow?(x : T, y : T) = true;
-[T when SignedInteger?(T)] overload safeFromOverflow?(x : T, y : T) = (x < T(0) and T(0) < y) or (y - x > T(0));
+[T when UnsignedInteger?(T)] override safeFromOverflow?(x : T, y : T) = true;
+[T when SignedInteger?(T)] override safeFromOverflow?(x : T, y : T) = (x < T(0) and T(0) < y) or (y - x > T(0));
 
 private define toMask;
 
 private forceinline pb(x, n){ x = bitor(x, bitshr(x, n)); }
-[T] overload toMask(x:T){
+[T] override toMask(x:T){
   var t = x;
   pb(t, 1);
   pb(t, 2);

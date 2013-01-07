@@ -5,23 +5,23 @@ import test.memory.(Canary, checkCanariesDestroyed);
 // a throwing or nonthrowing copy constructor
 
 record NonthrowingCopy (c:Canary);
-overload RegularRecord?(#NonthrowingCopy) = false;
-overload CopyDoesNotThrowType?(#NonthrowingCopy) = true;
-overload NonthrowingCopy() = initializeRecord(NonthrowingCopy);
-overload NonthrowingCopy(x:NonthrowingCopy) = copyRecord(x);
-overload moveUnsafe(x:NonthrowingCopy) = moveRecordUnsafe(x);
-overload resetUnsafe(x:NonthrowingCopy) { resetRecordUnsafe(x); }
-overload destroy(x:NonthrowingCopy) { destroyRecord(x); }
+override RegularRecord?(#NonthrowingCopy) = false;
+override CopyDoesNotThrowType?(#NonthrowingCopy) = true;
+override NonthrowingCopy() = initializeRecord(NonthrowingCopy);
+override NonthrowingCopy(x:NonthrowingCopy) = copyRecord(x);
+override moveUnsafe(x:NonthrowingCopy) = moveRecordUnsafe(x);
+override resetUnsafe(x:NonthrowingCopy) { resetRecordUnsafe(x); }
+override destroy(x:NonthrowingCopy) { destroyRecord(x); }
 
 record ThrowingCopy (c:Canary);
-overload RegularRecord?(#ThrowingCopy) = false;
-overload CopyDoesNotThrowType?(#ThrowingCopy) = false;
-overload ThrowingCopy() = initializeRecord(ThrowingCopy, Canary(true));
-overload ThrowingCopy(throw?) = initializeRecord(ThrowingCopy, Canary(throw?));
-overload ThrowingCopy(x:ThrowingCopy) = copyRecord(x);
-overload moveUnsafe(x:ThrowingCopy) = moveRecordUnsafe(x);
-overload resetUnsafe(x:ThrowingCopy) { resetRecordUnsafe(x); }
-overload destroy(x:ThrowingCopy) { destroyRecord(x); }
+override RegularRecord?(#ThrowingCopy) = false;
+override CopyDoesNotThrowType?(#ThrowingCopy) = false;
+override ThrowingCopy() = initializeRecord(ThrowingCopy, Canary(true));
+override ThrowingCopy(throw?) = initializeRecord(ThrowingCopy, Canary(throw?));
+override ThrowingCopy(x:ThrowingCopy) = copyRecord(x);
+override moveUnsafe(x:ThrowingCopy) = moveRecordUnsafe(x);
+override resetUnsafe(x:ThrowingCopy) { resetRecordUnsafe(x); }
+override destroy(x:ThrowingCopy) { destroyRecord(x); }
 
 tryNonthrowing() {
     var a = NonthrowingCopy();

@@ -42,7 +42,6 @@ static void initializePatterns(OverloadPtr x)
     initializePatternEnv(patternEnv, pvars, x->cells, x->multiCells);
     assert(x->target.ptr());
     x->callablePattern = evaluateOnePattern(x->target, patternEnv);
-
     llvm::ArrayRef<FormalArgPtr> formalArgs = code->formalArgs;
     for (unsigned i = 0; i < formalArgs.size(); ++i) {
         FormalArgPtr y = formalArgs[i];
@@ -100,7 +99,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
     initializePatterns(overload);
 
     PatternReseter reseter(overload);
-
+    
     if (!unifyPatternObj(overload->callablePattern, callable))
         return new MatchCallableError(overload->target, callable);
 
@@ -161,10 +160,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
         if (!evaluateBool(code->predicate, staticEnv))
             return new MatchPredicateError(code->predicate);
     
-    MatchSuccessPtr result = new MatchSuccess(
-        overload->callByName, overload->isInline, code, staticEnv,
-        callable, argsKey
-    );
+    MatchSuccessPtr result = new MatchSuccess(overload, staticEnv, callable, argsKey);
     
     for (unsigned i = 0, j = 0; i < formalArgs.size(); ++i) {
         FormalArgPtr x = formalArgs[i];

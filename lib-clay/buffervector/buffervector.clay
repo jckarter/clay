@@ -15,47 +15,47 @@ record BufferVector[T] (
 /// @section  predicates 
 
 [T]
-overload ContiguousSequence?(#BufferVector[T]) = true;
+override ContiguousSequence?(#BufferVector[T]) = true;
 
 
 
 /// @section  constructors 
 
 // disable all constructors
-[T] overload BufferVector[T](..args);
-[T] overload BufferVector(..args);
+[T] override BufferVector[T](..args);
+override BufferVector(..args);
 
 [T when PODType?(T)]
-overload BufferVector[T](begin:Pointer[T], end:Pointer[T], current:Pointer[T]) --> returned:BufferVector[T] {
+override BufferVector[T](begin:Pointer[T], end:Pointer[T], current:Pointer[T]) --> returned:BufferVector[T] {
     returned.begin = begin;
     returned.end = end;
     returned.current = current;
 }
 
 [T when PODType?(T)]
-overload BufferVector[T](begin:Pointer[T], end:Pointer[T]) =
+override BufferVector[T](begin:Pointer[T], end:Pointer[T]) =
     BufferVector[T](begin, end, begin);
 
 [T when PODType?(T)]
-overload BufferVector(begin:Pointer[T], end:Pointer[T], current:Pointer[T]) =
+override BufferVector(begin:Pointer[T], end:Pointer[T], current:Pointer[T]) =
     BufferVector[T](begin, end, current);
 
 [T when PODType?(T)]
-overload BufferVector(begin:Pointer[T], end:Pointer[T]) =
+override BufferVector(begin:Pointer[T], end:Pointer[T]) =
     BufferVector(begin, end, begin);
 
 [S when ContiguousSequence?(S) and PODType?(SequenceElementType(S))]
-overload BufferVector(seq:S) =
+override BufferVector(seq:S) =
     BufferVector(begin(seq), end(seq));
 
 
 /// @section  default constructor and copy constructor 
 
 [T when PODType?(T)]
-overload BufferVector[T]() --> returned:BufferVector[T] {}
+override BufferVector[T]() --> returned:BufferVector[T] {}
 
 [T when PODType?(T)]
-overload BufferVector[T](src:BufferVector[T]) =
+override BufferVector[T](src:BufferVector[T]) =
     BufferVector[T](src.begin, src.end, src.current);
 
 
@@ -63,24 +63,24 @@ overload BufferVector[T](src:BufferVector[T]) =
 /// @section  generic vector requirements 
 
 [T]
-overload Vector?(#BufferVector[T]) = true;
+override Vector?(#BufferVector[T]) = true;
 
 [T]
-overload vectorData(a:BufferVector[T]) = a.begin;
+override vectorData(a:BufferVector[T]) = a.begin;
 
 [T]
-overload vectorSize(a:BufferVector[T]) = SizeT(a.current - a.begin);
+override vectorSize(a:BufferVector[T]) = SizeT(a.current - a.begin);
 
 [T]
-overload vectorSetSize(a:BufferVector[T], size:SizeT) {
+override vectorSetSize(a:BufferVector[T], size:SizeT) {
     a.current = a.begin + size;
 }
 
 [T]
-overload vectorCapacity(a:BufferVector[T]) = SizeT(a.end - a.begin);
+override vectorCapacity(a:BufferVector[T]) = SizeT(a.end - a.begin);
 
 [T]
-overload vectorRequestCapacity(a:BufferVector[T], capacity:SizeT) {
+override vectorRequestCapacity(a:BufferVector[T], capacity:SizeT) {
     assert(capacity <= a.end-a.begin, "BufferVector cannot be expanded");
 }
 

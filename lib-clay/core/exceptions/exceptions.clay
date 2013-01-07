@@ -19,13 +19,13 @@ variant Exception;
 record NoException ();
 instance Exception (NoException);
 
-overload Exception() = Exception(NoException());
+override Exception() = Exception(NoException());
 
 record GenericException (
     message: StringLiteralRef,
 );
 [S when StringLiteral?(S)]
-overload GenericException(#S) : GenericException 
+override GenericException(#S) : GenericException 
     = GenericException(StringLiteralRef(S));
 
 instance Exception (GenericException);
@@ -58,7 +58,7 @@ private exceptionObject(exp:RawPointer) : ByRef[ExceptionData]
 // more sophisticated version.
 define printUnhandledExceptionToStderr(e) :;
 
-overload printUnhandledExceptionToStderr(e) : {
+override printUnhandledExceptionToStderr(e) : {
     libc.fprintf(libc.stderr, cstring("unhandled %s exception\n"), cstring(MemberTypeName(e)));
 }
 
@@ -67,7 +67,7 @@ overload printUnhandledExceptionToStderr(e) : {
 /// @section  throwValue, continueException 
 
 [T when Type?(T)]
-overload throwValue(x:T) : {
+override throwValue(x:T) : {
     errorWithPrintfNoThrow(stringLiteralConcat("exception of type ", StaticName(T)," thrown with exceptions disabled"));
 }
 
@@ -75,7 +75,7 @@ private allocateExceptionData(forward x, file, line) : Pointer[ExceptionData] =
     allocateObject(ExceptionData(Exception(x), ExceptionContext(Backtrace(), file, line)));
 
 [ when ExceptionsEnabled?]
-alias overload throwValue(x) : {
+alias override throwValue(x) : {
     // allocateExceptionData cannot be inlined, because allocateExceptionData is also an alias function that throws
     var exp = allocateExceptionData(x, StringLiteralRef(__FILE__), UInt(__LINE__));
     if (not Flag?("clay.DisableBacktraceOnThrow")) {
@@ -85,11 +85,11 @@ alias overload throwValue(x) : {
 }
 
 [S when StringLiteral?(S)]
-alias overload throwValue(#S) : {
+alias override throwValue(#S) : {
     throwValue(GenericException(S));
 }
 
-overload continueException(exp:RawPointer) : {
+override continueException(exp:RawPointer) : {
     signalException(exp);
 }
 
@@ -121,17 +121,17 @@ alias throwButPropagateLike(ex, ..expr) {
 /// @section  exceptionIs?, exceptionAs, exceptionAsAny 
 
 [T]
-overload exceptionIs?(#T, exp:RawPointer) : Bool = nestedVariantIs?(exceptionObject(exp).exception, T);
+override exceptionIs?(#T, exp:RawPointer) : Bool = nestedVariantIs?(exceptionObject(exp).exception, T);
 
 [T]
-overload exceptionAs(#T, exp:RawPointer) : T, ExceptionContext {
+override exceptionAs(#T, exp:RawPointer) : T, ExceptionContext {
     finally freeRawMemory(exp);
     return
         moveUnsafe(nestedVariantAs(exceptionObject(exp).exception, T)),
         moveUnsafe(exceptionObject(exp).context);
 }
 
-overload exceptionAsAny(exp:RawPointer) : Exception, ExceptionContext {
+override exceptionAsAny(exp:RawPointer) : Exception, ExceptionContext {
     finally freeRawMemory(exp);
     return
         moveUnsafe(exceptionObject(exp).exception),
@@ -148,17 +148,17 @@ private forceinline errorMsg(msg) : {
     showBacktrace();
 }
 
-overload unhandledExceptionInExternal() : {
+override unhandledExceptionInExternal() : {
     errorMsg("unhandled exception in external procedure\n");
     libc.abort();
 }
 
-overload exceptionInInitializer() : {
+override exceptionInInitializer() : {
     errorMsg("exception when initializing globals\n");
     libc.abort();
 }
 
-overload exceptionInFinalizer() : {
+override exceptionInFinalizer() : {
     errorMsg("exception when destroying globals\n");
     libc.abort();
 }

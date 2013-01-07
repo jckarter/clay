@@ -9,13 +9,13 @@ import byteorder.*;
 
 [A]
 define Algorithm?(#A): Bool;
-overload Algorithm?(A) = false;
+override Algorithm?(A) = false;
 
 // true iff T is digest output
 
 [T]
 define Digest?(#T): Bool;
-overload Digest?(T) = false;
+default Digest?(T) = false;
 
 // algorithm name by digest or by digest context
 [T when Digest?(T) or DigestContext?(T)]
@@ -29,7 +29,7 @@ define DigestSize(#A): UInt;
 
 [T]
 define DigestContext?(#T): Bool;
-overload DigestContext?(T) = false;
+default DigestContext?(T) = false;
 
 // Hash function input block size. This function is a part of public API
 // because some algorithms (like HMAC) need to know it
@@ -69,7 +69,7 @@ define BlockSizeWords(#A);
 
 // block size in bytes
 [A when Algorithm?(A)]
-overload BlockSizeBytes(#A): UInt = UInt(BlockSizeWords(#A) * TypeSize(Word(#A)));
+override BlockSizeBytes(#A): UInt = UInt(BlockSizeWords(#A) * TypeSize(Word(#A)));
 
 // shortcut
 [A when Algorithm?(A)]
@@ -98,10 +98,10 @@ MakeDigest(#A) = recordWithProperties(
 define AlgorithmTypes(#A);
 
 [A when Algorithm?(A)]
-overload Digest(#A) = nthValue(#0, ..AlgorithmTypes(#A));
+override Digest(#A) = nthValue(#0, ..AlgorithmTypes(#A));
 
 [A when Algorithm?(A)]
-overload DigestContext(#A) = nthValue(#1, ..AlgorithmTypes(#A));
+override DigestContext(#A) = nthValue(#1, ..AlgorithmTypes(#A));
 
 // make digest context record
 [A when Algorithm?(A)]
@@ -117,7 +117,7 @@ MakeDigestContext(#A) = recordWithProperties(
 
 // digest context record is initialized with initial algorithm state
 [C when DigestContext?(C)]
-overload C() --> returned:C {
+override C() --> returned:C {
     returned.total <-- 0ul;
     returned.state <-- stateInitial(Algorithm(C));
     // returned.buffer does not need to be initialized
@@ -128,13 +128,13 @@ overload C() --> returned:C {
 private define bytesToWordsImpl(#Word, #ReverseBytes, bytes: Array[UInt8, N]);
 
 [N, Word]
-overload bytesToWordsImpl(#Word, #false, bytes: Array[UInt8, N]) --> returned: Array[Word, Int(N \ Int(TypeSize(Word)))] {
+override bytesToWordsImpl(#Word, #false, bytes: Array[UInt8, N]) --> returned: Array[Word, Int(N \ Int(TypeSize(Word)))] {
     ref returnedBytes = bitcast(Type(bytes), returned);
     returnedBytes <-- bytes;
 }
 
 [N, Word]
-overload bytesToWordsImpl(#Word, #true, bytes: Array[UInt8, N]) --> returned: Array[Word, Int(N \ Int(TypeSize(Word)))] {
+override bytesToWordsImpl(#Word, #true, bytes: Array[UInt8, N]) --> returned: Array[Word, Int(N \ Int(TypeSize(Word)))] {
     returned <-- bytesToWordsImpl(#Word, #false, bytes);
     for (word in returned) {
         word = reverseBytes(word);
@@ -151,13 +151,13 @@ bytesToWordsBig(#Word, bytes) = bytesToWordsImpl(#Word, #LittleEndian?, bytes);
 private define wordsToBytesImpl(array: Array[Word, K], #ReverseBytes): Array[UInt8, Int(TypeSize(Word) * K)];
 
 [Word, K]
-overload wordsToBytesImpl(array: Array[Word, K], #false) --> returned: Array[UInt8, Int(TypeSize(Word) * K)] {
+override wordsToBytesImpl(array: Array[Word, K], #false) --> returned: Array[UInt8, Int(TypeSize(Word) * K)] {
     ref arrayBytes = bitcast(Type(returned), array);
     returned <-- arrayBytes;
 }
 
 [Word, K]
-overload wordsToBytesImpl(words: Array[Word, K], #true) --> returned: Array[UInt8, Int(TypeSize(Word) * K)] {
+override wordsToBytesImpl(words: Array[Word, K], #true) --> returned: Array[UInt8, Int(TypeSize(Word) * K)] {
     for (i in range(K)) {
         var word = reverseBytes(words[i]);
         ref wordBytes = bitcast(Array[UInt8, Int(TypeSize(Word))], word);
@@ -169,8 +169,8 @@ littleWordsToBytes(words) = wordsToBytesImpl(words, #BigEndian?);
 bigWordsToBytes(words) = wordsToBytesImpl(words, #LittleEndian?);
 
 private define wordsToBytes(words, bigEndian);
-overload wordsToBytes(words, #true) = bigWordsToBytes(words);
-overload wordsToBytes(words, #false) = littleWordsToBytes(words);
+override wordsToBytes(words, #true) = bigWordsToBytes(words);
+override wordsToBytes(words, #false) = littleWordsToBytes(words);
 
 
 
@@ -181,24 +181,24 @@ record PoorManUInt128 (
     w: Array[UInt64, 2],
 );
 
-overload UnsignedInteger?(#PoorManUInt128) = true;
+override UnsignedInteger?(#PoorManUInt128) = true;
 
-overload assign(dest: PoorManUInt128, src: PoorManUInt128) {
+override assign(dest: PoorManUInt128, src: PoorManUInt128) {
     dest.w = src.w;
 }
 
-overload PoorManUInt128(src: PoorManUInt128) --> returned:PoorManUInt128 {
+override PoorManUInt128(src: PoorManUInt128) --> returned:PoorManUInt128 {
     returned.w = src.w;
 }
 
 [when LittleEndian?]
-overload PoorManUInt128(i: UInt64) --> returned:PoorManUInt128 {
+override PoorManUInt128(i: UInt64) --> returned:PoorManUInt128 {
     returned.w[0] = i;
     returned.w[1] = 0;
 }
 
 [when BigEndian?]
-overload PoorManUInt128(i: UInt64) --> returned:PoorManUInt128 {
+override PoorManUInt128(i: UInt64) --> returned:PoorManUInt128 {
     returned.w[0] = 0;
     returned.w[1] = i;
 }
@@ -213,8 +213,8 @@ private var padding[A] = array(0x80uss, ..replicateValue(0uss, #Int(2 * BlockSiz
 [I, B when Integer?(I)]
 private define hostToByteOrder(n:I, #B): I;
 
-overload hostToByteOrder(n, #true) = hostToBig(n);
-overload hostToByteOrder(n, #false) = hostToLittle(n);
+override hostToByteOrder(n, #true) = hostToBig(n);
+override hostToByteOrder(n, #false) = hostToLittle(n);
 
 
 [S]

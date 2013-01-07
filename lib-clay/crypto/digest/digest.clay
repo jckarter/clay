@@ -16,12 +16,12 @@ public import crypto.digest.internal.(
 
 // print digest as hex
 [H when Digest?(H)]
-overload printTo(stream, forward sha:H) {
+override printTo(stream, forward sha:H) {
     printTo(stream, hexString(sha.digest));
 }
 
 [H when Digest?(H)]
-overload hash(x:H) = bitcast(SizeT, x.digest);
+override hash(x:H) = bitcast(SizeT, x.digest);
 
 
 // complete digest computation and return the digest of type Digest(..)

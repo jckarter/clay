@@ -7,21 +7,21 @@ import numbers.floats.(nan,infinity,infinity?,nan?,signbit);
 import __intrinsics__.(x86_sse2_sqrt_sd as x86_sqrtsd);
 
 [T when Float?(T) ]
-forceinline overload sqrt(x:T) = T(x86_sqrtsd(Vec[Double,2](Double(x),0.))[0]);
+forceinline override sqrt(x:T) = T(x86_sqrtsd(Vec[Double,2](Double(x),0.))[0]);
 
-forceinline overload sqrt(x:Double) = x86_sqrtsd(Vec[Double,2](x,0.))[0];
+forceinline override sqrt(x:Double) = x86_sqrtsd(Vec[Double,2](x,0.))[0];
 
 [I when Imaginary?(I) ]
-forceinline overload sqrt(z:I) = sqrt(Complex(z));
+forceinline override sqrt(z:I) = sqrt(Complex(z));
 
 
 define thresh;
-alias overload thresh(#LongDouble) = 0xd.413cccfe77997ffp+16379fl;
-alias overload thresh(#Float)  = 0x1.a82797f7a7599p+126f;
-alias overload thresh(#Double) = 0x1.a827999fcef32p+1022;
+alias override thresh(#LongDouble) = 0xd.413cccfe77997ffp+16379fl;
+alias override thresh(#Float)  = 0x1.a82797f7a7599p+126f;
+alias override thresh(#Double) = 0x1.a827999fcef32p+1022;
 
 [C when Complex?(C)]
-overload sqrt(z:C) --> result:C {
+override sqrt(z:C) --> result:C {
     alias T = ComplexBaseType(C);
     alias ZERO = T(0);
     alias QUARTER = T(0.25);

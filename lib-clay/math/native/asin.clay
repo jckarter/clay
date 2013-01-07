@@ -21,7 +21,7 @@ alias qS3 = -6.88283971605453293030e-01; // 0xBFE6066C, 0x1B8D0159
 alias qS4 =  7.70381505559019352791e-02; // 0x3FB3B8C5, 0xB12E9282 
 
 
-overload asin(x:Double) {
+override asin(x:Double) {
 	alias ONE = 1.;
 	alias HUGE = GreatestPositiveFinite(Double);
 	var t=0.;
@@ -70,7 +70,7 @@ overload asin(x:Double) {
 
 
 [C when Complex?(C)]
-overload asin(x:C) --> res:C {
+override asin(x:C) --> res:C {
 
     alias T = ComplexBaseType(C);
     

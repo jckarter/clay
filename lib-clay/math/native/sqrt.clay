@@ -53,7 +53,7 @@ private var tm256 = 0x1.p-256;
     rl <-- fma(u,v,-rh);
 }
 
-overload sqrt(x:Double) {
+override sqrt(x:Double) {
 
     var a = MAKE_IEEE(x);
     var k = GET_IEEE_HIGH(a);
@@ -96,7 +96,7 @@ overload sqrt(x:Double) {
 
 
 
-overload sqrt(x:Float) {
+override sqrt(x:Float) {
     alias ONE = 1.f;
     alias ZERO = 0.f;
     alias TINY = LeastPositive(Float);
@@ -164,15 +164,15 @@ overload sqrt(x:Float) {
 
 
 [I when Imaginary?(I) ]
-forceinline overload sqrt(z:I) = sqrt(Complex(z));
+forceinline override sqrt(z:I) = sqrt(Complex(z));
 
 
 alias thresh(#LongDouble) = 0xd.413cccfe77997ffp+16379fl;
-alias overload thresh(#Float)  = 0x1.a82797f7a7599p+126f;
-alias overload thresh(#Double) = 0x1.a827999fcef32p+1022;
+alias override thresh(#Float)  = 0x1.a82797f7a7599p+126f;
+alias override thresh(#Double) = 0x1.a827999fcef32p+1022;
 
 [C when Complex?(C)]
-overload sqrt(z:C) --> result:C {
+override sqrt(z:C) --> result:C {
     alias T = ComplexBaseType(C);
     alias ZERO = T(0);
     alias QUARTER = T(0.25);
