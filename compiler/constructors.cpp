@@ -72,15 +72,9 @@ vector<OverloadPtr> &primOpOverloads(PrimOpPtr x)
     return *ptr;
 }
 
-void addPrimOpOverload(PrimOpPtr x, OverloadPtr overload)
+vector<OverloadPtr> &getPatternOverloads()
 {
-    vector<OverloadPtr> &v = primOpOverloads(x);
-    v.insert(v.begin(), overload);
-}
-
-void addPatternOverload(OverloadPtr x)
-{
-    patternOverloads.insert(patternOverloads.begin(), x);
+    return patternOverloads;
 }
 
 void initTypeOverloads(TypePtr t)
