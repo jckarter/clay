@@ -434,12 +434,11 @@ struct Object {
         : refCount(0), objKind(objKind) {}
     void incRef() { ++refCount; }
     void decRef() {
-        if (--refCount == 0)
-            dealloc();
+        if (--refCount == 0) {
+            delete this;
+        }
     }
-    void operator delete(void*) {}
-    virtual void dealloc() { ::operator delete(this); }
-    virtual ~Object() { dealloc(); }
+    virtual ~Object() {}
 };
 
 typedef Pointer<Object> ObjectPtr;
@@ -997,7 +996,9 @@ struct ANode : public Object {
     void *operator new(size_t num_bytes) {
         return ANodeAllocator->Allocate(num_bytes, llvm::AlignOf<ANode>::Alignment);
     }
-    virtual void dealloc() { ANodeAllocator->Deallocate(this); }
+    void operator delete(void* anode) {
+        ANodeAllocator->Deallocate(anode);
+    }
 };
 
 struct Identifier : public ANode {
@@ -2598,7 +2599,9 @@ struct Type : public Object {
     void *operator new(size_t num_bytes) {
         return ANodeAllocator->Allocate(num_bytes, llvm::AlignOf<Type>::Alignment);
     }
-    virtual void dealloc() { ANodeAllocator->Deallocate(this); }
+    void operator delete(void* type) {
+        ANodeAllocator->Deallocate(type);
+    }
     llvm::DIType getDebugInfo() { return llvm::DIType(debugInfo); }
 };
 
