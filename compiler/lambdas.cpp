@@ -476,9 +476,10 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
 
     case THROW : {
         Throw *y = (Throw *)x.ptr();
-        convertFreeVars(y->expr, env, ctx);
-        if (y->context != NULL)
-            convertFreeVars(y->context, env, ctx);
+        desugarThrow(y);
+        convertFreeVars(y->desugaredExpr, env, ctx);
+        if (y->desugaredContext != NULL)
+            convertFreeVars(y->desugaredContext, env, ctx);
         break;
     }
 

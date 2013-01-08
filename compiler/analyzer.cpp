@@ -2717,7 +2717,10 @@ static StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, Analysi
             x->desugaredCatchBlock = desugarCatchBlocks(x->catchBlocks);
         StatementAnalysis result1, result2;
         result1 = analyzeStatement(x->tryBlock, env, ctx);
-        result2 = analyzeStatement(x->desugaredCatchBlock, env, ctx);
+
+        EnvPtr catchEnv = new Env(env, true);
+
+        result2 = analyzeStatement(x->desugaredCatchBlock, catchEnv, ctx);
         return combineStatementAnalysis(result1, result2);
     }
 
