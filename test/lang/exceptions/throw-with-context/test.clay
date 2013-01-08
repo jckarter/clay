@@ -1,0 +1,18 @@
+import test.*;
+import test.module.*;
+
+foo() {
+    var ctx = ExceptionContext();
+    ctx.line = 1789;
+    throw GenericException("hi there") in ctx;
+}
+
+TEST_throw_with_context() {
+    try {
+        foo();
+    } catch (e in ctx) {
+        expectEqual(1789, ctx.line);
+    }
+}
+
+main() = testMainModule();

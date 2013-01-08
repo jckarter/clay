@@ -399,7 +399,7 @@ StatementPtr clone(StatementPtr x)
 
     case THROW : {
         Throw *y = (Throw *)x.ptr();
-        out = new Throw(cloneOpt(y->expr));
+        out = new Throw(cloneOpt(y->expr), cloneOpt(y->context));
         break;
     }
 

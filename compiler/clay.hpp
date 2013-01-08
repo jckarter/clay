@@ -1651,8 +1651,9 @@ struct Catch : public ANode {
 
 struct Throw : public Statement {
     ExprPtr expr;
-    Throw(ExprPtr expr)
-        : Statement(THROW), expr(expr) {}
+    ExprPtr context;
+    Throw(ExprPtr expr, ExprPtr context)
+        : Statement(THROW), expr(expr), context(context) {}
 };
 
 struct StaticFor : public Statement {

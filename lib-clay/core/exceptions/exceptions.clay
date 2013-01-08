@@ -67,20 +67,29 @@ overload printUnhandledExceptionToStderr(e) : {
 /// @section  throwValue, continueException 
 
 [T when Type?(T)]
-overload throwValue(x:T) : {
+overload throwValue(x:T, ..ignored) : {
     errorWithPrintfNoThrow(stringLiteralConcat("exception of type ", StaticName(T)," thrown with exceptions disabled"));
 }
 
-private allocateExceptionData(forward x, file, line) : Pointer[ExceptionData] =
-    allocateObject(ExceptionData(Exception(x), ExceptionContext(Backtrace(), file, line)));
+private forceinline allocateExceptionDataWithFileAndLine(forward x, file, line) : Pointer[ExceptionData] =
+    allocateExceptionData(x, ExceptionContext(Backtrace(), file, line));
+
+// allocateExceptionData cannot be inlined, because allocateObject is also an alias function that throws
+private allocateExceptionData(forward x, forward context) : Pointer[ExceptionData] =
+    allocateObject(ExceptionData(Exception(x), context));
 
 [ when ExceptionsEnabled?]
 alias overload throwValue(x) : {
-    // allocateExceptionData cannot be inlined, because allocateObject is also an alias function that throws
-    var exp = allocateExceptionData(x, StringLiteralRef(__FILE__), UInt(__LINE__));
+    var exp = allocateExceptionDataWithFileAndLine(x, StringLiteralRef(__FILE__), UInt(__LINE__));
     if (not Flag?("clay.DisableBacktraceOnThrow")) {
         exp^.context.backtrace = captureBacktrace();
     }
+    signalException(RawPointer(exp));
+}
+
+[ when ExceptionsEnabled?]
+alias overload throwValue(x, context) : {
+    var exp = allocateExceptionData(x, context);
     signalException(RawPointer(exp));
 }
 

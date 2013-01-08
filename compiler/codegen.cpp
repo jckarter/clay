@@ -4193,7 +4193,11 @@ bool codegenStatement(StatementPtr stmt,
             error("throw statements need an argument");
         ExprPtr callable = operator_expr_throwValue();
         callable->location = stmt->location;
-        ExprListPtr args = new ExprList(x->expr);
+        ExprListPtr args = new ExprList();
+        args->exprs.push_back(x->expr);
+        if (x->context != NULL)
+            args->exprs.push_back(x->context);
+
         int tempMarker = markTemps(ctx);
         int marker = cgMarkStack(ctx);
         codegenCallExpr(callable, args, env, ctx, new MultiCValue());
