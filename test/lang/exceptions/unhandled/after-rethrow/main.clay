@@ -1,0 +1,15 @@
+record MyException(a: Int);
+
+instance Exception (MyException);
+
+foo() {
+    throw MyException(17);
+}
+
+main() {
+    try {
+        foo();
+    } catch (e) {
+        throw; // ctx.line must be 6 after this statement
+    }
+}

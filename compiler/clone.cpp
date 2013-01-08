@@ -399,7 +399,12 @@ StatementPtr clone(StatementPtr x)
 
     case THROW : {
         Throw *y = (Throw *)x.ptr();
-        out = new Throw(cloneOpt(y->expr));
+        Throw *outThrow = new Throw(cloneOpt(y->expr), cloneOpt(y->context));
+        // this is weird part: in certain situations
+        // clone is called after desugar, and desugaredExpr is modified after desugar
+        outThrow->desugaredExpr = cloneOpt(y->desugaredExpr);
+        outThrow->desugaredContext = cloneOpt(y->desugaredContext);
+        out = outThrow;
         break;
     }
 

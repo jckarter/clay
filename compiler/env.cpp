@@ -513,4 +513,14 @@ Location safeLookupCallByNameLocation(EnvPtr env)
     return head->location;
 }
 
+bool lookupExceptionAvailable(const Env* env) {
+    if (env->exceptionAvailable)
+        return true;
+
+    if (env->parent.ptr() && env->parent->objKind == ENV)
+        return lookupExceptionAvailable((const Env*) env->parent.ptr());
+
+    return false;
+}
+
 }

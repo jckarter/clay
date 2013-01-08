@@ -1426,10 +1426,23 @@ static bool tryStatement(StatementPtr &x) {
 static bool throwStatement(StatementPtr &x) {
     Location location = currentLocation();
     ExprPtr a;
+    ExprPtr context;
     if (!keyword("throw")) return false;
-    if (!optExpression(a)) return false;
+    int p = save();
+    if (!symbol(";")) {
+        restore(p);
+        if (!optExpression(a)) return false;
+        int q = save();
+        if (keyword("in")) {
+            if (!optExpression(context)) return false;
+        } else {
+            restore(q);
+        }
+    } else {
+        restore(p);
+    }
     if (!symbol(";")) return false;
-    x = new Throw(a);
+    x = new Throw(a, context);
     x->location = location;
     return true;
 }

@@ -429,7 +429,7 @@ static void printStatement(llvm::raw_ostream &out, const Statement *x) {
     }
     case THROW : {
         const Throw *y = (const Throw *)x;
-        out << "Throw(" << y->expr << ")";
+        out << "Throw(" << y->expr << ", " << y->context << ")";
         break;
     }
     case STATIC_FOR : {
