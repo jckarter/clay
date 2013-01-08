@@ -1,5 +1,7 @@
 #include "clay.hpp"
 #include "types.hpp"
+#include "objects.hpp"
+
 
 namespace clay {
 

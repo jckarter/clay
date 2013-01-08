@@ -7,6 +7,8 @@
 #include "patterns.hpp"
 #include "analyzer.hpp"
 #include "loader.hpp"
+#include "env.hpp"
+#include "objects.hpp"
 
 
 #pragma clang diagnostic ignored "-Wcovered-switch-default"

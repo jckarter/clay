@@ -2,6 +2,7 @@
 #include "patterns.hpp"
 #include "matchinvoke.hpp"
 #include "evaluator.hpp"
+#include "env.hpp"
 
 
 namespace clay {

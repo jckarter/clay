@@ -3,6 +3,7 @@
 #include "patterns.hpp"
 #include "analyzer.hpp"
 #include "constructors.hpp"
+#include "env.hpp"
 
 
 namespace clay {

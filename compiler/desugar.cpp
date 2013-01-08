@@ -4,6 +4,9 @@
 #include "analyzer.hpp"
 #include "desugar.hpp"
 #include "parser.hpp"
+#include "clone.hpp"
+#include "objects.hpp"
+
 
 namespace clay {
 

@@ -1,3 +1,4 @@
+#include "clone.hpp"
 #include "clay.hpp"
 #include "analyzer.hpp"
 

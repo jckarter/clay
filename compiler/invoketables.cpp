@@ -3,6 +3,8 @@
 #include "error.hpp"
 #include "invoketables.hpp"
 #include "constructors.hpp"
+#include "clone.hpp"
+#include "objects.hpp"
 
 
 #pragma clang diagnostic ignored "-Wcovered-switch-default"
