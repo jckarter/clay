@@ -2392,8 +2392,8 @@ struct Module : public ANode {
 
     set<string> importedNames;
 
-    int publicSymbolsLoading:3;
-    int allSymbolsLoading:3;
+    int publicSymbolsLoading; //:3;
+    int allSymbolsLoading; //:3;
     bool attributesVerified:1;
     bool publicSymbolsLoaded:1;
     bool allSymbolsLoaded:1;

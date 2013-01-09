@@ -85,7 +85,7 @@ struct InvokeSet {
     map<vector<ValueTempness>, InvokeEntry*> tempnessMap;
     map<vector<ValueTempness>, InvokeEntry*> tempnessMap2;
 
-    unsigned nextOverloadIndex:31;
+    unsigned nextOverloadIndex; //:31;
 
     bool shouldLog:1;
 
