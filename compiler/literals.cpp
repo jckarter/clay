@@ -97,7 +97,7 @@ static F parseHexFloat(char *number, char **end) {
         int mantissaExponent = mantissaLog
             + (mantissaBits > 64 ? mantissaBits - 64 : 0)
             - point
-            + exponent
+            + int(exponent)
             + 1023;
 
         mantissa = mantissa << (60 - mantissaLog);

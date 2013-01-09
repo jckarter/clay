@@ -4,7 +4,7 @@
 
 namespace clay {
 
-static void initLexer(SourcePtr s, size_t offset, size_t length);
+static void initLexer(SourcePtr s, unsigned offset, size_t length);
 static void cleanupLexer();
 static bool nextToken(Token &x);
 static bool nextDocToken(Token &x);
@@ -13,7 +13,7 @@ void tokenize(SourcePtr source, vector<Token> &tokens) {
     tokenize(source, 0, source->size(), tokens);
 }
 
-void tokenize(SourcePtr source, size_t offset, size_t length,
+void tokenize(SourcePtr source, unsigned offset, size_t length,
               vector<Token> &tokens) {
     initLexer(source, offset, length);
     tokens.push_back(Token());
@@ -39,13 +39,13 @@ void tokenize(SourcePtr source, size_t offset, size_t length,
 }
 
 static Source *lexerSource;
-static size_t beginOffset;
+static unsigned beginOffset;
 static const char *begin;
 static const char *ptr;
 static const char *end;
 static const char *maxPtr;
 
-static void initLexer(SourcePtr source, size_t offset, size_t length) {
+static void initLexer(SourcePtr source, unsigned offset, size_t length) {
     lexerSource = source.ptr();
     begin = source->data() + offset;
     end = begin + length;
@@ -60,7 +60,7 @@ static void cleanupLexer() {
 }
 
 static Location locationFor(const char *ptr) {
-    size_t offset = size_t(ptr - begin) + beginOffset;
+    unsigned offset = unsigned(ptr - begin) + beginOffset;
     return Location(lexerSource, offset);
 }
 

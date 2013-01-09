@@ -107,15 +107,15 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
     CodePtr code = overload->code;
     if (code->hasVarArg) {
         if (argsKey.size() < code->formalArgs.size()-1)
-            return new MatchArityError(code->formalArgs.size(), argsKey.size(), true);
+            return new MatchArityError(unsigned(code->formalArgs.size()), unsigned(argsKey.size()), true);
     }
     else {
         if (code->formalArgs.size() != argsKey.size())
-            return new MatchArityError(code->formalArgs.size(), argsKey.size(), false);
+            return new MatchArityError(unsigned(code->formalArgs.size()), unsigned(argsKey.size()), false);
     }
     llvm::ArrayRef<FormalArgPtr> formalArgs = code->formalArgs;
-    size_t varArgSize = argsKey.size()-formalArgs.size()+1;
-    for (size_t i = 0, j = 0; i < formalArgs.size(); ++i) {
+    unsigned varArgSize = unsigned(argsKey.size()-formalArgs.size()+1);
+    for (unsigned i = 0, j = 0; i < formalArgs.size(); ++i) {
         FormalArgPtr x = formalArgs[i];
         if (x->varArg) {
             if (x->type.ptr()) {
@@ -125,7 +125,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
                 --j;
                 MultiPatternPtr pattern = overload->varArgPattern;
                 if (!unifyMulti(pattern, types))
-                    return new MatchMultiArgumentError(formalArgs.size(), types, x);                
+                    return new MatchMultiArgumentError(unsigned(formalArgs.size()), types, x);                
             } else {
                 j = varArgSize-1;
             }
@@ -166,7 +166,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
         callable, argsKey
     );
     
-    for (size_t i = 0, j = 0; i < formalArgs.size(); ++i) {
+    for (unsigned i = 0, j = 0; i < formalArgs.size(); ++i) {
         FormalArgPtr x = formalArgs[i];
         if (x->varArg) {
             result->varArgName = x->name;
@@ -180,7 +180,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
             result->fixedArgTypes.push_back(argsKey[i+j]);
         }
     }
-    if(!code->hasVarArg) result->varArgPosition = result->fixedArgNames.size();
+    if(!code->hasVarArg) result->varArgPosition = unsigned(result->fixedArgNames.size());
     return result.ptr();
 }
 

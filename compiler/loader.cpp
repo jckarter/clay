@@ -136,7 +136,7 @@ void initLoader() {
 
 static string toKey(DottedNamePtr name) {
     string key;
-    for (size_t i = 0; i < name->parts.size(); ++i) {
+    for (unsigned i = 0; i < name->parts.size(); ++i) {
         if (i != 0)
             key.push_back('.');
         key.append(name->parts[i]->str.begin(), name->parts[i]->str.end());

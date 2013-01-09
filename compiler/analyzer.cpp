@@ -382,7 +382,7 @@ PVData safeAnalyzeOne(ExprPtr expr, EnvPtr env)
     return result;
 }
 
-MultiPValuePtr safeAnalyzeMulti(ExprListPtr exprs, EnvPtr env, unsigned wantCount)
+MultiPValuePtr safeAnalyzeMulti(ExprListPtr exprs, EnvPtr env, size_t wantCount)
 {
     ClearAnalysisError clear;
     MultiPValuePtr result = analyzeMulti(exprs, env, wantCount);
@@ -460,9 +460,9 @@ MultiPValuePtr safeAnalyzeGVarInstance(GVarInstancePtr x)
 // analyzeMulti
 //
 
-static MultiPValuePtr analyzeMulti2(ExprListPtr exprs, EnvPtr env, unsigned wantCount);
+static MultiPValuePtr analyzeMulti2(ExprListPtr exprs, EnvPtr env, size_t wantCount);
 
-MultiPValuePtr analyzeMulti(ExprListPtr exprs, EnvPtr env, unsigned wantCount)
+MultiPValuePtr analyzeMulti(ExprListPtr exprs, EnvPtr env, size_t wantCount)
 {
     if (analysisCachingDisabled > 0)
         return analyzeMulti2(exprs, env, wantCount);
@@ -471,7 +471,7 @@ MultiPValuePtr analyzeMulti(ExprListPtr exprs, EnvPtr env, unsigned wantCount)
     return exprs->cachedAnalysis;
 }
 
-static MultiPValuePtr analyzeMulti2(ExprListPtr exprs, EnvPtr env, unsigned wantCount)
+static MultiPValuePtr analyzeMulti2(ExprListPtr exprs, EnvPtr env, size_t wantCount)
 {
     MultiPValuePtr out = new MultiPValue();
     ExprPtr unpackExpr = implicitUnpackExpr(wantCount, exprs);
@@ -480,7 +480,7 @@ static MultiPValuePtr analyzeMulti2(ExprListPtr exprs, EnvPtr env, unsigned want
         if (!z)
             return NULL;
         out->add(z);
-    } else for (size_t i = 0; i < exprs->size(); ++i) {
+    } else for (unsigned i = 0; i < exprs->size(); ++i) {
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
@@ -553,21 +553,21 @@ static MultiPValuePtr analyzeMultiArgs2(ExprListPtr exprs,
 {
     MultiPValuePtr out = new MultiPValue();
     unsigned index = startIndex;
-    for (size_t i = 0; i < exprs->size(); ++i) {
+    for (unsigned i = 0; i < exprs->size(); ++i) {
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
             Unpack *y = (Unpack *)x.ptr();
             MultiPValuePtr z = analyzeArgExpr(y->expr, env, index, dispatchIndices);
             if (!z)
                 return NULL;
-            index += z->size();
+            index += unsigned(z->size());
             out->add(z);
         }
         else if (x->exprKind == PAREN) {
             MultiPValuePtr z = analyzeArgExpr(x, env, index, dispatchIndices);
             if (!z)
                 return NULL;
-            index += z->size();
+            index += unsigned(z->size());
             out->add(z);
         } else {
             PVData y = analyzeOneArg(x, env, index, dispatchIndices);
@@ -603,7 +603,7 @@ MultiPValuePtr analyzeArgExpr(ExprPtr x,
         MultiPValuePtr mpv = analyzeExpr(y->expr, env);
         if (!mpv)
             return NULL;
-        for (size_t i = 0; i < mpv->size(); ++i)
+        for (unsigned i = 0; i < mpv->size(); ++i)
             dispatchIndices.push_back(i + startIndex);
         return mpv;
     }
@@ -1444,13 +1444,13 @@ TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args)
         case PRIM_Array : {
             ensureArity(args, 2);
             TypePtr t = staticToType(args, 0);
-            return arrayType(t, (unsigned int)staticToInt(args, 1));
+            return arrayType(t, unsigned(staticToInt(args, 1)));
         }
 
         case PRIM_Vec : {
             ensureArity(args, 2);
             TypePtr t = staticToType(args, 0);
-            return vecType(t, (unsigned int)staticToInt(args, 1));
+            return vecType(t, unsigned(staticToInt(args, 1)));
         }
 
         case PRIM_Tuple : {
@@ -1561,7 +1561,7 @@ void computeArgsKey(MultiPValuePtr args,
                     vector<TypePtr> &argsKey,
                     vector<ValueTempness> &argsTempness)
 {
-    for (size_t i = 0; i < args->size(); ++i) {
+    for (unsigned i = 0; i < args->size(); ++i) {
         PVData const &pv = args->values[i];
         argsKey.push_back(pv.type);
         argsTempness.push_back(pv.isTemp ? TEMPNESS_RVALUE : TEMPNESS_LVALUE);
@@ -1634,13 +1634,13 @@ struct IntrinsicAnalyzer {
         va_list argTypeList;
         va_start(argTypeList, numArguments);
         
-        llvm::SmallVector<size_t, 4> overloadedReturns;
+        llvm::SmallVector<unsigned, 4> overloadedReturns;
         
         for (size_t ri = 0; ri < numReturnValues; ++ri)
         {
             int retType = va_arg(argTypeList, int);
             if (retType < 0) {
-                size_t matchIndex = size_t(~retType);
+                unsigned matchIndex = unsigned(~retType);
                 matchIndex &= ~(ExtendedElementVectorType | TruncatedElementVectorType);
                 assert(matchIndex < ri);
                 
@@ -1650,10 +1650,10 @@ struct IntrinsicAnalyzer {
                 || retType == llvm::MVT::vAny
                 || retType == llvm::MVT::iPTRAny)
             {
-                overloadedReturns.push_back(outOverloadedTypes.size());
+                overloadedReturns.push_back(unsigned(outOverloadedTypes.size()));
                 outOverloadedTypes.push_back(NULL);
             } else {
-                overloadedReturns.push_back(~size_t(0));
+                overloadedReturns.push_back(~unsigned(0));
             }
         }
         
@@ -1663,12 +1663,12 @@ struct IntrinsicAnalyzer {
             llvm::Type *argType = inputTypes[ai];
             
             if (expectArgType < 0) {
-                size_t matchIndex = size_t(~expectArgType);
+                unsigned matchIndex = unsigned(~expectArgType);
                 matchIndex &= ~(ExtendedElementVectorType | TruncatedElementVectorType);
                 assert(matchIndex < ai + numReturnValues);
                 
                 if (matchIndex < numReturnValues) {
-                    assert(overloadedReturns[matchIndex] != ~size_t(0));
+                    assert(overloadedReturns[matchIndex] != ~unsigned(0));
                     llvm::Type *&oType = outOverloadedTypes[overloadedReturns[matchIndex]];
                     if (oType == NULL)
                         oType = argType;
@@ -2043,20 +2043,20 @@ MultiPValuePtr analyzeDispatch(ObjectPtr obj,
     vector<unsigned> dispatchIndices2(dispatchIndices.begin() + 1,
                                       dispatchIndices.end());
     MultiPValuePtr prefix = new MultiPValue();
-    for (size_t i = 0; i < index; ++i)
+    for (unsigned i = 0; i < index; ++i)
         prefix->add(args->values[i]);
     MultiPValuePtr suffix = new MultiPValue();
-    for (size_t i = index+1; i < args->size(); ++i)
+    for (unsigned i = index+1; i < args->size(); ++i)
         suffix->add(args->values[i]);
     PVData const &pvDispatch = args->values[index];
     int iMemberCount = dispatchTagCount(pvDispatch.type);
     if (iMemberCount <= 0)
         argumentError(index, "DispatchMemberCount for type must be positive");
-    size_t memberCount = (size_t)iMemberCount;
+    unsigned memberCount = (unsigned)iMemberCount;
         
     MultiPValuePtr result;
     vector<TypePtr> dispatchedTypes;
-    for (size_t i = 0; i < memberCount; ++i) {
+    for (unsigned i = 0; i < memberCount; ++i) {
         MultiPValuePtr args2 = new MultiPValue();
         args2->add(prefix);
         PVData pvDispatch2 = analyzeDispatchIndex(pvDispatch, i);
@@ -2074,7 +2074,7 @@ MultiPValuePtr analyzeDispatch(ObjectPtr obj,
                 ok = false;
             }
             else {
-                for (size_t j = 0; j < result2->size(); ++j) {
+                for (unsigned j = 0; j < result2->size(); ++j) {
                     PVData const &pv = result->values[j];
                     PVData const &pv2 = result2->values[j];
                     if (pv.type != pv2.type) {
@@ -2092,17 +2092,17 @@ MultiPValuePtr analyzeDispatch(ObjectPtr obj,
                 llvm::raw_string_ostream ostr(buf);
                 ostr << "mismatching result types with dispatch";
                 ostr << "\n    expected ";
-                for (size_t j = 0; j < result->size(); ++j) {
+                for (unsigned j = 0; j < result->size(); ++j) {
                     if (j != 0) ostr << ", ";
                     ostr << result->values[j].type;
                 }
                 ostr << "\n        from dispatching to ";
-                for (size_t j = 0; j < dispatchedTypes.size(); ++j) {
+                for (unsigned j = 0; j < dispatchedTypes.size(); ++j) {
                     if (j != 0) ostr << ", ";
                     ostr << dispatchedTypes[j];
                 }
                 ostr << "\n     but got ";
-                for (size_t j = 0; j < result->size(); ++j) {
+                for (unsigned j = 0; j < result->size(); ++j) {
                     if (j != 0) ostr << ", ";
                     ostr << result2->values[j].type;
                 }
@@ -2289,7 +2289,7 @@ MultiPValuePtr analyzeCallByName(InvokeEntry* entry,
 
     EnvPtr bodyEnv = new Env(entry->env);
     bodyEnv->callByNameExprHead = callable;
-    size_t i = 0, j = 0;
+    unsigned i = 0, j = 0;
     for (; i < entry->varArgPosition; ++i) {
         ExprPtr expr = foreignExpr(env, args->exprs[i]);
         addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
@@ -2561,7 +2561,7 @@ static StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, Analysi
         }
         if (ctx->returnInitialized) {
             ensureArity(mpv, ctx->returnTypes.size());
-            for (size_t i = 0; i < mpv->size(); ++i) {
+            for (unsigned i = 0; i < mpv->size(); ++i) {
                 PVData const &pv = mpv->values[i];
                 bool byRef = returnKindToByRef(x->returnKind, pv);
                 if (ctx->returnTypes[i] != pv.type)
@@ -2576,7 +2576,7 @@ static StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, Analysi
         else {
             ctx->returnIsRef.clear();
             ctx->returnTypes.clear();
-            for (size_t i = 0; i < mpv->size(); ++i) {
+            for (unsigned i = 0; i < mpv->size(); ++i) {
                 PVData const &pv = mpv->values[i];
                 bool byRef = returnKindToByRef(x->returnKind, pv);
                 ctx->returnIsRef.push_back(byRef);
@@ -2690,7 +2690,7 @@ static StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, Analysi
             return SA_RECURSIVE;
         }
         initializeStaticForClones(x, mpv->size());
-        for (size_t i = 0; i < mpv->size(); ++i) {
+        for (unsigned i = 0; i < mpv->size(); ++i) {
             EnvPtr env2 = new Env(env);
             addLocal(env2, x->variable, new PValue(mpv->values[i]));
             StatementAnalysis sa;
@@ -2717,7 +2717,7 @@ static StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, Analysi
     }
 }
 
-void initializeStaticForClones(StaticForPtr x, unsigned count)
+void initializeStaticForClones(StaticForPtr x, size_t count)
 {
     if (x->clonesInitialized) {
         assert(count == x->clonedBodies.size());
@@ -2752,7 +2752,7 @@ static EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
                 arityMismatchError(x->args.size(), mpv->values.size(), /*hasVarArg=*/ false);
 
         vector<TypePtr> key;
-        for (size_t i = 0; i < mpv->size(); ++i) {
+        for (unsigned i = 0; i < mpv->size(); ++i) {
             PVData const &pv = mpv->values[i];
             key.push_back(pv.type);
         }
@@ -2777,14 +2777,14 @@ static EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
                     }
                     --j;
                     if (!unifyMulti(evaluateMultiPattern(new ExprList(unpack), patternEnv), types))
-                        matchBindingError(new MatchMultiBindingError(formalArgs.size(), types, y));
+                        matchBindingError(new MatchMultiBindingError(unsigned(formalArgs.size()), types, y));
                 } else {
                     j = varArgSize-1;
                 }
             } else {
                 if (y->type.ptr()) {      
                     if (!unifyPatternObj(evaluateOnePattern(y->type, patternEnv), key[i+j].ptr()))
-                        matchBindingError(new MatchBindingError(i+j, key[i+j], y));
+                        matchBindingError(new MatchBindingError(unsigned(i+j), key[i+j], y));
                 }
             }
         }
@@ -2860,7 +2860,7 @@ bool returnKindToByRef(ReturnKind returnKind, PVData const &pv)
 //
 
 static std::pair<vector<TypePtr>, InvokeEntry*>
-invokeEntryForCallableArguments(MultiPValuePtr args, size_t callableIndex, size_t firstArgTypeIndex)
+invokeEntryForCallableArguments(MultiPValuePtr args, unsigned callableIndex, unsigned firstArgTypeIndex)
 {
     if (args->size() < firstArgTypeIndex)
         arityError2(firstArgTypeIndex, args->size());
@@ -2883,7 +2883,7 @@ invokeEntryForCallableArguments(MultiPValuePtr args, size_t callableIndex, size_
     }
     vector<TypePtr> argsKey;
     vector<ValueTempness> argsTempness;
-    for (size_t i = firstArgTypeIndex; i < args->size(); ++i) {
+    for (unsigned i = firstArgTypeIndex; i < args->size(); ++i) {
         TypePtr t = valueToType(args, i);
         argsKey.push_back(t);
         argsTempness.push_back(TEMPNESS_LVALUE);
@@ -3507,14 +3507,14 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         if (begin > end)
             argumentIndexRangeError(1, "starting index",
                                     begin, end);
-        llvm::StringRef result(&ident->str[begin], end - begin);
+        llvm::StringRef result(&ident->str[unsigned(begin)], end - begin);
         return analyzeStaticObject(Identifier::get(result));
     }
 
     case PRIM_stringLiteralConcat : {
         llvm::SmallString<32> result;
         for (size_t i = 0, sz = args->size(); i < sz; ++i) {
-            ObjectPtr obj = unwrapStaticType(args->values[i].type);
+            ObjectPtr obj = unwrapStaticType(args->values[unsigned(i)].type);
             if (!obj || (obj->objKind != IDENTIFIER))
                 argumentError(i, "expecting a string literal value");
             Identifier *ident = (Identifier *)obj.ptr();
@@ -3526,7 +3526,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_stringLiteralFromBytes : {
         std::string result;
         for (size_t i = 0, sz = args->size(); i < sz; ++i) {
-            ObjectPtr obj = unwrapStaticType(args->values[i].type);
+            ObjectPtr obj = unwrapStaticType(args->values[unsigned(i)].type);
             size_t byte = 0;
             if (!obj || !staticToSizeTOrInt(obj, byte))
                 argumentError(i, "expecting a static SizeT or Int value");
@@ -3685,7 +3685,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             argumentError(0, "expecting static SizeT or Int value");
         if (i+1 >= args->size())
             argumentError(0, "nthValue argument out of bounds");
-        return new MultiPValue(args->values[i+1]);
+        return new MultiPValue(args->values[unsigned(i)+1]);
     }
 
     case PRIM_withoutNthValue : {
@@ -3698,7 +3698,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         if (i+1 >= args->size())
             argumentError(0, "withoutNthValue argument out of bounds");
         MultiPValuePtr mpv = new MultiPValue();
-        for (size_t n = 1; n < args->size(); ++n) {
+        for (unsigned n = 1; n < args->size(); ++n) {
             if (n == i+1)
                 continue;
             mpv->add(args->values[n]);
@@ -3716,7 +3716,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         if (i+1 >= args->size())
             i = args->size() - 1;
         MultiPValuePtr mpv = new MultiPValue();
-        for (size_t n = 1; n < i+1; ++n)
+        for (unsigned n = 1; n < i+1; ++n)
             mpv->add(args->values[n]);
         return mpv;
     }
@@ -3732,7 +3732,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             i = args->size() - 1;
         MultiPValuePtr mpv = new MultiPValue();
         for (size_t n = i+1; n < args->size(); ++n)
-            mpv->add(args->values[n]);
+            mpv->add(args->values[unsigned(n)]);
         return mpv;
     }
 
@@ -3865,7 +3865,7 @@ BoolKind typeBoolKind(TypePtr type) {
     }
 }
 
-ExprPtr implicitUnpackExpr(unsigned wantCount, ExprListPtr exprs) {
+ExprPtr implicitUnpackExpr(size_t wantCount, ExprListPtr exprs) {
     if (wantCount >= 1 && exprs->size() == 1 && exprs->exprs[0]->exprKind != UNPACK)
         return exprs->exprs[0];
     else

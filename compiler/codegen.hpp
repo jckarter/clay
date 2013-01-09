@@ -73,10 +73,10 @@ struct MultiCValue : public Object {
 
 struct JumpTarget {
     llvm::BasicBlock *block;
-    unsigned int stackMarker;
+    size_t stackMarker;
     int useCount;
     JumpTarget() : block(NULL), stackMarker(0), useCount(0) {}
-    JumpTarget(llvm::BasicBlock *block, unsigned int stackMarker)
+    JumpTarget(llvm::BasicBlock *block, size_t stackMarker)
         : block(block), stackMarker(stackMarker), useCount(0) {}
 };
 
@@ -191,7 +191,7 @@ struct DebugLocationContext {
         if (loc.ok()) {
             pushLocation(loc);
             if (llvmDIBuilder != NULL && ctx->inlineDepth == 0) {
-                unsigned int line, column;
+                unsigned line, column;
                 getDebugLineCol(loc, line, column);
                 llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, ctx->getDebugScope());
                 ctx->builder->SetCurrentDebugLocation(debugLoc);

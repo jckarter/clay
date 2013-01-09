@@ -375,10 +375,10 @@ struct X86_32_ExternalTarget : public ExternalTarget {
             if (passVecAsNonaggregate)
                 return PASS_THROUGH;
             else
-                return typeSize(type);
+                return int(typeSize(type));
 
         case COMPLEX_TYPE:
-            return typeSize(type);
+            return int(typeSize(type));
 
         case VARIANT_TYPE:
         case UNION_TYPE:
@@ -387,7 +387,7 @@ struct X86_32_ExternalTarget : public ExternalTarget {
             if (alwaysPassStructsOnStack)
                 return PASS_ON_STACK;
             else
-                return typeSize(type);
+                return int(typeSize(type));
         
         case NEW_TYPE: {
             NewType *nt = (NewType*)type.ptr();
@@ -406,7 +406,7 @@ struct X86_32_ExternalTarget : public ExternalTarget {
         case 2:
         case 4:
         case 8:
-            return llvmIntType((unsigned int)(8*size));
+            return llvmIntType(unsigned(8*size));
         default:
             return NULL;
         }
@@ -899,7 +899,7 @@ llvm::Type *X86_64_ExternalTarget::llvmWordType(TypePtr type)
             assert(false);
             break;
         case INTEGER: {
-            size_t wordSize = size >= 8 ? 64 : size*8;
+            unsigned wordSize = size >= 8 ? 64 : unsigned(size*8);
             llWordTypes.push_back(llvmIntType(wordSize));
             ++i;
             break;

@@ -7,8 +7,8 @@ namespace clay {
 map<llvm::StringRef, IdentifierPtr> Identifier::freeIdentifiers;
 
 static vector<Token> *tokens;
-static unsigned int position;
-static unsigned int maxPosition;
+static unsigned position;
+static unsigned maxPosition;
 static bool parserOptionKeepDocumentation = false;
 
 static AddTokensCallback addTokens = NULL;
@@ -40,11 +40,11 @@ static bool next(Token *&x) {
     return true;
 }
 
-static unsigned int save() {
+static unsigned save() {
     return position;
 }
 
-static void restore(unsigned int p) {
+static void restore(unsigned p) {
     position = p;
 }
 
@@ -122,7 +122,7 @@ static bool identifierList(vector<IdentifierPtr> &x) {
     x.clear();
     while (true) {
         x.push_back(y);
-        unsigned int p = save();
+        unsigned p = save();
         if (!symbol(",")) {
             restore(p);
             break;
@@ -142,7 +142,7 @@ static bool identifierListNoTail(vector<IdentifierPtr> &x) {
     x.clear();
     while (true) {
         x.push_back(y);
-        unsigned int p = save();
+        unsigned p = save();
         if (!symbol(",") || !identifier(y)) {
             restore(p);
             break;
@@ -158,7 +158,7 @@ static bool dottedName(DottedNamePtr &x) {
     if (!identifier(ident)) return false;
     while (true) {
         y->parts.push_back(ident);
-        unsigned int p = save();
+        unsigned p = save();
         if (!symbol(".") || !identifier(ident)) {
             restore(p);
             break;
@@ -177,7 +177,7 @@ static bool dottedName(DottedNamePtr &x) {
 
 static bool boolLiteral(ExprPtr &x) {
     Location location = currentLocation();
-    unsigned int p = save();
+    unsigned p = save();
     if (keyword("true"))
         x = new BoolLiteral(true);
     else if (restore(p), keyword("false"))
@@ -205,7 +205,7 @@ static bool intLiteral(llvm::StringRef op, ExprPtr &x) {
     if (!next(t) || (t->tokenKind != T_INT_LITERAL))
         return false;
     Token* t2;
-    unsigned int p = save();
+    unsigned p = save();
     if (next(t2) && (t2->tokenKind == T_IDENTIFIER)) {
         x = new IntLiteral(cleanNumericSeparator(op, t->str), t2->str);
     }
@@ -223,7 +223,7 @@ static bool floatLiteral(llvm::StringRef op, ExprPtr &x) {
     if (!next(t) || (t->tokenKind != T_FLOAT_LITERAL))
         return false;
     Token* t2;
-    unsigned int p = save();
+    unsigned p = save();
     if (next(t2) && (t2->tokenKind == T_IDENTIFIER)) {
         x = new FloatLiteral(cleanNumericSeparator(op, t->str), t2->str);
     }
@@ -258,7 +258,7 @@ static bool stringLiteral(ExprPtr &x) {
 }
 
 static bool literal(ExprPtr &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (boolLiteral(x)) return true;
     if (restore(p), intLiteral("+", x)) return true;
     if (restore(p), floatLiteral("+", x)) return true;
@@ -276,7 +276,7 @@ static bool literal(ExprPtr &x) {
 static bool expression(ExprPtr &x, bool = false);
 
 static bool optExpression(ExprPtr &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!expression(x)) {
         restore(p);
         x = NULL;
@@ -290,7 +290,7 @@ static bool expressionList(ExprListPtr &x, bool = false) {
     if (!expression(b)) return false;
     a = new ExprList(b);
     while (true) {
-        unsigned int p = save();
+        unsigned p = save();
         if (!symbol(",")) {
             restore(p);
             break;
@@ -307,7 +307,7 @@ static bool expressionList(ExprListPtr &x, bool = false) {
 }
 
 static bool optExpressionList(ExprListPtr &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!expressionList(x)) {
         restore(p);
         x = new ExprList();
@@ -397,7 +397,7 @@ static bool evalExpr(ExprPtr &ev) {
 }
 
 static bool atomicExpr(ExprPtr &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (nameRef(x)) return true;
     if (restore(p), parenExpr(x)) return true;
     if (restore(p), literal(x)) return true;
@@ -482,7 +482,7 @@ static bool dereferenceSuffix(ExprPtr &x) {
 }
 
 static bool suffix(ExprPtr &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (stringLiteralSuffix(x)) return true;
     if (restore(p), indexingSuffix(x)) return true;
     if (restore(p), callSuffix(x)) return true;
@@ -528,7 +528,7 @@ static void setSuffixBase(Expr *a, ExprPtr base) {
 static bool suffixExpr(ExprPtr &x) {
     if (!atomicExpr(x)) return false;
     while (true) {
-        unsigned int p = save();
+        unsigned p = save();
         ExprPtr y;
         if (!suffix(y)) {
             restore(p);
@@ -559,7 +559,7 @@ static bool addressOfExpr(ExprPtr &x) {
 }
 
 static bool plusOrMinus(llvm::StringRef &op) {
-    unsigned int p = save();
+    unsigned p = save();
     if (opsymbol("+")) {
         op = llvm::StringRef("+");
         return true;
@@ -571,7 +571,7 @@ static bool plusOrMinus(llvm::StringRef &op) {
 }
 
 static bool signedLiteral(llvm::StringRef op, ExprPtr &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (restore(p), intLiteral(op, x)) return true;
     if (restore(p), floatLiteral(op, x)) return true;
     return false;
@@ -599,7 +599,7 @@ static bool staticExpr(ExprPtr &x) {
 
 
 static bool operatorOp(llvm::StringRef &op) {
-    unsigned int p = save();
+    unsigned p = save();
 
     const char *s[] = {
         "<--", "-->", "=>", "->", "~>", "=", NULL
@@ -615,7 +615,7 @@ static bool operatorOp(llvm::StringRef &op) {
 static bool preopExpr(ExprPtr &x) {
     Location location = currentLocation();
     llvm::StringRef op;
-    unsigned int p = save();
+    unsigned p = save();
     if (plusOrMinus(op)) {
         if (signedLiteral(op, x)) return true;
     }
@@ -631,7 +631,7 @@ static bool preopExpr(ExprPtr &x) {
 }
 
 static bool prefixExpr(ExprPtr &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (addressOfExpr(x)) return true;
     if (restore(p), dispatchExpr(x)) return true;
     if (restore(p), preopExpr(x)) return true;
@@ -651,7 +651,7 @@ static bool operatorTail(VariadicOpPtr &x) {
     ExprPtr b;
     llvm::StringRef op;
     if (!operatorOp(op)) return false;
-    unsigned int p = save();
+    unsigned p = save();
     while (true) {
         if (!prefixExpr(b)) return false;
         exprs->add(new NameRef(Identifier::get(op)));
@@ -670,7 +670,7 @@ static bool operatorTail(VariadicOpPtr &x) {
 static bool operatorExpr(ExprPtr &x) {
     if (!prefixExpr(x)) return false;
     while (true) {
-        unsigned int p = save();
+        unsigned p = save();
         VariadicOpPtr y;
         if (!operatorTail(y)) {
             restore(p);
@@ -690,7 +690,7 @@ static bool operatorExpr(ExprPtr &x) {
 
 static bool notExpr(ExprPtr &x) {
     Location location = currentLocation();
-    unsigned int p = save();
+    unsigned p = save();
     if (!keyword("not")) {
         restore(p);
         return operatorExpr(x);
@@ -715,7 +715,7 @@ static bool andExprTail(AndPtr &x) {
 static bool andExpr(ExprPtr &x) {
     if (!notExpr(x)) return false;
     while (true) {
-        unsigned int p = save();
+        unsigned p = save();
         AndPtr y;
         if (!andExprTail(y)) {
             restore(p);
@@ -740,7 +740,7 @@ static bool orExprTail(OrPtr &x) {
 static bool orExpr(ExprPtr &x) {
     if (!andExpr(x)) return false;
     while (true) {
-        unsigned int p = save();
+        unsigned p = save();
         OrPtr y;
         if (!orExprTail(y)) {
             restore(p);
@@ -783,7 +783,7 @@ static bool ifExpr(ExprPtr &x) {
 //
 
 static bool returnKind(ReturnKind &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (keyword("ref")) {
         x = RETURN_REF;
     }
@@ -821,7 +821,7 @@ static bool arguments(vector<FormalArgPtr> &args, bool &hasVarArg, bool &hasAsCo
 
 static bool lambdaArgs(vector<FormalArgPtr> &formalArgs,
                        bool &hasVarArg, bool &hasAsConversion) {
-    unsigned int p = save();
+    unsigned p = save();
     IdentifierPtr name;
     if (identifier(name)) {
         formalArgs.clear();
@@ -847,7 +847,7 @@ static bool lambdaExprBody(StatementPtr &x) {
 }
 
 static bool lambdaArrow(LambdaCapture &captureBy) {
-    unsigned int p = save();
+    unsigned p = save();
     if (opsymbol("->")) {
         captureBy = REF_CAPTURE;
         return true;
@@ -864,7 +864,7 @@ static bool lambdaArrow(LambdaCapture &captureBy) {
 }
 
 static bool lambdaBody(StatementPtr &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (lambdaExprBody(x)) return true;
     if (restore(p), block(x)) return true;
     return false;
@@ -931,7 +931,7 @@ static bool pairExpr(ExprPtr &x) {
 
 static bool expression(ExprPtr &x, bool) {
     Location startLocation = currentLocation();
-    unsigned int p = save();
+    unsigned p = save();
     if (restore(p), lambda(x)) goto success;
     if (restore(p), pairExpr(x)) goto success;
     if (restore(p), orExpr(x)) goto success;
@@ -953,7 +953,7 @@ success:
 static bool dottedNameRef(ExprPtr &x) {
     if (!nameRef(x)) return false;
     while (true) {
-        unsigned int p = save();
+        unsigned p = save();
         ExprPtr y;
         if (!fieldRefSuffix(y)) {
             restore(p);
@@ -966,7 +966,7 @@ static bool dottedNameRef(ExprPtr &x) {
 }
 
 static bool atomicPattern(ExprPtr &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (dottedNameRef(x)) return true;
     if (restore(p), intLiteral("+", x)) return true;
     return false;
@@ -986,7 +986,7 @@ static bool patternSuffix(IndexingPtr &x) {
 static bool pattern(ExprPtr &x) {
     Location start = currentLocation();
     if (!atomicPattern(x)) return false;
-    unsigned int p = save();
+    unsigned p = save();
     IndexingPtr y;
     if (!patternSuffix(y)) {
         restore(p);
@@ -1013,7 +1013,7 @@ static bool typeSpec(ExprPtr &x) {
 }
 
 static bool optTypeSpec(ExprPtr &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!typeSpec(x)) {
         restore(p);
         x = NULL;
@@ -1027,7 +1027,7 @@ static bool exprTypeSpec(ExprPtr &x) {
 }
 
 static bool optExprTypeSpec(ExprPtr &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!exprTypeSpec(x)) {
         restore(p);
         x = NULL;
@@ -1054,7 +1054,7 @@ static bool labelDef(StatementPtr &x) {
 }
 
 static bool bindingKind(BindingKind &bindingKind) {
-    unsigned int p = save();
+    unsigned p = save();
     if (keyword("var"))
         bindingKind = VAR;
     else if (restore(p), keyword("ref"))
@@ -1081,7 +1081,7 @@ static bool localBinding(StatementPtr &x) {
     vector<FormalArgPtr> args;
     bool hasVarArg = false;
     if (!bindingsBody(args, hasVarArg)) return false;
-    unsigned int p = save();
+    unsigned p = save();
     if (!symbol(",")) restore(p); 
     if (!opsymbol("=")) return false;
     ExprListPtr z;
@@ -1094,7 +1094,7 @@ static bool localBinding(StatementPtr &x) {
 }
 
 static bool blockItem(StatementPtr &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (labelDef(x)) return true;
     if (restore(p), localBinding(x)) return true;
     if (restore(p), statement(x)) return true;
@@ -1103,7 +1103,7 @@ static bool blockItem(StatementPtr &x) {
 
 static bool blockItems(vector<StatementPtr> &stmts, bool) {
     while (true) {
-        unsigned int p = save();
+        unsigned p = save();
         StatementPtr z;
         if (!blockItem(z)) {
             restore(p);
@@ -1120,11 +1120,11 @@ static bool statementExpression(vector<StatementPtr> &stmts, ExprPtr &expr) {
     ExprPtr tailExpr;
     StatementPtr stmt;
     while (true) {
-        unsigned int p = save();
+        unsigned p = save();
         if (statementExprStatement(stmt)) {
             stmts.push_back(stmt);
         } else if (restore(p), expression(tailExpr)) {
-            unsigned int q = save();
+            unsigned q = save();
             if (symbol(";")) {
                 stmts.push_back(new ExprStatement(tailExpr));
             } else {
@@ -1238,7 +1238,7 @@ static bool returnStatement(StatementPtr &x) {
 }
 
 static bool optElse(StatementPtr &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!keyword("else")) {
         restore(p);
         return true;
@@ -1287,7 +1287,7 @@ static bool caseBlockList(vector<CaseBlockPtr> &x) {
     x.clear();
     while (true) {
         x.push_back(a);
-        unsigned int p = save();
+        unsigned p = save();
         if (!caseBlock(a)) {
             restore(p);
             break;
@@ -1382,7 +1382,7 @@ static bool catchBlock(CatchPtr &x) {
     ExprPtr etype;
     if (!optExprTypeSpec(etype)) return false;
     IdentifierPtr contextVar;
-    unsigned int p = save();
+    unsigned p = save();
     if (keyword("in")) {
         if (!identifier(contextVar)) return false;
     } else {
@@ -1402,7 +1402,7 @@ static bool catchBlockList(vector<CatchPtr> &x) {
     x.clear();
     while (true) {
         x.push_back(a);
-        unsigned int p = save();
+        unsigned p = save();
         if (!catchBlock(a)) {
             restore(p);
             break;
@@ -1495,7 +1495,7 @@ static bool staticAssert(ExprPtr& cond, ExprListPtr& message, Location& location
 
     message = new ExprList();
 
-    unsigned int s = save();
+    unsigned s = save();
     while (symbol(",")) {
         ExprPtr expr;
         if (!expression(expr)) return false;
@@ -1531,7 +1531,7 @@ static bool staticAssertStatement(StatementPtr &x) {
 
 
 static bool statement(StatementPtr &x, bool) {
-    unsigned int p = save();
+    unsigned p = save();
     if (block(x)) return true;
     if (restore(p), assignment(x)) return true;
     if (restore(p), initAssignment(x)) return true;
@@ -1558,7 +1558,7 @@ static bool statement(StatementPtr &x, bool) {
 }
 
 static bool statementExprStatement(StatementPtr &stmt) {
-    unsigned int p = save();
+    unsigned p = save();
     if (localBinding(stmt)) return true;
     if (restore(p), assignment(stmt)) return true;
     if (restore(p), initAssignment(stmt)) return true;
@@ -1579,7 +1579,7 @@ static bool staticVarParam(IdentifierPtr &varParam) {
 }
 
 static bool optStaticVarParam(IdentifierPtr &varParam) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!staticVarParam(varParam)) {
         restore(p);
         varParam = NULL;
@@ -1594,7 +1594,7 @@ static bool trailingVarParam(IdentifierPtr &varParam) {
 }
 
 static bool optTrailingVarParam(IdentifierPtr &varParam) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!trailingVarParam(varParam)) {
         restore(p);
         varParam = NULL;
@@ -1606,7 +1606,7 @@ static bool paramsAndVarParam(vector<IdentifierPtr> &params,
                               IdentifierPtr &varParam) {
     if (!identifierListNoTail(params)) return false;
     if (!optTrailingVarParam(varParam)) return false;
-    unsigned int p = save();
+    unsigned p = save();
     if (!symbol(","))
         restore(p);
     return true;
@@ -1614,7 +1614,7 @@ static bool paramsAndVarParam(vector<IdentifierPtr> &params,
 
 static bool staticParamsInner(vector<IdentifierPtr> &params,
                               IdentifierPtr &varParam) {
-    unsigned int p = save();
+    unsigned p = save();
     if (paramsAndVarParam(params, varParam)) return true;
     restore(p);
     params.clear(); varParam = NULL;
@@ -1631,7 +1631,7 @@ static bool staticParams(vector<IdentifierPtr> &params,
 
 static bool optStaticParams(vector<IdentifierPtr> &params,
                             IdentifierPtr &varParam) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!staticParams(params, varParam)) {
         restore(p);
         params.clear();
@@ -1655,7 +1655,7 @@ static bool varArgTypeSpec(ExprPtr &vargType) {
 }
 
 static bool optVarArgTypeSpec(ExprPtr &vargType) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!varArgTypeSpec(vargType)) {
         restore(p);
         vargType = NULL;
@@ -1664,7 +1664,7 @@ static bool optVarArgTypeSpec(ExprPtr &vargType) {
 }
 
 static bool optArgTempness(ValueTempness &tempness) {
-    unsigned int p = save();
+    unsigned p = save();
     if (keyword("rvalue")) {
         tempness = TEMPNESS_RVALUE;
         return true;
@@ -1691,7 +1691,7 @@ static bool valueFormalArg(FormalArgPtr &x, bool &hasVarArg, bool &hasAsConversi
     IdentifierPtr y;
     ExprPtr z;
     bool varArg = false;
-    unsigned int p = save();
+    unsigned p = save();
     if (ellipsis()) {
         if (hasVarArg) 
             return false;    
@@ -1721,7 +1721,7 @@ static bool valueFormalArg(FormalArgPtr &x, bool &hasVarArg, bool &hasAsConversi
     return true;
 }
 
-static FormalArgPtr makeStaticFormalArg(unsigned index, ExprPtr expr, Location const & location) {
+static FormalArgPtr makeStaticFormalArg(size_t index, ExprPtr expr, Location const & location) {
     // desugar static args
     llvm::SmallString<128> buf;
     llvm::raw_svector_ostream sout(buf);
@@ -1741,7 +1741,7 @@ static FormalArgPtr makeStaticFormalArg(unsigned index, ExprPtr expr, Location c
     return arg;
 }
 
-static bool staticFormalArg(unsigned index, FormalArgPtr &x) {
+static bool staticFormalArg(size_t index, FormalArgPtr &x) {
     Location location = currentLocation();
     ExprPtr expr;
     if (!symbol("#")) return false;
@@ -1755,7 +1755,7 @@ static bool staticFormalArg(unsigned index, FormalArgPtr &x) {
     return true;
 }
 
-static bool stringFormalArg(unsigned index, FormalArgPtr &x) {
+static bool stringFormalArg(size_t index, FormalArgPtr &x) {
     Location location = currentLocation();
     ExprPtr expr;
     if (!stringLiteral(expr)) return false;
@@ -1763,8 +1763,8 @@ static bool stringFormalArg(unsigned index, FormalArgPtr &x) {
     return true;
 }
 
-static bool formalArg(unsigned index, FormalArgPtr &x, bool &hasVarArg, bool &hasAsConversion) {
-    unsigned int p = save();
+static bool formalArg(size_t index, FormalArgPtr &x, bool &hasVarArg, bool &hasAsConversion) {
+    unsigned p = save();
     if (valueFormalArg(x, hasVarArg, hasAsConversion)) return true;
     if (restore(p), staticFormalArg(index, x)) return true;
     if (restore(p), stringFormalArg(index, x)) return true;
@@ -1777,7 +1777,7 @@ static bool formalArgs(vector<FormalArgPtr> &x, bool &hasVarArg, bool &hasAsConv
     x.clear();
     while (true) {
         x.push_back(y);
-        unsigned int p = save();
+        unsigned p = save();
         if (!symbol(",") || !formalArg(x.size(), y, hasVarArg, hasAsConversion)) {
             restore(p);
             break;
@@ -1787,7 +1787,7 @@ static bool formalArgs(vector<FormalArgPtr> &x, bool &hasVarArg, bool &hasAsConv
 }
 
 static bool argumentsBody(vector<FormalArgPtr> &args, bool &hasVarArg, bool &hasAsConversion) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!formalArgs(args, hasVarArg, hasAsConversion)){
         restore(p);
         args.clear();
@@ -1808,7 +1808,7 @@ static bool bindingArg(FormalArgPtr &x, bool &hasVarArg) {
     IdentifierPtr y;
     ExprPtr z;
     bool varArg = false;
-    unsigned int p = save();
+    unsigned p = save();
     if (ellipsis()) {
         if (hasVarArg) 
             return false;    
@@ -1835,7 +1835,7 @@ static bool bindingsBody(vector<FormalArgPtr> &x, bool &hasVarArg) {
     x.clear();
     while (true) {
         x.push_back(y);
-        unsigned int p = save();
+        unsigned p = save();
         if (!symbol(",") || !bindingArg(y, hasVarArg)) {
             restore(p);
             break;
@@ -1850,7 +1850,7 @@ static bool predicate(ExprPtr &x) {
 }
 
 static bool optPredicate(ExprPtr &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!predicate(x)) {
         restore(p);
         x = NULL;
@@ -1859,7 +1859,7 @@ static bool optPredicate(ExprPtr &x) {
 }
 
 static bool patternVar(PatternVar &x) {
-    unsigned int p = save();
+    unsigned p = save();
     x.isMulti = true;
     if (!ellipsis()) {
         restore(p);
@@ -1875,7 +1875,7 @@ static bool patternVarList(vector<PatternVar> &x) {
     x.clear();
     while (true) {
         x.push_back(y);
-        unsigned int p = save();
+        unsigned p = save();
         if (!symbol(",") || !patternVar(y)) {
             restore(p);
             break;
@@ -1885,7 +1885,7 @@ static bool patternVarList(vector<PatternVar> &x) {
 }
 
 static bool optPatternVarList(vector<PatternVar> &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!patternVarList(x)) {
         restore(p);
         x.clear();
@@ -1905,7 +1905,7 @@ static bool patternVarsWithCond(vector<PatternVar> &x, ExprPtr &y) {
 }
 
 static bool optPatternVarsWithCond(vector<PatternVar> &x, ExprPtr &y) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!patternVarsWithCond(x, y)) {
         restore(p);
         x.clear();
@@ -1915,13 +1915,13 @@ static bool optPatternVarsWithCond(vector<PatternVar> &x, ExprPtr &y) {
 }
 
 static void skipOptPatternVar() {
-    unsigned int p = save();
+    unsigned p = save();
     if (!symbol("[")) {
         restore(p);
     } else {
         int bracket = 1;
         while (bracket) {
-            unsigned int p = save();
+            unsigned p = save();
             if (symbol("[")) {
                 ++bracket;
                 continue;
@@ -1946,14 +1946,14 @@ static bool exprBody(StatementPtr &x) {
 }
 
 static bool body(StatementPtr &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (exprBody(x)) return true;
     if (restore(p), block(x)) return true;
     return false;
 }
 
 static bool optBody(StatementPtr &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (body(x)) return true;
     restore(p);
     x = NULL;
@@ -1968,7 +1968,7 @@ static bool optBody(StatementPtr &x) {
 //
 
 bool optVisibility(Visibility defaultVisibility, Visibility &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (keyword("public")) {
         x = PUBLIC;
         return true;
@@ -2002,7 +2002,7 @@ static bool recordField(RecordFieldPtr &x, bool &hasVarField) {
     IdentifierPtr y;
     ExprPtr z;
     bool varField = false;
-    unsigned int p = save();
+    unsigned p = save();
     if (ellipsis()) {
         if (hasVarField) 
             return false;    
@@ -2029,7 +2029,7 @@ static bool recordFields(vector<RecordFieldPtr> &x, bool &hasVarField) {
     x.clear();
     while (true) {
         x.push_back(y);
-        unsigned int p = save();
+        unsigned p = save();
         if (!symbol(",")) {
             restore(p);
             break;
@@ -2044,7 +2044,7 @@ static bool recordFields(vector<RecordFieldPtr> &x, bool &hasVarField) {
 }
 
 static bool optRecordFields(vector<RecordFieldPtr> &x, bool &hasVarField) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!recordFields(x, hasVarField)) {
         restore(p);
         x.clear();
@@ -2077,17 +2077,17 @@ static bool recordBodyComputed(RecordBodyPtr &x) {
 }
 
 static bool recordBody(RecordBodyPtr &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (recordBodyFields(x)) return true;
     if (restore(p), recordBodyComputed(x)) return true;
     return false;
 }
 
-static bool record(TopLevelItemPtr &x, Module *module, unsigned int s) {
+static bool record(TopLevelItemPtr &x, Module *module, unsigned s) {
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("record")) return false;
-    unsigned int e = save();
+    unsigned e = save();
     restore(s);
     Location location = currentLocation();
     vector<PatternVar> patternVars;
@@ -2114,7 +2114,7 @@ static bool instances(ExprListPtr &x) {
 }
 
 static bool optInstances(ExprListPtr &x, bool &open) {
-    unsigned int p = save();
+    unsigned p = save();
     if (symbol("(")) {
         open = false;
         return optExpressionList(x) && symbol(")");
@@ -2126,11 +2126,11 @@ static bool optInstances(ExprListPtr &x, bool &open) {
     }
 }
 
-static bool variant(TopLevelItemPtr &x, Module *module, unsigned int s) {
+static bool variant(TopLevelItemPtr &x, Module *module, unsigned s) {
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("variant")) return false;
-    unsigned int e = save();
+    unsigned e = save();
     restore(s);
     Location location = currentLocation();
     vector<PatternVar> patternVars;
@@ -2151,9 +2151,9 @@ static bool variant(TopLevelItemPtr &x, Module *module, unsigned int s) {
     return true;
 }
 
-static bool instance(TopLevelItemPtr &x, Module *module, unsigned int s) {
+static bool instance(TopLevelItemPtr &x, Module *module, unsigned s) {
     if (!keyword("instance")) return false;
-    unsigned int e = save();
+    unsigned e = save();
     restore(s);
     Location location = currentLocation();
     vector<PatternVar> patternVars;
@@ -2218,7 +2218,7 @@ static bool returnTypeList(vector<ReturnSpecPtr> &x) {
     x.clear();
     while (true) {
         x.push_back(y);
-        unsigned int p = save();
+        unsigned p = save();
         if (!symbol(",") || !returnType(y)) {
             restore(p);
             break;
@@ -2228,7 +2228,7 @@ static bool returnTypeList(vector<ReturnSpecPtr> &x) {
 }
 
 static bool optReturnTypeList(vector<ReturnSpecPtr> &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!returnTypeList(x)) {
         restore(p);
         x.clear();
@@ -2253,7 +2253,7 @@ static bool namedReturnList(vector<ReturnSpecPtr> &x) {
     x.clear();
     while (true) {
         x.push_back(y);
-        unsigned int p = save();
+        unsigned p = save();
         if (!symbol(",") || !namedReturn(y)) {
             restore(p);
             break;
@@ -2263,7 +2263,7 @@ static bool namedReturnList(vector<ReturnSpecPtr> &x) {
 }
 
 static bool optNamedReturnList(vector<ReturnSpecPtr> &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!namedReturnList(x)) {
         restore(p);
         x.clear();
@@ -2282,7 +2282,7 @@ static bool varReturnType(ReturnSpecPtr &x) {
 }
 
 static bool optVarReturnType(ReturnSpecPtr &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!varReturnType(x)) {
         restore(p);
         x = NULL;
@@ -2303,7 +2303,7 @@ static bool varNamedReturn(ReturnSpecPtr &x) {
 }
 
 static bool optVarNamedReturn(ReturnSpecPtr &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!varNamedReturn(x)) {
         restore(p);
         x = NULL;
@@ -2315,7 +2315,7 @@ static bool allReturnSpecsWithFlag(vector<ReturnSpecPtr> &returnSpecs,
                            ReturnSpecPtr &varReturnSpec, bool &exprRetSpecs) {
     returnSpecs.clear();
     varReturnSpec = NULL;
-    unsigned int p = save();
+    unsigned p = save();
     if (symbol(":")) {
         if (!optReturnTypeList(returnSpecs)) return false;
         if (!optVarReturnType(varReturnSpec)) return false;
@@ -2347,7 +2347,7 @@ static bool allReturnSpecs(vector<ReturnSpecPtr> &returnSpecs,
 //
 
 static bool optInline(InlineAttribute &isInline) {
-    unsigned int p = save();
+    unsigned p = save();
     if (keyword("inline"))
         isInline = INLINE;
     else if (restore(p), keyword("forceinline"))
@@ -2362,7 +2362,7 @@ static bool optInline(InlineAttribute &isInline) {
 }
 
 static bool optCallByName(bool &callByName) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!keyword("alias")) {
         restore(p);
         callByName = false;
@@ -2373,7 +2373,7 @@ static bool optCallByName(bool &callByName) {
 }
 
 static bool optPrivateOverload(bool &privateOverload) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!keyword("private")) {
         restore(p);
         privateOverload = false;
@@ -2432,11 +2432,11 @@ static bool llvmProcedure(vector<TopLevelItemPtr> &x, Module *module) {
     return true;
 }
 
-static bool procedureWithInterface(vector<TopLevelItemPtr> &x, Module *module, unsigned int s) {
+static bool procedureWithInterface(vector<TopLevelItemPtr> &x, Module *module, unsigned s) {
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("define")) return false;
-    unsigned int e = save();
+    unsigned e = save();
     restore(s);
     Location location = currentLocation();
     CodePtr interfaceCode = new Code();
@@ -2472,7 +2472,7 @@ static bool procedureWithInterface(vector<TopLevelItemPtr> &x, Module *module, u
     return true;
 }
 
-static bool procedureWithBody(vector<TopLevelItemPtr> &x, Module *module, unsigned int s) {
+static bool procedureWithBody(vector<TopLevelItemPtr> &x, Module *module, unsigned s) {
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     InlineAttribute isInline;
@@ -2483,7 +2483,7 @@ static bool procedureWithBody(vector<TopLevelItemPtr> &x, Module *module, unsign
     Location targetStartLocation = currentLocation();
     if (!identifier(name)) return false;
     Location targetEndLocation = currentLocation();
-    unsigned int e = save();
+    unsigned e = save();
     restore(s);
     Location location = currentLocation();
     CodePtr code = new Code();
@@ -2535,13 +2535,13 @@ static bool procedure(TopLevelItemPtr &x, Module *module) {
     return true;
 }
 
-static bool overload(TopLevelItemPtr &x, Module *module, unsigned int s) {
+static bool overload(TopLevelItemPtr &x, Module *module, unsigned s) {
     InlineAttribute isInline;
     if (!optInline(isInline)) return false;
     bool callByName;
     if (!optCallByName(callByName)) return false;
     if (!keyword("overload")) return false;
-    unsigned int e = save();
+    unsigned e = save();
     restore(s);
     Location location = currentLocation();
     CodePtr code = new Code();
@@ -2557,7 +2557,7 @@ static bool overload(TopLevelItemPtr &x, Module *module, unsigned int s) {
     code->hasVarArg = hasVarArg;
     bool exprRetSpecs = false;
     code->returnSpecsDeclared = allReturnSpecsWithFlag(code->returnSpecs, code->varReturnSpec, exprRetSpecs);
-    unsigned int p = save();
+    unsigned p = save();
     if (!optBody(code->body)) {
         restore(p);
         if (callByName) return false;
@@ -2599,7 +2599,7 @@ static bool enumMemberList(vector<EnumMemberPtr> &x) {
     x.clear();
     while (true) {
         x.push_back(y);
-        unsigned int p = save();
+        unsigned p = save();
         if (!symbol(",")) {
             restore(p);
             break;
@@ -2613,11 +2613,11 @@ static bool enumMemberList(vector<EnumMemberPtr> &x) {
     return true;
 }
 
-static bool enumeration(TopLevelItemPtr &x, Module *module, unsigned int s) {
+static bool enumeration(TopLevelItemPtr &x, Module *module, unsigned s) {
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("enum")) return false;
-    unsigned int e = save();
+    unsigned e = save();
     restore(s);
     Location location = currentLocation();
     vector<PatternVar> patternVars;
@@ -2642,11 +2642,11 @@ static bool enumeration(TopLevelItemPtr &x, Module *module, unsigned int s) {
 // global variable
 //
 
-static bool globalVariable(TopLevelItemPtr &x, Module *module, unsigned int s) {
+static bool globalVariable(TopLevelItemPtr &x, Module *module, unsigned s) {
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("var")) return false;
-    unsigned int e = save();
+    unsigned e = save();
     restore(s);
     Location location = currentLocation();
     vector<PatternVar> patternVars;
@@ -2681,7 +2681,7 @@ static bool externalAttributes(ExprListPtr &x) {
 }
 
 static bool optExternalAttributes(ExprListPtr &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!externalAttributes(x)) {
         restore(p);
         x = new ExprList();
@@ -2706,7 +2706,7 @@ static bool externalArgs(vector<ExternalArgPtr> &x) {
     x.clear();
     while (true) {
         x.push_back(y);
-        unsigned int p = save();
+        unsigned p = save();
         if (!symbol(",") || !externalArg(y)) {
             restore(p);
             break;
@@ -2722,7 +2722,7 @@ static bool externalVarArgs(bool &hasVarArgs) {
 }
 
 static bool optExternalVarArgs(bool &hasVarArgs) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!externalVarArgs(hasVarArgs)) {
         restore(p);
         hasVarArgs = false;
@@ -2737,7 +2737,7 @@ static bool trailingExternalVarArgs(bool &hasVarArgs) {
 }
 
 static bool optTrailingExternalVarArgs(bool &hasVarArgs) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!trailingExternalVarArgs(hasVarArgs)) {
         restore(p);
         hasVarArgs = false;
@@ -2754,7 +2754,7 @@ static bool externalArgsWithVArgs(vector<ExternalArgPtr> &x,
 
 static bool externalArgsBody(vector<ExternalArgPtr> &x,
                              bool &hasVarArgs) {
-    unsigned int p = save();
+    unsigned p = save();
     if (externalArgsWithVArgs(x, hasVarArgs)) return true;
     restore(p);
     x.clear();
@@ -2764,7 +2764,7 @@ static bool externalArgsBody(vector<ExternalArgPtr> &x,
 }
 
 static bool externalBody(StatementPtr &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (exprBody(x)) return true;
     if (restore(p), block(x)) return true;
     if (restore(p), symbol(";")) {
@@ -2775,7 +2775,7 @@ static bool externalBody(StatementPtr &x) {
 }
 
 static bool optExternalReturn(ExprPtr &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!symbol(":")) {
         restore(p);
         return true;
@@ -2824,11 +2824,11 @@ static bool externalVariable(TopLevelItemPtr &x, Module *module) {
 // global alias
 //
 
-static bool globalAlias(TopLevelItemPtr &x, Module *module, unsigned int s) {
+static bool globalAlias(TopLevelItemPtr &x, Module *module, unsigned s) {
     Visibility vis;
     if (!topLevelVisibility(vis)) return false;
     if (!keyword("alias")) return false;
-    unsigned int e = save();
+    unsigned e = save();
     restore(s);
     Location location = currentLocation();
     vector<PatternVar> patternVars;
@@ -2862,7 +2862,7 @@ static bool importAlias(IdentifierPtr &x) {
 }
 
 static bool optImportAlias(IdentifierPtr &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!importAlias(x)) {
         restore(p);
         x = NULL;
@@ -2905,7 +2905,7 @@ static bool importedMemberList(vector<ImportedMember> &x) {
     x.clear();
     while (true) {
         x.push_back(y);
-        unsigned int p = save();
+        unsigned p = save();
         if (!symbol(",")) {
             restore(p);
             break;
@@ -2936,7 +2936,7 @@ static bool importMembers(ImportPtr &x) {
 static bool import2(ImportPtr &x, Visibility visTop) {
     Visibility vis;
     if (!importVisibility(vis)) return false;
-    unsigned int p = save();
+    unsigned p = save();
     if (importStar(x)) goto importsuccess;
     if (restore(p), importMembers(x)) goto importsuccess;
     if (restore(p), importModule(x)) goto importsuccess;
@@ -2957,7 +2957,7 @@ static bool importList(vector<ImportPtr> &x, Visibility vis) {
     if (!import2(y, vis)) return false;
     while (true) {
         x.push_back(y);
-        unsigned int p = save();
+        unsigned p = save();
         if (!symbol(",") || !import2(y, vis)) {
             restore(p);
             break;
@@ -2978,7 +2978,7 @@ static bool import(vector<ImportPtr> &x) {
 static bool imports(vector<ImportPtr> &x) {
     x.clear();
     while (true) {
-        unsigned int p = save();
+        unsigned p = save();
         if (!import(x)) {
             restore(p);
             break;
@@ -3053,7 +3053,7 @@ static bool documentation(TopLevelItemPtr &x, Module *module)
     bool hasAttachmentAnnotation = false;
 
     for (;;) {
-        unsigned int p = save();
+        unsigned p = save();
         if (documentationAnnotation(annotation)) {
             if (hasAttachmentAnnotation) {
                 restore (p);
@@ -3087,11 +3087,11 @@ static bool documentation(TopLevelItemPtr &x, Module *module)
 //
 
 static bool topLevelItem(vector<TopLevelItemPtr> &x, Module *module) {
-    unsigned int p = save();
+    unsigned p = save();
 
     TopLevelItemPtr y;
     skipOptPatternVar();
-    unsigned int q = save();
+    unsigned q = save();
     if (restore(q), overload(y, module, p)) goto success;
     if (restore(q), procedureWithInterface(x, module, p)) goto success2;
     if (restore(q), procedureWithBody(x, module, p)) goto success2;
@@ -3121,7 +3121,7 @@ static bool topLevelItems(vector<TopLevelItemPtr> &x, Module *module) {
     x.clear();
 
     while (true) {
-        unsigned int p = save();
+        unsigned p = save();
         if (!topLevelItem(x, module)) {
             restore(p);
             break;
@@ -3131,7 +3131,7 @@ static bool topLevelItems(vector<TopLevelItemPtr> &x, Module *module) {
 }
 
 static bool optModuleDeclarationAttributes(ExprListPtr &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!symbol("(")) {
         restore(p);
         x = NULL;
@@ -3147,7 +3147,7 @@ static bool optModuleDeclarationAttributes(ExprListPtr &x) {
 static bool optModuleDeclaration(ModuleDeclarationPtr &x) {
     Location location = currentLocation();
 
-    unsigned int p = save();
+    unsigned p = save();
     if (!keyword("in")) {
         restore(p);
         x = NULL;
@@ -3168,7 +3168,7 @@ static bool optModuleDeclaration(ModuleDeclarationPtr &x) {
 }
 
 static bool optTopLevelLLVM(LLVMCodePtr &x) {
-    unsigned int p = save();
+    unsigned p = save();
     if (!llvmCode(x)) {
         restore(p);
         x = NULL;
@@ -3194,7 +3194,7 @@ static bool module(llvm::StringRef moduleName, ModulePtr &x) {
 
 static bool replItems(ReplItem& x, bool = false) {
     inRepl = false;
-    unsigned int p = save();
+    unsigned p = save();
     if (expression(x.expr) && position == tokens->size()) {
         x.isExprSet = true;
         return true;
@@ -3212,7 +3212,7 @@ static bool replItems(ReplItem& x, bool = false) {
             break;
         }
 
-        unsigned int p = save();
+        unsigned p = save();
 
         if (!topLevelItem(x.toplevels, NULL)) {
             restore(p);
@@ -3245,7 +3245,7 @@ static bool replItems(ReplItem& x, bool = false) {
 //
 
 template<typename Parser, typename ParserParam, typename Node>
-void applyParser(SourcePtr source, unsigned int offset, unsigned int length, Parser parser, ParserParam parserParam, Node &node)
+void applyParser(SourcePtr source, unsigned offset, size_t length, Parser parser, ParserParam parserParam, Node &node)
 {
     vector<Token> t;
     tokenize(source, offset, length, t);
@@ -3256,7 +3256,7 @@ void applyParser(SourcePtr source, unsigned int offset, unsigned int length, Par
     if (!parser(node, parserParam) || (position < t.size())) {
         Location location;
         if (maxPosition == t.size())
-            location = Location(source.ptr(), source->size());
+            location = Location(source.ptr(), unsigned(source->size()));
         else
             location = t[maxPosition].location;
         pushLocation(location);
@@ -3287,7 +3287,7 @@ ModulePtr parse(llvm::StringRef moduleName, SourcePtr source, ParserFlags flags)
 // parseExpr
 //
 
-ExprPtr parseExpr(SourcePtr source, unsigned int offset, unsigned int length) {
+ExprPtr parseExpr(SourcePtr source, unsigned offset, size_t length) {
     ExprPtr expr;
     applyParser(source, offset, length, expression, false, expr);
     return expr;
@@ -3298,7 +3298,7 @@ ExprPtr parseExpr(SourcePtr source, unsigned int offset, unsigned int length) {
 // parseExprList
 //
 
-ExprListPtr parseExprList(SourcePtr source, unsigned int offset, unsigned int length) {
+ExprListPtr parseExprList(SourcePtr source, unsigned offset, size_t length) {
     ExprListPtr exprList;
     applyParser(source, offset, length, expressionList, false, exprList);
     return exprList;
@@ -3309,7 +3309,7 @@ ExprListPtr parseExprList(SourcePtr source, unsigned int offset, unsigned int le
 // parseStatements
 //
 
-void parseStatements(SourcePtr source, unsigned int offset, unsigned int length,
+void parseStatements(SourcePtr source, unsigned offset, size_t length,
         vector<StatementPtr> &stmts)
 {
     applyParser(source, offset, length, blockItems, false, stmts);
@@ -3320,7 +3320,7 @@ void parseStatements(SourcePtr source, unsigned int offset, unsigned int length,
 // parseTopLevelItems
 //
 
-void parseTopLevelItems(SourcePtr source, unsigned int offset, unsigned int length,
+void parseTopLevelItems(SourcePtr source, unsigned offset, size_t length,
         vector<TopLevelItemPtr> &topLevels, Module *module)
 {
     applyParser(source, offset, length, topLevelItems, module, topLevels);
@@ -3330,7 +3330,7 @@ void parseTopLevelItems(SourcePtr source, unsigned int offset, unsigned int leng
 // parseInteractive
 //
 
-ReplItem parseInteractive(SourcePtr source, unsigned int offset, unsigned int length)
+ReplItem parseInteractive(SourcePtr source, unsigned offset, size_t length)
 {
     ReplItem x;
     applyParser(source, offset, length, replItems, false, x);

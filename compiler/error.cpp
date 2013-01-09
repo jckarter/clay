@@ -118,7 +118,7 @@ DebugPrinter::~DebugPrinter()
 // report error
 //
 
-static void computeLineCol(Location const &location, unsigned int &line, unsigned int &column, unsigned int &tabColumn) {
+static void computeLineCol(Location const &location, unsigned &line, unsigned &column, unsigned &tabColumn) {
     const char *p = location.source->data();
     const char *end = p + location.offset;
     line = column = tabColumn = 0;
@@ -136,21 +136,21 @@ static void computeLineCol(Location const &location, unsigned int &line, unsigne
     }
 }
 
-llvm::DIFile getDebugLineCol(Location const &location, unsigned int &line, unsigned int &column) {
+llvm::DIFile getDebugLineCol(Location const &location, unsigned &line, unsigned &column) {
     if (!location.ok()) {
         line = 0;
         column = 0;
         return llvm::DIFile(NULL);
     }
 
-    unsigned int tabColumn;
+    unsigned tabColumn;
     computeLineCol(location, line, column, tabColumn);
     line += 1;
     column += 1;
     return location.source->getDebugInfo();
 }
 
-void getLineCol(Location const &location, unsigned int &line, unsigned int &column, unsigned int &tabColumn) {
+void getLineCol(Location const &location, unsigned &line, unsigned &column, unsigned &tabColumn) {
     if (!location.ok()) {
         line = 0;
         column = 0;
@@ -177,13 +177,13 @@ static bool endsWithNewline(llvm::StringRef s) {
     return s[s.size()-1] == '\n';
 }
 
-static void displayLocation(Location const &location, unsigned int &line, unsigned int &column) {
-    unsigned int tabColumn;
+static void displayLocation(Location const &location, unsigned &line, unsigned &column) {
+    unsigned tabColumn;
     getLineCol(location, line, column, tabColumn);
     vector<string> lines;
     splitLines(location.source, lines);
     llvm::errs() << "###############################\n";
-    unsigned int i = (line < 2) ? 0 : line-2;
+    unsigned i = (line < 2) ? 0 : line-2;
     for (; i <= line+2; ++i) {
         if (i >= lines.size())
             continue;
@@ -191,7 +191,7 @@ static void displayLocation(Location const &location, unsigned int &line, unsign
         if (!endsWithNewline(lines[i]))
             llvm::errs() << "\n";
         if (i == line) {
-            for (unsigned int j = 0; j < tabColumn; ++j)
+            for (unsigned j = 0; j < tabColumn; ++j)
                 llvm::errs() << "-";
             llvm::errs() << "^\n";
         }
@@ -257,7 +257,7 @@ void displayError(llvm::Twine const &msg, llvm::StringRef kind) {
 
     Location location = topLocation();
     if (location.ok()) {
-        unsigned int line, column;
+        unsigned line, column;
         displayLocation(location, line, column);
         llvm::errs() << location.source->fileName
             << '(' << line+1 << ',' << column << "): " << kind << ": " << msgString;
@@ -298,18 +298,18 @@ void fmtError(const char *fmt, ...) {
     error(s);
 }
 
-void argumentError(unsigned int index, llvm::StringRef msg) {
+void argumentError(size_t index, llvm::StringRef msg) {
     string buf;
     llvm::raw_string_ostream sout(buf);
     sout << "argument " << (index+1) << ": " << msg;
     error(sout.str());
 }
 
-static const char *valuesStr(int n) {
+static const char *valuesStr(size_t n) {
     return (n == 1) ? "value" : "values";
 }
 
-void arityError(int expected, int received) {
+void arityError(size_t expected, size_t received) {
     string buf;
     llvm::raw_string_ostream sout(buf);
     sout << "expected " << expected << " " << valuesStr(expected);
@@ -317,7 +317,7 @@ void arityError(int expected, int received) {
     error(sout.str());
 }
 
-void arityError2(int minExpected, int received) {
+void arityError2(size_t minExpected, size_t received) {
     string buf;
     llvm::raw_string_ostream sout(buf);
     sout << "expected at least " << minExpected
@@ -346,7 +346,7 @@ void ensureArity(MultiCValuePtr args, size_t size) {
         arityError(size, args->size());
 }
 
-void arityMismatchError(int leftArity, int rightArity, bool hasVarArg) {
+void arityMismatchError(size_t leftArity, size_t rightArity, bool hasVarArg) {
     string buf;
     llvm::raw_string_ostream sout(buf);
     if (hasVarArg)
@@ -383,13 +383,13 @@ void typeError(TypePtr expectedType, TypePtr receivedType) {
     error(typeErrorMessage(expectedType, receivedType));
 }
 
-void argumentTypeError(unsigned int index,
+void argumentTypeError(unsigned index,
                        llvm::StringRef expected,
                        TypePtr receivedType) {
     argumentError(index, typeErrorMessage(expected, receivedType));
 }
 
-void argumentTypeError(unsigned int index,
+void argumentTypeError(unsigned index,
                        TypePtr expectedType,
                        TypePtr receivedType) {
     argumentError(index, typeErrorMessage(expectedType, receivedType));
@@ -406,7 +406,7 @@ void indexRangeError(llvm::StringRef kind,
     error(sout.str());
 }
 
-void argumentIndexRangeError(unsigned int index,
+void argumentIndexRangeError(unsigned index,
                              llvm::StringRef kind,
                              size_t value,
                              size_t maxValue)
@@ -426,7 +426,7 @@ void invalidStaticObjectError(ObjectPtr obj)
     error(sout.str());
 }
 
-void argumentInvalidStaticObjectError(unsigned int index, ObjectPtr obj)
+void argumentInvalidStaticObjectError(unsigned index, ObjectPtr obj)
 {
     string buf;
     llvm::raw_string_ostream sout(buf);
@@ -458,7 +458,7 @@ static void matchFailureMessage(MatchFailureError const &err, string &outBuf)
         }
         sout << "\n    ";
         Location location = overload->location;
-        unsigned int line, column, tabColumn;
+        unsigned line, column, tabColumn;
         getLineCol(location, line, column, tabColumn);
         sout << location.source->fileName.c_str()
             << "(" << line+1 << "," << column << ")"
@@ -493,7 +493,7 @@ void matchFailureLog(MatchFailureError const &err)
 
 void printFileLineCol(llvm::raw_ostream &out, Location const &location)
 {
-    unsigned int line, column, tabColumn;
+    unsigned line, column, tabColumn;
     getLineCol(location, line, column, tabColumn);
     out << location.source->fileName << "(" << line+1 << "," << column << ")";
 }

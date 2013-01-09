@@ -50,13 +50,13 @@ static vector<TypePtr> typesOfValues(ObjectPtr obj) {
     switch (obj->objKind) {
     case MULTI_PVALUE : {
         MultiPValue *mpv = (MultiPValue *)obj.ptr();
-        for (size_t i = 0; i < mpv->size(); ++i)
+        for (unsigned i = 0; i < mpv->size(); ++i)
             types.push_back(mpv->values[i].type);
         break;
     }
     case MULTI_CVALUE : {
         MultiCValue *mcv = (MultiCValue *)obj.ptr();
-        for (size_t i = 0; i < mcv->size(); ++i)
+        for (unsigned i = 0; i < mcv->size(); ++i)
             types.push_back(mcv->values[i]->type);
         break;
     }
@@ -724,7 +724,7 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
 
 void convertFreeVars(ExprListPtr x, EnvPtr env, LambdaContext &ctx)
 {
-    for (size_t i = 0; i < x->size(); ++i)
+    for (unsigned i = 0; i < x->size(); ++i)
         convertFreeVars(x->exprs[i], env, ctx);
 }
 

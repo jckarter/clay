@@ -42,7 +42,7 @@ struct Token {
 
 void tokenize(SourcePtr source, vector<Token> &tokens);
 
-void tokenize(SourcePtr source, size_t offset, size_t length,
+void tokenize(SourcePtr source, unsigned offset, size_t length,
               vector<Token> &tokens);
 
 bool isSpace(char c);

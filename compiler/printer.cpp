@@ -95,6 +95,12 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &out, const vector<T> &v)
     return out << llvm::makeArrayRef(v);
 }
 
+template <class T>
+llvm::raw_ostream &operator<<(llvm::raw_ostream &out, const llvm::SmallVector<T, 3> &v)
+{
+    return out << llvm::makeArrayRef(v);
+}
+
 llvm::raw_ostream &operator<<(llvm::raw_ostream &out, PVData const &pv)
 {
     return out << "PVData(" << pv.type << ", " << pv.isTemp << ")";
@@ -889,7 +895,7 @@ void printName(llvm::raw_ostream &out, ObjectPtr x)
         Identifier *y = (Identifier *)x.ptr();
         if (_safeNames > 0) {
             out << "#";
-            for (size_t i = 0; i < y->str.size(); ++i) {
+            for (unsigned i = 0; i < y->str.size(); ++i) {
                 char ch = y->str[i];
                 if (isSafe(ch))
                     out << ch;
@@ -899,7 +905,7 @@ void printName(llvm::raw_ostream &out, ObjectPtr x)
         }
         else {
             out << "\"";
-            for (size_t i = 0; i < y->str.size(); ++i) {
+            for (unsigned i = 0; i < y->str.size(); ++i) {
                 char ch = y->str[i];
                 switch (ch) {
                 case '\0':
@@ -1342,7 +1348,7 @@ void typePrint(llvm::raw_ostream &out, TypePtr t) {
 std::string clay::DottedName::join() const {
     std::string s;
     llvm::raw_string_ostream ss(s);
-    for (std::vector<clay::IdentifierPtr>::const_iterator part = parts.begin();
+    for (llvm::SmallVector<clay::IdentifierPtr, 2>::const_iterator part = parts.begin();
             part != parts.end(); ++part)
     {
         if (part != parts.begin())

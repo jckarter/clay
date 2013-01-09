@@ -28,10 +28,10 @@ MultiEValuePtr evalMultiAsRef(ExprListPtr exprs, EnvPtr env);
 MultiEValuePtr evalExprAsRef(ExprPtr expr, EnvPtr env);
 
 void evalOneInto(ExprPtr expr, EnvPtr env, EValuePtr out);
-void evalMultiInto(ExprListPtr exprs, EnvPtr env, MultiEValuePtr out, unsigned wantCount);
+void evalMultiInto(ExprListPtr exprs, EnvPtr env, MultiEValuePtr out, size_t wantCount);
 void evalExprInto(ExprPtr expr, EnvPtr env, MultiEValuePtr out);
 
-void evalMulti(ExprListPtr exprs, EnvPtr env, MultiEValuePtr out, unsigned wantCount);
+void evalMulti(ExprListPtr exprs, EnvPtr env, MultiEValuePtr out, size_t wantCount);
 void evalOne(ExprPtr expr, EnvPtr env, EValuePtr out);
 void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out);
 void evalStaticObject(ObjectPtr x, MultiEValuePtr out);
@@ -117,10 +117,10 @@ struct TerminateGoto : Termination {
 
 struct LabelInfo {
     EnvPtr env;
-    unsigned int stackMarker;
-    unsigned int blockPosition;
+    unsigned stackMarker;
+    unsigned blockPosition;
     LabelInfo() {}
-    LabelInfo(EnvPtr env, unsigned int stackMarker, unsigned int blockPosition)
+    LabelInfo(EnvPtr env, unsigned stackMarker, unsigned blockPosition)
         : env(env), stackMarker(stackMarker), blockPosition(blockPosition) {}
 };
 
@@ -165,7 +165,7 @@ bool staticToType(ObjectPtr x, TypePtr &out)
     return true;
 }
 
-TypePtr staticToType(MultiStaticPtr x, unsigned index)
+TypePtr staticToType(MultiStaticPtr x, size_t index)
 {
     TypePtr out;
     if (!staticToType(x->values[index], out))
@@ -239,7 +239,7 @@ MultiStaticPtr evaluateExprStatic(ExprPtr expr, EnvPtr env)
     vector<ValueHolderPtr> valueHolders;
     MultiEValuePtr mev = new MultiEValue();
     bool allStatic = true;
-    for (size_t i = 0; i < mpv->size(); ++i) {
+    for (unsigned i = 0; i < mpv->size(); ++i) {
         TypePtr t = mpv->values[i].type;
         if (!isStaticOrTupleOfStatics(t))
             allStatic = false;
@@ -249,7 +249,7 @@ MultiStaticPtr evaluateExprStatic(ExprPtr expr, EnvPtr env)
         mev->add(ev);
     }
     if (!allStatic) {
-        unsigned int marker = evalMarkStack();
+        unsigned marker = evalMarkStack();
         evalExprInto(expr, env, mev);
         evalDestroyAndPopStack(marker);
     }
@@ -614,14 +614,14 @@ bool evalToBoolFlag(EValuePtr a, bool acceptStatics)
 // evaluator temps
 //
 
-unsigned int evalMarkStack()
+unsigned evalMarkStack()
 {
-    return stackEValues.size();
+    return unsigned(stackEValues.size());
 }
 
-void evalDestroyStack(unsigned int marker)
+void evalDestroyStack(unsigned marker)
 {
-    unsigned int i = stackEValues.size();
+    size_t i = stackEValues.size();
     assert(marker <= i);
     while (marker < i) {
         --i;
@@ -629,7 +629,7 @@ void evalDestroyStack(unsigned int marker)
     }
 }
 
-void evalPopStack(unsigned int marker)
+void evalPopStack(unsigned marker)
 {
     assert(marker <= stackEValues.size());
     while (marker < stackEValues.size()) {
@@ -638,7 +638,7 @@ void evalPopStack(unsigned int marker)
     }
 }
 
-void evalDestroyAndPopStack(unsigned int marker)
+void evalDestroyAndPopStack(unsigned marker)
 {
     assert(marker <= stackEValues.size());
     while (marker < stackEValues.size()) {
@@ -736,13 +736,13 @@ MultiEValuePtr evalForwardExprAsRef(ExprPtr expr, EnvPtr env)
 {
     MultiPValuePtr mpv = safeAnalyzeExpr(expr, env);
     MultiEValuePtr mev = new MultiEValue();
-    for (size_t i = 0; i < mpv->size(); ++i) {
+    for (unsigned i = 0; i < mpv->size(); ++i) {
         PVData const &pv = mpv->values[i];
         mev->add(evalAllocValueForPValue(pv));
     }
     evalExpr(expr, env, mev);
     MultiEValuePtr out = new MultiEValue();
-    for (size_t i = 0; i < mpv->size(); ++i) {
+    for (unsigned i = 0; i < mpv->size(); ++i) {
         if (mpv->values[i].isTemp) {
             mev->values[i]->forwardedRValue = true;
             out->add(mev->values[i]);
@@ -794,13 +794,13 @@ MultiEValuePtr evalExprAsRef(ExprPtr expr, EnvPtr env)
 {
     MultiPValuePtr mpv = safeAnalyzeExpr(expr, env);
     MultiEValuePtr mev = new MultiEValue();
-    for (size_t i = 0; i < mpv->size(); ++i) {
+    for (unsigned i = 0; i < mpv->size(); ++i) {
         PVData const &pv = mpv->values[i];
         mev->add(evalAllocValueForPValue(pv));
     }
     evalExpr(expr, env, mev);
     MultiEValuePtr out = new MultiEValue();
-    for (size_t i = 0; i < mpv->size(); ++i) {
+    for (unsigned i = 0; i < mpv->size(); ++i) {
         if (mpv->values[i].isTemp)
             out->add(mev->values[i]);
         else
@@ -829,7 +829,7 @@ void evalOneInto(ExprPtr expr, EnvPtr env, EValuePtr out)
 }
 
 
-void evalMultiInto(ExprListPtr exprs, EnvPtr env, MultiEValuePtr out, unsigned wantCount)
+void evalMultiInto(ExprListPtr exprs, EnvPtr env, MultiEValuePtr out, size_t wantCount)
 {
     size_t j = 0;
     ExprPtr unpackExpr = implicitUnpackExpr(wantCount, exprs);
@@ -879,7 +879,7 @@ void evalExprInto(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
     MultiPValuePtr mpv = safeAnalyzeExpr(expr, env);
     assert(out->size() == mpv->size());
     MultiEValuePtr mev = new MultiEValue();
-    for (size_t i = 0; i < mpv->size(); ++i) {
+    for (unsigned i = 0; i < mpv->size(); ++i) {
         PVData const &pv = mpv->values[i];
         if (pv.isTemp) {
             mev->add(out->values[i]);
@@ -890,7 +890,7 @@ void evalExprInto(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         }
     }
     evalExpr(expr, env, mev);
-    for (size_t i = 0; i < mpv->size(); ++i) {
+    for (unsigned i = 0; i < mpv->size(); ++i) {
         if (!mpv->values[i].isTemp) {
             evalValueCopy(out->values[i], derefValue(mev->values[i]));
         }
@@ -903,7 +903,7 @@ void evalExprInto(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
 // evalMulti
 //
 
-void evalMulti(ExprListPtr exprs, EnvPtr env, MultiEValuePtr out, unsigned wantCount)
+void evalMulti(ExprListPtr exprs, EnvPtr env, MultiEValuePtr out, size_t wantCount)
 {
     size_t j = 0;
     ExprPtr unpackExpr = implicitUnpackExpr(wantCount, exprs);
@@ -1009,7 +1009,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
 
     case LINE_EXPR : {
         Location location = safeLookupCallByNameLocation(env);
-        unsigned int line, column, tabColumn;
+        unsigned line, column, tabColumn;
         getLineCol(location, line, column, tabColumn);
 
         ValueHolderPtr vh = sizeTToValueHolder(line+1);
@@ -1018,7 +1018,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
     }
     case COLUMN_EXPR : {
         Location location = safeLookupCallByNameLocation(env);
-        unsigned int line, column, tabColumn;
+        unsigned line, column, tabColumn;
         getLineCol(location, line, column, tabColumn);
 
         ValueHolderPtr vh = sizeTToValueHolder(column);
@@ -1342,7 +1342,7 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
         // allow values of static type
         MultiCValue *y = (MultiCValue *)x.ptr();
         assert(out->size() == y->size());
-        for (size_t i = 0; i < y->size(); ++i) {
+        for (unsigned i = 0; i < y->size(); ++i) {
             CValuePtr cv = y->values[i];
             if (cv->type->typeKind != STATIC_TYPE)
                 argumentInvalidStaticObjectError(i, cv.ptr());
@@ -1374,7 +1374,7 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
         // allow values of static type
         MultiPValue *y = (MultiPValue *)x.ptr();
         assert(out->size() == y->size());
-        for (size_t i = 0; i < y->size(); ++i) {
+        for (unsigned i = 0; i < y->size(); ++i) {
             PVData const &pv = y->values[i];
             if (pv.type->typeKind != STATIC_TYPE)
                 argumentInvalidStaticObjectError(i, new PValue(pv));
@@ -1443,7 +1443,7 @@ void evalIndexingExpr(ExprPtr indexable,
     MultiPValuePtr mpv = safeAnalyzeIndexingExpr(indexable, args, env);
     assert(mpv->size() == out->size());
     bool allTempStatics = true;
-    for (size_t i = 0; i < mpv->size(); ++i) {
+    for (unsigned i = 0; i < mpv->size(); ++i) {
         PVData const &pv = mpv->values[i];
         if (pv.isTemp)
             assert(out->values[i]->type == pv.type);
@@ -1676,19 +1676,19 @@ void evalDispatch(ObjectPtr obj,
     computeArgsKey(pvArgs, argsKey, argsTempness);
     CompileContextPusher pusher(obj, argsKey);
 
-    size_t index = dispatchIndices[0];
+    unsigned index = dispatchIndices[0];
     vector<unsigned> dispatchIndices2(dispatchIndices.begin() + 1,
                                       dispatchIndices.end());
 
     MultiEValuePtr prefix = new MultiEValue();
     MultiPValuePtr pvPrefix = new MultiPValue();
-    for (size_t i = 0; i < index; ++i) {
+    for (unsigned i = 0; i < index; ++i) {
         prefix->add(args->values[i]);
         pvPrefix->add(pvArgs->values[i]);
     }
     MultiEValuePtr suffix = new MultiEValue();
     MultiPValuePtr pvSuffix = new MultiPValue();
-    for (size_t i = index+1; i < args->size(); ++i) {
+    for (unsigned i = index+1; i < args->size(); ++i) {
         suffix->add(args->values[i]);
         pvSuffix->add(pvArgs->values[i]);
     }
@@ -1992,7 +1992,7 @@ void evalCallByName(InvokeEntry* entry,
     assert(mpv->size() == out->size());
 
     vector<EReturn> returns;
-    for (size_t i = 0; i < mpv->size(); ++i) {
+    for (unsigned i = 0; i < mpv->size(); ++i) {
         PVData const &pv = mpv->values[i];
         EValuePtr ev = out->values[i];
         if (pv.isTemp)
@@ -2091,7 +2091,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case BLOCK : {
         Block *x = (Block *)stmt.ptr();
-        unsigned int blockMarker = evalMarkStack();
+        unsigned blockMarker = evalMarkStack();
         llvm::StringMap<LabelInfo> labels;
         evalCollectLabels(x->statements, 0, env, labels);
         TerminationPtr termination;
@@ -2141,11 +2141,11 @@ TerminationPtr evalStatement(StatementPtr stmt,
         MultiPValuePtr mpvRight = safeAnalyzeMulti(x->right, env, mpvLeft->size());
         if (mpvLeft->size() != mpvRight->size())
             arityMismatchError(mpvLeft->size(), mpvRight->size(), /*hasVarArg=*/false);
-        for (size_t i = 0; i < mpvLeft->size(); ++i) {
+        for (unsigned i = 0; i < mpvLeft->size(); ++i) {
             if (mpvLeft->values[i].isTemp)
                 argumentError(i, "cannot assign to a temporary");
         }
-        unsigned int marker = evalMarkStack();
+        unsigned marker = evalMarkStack();
         if (mpvLeft->size() == 1) {
             ExprListPtr args = new ExprList();
             args->add(x->left);
@@ -2155,7 +2155,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
         }
         else {
             MultiEValuePtr mevRight = new MultiEValue();
-            for (size_t i = 0; i < mpvRight->size(); ++i) {
+            for (unsigned i = 0; i < mpvRight->size(); ++i) {
                 PVData const &pv = mpvRight->values[i];
                 EValuePtr ev = evalAllocValue(pv.type);
                 mevRight->add(ev);
@@ -2179,7 +2179,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
         MultiPValuePtr mpvRight = safeAnalyzeMulti(x->right, env, mpvLeft->size());
         if (mpvLeft->size() != mpvRight->size())
             arityMismatchError(mpvLeft->size(), mpvRight->size(), /*hasVarArg=*/false);
-        for (size_t i = 0; i < mpvLeft->size(); ++i) {
+        for (unsigned i = 0; i < mpvLeft->size(); ++i) {
             if (mpvLeft->values[i].isTemp)
                 argumentError(i, "cannot assign to a temporary");
             if (mpvLeft->values[i].type != mpvRight->values[i].type) {
@@ -2188,7 +2188,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
                                   mpvRight->values[i].type);
             }
         }
-        unsigned int marker = evalMarkStack();
+        unsigned marker = evalMarkStack();
         MultiEValuePtr mevLeft = evalMultiAsRef(x->left, env);
         evalMultiInto(x->right, env, mevLeft, mpvLeft->size());
         evalDestroyAndPopStack(marker);
@@ -2216,11 +2216,11 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case RETURN : {
         Return *x = (Return *)stmt.ptr();
-        unsigned wantCount = x->isReturnSpecs ? 1 : 0;
+        size_t wantCount = x->isReturnSpecs ? 1 : 0;
         MultiPValuePtr mpv = safeAnalyzeMulti(x->values, env, wantCount);
         MultiEValuePtr mev = new MultiEValue();
         ensureArity(mpv, ctx->returns.size());
-        for (size_t i = 0; i < mpv->size(); ++i) {
+        for (unsigned i = 0; i < mpv->size(); ++i) {
             PVData const &pv = mpv->values[i];
             bool byRef = returnKindToByRef(x->returnKind, pv);
             EReturn &y = ctx->returns[i];
@@ -2232,7 +2232,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
                 argumentError(i, "cannot return a temporary by reference");
             mev->add(y.value);
         }
-        unsigned int marker = evalMarkStack();
+        unsigned marker = evalMarkStack();
         switch (x->returnKind) {
         case RETURN_VALUE :
             evalMultiInto(x->values, env, mev, wantCount);
@@ -2260,11 +2260,11 @@ TerminationPtr evalStatement(StatementPtr stmt,
     case IF : {
         If *x = (If *)stmt.ptr();
 
-        unsigned int scopeMarker = evalMarkStack();
+        unsigned scopeMarker = evalMarkStack();
 
         EnvPtr env2 = evalStatementExpressionStatements(x->conditionStatements, env, ctx);
 
-        unsigned int tempMarker = evalMarkStack();
+        unsigned tempMarker = evalMarkStack();
         EValuePtr ev = evalOneAsRef(x->condition, env2);
         bool flag = evalToBoolFlag(ev, true);
         evalDestroyAndPopStack(tempMarker);
@@ -2299,7 +2299,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case EXPR_STATEMENT : {
         ExprStatement *x = (ExprStatement *)stmt.ptr();
-        unsigned int marker = evalMarkStack();
+        unsigned marker = evalMarkStack();
         evalExprAsRef(x->expr, env);
         evalDestroyAndPopStack(marker);
         return NULL;
@@ -2308,12 +2308,12 @@ TerminationPtr evalStatement(StatementPtr stmt,
     case WHILE : {
         While *x = (While *)stmt.ptr();
 
-        unsigned int scopeMarker = evalMarkStack();
+        unsigned scopeMarker = evalMarkStack();
 
         while (true) {
             EnvPtr env2 = evalStatementExpressionStatements(x->conditionStatements, env, ctx);
 
-            unsigned int tempMarker = evalMarkStack();
+            unsigned tempMarker = evalMarkStack();
             EValuePtr ev = evalOneAsRef(x->condition, env2);
             bool flag = evalToBoolFlag(ev, false);
             evalDestroyAndPopStack(tempMarker);
@@ -2415,7 +2415,7 @@ void evalCollectLabels(llvm::ArrayRef<StatementPtr> statements,
                        EnvPtr env,
                        llvm::StringMap<LabelInfo> &labels)
 {
-    for (size_t i = startIndex; i < statements.size(); ++i) {
+    for (unsigned i = startIndex; i < statements.size(); ++i) {
         StatementPtr x = statements[i];
         switch (x->stmtKind) {
         case LABEL : {
@@ -2453,11 +2453,11 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
             if (mpv->values.size() != x->args.size())
                 arityMismatchError(x->args.size(), mpv->values.size(), /*hasVarArg=*/false);
         MultiEValuePtr mev = new MultiEValue();
-        for (size_t i = 0; i < x->args.size(); ++i) {
+        for (unsigned i = 0; i < x->args.size(); ++i) {
             EValuePtr ev = evalAllocValue(mpv->values[i].type);
             mev->add(ev);
         }
-        unsigned int marker = evalMarkStack();
+        unsigned marker = evalMarkStack();
         evalMultiInto(x->values, env, mev, x->args.size());
         evalDestroyAndPopStack(marker);
         EnvPtr env2 = new Env(env);
@@ -2488,14 +2488,14 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
             if (mpv->values.size() != x->args.size())
                 arityMismatchError(x->args.size(), mpv->values.size(), /*hasVarArg=*/false);
         MultiEValuePtr mev = new MultiEValue();
-        for (size_t i = 0; i < x->args.size(); ++i) {
+        for (unsigned i = 0; i < x->args.size(); ++i) {
             PVData const &pv = mpv->values[i];
             if (pv.isTemp)
                 argumentError(i, "ref can only bind to an rvalue");
             EValuePtr evPtr = evalAllocValue(pointerType(pv.type));
             mev->add(evPtr);
         }
-        unsigned int marker = evalMarkStack();
+        unsigned marker = evalMarkStack();
         evalMulti(x->values, env, mev, x->args.size());
         evalDestroyAndPopStack(marker);
         EnvPtr env2 = new Env(env);
@@ -2529,18 +2529,18 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
             if (mpv->values.size() != x->args.size())
                 arityMismatchError(x->args.size(), mpv->values.size(), /*hasVarArg=*/false);
         MultiEValuePtr mev = new MultiEValue();
-        for (size_t i = 0; i < x->args.size(); ++i) {
+        for (unsigned i = 0; i < x->args.size(); ++i) {
             PVData const &pv = mpv->values[i];
             mev->add(evalAllocValueForPValue(pv));
         }
-        unsigned int marker = evalMarkStack();
+        unsigned marker = evalMarkStack();
         evalMulti(x->values, env, mev, x->args.size());
         evalDestroyAndPopStack(marker);
         EnvPtr env2 = new Env(env);
         for (size_t i = 0; i < x->patternVars.size(); ++i)
             addLocal(env2, x->patternVars[i].name, x->patternTypes[i]);
         size_t varArgSize = mev->values.size()-x->args.size()+1;
-        for (size_t i = 0, j = 0; i < x->args.size(); ++i) {
+        for (unsigned i = 0, j = 0; i < x->args.size(); ++i) {
             if (x->args[i]->varArg) {
                 MultiEValuePtr varArgs = new MultiEValue();
                 for (; j < varArgSize; ++j) {
@@ -3594,7 +3594,7 @@ static const void *evalStringTableConstant(llvm::StringRef s)
     void *buf = malloc(size + bits + 1);
     switch (bits) {
     case 4:
-        *(size32_t*)buf = size;
+        *(size32_t*)buf = (size32_t)size;
         break;
     case 8:
         *(size64_t*)buf = size;
@@ -3684,7 +3684,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         }
         vector<TypePtr> argsKey;
         vector<ValueTempness> argsTempness;
-        for (size_t i = 1; i < args->size(); ++i) {
+        for (unsigned i = 1; i < args->size(); ++i) {
             TypePtr t = valueToType(args, i);
             argsKey.push_back(t);
             argsTempness.push_back(TEMPNESS_LVALUE);
@@ -4264,7 +4264,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
             argumentIndexRangeError(1, "tuple element index",
                                     i, tt->elementTypes.size());
         const llvm::StructLayout *layout = tupleTypeLayout(tt.ptr());
-        char *ptr = etuple->addr + layout->getElementOffset(i);
+        char *ptr = etuple->addr + layout->getElementOffset(unsigned(i));
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == pointerType(tt->elementTypes[i]));
@@ -4278,7 +4278,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         EValuePtr etuple = tupleValue(args, 0, tt);
         assert(out->size() == tt->elementTypes.size());
         const llvm::StructLayout *layout = tupleTypeLayout(tt.ptr());
-        for (size_t i = 0; i < tt->elementTypes.size(); ++i) {
+        for (unsigned i = 0; i < tt->elementTypes.size(); ++i) {
             EValuePtr outi = out->values[i];
             assert(outi->type == pointerType(tt->elementTypes[i]));
             char *ptr = etuple->addr + layout->getElementOffset(i);
@@ -4358,7 +4358,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         ensureArity(args, 2);
         RecordTypePtr rt;
         EValuePtr erec = recordValue(args, 0, rt);
-        size_t i = valueToStaticSizeTOrInt(args, 1);
+        unsigned i = unsigned(valueToStaticSizeTOrInt(args, 1));
         llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(rt);
         if (i >= rt->fieldCount())
             argumentIndexRangeError(1, "record field index",
@@ -4368,14 +4368,14 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         if (rt->hasVarField && i >= rt->varFieldPosition) {
             if (i == rt->varFieldPosition) {
                 assert(out->size() == rt->varFieldSize());
-                for (size_t j = 0; j < rt->varFieldSize(); ++j) {
+                for (unsigned j = 0; j < rt->varFieldSize(); ++j) {
                     char *ptr = erec->addr + layout->getElementOffset(i+j);
                     EValuePtr out0 = out->values[j];
                     assert(out0->type == pointerType(fieldTypes[i+j]));
                     out0->as<void *>() = (void *)ptr;
                 }
             } else {
-                size_t k = i+rt->varFieldSize()-1;
+                unsigned k = i+unsigned(rt->varFieldSize()-1);
                 char *ptr = erec->addr + layout->getElementOffset(k);
                 assert(out->size() == 1);
                 EValuePtr out0 = out->values[0];
@@ -4406,21 +4406,21 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
             sout << "field not found: " << fname->str;
             argumentError(1, sout.str());
         }
-        size_t i = fi->second;
+        unsigned i = unsigned(fi->second);
         llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(rt);
         const llvm::StructLayout *layout = recordTypeLayout(rt.ptr());
         
         if (rt->hasVarField && i >= rt->varFieldPosition) {
             if (i == rt->varFieldPosition) {
                 assert(out->size() == rt->varFieldSize());
-                for (size_t j = 0; j < rt->varFieldSize(); ++j) {
+                for (unsigned j = 0; j < rt->varFieldSize(); ++j) {
                     char *ptr = erec->addr + layout->getElementOffset(i+j);
                     EValuePtr out0 = out->values[j];
                     assert(out0->type == pointerType(fieldTypes[i+j]));
                     out0->as<void *>() = (void *)ptr;
                 }
             } else {
-                size_t k = i+rt->varFieldSize()-1;
+                unsigned k = i+unsigned(rt->varFieldSize())-1;
                 char *ptr = erec->addr + layout->getElementOffset(k);
                 assert(out->size() == 1);
                 EValuePtr out0 = out->values[0];
@@ -4444,7 +4444,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(rt);
         assert(out->size() == fieldTypes.size());
         const llvm::StructLayout *layout = recordTypeLayout(rt.ptr());
-        for (size_t i = 0; i < fieldTypes.size(); ++i) {
+        for (unsigned i = 0; i < fieldTypes.size(); ++i) {
             EValuePtr outi = out->values[i];
             assert(outi->type == pointerType(fieldTypes[i]));
             char *ptr = erec->addr + layout->getElementOffset(i);
@@ -4463,8 +4463,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == fieldTypes.size());
         const llvm::StructLayout *layout = recordTypeLayout(rt.ptr());
         assert(out->size() == rt->varFieldSize());
-        for (size_t i = 0; i < rt->varFieldSize(); ++i) {
-            size_t k = rt->varFieldPosition + i;
+        for (unsigned i = 0; i < rt->varFieldSize(); ++i) {
+            unsigned k = unsigned(rt->varFieldPosition) + i;
             EValuePtr outi = out->values[i];
             assert(outi->type == pointerType(fieldTypes[k]));
             char *ptr = erec->addr + layout->getElementOffset(k);
@@ -4664,7 +4664,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr outi = out->values[0];
         assert(outi->type == cIntType);
-        outi->as<int>() = ident->str[n];
+        outi->as<int>() = ident->str[unsigned(n)];
         break;
     }
 
@@ -4672,7 +4672,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         ensureArity(args, 1);
         IdentifierPtr ident = valueToIdentifier(args, 0);
         assert(out->size() == ident->str.size());
-        for (size_t i = 0, sz = ident->str.size(); i < sz; ++i) {
+        for (unsigned i = 0, sz = unsigned(ident->str.size()); i < sz; ++i) {
             EValuePtr outi = out->values[i];
             assert(outi->type == cIntType);
             outi->as<int>() = ident->str[i];
@@ -4764,7 +4764,7 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == cIntType);
-        out0->as<int>() = args->size();
+        out0->as<int>() = int(args->size());
         break;
     }
 

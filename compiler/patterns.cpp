@@ -109,7 +109,7 @@ static PatternPtr objectToPattern(ObjectPtr obj)
             TupleType *tt = (TupleType *)x->type.ptr();
             const llvm::StructLayout *layout = tupleTypeLayout(tt);
             MultiPatternListPtr params = new MultiPatternList();
-            for (size_t i = 0; i < tt->elementTypes.size(); ++i) {
+            for (unsigned i = 0; i < tt->elementTypes.size(); ++i) {
                 char *addr = x->buf + layout->getElementOffset(i);
                 EValuePtr evElement = new EValue(tt->elementTypes[i], addr);
                 PatternPtr y = objectToPattern(evalueToStatic(evElement));

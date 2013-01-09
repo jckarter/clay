@@ -141,10 +141,10 @@ InvokeSet* lookupInvokeSet(ObjectPtr callable,
 {
     if (!invokeTablesInitialized)
         initInvokeTables();
-    unsigned int h = objectHash(callable) + objectVectorHash(argsKey);
-    h &= (invokeTable.size() - 1);
+    unsigned h = objectHash(callable) + objectVectorHash(argsKey);
+    h &= unsigned(invokeTable.size() - 1);
     llvm::SmallVector<InvokeSet*, 2> &bucket = invokeTable[h];
-    for (size_t i = 0; i < bucket.size(); ++i) {
+    for (unsigned i = 0; i < bucket.size(); ++i) {
         InvokeSet* invokeSet = bucket[i];
         if (objectEquals(invokeSet->callable, callable) &&
             objectVectorEquals(invokeSet->argsKey, argsKey))
@@ -164,8 +164,8 @@ InvokeSet* lookupInvokeSet(ObjectPtr callable,
 vector<InvokeSet*> lookupInvokeSets(ObjectPtr callable) {
     assert(invokeTablesInitialized);
     vector<InvokeSet*> r;
-    for (size_t i = 0; i < invokeTable.size(); ++i) {
-        for (size_t j = 0; j < invokeTable[i].size(); ++j) {
+    for (unsigned i = 0; i < invokeTable.size(); ++i) {
+        for (unsigned j = 0; j < invokeTable[i].size(); ++j) {
             InvokeSet* set = invokeTable[i][j];
             if (objectEquals(set->callable, callable)) {
                 r.push_back(set);
@@ -356,7 +356,7 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
     vector<ValueTempness> tempnessKey;
     vector<uint8_t> forwardedRValueFlags;
     
-    unsigned int i = 0;
+    unsigned i = 0;
     while ((match = getMatch(invokeSet,i,failures)).ptr() != NULL) {
         if (matchTempness(match->code,
                           argsTempness,

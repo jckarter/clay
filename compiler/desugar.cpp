@@ -107,7 +107,7 @@ static vector<FormalArgPtr> identV(IdentifierPtr x) {
     return v;
 }
 
-static vector<FormalArgPtr> identVtoFormalV(vector<IdentifierPtr> x) {
+static vector<FormalArgPtr> identVtoFormalV(llvm::ArrayRef<IdentifierPtr> x) {
     vector<FormalArgPtr> v;
     for(size_t i=0; i<x.size(); ++i)
         v.push_back(new FormalArg(x[i], NULL));
@@ -375,7 +375,7 @@ ExprListPtr desugarEvalExpr(EvalExprPtr eval, EnvPtr env)
         return eval->value;
     else {
         SourcePtr source = evalToSource(eval->location, new ExprList(eval->args), env);
-        eval->value = parseExprList(source, 0, source->size());
+        eval->value = parseExprList(source, 0, unsigned(source->size()));
         eval->evaled = true;
         return eval->value;
     }
@@ -387,7 +387,7 @@ llvm::ArrayRef<StatementPtr> desugarEvalStatement(EvalStatementPtr eval, EnvPtr 
         return eval->value;
     else {
         SourcePtr source = evalToSource(eval->location, eval->args, env);
-        parseStatements(source, 0, source->size(), eval->value);
+        parseStatements(source, 0, unsigned(source->size()), eval->value);
         eval->evaled = true;
         return eval->value;
     }
@@ -399,7 +399,7 @@ llvm::ArrayRef<TopLevelItemPtr> desugarEvalTopLevel(EvalTopLevelPtr eval, EnvPtr
         return eval->value;
     else {
         SourcePtr source = evalToSource(eval->location, eval->args, env);
-        parseTopLevelItems(source, 0, source->size(), eval->value, eval->module);
+        parseTopLevelItems(source, 0, unsigned(source->size()), eval->value, eval->module);
         eval->evaled = true;
         return eval->value;
     }
