@@ -7189,7 +7189,7 @@ llvm::TargetMachine *initLLVM(llvm::StringRef targetTriple,
     llvm::StringRef flags,
     bool relocPic,
     bool debug,
-    bool optimized)
+    unsigned optLevel)
 {
     llvm::InitializeAllTargets();
     llvm::InitializeAllTargetMCs();
@@ -7207,7 +7207,7 @@ llvm::TargetMachine *initLLVM(llvm::StringRef targetTriple,
             llvm::sys::path::filename(absFileName),
             llvm::sys::path::parent_path(absFileName),
             "clay compiler " CLAY_COMPILER_VERSION,
-            optimized,
+            optLevel > 0,
             flags,
             0);
     } else
@@ -7224,8 +7224,19 @@ llvm::TargetMachine *initLLVM(llvm::StringRef targetTriple,
         : llvm::Reloc::Default;
     llvm::CodeModel::Model codeModel = llvm::CodeModel::Default;
 
+    llvm::CodeGenOpt::Level level;
+    switch (optLevel) {
+    case 0 : level = llvm::CodeGenOpt::None; break;
+    case 1 : level = llvm::CodeGenOpt::Less; break;
+    case 2 : level = llvm::CodeGenOpt::Default; break;
+    default : level = llvm::CodeGenOpt::Aggressive; break;
+    }
+
     llvm::TargetMachine *targetMachine = target->createTargetMachine(
-        targetTriple, "", "", llvm::TargetOptions(), reloc, codeModel);
+        targetTriple, "", "", llvm::TargetOptions(), reloc, codeModel, level);
+
+    if (optLevel < 2 || debug)
+        targetMachine->Options.NoFramePointerElim = 1;
 
     if (targetMachine != NULL) {
         llvmDataLayout = targetMachine->getDataLayout();
