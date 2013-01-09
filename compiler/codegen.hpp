@@ -137,7 +137,7 @@ struct CodegenContext {
     vector<JumpTarget> continues;
     vector<JumpTarget> exceptionTargets;
     llvm::Value *exceptionValue;
-    int inlineDepth:31;
+    int inlineDepth; //:31;
     bool checkExceptions:1;
 
     CodegenContext()
