@@ -3,7 +3,7 @@
 #include "codegen.hpp"
 #include "loader.hpp"
 #include "patterns.hpp"
-
+#include "objects.hpp"
 
 
 #pragma clang diagnostic ignored "-Wcovered-switch-default"

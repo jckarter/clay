@@ -4,6 +4,9 @@
 #include "analyzer.hpp"
 #include "desugar.hpp"
 #include "parser.hpp"
+#include "clone.hpp"
+#include "objects.hpp"
+
 
 namespace clay {
 
@@ -418,7 +421,7 @@ OverloadPtr desugarAsOverload(OverloadPtr &x) {
     returnExpr->location = x->code->body->location;
 
     //Add patterns as static args
-    for (size_t i = 0; i < x->code->patternVars.size(); ++i) {
+    for (unsigned i = 0; i < x->code->patternVars.size(); ++i) {
         llvm::SmallString<128> buf;
         llvm::raw_svector_ostream sout(buf);
         sout << "%arg" << i;
@@ -442,7 +445,7 @@ OverloadPtr desugarAsOverload(OverloadPtr &x) {
     }
 
     //Add args
-    for (size_t i = 0; i < x->code->formalArgs.size(); ++i) {
+    for (unsigned i = 0; i < x->code->formalArgs.size(); ++i) {
         FormalArgPtr arg = clone(x->code->formalArgs[i]);
         arg->tempness = TEMPNESS_FORWARD;
         if (x->code->formalArgs[i]->asArg) {

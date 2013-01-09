@@ -13,12 +13,52 @@
 #include "literals.hpp"
 #include "desugar.hpp"
 #include "constructors.hpp"
+#include "env.hpp"
+#include "clone.hpp"
+#include "objects.hpp"
 
 
 #pragma clang diagnostic ignored "-Wcovered-switch-default"
 
 
 namespace clay {
+
+
+GVarInstance::GVarInstance(GlobalVariablePtr gvar,
+             llvm::ArrayRef<ObjectPtr> params)
+    : Object(DONT_CARE), gvar(gvar), params(params),
+      llGlobal(NULL), debugInfo(NULL), analyzing(false) {}
+
+GVarInstance::~GVarInstance() {}
+
+
+Procedure::Procedure(Module *module, IdentifierPtr name, Visibility visibility, bool privateOverload)
+    : TopLevelItem(PROCEDURE, module, name, visibility),
+      privateOverload(privateOverload)
+{}
+
+Procedure::Procedure(Module *module, IdentifierPtr name, Visibility visibility, bool privateOverload, OverloadPtr interface)
+    : TopLevelItem(PROCEDURE, module, name, visibility),
+      interface(interface), privateOverload(privateOverload)
+{}
+
+Procedure::~Procedure() {}
+
+
+GlobalVariable::GlobalVariable(Module *module, IdentifierPtr name,
+               Visibility visibility,
+               llvm::ArrayRef<PatternVar> patternVars,
+               ExprPtr predicate,
+               llvm::ArrayRef<IdentifierPtr> params,
+               IdentifierPtr varParam,
+               ExprPtr expr)
+    : TopLevelItem(GLOBAL_VARIABLE, module, name, visibility),
+      patternVars(patternVars), predicate(predicate),
+      params(params), varParam(varParam), expr(expr) {}
+
+GlobalVariable::~GlobalVariable() {}
+
+
 
 static StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContext *ctx);
 static EnvPtr analyzeBinding(BindingPtr x, EnvPtr env);

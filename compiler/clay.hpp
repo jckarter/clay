@@ -1995,15 +1995,9 @@ struct Procedure : public TopLevelItem {
 
     bool privateOverload:1;
 
-    Procedure(Module *module, IdentifierPtr name, Visibility visibility, bool privateOverload)
-        : TopLevelItem(PROCEDURE, module, name, visibility),
-          privateOverload(privateOverload)
-    {}
-
-    Procedure(Module *module, IdentifierPtr name, Visibility visibility, bool privateOverload, OverloadPtr interface)
-        : TopLevelItem(PROCEDURE, module, name, visibility),
-          interface(interface), privateOverload(privateOverload)
-    {}
+    Procedure(Module *module, IdentifierPtr name, Visibility visibility, bool privateOverload);
+    Procedure(Module *module, IdentifierPtr name, Visibility visibility, bool privateOverload, OverloadPtr interface);
+    ~Procedure();
 };
 
 struct IntrinsicInstance {
@@ -2076,10 +2070,9 @@ struct GlobalVariable : public TopLevelItem {
                    ExprPtr predicate,
                    llvm::ArrayRef<IdentifierPtr> params,
                    IdentifierPtr varParam,
-                   ExprPtr expr)
-        : TopLevelItem(GLOBAL_VARIABLE, module, name, visibility),
-          patternVars(patternVars), predicate(predicate),
-          params(params), varParam(varParam), expr(expr) {}
+                   ExprPtr expr);
+
+    ~GlobalVariable();
 
     bool hasParams() const {
         return !params.empty() || (varParam.ptr() != NULL);
@@ -2101,9 +2094,9 @@ struct GVarInstance : public Object {
     bool analyzing:1;
 
     GVarInstance(GlobalVariablePtr gvar,
-                 llvm::ArrayRef<ObjectPtr> params)
-        : Object(DONT_CARE), gvar(gvar), params(params),
-          llGlobal(NULL), debugInfo(NULL), analyzing(false) {}
+                 llvm::ArrayRef<ObjectPtr> params);
+
+    ~GVarInstance();
 
     llvm::DIGlobalVariable getDebugInfo() { return llvm::DIGlobalVariable(debugInfo); }
 };
@@ -2535,32 +2528,6 @@ string shortString(llvm::StringRef in);
 
 
 //
-// clone ast
-//
-
-CodePtr clone(CodePtr x);
-void clone(llvm::ArrayRef<PatternVar> x, vector<PatternVar> &out);
-void clone(llvm::ArrayRef<IdentifierPtr> x, vector<IdentifierPtr> &out);
-ExprPtr clone(ExprPtr x);
-ExprPtr cloneOpt(ExprPtr x);
-ExprListPtr clone(ExprListPtr x);
-void clone(llvm::ArrayRef<FormalArgPtr> x, vector<FormalArgPtr> &out);
-FormalArgPtr clone(FormalArgPtr x);
-FormalArgPtr cloneOpt(FormalArgPtr x);
-void clone(llvm::ArrayRef<ReturnSpecPtr> x, vector<ReturnSpecPtr> &out);
-ReturnSpecPtr clone(ReturnSpecPtr x);
-ReturnSpecPtr cloneOpt(ReturnSpecPtr x);
-StatementPtr clone(StatementPtr x);
-StatementPtr cloneOpt(StatementPtr x);
-void clone(llvm::ArrayRef<StatementPtr> x, vector<StatementPtr> &out);
-CaseBlockPtr clone(CaseBlockPtr x);
-void clone(llvm::ArrayRef<CaseBlockPtr> x, vector<CaseBlockPtr> &out);
-CatchPtr clone(CatchPtr x);
-void clone(llvm::ArrayRef<CatchPtr> x, vector<CatchPtr> &out);
-
-
-
-//
 // Env
 //
 
@@ -2579,104 +2546,12 @@ struct Env : public Object {
 
 
 //
-// env module
-//
-
-void addGlobal(ModulePtr module,
-               IdentifierPtr name,
-               Visibility visibility,
-               ObjectPtr value);
-ObjectPtr lookupPrivate(ModulePtr module, IdentifierPtr name);
-ObjectPtr lookupPublic(ModulePtr module, IdentifierPtr name);
-ObjectPtr safeLookupPublic(ModulePtr module, IdentifierPtr name);
-
-void addLocal(EnvPtr env, IdentifierPtr name, ObjectPtr value);
-ObjectPtr lookupEnv(EnvPtr env, IdentifierPtr name);
-ObjectPtr safeLookupEnv(EnvPtr env, IdentifierPtr name);
-ModulePtr safeLookupModule(EnvPtr env);
-llvm::DINameSpace lookupModuleDebugInfo(EnvPtr env);
-
-ObjectPtr lookupEnvEx(EnvPtr env, IdentifierPtr name,
-                      EnvPtr nonLocalEnv, bool &isNonLocal,
-                      bool &isGlobal);
-
-ExprPtr foreignExpr(EnvPtr env, ExprPtr expr);
-
-ExprPtr lookupCallByNameExprHead(EnvPtr env);
-Location safeLookupCallByNameLocation(EnvPtr env);
-
-//
 // interactive module
 //
 
 void runInteractive(llvm::Module *llvmModule, ModulePtr module);
 
 
-//
-// objects
-//
-
-struct ValueHolder : public Object {
-    TypePtr type;
-    char *buf;
-    ValueHolder(TypePtr type);
-    ~ValueHolder();
-
-    template<typename T>
-    T &as() { return *(T*)buf; }
-
-    template<typename T>
-    T const &as() const { return *(T const *)buf; }
-};
-
-
-bool _objectValueEquals(ObjectPtr a, ObjectPtr b);
-unsigned objectHash(ObjectPtr a);
-
-inline bool objectEquals(ObjectPtr a, ObjectPtr b) {
-    if (a == b)
-        return true;
-    return _objectValueEquals(a,b);
-}
-
-template <typename ObjectVectorA, typename ObjectVectorB>
-inline bool objectVectorEquals(ObjectVectorA const &a,
-                        ObjectVectorB const &b) {
-    if (a.size() != b.size()) return false;
-    for (unsigned i = 0; i < a.size(); ++i) {
-        if (!objectEquals(a[i].ptr(), b[i].ptr()))
-            return false;
-    }
-    return true;
-}
-
-template <typename ObjectVector>
-inline unsigned objectVectorHash(ObjectVector const &a) {
-    unsigned h = 0;
-    for (unsigned i = 0; i < a.size(); ++i)
-        h += objectHash(a[i].ptr());
-    return h;
-}
-
-struct ObjectTableNode {
-    vector<ObjectPtr> key;
-    ObjectPtr value;
-    ObjectTableNode(llvm::ArrayRef<ObjectPtr> key,
-                    ObjectPtr value)
-        : key(key), value(value) {}
-};
-
-struct ObjectTable : public Object {
-    vector< vector<ObjectTableNode> > buckets;
-    unsigned size;
-public :
-    ObjectTable() : Object(DONT_CARE), size(0) {}
-    ObjectPtr &lookup(llvm::ArrayRef<ObjectPtr> key);
-private :
-    void rehash();
-};
-
-
 //
 // Types
 //

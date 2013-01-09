@@ -5,7 +5,8 @@
 #include "operators.hpp"
 #include "patterns.hpp"
 #include "analyzer.hpp"
-
+#include "env.hpp"
+#include "objects.hpp"
 
 
 #pragma clang diagnostic ignored "-Wcovered-switch-default"

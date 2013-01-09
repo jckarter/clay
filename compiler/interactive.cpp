@@ -5,6 +5,7 @@
 #include "error.hpp"
 #include "loader.hpp"
 #include "invoketables.hpp"
+#include "env.hpp"
 
 #include <setjmp.h>
 #include <signal.h>

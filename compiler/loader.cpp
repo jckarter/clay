@@ -7,6 +7,7 @@
 #include "constructors.hpp"
 #include "parser.hpp"
 #include "desugar.hpp"
+#include "env.hpp"
 
 #pragma clang diagnostic ignored "-Wcovered-switch-default"
 
