@@ -64,7 +64,7 @@ else()
     set(CLAY_CXXFLAGS "${LLVM_CXXFLAGS} -DNDEBUG")
 endif()
 if (NOT MSVC)
-    set(CLAY_CXXFLAGS "${CLAY_CXXFLAGS} -fexceptions -Wconversion")
+    set(CLAY_CXXFLAGS "${CLAY_CXXFLAGS} -fexceptions")
 endif()
 
 set(ENABLE_PCH False CACHE BOOL
