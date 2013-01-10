@@ -41,7 +41,7 @@ struct MultiEValue : public Object {
 };
 
 bool staticToType(ObjectPtr x, TypePtr &out);
-TypePtr staticToType(MultiStaticPtr x, unsigned index);
+TypePtr staticToType(MultiStaticPtr x, size_t index);
 
 void evaluateReturnSpecs(llvm::ArrayRef<ReturnSpecPtr> returnSpecs,
                          ReturnSpecPtr varReturnSpec,
@@ -80,10 +80,10 @@ void evalValueAssign(EValuePtr dest, EValuePtr src);
 void evalValueMoveAssign(EValuePtr dest, EValuePtr src);
 bool evalToBoolFlag(EValuePtr a, bool acceptStatics);
 
-int evalMarkStack();
-void evalDestroyStack(int marker);
-void evalPopStack(int marker);
-void evalDestroyAndPopStack(int marker);
+unsigned evalMarkStack();
+void evalDestroyStack(unsigned marker);
+void evalPopStack(unsigned marker);
+void evalDestroyAndPopStack(unsigned marker);
 EValuePtr evalAllocValue(TypePtr t);
 
 EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env);

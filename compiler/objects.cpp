@@ -70,39 +70,39 @@ bool _objectValueEquals(ObjectPtr a, ObjectPtr b)
 // objectHash
 //
 
-static int identityHash(Object *a)
+static unsigned identityHash(Object *a)
 {
     size_t v = (size_t)a;
-    return (int)v;
+    return unsigned(int(v));
 }
 
 // FIXME: this doesn't handle arbitrary values (need to call clay)
-int objectHash(ObjectPtr a)
+unsigned objectHash(ObjectPtr a)
 {
     switch (a->objKind) {
 
     case IDENTIFIER : {
         Identifier *b = (Identifier *)a.ptr();
-        int h = 0;
+        unsigned h = 0;
         for (unsigned i = 0; i < b->str.size(); ++i)
-            h += b->str[i];
+            h += unsigned(b->str[i]);
         return h;
     }
 
     case VALUE_HOLDER : {
         ValueHolder *b = (ValueHolder *)a.ptr();
         // TODO: call clay 'hash'
-        int h = 0;
+        unsigned h = 0;
         size_t n = typeSize(b->type);
-        for (size_t i = 0; i < n; ++i)
-            h += b->buf[i];
+        for (unsigned i = 0; i < n; ++i)
+            h += unsigned(b->buf[i]);
         h = h*11 + identityHash(b->type.ptr());
         return h;
     }
 
     case PVALUE : {
         PValue *b = (PValue *)a.ptr();
-        int h = identityHash(b->data.type.ptr());
+        unsigned h = identityHash(b->data.type.ptr());
         h *= b->data.isTemp ? 11 : 23;
         return h;
     }
@@ -126,8 +126,8 @@ ObjectPtr &ObjectTable::lookup(llvm::ArrayRef<ObjectPtr> key)
         this->buckets.resize(16);
     if (this->buckets.size() < 2*this->size)
         rehash();
-    int h = objectVectorHash(key);
-    h &= (buckets.size() - 1);
+    unsigned h = objectVectorHash(key);
+    h &= unsigned(buckets.size() - 1);
     vector<ObjectTableNode> &bucket = buckets[h];
     for (unsigned i = 0; i < bucket.size(); ++i) {
         if (objectVectorEquals(key, bucket[i].key))
@@ -146,8 +146,8 @@ void ObjectTable::rehash()
     for (unsigned i = 0; i < this->buckets.size(); ++i) {
         vector<ObjectTableNode> &bucket = this->buckets[i];
         for (unsigned j = 0; j < bucket.size(); ++j) {
-            int h = objectVectorHash(bucket[j].key);
-            h &= (newBuckets.size() - 1);
+            unsigned h = objectVectorHash(bucket[j].key);
+            h &= unsigned(newBuckets.size() - 1);
             newBuckets[h].push_back(bucket[j]);
         }
     }

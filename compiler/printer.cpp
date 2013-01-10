@@ -95,6 +95,12 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &out, const vector<T> &v)
     return out << llvm::makeArrayRef(v);
 }
 
+template <class T>
+llvm::raw_ostream &operator<<(llvm::raw_ostream &out, const llvm::SmallVector<T, 3> &v)
+{
+    return out << llvm::makeArrayRef(v);
+}
+
 llvm::raw_ostream &operator<<(llvm::raw_ostream &out, PVData const &pv)
 {
     return out << "PVData(" << pv.type << ", " << pv.isTemp << ")";
@@ -658,7 +664,7 @@ static void print(llvm::raw_ostream &out, const Object *x) {
         case IMPORT_MEMBERS : {
             const ImportMembers *z = (const ImportMembers *)y;
             out << "ImportMembers(" << z->visibility << ", " << z->dottedName << ", [";
-            for (unsigned i = 0; i < z->members.size(); ++i) {
+            for (size_t i = 0; i < z->members.size(); ++i) {
                 if (i != 0)
                     out << ", ";
                 const ImportedMember &a = z->members[i];
@@ -808,7 +814,7 @@ void disableSafePrintName()
 
 void printNameList(llvm::raw_ostream &out, llvm::ArrayRef<ObjectPtr> x)
 {
-    for (unsigned i = 0; i < x.size(); ++i) {
+    for (size_t i = 0; i < x.size(); ++i) {
         if (i != 0)
             out << ", ";
         printName(out, x[i]);
@@ -817,7 +823,7 @@ void printNameList(llvm::raw_ostream &out, llvm::ArrayRef<ObjectPtr> x)
 
 void printNameList(llvm::raw_ostream &out, llvm::ArrayRef<ObjectPtr> x, llvm::ArrayRef<unsigned> dispatchIndices)
 {
-    for (unsigned i = 0; i < x.size(); ++i) {
+    for (size_t i = 0; i < x.size(); ++i) {
         if (i != 0)
             out << ", ";
         if (find(dispatchIndices.begin(), dispatchIndices.end(), i) != dispatchIndices.end())
@@ -828,7 +834,7 @@ void printNameList(llvm::raw_ostream &out, llvm::ArrayRef<ObjectPtr> x, llvm::Ar
 
 void printNameList(llvm::raw_ostream &out, llvm::ArrayRef<TypePtr> x)
 {
-    for (unsigned i = 0; i < x.size(); ++i) {
+    for (size_t i = 0; i < x.size(); ++i) {
         if (i != 0)
             out << ", ";
         printName(out, x[i].ptr());
@@ -845,7 +851,7 @@ static void printStaticOrTupleOfStatics(llvm::raw_ostream &out, TypePtr t) {
     case TUPLE_TYPE : {
         TupleType *tt = (TupleType *)t.ptr();
         out << "[";
-        for (unsigned i = 0; i < tt->elementTypes.size(); ++i) {
+        for (size_t i = 0; i < tt->elementTypes.size(); ++i) {
             if (i != 0)
                 out << ", ";
             printStaticOrTupleOfStatics(out, tt->elementTypes[i]);
@@ -933,7 +939,7 @@ void printName(llvm::raw_ostream &out, ObjectPtr x)
                         out << "\\x";
                         if (ch < 16)
                             out << '0';
-                        out.write_hex(ch);
+                        out.write_hex((unsigned long long int)ch);
                     }
                     break;
                 }
@@ -1110,7 +1116,7 @@ void printValue(llvm::raw_ostream &out, EValuePtr ev)
         int member = ev->as<int>();
 
         if (member >= 0 && size_t(member) < members.size()) {
-            out << members[member]->name->str;
+            out << members[(size_t)member]->name->str;
         } else {
             printName(out, t);
             out << '(' << member << ')';
@@ -1218,13 +1224,13 @@ void typePrint(llvm::raw_ostream &out, TypePtr t) {
     case CODE_POINTER_TYPE : {
         CodePointerType *x = (CodePointerType *)t.ptr();
         out << "CodePointer[[";
-        for (unsigned i = 0; i < x->argTypes.size(); ++i) {
+        for (size_t i = 0; i < x->argTypes.size(); ++i) {
             if (i != 0)
                 out << ", ";
             out << x->argTypes[i];
         }
         out << "], [";
-        for (unsigned i = 0; i < x->returnTypes.size(); ++i) {
+        for (size_t i = 0; i < x->returnTypes.size(); ++i) {
             if (i != 0)
                 out << ", ";
             if (x->returnIsRef[i])
@@ -1263,7 +1269,7 @@ void typePrint(llvm::raw_ostream &out, TypePtr t) {
         else
             out << "false, ";
         out << "[";
-        for (unsigned i = 0; i < x->argTypes.size(); ++i) {
+        for (size_t i = 0; i < x->argTypes.size(); ++i) {
             if (i != 0)
                 out << ", ";
             out << x->argTypes[i];
@@ -1342,7 +1348,7 @@ void typePrint(llvm::raw_ostream &out, TypePtr t) {
 std::string clay::DottedName::join() const {
     std::string s;
     llvm::raw_string_ostream ss(s);
-    for (std::vector<clay::IdentifierPtr>::const_iterator part = parts.begin();
+    for (llvm::SmallVector<clay::IdentifierPtr, 2>::const_iterator part = parts.begin();
             part != parts.end(); ++part)
     {
         if (part != parts.begin())

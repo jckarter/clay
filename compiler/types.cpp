@@ -108,7 +108,7 @@ void initTypes() {
         assert(false);
     }
 
-    int N = 1024;
+    unsigned N = 1024;
     pointerTypes.resize(N);
     codePointerTypes.resize(N);
     cCodePointerTypes.resize(N);
@@ -121,14 +121,14 @@ void initTypes() {
     staticTypes.resize(N);
 }
 
-TypePtr integerType(int bits, bool isSigned) {
+TypePtr integerType(unsigned bits, bool isSigned) {
     if (isSigned)
         return intType(bits);
     else
         return uintType(bits);
 }
 
-TypePtr intType(int bits) {
+TypePtr intType(unsigned bits) {
     switch (bits) {
     case 8 : return int8Type;
     case 16 : return int16Type;
@@ -141,7 +141,7 @@ TypePtr intType(int bits) {
     }
 }
 
-TypePtr uintType(int bits) {
+TypePtr uintType(unsigned bits) {
     switch (bits) {
     case 8 : return uint8Type;
     case 16 : return uint16Type;
@@ -154,7 +154,7 @@ TypePtr uintType(int bits) {
     }
 }
 
-TypePtr floatType(int bits) {
+TypePtr floatType(unsigned bits) {
     switch (bits) {
     case 32 : return float32Type;
     case 64 : return float64Type;
@@ -165,7 +165,7 @@ TypePtr floatType(int bits) {
     }
 }
 
-TypePtr imagType(int bits) {
+TypePtr imagType(unsigned bits) {
     switch (bits) {
     case 32 : return imag32Type;
     case 64 : return imag64Type;
@@ -176,7 +176,7 @@ TypePtr imagType(int bits) {
     }
 }
 
-TypePtr complexType(int bits) {
+TypePtr complexType(unsigned bits) {
     switch (bits) {
     case 32 : return complex32Type;
     case 64 : return complex64Type;
@@ -187,13 +187,13 @@ TypePtr complexType(int bits) {
     }
 }
 
-static int pointerHash(void *p) {
-    return int(size_t(p));
+static unsigned pointerHash(void *p) {
+    return unsigned(int(size_t(p)));
 }
 
 TypePtr pointerType(TypePtr pointeeType) {
-    int h = pointerHash(pointeeType.ptr());
-    h &= pointerTypes.size() - 1;
+    unsigned h = pointerHash(pointeeType.ptr());
+    h &= unsigned(pointerTypes.size() - 1);
     vector<PointerTypePtr>::iterator i, end;
     for (i = pointerTypes[h].begin(), end = pointerTypes[h].end();
          i != end; ++i) {
@@ -210,15 +210,14 @@ TypePtr codePointerType(llvm::ArrayRef<TypePtr> argTypes,
                         llvm::ArrayRef<uint8_t> returnIsRef,
                         llvm::ArrayRef<TypePtr> returnTypes) {
     assert(returnIsRef.size() == returnTypes.size());
-    int h = 0;
+    unsigned h = 0;
     for (unsigned i = 0; i < argTypes.size(); ++i) {
         h += pointerHash(argTypes[i].ptr());
     }
     for (unsigned i = 0; i < returnTypes.size(); ++i) {
-        int factor = returnIsRef[i] ? 23 : 11;
-        h += factor*pointerHash(returnTypes[i].ptr());
+        h += (returnIsRef[i] ? 23 : 11)*pointerHash(returnTypes[i].ptr());
     }
-    h &= codePointerTypes.size() - 1;
+    h &= unsigned(codePointerTypes.size() - 1);
     vector<CodePointerTypePtr> &bucket = codePointerTypes[h];
     for (unsigned i = 0; i < bucket.size(); ++i) {
         CodePointerType *t = bucket[i].ptr();
@@ -239,14 +238,14 @@ TypePtr cCodePointerType(CallingConv callingConv,
                          llvm::ArrayRef<TypePtr> argTypes,
                          bool hasVarArgs,
                          TypePtr returnType) {
-    int h = int(callingConv)*100;
+    unsigned h = unsigned(callingConv)*100;
     for (unsigned i = 0; i < argTypes.size(); ++i) {
         h += pointerHash(argTypes[i].ptr());
     }
     h += (hasVarArgs ? 1 : 0);
     if (returnType.ptr())
         h += pointerHash(returnType.ptr());
-    h &= cCodePointerTypes.size() - 1;
+    h &= unsigned(cCodePointerTypes.size() - 1);
     vector<CCodePointerTypePtr> &bucket = cCodePointerTypes[h];
     for (unsigned i = 0; i < bucket.size(); ++i) {
         CCodePointerType *t = bucket[i].ptr();
@@ -266,9 +265,9 @@ TypePtr cCodePointerType(CallingConv callingConv,
     return t.ptr();
 }
 
-TypePtr arrayType(TypePtr elementType, int size) {
-    int h = pointerHash(elementType.ptr()) + size;
-    h &= arrayTypes.size() - 1;
+TypePtr arrayType(TypePtr elementType, unsigned size) {
+    unsigned h = pointerHash(elementType.ptr()) + size;
+    h &= unsigned(arrayTypes.size() - 1);
     vector<ArrayTypePtr>::iterator i, end;
     for (i = arrayTypes[h].begin(), end = arrayTypes[h].end();
          i != end; ++i) {
@@ -281,11 +280,11 @@ TypePtr arrayType(TypePtr elementType, int size) {
     return t.ptr();
 }
 
-TypePtr vecType(TypePtr elementType, int size) {
+TypePtr vecType(TypePtr elementType, unsigned size) {
     if (elementType->typeKind != INTEGER_TYPE && elementType->typeKind != FLOAT_TYPE)
         error("Vec element type must be an integer or float type");
-    int h = pointerHash(elementType.ptr()) + size;
-    h &= vecTypes.size() - 1;
+    unsigned h = pointerHash(elementType.ptr()) + size;
+    h &= unsigned(vecTypes.size() - 1);
     vector<VecTypePtr>::iterator i, end;
     for (i = vecTypes[h].begin(), end = vecTypes[h].end();
          i != end; ++i) {
@@ -299,13 +298,13 @@ TypePtr vecType(TypePtr elementType, int size) {
 }
 
 TypePtr tupleType(llvm::ArrayRef<TypePtr> elementTypes) {
-    int h = 0;
+    unsigned h = 0;
     TypePtr const *ei, *eend;
     for (ei = elementTypes.begin(), eend = elementTypes.end();
          ei != eend; ++ei) {
         h += pointerHash(ei->ptr());
     }
-    h &= tupleTypes.size() - 1;
+    h &= unsigned(tupleTypes.size() - 1);
     vector<TupleTypePtr>::iterator i, end;
     for (i = tupleTypes[h].begin(), end = tupleTypes[h].end();
          i != end; ++i) {
@@ -319,13 +318,13 @@ TypePtr tupleType(llvm::ArrayRef<TypePtr> elementTypes) {
 }
 
 TypePtr unionType(llvm::ArrayRef<TypePtr> memberTypes) {
-    int h = 0;
+    unsigned h = 0;
     TypePtr const *mi, *mend;
     for (mi = memberTypes.begin(), mend = memberTypes.end();
          mi != mend; ++mi) {
         h += pointerHash(mi->ptr());
     }
-    h &= memberTypes.size() - 1;
+    h &= unsigned(memberTypes.size() - 1);
     vector<UnionTypePtr>::iterator i, end;
     for (i = unionTypes[h].begin(), end = unionTypes[h].end();
          i != end; ++i) {
@@ -339,11 +338,11 @@ TypePtr unionType(llvm::ArrayRef<TypePtr> memberTypes) {
 }
 
 TypePtr recordType(RecordDeclPtr record, llvm::ArrayRef<ObjectPtr> params) {
-    int h = pointerHash(record.ptr());
+    unsigned h = pointerHash(record.ptr());
     ObjectPtr const *pi, *pend;
     for (pi = params.begin(), pend = params.end(); pi != pend; ++pi)
         h += objectHash(*pi);
-    h &= recordTypes.size() - 1;
+    h &= unsigned(recordTypes.size() - 1);
     vector<RecordTypePtr>::iterator i, end;
     for (i = recordTypes[h].begin(), end = recordTypes[h].end();
          i != end; ++i) {
@@ -361,10 +360,10 @@ TypePtr recordType(RecordDeclPtr record, llvm::ArrayRef<ObjectPtr> params) {
 }
 
 TypePtr variantType(VariantDeclPtr variant, llvm::ArrayRef<ObjectPtr> params) {
-    int h = pointerHash(variant.ptr());
+    unsigned h = pointerHash(variant.ptr());
     for (unsigned i = 0; i < params.size(); ++i)
         h += objectHash(params[i]);
-    h &= variantTypes.size() - 1;
+    h &= unsigned(variantTypes.size() - 1);
     vector<VariantTypePtr> &bucket = variantTypes[h];
     for (unsigned i = 0; i < bucket.size(); ++i) {
         VariantType *t = bucket[i].ptr();
@@ -372,7 +371,7 @@ TypePtr variantType(VariantDeclPtr variant, llvm::ArrayRef<ObjectPtr> params) {
             return t;
     }
     VariantTypePtr t = new VariantType(variant);
-    for (unsigned i = 0; i < params.size(); ++i)
+    for (size_t i = 0; i < params.size(); ++i)
         t->params.push_back(params[i]);
     bucket.push_back(t);
     return t.ptr();
@@ -380,8 +379,8 @@ TypePtr variantType(VariantDeclPtr variant, llvm::ArrayRef<ObjectPtr> params) {
 
 TypePtr staticType(ObjectPtr obj)
 {
-    int h = objectHash(obj);
-    h &= staticTypes.size() - 1;
+    unsigned h = objectHash(obj);
+    h &= unsigned(staticTypes.size() - 1);
     vector<StaticTypePtr> &bucket = staticTypes[h];
     for (unsigned i = 0; i < bucket.size(); ++i) {
         if (objectEquals(obj, bucket[i]->obj))
@@ -475,7 +474,7 @@ bool isPrimitiveAggregateType(TypePtr t)
         return true;
     case TUPLE_TYPE : {
         TupleType *tt = (TupleType *)t.ptr();
-        for (unsigned i = 0; i < tt->elementTypes.size(); ++i) {
+        for (size_t i = 0; i < tt->elementTypes.size(); ++i) {
             if (!isPrimitiveAggregateType(tt->elementTypes[i]))
                 return false;
         }
@@ -657,7 +656,7 @@ void initializeRecordFields(RecordTypePtr t) {
     else
         assert(t->params.size() == r->params.size());
     EnvPtr env = new Env(r->env);
-    for (size_t i = 0; i < r->params.size(); ++i)
+    for (unsigned i = 0; i < r->params.size(); ++i)
         addLocal(env, r->params[i], t->params[i].ptr());
     if (r->varParam.ptr()) {
         MultiStaticPtr rest = new MultiStatic();
@@ -776,7 +775,7 @@ static void initializeVariantType(VariantTypePtr t) {
         llvm::ArrayRef<IdentifierPtr> params = t->variant->params;
         IdentifierPtr varParam = t->variant->varParam;
         assert(params.size() <= t->params.size());
-        for (size_t j = 0; j < params.size(); ++j)
+        for (unsigned j = 0; j < params.size(); ++j)
             addLocal(variantEnv, params[j], t->params[j]);
         if (varParam.ptr()) {
             MultiStaticPtr ms = new MultiStatic();
@@ -797,13 +796,13 @@ static void initializeVariantType(VariantTypePtr t) {
     evaluateMultiType(defaultInstances, variantEnv, t->memberTypes);
 
     llvm::ArrayRef<InstanceDeclPtr> instances = t->variant->instances;
-    for (size_t i = 0; i < instances.size(); ++i) {
+    for (unsigned i = 0; i < instances.size(); ++i) {
         InstanceDeclPtr x = instances[i];
         vector<PatternCellPtr> cells;
         vector<MultiPatternCellPtr> multiCells;
         llvm::ArrayRef<PatternVar> pvars = x->patternVars;
         EnvPtr patternEnv = new Env(x->env);
-        for (size_t j = 0; j < pvars.size(); ++j) {
+        for (unsigned j = 0; j < pvars.size(); ++j) {
             if (pvars[j].isMulti) {
                 MultiPatternCellPtr multiCell = new MultiPatternCell(NULL);
                 multiCells.push_back(multiCell);
@@ -943,27 +942,27 @@ static void verifyRecursionCorrectness(TypePtr t,
     }
     case TUPLE_TYPE : {
         TupleType *tt = (TupleType *)t.ptr();
-        for (unsigned i = 0; i < tt->elementTypes.size(); ++i)
+        for (size_t i = 0; i < tt->elementTypes.size(); ++i)
             verifyRecursionCorrectness(tt->elementTypes[i], visited);
         break;
     }
     case UNION_TYPE : {
         UnionType *ut = (UnionType *)t.ptr();
-        for (unsigned i = 0; i < ut->memberTypes.size(); ++i)
+        for (size_t i = 0; i < ut->memberTypes.size(); ++i)
             verifyRecursionCorrectness(ut->memberTypes[i], visited);
         break;
     }
     case RECORD_TYPE : {
         RecordType *rt = (RecordType *)t.ptr();
         llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(rt);
-        for (unsigned i = 0; i < fieldTypes.size(); ++i)
+        for (size_t i = 0; i < fieldTypes.size(); ++i)
             verifyRecursionCorrectness(fieldTypes[i], visited);  
         break;
     }
     case VARIANT_TYPE : {
         VariantType *vt = (VariantType *)t.ptr();
         llvm::ArrayRef<TypePtr> memberTypes = variantMemberTypes(vt);
-        for (unsigned i = 0; i < memberTypes.size(); ++i)
+        for (size_t i = 0; i < memberTypes.size(); ++i)
             verifyRecursionCorrectness(memberTypes[i], visited);
         break;
     }
@@ -985,11 +984,11 @@ static void verifyRecursionCorrectness(TypePtr t,
 // llvmIntType, llvmFloatType, llvmPointerType, llvmArrayType, llvmVoidType
 //
 
-llvm::Type *llvmIntType(int bits) {
+llvm::Type *llvmIntType(unsigned bits) {
     return llvm::IntegerType::get(llvm::getGlobalContext(), bits);
 }
 
-llvm::Type *llvmFloatType(int bits) {
+llvm::Type *llvmFloatType(unsigned bits) {
     switch (bits) {
     case 32 :
         return llvm::Type::getFloatTy(llvm::getGlobalContext());
@@ -1018,11 +1017,11 @@ llvm::PointerType *llvmPointerType(TypePtr t) {
     return llvmPointerType(t->llType);
 }
 
-llvm::Type *llvmArrayType(llvm::Type *llType, int size) {
+llvm::Type *llvmArrayType(llvm::Type *llType, unsigned size) {
     return llvm::ArrayType::get(llType, size);
 }
 
-llvm::Type *llvmArrayType(TypePtr type, int size) {
+llvm::Type *llvmArrayType(TypePtr type, unsigned size) {
     return llvmArrayType(llvmType(type), size);
 }
 
@@ -1038,7 +1037,7 @@ llvm::Type *CCodePointerType::getCallType() {
         vector< pair<unsigned, llvm::Attributes> > llAttributes;
         llvm::Type *llRetType =
             target->pushReturnType(this->callingConv, this->returnType, llArgTypes, llAttributes);
-        for (unsigned i = 0; i < this->argTypes.size(); ++i)
+        for (size_t i = 0; i < this->argTypes.size(); ++i)
             target->pushArgumentType(this->callingConv, this->argTypes[i], llArgTypes, llAttributes);
         llvm::FunctionType *llFuncType =
             llvm::FunctionType::get(llRetType, llArgTypes, this->hasVarArgs);
@@ -1157,9 +1156,9 @@ static void declareLLVMType(TypePtr t) {
     case CODE_POINTER_TYPE : {
         CodePointerType *x = (CodePointerType *)t.ptr();
         vector<llvm::Type *> llArgTypes;
-        for (unsigned i = 0; i < x->argTypes.size(); ++i)
+        for (size_t i = 0; i < x->argTypes.size(); ++i)
             llArgTypes.push_back(llvmPointerType(x->argTypes[i]));
-        for (unsigned i = 0; i < x->returnTypes.size(); ++i) {
+        for (size_t i = 0; i < x->returnTypes.size(); ++i) {
             TypePtr t = x->returnTypes[i];
             if (x->returnIsRef[i])
                 llArgTypes.push_back(llvmPointerType(pointerType(t)));
@@ -1172,7 +1171,7 @@ static void declareLLVMType(TypePtr t) {
         if (llvmDIBuilder != NULL) {
             vector<llvm::Value*> debugParamTypes;
             debugParamTypes.push_back(llvmVoidTypeDebugInfo());
-            for (unsigned i = 0; i < x->argTypes.size(); ++i) {
+            for (size_t i = 0; i < x->argTypes.size(); ++i) {
                 llvm::DIType argType = llvmTypeDebugInfo(x->argTypes[i]);
                 llvm::DIType argRefType
                     = llvmDIBuilder->createReferenceType(
@@ -1180,7 +1179,7 @@ static void declareLLVMType(TypePtr t) {
                         argType);
                 debugParamTypes.push_back(argRefType);
             }
-            for (unsigned i = 0; i < x->returnTypes.size(); ++i) {
+            for (size_t i = 0; i < x->returnTypes.size(); ++i) {
                 llvm::DIType returnType = llvmTypeDebugInfo(x->returnTypes[i]);
                 llvm::DIType returnRefType = x->returnIsRef[i]
                     ? llvmDIBuilder->createReferenceType(
@@ -1339,11 +1338,11 @@ static void declareLLVMType(TypePtr t) {
                  ++i)
             {
                 enumerators.push_back(
-                    llvmDIBuilder->createEnumerator((*i)->name->str, (*i)->index));
+                    llvmDIBuilder->createEnumerator((*i)->name->str, (unsigned)((*i)->index)));
             }
             llvm::DIArray enumArray = llvmDIBuilder->getOrCreateArray(enumerators);
 
-            int line, column;
+            unsigned line, column;
             llvm::DIFile file = getDebugLineCol(en->enumeration->location, line, column);
 
             t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createEnumerationType(
@@ -1462,7 +1461,7 @@ static void defineLLVMType(TypePtr t) {
         size_t maxAlign = 0;
         size_t maxAlignSize = 0;
         size_t maxSize = 0;
-        for (unsigned i = 0; i < x->memberTypes.size(); ++i) {
+        for (size_t i = 0; i < x->memberTypes.size(); ++i) {
             llvm::Type *llt = llvmType(x->memberTypes[i]);
             size_t align = (size_t)llvmDataLayout->getABITypeAlignment(llt);
             size_t size = (size_t)llvmDataLayout->getTypeAllocSize(llt);
@@ -1569,7 +1568,7 @@ static void defineLLVMType(TypePtr t) {
                             Location fieldLocation = fieldNames[i]->location;
                             if (!fieldLocation.ok())
                                 fieldLocation = x->record->location;
-                            int fieldLine, fieldColumn;
+                            unsigned fieldLine, fieldColumn;
                             llvm::DIFile fieldFile = getDebugLineCol(fieldLocation, fieldLine, fieldColumn);
                             members.push_back(llvmDIBuilder->createMemberType(
                                 placeholder,
@@ -1594,7 +1593,7 @@ static void defineLLVMType(TypePtr t) {
                         Location fieldLocation = fieldNames[i]->location;
                         if (!fieldLocation.ok())
                             fieldLocation = x->record->location;
-                        int fieldLine, fieldColumn;
+                        unsigned fieldLine, fieldColumn;
                         llvm::DIFile fieldFile = getDebugLineCol(fieldLocation, fieldLine, fieldColumn);
                         members.push_back(llvmDIBuilder->createMemberType(
                             placeholder,
@@ -1618,7 +1617,7 @@ static void defineLLVMType(TypePtr t) {
                     Location fieldLocation = fieldNames[i]->location;
                     if (!fieldLocation.ok())
                         fieldLocation = x->record->location;
-                    int fieldLine, fieldColumn;
+                    unsigned fieldLine, fieldColumn;
                     llvm::DIFile fieldFile = getDebugLineCol(fieldLocation, fieldLine, fieldColumn);
                     members.push_back(llvmDIBuilder->createMemberType(
                         placeholder,
@@ -1638,7 +1637,7 @@ static void defineLLVMType(TypePtr t) {
             llvm::DIArray memberArray = llvmDIBuilder->getOrCreateArray(
                 llvm::makeArrayRef(members));
 
-            int line, column;
+            unsigned line, column;
             llvm::DIFile file = getDebugLineCol(x->record->location, line, column);
 
             t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createStructType(

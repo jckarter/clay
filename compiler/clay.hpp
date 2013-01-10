@@ -225,7 +225,7 @@ struct uint128_holder {
     uint128_holder() {}
     explicit uint128_holder(size64_t low) : lowValue(low), highPad(0) {}
     uint128_holder(size64_t low, size64_t high) : lowValue(low), highPad(high) {}
-    explicit uint128_holder(int128_holder y) : lowValue(y.lowValue), highPad(y.highPad) {}
+    explicit uint128_holder(int128_holder y) : lowValue((size64_t)y.lowValue), highPad((size64_t)y.highPad) {}
 
     uint128_holder &operator=(size64_t low) {
         new ((void*)this) uint128_holder(low);
@@ -286,7 +286,7 @@ public:
 namespace clay {
 
 inline int128_holder::int128_holder(uint128_holder y)
-    : lowValue(y.lowValue), highPad(y.highPad) {}
+    : lowValue((ptrdiff64_t)y.lowValue), highPad((ptrdiff64_t)y.highPad) {}
 
 typedef int128_holder clay_int128;
 typedef uint128_holder clay_uint128;
@@ -789,11 +789,11 @@ struct Source : public Object {
 
 struct Location {
     SourcePtr source;
-    size_t offset;
+    unsigned offset;
 
     Location()
         : source(NULL), offset(0) {}
-    Location(const SourcePtr &source, size_t offset)
+    Location(const SourcePtr &source, unsigned offset)
         : source(source), offset(offset) {}
 
     bool ok() const { return source != NULL; }
@@ -899,13 +899,13 @@ inline void error(T const *context, llvm::Twine const &msg)
     error(context->location, msg);
 }
 
-void argumentError(unsigned int index, llvm::StringRef msg);
+void argumentError(size_t index, llvm::StringRef msg);
 
-void arityError(int expected, int received);
-void arityError2(int minExpected, int received);
+void arityError(size_t expected, size_t received);
+void arityError2(size_t minExpected, size_t received);
 
 template <class T>
-inline void arityError(Pointer<T> context, int expected, int received)
+inline void arityError(Pointer<T> context, size_t expected, size_t received)
 {
     if (context->location.ok())
         pushLocation(context->location);
@@ -913,7 +913,7 @@ inline void arityError(Pointer<T> context, int expected, int received)
 }
 
 template <class T>
-inline void arityError2(Pointer<T> context, int minExpected, int received)
+inline void arityError2(Pointer<T> context, size_t minExpected, size_t received)
 {
     if (context->location.ok())
         pushLocation(context->location);
@@ -937,19 +937,19 @@ inline void ensureArity2(T const &args, size_t size, bool hasVarArgs)
 {
     if (!hasVarArgs)
         ensureArity(args, size);
-    else if ((int)args.size() < size)
+    else if (args.size() < size)
         arityError2(size, args.size());
 }
 
-void arityMismatchError(int leftArity, int rightArity, bool hasVarArg);
+void arityMismatchError(size_t leftArity, size_t rightArity, bool hasVarArg);
 
 void typeError(llvm::StringRef expected, TypePtr receivedType);
 void typeError(TypePtr expectedType, TypePtr receivedType);
 
-void argumentTypeError(unsigned int index,
+void argumentTypeError(unsigned index,
                        llvm::StringRef expected,
                        TypePtr receivedType);
-void argumentTypeError(unsigned int index,
+void argumentTypeError(unsigned index,
                        TypePtr expectedType,
                        TypePtr receivedType);
 
@@ -957,22 +957,22 @@ void indexRangeError(llvm::StringRef kind,
                      size_t value,
                      size_t maxValue);
 
-void argumentIndexRangeError(unsigned int index,
+void argumentIndexRangeError(unsigned index,
                              llvm::StringRef kind,
                              size_t value,
                              size_t maxValue);
 
 void getLineCol(Location const &location,
-                int &line,
-                int &column,
-                int &tabColumn);
+                unsigned &line,
+                unsigned &column,
+                unsigned &tabColumn);
 
-llvm::DIFile getDebugLineCol(Location const &location, int &line, int &column);
+llvm::DIFile getDebugLineCol(Location const &location, unsigned &line, unsigned &column);
 
 void printFileLineCol(llvm::raw_ostream &out, Location const &location);
 
 void invalidStaticObjectError(ObjectPtr obj);
-void argumentInvalidStaticObjectError(unsigned int index, ObjectPtr obj);
+void argumentInvalidStaticObjectError(unsigned index, ObjectPtr obj);
 
 struct DebugPrinter {
     static int indent;
@@ -1025,7 +1025,7 @@ struct Identifier : public ANode {
 };
 
 struct DottedName : public ANode {
-    vector<IdentifierPtr> parts;
+    llvm::SmallVector<IdentifierPtr, 2> parts;
     DottedName()
         : ANode(DOTTED_NAME) {}
     DottedName(llvm::ArrayRef<IdentifierPtr> parts)
@@ -2227,7 +2227,8 @@ enum DocumentationAnnotation
     SectionAnnotation,
     ModuleAnnotation,
     OverloadAnnotation,
-    RecordAnnotion
+    RecordAnnotion,
+    InvalidAnnotation
 };
 
 struct Documentation : public TopLevelItem {
@@ -2608,23 +2609,23 @@ struct BoolType : public Type {
 };
 
 struct IntegerType : public Type {
-    int bits:15;
+    unsigned bits:15;
     bool isSigned:1;
-    IntegerType(int bits, bool isSigned)
+    IntegerType(unsigned bits, bool isSigned)
         : Type(INTEGER_TYPE), bits(bits), isSigned(isSigned) {}
 };
 
 struct FloatType : public Type {
-    int bits:15;
+    unsigned bits:15;
     bool isImaginary:1;
-    FloatType(int bits, bool isImaginary)
+    FloatType(unsigned bits, bool isImaginary)
         : Type(FLOAT_TYPE), bits(bits), isImaginary(isImaginary){}
 };
 
 struct ComplexType : public Type {
     const llvm::StructLayout *layout;
-    int bits:15;
-    ComplexType(int bits)
+    unsigned bits:15;
+    ComplexType(unsigned bits)
         : Type(COMPLEX_TYPE), layout(NULL), bits(bits) {}
 };
 
@@ -2670,15 +2671,15 @@ struct CCodePointerType : public Type {
 
 struct ArrayType : public Type {
     TypePtr elementType;
-    int size;
-    ArrayType(TypePtr elementType, int size)
+    unsigned size;
+    ArrayType(TypePtr elementType, unsigned size)
         : Type(ARRAY_TYPE), elementType(elementType), size(size) {}
 };
 
 struct VecType : public Type {
     TypePtr elementType;
-    int size;
-    VecType(TypePtr elementType, int size)
+    unsigned size;
+    VecType(TypePtr elementType, unsigned size)
         : Type(VEC_TYPE), elementType(elementType), size(size) {}
 };
 
@@ -2723,10 +2724,10 @@ struct RecordType : public Type {
         : Type(RECORD_TYPE), record(record), params(params),
           layout(NULL), fieldsInitialized(false), hasVarField(false) {}
 
-    unsigned varFieldSize() {
+    size_t varFieldSize() {
         return fieldTypes.size() - fieldNames.size() + 1;
     }
-    unsigned fieldCount() {
+    size_t fieldCount() {
         return fieldNames.size();
     }
 };

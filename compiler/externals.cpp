@@ -376,10 +376,10 @@ struct X86_32_ExternalTarget : public ExternalTarget {
             if (passVecAsNonaggregate)
                 return PASS_THROUGH;
             else
-                return typeSize(type);
+                return int(typeSize(type));
 
         case COMPLEX_TYPE:
-            return typeSize(type);
+            return int(typeSize(type));
 
         case VARIANT_TYPE:
         case UNION_TYPE:
@@ -388,7 +388,7 @@ struct X86_32_ExternalTarget : public ExternalTarget {
             if (alwaysPassStructsOnStack)
                 return PASS_ON_STACK;
             else
-                return typeSize(type);
+                return int(typeSize(type));
         
         case NEW_TYPE: {
             NewType *nt = (NewType*)type.ptr();
@@ -407,7 +407,7 @@ struct X86_32_ExternalTarget : public ExternalTarget {
         case 2:
         case 4:
         case 8:
-            return llvmIntType(8*size);
+            return llvmIntType(unsigned(8*size));
         default:
             return NULL;
         }
@@ -666,7 +666,7 @@ static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_
     size_t misalign = offset % typeAlignment(type);
     if (misalign != 0) {
         for (size_t i = offset/8; i < (offset+typeSize(type)+7)/8; ++i)
-            unifyWordClass(begin + i, MEMORY);
+            unifyWordClass(begin + (long int)i, MEMORY);
         return;
     }
 
@@ -678,7 +678,7 @@ static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_
     case POINTER_TYPE:
     case CODE_POINTER_TYPE:
     case CCODE_POINTER_TYPE: {
-        unifyWordClass(begin + offset/8, INTEGER);
+        unifyWordClass(begin + (long int)offset/8, INTEGER);
         break;
     }
     case FLOAT_TYPE: {
@@ -686,16 +686,16 @@ static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_
         switch (x->bits) {
         case 32:
             if (offset % 8 == 4)
-                unifyWordClass(begin + offset/8, SSE_FLOAT_VECTOR);
+                unifyWordClass(begin + (long int)offset/8, SSE_FLOAT_VECTOR);
             else
-                unifyWordClass(begin + offset/8, SSE_FLOAT_SCALAR);
+                unifyWordClass(begin + (long int)offset/8, SSE_FLOAT_SCALAR);
             break;
         case 64:
-            unifyWordClass(begin + offset/8, SSE_DOUBLE_SCALAR);
+            unifyWordClass(begin + (long int)offset/8, SSE_DOUBLE_SCALAR);
             break;
         case 80:
-            unifyWordClass(begin + offset/8, X87);
-            unifyWordClass(begin + offset/8 + 1, X87UP);
+            unifyWordClass(begin + (long int)offset/8, X87);
+            unifyWordClass(begin + (long int)offset/8 + 1, X87UP);
             break;
         default:
             assert(false);
@@ -709,13 +709,13 @@ static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_
         case 32:
         case 64:
             _classifyType(floatType(complexType->bits), begin, offset);
-            _classifyType(imagType(complexType->bits), begin, offset + complexType->bits/8);
+            _classifyType(imagType(complexType->bits), begin, offset + (size_t)complexType->bits/8);
             break;
         case 80:
-            unifyWordClass(begin + offset/8, COMPLEX_X87);
-            unifyWordClass(begin + offset/8 + 1, COMPLEX_X87);
-            unifyWordClass(begin + offset/8 + 2, COMPLEX_X87);
-            unifyWordClass(begin + offset/8 + 3, COMPLEX_X87);
+            unifyWordClass(begin + (long int)offset/8, COMPLEX_X87);
+            unifyWordClass(begin + (long int)offset/8 + 1, COMPLEX_X87);
+            unifyWordClass(begin + (long int)offset/8 + 2, COMPLEX_X87);
+            unifyWordClass(begin + (long int)offset/8 + 3, COMPLEX_X87);
             break;
         default:
             assert(false);
@@ -725,7 +725,6 @@ static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_
     }
     case ARRAY_TYPE: {
         ArrayType *arrayType = (ArrayType *)type.ptr();
-        assert(arrayType->size >= 0);
         for (size_t i = 0; i < (size_t)arrayType->size; ++i)
             _classifyType(arrayType->elementType, begin,
                           offset + i * typeSize(arrayType->elementType));
@@ -738,10 +737,10 @@ static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_
             FloatType *floatElementType = (FloatType*)vecType->elementType.ptr();
             switch (floatElementType->bits) {
             case 32:
-                unifyWordClass(begin + offset/8, SSE_FLOAT_VECTOR);
+                unifyWordClass(begin + (long int)offset/8, SSE_FLOAT_VECTOR);
                 break;
             case 64:
-                unifyWordClass(begin + offset/8, SSE_DOUBLE_VECTOR);
+                unifyWordClass(begin + (long int)offset/8, SSE_DOUBLE_VECTOR);
                 break;
             case 80:
                 error("Float80 vec types not supported");
@@ -749,11 +748,11 @@ static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_
             }
         }
         default:
-            unifyWordClass(begin + offset/8, SSE_INT_VECTOR);
+            unifyWordClass(begin + (long int)offset/8, SSE_INT_VECTOR);
             break;
         }
         for (size_t i = 1; i < (typeSize(type)+7)/8; ++i)
-            unifyWordClass(begin + offset/8 + i, SSEUP);
+            unifyWordClass(begin + (long int)(offset/8 + i), SSEUP);
         break;
     }
     case VARIANT_TYPE: {
@@ -901,13 +900,13 @@ llvm::Type *X86_64_ExternalTarget::llvmWordType(TypePtr type)
             assert(false);
             break;
         case INTEGER: {
-            size_t wordSize = size >= 8 ? 64 : size*8;
+            unsigned wordSize = size >= 8 ? 64 : unsigned(size*8);
             llWordTypes.push_back(llvmIntType(wordSize));
             ++i;
             break;
         }
         case SSE_INT_VECTOR: {
-            int vectorRun = 0;
+            unsigned vectorRun = 0;
             do { ++vectorRun; ++i; } while (i != wordClasses.end() && *i == SSEUP);
             // 8-byte int vectors are allocated to MMX registers, so always generate
             // a <float x n> vector for 64-bit SSE words.
@@ -918,13 +917,13 @@ llvm::Type *X86_64_ExternalTarget::llvmWordType(TypePtr type)
             break;
         }
         case SSE_FLOAT_VECTOR: {
-            int vectorRun = 0;
+            unsigned vectorRun = 0;
             do { ++vectorRun; ++i; } while (i != wordClasses.end() && *i == SSEUP);
             llWordTypes.push_back(llvm::VectorType::get(llvmFloatType(32), vectorRun*2));
             break;
         }
         case SSE_DOUBLE_VECTOR: {
-            int vectorRun = 0;
+            unsigned vectorRun = 0;
             do { ++vectorRun; ++i; } while (i != wordClasses.end() && *i == SSEUP);
             llWordTypes.push_back(llvm::VectorType::get(llvmFloatType(64), vectorRun));
             break;

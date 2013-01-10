@@ -34,15 +34,15 @@ enum TokenKind {
 struct Token {
     Location location;
     llvm::SmallString<16> str;
-    int tokenKind;
+    TokenKind tokenKind;
     Token() : tokenKind(T_NONE) {}
-    explicit Token(int tokenKind) : tokenKind(tokenKind) {}
-    explicit Token(int tokenKind, llvm::StringRef str) : str(str), tokenKind(tokenKind) {}
+    explicit Token(TokenKind tokenKind) : tokenKind(tokenKind) {}
+    explicit Token(TokenKind tokenKind, llvm::StringRef str) : str(str), tokenKind(tokenKind) {}
 };
 
 void tokenize(SourcePtr source, vector<Token> &tokens);
 
-void tokenize(SourcePtr source, size_t offset, size_t length,
+void tokenize(SourcePtr source, unsigned offset, size_t length,
               vector<Token> &tokens);
 
 bool isSpace(char c);

@@ -143,8 +143,8 @@ InvokeSet* lookupInvokeSet(ObjectPtr callable,
 {
     if (!invokeTablesInitialized)
         initInvokeTables();
-    int h = objectHash(callable) + objectVectorHash(argsKey);
-    h &= (invokeTable.size() - 1);
+    unsigned h = objectHash(callable) + objectVectorHash(argsKey);
+    h &= unsigned(invokeTable.size() - 1);
     llvm::SmallVector<InvokeSet*, 2> &bucket = invokeTable[h];
     for (unsigned i = 0; i < bucket.size(); ++i) {
         InvokeSet* invokeSet = bucket[i];
@@ -166,8 +166,8 @@ InvokeSet* lookupInvokeSet(ObjectPtr callable,
 vector<InvokeSet*> lookupInvokeSets(ObjectPtr callable) {
     assert(invokeTablesInitialized);
     vector<InvokeSet*> r;
-    for (size_t i = 0; i < invokeTable.size(); ++i) {
-        for (size_t j = 0; j < invokeTable[i].size(); ++j) {
+    for (unsigned i = 0; i < invokeTable.size(); ++i) {
+        for (unsigned j = 0; j < invokeTable[i].size(); ++j) {
             InvokeSet* set = invokeTable[i][j];
             if (objectEquals(set->callable, callable)) {
                 r.push_back(set);
@@ -275,8 +275,8 @@ static bool matchTempness(CodePtr code,
     tempnessKey.clear();
     forwardedRValueFlags.clear();
     
-    unsigned varArgSize = argsTempness.size()-fargs.size()+1;
-    for (unsigned i = 0, j = 0; i < fargs.size(); ++i) {
+    size_t varArgSize = argsTempness.size()-fargs.size()+1;
+    for (size_t i = 0, j = 0; i < fargs.size(); ++i) {
         if (callByName && (fargs[i]->tempness == TEMPNESS_FORWARD)) {
                 error(fargs[i], "forwarded arguments are not allowed "
                       "in call-by-name procedures");

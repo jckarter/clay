@@ -27,7 +27,7 @@ void displayCounts() {
         ++cmi;
     }
     sort(counts.begin(), counts.end());
-    for (unsigned i = 0; i < counts.size(); ++i) {
+    for (size_t i = 0; i < counts.size(); ++i) {
         llvm::outs() << counts[i].second << " - " << counts[i].first << '\n';
     }
 }

@@ -37,12 +37,12 @@ extern TypePtr cPtrDiffTType;
 
 void initTypes();
 
-TypePtr integerType(int bits, bool isSigned);
-TypePtr intType(int bits);
-TypePtr uintType(int bits);
-TypePtr floatType(int bits);
-TypePtr imagType(int bits);
-TypePtr complexType(int bits);
+TypePtr integerType(unsigned int bits, bool isSigned);
+TypePtr intType(unsigned int bits);
+TypePtr uintType(unsigned int bits);
+TypePtr floatType(unsigned int bits);
+TypePtr imagType(unsigned int bits);
+TypePtr complexType(unsigned int bits);
 TypePtr pointerType(TypePtr pointeeType);
 TypePtr codePointerType(llvm::ArrayRef<TypePtr> argTypes,
                         llvm::ArrayRef<uint8_t> returnIsRef,
@@ -51,8 +51,8 @@ TypePtr cCodePointerType(CallingConv callingConv,
                          llvm::ArrayRef<TypePtr> argTypes,
                          bool hasVarArgs,
                          TypePtr returnType);
-TypePtr arrayType(TypePtr elememtType, int size);
-TypePtr vecType(TypePtr elementType, int size);
+TypePtr arrayType(TypePtr elememtType, unsigned int size);
+TypePtr vecType(TypePtr elementType, unsigned int size);
 TypePtr tupleType(llvm::ArrayRef<TypePtr> elementTypes);
 TypePtr unionType(llvm::ArrayRef<TypePtr> memberTypes);
 TypePtr recordType(RecordDeclPtr record, llvm::ArrayRef<ObjectPtr> params);
@@ -84,12 +84,12 @@ const llvm::StructLayout *tupleTypeLayout(TupleType *t);
 const llvm::StructLayout *complexTypeLayout(ComplexType *t);
 const llvm::StructLayout *recordTypeLayout(RecordType *t);
 
-llvm::Type *llvmIntType(int bits);
-llvm::Type *llvmFloatType(int bits);
+llvm::Type *llvmIntType(unsigned int bits);
+llvm::Type *llvmFloatType(unsigned int bits);
 llvm::PointerType *llvmPointerType(llvm::Type *llType);
 llvm::PointerType *llvmPointerType(TypePtr t);
-llvm::Type *llvmArrayType(llvm::Type *llType, int size);
-llvm::Type *llvmArrayType(TypePtr type, int size);
+llvm::Type *llvmArrayType(llvm::Type *llType, unsigned int size);
+llvm::Type *llvmArrayType(TypePtr type, unsigned int size);
 llvm::Type *llvmVoidType();
 
 llvm::Type *llvmType(TypePtr t);

@@ -110,7 +110,7 @@ static vector<FormalArgPtr> identV(IdentifierPtr x) {
     return v;
 }
 
-static vector<FormalArgPtr> identVtoFormalV(vector<IdentifierPtr> x) {
+static vector<FormalArgPtr> identVtoFormalV(llvm::ArrayRef<IdentifierPtr> x) {
     vector<FormalArgPtr> v;
     for(size_t i=0; i<x.size(); ++i)
         v.push_back(new FormalArg(x[i], NULL));
@@ -209,7 +209,7 @@ StatementPtr desugarCatchBlocks(llvm::ArrayRef<CatchPtr> catchBlocks) {
     bool lastWasAny = false;
     IfPtr lastIf;
     StatementPtr result;
-    for (unsigned i = 0; i < catchBlocks.size(); ++i) {
+    for (size_t i = 0; i < catchBlocks.size(); ++i) {
         CatchPtr x = catchBlocks[i];
         if (lastWasAny)
             error(x, "unreachable catch block");
@@ -325,7 +325,7 @@ StatementPtr desugarSwitchStatement(SwitchPtr x) {
     StatementPtr *nextPtr = &root;
 
     // dispatch logic
-    for (unsigned i = 0; i < x->caseBlocks.size(); ++i) {
+    for (size_t i = 0; i < x->caseBlocks.size(); ++i) {
         CaseBlockPtr caseBlock = x->caseBlocks[i];
 
         ExprListPtr caseArgs = new ExprList(thingRef.ptr());
@@ -357,7 +357,7 @@ static SourcePtr evalToSource(Location const &location, ExprListPtr args, EnvPtr
     llvm::SmallString<128> sourceTextBuf;
     llvm::raw_svector_ostream sourceTextOut(sourceTextBuf);
     MultiStaticPtr values = evaluateMultiStatic(args, env);
-    for (unsigned i = 0; i < values->size(); ++i) {
+    for (size_t i = 0; i < values->size(); ++i) {
         printStaticName(sourceTextOut, values->values[i]);
     }
 
@@ -378,7 +378,7 @@ ExprListPtr desugarEvalExpr(EvalExprPtr eval, EnvPtr env)
         return eval->value;
     else {
         SourcePtr source = evalToSource(eval->location, new ExprList(eval->args), env);
-        eval->value = parseExprList(source, 0, source->size());
+        eval->value = parseExprList(source, 0, unsigned(source->size()));
         eval->evaled = true;
         return eval->value;
     }
@@ -390,7 +390,7 @@ llvm::ArrayRef<StatementPtr> desugarEvalStatement(EvalStatementPtr eval, EnvPtr 
         return eval->value;
     else {
         SourcePtr source = evalToSource(eval->location, eval->args, env);
-        parseStatements(source, 0, source->size(), eval->value);
+        parseStatements(source, 0, unsigned(source->size()), eval->value);
         eval->evaled = true;
         return eval->value;
     }
@@ -402,7 +402,7 @@ llvm::ArrayRef<TopLevelItemPtr> desugarEvalTopLevel(EvalTopLevelPtr eval, EnvPtr
         return eval->value;
     else {
         SourcePtr source = evalToSource(eval->location, eval->args, env);
-        parseTopLevelItems(source, 0, source->size(), eval->value, eval->module);
+        parseTopLevelItems(source, 0, unsigned(source->size()), eval->value, eval->module);
         eval->evaled = true;
         return eval->value;
     }

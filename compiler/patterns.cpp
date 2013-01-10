@@ -66,7 +66,7 @@ MultiStaticPtr derefDeep(MultiPatternPtr x)
     case MULTI_PATTERN_LIST : {
         MultiPatternList *y = (MultiPatternList *)x.ptr();
         MultiStaticPtr out = new MultiStatic();
-        for (unsigned i = 0; i < y->items.size(); ++i) {
+        for (size_t i = 0; i < y->items.size(); ++i) {
             ObjectPtr z = derefDeep(y->items[i]);
             if (!z)
                 return NULL;
@@ -134,12 +134,12 @@ static PatternPtr objectToPattern(ObjectPtr obj)
             CodePointerType *cpt = (CodePointerType *)t;
             ObjectPtr head = primitive_CodePointer();
             MultiPatternListPtr argTypes = new MultiPatternList();
-            for (unsigned i = 0; i < cpt->argTypes.size(); ++i) {
+            for (size_t i = 0; i < cpt->argTypes.size(); ++i) {
                 PatternPtr x = objectToPattern(cpt->argTypes[i].ptr());
                 argTypes->items.push_back(x);
             }
             MultiPatternListPtr returnTypes = new MultiPatternList();
-            for (unsigned i = 0; i < cpt->returnTypes.size(); ++i) {
+            for (size_t i = 0; i < cpt->returnTypes.size(); ++i) {
                 TypePtr t = cpt->returnTypes[i];
                 if (cpt->returnIsRef[i]) {
                     ObjectPtr obj = primitive_ByRef();
@@ -186,7 +186,7 @@ static PatternPtr objectToPattern(ObjectPtr obj)
             ValueHolderPtr varArgParam = boolToValueHolder(cpt->hasVarArgs);
 
             MultiPatternListPtr argTypes = new MultiPatternList();
-            for (unsigned i = 0; i < cpt->argTypes.size(); ++i) {
+            for (size_t i = 0; i < cpt->argTypes.size(); ++i) {
                 PatternPtr x = objectToPattern(cpt->argTypes[i].ptr());
                 argTypes->items.push_back(x);
             }
@@ -209,7 +209,7 @@ static PatternPtr objectToPattern(ObjectPtr obj)
             ObjectPtr head = primitive_Array();
             MultiPatternListPtr params = new MultiPatternList();
             params->items.push_back(objectToPattern(at->elementType.ptr()));
-            ValueHolderPtr vh = intToValueHolder(at->size);
+            ValueHolderPtr vh = intToValueHolder((int)at->size);
             params->items.push_back(objectToPattern(vh.ptr()));
             return new PatternStruct(head, params.ptr());
         }
@@ -218,7 +218,7 @@ static PatternPtr objectToPattern(ObjectPtr obj)
             ObjectPtr head = primitive_Vec();
             MultiPatternListPtr params = new MultiPatternList();
             params->items.push_back(objectToPattern(vt->elementType.ptr()));
-            ValueHolderPtr vh = intToValueHolder(vt->size);
+            ValueHolderPtr vh = intToValueHolder((int)vt->size);
             params->items.push_back(objectToPattern(vh.ptr()));
             return new PatternStruct(head, params.ptr());
         }
@@ -226,7 +226,7 @@ static PatternPtr objectToPattern(ObjectPtr obj)
             TupleType *tt = (TupleType *)t;
             ObjectPtr head = primitive_Tuple();
             MultiPatternListPtr params = new MultiPatternList();
-            for (unsigned i = 0; i < tt->elementTypes.size(); ++i) {
+            for (size_t i = 0; i < tt->elementTypes.size(); ++i) {
                 PatternPtr x = objectToPattern(tt->elementTypes[i].ptr());
                 params->items.push_back(x);
             }
@@ -236,7 +236,7 @@ static PatternPtr objectToPattern(ObjectPtr obj)
             UnionType *ut = (UnionType *)t;
             ObjectPtr head = primitive_Union();
             MultiPatternListPtr params = new MultiPatternList();
-            for (unsigned i = 0; i < ut->memberTypes.size(); ++i) {
+            for (size_t i = 0; i < ut->memberTypes.size(); ++i) {
                 PatternPtr x = objectToPattern(ut->memberTypes[i].ptr());
                 params->items.push_back(x);
             }
@@ -253,7 +253,7 @@ static PatternPtr objectToPattern(ObjectPtr obj)
             RecordType *rt = (RecordType *)t;
             ObjectPtr head = rt->record.ptr();
             MultiPatternListPtr params = new MultiPatternList();
-            for (unsigned i = 0; i < rt->params.size(); ++i) {
+            for (size_t i = 0; i < rt->params.size(); ++i) {
                 PatternPtr x = objectToPattern(rt->params[i]);
                 params->items.push_back(x);
             }
@@ -263,7 +263,7 @@ static PatternPtr objectToPattern(ObjectPtr obj)
             VariantType *vt = (VariantType *)t;
             ObjectPtr head = vt->variant.ptr();
             MultiPatternListPtr params = new MultiPatternList();
-            for (unsigned i = 0; i < vt->params.size(); ++i) {
+            for (size_t i = 0; i < vt->params.size(); ++i) {
                 PatternPtr x = objectToPattern(vt->params[i]);
                 params->items.push_back(x);
             }
@@ -380,7 +380,7 @@ bool unifyMulti(MultiPatternPtr a, MultiStaticPtr b)
 {
     assert(a.ptr() && b.ptr());
     MultiPatternListPtr b2 = new MultiPatternList();
-    for (unsigned i = 0; i < b->size(); ++i)
+    for (size_t i = 0; i < b->size(); ++i)
         b2->items.push_back(objectToPattern(b->values[i]));
     return unifyMulti(a, b2.ptr());
 }
@@ -410,7 +410,7 @@ bool unifyMulti(MultiPatternPtr a, MultiPatternPtr b)
 static MultiPatternListPtr subList(MultiPatternListPtr x, unsigned index)
 {
     MultiPatternListPtr subList = new MultiPatternList();
-    for (unsigned i = index; i < x->items.size(); ++i)
+    for (size_t i = index; i < x->items.size(); ++i)
         subList->items.push_back(x->items[i]);
     subList->tail = x->tail;
     return subList;
@@ -666,7 +666,7 @@ PatternPtr evaluateAliasPattern(GlobalAliasPtr x, MultiPatternPtr params)
 {
     MultiPatternListPtr args = new MultiPatternList();
     EnvPtr env = new Env(x->env);
-    for (unsigned i = 0; i < x->params.size(); ++i) {
+    for (size_t i = 0; i < x->params.size(); ++i) {
         PatternCellPtr cell = new PatternCell(NULL);
         args->items.push_back(cell.ptr());
         addLocal(env, x->params[i], cell.ptr());
@@ -723,7 +723,7 @@ static bool appendPattern(MultiPatternListPtr &cur, MultiPatternPtr x)
         if (!y->items.empty()) {
             if (!cur)
                 return false;
-            for (unsigned i = 0; i < y->items.size(); ++i)
+            for (size_t i = 0; i < y->items.size(); ++i)
                 cur->items.push_back(y->items[i]);
         }
         if (y->tail.ptr())
@@ -740,7 +740,7 @@ MultiPatternPtr evaluateMultiPattern(ExprListPtr exprs, EnvPtr env)
 {
     MultiPatternListPtr out = new MultiPatternList();
     MultiPatternListPtr cur = out;
-    for (unsigned i = 0; i < exprs->size(); ++i) {
+    for (size_t i = 0; i < exprs->size(); ++i) {
         assert(!cur || !cur->tail);
         ExprPtr x = exprs->exprs[i];
         if (x->exprKind == UNPACK) {
@@ -756,7 +756,7 @@ MultiPatternPtr evaluateMultiPattern(ExprListPtr exprs, EnvPtr env)
                 if (!cur && (z->size() > 0))
                     error(x, "expressions cannot occur after "
                           "multi-pattern variable");
-                for (unsigned j = 0; j < z->size(); ++j) {
+                for (size_t j = 0; j < z->size(); ++j) {
                     PatternPtr p = new PatternCell(z->values[i]);
                     cur->items.push_back(p);
                 }

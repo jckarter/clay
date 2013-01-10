@@ -18,7 +18,7 @@ struct AnalysisCachingDisabler {
 };
 
 
-void initializeStaticForClones(StaticForPtr x, unsigned count);
+void initializeStaticForClones(StaticForPtr x, size_t count);
 bool returnKindToByRef(ReturnKind returnKind, PVData const &pv);
 
 MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args);
@@ -41,7 +41,7 @@ BoolKind typeBoolKind(TypePtr type);
 
 
 PVData safeAnalyzeOne(ExprPtr expr, EnvPtr env);
-MultiPValuePtr safeAnalyzeMulti(ExprListPtr exprs, EnvPtr env, unsigned wantCount);
+MultiPValuePtr safeAnalyzeMulti(ExprListPtr exprs, EnvPtr env, size_t wantCount);
 MultiPValuePtr safeAnalyzeExpr(ExprPtr expr, EnvPtr env);
 MultiPValuePtr safeAnalyzeIndexingExpr(ExprPtr indexable,
                                        ExprListPtr args,
@@ -58,7 +58,7 @@ MultiPValuePtr safeAnalyzeCallByName(InvokeEntry* entry,
                                      EnvPtr env);
 MultiPValuePtr safeAnalyzeGVarInstance(GVarInstancePtr x);
 
-MultiPValuePtr analyzeMulti(ExprListPtr exprs, EnvPtr env, unsigned wantCount);
+MultiPValuePtr analyzeMulti(ExprListPtr exprs, EnvPtr env, size_t wantCount);
 PVData analyzeOne(ExprPtr expr, EnvPtr env);
 
 MultiPValuePtr analyzeMultiArgs(ExprListPtr exprs,
@@ -144,7 +144,7 @@ enum StatementAnalysis {
     SA_TERMINATED
 };
 
-ExprPtr implicitUnpackExpr(unsigned wantCount, ExprListPtr exprs);
+ExprPtr implicitUnpackExpr(size_t wantCount, ExprListPtr exprs);
 
 }
 
