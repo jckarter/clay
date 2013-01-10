@@ -263,15 +263,8 @@ static void generateLLVM(llvm::Module *module, bool emitAsm, llvm::raw_ostream *
 static void generateAssembly(llvm::Module *module,
                              llvm::TargetMachine *targetMachine,
                              llvm::raw_ostream *out,
-                             bool emitObject,
-                             unsigned optLevel,
-                             bool sharedLib,
-                             bool genPIC,
-                             bool debug)
+                             bool emitObject)
 {
-    if (optLevel < 2 || debug)
-        targetMachine->Options.NoFramePointerElim = 1;
-
     llvm::FunctionPassManager fpasses(module);
 
     fpasses.add(new llvm::DataLayout(module));
@@ -284,15 +277,7 @@ static void generateAssembly(llvm::Module *module,
         ? llvm::TargetMachine::CGFT_ObjectFile
         : llvm::TargetMachine::CGFT_AssemblyFile;
 
-    llvm::CodeGenOpt::Level level;
-    switch (optLevel) {
-    case 0 : level = llvm::CodeGenOpt::None; break;
-    case 1 : level = llvm::CodeGenOpt::Less; break;
-    case 2 : level = llvm::CodeGenOpt::Default; break;
-    default : level = llvm::CodeGenOpt::Aggressive; break;
-    }
-    bool result = targetMachine->addPassesToEmitFile(
-        fpasses, fout, fileType, level);
+    bool result = targetMachine->addPassesToEmitFile(fpasses, fout, fileType);
     assert(!result);
 
     fpasses.doInitialization();
@@ -326,10 +311,8 @@ static bool generateBinary(llvm::Module *module,
                            llvm::TargetMachine *targetMachine,
                            llvm::Twine const &outputFilePath,
                            llvm::sys::Path const &clangPath,
-                           unsigned optLevel,
                            bool /*exceptions*/,
                            bool sharedLib,
-                           bool genPIC,
                            bool debug,
                            llvm::ArrayRef<string> arguments,
                            bool verbose)
@@ -345,7 +328,7 @@ static bool generateBinary(llvm::Module *module,
     {
         llvm::raw_fd_ostream objOut(fd, /*shouldClose=*/ true);
 
-        generateAssembly(module, targetMachine, &objOut, true, optLevel, sharedLib, genPIC, debug);
+        generateAssembly(module, targetMachine, &objOut, true);
     }
 
     string outputFilePathStr = outputFilePath.str();
@@ -979,7 +962,7 @@ int main2(int argc, char **argv, char const* const* envp) {
     std::string moduleName = clayScript.empty() ? clayFile : "-e";
 
     llvm::TargetMachine *targetMachine = initLLVM(targetTriple, moduleName, "",
-        (sharedLib || genPIC), debug, optLevel > 0);
+        (sharedLib || genPIC), debug, optLevel);
     if (targetMachine == NULL)
     {
         llvm::errs() << "error: unable to initialize LLVM for target " << targetTriple << "\n";
@@ -1164,7 +1147,7 @@ int main2(int argc, char **argv, char const* const* envp) {
             if (emitLLVM)
                 generateLLVM(llvmModule, emitAsm, &out);
             else if (emitAsm || emitObject)
-                generateAssembly(llvmModule, targetMachine, &out, emitObject, optLevel, sharedLib, genPIC, debug);
+                generateAssembly(llvmModule, targetMachine, &out, emitObject);
             outputTimer.stop();
         }
         else {
@@ -1201,8 +1184,7 @@ int main2(int argc, char **argv, char const* const* envp) {
 
             outputTimer.start();
             result = generateBinary(llvmModule, targetMachine, outputFile, clangPath,
-                                    optLevel, exceptions, sharedLib, genPIC, debug,
-                                    arguments, verbose);
+                                    exceptions, sharedLib, debug, arguments, verbose);
             outputTimer.stop();
             if (!result)
                 return 1;
