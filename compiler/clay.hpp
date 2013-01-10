@@ -1652,6 +1652,8 @@ struct Catch : public ANode {
 struct Throw : public Statement {
     ExprPtr expr;
     ExprPtr context;
+    ExprPtr desugaredExpr;
+    ExprPtr desugaredContext;
     Throw(ExprPtr expr, ExprPtr context)
         : Statement(THROW), expr(expr), context(context) {}
 };
@@ -2534,14 +2536,15 @@ string shortString(llvm::StringRef in);
 
 struct Env : public Object {
     ObjectPtr parent;
+    const bool exceptionAvailable;
     ExprPtr callByNameExprHead;
     llvm::StringMap<ObjectPtr> entries;
     Env()
-        : Object(ENV) {}
+        : Object(ENV), exceptionAvailable(false) {}
     Env(ModulePtr parent)
-        : Object(ENV), parent(parent.ptr()) {}
-    Env(EnvPtr parent)
-        : Object(ENV), parent(parent.ptr()) {}
+        : Object(ENV), parent(parent.ptr()), exceptionAvailable(false) {}
+    Env(EnvPtr parent, bool exceptionAvailable = false)
+        : Object(ENV), parent(parent.ptr()), exceptionAvailable(exceptionAvailable) {}
 };
 
 

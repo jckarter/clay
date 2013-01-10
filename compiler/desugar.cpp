@@ -235,7 +235,14 @@ StatementPtr desugarCatchBlocks(llvm::ArrayRef<CatchPtr> catchBlocks) {
                             new ExprList(getter.ptr()));
             binding->location = x->exceptionVar->location;
 
+            BindingPtr exceptionVarForRethrow =
+                new Binding(REF,
+                            identVtoFormalV(vector<IdentifierPtr>(1, Identifier::get("%exception", x->location))),
+                            new ExprList(new NameRef(Identifier::get(x->exceptionVar->str, x->location))));
+            exceptionVarForRethrow->location = x->exceptionVar->location;
+
             block->statements.push_back(binding.ptr());
+            block->statements.push_back(exceptionVarForRethrow.ptr());
             block->statements.push_back(x->body);
 
             IfPtr ifStatement = new If(cond.ptr(), block.ptr());
@@ -262,7 +269,15 @@ StatementPtr desugarCatchBlocks(llvm::ArrayRef<CatchPtr> catchBlocks) {
                             identVtoFormalV(identifiers),
                             new ExprList(getter.ptr()));
             binding->location = x->exceptionVar->location;
+
+            BindingPtr exceptionVarForRethrow =
+                new Binding(REF,
+                            identVtoFormalV(vector<IdentifierPtr>(1, Identifier::get("%exception", x->location))),
+                            new ExprList(new NameRef(Identifier::get(x->exceptionVar->str, x->location))));
+            exceptionVarForRethrow->location = x->exceptionVar->location;
+
             block->statements.push_back(binding.ptr());
+            block->statements.push_back(exceptionVarForRethrow.ptr());
             block->statements.push_back(x->body);
 
             if (!result)
@@ -298,6 +313,19 @@ StatementPtr desugarCatchBlocks(llvm::ArrayRef<CatchPtr> catchBlocks) {
     block->statements.push_back(result.ptr());
 
     return block.ptr();
+}
+
+void desugarThrow(Throw* thro) {
+    if (thro->desugaredExpr != NULL)
+        return;
+
+    if (thro->expr != NULL) {
+        thro->desugaredExpr = thro->expr;
+        thro->desugaredContext = thro->context;
+    } else {
+        thro->desugaredExpr = new NameRef(Identifier::get("%exception", thro->location));
+        thro->desugaredContext = new NameRef(Identifier::get("%context", thro->location));
+    }
 }
 
 StatementPtr desugarSwitchStatement(SwitchPtr x) {

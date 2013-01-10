@@ -1,0 +1,21 @@
+import printer.*;
+
+foo() {
+    throw GenericException("from foo");
+}
+
+bar() {
+    try {
+        foo();
+    } catch (e) {
+        throw;
+    }
+}
+
+main() {
+    try {
+        bar();
+    } catch (e: GenericException) {
+        println("caught ", e);
+    }
+}

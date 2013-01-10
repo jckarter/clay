@@ -1,0 +1,1 @@
+rethrow statement can be used only from within catch block

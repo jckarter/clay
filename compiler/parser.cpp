@@ -1428,10 +1428,16 @@ static bool throwStatement(StatementPtr &x) {
     ExprPtr a;
     ExprPtr context;
     if (!keyword("throw")) return false;
-    if (!optExpression(a)) return false;
     int p = save();
-    if (keyword("in")) {
-        if (!optExpression(context)) return false;
+    if (!symbol(";")) {
+        restore(p);
+        if (!optExpression(a)) return false;
+        int q = save();
+        if (keyword("in")) {
+            if (!optExpression(context)) return false;
+        } else {
+            restore(q);
+        }
     } else {
         restore(p);
     }

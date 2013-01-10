@@ -30,6 +30,8 @@ ExprPtr foreignExpr(EnvPtr env, ExprPtr expr);
 ExprPtr lookupCallByNameExprHead(EnvPtr env);
 Location safeLookupCallByNameLocation(EnvPtr env);
 
+bool lookupExceptionAvailable(const Env* env);
+
 } // namespace clay
 
 #endif // __ENV_HPP

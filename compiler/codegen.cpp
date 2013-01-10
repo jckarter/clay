@@ -4173,8 +4173,11 @@ bool codegenStatement(StatementPtr stmt,
         ctx->exceptionTargets.pop_back();
 
         ctx->builder->SetInsertPoint(catchBegin);
+
+        EnvPtr catchEnv = new Env(env, true);
+
         bool catchTerminated =
-            codegenStatement(x->desugaredCatchBlock, env, ctx);
+            codegenStatement(x->desugaredCatchBlock, catchEnv, ctx);
         if (!catchTerminated) {
             if (!catchEnd)
                 catchEnd = newBasicBlock("catchEnd", ctx);
@@ -4189,14 +4192,18 @@ bool codegenStatement(StatementPtr stmt,
 
     case THROW : {
         Throw *x = (Throw *)stmt.ptr();
-        if (!x->expr)
-            error("throw statements need an argument");
+
+        if (!x->expr && !lookupExceptionAvailable(env.ptr()))
+            error("rethrow statement can be used only from within catch block");
+
+        desugarThrow(x);
         ExprPtr callable = operator_expr_throwValue();
         callable->location = stmt->location;
         ExprListPtr args = new ExprList();
-        args->exprs.push_back(x->expr);
-        if (x->context != NULL)
-            args->exprs.push_back(x->context);
+        args->exprs.push_back(x->desugaredExpr);
+        if (x->desugaredContext != NULL)
+            args->exprs.push_back(x->desugaredContext);
+
         size_t tempMarker = markTemps(ctx);
         size_t marker = cgMarkStack(ctx);
         codegenCallExpr(callable, args, env, ctx, new MultiCValue());
