@@ -1,5 +1,17 @@
 import test.*;
 
+record NonCopyable (
+);
+
+overload resetUnsafe(x:NonCopyable) {}
+overload destroy(x:NonCopyable) {}
+
+overload RegularRecord?(#NonCopyable) = false;
+overload BitwiseMovedType?(#NonCopyable) = true;
+
+staticassert (     Movable?(NonCopyable));
+staticassert (not Copyable?(NonCopyable));
+
 main() = testMain(
     TestSuite("core.arrays", array(
         TestCase("arrayElements", -> {
@@ -16,5 +28,8 @@ main() = testMain(
         TestCase("indexing", -> {
             var b = array(..integers(#256));
             expectEqual(224, b[224_uss]);
+        }),
+        TestCase("array from single non-copyable", -> {
+            array(NonCopyable());
         }),
     )));

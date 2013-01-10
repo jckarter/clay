@@ -8,25 +8,20 @@ main() {
         var a = array(Canary(), Canary(), Canary(), Canary());
     });
     verifyCanaryLevel(() => {
-        println("testing array construction 2");
-        throwAfter(3);
-        var a = Array[Canary,5](Canary());
-    });
-    verifyCanaryLevel(() => {
         println("testing array copy");
-        var a = Array[Canary,5](Canary());
+        var a = array(..replicateValue(Canary(), #5));
         throwAfter(3);
         var b = a;
     });
     verifyCanaryLevel(() => {
         println("testing array move");
-        var a = Array[Canary,5](Canary());
+        var a = array(..replicateValue(Canary(), #5));
         throwAfter(3);
         var b = move(a);
     });
     verifyCanaryLevel(() => {
         println("testing array destroy/reset");
-        var a = Array[Canary,5](Canary());
+        var a = array(..replicateValue(Canary(), #5));
         destroy(a);
         throwAfter(3);
         resetUnsafe(a);
