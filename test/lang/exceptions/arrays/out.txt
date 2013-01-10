@@ -1,7 +1,5 @@
 testing array construction
 caught exception: CanaryError()
-testing array construction 2
-caught exception: CanaryError()
 testing array copy
 caught exception: CanaryError()
 testing array move
