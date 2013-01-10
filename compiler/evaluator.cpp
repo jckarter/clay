@@ -1638,21 +1638,23 @@ void evalCallExpr(ExprPtr callable,
 // evalDispatch
 //
 
-int evalDispatchTag(EValuePtr ev)
+unsigned evalDispatchTag(EValuePtr ev)
 {
-    int tag = -1;
+    unsigned tag;
     EValuePtr etag = new EValue(cIntType, (char *)&tag);
     evalCallValue(staticEValue(operator_dispatchTag()),
                   new MultiEValue(ev),
                   new MultiEValue(etag));
+    if (!tag)
+        error("dispatch tag uninitialized");
     return tag;
 }
 
-EValuePtr evalDispatchIndex(EValuePtr ev, PVData const &pvOut, int tag)
+EValuePtr evalDispatchIndex(EValuePtr ev, PVData const &pvOut, unsigned tag)
 {
     MultiEValuePtr args = new MultiEValue();
     args->add(ev);
-    ValueHolderPtr vh = intToValueHolder(tag);
+    ValueHolderPtr vh = intToValueHolder((int)tag);
     args->add(staticEValue(vh.ptr()));
 
     EValuePtr evOut = evalAllocValueForPValue(pvOut);
@@ -1696,9 +1698,9 @@ void evalDispatch(ObjectPtr obj,
     EValuePtr evDispatch = args->values[index];
     PVData const &pvDispatch = pvArgs->values[index];
 
-    int tag = evalDispatchTag(evDispatch);
-    int tagCount = dispatchTagCount(evDispatch->type);
-    if ((tag < 0) || (tag >= tagCount))
+    unsigned tag = evalDispatchTag(evDispatch);
+    unsigned tagCount = dispatchTagCount(evDispatch->type);
+    if (tag >= tagCount)
         argumentError(index, "invalid variant value");
 
     MultiEValuePtr args2 = new MultiEValue();

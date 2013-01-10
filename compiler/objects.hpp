@@ -42,8 +42,8 @@ inline bool objectVectorEquals(ObjectVectorA const &a,
 }
 
 template <typename ObjectVector>
-inline int objectVectorHash(ObjectVector const &a) {
-    int h = 0;
+inline unsigned objectVectorHash(ObjectVector const &a) {
+    unsigned h = 0;
     for (unsigned i = 0; i < a.size(); ++i)
         h += objectHash(a[i].ptr());
     return h;

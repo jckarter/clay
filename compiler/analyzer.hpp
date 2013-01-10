@@ -106,7 +106,7 @@ MultiPValuePtr analyzeReturn(llvm::ArrayRef<uint8_t> returnIsRef,
 MultiPValuePtr analyzeCallExpr(ExprPtr callable,
                                ExprListPtr args,
                                EnvPtr env);
-PVData analyzeDispatchIndex(PVData const &pv, int tag);
+PVData analyzeDispatchIndex(PVData const &pv, unsigned tag);
 MultiPValuePtr analyzeDispatch(ObjectPtr obj,
                                MultiPValuePtr args,
                                llvm::ArrayRef<unsigned> dispatchIndices);

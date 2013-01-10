@@ -2054,11 +2054,11 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
 // analyzeDispatch
 //
 
-PVData analyzeDispatchIndex(PVData const &pv, int tag)
+PVData analyzeDispatchIndex(PVData const &pv, unsigned tag)
 {
     MultiPValuePtr args = new MultiPValue();
     args->add(pv);
-    ValueHolderPtr vh = intToValueHolder(tag);
+    ValueHolderPtr vh = intToValueHolder((int)tag);
     args->add(staticPValue(vh.ptr()));
 
     MultiPValuePtr out =
@@ -2089,10 +2089,7 @@ MultiPValuePtr analyzeDispatch(ObjectPtr obj,
     for (unsigned i = index+1; i < args->size(); ++i)
         suffix->add(args->values[i]);
     PVData const &pvDispatch = args->values[index];
-    int iMemberCount = dispatchTagCount(pvDispatch.type);
-    if (iMemberCount <= 0)
-        argumentError(index, "DispatchMemberCount for type must be positive");
-    unsigned memberCount = (unsigned)iMemberCount;
+    unsigned memberCount = dispatchTagCount(pvDispatch.type);
         
     MultiPValuePtr result;
     vector<TypePtr> dispatchedTypes;
@@ -2132,17 +2129,18 @@ MultiPValuePtr analyzeDispatch(ObjectPtr obj,
                 llvm::raw_string_ostream ostr(buf);
                 ostr << "mismatching result types with dispatch";
                 ostr << "\n    expected ";
-                for (unsigned j = 0; j < result->size(); ++j) {
+                unsigned j = 0;
+                for (;j < result->size(); ++j) {
                     if (j != 0) ostr << ", ";
                     ostr << result->values[j].type;
                 }
                 ostr << "\n        from dispatching to ";
-                for (unsigned j = 0; j < dispatchedTypes.size(); ++j) {
+                for (j = 0; j < dispatchedTypes.size(); ++j) {
                     if (j != 0) ostr << ", ";
                     ostr << dispatchedTypes[j];
                 }
                 ostr << "\n     but got ";
-                for (unsigned j = 0; j < result->size(); ++j) {
+                for (j = 0; j < result->size(); ++j) {
                     if (j != 0) ostr << ", ";
                     ostr << result2->values[j].type;
                 }

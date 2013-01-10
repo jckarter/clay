@@ -459,7 +459,7 @@ static llvm::Value *allocTemp(llvm::Type *llType, CodegenContext* ctx)
     for (size_t i = ctx->discardedSlots.size(); i > 0; --i) {
         if (ctx->discardedSlots[i-1].llType == llType) {
             llv = ctx->discardedSlots[i-1].llValue;
-            ctx->discardedSlots.erase(ctx->discardedSlots.begin() + i-1);
+            ctx->discardedSlots.erase(ctx->discardedSlots.begin() + long(i)-1);
             break;
         }
     }
@@ -2222,11 +2222,11 @@ llvm::Value *codegenDispatchTag(CValuePtr cv, CodegenContext* ctx)
     return ctx->builder->CreateLoad(ctag->llValue);
 }
 
-CValuePtr codegenDispatchIndex(CValuePtr cv, PVData const &pvOut, int tag, CodegenContext* ctx)
+CValuePtr codegenDispatchIndex(CValuePtr cv, PVData const &pvOut, unsigned tag, CodegenContext* ctx)
 {
     MultiCValuePtr args = new MultiCValue();
     args->add(cv);
-    ValueHolderPtr vh = intToValueHolder(tag);
+    ValueHolderPtr vh = intToValueHolder((int)tag);
     args->add(staticCValue(vh.ptr(), ctx));
 
     CValuePtr cvOut = codegenAllocValueForPValue(pvOut, ctx);
@@ -2275,11 +2275,7 @@ void codegenDispatch(ObjectPtr obj,
     CValuePtr cvDispatch = args->values[index];
     PVData const &pvDispatch = pvArgs->values[index];
 
-    int iMemberCount = dispatchTagCount(pvDispatch.type);
-    if (iMemberCount <= 0)
-        argumentError(index, "DispatchMemberCount for type must be positive");
-    unsigned memberCount = (unsigned)iMemberCount;
-
+    unsigned memberCount = dispatchTagCount(pvDispatch.type);
     llvm::Value *llTag = codegenDispatchTag(cvDispatch, ctx);
 
     vector<llvm::BasicBlock *> callBlocks;
@@ -4479,7 +4475,7 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
             mcv->add(cv);
             if (llvmDIBuilder != NULL) {
                 llvm::DILexicalBlock debugBlock = ctx->getDebugScope();
-                llvm::DIType debugType = llvmTypeDebugInfo(cv->type);
+                llvm::DIType debugType = llvmTypeDebugInfo(pv.type);
                 llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
                     llvm::dwarf::DW_TAG_auto_variable, // tag
                     debugBlock, // scope
@@ -4487,10 +4483,10 @@ EnvPtr codegenBinding(BindingPtr x, EnvPtr env, CodegenContext* ctx)
                     file, // file
                     line, // line
                     pv.isTemp
-                        ? llvmTypeDebugInfo(pv.type)
+                        ? debugType
                         : llvmDIBuilder->createReferenceType(
                             llvm::dwarf::DW_TAG_reference_type,
-                            llvmTypeDebugInfo(pv.type)), // type
+                            debugType), // type
                     true, // alwaysPreserve
                     0, // flags
                     0 // argNo
@@ -6513,7 +6509,7 @@ void codegenPrimOp(PrimOpPtr x,
         assert(out->size() == 1);
         CValuePtr outi = out->values[0];
         assert(outi->type == cIntType);
-        llvm::Constant *value = llvm::ConstantInt::get(llvmIntType(32), ident->str[n]);
+        llvm::Constant *value = llvm::ConstantInt::get(llvmIntType(32), size_t(ident->str[n]));
         ctx->builder->CreateStore(value, outi->llValue);
         break;
     }
@@ -6522,10 +6518,10 @@ void codegenPrimOp(PrimOpPtr x,
         ensureArity(args, 1);
         IdentifierPtr ident = valueToIdentifier(args, 0);
         assert(out->size() == ident->str.size());
-        for (size_t i = 0, sz = ident->str.size(); i < sz; ++i) {
+        for (unsigned i = 0; i < ident->str.size(); ++i) {
             CValuePtr outi = out->values[i];
             assert(outi->type == cIntType);
-            llvm::Constant *value = llvm::ConstantInt::get(llvmIntType(32), ident->str[unsigned(i)]);
+            llvm::Constant *value = llvm::ConstantInt::get(llvmIntType(32), size_t(ident->str[i]));
             ctx->builder->CreateStore(value, outi->llValue);
         }
         break;
