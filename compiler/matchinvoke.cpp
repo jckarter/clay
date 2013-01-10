@@ -12,7 +12,7 @@ void initializePatternEnv(EnvPtr patternEnv, llvm::ArrayRef<PatternVar> pvars,
     vector<PatternCellPtr> &cells, vector<MultiPatternCellPtr> &multiCells)
 {
     
-    for (unsigned i = 0; i < pvars.size(); ++i) {
+    for (size_t i = 0; i < pvars.size(); ++i) {
         if (pvars[i].isMulti) {
             MultiPatternCellPtr multiCell = new MultiPatternCell(NULL);
             multiCells.push_back(multiCell);
@@ -45,7 +45,7 @@ static void initializePatterns(OverloadPtr x)
     x->callablePattern = evaluateOnePattern(x->target, patternEnv);
 
     llvm::ArrayRef<FormalArgPtr> formalArgs = code->formalArgs;
-    for (unsigned i = 0; i < formalArgs.size(); ++i) {
+    for (size_t i = 0; i < formalArgs.size(); ++i) {
         FormalArgPtr y = formalArgs[i];
         PatternPtr pattern;
         if (y->type.ptr()) {
@@ -67,7 +67,7 @@ static void initializePatterns(OverloadPtr x)
 static void resetPatterns(OverloadPtr x)
 {
     assert(x->cells.size() == x->multiCells.size());
-    for (unsigned i = 0; i < x->cells.size(); ++i) {
+    for (size_t i = 0; i < x->cells.size(); ++i) {
         if (x->cells[i].ptr()) {
             x->cells[i]->obj = NULL;
             assert(!x->multiCells[i]);
@@ -108,14 +108,14 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
     CodePtr code = overload->code;
     if (code->hasVarArg) {
         if (argsKey.size() < code->formalArgs.size()-1)
-            return new MatchArityError(code->formalArgs.size(), argsKey.size(), true);
+            return new MatchArityError(unsigned(code->formalArgs.size()), unsigned(argsKey.size()), true);
     }
     else {
         if (code->formalArgs.size() != argsKey.size())
-            return new MatchArityError(code->formalArgs.size(), argsKey.size(), false);
+            return new MatchArityError(unsigned(code->formalArgs.size()), unsigned(argsKey.size()), false);
     }
     llvm::ArrayRef<FormalArgPtr> formalArgs = code->formalArgs;
-    unsigned varArgSize = argsKey.size()-formalArgs.size()+1;
+    unsigned varArgSize = unsigned(argsKey.size()-formalArgs.size()+1);
     for (unsigned i = 0, j = 0; i < formalArgs.size(); ++i) {
         FormalArgPtr x = formalArgs[i];
         if (x->varArg) {
@@ -126,7 +126,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
                 --j;
                 MultiPatternPtr pattern = overload->varArgPattern;
                 if (!unifyMulti(pattern, types))
-                    return new MatchMultiArgumentError(formalArgs.size(), types, x);                
+                    return new MatchMultiArgumentError(unsigned(formalArgs.size()), types, x);                
             } else {
                 j = varArgSize-1;
             }
@@ -141,7 +141,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
     
     EnvPtr staticEnv = new Env(overload->env);
     llvm::ArrayRef<PatternVar> pvars = code->patternVars;
-    for (unsigned i = 0; i < pvars.size(); ++i) {
+    for (size_t i = 0; i < pvars.size(); ++i) {
         if (pvars[i].isMulti) {
             MultiStaticPtr ms = derefDeep(overload->multiCells[i].ptr());
             if (!ms)
@@ -181,7 +181,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
             result->fixedArgTypes.push_back(argsKey[i+j]);
         }
     }
-    if(!code->hasVarArg) result->varArgPosition = result->fixedArgNames.size();
+    if(!code->hasVarArg) result->varArgPosition = unsigned(result->fixedArgNames.size());
     return result.ptr();
 }
 

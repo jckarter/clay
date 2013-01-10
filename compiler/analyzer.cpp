@@ -193,7 +193,7 @@ static bool staticToTypeTuple(ObjectPtr x, vector<TypePtr> &out)
     if (y->type->typeKind != TUPLE_TYPE)
         return false;
     TupleTypePtr z = (TupleType *)y->type.ptr();
-    for (unsigned i = 0; i < z->elementTypes.size(); ++i) {
+    for (size_t i = 0; i < z->elementTypes.size(); ++i) {
         ObjectPtr obj = unwrapStaticType(z->elementTypes[i]);
         if ((!obj) || (obj->objKind != TYPE))
             return false;
@@ -422,7 +422,7 @@ PVData safeAnalyzeOne(ExprPtr expr, EnvPtr env)
     return result;
 }
 
-MultiPValuePtr safeAnalyzeMulti(ExprListPtr exprs, EnvPtr env, unsigned wantCount)
+MultiPValuePtr safeAnalyzeMulti(ExprListPtr exprs, EnvPtr env, size_t wantCount)
 {
     ClearAnalysisError clear;
     MultiPValuePtr result = analyzeMulti(exprs, env, wantCount);
@@ -500,9 +500,9 @@ MultiPValuePtr safeAnalyzeGVarInstance(GVarInstancePtr x)
 // analyzeMulti
 //
 
-static MultiPValuePtr analyzeMulti2(ExprListPtr exprs, EnvPtr env, unsigned wantCount);
+static MultiPValuePtr analyzeMulti2(ExprListPtr exprs, EnvPtr env, size_t wantCount);
 
-MultiPValuePtr analyzeMulti(ExprListPtr exprs, EnvPtr env, unsigned wantCount)
+MultiPValuePtr analyzeMulti(ExprListPtr exprs, EnvPtr env, size_t wantCount)
 {
     if (analysisCachingDisabled > 0)
         return analyzeMulti2(exprs, env, wantCount);
@@ -511,7 +511,7 @@ MultiPValuePtr analyzeMulti(ExprListPtr exprs, EnvPtr env, unsigned wantCount)
     return exprs->cachedAnalysis;
 }
 
-static MultiPValuePtr analyzeMulti2(ExprListPtr exprs, EnvPtr env, unsigned wantCount)
+static MultiPValuePtr analyzeMulti2(ExprListPtr exprs, EnvPtr env, size_t wantCount)
 {
     MultiPValuePtr out = new MultiPValue();
     ExprPtr unpackExpr = implicitUnpackExpr(wantCount, exprs);
@@ -600,14 +600,14 @@ static MultiPValuePtr analyzeMultiArgs2(ExprListPtr exprs,
             MultiPValuePtr z = analyzeArgExpr(y->expr, env, index, dispatchIndices);
             if (!z)
                 return NULL;
-            index += z->size();
+            index += unsigned(z->size());
             out->add(z);
         }
         else if (x->exprKind == PAREN) {
             MultiPValuePtr z = analyzeArgExpr(x, env, index, dispatchIndices);
             if (!z)
                 return NULL;
-            index += z->size();
+            index += unsigned(z->size());
             out->add(z);
         } else {
             PVData y = analyzeOneArg(x, env, index, dispatchIndices);
@@ -961,7 +961,7 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
     case MULTI_STATIC : {
         MultiStatic *y = (MultiStatic *)x.ptr();
         MultiPValuePtr mpv = new MultiPValue();
-        for (unsigned i = 0; i < y->size(); ++i) {
+        for (size_t i = 0; i < y->size(); ++i) {
             TypePtr t = objectType(y->values[i]);
             mpv->values.push_back(PVData(t, true));
         }
@@ -1006,7 +1006,7 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
     case MULTI_EVALUE : {
         MultiEValue *y = (MultiEValue *)x.ptr();
         MultiPValuePtr z = new MultiPValue();
-        for (unsigned i = 0; i < y->values.size(); ++i) {
+        for (size_t i = 0; i < y->values.size(); ++i) {
             EValue *ev = y->values[i].ptr();
             z->values.push_back(PVData(ev->type, ev->forwardedRValue));
         }
@@ -1021,7 +1021,7 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
     case MULTI_CVALUE : {
         MultiCValue *y = (MultiCValue *)x.ptr();
         MultiPValuePtr z = new MultiPValue();
-        for (unsigned i = 0; i < y->values.size(); ++i) {
+        for (size_t i = 0; i < y->values.size(); ++i) {
             CValue *cv = y->values[i].ptr();
             z->add(PVData(cv->type, cv->forwardedRValue));
         }
@@ -1103,12 +1103,12 @@ MultiPValuePtr analyzeGVarInstance(GVarInstancePtr x)
         x->expr = clone(gvar->expr);
     if (!x->env) {
         x->env = new Env(gvar->env);
-        for (unsigned i = 0; i < gvar->params.size(); ++i) {
+        for (size_t i = 0; i < gvar->params.size(); ++i) {
             addLocal(x->env, gvar->params[i], x->params[i]);
         }
         if (gvar->varParam.ptr()) {
             MultiStaticPtr varParams = new MultiStatic();
-            for (unsigned i = gvar->params.size(); i < x->params.size(); ++i)
+            for (size_t i = gvar->params.size(); i < x->params.size(); ++i)
                 varParams->add(x->params[i]);
             addLocal(x->env, gvar->varParam, varParams.ptr());
         }
@@ -1150,7 +1150,7 @@ void analyzeExternalProcedure(ExternalProcedurePtr x)
     if (!x->attributesVerified)
         verifyAttributes(x);
     vector<TypePtr> argTypes;
-    for (unsigned i = 0; i < x->args.size(); ++i) {
+    for (size_t i = 0; i < x->args.size(); ++i) {
         ExternalArgPtr y = x->args[i];
         y->type2 = evaluateType(y->type, x->env);
         argTypes.push_back(y->type2);
@@ -1181,7 +1181,7 @@ void verifyAttributes(ExternalProcedurePtr x)
 
     MultiStaticPtr attrs = evaluateMultiStatic(x->attributes, x->env);
 
-    for (unsigned i = 0; i < attrs->size(); ++i) {
+    for (size_t i = 0; i < attrs->size(); ++i) {
         ObjectPtr obj = attrs->values[i];
 
         switch (obj->objKind) {
@@ -1268,7 +1268,7 @@ void verifyAttributes(ExternalVariablePtr var)
 
     MultiStaticPtr attrs = evaluateMultiStatic(var->attributes, var->env);
 
-    for (unsigned i = 0; i < attrs->size(); ++i) {
+    for (size_t i = 0; i < attrs->size(); ++i) {
         ObjectPtr obj = attrs->values[i];
 
         if (obj->objKind != PRIM_OP) {
@@ -1312,7 +1312,7 @@ void verifyAttributes(ModulePtr mod)
     if (mod->declaration != NULL && mod->declaration->attributes != NULL) {
         MultiStaticPtr attrs = evaluateMultiStatic(mod->declaration->attributes, mod->env);
 
-        for (unsigned i = 0; i < attrs->size(); ++i) {
+        for (size_t i = 0; i < attrs->size(); ++i) {
             ObjectPtr obj = attrs->values[i];
 
             switch (obj->objKind) {
@@ -1459,7 +1459,7 @@ TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args)
             vector<TypePtr> returnTypes;
             staticToTypeTuple(args, 1, returnTypes);
             vector<uint8_t> returnIsRef(returnTypes.size(), false);
-            for (unsigned i = 0; i < returnTypes.size(); ++i)
+            for (size_t i = 0; i < returnTypes.size(); ++i)
                 returnIsRef[i] = unwrapByRef(returnTypes[i]);
             return codePointerType(argTypes, returnIsRef, returnTypes);
         }
@@ -1484,27 +1484,25 @@ TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args)
         case PRIM_Array : {
             ensureArity(args, 2);
             TypePtr t = staticToType(args, 0);
-            int size = staticToInt(args, 1);
-            return arrayType(t, size);
+            return arrayType(t, unsigned(staticToInt(args, 1)));
         }
 
         case PRIM_Vec : {
             ensureArity(args, 2);
             TypePtr t = staticToType(args, 0);
-            int size = staticToInt(args, 1);
-            return vecType(t, size);
+            return vecType(t, unsigned(staticToInt(args, 1)));
         }
 
         case PRIM_Tuple : {
             vector<TypePtr> types;
-            for (unsigned i = 0; i < args->size(); ++i)
+            for (size_t i = 0; i < args->size(); ++i)
                 types.push_back(staticToType(args, i));
             return tupleType(types);
         }
 
         case PRIM_Union : {
             vector<TypePtr> types;
-            for (unsigned i = 0; i < args->size(); ++i)
+            for (size_t i = 0; i < args->size(); ++i)
                 types.push_back(staticToType(args, i));
             return unionType(types);
         }
@@ -1579,12 +1577,12 @@ MultiPValuePtr analyzeAliasIndexing(GlobalAliasPtr x,
         ensureArity(params, x->params.size());
     }
     EnvPtr bodyEnv = new Env(x->env);
-    for (unsigned i = 0; i < x->params.size(); ++i) {
+    for (size_t i = 0; i < x->params.size(); ++i) {
         addLocal(bodyEnv, x->params[i], params->values[i]);
     }
     if (x->varParam.ptr()) {
         MultiStaticPtr varParams = new MultiStatic();
-        for (unsigned i = x->params.size(); i < params->size(); ++i)
+        for (size_t i = x->params.size(); i < params->size(); ++i)
             varParams->add(params->values[i]);
         addLocal(bodyEnv, x->varParam, varParams.ptr());
     }
@@ -1615,7 +1613,7 @@ MultiPValuePtr analyzeReturn(llvm::ArrayRef<uint8_t> returnIsRef,
 
 {
     MultiPValuePtr x = new MultiPValue();
-    for (unsigned i = 0; i < returnTypes.size(); ++i) {
+    for (size_t i = 0; i < returnTypes.size(); ++i) {
         PVData pv = PVData(returnTypes[i], !returnIsRef[i]);
         x->values.push_back(pv);
     }
@@ -1676,13 +1674,13 @@ struct IntrinsicAnalyzer {
         va_list argTypeList;
         va_start(argTypeList, numArguments);
         
-        llvm::SmallVector<size_t, 4> overloadedReturns;
+        llvm::SmallVector<unsigned, 4> overloadedReturns;
         
         for (size_t ri = 0; ri < numReturnValues; ++ri)
         {
             int retType = va_arg(argTypeList, int);
             if (retType < 0) {
-                size_t matchIndex = size_t(~retType);
+                unsigned matchIndex = unsigned(~retType);
                 matchIndex &= ~(ExtendedElementVectorType | TruncatedElementVectorType);
                 assert(matchIndex < ri);
                 
@@ -1692,10 +1690,10 @@ struct IntrinsicAnalyzer {
                 || retType == llvm::MVT::vAny
                 || retType == llvm::MVT::iPTRAny)
             {
-                overloadedReturns.push_back(outOverloadedTypes.size());
+                overloadedReturns.push_back(unsigned(outOverloadedTypes.size()));
                 outOverloadedTypes.push_back(NULL);
             } else {
-                overloadedReturns.push_back(~size_t(0));
+                overloadedReturns.push_back(~unsigned(0));
             }
         }
         
@@ -1705,12 +1703,12 @@ struct IntrinsicAnalyzer {
             llvm::Type *argType = inputTypes[ai];
             
             if (expectArgType < 0) {
-                size_t matchIndex = size_t(~expectArgType);
+                unsigned matchIndex = unsigned(~expectArgType);
                 matchIndex &= ~(ExtendedElementVectorType | TruncatedElementVectorType);
                 assert(matchIndex < ai + numReturnValues);
                 
                 if (matchIndex < numReturnValues) {
-                    assert(overloadedReturns[matchIndex] != ~size_t(0));
+                    assert(overloadedReturns[matchIndex] != ~unsigned(0));
                     llvm::Type *&oType = outOverloadedTypes[overloadedReturns[matchIndex]];
                     if (oType == NULL)
                         oType = argType;
@@ -2094,11 +2092,11 @@ MultiPValuePtr analyzeDispatch(ObjectPtr obj,
     int iMemberCount = dispatchTagCount(pvDispatch.type);
     if (iMemberCount <= 0)
         argumentError(index, "DispatchMemberCount for type must be positive");
-    size_t memberCount = (size_t)iMemberCount;
+    unsigned memberCount = (unsigned)iMemberCount;
         
     MultiPValuePtr result;
     vector<TypePtr> dispatchedTypes;
-    for (size_t i = 0; i < memberCount; ++i) {
+    for (unsigned i = 0; i < memberCount; ++i) {
         MultiPValuePtr args2 = new MultiPValue();
         args2->add(prefix);
         PVData pvDispatch2 = analyzeDispatchIndex(pvDispatch, i);
@@ -2418,7 +2416,7 @@ static void unifyInterfaceReturns(InvokeEntry* entry)
         printFileLineCol(out, entry->parent->interface->location);
         error(entry->code, out.str());
     }
-    for (unsigned i = 0; i < interfaceReturnTypes.size(); ++i) {
+    for (size_t i = 0; i < interfaceReturnTypes.size(); ++i) {
         if (interfaceReturnTypes[i] != entry->returnTypes[i]) {
             string buf;
             llvm::raw_string_ostream out(buf);
@@ -2458,14 +2456,14 @@ void analyzeCodeBody(InvokeEntry* entry)
 
     EnvPtr bodyEnv = new Env(entry->env);
 
-    unsigned i = 0;
+    size_t i = 0;
     for (; i < entry->varArgPosition; ++i) {
         bool flag = entry->forwardedRValueFlags[i];
         addLocal(bodyEnv, entry->fixedArgNames[i], new PValue(entry->fixedArgTypes[i], flag));
     }
     if (entry->varArgName.ptr()) {
         MultiPValuePtr varArgs = new MultiPValue();
-        unsigned j = 0;
+        size_t j = 0;
         for (; j < entry->varArgTypes.size(); ++j) {
             bool flag = entry->forwardedRValueFlags[i+j];
             PVData parg(entry->varArgTypes[j], flag);
@@ -2528,7 +2526,7 @@ static StatementAnalysis analyzeBlockStatement(StatementPtr stmt, EnvPtr &env, A
     } else if (stmt->stmtKind == EVAL_STATEMENT) {
         EvalStatement *eval = (EvalStatement*)stmt.ptr();
         llvm::ArrayRef<StatementPtr> evaled = desugarEvalStatement(eval, env);
-        for (unsigned i = 0; i < evaled.size(); ++i) {
+        for (size_t i = 0; i < evaled.size(); ++i) {
             StatementAnalysis sa = analyzeBlockStatement(evaled[i], env, ctx);
             if (sa != SA_FALLTHROUGH)
                 return sa;
@@ -2574,7 +2572,7 @@ static StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, Analysi
 
     case BLOCK : {
         Block *block = (Block *)stmt.ptr();
-        for (unsigned i = 0; i < block->statements.size(); ++i) {
+        for (size_t i = 0; i < block->statements.size(); ++i) {
             StatementAnalysis sa = analyzeBlockStatement(block->statements[i], env, ctx);
             if (sa != SA_FALLTHROUGH)
                 return sa;
@@ -2669,7 +2667,7 @@ static StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, Analysi
     case EVAL_STATEMENT : {
         EvalStatement *eval = (EvalStatement*)stmt.ptr();
         llvm::ArrayRef<StatementPtr> evaled = desugarEvalStatement(eval, env);
-        for (unsigned i = 0; i < evaled.size(); ++i) {
+        for (size_t i = 0; i < evaled.size(); ++i) {
             StatementAnalysis sa = analyzeStatement(evaled[i], env, ctx);
             if (sa != SA_FALLTHROUGH)
                 return sa;
@@ -2759,7 +2757,7 @@ static StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, Analysi
     }
 }
 
-void initializeStaticForClones(StaticForPtr x, unsigned count)
+void initializeStaticForClones(StaticForPtr x, size_t count)
 {
     if (x->clonesInitialized) {
         assert(count == x->clonedBodies.size());
@@ -2806,8 +2804,8 @@ static EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
         initializePatternEnv(patternEnv, pvars, cells, multiCells);
         
         llvm::ArrayRef<FormalArgPtr> formalArgs = x->args;
-        unsigned varArgSize = key.size()-formalArgs.size()+1;
-        for (unsigned i = 0, j = 0; i < formalArgs.size(); ++i) {
+        size_t varArgSize = key.size()-formalArgs.size()+1;
+        for (size_t i = 0, j = 0; i < formalArgs.size(); ++i) {
             FormalArgPtr y = formalArgs[i];
             if(y->varArg){
                 if (y->type.ptr()) {      
@@ -2819,20 +2817,20 @@ static EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
                     }
                     --j;
                     if (!unifyMulti(evaluateMultiPattern(new ExprList(unpack), patternEnv), types))
-                        matchBindingError(new MatchMultiBindingError(formalArgs.size(), types, y));
+                        matchBindingError(new MatchMultiBindingError(unsigned(formalArgs.size()), types, y));
                 } else {
                     j = varArgSize-1;
                 }
             } else {
                 if (y->type.ptr()) {      
                     if (!unifyPatternObj(evaluateOnePattern(y->type, patternEnv), key[i+j].ptr()))
-                        matchBindingError(new MatchBindingError(i+j, key[i+j], y));
+                        matchBindingError(new MatchBindingError(unsigned(i+j), key[i+j], y));
                 }
             }
         }
               
         EnvPtr staticEnv = new Env(env);
-        for (unsigned i = 0; i < pvars.size(); ++i) {
+        for (size_t i = 0; i < pvars.size(); ++i) {
             if (pvars[i].isMulti) {
                 MultiStaticPtr ms = derefDeep(multiCells[i].ptr());
                 if (!ms)
@@ -2852,7 +2850,7 @@ static EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
         evaluatePredicate(x->patternVars, x->predicate, staticEnv);   
         
         EnvPtr env2 = new Env(staticEnv);
-        for (unsigned i = 0, j = 0; i < formalArgs.size(); ++i) {
+        for (size_t i = 0, j = 0; i < formalArgs.size(); ++i) {
             FormalArgPtr y = formalArgs[i];    
             if(y->varArg){
                 MultiPValuePtr varArgs = new MultiPValue();
@@ -2902,7 +2900,7 @@ bool returnKindToByRef(ReturnKind returnKind, PVData const &pv)
 //
 
 static std::pair<vector<TypePtr>, InvokeEntry*>
-invokeEntryForCallableArguments(MultiPValuePtr args, size_t callableIndex, size_t firstArgTypeIndex)
+invokeEntryForCallableArguments(MultiPValuePtr args, unsigned callableIndex, unsigned firstArgTypeIndex)
 {
     if (args->size() < firstArgTypeIndex)
         arityError2(firstArgTypeIndex, args->size());
@@ -3200,7 +3198,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         ensureArity(args, 1);
         ArrayTypePtr t = arrayTypeOfValue(args, 0);
         MultiPValuePtr mpv = new MultiPValue();
-        for (unsigned i = 0; i < (unsigned)t->size; ++i)
+        for (size_t i = 0; i < t->size; ++i)
             mpv->add(PVData(t->elementType, false));
         return mpv;
     }
@@ -3231,7 +3229,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         ensureArity(args, 1);
         TupleTypePtr t = tupleTypeOfValue(args, 0);
         MultiPValuePtr mpv = new MultiPValue();
-        for (unsigned i = 0; i < t->elementTypes.size(); ++i)
+        for (size_t i = 0; i < t->elementTypes.size(); ++i)
             mpv->add(PVData(t->elementTypes[i], false));
         return mpv;
     }
@@ -3332,7 +3330,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         RecordTypePtr t = recordTypeOfValue(args, 0);
         llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(t);
         MultiPValuePtr mpv = new MultiPValue();
-        for (unsigned i = 0; i < fieldTypes.size(); ++i)
+        for (size_t i = 0; i < fieldTypes.size(); ++i)
             mpv->add(PVData(fieldTypes[i], false));
         return mpv;
     }
@@ -3345,7 +3343,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(t);
         MultiPValuePtr mpv = new MultiPValue();
         size_t varEnd = t->varFieldPosition + t->varFieldSize();
-        for (unsigned i = t->varFieldPosition; i < varEnd; ++i)
+        for (size_t i = t->varFieldPosition; i < varEnd; ++i)
             mpv->add(PVData(fieldTypes[i], false));
         return mpv;
     }
@@ -3549,14 +3547,14 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         if (begin > end)
             argumentIndexRangeError(1, "starting index",
                                     begin, end);
-        llvm::StringRef result(&ident->str[begin], end - begin);
+        llvm::StringRef result(&ident->str[unsigned(begin)], end - begin);
         return analyzeStaticObject(Identifier::get(result));
     }
 
     case PRIM_stringLiteralConcat : {
         llvm::SmallString<32> result;
         for (size_t i = 0, sz = args->size(); i < sz; ++i) {
-            ObjectPtr obj = unwrapStaticType(args->values[i].type);
+            ObjectPtr obj = unwrapStaticType(args->values[unsigned(i)].type);
             if (!obj || (obj->objKind != IDENTIFIER))
                 argumentError(i, "expecting a string literal value");
             Identifier *ident = (Identifier *)obj.ptr();
@@ -3568,7 +3566,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_stringLiteralFromBytes : {
         std::string result;
         for (size_t i = 0, sz = args->size(); i < sz; ++i) {
-            ObjectPtr obj = unwrapStaticType(args->values[i].type);
+            ObjectPtr obj = unwrapStaticType(args->values[unsigned(i)].type);
             size_t byte = 0;
             if (!obj || !staticToSizeTOrInt(obj, byte))
                 argumentError(i, "expecting a static SizeT or Int value");
@@ -3727,7 +3725,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             argumentError(0, "expecting static SizeT or Int value");
         if (i+1 >= args->size())
             argumentError(0, "nthValue argument out of bounds");
-        return new MultiPValue(args->values[i+1]);
+        return new MultiPValue(args->values[unsigned(i)+1]);
     }
 
     case PRIM_withoutNthValue : {
@@ -3740,7 +3738,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         if (i+1 >= args->size())
             argumentError(0, "withoutNthValue argument out of bounds");
         MultiPValuePtr mpv = new MultiPValue();
-        for (size_t n = 1; n < args->size(); ++n) {
+        for (unsigned n = 1; n < args->size(); ++n) {
             if (n == i+1)
                 continue;
             mpv->add(args->values[n]);
@@ -3758,7 +3756,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         if (i+1 >= args->size())
             i = args->size() - 1;
         MultiPValuePtr mpv = new MultiPValue();
-        for (size_t n = 1; n < i+1; ++n)
+        for (unsigned n = 1; n < i+1; ++n)
             mpv->add(args->values[n]);
         return mpv;
     }
@@ -3774,7 +3772,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             i = args->size() - 1;
         MultiPValuePtr mpv = new MultiPValue();
         for (size_t n = i+1; n < args->size(); ++n)
-            mpv->add(args->values[n]);
+            mpv->add(args->values[unsigned(n)]);
         return mpv;
     }
 
@@ -3907,7 +3905,7 @@ BoolKind typeBoolKind(TypePtr type) {
     }
 }
 
-ExprPtr implicitUnpackExpr(unsigned wantCount, ExprListPtr exprs) {
+ExprPtr implicitUnpackExpr(size_t wantCount, ExprListPtr exprs) {
     if (wantCount >= 1 && exprs->size() == 1 && exprs->exprs[0]->exprKind != UNPACK)
         return exprs->exprs[0];
     else

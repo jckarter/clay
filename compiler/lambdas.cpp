@@ -160,7 +160,7 @@ static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
     vector<RecordFieldPtr> fields;
 
     CallPtr converted = new Call(NULL, new ExprList());
-    for (unsigned i = 0; i < x->freeVars.size(); ++i) {
+    for (size_t i = 0; i < x->freeVars.size(); ++i) {
         IdentifierPtr ident = Identifier::get(x->freeVars[i]);
         NameRefPtr nameRef = new NameRef(ident);
 
@@ -185,7 +185,7 @@ static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
         case MULTI_CVALUE : {
             vector<TypePtr> types = typesOfValues(obj);
             vector<TypePtr> elementTypes;
-            for (unsigned j = 0; j < types.size(); ++j) {
+            for (size_t j = 0; j < types.size(); ++j) {
                 TypePtr t = types[j];
                 if (x->captureBy == REF_CAPTURE)
                     t = pointerType(t);
@@ -227,7 +227,7 @@ static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
     IdentifierPtr closureDataIdent = Identifier::get(closureDataName);
     FormalArgPtr closureDataArg = new FormalArg(closureDataIdent, typeExpr);
     code->formalArgs.push_back(closureDataArg.ptr());
-    for (unsigned i = 0; i < x->formalArgs.size(); ++i) {
+    for (size_t i = 0; i < x->formalArgs.size(); ++i) {
         code->formalArgs.push_back(x->formalArgs[i]);
     }
     code->hasVarArg = x->hasVarArg;
@@ -254,7 +254,7 @@ static void initializeLambdaWithoutFreeVars(LambdaPtr x, EnvPtr env,
 
     CodePtr code = new Code();
     code->location = x->location;
-    for (unsigned i = 0; i < x->formalArgs.size(); ++i) {
+    for (size_t i = 0; i < x->formalArgs.size(); ++i) {
         code->formalArgs.push_back(x->formalArgs[i]);
     }
     code->hasVarArg = x->hasVarArg;
@@ -296,7 +296,7 @@ void convertFreeVars(LambdaPtr x, EnvPtr env,
                      vector<string> &freeVars)
 {
     EnvPtr env2 = new Env(env);
-    for (unsigned i = 0; i < x->formalArgs.size(); ++i) {
+    for (size_t i = 0; i < x->formalArgs.size(); ++i) {
         FormalArgPtr arg = x->formalArgs[i];
         addLocal(env2, arg->name, arg->name.ptr());
     }
@@ -308,7 +308,7 @@ static EnvPtr convertFreeVarsFromBinding(BindingPtr binding, EnvPtr env, LambdaC
 {
     convertFreeVars(binding->values, env, ctx);
     EnvPtr env2 = new Env(env);
-    for (unsigned j = 0; j < binding->args.size(); ++j)
+    for (size_t j = 0; j < binding->args.size(); ++j)
         addLocal(env2, binding->args[j]->name, binding->args[j]->name.ptr());
     return env2;
 }
@@ -349,7 +349,7 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
 
     case BLOCK : {
         Block *y = (Block *)x.ptr();
-        for (unsigned i = 0; i < y->statements.size(); ++i) {
+        for (size_t i = 0; i < y->statements.size(); ++i) {
             StatementPtr z = y->statements[i];
             if (z->stmtKind == BINDING)
                 env = convertFreeVarsFromBinding((Binding *)z.ptr(), env, ctx);
@@ -408,7 +408,7 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
         Switch *y = (Switch *)x.ptr();
         env = convertFreeVarsFromStatementExpressionStatements(y->exprStatements, env, ctx);
         convertFreeVars(y->expr, env, ctx);
-        for (unsigned i = 0; i < y->caseBlocks.size(); ++i) {
+        for (size_t i = 0; i < y->caseBlocks.size(); ++i) {
             CaseBlockPtr z = y->caseBlocks[i];
             convertFreeVars(z->caseLabels, env, ctx);
             convertFreeVars(z->body, env, ctx);
@@ -447,7 +447,7 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
         For *y = (For *)x.ptr();
         convertFreeVars(y->expr, env, ctx);
         EnvPtr env2 = new Env(env);
-        for (unsigned j = 0; j < y->variables.size(); ++j)
+        for (size_t j = 0; j < y->variables.size(); ++j)
             addLocal(env2, y->variables[j], y->variables[j].ptr());
         convertFreeVars(y->body, env2, ctx);
         break;
@@ -460,7 +460,7 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
     case TRY : {
         Try *y = (Try *)x.ptr();
         convertFreeVars(y->tryBlock, env, ctx);
-        for (unsigned i = 0; i < y->catchBlocks.size(); ++i) {
+        for (size_t i = 0; i < y->catchBlocks.size(); ++i) {
             EnvPtr env2 = new Env(env);
             addLocal(env2,
                 y->catchBlocks[i]->exceptionVar,
@@ -570,7 +570,7 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
             else if ((z->objKind == MULTI_PVALUE) || (z->objKind == MULTI_CVALUE)) {
                 vector<TypePtr> types = typesOfValues(z);
                 bool allStatic = true;
-                for (unsigned i = 0; i < types.size(); ++i) {
+                for (size_t i = 0; i < types.size(); ++i) {
                     if (!isStaticOrTupleOfStatics(types[i])) {
                         allStatic = false;
                         break;
@@ -578,7 +578,7 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
                 }
                 if (allStatic) {
                     ExprListPtr args = new ExprList();
-                    for (unsigned i = 0; i < types.size(); ++i)
+                    for (size_t i = 0; i < types.size(); ++i)
                         args->add(new ObjectExpr(types[i].ptr()));
                     CallPtr call = new Call(operator_expr_typesToRValues(), args);
                     call->location = y->location;
@@ -683,7 +683,7 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
     case LAMBDA : {
         Lambda *y = (Lambda *)x.ptr();
         EnvPtr env2 = new Env(env);
-        for (unsigned i = 0; i < y->formalArgs.size(); ++i)
+        for (size_t i = 0; i < y->formalArgs.size(); ++i)
             addLocal(env2, y->formalArgs[i]->name, y->formalArgs[i]->name.ptr());
         convertFreeVars(y->body, env2, ctx);
         break;

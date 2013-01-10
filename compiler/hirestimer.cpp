@@ -102,7 +102,7 @@ unsigned long long HiResTimer::elapsedNanos()
 namespace clay {
 
 HiResTimer::HiResTimer()
-    : elapsedTicks(0), running(0), startTicks(0)
+    : elapsedTicks(0), startTicks(0), running(0)
 {
 }
 
@@ -111,7 +111,7 @@ void HiResTimer::start()
     if (++running == 1) {
         struct timespec t;
         clock_gettime(CLOCK, &t);
-        startTicks = (unsigned long long)t.tv_sec * 1000000000 + t.tv_nsec;
+        startTicks = (unsigned long long)(t.tv_sec * 1000000000 + t.tv_nsec);
     }
 }
 
@@ -120,7 +120,7 @@ void HiResTimer::stop()
     if (--running == 0) {
         struct timespec t;
         clock_gettime(CLOCK, &t);
-        elapsedTicks = (unsigned long long)t.tv_sec * 1000000000 + t.tv_nsec - startTicks;
+        elapsedTicks = (unsigned long long)(t.tv_sec * 1000000000 + t.tv_nsec) - startTicks;
     }
 }
 

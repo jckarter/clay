@@ -35,7 +35,7 @@ static void addOptimizationPasses(llvm::PassManager &passes,
 {
     llvm::Pass *inliningPass = 0;
     if (optLevel > 1) {
-        unsigned threshold = 225;
+        int threshold = 225;
         if (optLevel > 2)
             threshold = 275;
         inliningPass = llvm::createFunctionInliningPass(threshold);
@@ -986,7 +986,7 @@ int main2(int argc, char **argv, char const* const* envp) {
             end = begin;
             while (*end && (*end != ENV_SEPARATOR))
                 ++end;
-            searchPath.push_back(llvm::StringRef(begin, end-begin));
+            searchPath.push_back(llvm::StringRef(begin, (size_t)(end-begin)));
             begin = end + 1;
         }
         while (*end);
