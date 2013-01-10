@@ -95,7 +95,7 @@ copyRecord(src:T) --> returned:T {
     ..recordFields(returned) <-- ..recordFields(src);
 }
 
-[T when RegularRecord?(T) and not BitwiseCopiedType?(T)]
+[T when RegularRecord?(T) and not BitwiseCopiedType?(T) and allValues?(Copyable?, ..RecordFieldTypes(T))]
 overload T(src:T) = copyRecord(src);
 
 
@@ -109,7 +109,7 @@ moveRecordUnsafe(src:T) --> returned:T {
         ..fieldRefByIndex(returned, i) <-- moveUnsafe(..fieldRefByIndex(src, i));
 }
 
-[T when RegularRecord?(T) and not BitwiseMovedType?(T)]
+[T when RegularRecord?(T) and not BitwiseMovedType?(T) and allValues?(Movable?, ..RecordFieldTypes(T))]
 overload moveUnsafe(src:T) : T = moveRecordUnsafe(src);
 
 [T when Record?(T)]

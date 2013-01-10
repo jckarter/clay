@@ -1,0 +1,16 @@
+record NonMovable (
+);
+
+overload RegularRecord?(#NonMovable) = false;
+
+staticassert (not Movable?(NonMovable));
+
+record RecordWithNonMovableField (
+    a: Int,
+    b: NonMovable,
+);
+
+staticassert (not Movable?(RecordWithNonMovableField));
+
+main() {
+}

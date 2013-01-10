@@ -1,0 +1,16 @@
+record NonCopyable (
+);
+
+overload RegularRecord?(#NonCopyable) = false;
+
+staticassert (not Copyable?(NonCopyable));
+
+record RecordWithNonCopyableField (
+    a: Int,
+    b: NonCopyable,
+);
+
+staticassert (not Copyable?(RecordWithNonCopyableField));
+
+main() {
+}
