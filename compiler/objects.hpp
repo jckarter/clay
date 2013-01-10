@@ -22,7 +22,7 @@ struct ValueHolder : public Object {
 
 
 bool _objectValueEquals(ObjectPtr a, ObjectPtr b);
-int objectHash(ObjectPtr a);
+unsigned objectHash(ObjectPtr a);
 
 inline bool objectEquals(ObjectPtr a, ObjectPtr b) {
     if (a == b)
