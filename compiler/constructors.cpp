@@ -78,32 +78,6 @@ vector<OverloadPtr> &getPatternOverloads()
     return patternOverloads;
 }
 
-void initTypeOverloads(TypePtr t)
-{
-    assert(!t->overloadsInitialized);
-
-    for (size_t i = 0; i < patternOverloads.size(); ++i) {
-        OverloadPtr x = patternOverloads[i];
-        EnvPtr env = new Env(x->env);
-        llvm::ArrayRef<PatternVar> pvars = x->code->patternVars;
-        for (size_t i = 0; i < pvars.size(); ++i) {
-            if (pvars[i].isMulti) {
-                MultiPatternCellPtr cell = new MultiPatternCell(NULL);
-                addLocal(env, pvars[i].name, cell.ptr());
-            }
-            else {
-                PatternCellPtr cell = new PatternCell(NULL);
-                addLocal(env, pvars[i].name, cell.ptr());
-            }
-        }
-        PatternPtr pattern = evaluateOnePattern(x->target, env);
-        if (unifyPatternObj(pattern, t.ptr()))
-            t->overloads.push_back(x);
-    }
-
-    t->overloadsInitialized = true;
-}
-
 void initBuiltinConstructor(RecordDeclPtr x)
 {
     assert(!(x->builtinOverloadInitialized));

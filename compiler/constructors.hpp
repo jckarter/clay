@@ -8,7 +8,6 @@ namespace clay {
 bool isOverloadablePrimOp(ObjectPtr x);
 vector<OverloadPtr> &primOpOverloads(PrimOpPtr x);
 vector<OverloadPtr> &getPatternOverloads();
-void initTypeOverloads(TypePtr t);
 void initBuiltinConstructor(RecordDeclPtr x);
 
 }
