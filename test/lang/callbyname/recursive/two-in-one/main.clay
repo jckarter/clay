@@ -1,0 +1,14 @@
+import printer.*;
+
+alias yy() {
+    println("yy");
+}
+
+alias xx() {
+    yy();
+    yy();
+}
+
+main() {
+    xx();
+}

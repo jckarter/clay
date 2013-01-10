@@ -140,6 +140,8 @@ struct CodegenContext {
     int inlineDepth; //:31;
     bool checkExceptions:1;
 
+    int callByNameDepth;
+
     CodegenContext()
         : llvmFunc(NULL),
           initBuilder(NULL),
@@ -147,7 +149,8 @@ struct CodegenContext {
           valueForStatics(NULL),
           exceptionValue(NULL),
           inlineDepth(0),
-          checkExceptions(true)
+          checkExceptions(true),
+          callByNameDepth(0)
     {
     }
 
@@ -158,7 +161,8 @@ struct CodegenContext {
           valueForStatics(NULL),
           exceptionValue(NULL),
           inlineDepth(0),
-          checkExceptions(true)
+          checkExceptions(true),
+          callByNameDepth(0)
     {
     }
 

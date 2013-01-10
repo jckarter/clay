@@ -1,0 +1,7 @@
+alias xx() {
+    xx();
+}
+
+main() {
+    xx();
+}

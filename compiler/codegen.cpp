@@ -3543,6 +3543,11 @@ void codegenCallByName(InvokeEntry* entry,
 
     ++ctx->inlineDepth;
 
+    ++ctx->callByNameDepth;
+    if (ctx->callByNameDepth > 100) {
+        error("alias functions stack overflow");
+    }
+
     EnvPtr bodyEnv = new Env(entry->env);
     bodyEnv->callByNameExprHead = callable;
 
@@ -3627,6 +3632,8 @@ void codegenCallByName(InvokeEntry* entry,
 
     --ctx->inlineDepth;
     assert(ctx->inlineDepth >= 0);
+    --ctx->callByNameDepth;
+    assert(ctx->callByNameDepth >= 0);
 }
 
 

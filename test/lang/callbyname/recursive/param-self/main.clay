@@ -1,0 +1,7 @@
+import printer.*;
+
+alias zzz(param) = param;
+
+main() {
+    println(zzz(zzz(2)));
+}

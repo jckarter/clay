@@ -1,0 +1,11 @@
+import printer.*;
+
+fact(n: Int): Int =
+    if (n > 1) n * useless(n - 1)
+    else 1;
+
+alias useless(n) = fact(n);
+
+main() {
+    println(fact(10));
+}

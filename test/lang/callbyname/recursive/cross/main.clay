@@ -1,0 +1,11 @@
+alias yy() {
+    xx();
+}
+
+alias xx() {
+    yy();
+}
+
+main() {
+    xx();
+}
