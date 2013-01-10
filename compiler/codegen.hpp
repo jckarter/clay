@@ -21,7 +21,7 @@ llvm::TargetMachine *initLLVM(llvm::StringRef targetTriple,
     llvm::StringRef flags,
     bool relocPic,
     bool debug,
-    bool optimized);
+    unsigned optLevel);
 
 bool inlineEnabled();
 void setInlineEnabled(bool enabled);
