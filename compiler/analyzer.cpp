@@ -1039,6 +1039,7 @@ MultiPValuePtr analyzeStaticObject(ObjectPtr x)
     }
 
     case PATTERN :
+    case MULTI_PATTERN :
         error("pattern variable cannot be used as value");
         return NULL;
 

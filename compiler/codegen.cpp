@@ -1396,10 +1396,10 @@ void codegenStaticObject(ObjectPtr x,
         break;
     }
 
-    case PATTERN : {
+    case PATTERN :
+    case MULTI_PATTERN :
         error("pattern variable cannot be used as value");
         break;
-    }
 
     default :
         invalidStaticObjectError(x);
