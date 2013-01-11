@@ -17,6 +17,9 @@ llvm::PointerType *exceptionReturnType();
 llvm::Value *noExceptionReturnValue();
 
 llvm::TargetMachine *initLLVM(llvm::StringRef targetTriple,
+    llvm::StringRef targetCPU,
+    llvm::StringRef targetFeatures,
+    bool softFloat,
     llvm::StringRef name,
     llvm::StringRef flags,
     bool relocPic,
