@@ -235,10 +235,10 @@ overload printTo(stream, x:UniChar) {
     encodeUniChar(x, c -> ..printTo(stream, c));
 }
 
-[S when String?(S)]
+[S when String?(S) or UniString?(S)]
 overload printTo(stream, x:S) {
     for (c in x)
-        write(stream, c);
+        printTo(stream, c);
 }
 
 [S when ContiguousString?(S)]

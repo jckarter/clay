@@ -6,40 +6,31 @@
 
 /// @section  String? 
 
-[T]
-define String?(#T) : Bool;
+[A]
+String?(#A) = Sequence?(A) and SequenceElementType(A) == Char;
 
 [A]
-overload String?(#A) : Bool = false;
-
-[A when Sequence?(A) and (Char == SequenceElementType(A))]
-overload String?(#A) : Bool = true;
+UniString?(#A) = Sequence?(A) and SequenceElementType(A) == UniChar;
 
 
 
 /// @section  SizedString? 
 
 [A]
-define SizedString?(#A) : Bool;
+SizedString?(#A) = String?(A) and SizedSequence?(A);
 
 [A]
-overload SizedString?(#A) : Bool = false;
-
-[A when SizedSequence?(A) and (Char == SequenceElementType(A))]
-overload SizedString?(#A) : Bool = true;
+SizedUniString?(A) = UniString?(A) and SizedSequence?(A);
 
 
 
 /// @section  ContiguousString? 
 
 [A]
-define ContiguousString?(#A) : Bool;
+ContiguousString?(#A) = String?(A) and ContiguousSequence?(A);
 
 [A]
-overload ContiguousString?(#A) : Bool = false;
-
-[A when ContiguousSequence?(A) and (Char == SequenceElementType(A))]
-overload ContiguousString?(#A) : Bool = true;
+ContiguousUniString?(#A) = UniString?(A) and ContiguousSequence?(A);
 
 
 

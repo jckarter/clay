@@ -1,4 +1,5 @@
 import printer.protocol.(printTo);
+import data.strings.(String);
 
 record UTF8Decoder[Iterator] (
     iter: Iterator
@@ -100,6 +101,8 @@ record UTF8[Sequence] (
 );
 
 [T] overload iterator(u: UTF8[T]) = UTF8Decoder(iterator(u.encoded));
+
+staticassert(UniString?(UTF8[String]));
 
 private encodeTwo(code)
     = bitor(0xC0, bitshr(bitand(code, 0x7C0), 6)),
