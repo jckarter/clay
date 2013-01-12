@@ -43,5 +43,9 @@ main() = testMain(
             expectPrinted("aaa", CStringRef(cstring("aaa")));
             expectPrinted("(null)", CStringRef());
         }),
+        TestCase("UniString?", -> {
+            var s = array(UniChar('a'), UniChar('b'));
+            expectPrinted("ab", s);
+        }),
     )));
 
