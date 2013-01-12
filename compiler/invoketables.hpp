@@ -88,6 +88,7 @@ struct InvokeSet {
     unsigned nextOverloadIndex; //:31;
 
     bool shouldLog:1;
+    bool evaluatingPredicate:1;
 
     InvokeSet(ObjectPtr callable,
               llvm::ArrayRef<TypePtr> argsKey,
@@ -96,7 +97,8 @@ struct InvokeSet {
         : callable(callable), argsKey(argsKey),
           interface(symbolInterface),
           overloads(symbolOverloads), nextOverloadIndex(0),
-          shouldLog(false)
+          shouldLog(false),
+          evaluatingPredicate(false)
     {
         overloads.insert(overloads.end(), patternOverloads.begin(), patternOverloads.end());
     }

@@ -1,0 +1,6 @@
+[when foo()]
+foo() {}
+
+main() {
+    foo();
+}

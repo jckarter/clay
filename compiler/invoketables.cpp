@@ -330,12 +330,33 @@ static InvokeEntry* newInvokeEntry(InvokeSet* parent,
     return entry;
 }
 
+namespace {
+    class FinallyClearEvaluatingPredicate {
+    private:
+        InvokeSet* invokeSet;
+    public:
+        FinallyClearEvaluatingPredicate(InvokeSet* invokeSet): invokeSet(invokeSet) {}
+        ~FinallyClearEvaluatingPredicate() {
+            assert(invokeSet->evaluatingPredicate);
+            invokeSet->evaluatingPredicate = false;
+        }
+    };
+}
+
 InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
                                llvm::ArrayRef<TypePtr> argsKey,
                                llvm::ArrayRef<ValueTempness> argsTempness,
                                MatchFailureError &failures)
 {
     InvokeSet* invokeSet = lookupInvokeSet(callable, argsKey);
+
+    if (invokeSet->evaluatingPredicate) {
+        // matchInvoke calls the same lookupInvokeEntry
+        error("predicate evaluation loop");
+    }
+
+    invokeSet->evaluatingPredicate = true;
+    FinallyClearEvaluatingPredicate FinallyClearEvaluatingPredicate(invokeSet);
 
     map<vector<ValueTempness>,InvokeEntry*>::iterator iter =
         invokeSet->tempnessMap.find(argsTempness);
