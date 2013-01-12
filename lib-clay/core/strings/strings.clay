@@ -9,6 +9,9 @@
 [A]
 String?(#A) = Sequence?(A) and SequenceElementType(A) == Char;
 
+[A]
+UniString?(#A) = Sequence?(A) and SequenceElementType(A) == UniChar;
+
 
 
 /// @section  SizedString? 
@@ -16,12 +19,18 @@ String?(#A) = Sequence?(A) and SequenceElementType(A) == Char;
 [A]
 SizedString?(#A) = String?(A) and SizedSequence?(A);
 
+[A]
+SizedUniString?(A) = UniString?(A) and SizedSequence?(A);
+
 
 
 /// @section  ContiguousString? 
 
 [A]
 ContiguousString?(#A) = String?(A) and ContiguousSequence?(A);
+
+[A]
+ContiguousUniString?(#A) = UniString?(A) and ContiguousSequence?(A);
 
 
 
