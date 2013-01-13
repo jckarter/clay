@@ -35,7 +35,8 @@ build() {
     rm -Rf build
     mkdir build
     cd build
-    cmake -G "Unix Makefiles" ../ -DCMAKE_INSTALL_PREFIX=/opt/clay
+    cmake -G "Unix Makefiles" ../ -DCMAKE_INSTALL_PREFIX=/opt/clay -DCMAKE_BUILD_TYPE=Release
+    
     make VERBOSE=0
 
     make DESTDIR=${pkgdir} install
