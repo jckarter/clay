@@ -209,7 +209,7 @@ overload CCastable?(#F, #T) : Bool = false;
 overload CCastable?(#F, #T) : Bool = true;
 
 [F, T when Integer?(F) and Integer?(T) and TypeSize(T) == TypeSize(F)]
-overload CCastable?(#Pointer[F], #Pointer[T]) : Bool = true;
+default CCastable?(#Pointer[F], #Pointer[T]) : Bool = true;
 
 [F]
 overload CCastable?(#Pointer[F], #RawPointer) : Bool = true;
@@ -227,7 +227,7 @@ overload cCast(s:S, #Pointer[CChar]) : Pointer[CChar] = cstring(s);
 overload cCast(forward from:F, #F) = forward from;
 
 [CC, ..In, ..Out, ..A when countValues(..In) == countValues(..A)]
-forceinline overload call(ptr:ExternalCodePointer[CC, false, [..In], [..Out]], ..args:A) =
+forceinline default call(ptr:ExternalCodePointer[CC, false, [..In], [..Out]], ..args:A) =
     ..callExternalCodePointer(ptr,
         ..mapValues2((arg, T) => cCast(arg, T), #countValues(..A), ..args, ..In));
 
@@ -236,7 +236,7 @@ forceinline overload call(ptr:ExternalCodePointer[CC, false, [..In], [..Out]], .
     ..callExternalCodePointer(ptr, ..args);
 
 [CC, ..In, ..Out, ..A when (countValues(..A) >= countValues(..In))]
-forceinline overload call(ptr:ExternalCodePointer[CC, true, [..In], [..Out]], ..args:A) {
+forceinline default call(ptr:ExternalCodePointer[CC, true, [..In], [..Out]], ..args:A) {
     alias N = #countValues(..In);
     return ..callExternalCodePointer(ptr,
         ..mapValues2((arg, T) => cCast(arg, T), N, ..takeValues(N, ..args), ..In),

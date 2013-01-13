@@ -30,7 +30,7 @@ forceinline overload moveUnsafe(src:Static[A]) --> returned:Static[A] {
 /// @section  equals?, lesser? 
 
 [A, B]
-forceinline overload equals?(a:Static[A], b:Static[B]) : Bool = false;
+forceinline default equals?(a:Static[A], b:Static[B]) : Bool = false;
 
 [A]
 forceinline overload equals?(a:Static[A], b:Static[A]) : Bool = true;

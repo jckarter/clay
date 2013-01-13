@@ -22,7 +22,8 @@ if(BUILD_BINDGEN)
             -I${clay_SOURCE_DIR}/tools
             -o ${clay_BINARY_DIR}/tools/clay-bindgen${CMAKE_EXECUTABLE_SUFFIX}
             ${LIBCLANG_LDFLAGS}
-            ${clay_SOURCE_DIR}/tools/bindgen.clay)
+            ${clay_SOURCE_DIR}/tools/bindgen.clay
+            -final-overloads)
 
     add_custom_target(clay-bindgen ALL
         DEPENDS ${clay_BINARY_DIR}/tools/clay-bindgen${CMAKE_EXECUTABLE_SUFFIX})

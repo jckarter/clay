@@ -38,8 +38,8 @@ forceinline overload just(m: Maybe[T], dflt: T) = maybe(m, v => v, () => dflt);
 /// @section  maybe function 
 
 private define maybeValue;
-forceinline overload maybeValue(T, forward x, thenFn, ..elseFn) = forward ..thenFn(x);
-forceinline overload maybeValue(T, forward n: Nothing, thenFn, elseFn) = forward ..elseFn();
+forceinline default maybeValue(T, forward x, thenFn, ..elseFn) = forward ..thenFn(x);
+forceinline default maybeValue(T, forward n: Nothing, thenFn, elseFn) = forward ..elseFn();
 
 
 // if the thenFn returns Maybe[T]s, have the default else case return nothing(T)s

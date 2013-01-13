@@ -93,7 +93,7 @@ Movable?(T)  = CallDefined?(move, T);
 
 
 [T]
-forceinline overload assign(ref dest:T, rvalue src:T) : {
+forceinline default assign(ref dest:T, rvalue src:T) : {
     swap(dest, src);
 }
 
@@ -119,10 +119,10 @@ forceinline overload assign(ref dest:T, ref src:T) : {
 }
 
 [T when CallDefined?(T) and InitializeDoesNotThrowType?(T)]
-forceinline overload resetUnsafe(src:T) { src <-- T(); }
+forceinline default resetUnsafe(src:T) { src <-- T(); }
 
 [F]
-forceinline overload updateAssign(#F, ref dest, forward ..src) : {
+forceinline default updateAssign(#F, ref dest, forward ..src) : {
     dest = infixOperator(dest,F, ..src);
 }
 
@@ -131,16 +131,16 @@ forceinline overload prefixUpdateAssign(#F, ref dest, forward ..src) : {
     dest = prefixOperator(F, dest, ..src);
 }
 
-forceinline overload (!=)(a, b) : Bool = not (==)(a, b);
+forceinline default (!=)(a, b) : Bool = not (==)(a, b);
 
 define ordered?;
 forceinline overload ordered?(a, b) : Bool = (<=)(a, b) or (<=)(b, a);
 
-forceinline overload (<=)(a, b) : Bool = not (<)(b, a);
+forceinline default (<=)(a, b) : Bool = not (<)(b, a);
 
-forceinline overload (>)(a, b) : Bool = (<)(b, a);
+forceinline default (>)(a, b) : Bool = (<)(b, a);
 
-forceinline overload (>=)(a, b) : Bool = not (<)(a, b);
+forceinline default (>=)(a, b) : Bool = not (<)(a, b);
 
 forceinline overload (&)(a, b, c, ..rest) = (&)((&)(a, b), c, ..rest);
 
@@ -241,7 +241,7 @@ private define _countIndices;
 
 private define staticEquals?(a, b) : Bool;
 [A, B]
-forceinline overload staticEquals?(a:Static[A], b:Static[B]) : Bool = false;
+forceinline default staticEquals?(a:Static[A], b:Static[B]) : Bool = false;
 [A]
 forceinline overload staticEquals?(a:Static[A], b:Static[A]) : Bool = true;
 
@@ -250,7 +250,7 @@ BinaryOpDefined?(OP,T,U) : Bool = Symbol?(OP) and not Variant?(OP) and not Recor
 CompareOpDefined?(OP,T,U) : Bool = Symbol?(OP) and not Variant?(OP) and not Record?(OP) 
     and CallDefined?(OP,T,U) and staticEquals?(CallOutputTypes(OP,T,U),Bool); 
 
-[OP] forceinline overload prefixOperator(#OP, forward ..xs)
+[OP] forceinline default prefixOperator(#OP, forward ..xs)
     = forward OP(..prefixOperator(..xs));
 [OP] forceinline overload prefixOperator(#OP, forward x) 
     = forward ..OP(x);
@@ -308,8 +308,8 @@ define operatorPrecedence(T) : Int;
 define operatorAssociativity(T) : Int;
 
 
-[T] overload operatorPrecedence(#T) : Int = 0;
-[T] overload operatorAssociativity(#T) : Int = LEFT;
+[T] default operatorPrecedence(#T) : Int = 0;
+[T] default operatorAssociativity(#T) : Int = LEFT;
 
 overload operatorPrecedence(#(*)) : Int   = 1000;
 overload operatorPrecedence(#(/)) : Int   = 1000;
@@ -348,7 +348,7 @@ overload operatorAssociativity(#(<=)) : Int   = BOOLEAN;
 overload operatorAssociativity(#(>=)) : Int   = BOOLEAN;
 
 define Operator?(..x) : Bool;
-forceinline overload Operator?(..x) : Bool = false;
+forceinline default Operator?(..x) : Bool = false;
 [OP] forceinline overload Operator?(#OP) : Bool 
     = Symbol?(OP) and operatorPrecedence(OP) > 0;
 
@@ -356,9 +356,9 @@ define BoolAssoc?(..x) : Bool;
 define LeftAssoc?(..x) : Bool;
 define RightAssoc?(..x) : Bool;
 
-forceinline overload BoolAssoc?(..x) : Bool = false;
-forceinline overload LeftAssoc?(..x) : Bool = false;
-forceinline overload RightAssoc?(..x) : Bool = false;
+forceinline default BoolAssoc?(..x) : Bool = false;
+forceinline default LeftAssoc?(..x) : Bool = false;
+forceinline default RightAssoc?(..x) : Bool = false;
 
 [OP] forceinline overload BoolAssoc?(#OP) : Bool = integerEquals?(operatorAssociativity(OP),BOOLEAN);
 [OP1,OP2] forceinline overload BoolAssoc?(#OP1,#OP2) : Bool = BoolAssoc?(OP1) and BoolAssoc?(OP2);
@@ -383,7 +383,7 @@ forceinline overload infixToPolish(#0, #s, #v, forward ..y, #p, #T)
     = forward ..infixToPolish(#0, #(s-1), #1, ..y), T, #(p+v);
 
 [n, s, v when n>0]
-forceinline overload infixToPolish(#n, #s, #v,forward x, forward ..y) 
+forceinline default infixToPolish(#n, #s, #v,forward x, forward ..y) 
     = forward ..infixToPolish(#(n-1), #s, #(v+1), ..y), x;
 
 [n, s, v, OP when n>0 and Operator?(OP)]
@@ -400,17 +400,17 @@ forceinline overload infixToPolish(#n, #s, #v, #OP, forward ..y, #p, #T)
 private define evalPolish;
 forceinline overload evalPolish() = ;
 
-forceinline overload evalPolish(x, ..y) = x, ..evalPolish(..y);
+forceinline default evalPolish(x, ..y) = x, ..evalPolish(..y);
 
 [OP, v when Operator?(OP)]
-forceinline overload evalPolish(#OP, #v, ..x) 
+forceinline default evalPolish(#OP, #v, ..x) 
     = OP(..takeValues(#v, ..evalPolish(..x))), ..dropValues(#v, ..evalPolish(..x));
 
 [OP, v when BoolAssoc?(OP)]
 forceinline overload evalPolish(#OP, #v, ..x) = OP, ..evalPolish(..x);
 
 private define evalBool;
-forceinline overload evalBool(..x) = ..x;
+forceinline default evalBool(..x) = ..x;
 
 [OP, OP2 when BoolAssoc?(OP, OP2)]
 forceinline overload evalBool(#OP, y, #OP2, z, ..x) : Bool 
@@ -420,12 +420,12 @@ forceinline overload evalBool(#OP, y, #OP2, z, ..x) : Bool
 forceinline overload evalBool(#OP, x, y) : Bool = OP(x, y);
 
 [..T]
-forceinline overload infixOperator(forward ..args:T) 
+forceinline default infixOperator(forward ..args:T) 
     = forward ..evalBool(..evalPolish(
         ..infixToPolish(#countValues(..T), #0, #0, ..reverseValues(..args))));
 
 [OP]
-forceinline overload infixOperator(forward a, #OP, forward b) 
+forceinline default infixOperator(forward a, #OP, forward b) 
     = forward ..OP(a,b);
 
 
@@ -433,7 +433,7 @@ forceinline overload infixOperator(forward a, #OP, forward b)
 
 define swap(a, b) :;
 
-forceinline overload swap(a, b) : {
+forceinline default swap(a, b) : {
     var temp = moveUnsafe(a);
     a <-- moveUnsafe(b);
     b <-- move(temp);
@@ -456,7 +456,7 @@ define min(a:T, b:T) : T;
 define max(a:T, b:T) : T;
 
 [T]
-forceinline overload min(a:T, b:T) --> c:T {
+forceinline default min(a:T, b:T) --> c:T {
     if (a <= b)
         c <-- a;
     else
@@ -472,7 +472,7 @@ forceinline overload min(ref a:T, ref b:T)  : ByRef[T]  {
 }
 
 [T]
-forceinline overload max(a:T, b:T) --> c:T {
+forceinline default max(a:T, b:T) --> c:T {
     if (a > b)
         c <-- a;
     else
@@ -492,7 +492,7 @@ forceinline overload max(ref a:T, ref b:T)  : ByRef[T] {
 /// @section  ifExpression 
 
 [T]
-alias overload ifExpression(condition, consequent:T, alternate:T) --> ret:T {
+alias default ifExpression(condition, consequent:T, alternate:T) --> ret:T {
     if (condition)
         ret <-- consequent;
     else
@@ -522,7 +522,7 @@ alias overload ifExpression(condition, #consequent, #alternate) --> ret:StringLi
 /// @section  asExpression 
 
 [T, U]
-forceinline overload asExpression(value:T, #U) : U = U(value);
+forceinline default asExpression(value:T, #U) : U = U(value);
 
 [T, U when Numeric?(T,U)]
 forceinline overload asExpression(value:T, #U) : U = numericConvert(U, value);
@@ -557,7 +557,7 @@ bitror(x:I, n:J) = (|)((>>)(x, n), wrapBitshl(x, TypeSize(I)*8 - n));
 
 [T]
 define PrimitiveType?(#T) : Bool;
-overload PrimitiveType?(X) : Bool = false;
+default PrimitiveType?(X) : Bool = false;
 overload PrimitiveType?(#Bool) : Bool = true;
 overload PrimitiveType?(#Int8) : Bool = true;
 overload PrimitiveType?(#Int16) : Bool = true;
@@ -594,7 +594,7 @@ overload PrimitiveType?(#Tuple[]) : Bool = true;
 
 [T]
 define PrimitiveCompoundType?(#T) : Bool;
-overload PrimitiveCompoundType?(X) : Bool = false;
+default PrimitiveCompoundType?(X) : Bool = false;
 
 [T,n] overload PrimitiveCompoundType?(#Array[T,n]) : Bool = true;
 [..T] overload PrimitiveCompoundType?(#Tuple[..T]) : Bool = true;
@@ -614,7 +614,7 @@ overload PrimitiveCompoundMemberTypes(#V) = ..VariantMembers(V);
 
 [T]
 define PODType?(#T) : Bool;
-overload PODType?(X) : Bool = false;
+default PODType?(X) : Bool = false;
 
 [T when PrimitiveType?(T)]
 overload PODType?(#T) : Bool = true;
@@ -645,15 +645,15 @@ define BitwiseAssignedType?(#T) : Bool;
 [T]
 define BitwiseMoveAssignedType?(#T) : Bool;
 
-overload BitwiseCopiedType?(T) = PODType?(T);
-overload BitwiseMovedType?(T) = PODType?(T);
-overload DestroyDoesNothingType?(T) = PODType?(T);
-overload ResetDoesNothingType?(T) = PODType?(T);
-overload InitializeDoesNotThrowType?(T) = PODType?(T);
-overload CopyDoesNotThrowType?(T) = PODType?(T);
-overload AssignDoesNotThrowType?(T) = PODType?(T);
-overload BitwiseAssignedType?(T) = BitwiseCopiedType?(T) and DestroyDoesNothingType?(T);
-overload BitwiseMoveAssignedType?(T) = BitwiseMovedType?(T) and DestroyDoesNothingType?(T);
+default BitwiseCopiedType?(T) = PODType?(T);
+default BitwiseMovedType?(T) = PODType?(T);
+default DestroyDoesNothingType?(T) = PODType?(T);
+default ResetDoesNothingType?(T) = PODType?(T);
+default InitializeDoesNotThrowType?(T) = PODType?(T);
+default CopyDoesNotThrowType?(T) = PODType?(T);
+default AssignDoesNotThrowType?(T) = PODType?(T);
+default BitwiseAssignedType?(T) = BitwiseCopiedType?(T) and DestroyDoesNothingType?(T);
+default BitwiseMoveAssignedType?(T) = BitwiseMovedType?(T) and DestroyDoesNothingType?(T);
 
 [T when PrimitiveCompoundType?(T)]
 overload BitwiseCopiedType?(#T) : Bool
@@ -708,13 +708,13 @@ forceinline overload case?(x, forward ..ys) : Bool {
 
 define CallDefined?;
 [F]
-alias overload CallDefined?(f:F, ..In) : Bool = StaticCallDefined?(call, F, ..In);
+alias default CallDefined?(f:F, ..In) : Bool = StaticCallDefined?(call, F, ..In);
 [f]
 alias overload CallDefined?(#f, ..In) : Bool = Symbol?(f) and StaticCallDefined?(f, ..In);
 
 define CallOutputTypes;
 [F]
-alias overload CallOutputTypes(f:F, ..In) = ..StaticCallOutputTypes(call, F, ..In);
+alias default CallOutputTypes(f:F, ..In) = ..StaticCallOutputTypes(call, F, ..In);
 [f]
 alias overload CallOutputTypes(#f, ..In) = ..StaticCallOutputTypes(f, ..In);
 
@@ -723,7 +723,7 @@ alias overload CallOutputTypes(#f, ..In) = ..StaticCallOutputTypes(f, ..In);
 
 define MonoInputTypes;
 [f when StaticMono?(f)]
-alias overload MonoInputTypes(#f) = ..StaticMonoInputTypes(f);
+alias default MonoInputTypes(#f) = ..StaticMonoInputTypes(f);
 [F when LambdaRecord?(F) and LambdaMono?(F)]
 alias overload MonoInputTypes(f:F) = ..LambdaMonoInputTypes(F);
 

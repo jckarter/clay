@@ -230,7 +230,7 @@ forceinline overload integerConvertWithOverflow(#A, b:B) : A, Bool
 // callbacks for integer*Checked primitives
 
 private define PrintfFmt;
-[T] overload PrintfFmt(#T) = "%d";
+[T] default PrintfFmt(#T) = "%d";
 overload PrintfFmt(#UInt32) = "%u";
 
 overload PrintfFmt(#Int64) = "%lld";

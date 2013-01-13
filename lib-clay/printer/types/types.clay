@@ -41,12 +41,12 @@ overload printTo(stream, x:Bool) {
 /// @section  printTo - integers, floats, pointers 
 
 [I when SignedInteger?(I)]
-overload printTo(stream, x:I) {
+default printTo(stream, x:I) {
     printWithSprintf(stream, "%d", Int(x));
 }
 
 [I when UnsignedInteger?(I)]
-overload printTo(stream, x:I) {
+default printTo(stream, x:I) {
     printWithSprintf(stream, "%u", UInt(x));
 }
 
@@ -154,7 +154,7 @@ forceinline printFloatWithSprintf(stream, nanString, formatString, ..values) {
 /// @section  printTo - statics 
 
 [X]
-overload printTo(stream, x:Static[X]) {
+default printTo(stream, x:Static[X]) {
     printTo(stream, StaticName(x));
 }
 
@@ -186,7 +186,7 @@ overload printTo(stream, x:Tuple[..T]) {
 }
 
 [T when Record?(T) and not LambdaRecord?(T)]
-overload printTo(stream, x:T) {
+default printTo(stream, x:T) {
     printTo(stream, T, "(", ..weaveValues(", ", ..recordFields(x)), ")");
 }
 
@@ -236,13 +236,13 @@ overload printTo(stream, x:UniChar) {
 }
 
 [S when String?(S) or UniString?(S)]
-overload printTo(stream, x:S) {
+default printTo(stream, x:S) {
     for (c in x)
         printTo(stream, c);
 }
 
 [S when ContiguousString?(S)]
-overload printTo(stream, x:S) {
+default printTo(stream, x:S) {
     write(stream, x);
 }
 
@@ -380,13 +380,13 @@ overload printReprTo(stream, x:E) {
 /// @section  printReprTo - statics 
 
 [X]
-overload printReprTo(stream, x:Static[X]) {
+default printReprTo(stream, x:Static[X]) {
     printTo(stream, "#");
     printReprTo(stream, unwrapStatic(x));
 }
 
 [S when Symbol?(S)]
-overload printReprTo(stream, #S) {
+default printReprTo(stream, #S) {
     printTo(stream, StaticName(S));
 }
 

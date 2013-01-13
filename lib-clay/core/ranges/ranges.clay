@@ -94,10 +94,10 @@ forceinline overload end(a:ReverseRange[T]) : ValueReverseCoordinate[T]
 define range;
 
 [T]
-forceinline overload range(begin:T, end:T) : Range[T] = Range(begin, end);
+forceinline default range(begin:T, end:T) : Range[T] = Range(begin, end);
 
 [A,B when Integer?(A) and Integer?(B)]
-forceinline overload range(begin:A, end:B) =
+forceinline default range(begin:A, end:B) =
     Range(toBiggerNumericType(A, B, begin),
           toBiggerNumericType(A, B, end));
 

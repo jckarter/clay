@@ -16,7 +16,7 @@ overload fileSize  (f: RawFilePointer, ..args) = ..fileSize  (f.rawFile^, ..args
 overload seek      (f: RawFilePointer, ..args) = ..seek      (f.rawFile^, ..args);
 overload fileHandle(f: RawFilePointer, ..args) = ..fileHandle(f.rawFile^, ..args);
 
-overload RawFilePointer(..args) =
+default RawFilePointer(..args) =
     initializeRecord(RawFilePointer, new(RawFile(..args)));
 
 overload RawFilePointer(rvalue rawFile: RawFile) =

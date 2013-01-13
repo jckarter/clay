@@ -305,6 +305,30 @@ void argumentError(size_t index, llvm::StringRef msg) {
     error(sout.str());
 }
 
+void ambiguousMatchError(MatchSuccessPtr match, MatchSuccessPtr match2) {
+    if (match->overload->location.ok()) {
+        unsigned line, column;
+        displayLocation(match->overload->location, line, column);
+        llvm::errs() << match->overload->location.source->fileName
+            << '(' << line+1 << ',' << column << "): " << "found matching overload\n";
+        llvm::errs().flush();
+        
+    }
+    if (match2->overload->location.ok()) {
+        unsigned line, column;
+        displayLocation(match2->overload->location, line, column);
+        llvm::errs() << match2->overload->location.source->fileName
+            << '(' << line+1 << ',' << column << "): " << "error: ambiguous overload\n";
+        llvm::errs().flush();
+        
+    }
+    string buf;
+    llvm::raw_string_ostream err(buf);
+    err << "ambiguous overloads for call-site\n";
+    
+    error(err.str());
+}
+
 static const char *valuesStr(size_t n) {
     return (n == 1) ? "value" : "values";
 }

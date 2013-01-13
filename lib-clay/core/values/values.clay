@@ -43,7 +43,7 @@ forceinline overload foldlValues(fn, forward x1, forward x2, forward ..xs)
 forceinline overload foldlValues(fn, forward x) = forward x;
 
 define weaveValues private overload;
-forceinline overload weaveValues(between, forward x, forward ..xs)
+forceinline default weaveValues(between, forward x, forward ..xs)
     = forward x, between, ..weaveValues(between, ..xs);
 forceinline overload weaveValues(between, forward x, forward y)
     = forward x, between, y;
@@ -120,7 +120,7 @@ private record CapturedRValue[T] (
 
 define CapturedValue?(a) : Bool private overload;
 
-overload CapturedValue?(a) : Bool = false;
+default CapturedValue?(a) : Bool = false;
 [T]
 overload CapturedValue?(#CapturedLValue[T]) : Bool = true;
 [T]
@@ -195,7 +195,7 @@ overload mapValues2(fn, #0, forward ..xs) = ;
 define assocValue private overload;
 
 [key]
-overload assocValue(#key, kv, forward ..kvs) = forward ..assocValue(#key, ..kvs);
+default assocValue(#key, kv, forward ..kvs) = forward ..assocValue(#key, ..kvs);
 
 [key, ..T]
 overload assocValue(#key, forward kv: Tuple[Static[key], ..T], ..kvs)

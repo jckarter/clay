@@ -125,6 +125,7 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
                                llvm::ArrayRef<ValueTempness> argsTempness,
                                MatchFailureError &failures);
 
+void setFinalOverloadsEnabled(bool enabled); 
 
 }
 
