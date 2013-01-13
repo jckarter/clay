@@ -801,7 +801,7 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
             desugarFieldRef(x, safeLookupModule(env));
         if (x->isDottedModuleName)
             return analyzeExpr(x->desugared, env);
-        
+
         PVData pv = analyzeOne(x->expr, env);
         if (!pv.ok())
             return NULL;
@@ -813,7 +813,7 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
                 return analyzeStaticObject(obj);
             }
         }
-        
+
         return analyzeExpr(x->desugared, env);
     }
 
@@ -1643,222 +1643,158 @@ MultiPValuePtr analyzeReturn(llvm::ArrayRef<uint8_t> returnIsRef,
 //    equal to `~index`, indicating that that argument must be the same type as
 //    the `index`th vararg.
 struct IntrinsicAnalyzer {
-    // XXX unsigned vs signed, real vs imag, etc. semantic issues
-
-    static const int IF = 0;
-    static const unsigned ExtendedElementVectorType = 0x40000000;
-    static const unsigned TruncatedElementVectorType = 0x20000000;
-
     llvm::Intrinsic::ID ID;
     llvm::ArrayRef<llvm::Type*> inputTypes;
-    
+
     string outError;
     llvm::SmallVector<llvm::Type*, 4> outOverloadedTypes;
-    
+
     IntrinsicAnalyzer(llvm::Intrinsic::ID ID,
                       llvm::ArrayRef<llvm::Type*> inputTypes)
     : ID(ID), inputTypes(inputTypes) {}
-    
-    void VerifyIntrinsicPrototype(llvm::Intrinsic::ID id,
-                                  int dummyIF,
-                                  size_t numReturnValues,
-                                  size_t numArguments,
-                                  ... /* llvm::MVT::SimpleValueType types... */)
+
+    static void skipReturnType(
+        llvm::ArrayRef<llvm::Intrinsic::IITDescriptor> &Infos)
     {
-        llvm::raw_string_ostream errors(outError);
-        if (numArguments != inputTypes.size()) {
-            errors << "intrinsic expects " << numArguments << " arguments, but got "
-                << inputTypes.size() << " arguments";
+        using namespace llvm;
+        using namespace Intrinsic;
+        IITDescriptor D = Infos.front();
+        Infos = Infos.slice(1);
+
+        switch (D.Kind) {
+        case IITDescriptor::Void: return;
+        case IITDescriptor::MMX: return;
+        case IITDescriptor::Metadata: return;
+        case IITDescriptor::Float: return;
+        case IITDescriptor::Double: return;
+        case IITDescriptor::Integer: return;
+        case IITDescriptor::Vector:
+            skipReturnType(Infos);
+            return;
+        case IITDescriptor::Pointer:
+            skipReturnType(Infos);
+            return;
+        case IITDescriptor::Struct: {
+            for (unsigned i = 0, e = D.Struct_NumElements; i != e; ++i)
+                skipReturnType(Infos);
             return;
         }
-        
-        va_list argTypeList;
-        va_start(argTypeList, numArguments);
-        
-        llvm::SmallVector<unsigned, 4> overloadedReturns;
-        
-        for (size_t ri = 0; ri < numReturnValues; ++ri)
-        {
-            int retType = va_arg(argTypeList, int);
-            if (retType < 0) {
-                unsigned matchIndex = unsigned(~retType);
-                matchIndex &= ~(ExtendedElementVectorType | TruncatedElementVectorType);
-                assert(matchIndex < ri);
-                
-                overloadedReturns.push_back(overloadedReturns[matchIndex]);
-            } else if (retType == llvm::MVT::iAny
-                || retType == llvm::MVT::fAny
-                || retType == llvm::MVT::vAny
-                || retType == llvm::MVT::iPTRAny)
-            {
-                overloadedReturns.push_back(unsigned(outOverloadedTypes.size()));
-                outOverloadedTypes.push_back(NULL);
-            } else {
-                overloadedReturns.push_back(~unsigned(0));
-            }
+        case IITDescriptor::Argument: return;
+        case IITDescriptor::ExtendVecArgument: return;
+        case IITDescriptor::TruncVecArgument: return;
         }
-        
-        for (size_t ai = 0; ai < numArguments; ++ai)
-        {
-            int expectArgType = va_arg(argTypeList, int);
-            llvm::Type *argType = inputTypes[ai];
-            
-            if (expectArgType < 0) {
-                unsigned matchIndex = unsigned(~expectArgType);
-                matchIndex &= ~(ExtendedElementVectorType | TruncatedElementVectorType);
-                assert(matchIndex < ai + numReturnValues);
-                
-                if (matchIndex < numReturnValues) {
-                    assert(overloadedReturns[matchIndex] != ~unsigned(0));
-                    llvm::Type *&oType = outOverloadedTypes[overloadedReturns[matchIndex]];
-                    if (oType == NULL)
-                        oType = argType;
-                    else if (oType != argType) {
-                        // XXX handle Extended/TruncatedElementVectorType relationships
-                        errors << "intrinsic argument " << ai+1
-                            << " must match LLVM type of return value " << matchIndex+1
-                            << ", which is ";
-                        oType->print(errors);
-                        errors << ", but got ";
-                        argType->print(errors);
-                        goto failed;
-                    }
-                } else {
-                    size_t matchArg = matchIndex - numReturnValues;
-                    assert(matchArg < ai);
-                    llvm::Type *matchType = inputTypes[matchArg];
-                    if (matchType != argType) {
-                        // XXX handle Extended/TruncatedElementVectorType relationships
-                        errors << "intrinsic argument " << ai+1
-                            << " must match LLVM type of argument " << ai+1
-                            << ", which is ";
-                        matchType->print(errors);
-                        errors << ", but got ";
-                        argType->print(errors);
-                        goto failed;
-                    }
-                }
-            } else if (expectArgType == llvm::MVT::iAny) {
-                if (!argType->isIntegerTy()) {
-                    errors << "intrinsic argument " << ai+1 << " must be of an LLVM integer type, but got ";
-                    argType->print(errors);
-                    goto failed;
-                }
-                outOverloadedTypes.push_back(argType);
-            } else if (expectArgType == llvm::MVT::fAny) {
-                if (!argType->isFloatingPointTy()) {
-                    errors << "intrinsic argument " << ai+1 << " must be of an LLVM floating point type, but got ";
-                    argType->print(errors);
-                    goto failed;
-                }
-                outOverloadedTypes.push_back(argType);
-            } else if (expectArgType == llvm::MVT::vAny) {
-                if (!argType->isVectorTy()) {
-                    errors << "intrinsic argument " << ai+1 << " must be of an LLVM vector type, but got ";
-                    argType->print(errors);
-                    goto failed;
-                }
-                outOverloadedTypes.push_back(argType);
-            } else if (expectArgType == llvm::MVT::iPTR) {
-                if (!argType->isPointerTy()) {
-                    errors << "intrinsic argument " << ai+1 << " must be of an LLVM pointer type, but got ";
-                    argType->print(errors);
-                    goto failed;
-                }
-            } else if (expectArgType == llvm::MVT::iPTRAny) {
-                if (llvm::PointerType *ptype = llvm::dyn_cast<llvm::PointerType>(argType)) {
-                    llvm::EVT PointeeVT = llvm::EVT::getEVT(ptype->getElementType(), true);
-                    if (PointeeVT == llvm::MVT::Other) {
-                        errors << "intrinsic argument " << ai+1
-                            << " must be of an LLVM pointer-to-integer type, but got ";
-                        argType->print(errors);
-                        goto failed;
-                    }
-                } else {
-                    errors << "intrinsic argument " << ai+1
-                        << " must be of an LLVM pointer-to-integer type, but got ";
-                    argType->print(errors);
-                    goto failed;
-                }
-                
-                outOverloadedTypes.push_back(argType);
-            } else {
-                llvm::EVT expectEVT((llvm::MVT::SimpleValueType)expectArgType);
-                unsigned numElts = 0;
-                llvm::Type *eltTy = argType;
-                llvm::VectorType *argVecTy = llvm::dyn_cast<llvm::VectorType>(argType);
-                if (argVecTy) {
-                    eltTy = argVecTy->getElementType();
-                    numElts = argVecTy->getNumElements();
-                }
-                
-                if (expectEVT.isVector()) {                    
-                    llvm::EVT eltEVT = llvm::EVT::getEVT(eltTy);
+        llvm_unreachable("unhandled");
+    }
 
-                    if (expectEVT.getVectorElementType() != eltEVT) {
-                        errors << "intrinsic argument " << ai+1
-                            << " must be of an LLVM vector type with element type "
-                            << expectEVT.getVectorElementType().getEVTString()
-                            << " but got element type " << eltEVT.getEVTString() << " in type ";
-                        argType->print(errors);
-                        goto failed;
-                    }
-                    
-                    if (expectEVT.getVectorNumElements() != numElts) {
-                        errors << "intrinsic argument " << ai+1
-                            << " must be of an LLVM vector type with "
-                            << expectEVT.getVectorNumElements() << " elements but got "
-                            << numElts << " elements in type ";
-                        argType->print(errors);
-                        goto failed;
-                    }
-                } else {
-                    llvm::Type *expectTy = expectEVT.getTypeForEVT(argType->getContext());
-                    if (expectTy != eltTy) {
-                        errors << "intrinsic argument " << ai+1
-                            << " must be of an LLVM vector or scalar type with "
-                            << expectEVT.getEVTString() << " elements but got type ";
-                        eltTy->print(errors);
-                        goto failed;
-                    } else if (eltTy != argType) {
-                        errors << "intrinsic argument " << ai+1
-                            << " must be of LLVM scalar type ";
-                        expectTy->print(errors);
-                        errors << " but got type ";
-                        argType->print(errors);
-                        goto failed;
-                    }
-                }
-            }
+    bool VerifyIntrinsicType(
+        llvm::Type *Ty,
+        llvm::ArrayRef<llvm::Intrinsic::IITDescriptor> &Infos,
+        llvm::SmallVectorImpl<llvm::Type*> &ArgTys)
+    {
+        using namespace llvm;
+        using namespace Intrinsic;
+
+        // If we ran out of descriptors, there are too many arguments.
+        if (Infos.empty()) return true;
+        IITDescriptor D = Infos.front();
+        Infos = Infos.slice(1);
+
+        switch (D.Kind) {
+        case IITDescriptor::Void: return !Ty->isVoidTy();
+        case IITDescriptor::MMX:  return !Ty->isX86_MMXTy();
+        case IITDescriptor::Metadata: return !Ty->isMetadataTy();
+        case IITDescriptor::Float: return !Ty->isFloatTy();
+        case IITDescriptor::Double: return !Ty->isDoubleTy();
+        case IITDescriptor::Integer: return !Ty->isIntegerTy(D.Integer_Width);
+        case IITDescriptor::Vector: {
+            llvm::VectorType *VT = dyn_cast<llvm::VectorType>(Ty);
+            return VT == 0 || VT->getNumElements() != D.Vector_Width ||
+                VerifyIntrinsicType(VT->getElementType(), Infos, ArgTys);
         }
-        
-        va_end(argTypeList);
+        case IITDescriptor::Pointer: {
+            llvm::PointerType *PT = dyn_cast<llvm::PointerType>(Ty);
+            return PT == 0 || PT->getAddressSpace() != D.Pointer_AddressSpace ||
+                VerifyIntrinsicType(PT->getElementType(), Infos, ArgTys);
+        }
 
-        for (llvm::Type * const *i = outOverloadedTypes.begin(),
-                * const *end = outOverloadedTypes.end();
-             i != end;
-             ++i)
-            // XXX provide a way to specify independent output types
-            if (*i == NULL) {
-                errors << "this intrinsic is currently unsupported because its output types "
-                    "cannot be deduced from its arguments; try using an __llvm__ function";
+        case IITDescriptor::Struct: {
+            llvm::StructType *ST = dyn_cast<llvm::StructType>(Ty);
+            if (ST == 0 || ST->getNumElements() != D.Struct_NumElements)
+                return true;
+
+            for (unsigned i = 0, e = D.Struct_NumElements; i != e; ++i)
+            if (VerifyIntrinsicType(ST->getElementType(i), Infos, ArgTys))
+                return true;
+            return false;
+        }
+
+        case IITDescriptor::Argument:
+            // Two cases here - If this is the second occurrence of an argument, verify
+            // that the later instance matches the previous instance.
+            if (D.getArgumentNumber() < ArgTys.size())
+                return Ty != ArgTys[D.getArgumentNumber()];
+
+            // Otherwise, if this is the first instance of an argument, record it and
+            // verify the "Any" kind.
+            assert(D.getArgumentNumber() == ArgTys.size() && "Table consistency error");
+            ArgTys.push_back(Ty);
+
+            switch (D.getArgumentKind()) {
+            case IITDescriptor::AK_AnyInteger: return !Ty->isIntOrIntVectorTy();
+            case IITDescriptor::AK_AnyFloat:   return !Ty->isFPOrFPVectorTy();
+            case IITDescriptor::AK_AnyVector:  return !isa<llvm::VectorType>(Ty);
+            case IITDescriptor::AK_AnyPointer: return !isa<llvm::PointerType>(Ty);
+            }
+            llvm_unreachable("all argument kinds not covered");
+
+        case IITDescriptor::ExtendVecArgument:
+            // This may only be used when referring to a previous vector argument.
+            return D.getArgumentNumber() >= ArgTys.size() ||
+                !isa<llvm::VectorType>(ArgTys[D.getArgumentNumber()]) ||
+                llvm::VectorType::getExtendedElementVectorType(
+                            cast<llvm::VectorType>(ArgTys[D.getArgumentNumber()])) != Ty;
+
+        case IITDescriptor::TruncVecArgument:
+            // This may only be used when referring to a previous vector argument.
+            return D.getArgumentNumber() >= ArgTys.size() ||
+                !isa<llvm::VectorType>(ArgTys[D.getArgumentNumber()]) ||
+                llvm::VectorType::getTruncatedElementVectorType(
+                            cast<llvm::VectorType>(ArgTys[D.getArgumentNumber()])) != Ty;
+        }
+        llvm_unreachable("unhandled");
+    }
+
+    void run() {
+        using namespace llvm;
+
+        llvm::raw_string_ostream errors(outError);
+
+        SmallVector<Intrinsic::IITDescriptor, 8> Table;
+        getIntrinsicInfoTableEntries(ID, Table);
+        ArrayRef<Intrinsic::IITDescriptor> TableRef = Table;
+        SmallVector<llvm::Type *, 4> ArgTys;
+
+        skipReturnType(TableRef);
+
+        for (unsigned i = 0, e = inputTypes.size(); i != e; ++i) {
+            if (VerifyIntrinsicType(inputTypes[i], TableRef, ArgTys)) {
+                errors << "Intrinsic has incorrect argument type!";
                 goto failed;
             }
-    
+            outOverloadedTypes.push_back(inputTypes[i]);
+        }
+        if (!TableRef.empty()) {
+            errors << "Intrinsic has too few arguments!";
+            goto failed;
+        }
+
     failed:
         errors.flush();
     }
-    
-    void run() {
-        using namespace llvm;
-#define GET_INTRINSIC_VERIFIER
-#include "llvm/Intrinsics.gen"
-#undef GET_INTRINSIC_VERIFIER
-    }
-    
+
     bool ok() const { return outError.empty(); }
 };
-    
+
 static TypePtr intrinsicOutputType(llvm::Type *ty)
 {
     if (llvm::IntegerType *intTy = llvm::dyn_cast<llvm::IntegerType>(ty)) {
@@ -1898,10 +1834,10 @@ static TypePtr intrinsicOutputType(llvm::Type *ty)
 
 static MultiPValuePtr intrinsicOutputTypes(llvm::Function *instance)
 {
-    
+
     MultiPValuePtr ret = new MultiPValue();
     llvm::Type *ty = instance->getFunctionType()->getReturnType();
-    
+
     if (ty->isVoidTy())
         return ret;
 
@@ -1914,7 +1850,7 @@ static MultiPValuePtr intrinsicOutputTypes(llvm::Function *instance)
         errors << " not yet supported";
         error(errors.str());
     }
-    
+
     ret->add(PVData(outType, true));
     return ret;
 }
@@ -1923,7 +1859,7 @@ static MultiPValuePtr analyzeIntrinsic(IntrinsicSymbol *intrin, MultiPValue *arg
 {
     vector<TypePtr> argsKey;
     args->toArgsKey(&argsKey);
-    
+
     map<vector<TypePtr>, IntrinsicInstance>::const_iterator instancePair
         = intrin->instances.find(argsKey);
     if (instancePair != intrin->instances.end()) {
@@ -2033,7 +1969,7 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
             return NULL;
         return analyzeReturn(entry->returnIsRef, entry->returnTypes);
     }
-            
+
     case INTRINSIC : {
         IntrinsicSymbol *intrin = (IntrinsicSymbol*)obj.ptr();
         MultiPValuePtr mpv = analyzeMulti(args, env, 0);
@@ -2091,7 +2027,7 @@ MultiPValuePtr analyzeDispatch(ObjectPtr obj,
         suffix->add(args->values[i]);
     PVData const &pvDispatch = args->values[index];
     unsigned memberCount = dispatchTagCount(pvDispatch.type);
-        
+
     MultiPValuePtr result;
     vector<TypePtr> dispatchedTypes;
     for (unsigned i = 0; i < memberCount; ++i) {
@@ -2216,7 +2152,7 @@ MultiPValuePtr analyzeCallValue(PVData const &callable,
         IntrinsicSymbol *intrin = (IntrinsicSymbol*)obj.ptr();
         return analyzeIntrinsic(intrin, args.ptr());
     }
-        
+
     default :
         error("invalid call expression");
         return NULL;
@@ -2345,7 +2281,7 @@ MultiPValuePtr analyzeCallByName(InvokeEntry* entry,
             addLocal(bodyEnv, entry->fixedArgNames[i], expr.ptr());
         }
     }
-    
+
     AnalysisContext ctx;
     StatementAnalysis sa = analyzeStatement(code->body, bodyEnv, &ctx);
     if ((sa == SA_RECURSIVE) && (!ctx.returnInitialized))
@@ -2566,7 +2502,7 @@ static EnvPtr analyzeStatementExpressionStatements(llvm::ArrayRef<StatementPtr> 
 static StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, AnalysisContext* ctx)
 {
     LocationContext loc(stmt->location);
-        
+
     switch (stmt->stmtKind) {
 
     case BLOCK : {
@@ -2593,7 +2529,7 @@ static StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, Analysi
         Return *x = (Return *)stmt.ptr();
         unsigned wantCount = x->isReturnSpecs ? 1 : 0;
         MultiPValuePtr mpv = analyzeMulti(x->values, env, wantCount);
-        
+
         if (!mpv) {
             ctx->hasRecursivePropagation = true;
             return SA_RECURSIVE;
@@ -2776,7 +2712,7 @@ void initializeStaticForClones(StaticForPtr x, size_t count)
 static EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
 {
     LocationContext loc(x->location);
-        
+
     switch (x->bindingKind) {
     case VAR :
     case REF :
@@ -2785,7 +2721,7 @@ static EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
         MultiPValuePtr mpv = analyzeMulti(x->values, env, x->args.size());
         if (!mpv)
             return NULL;
-        
+
         if(x->hasVarArg){
             if (mpv->values.size() < x->args.size()-1)
                 arityMismatchError(x->args.size()-1, mpv->values.size(), /*hasVarArg=*/ true);
@@ -2804,13 +2740,13 @@ static EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
         vector<PatternCellPtr> cells;
         vector<MultiPatternCellPtr> multiCells;
         initializePatternEnv(patternEnv, pvars, cells, multiCells);
-        
+
         llvm::ArrayRef<FormalArgPtr> formalArgs = x->args;
         size_t varArgSize = key.size()-formalArgs.size()+1;
         for (size_t i = 0, j = 0; i < formalArgs.size(); ++i) {
             FormalArgPtr y = formalArgs[i];
             if(y->varArg){
-                if (y->type.ptr()) {      
+                if (y->type.ptr()) {
                     ExprPtr unpack = new Unpack(y->type.ptr());
                     unpack->location = y->type->location;
                     MultiStaticPtr types = new MultiStatic();
@@ -2824,13 +2760,13 @@ static EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
                     j = varArgSize-1;
                 }
             } else {
-                if (y->type.ptr()) {      
+                if (y->type.ptr()) {
                     if (!unifyPatternObj(evaluateOnePattern(y->type, patternEnv), key[i+j].ptr()))
                         matchBindingError(new MatchBindingError(unsigned(i+j), key[i+j], y));
                 }
             }
         }
-              
+
         EnvPtr staticEnv = new Env(env);
         for (size_t i = 0; i < pvars.size(); ++i) {
             if (pvars[i].isMulti) {
@@ -2848,12 +2784,12 @@ static EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
                 x->patternTypes.push_back(v.ptr());
             }
         }
-        
-        evaluatePredicate(x->patternVars, x->predicate, staticEnv);   
-        
+
+        evaluatePredicate(x->patternVars, x->predicate, staticEnv);
+
         EnvPtr env2 = new Env(staticEnv);
         for (size_t i = 0, j = 0; i < formalArgs.size(); ++i) {
-            FormalArgPtr y = formalArgs[i];    
+            FormalArgPtr y = formalArgs[i];
             if(y->varArg){
                 MultiPValuePtr varArgs = new MultiPValue();
                 for (; j < varArgSize; ++j) {
@@ -2862,7 +2798,7 @@ static EnvPtr analyzeBinding(BindingPtr x, EnvPtr env)
                 }
                 --j;
                 addLocal(env2, y->name, varArgs.ptr());
-            } else { 
+            } else {
                 addLocal(env2, y->name, new PValue(key[i+j], false));
             }
         }
@@ -3284,7 +3220,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         if (i >= t->fieldCount())
             argumentIndexRangeError(1, "record field index",
                                     i, t->fieldCount());
-        
+
         MultiPValuePtr mpv = new MultiPValue();
         if (t->hasVarField && i >= t->varFieldPosition)
             if (i == t->varFieldPosition)
@@ -3394,7 +3330,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         ObjectPtr obj = unwrapStaticType(args->values[0].type);
         if (!obj && obj->objKind != TYPE)
             argumentError(0, "static type expected");
-        Type *type = (Type *)obj.ptr(); 
+        Type *type = (Type *)obj.ptr();
         MultiPValuePtr mpv = new MultiPValue();
         if(type->typeKind == NEW_TYPE) {
             NewType *nt = (NewType*)type;
@@ -3866,7 +3802,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
 
         return new MultiPValue(staticPValue(proc.ptr()));
     }
-    
+
     case PRIM_usuallyEquals : {
         ensureArity(args, 2);
         if (!isPrimitiveType(args->values[0].type))
