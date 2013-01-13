@@ -528,7 +528,7 @@ forceinline overload asExpression(value:T, #U) : U = U(value);
 forceinline overload asExpression(value:T, #U) : U = numericConvert(U, value);
 
 [T]
-forceinline overload asExpression(value:T, #T) : T = ref value;
+forceinline overload asExpression(value:T, #T) : ByRef[T] = ref value;
 
 [T]
 forceinline overload asExpression(rvalue value:T, #T) : T = value;
