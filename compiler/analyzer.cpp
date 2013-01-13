@@ -1647,7 +1647,7 @@ struct IntrinsicAnalyzer {
     llvm::ArrayRef<llvm::Type*> inputTypes;
 
     string outError;
-    llvm::SmallVector<llvm::Type*, 4> outOverloadedTypes;
+    llvm::SmallVector<llvm::Type*, 4> ArgTys;
 
     IntrinsicAnalyzer(llvm::Intrinsic::ID ID,
                       llvm::ArrayRef<llvm::Type*> inputTypes)
@@ -1686,53 +1686,132 @@ struct IntrinsicAnalyzer {
         llvm_unreachable("unhandled");
     }
 
-    bool VerifyIntrinsicType(
+    void VerifyIntrinsicType(
         llvm::Type *Ty,
         llvm::ArrayRef<llvm::Intrinsic::IITDescriptor> &Infos,
-        llvm::SmallVectorImpl<llvm::Type*> &ArgTys)
+        llvm::raw_string_ostream &errors, size_t ai)
     {
         using namespace llvm;
         using namespace Intrinsic;
 
         // If we ran out of descriptors, there are too many arguments.
-        if (Infos.empty()) return true;
+        if (Infos.empty()) {
+            errors << "intrinsic has too many arguments";
+            return;
+        }
         IITDescriptor D = Infos.front();
         Infos = Infos.slice(1);
 
         switch (D.Kind) {
-        case IITDescriptor::Void: return !Ty->isVoidTy();
-        case IITDescriptor::MMX:  return !Ty->isX86_MMXTy();
-        case IITDescriptor::Metadata: return !Ty->isMetadataTy();
-        case IITDescriptor::Float: return !Ty->isFloatTy();
-        case IITDescriptor::Double: return !Ty->isDoubleTy();
-        case IITDescriptor::Integer: return !Ty->isIntegerTy(D.Integer_Width);
+        case IITDescriptor::Void:
+            if (!Ty->isVoidTy()) {
+                errors << "intrinsic argument " << (ai+1)
+                       << " must match LLVM void type, but got ";
+                Ty->print(errors);
+            }
+            return;
+        case IITDescriptor::MMX:
+            if (!Ty->isX86_MMXTy()) {
+                errors << "intrinsic argument " << (ai+1)
+                       << " must match LLVM MMX type, but got ";
+                Ty->print(errors);
+            }
+            return;
+        case IITDescriptor::Metadata:
+            if (!Ty->isMetadataTy()) {
+                errors << "intrinsic argument " << (ai+1)
+                       << " must match LLVM metadata type, but got ";
+                Ty->print(errors);
+            }
+            return;
+        case IITDescriptor::Float:
+            if (!Ty->isFloatTy()) {
+                errors << "intrinsic argument " << (ai+1)
+                       << " must match LLVM float type, but got ";
+                Ty->print(errors);
+            }
+            return;
+        case IITDescriptor::Double:
+            if (!Ty->isDoubleTy()) {
+                errors << "intrinsic argument " << (ai+1)
+                       << " must match LLVM double type, but got ";
+                Ty->print(errors);
+            }
+            return;
+        case IITDescriptor::Integer:
+            if (!Ty->isIntegerTy(D.Integer_Width)) {
+                errors << "intrinsic argument " << (ai+1)
+                       << " must match LLVM i" << D.Integer_Width
+                       << " type, but got ";
+                Ty->print(errors);
+            }
+            return;
         case IITDescriptor::Vector: {
             llvm::VectorType *VT = dyn_cast<llvm::VectorType>(Ty);
-            return VT == 0 || VT->getNumElements() != D.Vector_Width ||
-                VerifyIntrinsicType(VT->getElementType(), Infos, ArgTys);
+            if (VT == 0) {
+                errors << "intrinsic argument " << (ai+1)
+                       << " must be of an LLVM vector type, but got ";
+                Ty->print(errors);
+            } else if (VT->getNumElements() != D.Vector_Width) {
+                errors << "intrinsic argument " << (ai+1)
+                       << " must be of an LLVM vector type with "
+                       << D.Vector_Width
+                       << " elements, but got ";
+                Ty->print(errors);
+            }
+            VerifyIntrinsicType(VT->getElementType(), Infos, errors, ai);
+            return;
         }
         case IITDescriptor::Pointer: {
             llvm::PointerType *PT = dyn_cast<llvm::PointerType>(Ty);
-            return PT == 0 || PT->getAddressSpace() != D.Pointer_AddressSpace ||
-                VerifyIntrinsicType(PT->getElementType(), Infos, ArgTys);
+            if (PT == 0) {
+                errors << "intrinsic argument " << (ai+1)
+                       << " must be of an LLVM pointer type, but got ";
+                Ty->print(errors);
+            } else if (PT->getAddressSpace() != D.Pointer_AddressSpace) {
+                errors << "intrinsic argument " << (ai+1)
+                       << " must be of an LLVM pointer type with"
+                       << D.Pointer_AddressSpace
+                       << " address space, but got ";
+                Ty->print(errors);
+            }
+            VerifyIntrinsicType(PT->getElementType(), Infos, errors, ai);
+            return;
         }
 
         case IITDescriptor::Struct: {
             llvm::StructType *ST = dyn_cast<llvm::StructType>(Ty);
-            if (ST == 0 || ST->getNumElements() != D.Struct_NumElements)
-                return true;
-
+            if (ST == 0) {
+                errors << "intrinsic argument " << (ai+1)
+                       << " must be of an LLVM struct type, but got ";
+                Ty->print(errors);
+            } else if (ST->getNumElements() != D.Struct_NumElements) {
+                errors << "intrinsic argument " << (ai+1)
+                       << " must be of an LLVM struct type with "
+                       << D.Struct_NumElements
+                       << " elements, but got ";
+                Ty->print(errors);
+            }
             for (unsigned i = 0, e = D.Struct_NumElements; i != e; ++i)
-            if (VerifyIntrinsicType(ST->getElementType(i), Infos, ArgTys))
-                return true;
-            return false;
+                VerifyIntrinsicType(ST->getElementType(i), Infos, errors, ai);
+            return;
         }
 
         case IITDescriptor::Argument:
             // Two cases here - If this is the second occurrence of an argument, verify
             // that the later instance matches the previous instance.
-            if (D.getArgumentNumber() < ArgTys.size())
-                return Ty != ArgTys[D.getArgumentNumber()];
+            if (D.getArgumentNumber() < ArgTys.size()) {
+                if (Ty != ArgTys[D.getArgumentNumber()]) {
+                    errors << "intrinsic argument " << (ai+1)
+                           << " must match LLVM type of argument "
+                           << D.getArgumentNumber()
+                           << ", which is ";
+                    ArgTys[D.getArgumentNumber()]->print(errors);
+                    errors << ", but got ";
+                    Ty->print(errors);
+                }
+                return;
+            }
 
             // Otherwise, if this is the first instance of an argument, record it and
             // verify the "Any" kind.
@@ -1740,26 +1819,64 @@ struct IntrinsicAnalyzer {
             ArgTys.push_back(Ty);
 
             switch (D.getArgumentKind()) {
-            case IITDescriptor::AK_AnyInteger: return !Ty->isIntOrIntVectorTy();
-            case IITDescriptor::AK_AnyFloat:   return !Ty->isFPOrFPVectorTy();
-            case IITDescriptor::AK_AnyVector:  return !isa<llvm::VectorType>(Ty);
-            case IITDescriptor::AK_AnyPointer: return !isa<llvm::PointerType>(Ty);
+            case IITDescriptor::AK_AnyInteger:
+                if (!Ty->isIntOrIntVectorTy()) {
+                    errors << "intrinsic argument " << (ai+1)
+                           << " must be of an LLVM integer type, but got ";
+                    Ty->print(errors);
+                }
+                return;
+            case IITDescriptor::AK_AnyFloat:
+                if (!Ty->isFPOrFPVectorTy()) {
+                    errors << "intrinsic argument " << (ai+1)
+                           << " must be of an LLVM floating point type, but got ";
+                    Ty->print(errors);
+                }
+                return;
+            case IITDescriptor::AK_AnyVector:
+                if (!isa<llvm::VectorType>(Ty)) {
+                    errors << "intrinsic argument " << (ai+1)
+                           << " must be of an LLVM vector type, but got ";
+                    Ty->print(errors);
+                }
+                return;
+            case IITDescriptor::AK_AnyPointer:
+                if (!isa<llvm::PointerType>(Ty)) {
+                    errors << "intrinsic argument " << (ai+1)
+                           << " must be of an LLVM pointer type, but got ";
+                    Ty->print(errors);
+                }
+                return;
             }
             llvm_unreachable("all argument kinds not covered");
 
         case IITDescriptor::ExtendVecArgument:
             // This may only be used when referring to a previous vector argument.
-            return D.getArgumentNumber() >= ArgTys.size() ||
+            if (D.getArgumentNumber() >= ArgTys.size() ||
                 !isa<llvm::VectorType>(ArgTys[D.getArgumentNumber()]) ||
                 llvm::VectorType::getExtendedElementVectorType(
-                            cast<llvm::VectorType>(ArgTys[D.getArgumentNumber()])) != Ty;
+                        cast<llvm::VectorType>(
+                            ArgTys[D.getArgumentNumber()])) != Ty)
+            {
+                    errors << "intrinsic argument " << (ai+1)
+                           << " must be of an LLVM vector type, but got ";
+                    Ty->print(errors);
+            }
+            return;
 
         case IITDescriptor::TruncVecArgument:
             // This may only be used when referring to a previous vector argument.
-            return D.getArgumentNumber() >= ArgTys.size() ||
+            if (D.getArgumentNumber() >= ArgTys.size() ||
                 !isa<llvm::VectorType>(ArgTys[D.getArgumentNumber()]) ||
                 llvm::VectorType::getTruncatedElementVectorType(
-                            cast<llvm::VectorType>(ArgTys[D.getArgumentNumber()])) != Ty;
+                        cast<llvm::VectorType>(
+                            ArgTys[D.getArgumentNumber()])) != Ty)
+            {
+                    errors << "intrinsic argument " << (ai+1)
+                           << " must be of an LLVM vector type, but got ";
+                    Ty->print(errors);
+            }
+            return;
         }
         llvm_unreachable("unhandled");
     }
@@ -1772,23 +1889,16 @@ struct IntrinsicAnalyzer {
         SmallVector<Intrinsic::IITDescriptor, 8> Table;
         getIntrinsicInfoTableEntries(ID, Table);
         ArrayRef<Intrinsic::IITDescriptor> TableRef = Table;
-        SmallVector<llvm::Type *, 4> ArgTys;
 
         skipReturnType(TableRef);
 
         for (unsigned i = 0, e = inputTypes.size(); i != e; ++i) {
-            if (VerifyIntrinsicType(inputTypes[i], TableRef, ArgTys)) {
-                errors << "Intrinsic has incorrect argument type!";
-                goto failed;
-            }
-            outOverloadedTypes.push_back(inputTypes[i]);
+            VerifyIntrinsicType(inputTypes[i], TableRef, errors, i);
         }
         if (!TableRef.empty()) {
-            errors << "Intrinsic has too few arguments!";
-            goto failed;
+            errors << "intrinsic has too few arguments";
         }
 
-    failed:
         errors.flush();
     }
 
@@ -1894,7 +2004,7 @@ static MultiPValuePtr analyzeIntrinsic(IntrinsicSymbol *intrin, MultiPValue *arg
         if (ia.outError.empty()) {
             instance.function = llvm::Intrinsic::getDeclaration(llvmModule,
                                                                 intrin->id,
-                                                                ia.outOverloadedTypes);
+                                                                ia.ArgTys);
             instance.outputTypes = intrinsicOutputTypes(instance.function);
             return instance.outputTypes;
         } else {
