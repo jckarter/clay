@@ -2,12 +2,12 @@
 
 pkgname=clay-git
 pkgver=0.2
-pkgrel=2
+pkgrel=3
 pkgdesc='Clay is a programming language designed for Generic Programming.'
 arch=('i686' 'x86_64')
 url='http://claylabs.com/clay/'
 license=('BSD')
-depends=('llvm=3.1' 'clang=3.1') #'python' 'ocaml' really needed?
+depends=('llvm=3.2' 'clang=3.2') #'python' 'ocaml' really needed?
 optdepends=()
 makedepends=('git' 'cmake>=2.6')
 provides=('clay')
@@ -36,14 +36,14 @@ build() {
     mkdir build
     cd build
     cmake -G "Unix Makefiles" ../ -DCMAKE_INSTALL_PREFIX=/opt/clay
-    make VERBOSE=1
+    make VERBOSE=0
 
     make DESTDIR=${pkgdir} install
 
     install -dm755 ${pkgdir}/usr/bin
     cd ${pkgdir}/usr/bin
     ln -s /opt/clay/bin/clay .
-    ln -s /opt/clay/bin/clay-fix .
+    ln -s /opt/clay/bin/claydoc .
     ln -s /opt/clay/bin/clay-bindgen .
 }
 
