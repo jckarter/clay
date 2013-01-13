@@ -452,7 +452,7 @@ OverloadPtr desugarAsOverload(OverloadPtr &x) {
     for (unsigned i = 0; i < x->code->patternVars.size(); ++i) {
         llvm::SmallString<128> buf;
         llvm::raw_svector_ostream sout(buf);
-        sout << "%arg" << i;
+        sout << "%asArg" << i;
         IdentifierPtr argName = Identifier::get(sout.str());
 
         ExprPtr staticName =
