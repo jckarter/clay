@@ -422,12 +422,11 @@ static void usage(char *argv0)
     llvm::errs() << "options:\n";
     llvm::errs() << "  -o <file>             specify output file\n";
     llvm::errs() << "  -target <target>      set target platform for code generation\n";
-    llvm::errs() << "  -target-cpu <CPU>     set target CPU for code generation\n";
-    llvm::errs() << "  -target-features <features>\n"
-        << "                        set target features for code generation\n"
+    llvm::errs() << "  -mcpu <CPU>           set target CPU for code generation\n";
+    llvm::errs() << "  -mattr <features>     set target features for code generation\n"
         << "                        use +feature to enable a feature\n"
         << "                        or -feature to disable it\n"
-        << "                        for example, -target-features +f1,-f2\n";
+        << "                        for example, -mattr +feature1,-feature2\n";
     llvm::errs() << "  -soft-float           generate software floating point library calls\n";
     llvm::errs() << "  -shared               create a dynamically linkable library\n";
     llvm::errs() << "  -emit-llvm            emit llvm code\n";
@@ -771,27 +770,27 @@ int main2(int argc, char **argv, char const* const* envp) {
             }
             crossCompiling = targetTriple != llvm::sys::getDefaultTargetTriple();
         }
-        else if (strcmp(argv[i], "-target-cpu") == 0) {
+        else if (strcmp(argv[i], "-mcpu") == 0) {
             if (i+1 == argc) {
-                llvm::errs() << "error: CPU name missing after -target-cpu\n";
+                llvm::errs() << "error: CPU name missing after -mcpu\n";
                 return 1;
             }
             ++i;
             targetCPU = argv[i];
             if (targetCPU.empty() || (targetCPU[0] == '-')) {
-                llvm::errs() << "error: CPU name missing after -target-cpu\n";
+                llvm::errs() << "error: CPU name missing after -mcpu\n";
                 return 1;
             }
         }
-        else if (strcmp(argv[i], "-target-features") == 0) {
+        else if (strcmp(argv[i], "-mattr") == 0) {
             if (i+1 == argc) {
-                llvm::errs() << "error: features missing after -target-features\n";
+                llvm::errs() << "error: features missing after -mattr\n";
                 return 1;
             }
             ++i;
             targetFeatures = argv[i];
             if (targetFeatures.empty() || (targetFeatures[0] == '-')) {
-                llvm::errs() << "error: features missing after -target-features\n";
+                llvm::errs() << "error: features missing after -mattr\n";
                 return 1;
             }
         }
