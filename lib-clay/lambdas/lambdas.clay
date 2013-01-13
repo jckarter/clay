@@ -1,30 +1,64 @@
-
-import sharedpointers.*;
+// main constructor
 
 
-/// @section  Function - polymorphic callable object container 
+/// @section  Function 
 
-record Function[In,Out] (
-    body : SharedPointer[FunctionBody[In,Out]]
+record Function[In, Out] (
+    obj : Pointer[Opaque],
+    code : CodePointer[[Opaque, ..unpack(In)], Out],
+    destructor : CodePointer[[Opaque],[]],
 );
 
+[..I, ..O]
+overload RegularRecord?(#Function[[..I], [..O]]) = false;
 
-// main constructor
+[..I, ..O]
+overload BitwiseMovedType?(#Function[[..I], [..O]]) = true;
+
+private define Function?(T) : Bool;
+overload Function?(T) = false;
+[..I, ..O]
+overload Function?(#Function[[..I], [..O]]) = true;
+
+[..I, ..O]
+overload call(x:Function[[..I], [..O]], forward ..args:I) : ..O {
+    return forward ..x.code(x.obj^, ..args);
+}
+
+[..I, ..O]
+overload Function[[..I], [..O]]() --> returned:Function[[..I], [..O]] {
+    returned.obj <-- Type(returned.obj)();
+    returned.code <-- Type(returned.code)();
+    returned.destructor <-- Type(returned.destructor)();
+}
 
 /* this comes before Function[In, Out] so that the shim isn't constructed if the object
    natively returns no values */
-[..In, T when CallDefined?(call, T, ..In)]
-alias overload Function[[..In], []](x:T) {
-    return Function[[..In],[]](new(FunctionBody[[..In],[]]((forward ..args) => { x(..args); })));
+[..In, T when CallDefined?(call, T, ..In) and not Function?(T)]
+overload Function[[..In], []](x:T) {
+    return Function[[..In],[]]((forward ..args) => { x(..args); });
 }
 
-[In, Out, T when CallableWithSignature?(T, In, Out)]
-alias overload Function[In, Out](x:T) {
-    return Function[In,Out](new(FunctionBody[In,Out](x)));
+[..I, ..O, T when CallDefined?(call, T, ..I) and not Function?(T)]
+overload Function[[..I],[..O]](x:T) --> returned:Function[[..I],[..O]] {
+    var codePtr = makeCodePointer(call, T, ..I);
+    var destructor = makeCodePointer(destroy, T);
+    returned.code = CodePointer[[Opaque, ..I], [..O]](codePtr);
+    returned.destructor = CodePointer[[Opaque],[]](destructor);
+
+    var ptr = allocateRawMemoryAligned(T, 1, TypeAlignment(T));
+    try {
+        ptr^ <-- x;
+    }
+    catch (e) {
+        freeRawMemoryAligned(ptr);
+        throw e;
+    }
+    returned.obj = Pointer[Opaque](ptr);
 }
 
-[T when MonoType?(T)]
-alias overload Function(x:T) {
+[T when MonoType?(T) and not Function?(T)]
+overload Function(x:T) {
     return Function[[..MonoInputTypes(x)],[..MonoOutputTypes(x)]](x);
 }
 
@@ -42,18 +76,21 @@ overload CallableWithSignature?(#T, In:I, Out:O) {
 [In,..Out]
 private CodePointerReturnTypes(#CodePointer[In,[..Out]]) = [..Out];
 
-
-// redefine constructors shadowed by the primary constructor
-
-[In,Out]
-alias overload Function[In,Out](body : SharedPointer[FunctionBody[In,Out]]) --> returned:Function[In,Out] {
-    returned.body <-- body;
+[In, Out]
+overload resetUnsafe(x:Function[In, Out]) {
+    x <-- Function[In, Out]();
 }
 
-[In,Out]
-overload Function[In,Out](x : Function[In,Out]) --> returned:Function[In,Out] {
-    returned.body <-- x.body;
+[In, Out]
+overload destroy(x:Function[In, Out]) {
+    if (not null?(x.obj)) {
+        x.destructor(x.obj^);
+        freeRawMemoryAligned(x.obj);
+    }
 }
+
+staticassert(     Movable?(Type(Function(() -> {}))));
+staticassert(not Copyable?(Type(Function(() -> {}))));
 
 
 // makeFunction
@@ -69,48 +106,5 @@ makeFunction(forward x:T, ..In) {
 // call operator
 
 [..I, ..O]
-overload call(x:Function[[..I], [..O]], forward ..args:I) : ..O {
-    return forward call(x.body^, ..args);
-}
-
-[..I, ..O]
 alias overload MonoInputTypes(x:Function[[..I], [..O]]) = ..I;
-
-
-/// @section  FunctionBody 
-
-record FunctionBody[In, Out] (
-    obj : Pointer[Opaque],
-    code : CodePointer[[Opaque, ..unpack(In)], Out],
-    destructor : CodePointer[[Opaque],[]],
-);
-
-[..I, ..O]
-overload call(x:FunctionBody[[..I], [..O]], forward ..args:I) : ..O {
-    return forward ..x.code(x.obj^, ..args);
-}
-
-[..I, ..O, T]
-alias overload FunctionBody[[..I],[..O]](x:T) --> returned:FunctionBody[[..I],[..O]] {
-    var codePtr = makeCodePointer(call, T, ..I);
-    var destructor = makeCodePointer(destroy, T);
-    returned.code = CodePointer[[Opaque, ..I], [..O]](codePtr);
-    returned.destructor = CodePointer[[Opaque],[]](destructor);
-
-    var ptr = allocateRawMemoryAligned(T, 1, TypeAlignment(T));
-    try {
-        ptr^ <-- x;
-    }
-    catch (e) {
-        freeRawMemoryAligned(ptr);
-        throw e;
-    }
-    returned.obj = Pointer[Opaque](ptr);
-}
-
-[In, Out]
-overload destroy(x:FunctionBody[In, Out]) {
-    x.destructor(x.obj^);
-    freeRawMemoryAligned(x.obj);
-}
 

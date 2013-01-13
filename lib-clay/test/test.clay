@@ -26,9 +26,16 @@ record TestCase (
     xfail?: Bool,
 );
 
-[T, F when String?(T) and CallDefined?(call, F) and (T != String or F != TestFunction)]
+staticassert (     Movable?(TestCase));
+staticassert (not Copyable?(TestCase));
+
+[T, F when String?(T) and CallDefined?(call, F)]
 overload TestCase(name:T, _case:F, xfail?)
-    = TestCase(String(name), TestFunction(_case), xfail?);
+    = initializeRecord(TestCase, String(name), TestFunction(_case), xfail?);
+
+[T when String?(T)]
+overload TestCase(name:T, rvalue _case:TestFunction, xfail?)
+    = initializeRecord(TestCase, String(name), move(_case), xfail?);
 
 overload TestCase(name, fn) = TestCase(name, TestFunction(fn), false);
 
@@ -40,7 +47,8 @@ record TestSuite (
 );
 
 [S, T when S != String or T != Vector[TestCase]]
-overload TestSuite(name : S, testCases : T) = TestSuite(String(name), Vector[TestCase](testCases));
+overload TestSuite(name : S, rvalue testCases : T) =
+    TestSuite(String(name), Vector[TestCase](move(testCases)));
 
 alias TEST_CASE_INDENT = "  ";
 alias TEST_FAILURE_INDENT = TEST_CASE_INDENT++TEST_CASE_INDENT;

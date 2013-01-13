@@ -20,7 +20,7 @@ startThread(proc): Thread {
             abort();
         }
     };
-    return Thread(startThreadImpl(allocateObject(FunctionBody[[], []](launcher))), false);
+    return Thread(startThreadImpl(allocateObject(Function[[], []](launcher))), false);
 }
 
 joinThread(thread: Thread) {

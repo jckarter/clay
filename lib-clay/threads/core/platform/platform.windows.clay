@@ -5,13 +5,13 @@ import lambdas.*;
 alias ThreadHandle = HANDLE;
 
 private threadProc(param: RawPointer): DWORD {
-    ref proc = bitcast(Pointer[FunctionBody[[], []]], param);
+    ref proc = bitcast(Pointer[Function[[], []]], param);
     finally freeObject(proc);
     proc^();
     return DWORD();
 }
 
-startThreadImpl(proc: Pointer[FunctionBody[[], []]]) {
+startThreadImpl(proc: Pointer[Function[[], []]]) {
     var thread = CreateThread(LPSECURITY_ATTRIBUTES(), SIZE_T(0), StdCallCodePointer(threadProc), bitcast(LPVOID, proc), DWORD(0), LPDWORD());
     if (null?(thread)) {
         freeObject(proc);
