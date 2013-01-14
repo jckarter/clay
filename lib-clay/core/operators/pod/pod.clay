@@ -15,7 +15,7 @@ forceinline overload copyNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Poi
     copyNonovPODs(destBegin, srcBegin, srcEnd);
 }
 [P when BitwiseMovedType?(P)]
-forceinline overload moveMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) : {
+forceinline default moveMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) : {
     copyPODs(destBegin, srcBegin, srcEnd);
     var destEnd = destBegin + (srcEnd - srcBegin);
     if (destBegin <= srcBegin)
@@ -32,7 +32,7 @@ forceinline overload moveMemoryUnsafe(destBegin:Pointer[P], srcBegin:Pointer[P],
     copyPODs(destBegin, srcBegin, srcEnd);
 }
 [P when BitwiseMovedType?(P)]
-forceinline overload moveNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) : {
+forceinline default moveNonoverlappingMemory(destBegin:Pointer[P], srcBegin:Pointer[P], srcEnd:Pointer[P]) : {
     copyNonovPODs(destBegin, srcBegin, srcEnd);
     resetMemoryUnsafe(srcBegin, srcEnd);
 }
@@ -67,7 +67,7 @@ forceinline overload destroyMemory(begin:Pointer[P], end:Pointer[P]) : { }
 
 define copyPOD;
 
-[P] forceinline overload copyPOD(x: P) --> returned: P { memcpy(@returned, @x, TypeSize(P)); }
+[P] forceinline default copyPOD(x: P) --> returned: P { memcpy(@returned, @x, TypeSize(P)); }
 forceinline overload copyPOD(x: Bool) --> returned: Bool { bitcopy(returned, x); }
 [N when Numeric?(N)]
 forceinline overload copyPOD(x: N) --> returned: N { bitcopy(returned, x); }
@@ -92,5 +92,5 @@ forceinline overload resetUnsafe(x: P) : { }
 [P when BitwiseCopiedType?(P)]
 forceinline overload P(x: P) --> returned: P = copyPOD(x);
 [P when BitwiseAssignedType?(P)]
-forceinline overload assign(ref x: P, y: P) : { x <-- copyPOD(y); }
+forceinline default assign(ref x: P, y: P) : { x <-- copyPOD(y); }
 

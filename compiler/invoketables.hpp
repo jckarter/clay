@@ -113,8 +113,9 @@ typedef vector< pair<OverloadPtr, MatchResultPtr> > MatchFailureVector;
 struct MatchFailureError {
     MatchFailureVector failures;
     bool failedInterface:1;
+    bool ambiguousMatch:1;
 
-    MatchFailureError() : failedInterface(false) {}
+    MatchFailureError() : failedInterface(false), ambiguousMatch(false) {}
 };
 
 InvokeSet *lookupInvokeSet(ObjectPtr callable,
@@ -125,6 +126,7 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
                                llvm::ArrayRef<ValueTempness> argsTempness,
                                MatchFailureError &failures);
 
+void setFinalOverloadsEnabled(bool enabled); 
 
 }
 

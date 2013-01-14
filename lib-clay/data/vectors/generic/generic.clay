@@ -4,7 +4,7 @@
 /// @section generic vector requirements
 
 define Vector?;
-overload Vector?(x) = false;
+default Vector?(x) = false;
 
 define vectorData;
 define vectorSize;
@@ -16,7 +16,7 @@ define vectorRequestCapacity;
 /// @section predicates
 
 [V when Vector?(V)]
-overload ContiguousSequence?(#V) = true;
+default ContiguousSequence?(#V) = true;
 
 
 /// @section size, index
@@ -135,7 +135,7 @@ private forceinline ensureSpace(a, space:SizeT) {
 private define insertLocationsUnsafe;
 
 [I, J when Integer?(I) and Integer?(J)]
-overload insertLocationsUnsafe(a, pos:I, n:J) {
+default insertLocationsUnsafe(a, pos:I, n:J) {
     return ..insertLocationsUnsafe(a, SizeT(pos), SizeT(n));
 }
 
@@ -161,7 +161,7 @@ overload insertAll(a:V, i:I, seq:S) {
 [V,I,S when Vector?(V) and Integer?(I) and SizedSequence?(S) and
          (SequenceElementType(S) == SequenceElementType(V))
          and LValueSequence?(S)]
-overload insertAll(a:V, i:I, seq:S) {
+default insertAll(a:V, i:I, seq:S) {
     assert(i >= 0 and i <= size(a), "invalid position for insert into ", V);
     var first, last = ..insertLocationsUnsafe(a, i, size(seq));
     try {

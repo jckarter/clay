@@ -45,10 +45,10 @@ RecordFieldNames(R) = ..mapValues(
 define RegularRecord?(#T) : Bool;
 
 [T]
-overload RegularRecord?(#T) : Bool = false;
+default RegularRecord?(#T) : Bool = false;
 
 [T when Record?(T)]
-overload RegularRecord?(#T) : Bool = true;
+default RegularRecord?(#T) : Bool = true;
 
 
 
@@ -58,7 +58,7 @@ overload RegularRecord?(#T) : Bool = true;
 define initializeRecord(#T, ..args:A): T;
 
 [T, ..A when Record?(T) and (Tuple[..RecordFieldTypes(T)] == Tuple[..A])]
-alias overload initializeRecord(#T, ..args:A) --> returned:T {
+alias default initializeRecord(#T, ..args:A) --> returned:T {
     ..recordFields(returned) <-- ..args;
 }
 
@@ -134,7 +134,7 @@ destroyRecord(a:T) : {
 }
 
 [T when RegularRecord?(T) and not DestroyDoesNothingType?(T)]
-overload destroy(a:T) : {
+default destroy(a:T) : {
     destroyRecord(a);
 }
 
@@ -154,7 +154,7 @@ overload assign(ref dest:T, ref src:T) : {
 /// @section  equals? 
 
 [T when RegularRecord?(T)]
-overload equals?(a:T, b:T) : Bool {
+default equals?(a:T, b:T) : Bool {
     alias n = RecordFieldCount(T);
     ..for (i in staticIntegers(#n)) {
         if (not equals?(fieldRefByIndex(a, i), fieldRefByIndex(b, i)))
@@ -168,7 +168,7 @@ overload equals?(a:T, b:T) : Bool {
 /// @section  lesser? 
 
 [T when RegularRecord?(T)]
-overload lesser?(a:T, b:T) : Bool {
+default lesser?(a:T, b:T) : Bool {
     alias n = RecordFieldCount(T);
     ..for (i in staticIntegers(#n)) {
         ref av = fieldRefByIndex(a, i);

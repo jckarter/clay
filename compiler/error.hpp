@@ -2,6 +2,7 @@
 #define __ERROR_HPP
 
 #include "clay.hpp"
+#include "invoketables.hpp"
 
 namespace clay {
 

@@ -475,6 +475,8 @@ void matchFailureError(MatchFailureError const &err)
     string buf;
     if (err.failedInterface)
         buf = "call does not conform to function interface";
+    else if(err.ambiguousMatch)
+        buf = "call matches ambiguous overloads";
     else
         buf = "no matching overload found";
 

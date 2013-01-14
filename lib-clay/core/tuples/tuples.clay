@@ -37,7 +37,7 @@ forceinline unpackTupleRef(x:Tuple[..T]) = ref ..tupleElements(x);
 
 define unpackRef private overload;
 
-forceinline overload unpackRef(x) = ref x;
+forceinline default unpackRef(x) = ref x;
 [..T]
 forceinline overload unpackRef(x:Tuple[..T]) = ref ..unpackTupleRef(x);
 

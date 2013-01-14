@@ -48,7 +48,7 @@ forceinline overload hash(z:T) = wrapAdd(
 [T]
 forceinline overload hash(x:Pointer[T]) = bitcast(SizeT, x);
 
-forceinline overload hash(x:Char) = wrapCast(SizeT, x);
+forceinline default hash(x:Char) = wrapCast(SizeT, x);
 
 
 
@@ -63,13 +63,13 @@ forceinline overload hash(a:Array[T,n]) = hashSequence(a);
 
 define hashValues;
 
-forceinline overload hashValues(..values) {
+forceinline default hashValues(..values) {
     var h = SizeT(0);
     ..for (x in values)
         h = wrapAdd(wrapMultiply(SizeT(7), h), wrapMultiply(SizeT(13), hash(x)));
     return h;
 }
-forceinline overload hashValues(value) = hash(value);
+forceinline default hashValues(value) = hash(value);
 
 [..T]
 forceinline overload hash(x:Tuple[..T]) = hashValues(..tupleElements(x));
@@ -98,7 +98,7 @@ forceinline overload hash(x:SharedPointer[T]) = hash(x.ptr);
 
 /// @section  strings 
 
-forceinline overload hash(a:String) = hashSequence(a);
+forceinline default hash(a:String) = hashSequence(a);
 forceinline overload hash(a:StringLiteralRef) = hashSequence(a);
 
 

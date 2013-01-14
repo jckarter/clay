@@ -189,14 +189,14 @@ lgamma_r(xarg:Double, signgamp:Pointer[Int]) {
 				    case (5) goto case5;	// FALLTHRU 
 				    case (4) goto case4;	// FALLTHRU 
 				    case (3) goto case3;	// FALLTHRU 
-					case (2,1,0) goto default;
+					case (2,1,0) goto defaultCase;
 
 case7:				z *: (y+6.0);	// FALLTHRU 
 case6:				z *: (y+5.0);	// FALLTHRU 
 case5:				z *: (y+4.0);	// FALLTHRU 
 case4:				z *: (y+3.0);	// FALLTHRU 
 case3:				z *: (y+2.0);	// FALLTHRU 
-default:			
+defaultCase:			
 				r +: log(z);
 		    // 8.0 <= x < 2**58 
 			} 
