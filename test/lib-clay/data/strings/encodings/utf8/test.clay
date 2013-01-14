@@ -9,42 +9,42 @@ main() = testMain(
     TestSuite("utf8", array(
         TestCase("UTF8 well formed", -> {
             expectEqual(
-                Vector[Int](72, 32, 233, 32, 8364, 32, 119652),
+                vector(72, 32, 233, 32, 8364, 32, 119652),
                 map(Int, UTF8("H \xC3\xA9 \xE2\x82\xAC \xF0\x9D\x8D\xA4")));
         }),
         TestCase("UTF8 code point > 0x10FFFF", -> {
             expectEqual(
-                Vector[Int](65533, 32),
+                vector(65533, 32),
                 map(Int, UTF8("\xF4\xBF\xBF\xBF ")));
         }),
         TestCase("UTF8 invalid start characters", -> {
             expectEqual(
-                Vector[Int](65533, 65533, 65533),
+                vector(65533, 65533, 65533),
                 map(Int, UTF8("\x80\xBF\xF5\xFF")));
         }),
         TestCase("UTF8 truncated sequences", -> {
             ..for (s in "\xC3", "\xE2", "\xE2\x82", "\xF0", "\xF0\x9D", "\xF0\x9D\x8D") {
                 expectEqual(
-                    Vector[UniChar](UniChar(65533)),
+                    vector(UniChar(65533)),
                     UTF8(s));
             }
         }),
         TestCase("UTF8 invalid characters in sequences", -> {
             expectEqual(
-                Vector[Int](65533, 32, 65533, 32, 65533, 32, 65533, 32, 65533, 32, 65533, 32, 65533, 32),
+                vector(65533, 32, 65533, 32, 65533, 32, 65533, 32, 65533, 32, 65533, 32, 65533, 32),
                     
                 map(Int, UTF8(
                     "\xC3\x29 \xC3\xE9 \xE2\x02\xAC \xE2\x82\x2C \xF0\x1D\x8D\xA4 \xF0\x9D\x0D\xA4 \xF0\x9D\x8D\x24 ")));
         }),
         TestCase("UTF8 invalid overlond encodings", -> {
             expectEqual(
-                Vector[Int](65533, 32, 65533, 32, 128, 32),
+                vector(65533, 32, 65533, 32, 128, 32),
                 map(Int, UTF8("\xC0\x80 \xC1\xBF \xC2\x80 ")));
             expectEqual(
-                Vector[Int](65533, 32, 65533, 32, 2048, 32),
+                vector(65533, 32, 65533, 32, 2048, 32),
                 map(Int, UTF8("\xE0\x80\x80 \xE0\x9F\xBF \xE0\xA0\x80 ")));
             expectEqual(
-                Vector[Int](65533, 32, 65533, 32, 65536, 32),
+                vector(65533, 32, 65533, 32, 65536, 32),
                 map(Int, UTF8("\xF0\x80\x80\x80 \xF0\x8F\xBF\xBF \xF0\x90\x80\x80 ")));
         }),
         TestCase("UTF8 push", -> {
@@ -64,7 +64,7 @@ main() = testMain(
                 "\0\x7F\xC2\x80\xDF\xBF\xE0\xA0\x80\xEF\xBF\xBF\xF0\x90\x80\x80\xF4\x8F\xBF\xBF\xEF\xBF\xBD",
                 ustr.encoded);
             expectEqual(
-                Vector[Int](0, 127, 128, 2047, 2048, 65535, 65536, 1114111, 65533),
+                vector(0, 127, 128, 2047, 2048, 65535, 65536, 1114111, 65533),
                 map(Int, ustr));
         }),
         TestCase("encodeUniChar", -> {

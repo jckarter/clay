@@ -7,6 +7,8 @@ import data.sequences.lazy.mapped.*;
 
 alias String = Vector[Char];
 
+string(..chars) = String(array(..chars));
+
 
 
 /// @section  construct from sequences of bytes 

@@ -2,7 +2,7 @@ import printer.(println);
 import data.vectors.*;
 
 main() {
-    var v = Vector[Int](1, 2, 3, 4, 5);
+    var v = vector(1, 2, 3, 4, 5);
     var sum = 0;
     for (x in v)
         sum +: x;

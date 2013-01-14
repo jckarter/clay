@@ -58,7 +58,7 @@ overload assign(dest:Test, src:Test) {
 
 main() {
     try {
-        var a = Vector[Test](Test(), Test(), Test(), Test());
+        var a = vector(Test(), Test(), Test(), Test());
         var b = Vector[Test]();
         b = move(a);
         var c = b;

@@ -1,9 +1,13 @@
 import data.algorithms.heaps.*;
 import data.vectors.*;
+import data.elements.*;
 
 record Queue[S] (seq: S);
 
 alias VectorQueue[T] = Queue[Vector[T]];
+
+[..A when equalValues?(..A)]
+vectorQueue(..args: A) = VectorQueue[nthValue(#0, ..A)](..args);
 
 [S] overload Queue[S]() = Queue(S());
 
@@ -39,6 +43,9 @@ overload Queue[S](forward ..values: A) --> returned: Queue[S] {
         throw ex;
     }
 }
+
+[S]
+overload Queue[S](elements: NoElements) = Queue[S]();
 
 [S] queueEmpty?(q: Queue[S]) = empty?(q.seq);
 [S] queueSize(q: Queue[S]) = size(q.seq);

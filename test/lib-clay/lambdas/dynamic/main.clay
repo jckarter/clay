@@ -14,7 +14,7 @@ makeFuncs() {
 
     alias F = Function[[Int], [Int]];
 
-    return Vector[F](F(double), F(triple), F(plus2), F(plus3));
+    return vector(F(double), F(triple), F(plus2), F(plus3));
 }
 
 main() {

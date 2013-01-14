@@ -1,5 +1,6 @@
 import data.sequences.handle.*;
 import data.sequences.*;
+import data.elements.*;
 
 
 /// @section  Deque coordinates 
@@ -150,8 +151,11 @@ overload Deque[T](forward from: A) --> to: Deque[T] {
     }
 }
 
-[T, ..A when countValues(..A) > 0 and equalValues?(T, ..A)]
-overload Deque[T](forward ..from: A) --> to: Deque[T] {
+[T]
+overload Deque[T](elements: NoElements) = Deque[T]();
+
+[..A when equalValues?(..A)]
+deque(forward ..from: A) --> to: Deque[nthValue(#0, ..A)] {
     initializeDequeMap(to, SizeT(countValues(..A)));
 
     var i = to.begin;
