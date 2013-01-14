@@ -3,6 +3,5 @@ overload foo(x) = true;
 overload foo(y:Int32) = false;
 
 main() {
-	foo("bar");
 	foo(2);
 }

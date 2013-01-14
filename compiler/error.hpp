@@ -12,7 +12,6 @@ extern set<pair<string,string> > logMatchSymbols;
 void matchBindingError(MatchResultPtr const &result);
 void matchFailureLog(MatchFailureError const &err);
 void matchFailureError(MatchFailureError const &err);
-void ambiguousMatchError(MatchSuccessPtr match, MatchSuccessPtr match2);
 
 class CompilerError : std::exception {
 };

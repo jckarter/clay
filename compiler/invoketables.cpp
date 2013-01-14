@@ -418,13 +418,12 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
         MatchSuccessPtr match2;
         vector<ValueTempness> tempnessKey2;
         vector<uint8_t> forwardedRValueFlags2;
-        MatchFailureError failures2;
         unsigned j = invokeSet->nextOverloadIndex;
         while ((match2 = findMatchingInvoke(callableOverloads(callable),
                                            j,
                                            callable,
                                            argsKey,
-                                           failures2)).ptr() != NULL) {
+                                           failures)).ptr() != NULL) {
             if (matchTempness(match2->overload->code,
                               argsTempness,
                               match2->overload->callByName,
@@ -436,8 +435,10 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
             ++j;
         }
 
-        if (match2 != NULL && !match2->overload->isDefault)
-            ambiguousMatchError(match, match2);
+        if (match2 != NULL && !match2->overload->isDefault) {
+            failures.ambiguousMatch = true;
+            return NULL;    
+        }
     }
 
     return entry;
