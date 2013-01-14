@@ -492,7 +492,7 @@ forceinline overload max(ref a:T, ref b:T)  : ByRef[T] {
 /// @section  ifExpression 
 
 [T]
-alias default ifExpression(condition, consequent:T, alternate:T) --> ret:T {
+alias overload ifExpression(condition, consequent:T, alternate:T) --> ret:T {
     if (condition)
         ret <-- consequent;
     else
@@ -521,11 +521,8 @@ alias overload ifExpression(condition, #consequent, #alternate) --> ret:StringLi
 
 /// @section  asExpression 
 
-[T, U]
-forceinline default asExpression(value:T, #U) : U = U(value);
-
-[T, U when Numeric?(T,U)]
-forceinline overload asExpression(value:T, #U) : U = numericConvert(U, value);
+[T, U when not staticEquals?(T, U)]
+forceinline overload asExpression(value:T, #U) : U = U(value);
 
 [T]
 forceinline overload asExpression(value:T, #T) : ByRef[T] = ref value;
@@ -723,7 +720,7 @@ alias overload CallOutputTypes(#f, ..In) = ..StaticCallOutputTypes(f, ..In);
 
 define MonoInputTypes;
 [f when StaticMono?(f)]
-alias default MonoInputTypes(#f) = ..StaticMonoInputTypes(f);
+alias overload MonoInputTypes(#f) = ..StaticMonoInputTypes(f);
 [F when LambdaRecord?(F) and LambdaMono?(F)]
 alias overload MonoInputTypes(f:F) = ..LambdaMonoInputTypes(F);
 

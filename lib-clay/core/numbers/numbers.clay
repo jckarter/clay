@@ -1,4 +1,5 @@
 import core.platform.(OSFamily, Unix, CPU, X86_64);
+import core.operators.(private staticEquals?);
 
 
 /// @section  numeric type predicates 
@@ -203,8 +204,8 @@ forceinline overload assign(ref dest:A, src:B) : {
 
 /// @section  equals?,  notEquals?, lesser?, lesserEquals?, greater?, greaterEquals? 
 
-[A,B when Numeric?(A,B)]
-forceinline default (==)(a:A, b:B) : Bool  =
+[A,B when not staticEquals?(A,B) and Numeric?(A,B)]
+forceinline overload (==)(a:A, b:B) : Bool  =
     (==)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
 [A when Numeric?(A)]
@@ -214,56 +215,44 @@ forceinline overload (==)(a:A, b:A) : Bool = integerEquals?(a, b);
 forceinline overload (==)(a:A, b:A) : Bool  = floatOrderedEquals?(a, b);
 
 
-[A, B when Numeric?(A, B)]
-forceinline default (!=)(a:A, b:B) : Bool  =
+[A, B when not equals?(A,B) and Numeric?(A, B)]
+forceinline overload (!=)(a:A, b:B) : Bool  =
     (!=)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
-
-[A when Numeric?(A)]
-forceinline overload (!=)(a:A, b:A) : Bool = not (==)(a, b);
 
 [A when Float?(A) or Imaginary?(A)]
 forceinline overload (!=)(a:A, b:A) : Bool = floatUnorderedNotEquals?(a, b);
 
 
-[A,B when Numeric?(A,B)]
-forceinline default (<)(a:A, b:B) : Bool =
+[A,B when not equals?(A,B) and Numeric?(A,B)]
+forceinline overload (<)(a:A, b:B) : Bool =
     (<)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
-[A when Numeric?(A)]
+[A when Integer?(A)]
 forceinline overload (<)(a:A, b:A) : Bool = integerLesser?(a, b);
 
 [A when Float?(A) or Imaginary?(A)]
 forceinline overload (<)(a:A, b:A) : Bool = floatOrderedLesser?(a, b);
 
 
-[A, B when Numeric?(A, B)]
-forceinline default (<=)(a:A, b:B) : Bool =
+[A, B when not equals?(A,B) and Numeric?(A, B)]
+forceinline overload (<=)(a:A, b:B) : Bool =
     (<=)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
-
-[A when Numeric?(A)]
-forceinline overload (<=)(a:A, b:A) : Bool  = not (<)(b, a);
 
 [A when Float?(A) or Imaginary?(A)]
 forceinline overload (<=)(a:A, b:A) : Bool = floatOrderedLesserEquals?(a, b);
 
 
-[A,B when Numeric?(A,B)]
-forceinline default (>)(a:A, b:B) : Bool =
+[A,B when not equals?(A,B) and Numeric?(A,B)]
+forceinline overload (>)(a:A, b:B) : Bool =
     (>)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
-
-[A when Numeric?(A)]
-forceinline overload (>)(a:A, b:A) : Bool = (<)(b, a);
 
 [A when Float?(A) or Imaginary?(A)]
 forceinline overload (>)(a:A, b:A) : Bool = floatOrderedGreater?(a, b);
 
 
-[A, B when Numeric?(A, B)]
-forceinline default (>=)(a:A, b:B) : Bool =
+[A, B when not equals?(A,B) and Numeric?(A, B)]
+forceinline overload (>=)(a:A, b:B) : Bool =
     (>=)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
-
-[A when Numeric?(A)]
-forceinline overload (>=)(a:A, b:A) : Bool = not (<)(a, b);
 
 [A when Float?(A) or Imaginary?(A)]
 forceinline overload (>=)(a:A, b:A) : Bool = floatOrderedGreaterEquals?(a, b);
@@ -281,46 +270,46 @@ forceinline overload zero?(x:T) : Bool = (==)(x, T(0));
 
 /// @section  binary ops 
 
-[A,B when Numeric?(A,B)]
-forceinline default (+)(a:A, b:B) =
+[A,B when not equals?(A,B) and Numeric?(A,B)]
+forceinline overload (+)(a:A, b:B) =
     (+)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
 [A when Numeric?(A)]
 forceinline default (+)(a:A, b:A) : A = numericAdd(a, b);
 
 
-[A,B when Numeric?(A,B)]
-forceinline default (-)(a:A, b:B) =
+[A,B when not equals?(A,B) and Numeric?(A,B)]
+forceinline overload (-)(a:A, b:B) =
     (-)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
 [A when Numeric?(A)]
 forceinline default (-)(a:A, b:A) : A = numericSubtract(a, b);
 
 
-[A,B when Numeric?(A,B)]
-forceinline default (*)(a:A, b:B) =
+[A,B when not equals?(A,B) and Numeric?(A,B)]
+forceinline overload (*)(a:A, b:B) =
     (*)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
 [A when Numeric?(A)]
 forceinline default (*)(a:A, b:A) : A = numericMultiply(a, b);
 
 
-[A,B when Float?(A,B)]
-forceinline default (/)(a:A, b:B) =
+[A,B when not equals?(A,B) and Float?(A,B)]
+forceinline overload (/)(a:A, b:B) =
     (/)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
 [A when Float?(A)]
 forceinline default (/)(a:A, b:A) : A = floatDivide(a, b);
 
-[A,B when Integer?(A,B)]
-forceinline default (\)(a:A, b:B) =
+[A,B when not equals?(A,B) and Integer?(A,B)]
+forceinline overload (\)(a:A, b:B) =
     (\)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
 [A when Integer?(A)]
 forceinline default (\)(a:A, b:A) : A = integerQuotient(a, b);
 
-[A,B when Integer?(A,B)]
-forceinline default (%)(a:A, b:B) =
+[A,B when not equals?(A,B) and Integer?(A,B)]
+forceinline overload (%)(a:A, b:B) =
     (%)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
 [A when Integer?(A)]
@@ -403,24 +392,24 @@ forceinline default (<<)(a:A, b:B) : A = integerShiftLeft(a, A(b));
 [A,B when Integer?(A,B)]
 forceinline default (>>)(a:A, b:B) : A = integerShiftRight(a, A(b));
 
-[A,B when Integer?(A,B)]
-forceinline default (&)(a:A, b:B) =
+[A,B when not equals?(A, B) and Integer?(A,B)]
+forceinline overload (&)(a:A, b:B) =
     integerBitwiseAnd(wrapToBiggerNumericType(A, B, a),
                       wrapToBiggerNumericType(A, B, b));
 
 [A when Integer?(A)]
 forceinline overload (&)(a:A, b:A) : A = integerBitwiseAnd(a, b);
 
-[A,B when Integer?(A,B)]
-forceinline default (|)(a:A, b:B) =
+[A,B when not equals?(A, B) and Integer?(A,B)]
+forceinline overload (|)(a:A, b:B) =
     integerBitwiseOr(wrapToBiggerNumericType(A, B, a),
                      wrapToBiggerNumericType(A, B, b));
 
 [A when Integer?(A)]
 forceinline overload (|)(a:A, b:A) : A = integerBitwiseOr(a, b);
 
-[A,B when Integer?(A,B)]
-forceinline default (~)(a:A, b:B) =
+[A,B when not equals?(A, B) and Integer?(A,B)]
+forceinline overload (~)(a:A, b:B) =
     integerBitwiseXor(wrapToBiggerNumericType(A, B, a),
                       wrapToBiggerNumericType(A, B, b));
 
@@ -466,7 +455,7 @@ forceinline overload (%)(a:A, b:A) : A
     = integerRemainderChecked(a, b);
 
 [A, B when Integer?(A, B) and IntegerOverflowChecks?()]
-forceinline overload bitshl(a:A, b:B) : A
+forceinline overload (<<)(a:A, b:B) : A
     = integerShiftLeftChecked(a, A(b));
 
 [A when SignedInteger?(A) and IntegerOverflowChecks?()]
