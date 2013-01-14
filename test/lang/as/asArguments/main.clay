@@ -4,7 +4,8 @@ import printer.(println);
 foo(x:T as Int64, y as Float64) = T, Type(x), Type(y);
 
 main() {
-	
-	println(..weaveValues(",", ..foo(3, 7.f)));
-
+	var a = 2;
+	ref ra = a;	
+	println(..weaveValues(",", ..foo(a, 7.f)));
+	println(..weaveValues(",", ..foo(ra, 9.0)));
 }
