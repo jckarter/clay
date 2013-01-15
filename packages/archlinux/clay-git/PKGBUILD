@@ -1,8 +1,8 @@
 # Maintainer: agemogolk (agemogolk@github)
 
 pkgname=clay-git
-pkgver=0.2
-pkgrel=3
+pkgver=20130115
+pkgrel=1
 pkgdesc='Clay is a programming language designed for Generic Programming.'
 arch=('i686' 'x86_64')
 url='http://claylabs.com/clay/'
@@ -13,24 +13,24 @@ makedepends=('git' 'cmake>=2.6')
 provides=('clay')
 conflicts=('clay-hg')
 
-_gitroot='git://github.com/jckarter'
+_gitroot='git://github.com/jckarter/clay.git'
+_gitname='clay'
 
 build() {
-    cd $srcdir
+    cd "$srcdir"
+    msg "Connecting to GIT server...."
 
-    msg "getting clay"
-    if [ -d clay ]; then
-        cd clay
-        git pull origin master
+    if [[ -d "$_gitname" ]]; then
+        cd "$_gitname" && git pull origin
         msg "The local files are updated."
     else
-        git clone $_gitroot/clay.git clay
+        git clone "$_gitroot" "$_gitname"
     fi
 
-    msg 'GIT checkout done or server timeout'
-    msg 'Start building Clay'
+    msg "GIT checkout done or server timeout"
+    msg "Starting build..."
 
-    cd $srcdir/clay
+    cd "$srcdir/$_gitname"
 
     rm -Rf build
     mkdir build
@@ -38,7 +38,10 @@ build() {
     cmake -G "Unix Makefiles" ../ -DCMAKE_INSTALL_PREFIX=/opt/clay -DCMAKE_BUILD_TYPE=Release
     
     make VERBOSE=0
+}
 
+package() {
+    cd "$srcdir/$_gitname/build"
     make DESTDIR=${pkgdir} install
 
     install -dm755 ${pkgdir}/usr/bin
@@ -47,4 +50,3 @@ build() {
     ln -s /opt/clay/bin/claydoc .
     ln -s /opt/clay/bin/clay-bindgen .
 }
-
