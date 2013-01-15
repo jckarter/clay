@@ -27,7 +27,7 @@ struct MatchResult : public Object {
 };
 
 struct MatchSuccess : public MatchResult {
-    CodePtr code;
+    OverloadPtr overload;
     EnvPtr env;
 
     ObjectPtr callable;
@@ -42,12 +42,11 @@ struct MatchSuccess : public MatchResult {
     InlineAttribute isInline:3;
     bool callByName:1;
 
-    MatchSuccess(bool callByName, InlineAttribute isInline, CodePtr code, EnvPtr env,
+    MatchSuccess(OverloadPtr overload, EnvPtr env,
                  ObjectPtr callable, llvm::ArrayRef<TypePtr> argsKey)
         : MatchResult(MATCH_SUCCESS),
-          code(code), env(env), callable(callable),
-          argsKey(argsKey), varArgPosition(0),
-          isInline(isInline), callByName(callByName) {}
+          overload(overload), env(env), callable(callable),
+          argsKey(argsKey), varArgPosition(0) {}
 };
 typedef Pointer<MatchSuccess> MatchSuccessPtr;
 

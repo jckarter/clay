@@ -12,7 +12,8 @@ import data.sequences.operators.*;
 var clayKeywords = array(
     "public", "private", "import", "as",
     "record", "variant", "instance",
-    "define", "overload", "external", "alias",
+    "define", "overload", "default",
+    "external", "alias",
     "static", "rvalue",
     "inline", "enum", "var", "ref", "forward",
     "and", "or", "not",

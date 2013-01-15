@@ -58,7 +58,7 @@ private exceptionObject(exp:RawPointer) : ByRef[ExceptionData]
 // more sophisticated version.
 define printUnhandledExceptionToStderr(e) :;
 
-overload printUnhandledExceptionToStderr(e) : {
+default printUnhandledExceptionToStderr(e) : {
     libc.fprintf(libc.stderr, cstring("unhandled %s exception\n"), cstring(MemberTypeName(e)));
 }
 
@@ -67,7 +67,7 @@ overload printUnhandledExceptionToStderr(e) : {
 /// @section  throwValue, continueException 
 
 [T when Type?(T)]
-overload throwValue(x:T, ..ignored) : {
+default throwValue(x:T, ..ignored) : {
     errorWithPrintfNoThrow(stringLiteralConcat("exception of type ", StaticName(T)," thrown with exceptions disabled"));
 }
 

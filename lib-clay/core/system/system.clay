@@ -35,7 +35,7 @@ private alias runMain(argc_, argv_, f, ..args) : Int {
 }
 
 [Main]
-overload __operators__.callMain(#Main, argc_:Int, argv_:Pointer[Pointer[Int8]]) : Int
+default __operators__.callMain(#Main, argc_:Int, argv_:Pointer[Pointer[Int8]]) : Int
     = runMain(argc_, argv_, Main);
 
 [Main when CallDefined?(Main, Type(commandLine()))]

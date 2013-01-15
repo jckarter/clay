@@ -17,7 +17,7 @@ VariantNestingPaths(#V, #M) =
 private define VariantNestingPaths2;
 
 [V,M]
-overload VariantNestingPaths2(#V, #M, Prefix) {
+default VariantNestingPaths2(#V, #M, Prefix) {
     alias SubV = Tuple(..SubVariants(V));
     return ..VariantNestingPaths3(SubV, M, Prefix, #0);
 }
@@ -32,7 +32,7 @@ overload VariantNestingPaths2(#V, #M, Prefix) {
 private define VariantNestingPaths3;
 
 [i]
-overload VariantNestingPaths3(Vs, M, Prefix, #i) {
+default VariantNestingPaths3(Vs, M, Prefix, #i) {
     alias V = staticIndex(Vs, #i);
     alias NewPrefix = Tuple(..unpack(Prefix), V);
     return ..VariantNestingPaths2(V, M, NewPrefix),

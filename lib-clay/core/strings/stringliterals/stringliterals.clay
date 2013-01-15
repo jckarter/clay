@@ -80,7 +80,7 @@ forceinline overload reverseIterator(#s) =
 /// @section  string literal concatenation 
 
 private define StringLiteralStatic?(s) : Bool;
-overload StringLiteralStatic?(s) : Bool = false;
+default StringLiteralStatic?(s) : Bool = false;
 [s]
 overload StringLiteralStatic?(#Static[s]) : Bool = StringLiteral?(s);
 
@@ -146,10 +146,10 @@ overload stringLiteralFind(identifier, sub) = stringLiteralFind(identifier, sub,
 
 define strl;
 
-overload strl(..xx) = stringLiteralConcat(..mapValues(strl, ..xx));
+default strl(..xx) = stringLiteralConcat(..mapValues(strl, ..xx));
 
 [x]
-overload strl(#x) = StaticName(#x);
+default strl(#x) = StaticName(#x);
 [i when StringLiteral?(i)]
 overload strl(#i) = i;
 

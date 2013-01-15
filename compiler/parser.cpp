@@ -2359,6 +2359,18 @@ static bool allReturnSpecs(vector<ReturnSpecPtr> &returnSpecs,
 // define, overload
 //
 
+static bool isOverload(bool &isDefault) {
+    int p = save();
+    if (keyword("overload"))
+        isDefault = false;
+    else if (restore(p), keyword("default"))
+        isDefault = true;
+    else {
+        return false;
+    }
+    return true;
+}
+
 static bool optInline(InlineAttribute &isInline) {
     unsigned p = save();
     if (keyword("inline"))
@@ -2553,7 +2565,8 @@ static bool overload(TopLevelItemPtr &x, Module *module, unsigned s) {
     if (!optInline(isInline)) return false;
     bool callByName;
     if (!optCallByName(callByName)) return false;
-    if (!keyword("overload")) return false;
+    bool isDefault;
+    if (!isOverload(isDefault)) return false;
     unsigned e = save();
     restore(s);
     Location location = currentLocation();
@@ -2585,9 +2598,10 @@ static bool overload(TopLevelItemPtr &x, Module *module, unsigned s) {
     target->startLocation = targetStartLocation;
     target->endLocation = targetEndLocation;
     code->location = location;
-    x = new Overload(module, target, code, callByName, isInline, hasAsConversion);
-    x->location = location;
-    NameRefPtr name = (NameRef *)target.ptr();
+    OverloadPtr oload = new Overload(module, target, code, callByName, isInline, hasAsConversion);
+    oload->location = location;
+    oload->isDefault = isDefault;
+    x = oload.ptr();
     return true;
 }
 
@@ -3028,7 +3042,7 @@ static bool documentationAnnotation(std::map<DocumentationAnnotation, string> &a
         ano = SectionAnnotation;
     } else if (key == "module") {
         ano = ModuleAnnotation;
-    } else if (key == "overload") {
+    } else if (key == "overload" || key == "default") {
         ano = OverloadAnnotation;
     } else if (key == "record") {
         ano = RecordAnnotion;

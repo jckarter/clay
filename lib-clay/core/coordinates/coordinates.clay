@@ -18,7 +18,7 @@ LValueCoordinate?(T) : Bool =
 [T]
 define ContiguousCoordinate?(#T) : Bool;
 
-overload ContiguousCoordinate?(T) : Bool = false;
+default ContiguousCoordinate?(T) : Bool = false;
 
 
 

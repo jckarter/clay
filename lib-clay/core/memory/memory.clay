@@ -167,7 +167,7 @@ overload moveMemory(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]
 }
 
 [T when not PODType?(T)]
-overload moveMemoryUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) : {
+default moveMemoryUnsafe(destBegin:Pointer[T], srcBegin:Pointer[T], srcEnd:Pointer[T]) : {
     if (destBegin <= srcBegin)
         moveMemoryForwardsUnsafe(destBegin, srcBegin, srcEnd);
     else

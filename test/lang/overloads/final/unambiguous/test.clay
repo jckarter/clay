@@ -1,0 +1,10 @@
+define foo;
+overload foo(x) = false;
+overload foo() = true;
+overload foo(x, y) = "OK";
+
+main() {
+	foo(2);
+	foo();
+	foo(2, 3);
+}

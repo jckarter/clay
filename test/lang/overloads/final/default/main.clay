@@ -1,0 +1,14 @@
+import printer.*;
+
+define foo;
+default foo(x) = 1;
+default foo(x, y) = 2;
+overload foo(x: Int32) = 3;
+overload foo(x: Char, y: Byte) = 4;
+
+main() {
+    println(foo("bar"));
+    println(foo(2, "bar"));
+    println(foo(2));
+    println(foo('a', 2uss));
+}

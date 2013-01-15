@@ -1968,6 +1968,7 @@ struct Overload : public TopLevelItem {
     bool callByName:1;
     bool nameIsPattern:1;
     bool hasAsConversion:1;
+    bool isDefault:1;
 
     Overload(Module *module, ExprPtr target,
              CodePtr code,
@@ -1976,7 +1977,7 @@ struct Overload : public TopLevelItem {
         : TopLevelItem(OVERLOAD, module), target(target), code(code),
           isInline(isInline), patternsInitializedState(0),
           callByName(callByName), nameIsPattern(false), 
-          hasAsConversion(false) {}
+          hasAsConversion(false), isDefault(false) {}
     Overload(Module *module, ExprPtr target,
              CodePtr code,
              bool callByName,
@@ -1985,7 +1986,7 @@ struct Overload : public TopLevelItem {
         : TopLevelItem(OVERLOAD, module), target(target), code(code),
           isInline(isInline), patternsInitializedState(0),
           callByName(callByName), nameIsPattern(false), 
-          hasAsConversion(hasAsConversion) {}
+          hasAsConversion(hasAsConversion), isDefault(false) {}
 };
 
 struct Procedure : public TopLevelItem {

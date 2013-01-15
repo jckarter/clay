@@ -3,7 +3,7 @@
 #include "error.hpp"
 #include "codegen.hpp"
 #include "loader.hpp"
-
+#include "invoketables.hpp"
 
 // for _exit
 #ifdef _WIN32
@@ -468,6 +468,8 @@ static void usage(char *argv0)
     llvm::errs() << "  -e <source>           compile and run <source> (implies -run)\n";
     llvm::errs() << "  -M<module>            \"import <module>.*;\" for -e\n";
     llvm::errs() << "  -version              display version info\n";
+
+    llvm::errs() << "  -final-overloads      enable final overloads (temporary option)\n";
 }
 
 static string sharedExtensionForTarget(llvm::Triple const &triple) {
@@ -540,6 +542,8 @@ int main2(int argc, char **argv, char const* const* envp) {
 
     unsigned optLevel = 2;
     bool optLevelSet = false;
+
+    bool finalOverloadsEnabled = false;
 
 #ifdef __APPLE__
     genPIC = true;
@@ -900,6 +904,9 @@ int main2(int argc, char **argv, char const* const* envp) {
             }
             clayFile = argv[i];
         }
+        else if (strcmp(argv[i], "-final-overloads") == 0) {
+            finalOverloadsEnabled = true;
+        }
         else {
             llvm::errs() << "error: unrecognized option " << argv[i] << '\n';
             return 1;
@@ -955,7 +962,9 @@ int main2(int argc, char **argv, char const* const* envp) {
 
     setInlineEnabled(inlineEnabled);
     setExceptionsEnabled(exceptions);
-
+    
+    setFinalOverloadsEnabled(finalOverloadsEnabled);
+    
     llvm::Triple llvmTriple(targetTriple);
     targetTriple = llvmTriple.str();
 
