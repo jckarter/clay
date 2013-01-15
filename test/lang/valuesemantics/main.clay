@@ -46,7 +46,7 @@ overload assign(dest:Test, src:Test) {
 }
 
 main() {
-    var a = Vector[Test](Test(), Test());
+    var a = vector(Test(), Test());
     reserve(a, 100);
     pushAll(a, array(Test(), Test(), Test(), Test(), Test()));
     var x = Test();

@@ -20,7 +20,7 @@ main() {
     var vmap = HashMap[Int,Vector[Int]]();
 
     println(vmap[0]);
-    put(vmap, 0, Vector[Int](1,2,3));
+    put(vmap, 0, vector(1,2,3));
     remove(vmap, 0);
     println(vmap[0]);
 

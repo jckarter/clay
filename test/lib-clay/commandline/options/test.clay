@@ -3,6 +3,7 @@ import commandline.options.table.*;
 import commandline.options.parser.*;
 import data.strings.*;
 import data.vectors.*;
+import data.elements.*;
 
 fbbSpec() = OptionSpecs(array(
   OptionSpec('f', "foo"),
@@ -26,7 +27,7 @@ numberOfOptions(it) = numberOf(it, OptionValue);
 numberOfArguments(it) = numberOf(it, Argument);
 validOptions?(it) = numberOf(it, Error) == 0;
 
-PR(..args) = ParseResult(..mapValues(ParseToken, ..args));
+PR(..args) = ParseResult(elements(..mapValues(ParseToken, ..args)));
 
 main() = testMain(
   TestSuite("Raw option parsing", array(
@@ -34,7 +35,7 @@ main() = testMain(
       var opts = array("foo", "bar", "baz");
       for(opt in opts){
         var pr = parseOptions(fbbSpec(), array("--"++opt));
-        expectEqual(pr, Vector[ParseToken](ParseToken(OptionValue(opt))));
+        expectEqual(pr, vector(ParseToken(OptionValue(opt))));
       }
     }),
     TestCase("repeated options", -> {
@@ -50,7 +51,7 @@ main() = testMain(
     }),
     TestCase("with values as separate tokens", -> {
       var pr = parseOptions(valuableSpec(), array("--foo", "bar"));
-      expectEqual(ParseResult(ParseToken(OptionValue("foo", "bar"))), pr);
+      expectEqual(ParseResult(elements(ParseToken(OptionValue("foo", "bar")))), pr);
     }),
     TestCase("with values included in a short options", -> {
       var pr = parseOptions(valuableSpec(), array("-fbar"));
@@ -82,8 +83,8 @@ main() = testMain(
     TestCase("getting values", -> {
       var ot = OptionTable(valuableSpec(), array("-fkittens", "--bar=badgers", "--foo", "bunnies"));
 
-      expectEqual(getOptions(ot, "foo"), Vector[String](String("kittens"), String("bunnies")));
-      expectEqual(getOptions(ot, "bar"), Vector[String](String("badgers")));
+      expectEqual(getOptions(ot, "foo"), vector(String("kittens"), String("bunnies")));
+      expectEqual(getOptions(ot, "bar"), vector(String("badgers")));
     })
   ))
 );

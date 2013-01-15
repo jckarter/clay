@@ -28,7 +28,7 @@ testReturnByRef() {
 }
 
 main() {
-    var a = Vector[Int](1, 2, 3, 4, 5, 6);
+    var a = vector(1, 2, 3, 4, 5, 6);
     sumWithLambda(a);
     sumWithBlock(a);
     testReturnByRef();

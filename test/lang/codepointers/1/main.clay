@@ -11,7 +11,7 @@ makeCPType(Inputs, Outputs) {
 }
 
 main() {
-    var a = Vector[Int](1, 2, 3, 4, 5);
+    var a = vector(1, 2, 3, 4, 5);
 
     showCPType( index, Type(a), Int );
     showCPType( clear, Type(a) );

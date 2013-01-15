@@ -1,6 +1,6 @@
 import printer.(str);
 import data.strings.(String);
-import data.vectors.(Vector);
+import data.vectors.*;
 import test.*;
 
 even?(x) = x % 2 == 0;
@@ -37,7 +37,7 @@ main() = testMain(
         TestCase("eachValue", -> {
             var r = Vector[String]();
             eachValue(x -> { push(r, str(x)); }, 1, 2.0, "three");
-            var expected = Vector[String](String("1"), String("2"), String("three"));
+            var expected = vector(String("1"), String("2"), String("three"));
             expectEqual(expected, r);
         }),
         TestCase("eachValue2", -> {
@@ -47,7 +47,7 @@ main() = testMain(
                 1, 2, 3,
                 7, 8, 9,
             );
-            var expected = Vector[Int](8, 10, 12);
+            var expected = vector(8, 10, 12);
             expectEqual(expected, r);
         }),
         TestCase("weaveValues", -> {

@@ -1,0 +1,10 @@
+define elements(..args) private overload;
+
+
+record NoElements ();
+
+overload elements() = NoElements();
+
+
+[..A when countValues(..A) > 0 and equalValues?(..A)]
+overload elements(..args: A) = array(..args);

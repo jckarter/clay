@@ -7,6 +7,7 @@ import
     data.strings.*,
     lambdas.*,
     data.vectors.*,
+    data.elements.*,
     printer.formatter.(repr);
 
 
@@ -239,7 +240,7 @@ alias expectCallUndefined(Proc, ..Types) {
 
 [I]
 private expectIterator2(name, iter:I, ..expected) {
-    var expectedV = Vector[IteratorTargetType(I)](..expected);
+    var expectedV = Vector[IteratorTargetType(I)](elements(..expected));
     var resultV = Vector[IteratorTargetType(I)]();
     pushAll(resultV, iter);
     var msg = str("`", name, "` is expected to contain:\n");

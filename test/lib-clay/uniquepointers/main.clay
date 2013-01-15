@@ -5,7 +5,7 @@ import data.vectors.*;
 test() {
     var p = newUnique(Canary(true));
 
-    var pv = Vector[UniquePointer[Canary]](
+    var pv = vector(
         newUnique(Canary(true)),
         newUnique(Canary(true)),
         newUnique(Canary(true)),

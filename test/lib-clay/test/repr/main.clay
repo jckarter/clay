@@ -16,7 +16,7 @@ main() = testMain(
                 expectEqualValues(['\r', "x\t"], '\x12', "x\t");
             }),
             TestCase("in expectIterator and expectSequence", -> {
-                var vs = Vector[UInt32](1u, 17u);
+                var vs = vector(1u, 17u);
                 expectIterator(iterator(vs), 4u);
                 expectSequence(vs, 12u);
             }),

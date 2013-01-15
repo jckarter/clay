@@ -32,7 +32,7 @@ testSeparatedListNotEmpty(#strict, #opt) {
     var s = String("1.12.xy");
     var input = iterator(s);
     var r = require(p(input));
-    var expected = Vector[Int](1, 12);
+    var expected = vector(1, 12);
     expectEqual(expected, r);
     if (strict) {
         expectEqual(String(".xy"), String(input));

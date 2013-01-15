@@ -35,7 +35,7 @@ main() {
         println(i);
     println("size: ", size(reverseRange(0,1)));
     println("---");
-    var v = Vector[Int](0,1,2,3,4,5,6);
+    var v = vector(0,1,2,3,4,5,6);
     for (i in sliced(v,0,5))
         println(i);
     println("---");

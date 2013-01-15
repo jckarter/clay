@@ -1,6 +1,7 @@
 
 import data.vectors.generic.*;
 public import data.vectors.generic.(Vector?);
+import data.elements.*;
 
 /// @module vector
 /// vector implementation
@@ -55,9 +56,16 @@ overload Vector(forward a:A) {
 
 /// @section varargs constructor
 
-[T, ..A when (countValues(..A) > 0) and equalValues?(T, ..A)]
-alias overload Vector[T](..elements:A) {
-    var v = Vector[T]();
+[A]
+alias overload Vector[A](elements: NoElements) = Vector[A]();
+
+/// Note this constructor cannot build vector from empty list of arguments
+/// because it cannot infer vector element type. If vector can be empty,
+/// and vector type is known, constructor from elements can be used:
+/// Vector[T](elements(..args))
+[..A when equalValues?(..A)]
+alias vector(..elements:A) {
+    var v = Vector[nthValue(#0, ..A)]();
     push(v, ..elements);
     return move(v);
 }
