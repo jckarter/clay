@@ -1,3 +1,4 @@
+first line
 construct Test 0
 construct Test 1
 move Test 0
@@ -6,8 +7,10 @@ move Test 1
 reset Test 3
 destroy Test 3
 destroy Test 2
+before reserve
 move Test 0
 move Test 1
+before pushAll
 construct Test 4
 construct Test 5
 construct Test 6
@@ -28,12 +31,15 @@ destroy Test 10
 destroy Test 11
 destroy Test 12
 destroy Test 13
+before x construction
 construct Test 14
+before push x
 move Test 14
 reset Test 15
 move Test 14
 reset Test 16
 destroy Test 16
+last line
 destroy Test 15
 destroy Test 0
 destroy Test 1
