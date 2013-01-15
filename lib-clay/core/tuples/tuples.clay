@@ -19,9 +19,12 @@ overload Tuple?(x) : Bool = false;
 /// @section  staticIndex 
 
 [..T, i]
-forceinline overload staticIndex(a:Tuple[..T], #i) =
+forceinline overload staticIndex(ref a:Tuple[..T], #i) =
     ref tupleRef(a, #SizeT(i));
 
+[..T, i]
+forceinline overload staticIndex(rvalue a:Tuple[..T], #i) =
+    move(tupleRef(a, #SizeT(i)));
 
 
 /// @section  unpackTuple, unpackTupleRef 
