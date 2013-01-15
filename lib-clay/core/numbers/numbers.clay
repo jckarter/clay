@@ -28,7 +28,7 @@ define Integer?(..T) : Bool;
 [A, B] overload Integer?(#A, #B) : Bool = Integer?(A) and Integer?(B);
 
 
-/// true iff integer operations work on given type
+/// true if integer operations work on given type
 [I when Integer?(I)]
 IntegerAvailable?(#I) : Bool =
     // Int128 is available only on x86-64 Unices
@@ -317,23 +317,17 @@ forceinline default (%)(a:A, b:A) : A = integerRemainder(a, b);
 
 /// @section  Variadic ops 
 
-[A, ..AA when countValues(..AA) != 1]
-forceinline overload (+)(a:A, ..aa:AA) : A = foldlValues((+), a, ..aa);
+forceinline overload (+)(a, b, c, ..d) = foldlValues((+), a, b, c, ..d);
 
-[A, ..AA when countValues(..AA) != 1]
-forceinline overload (-)(a:A, ..aa:AA) : A = foldlValues((-), a, ..aa);
+forceinline overload (-)(a, b, c, ..d) = foldlValues((-), a, b, c, ..d);
 
-[A, ..AA when countValues(..AA) != 1]
-forceinline overload (*)(a:A, ..aa:AA) : A = foldlValues((*), a, ..aa);
+forceinline overload (*)(a, b, c, ..d) = foldlValues((*), a, b, c, ..d);
 
-[A, ..AA when countValues(..AA) != 1]
-forceinline overload (/)(a:A, ..aa:AA) : A = foldlValues((/), a, ..aa);
+forceinline overload (/)(a, b, c, ..d) = foldlValues((/), a, b, c, ..d);
 
-[A, ..AA when countValues(..AA) != 1]
-forceinline overload (\)(a:A, ..aa:AA) : A = foldlValues((\), a, ..aa);
+forceinline overload (\)(a, b, c, ..d) = foldlValues((\), a, b, c, ..d);
 
-[A, ..AA when countValues(..AA) != 1]
-forceinline overload (%)(a:A, ..aa:AA) : A = foldlValues((%), a, ..aa);
+forceinline overload (%)(a, b, c, ..d) = foldlValues((%), a, b, c, ..d);
 
 /// @section  Imaginary binary ops 
 
