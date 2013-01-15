@@ -215,7 +215,7 @@ forceinline overload (==)(a:A, b:A) : Bool = integerEquals?(a, b);
 forceinline overload (==)(a:A, b:A) : Bool  = floatOrderedEquals?(a, b);
 
 
-[A, B when not equals?(A,B) and Numeric?(A, B)]
+[A, B when not staticEquals?(A,B) and Numeric?(A, B)]
 forceinline overload (!=)(a:A, b:B) : Bool  =
     (!=)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
@@ -223,7 +223,7 @@ forceinline overload (!=)(a:A, b:B) : Bool  =
 forceinline overload (!=)(a:A, b:A) : Bool = floatUnorderedNotEquals?(a, b);
 
 
-[A,B when not equals?(A,B) and Numeric?(A,B)]
+[A,B when not staticEquals?(A,B) and Numeric?(A,B)]
 forceinline overload (<)(a:A, b:B) : Bool =
     (<)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
@@ -234,7 +234,7 @@ forceinline overload (<)(a:A, b:A) : Bool = integerLesser?(a, b);
 forceinline overload (<)(a:A, b:A) : Bool = floatOrderedLesser?(a, b);
 
 
-[A, B when not equals?(A,B) and Numeric?(A, B)]
+[A, B when not staticEquals?(A,B) and Numeric?(A, B)]
 forceinline overload (<=)(a:A, b:B) : Bool =
     (<=)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
@@ -242,7 +242,7 @@ forceinline overload (<=)(a:A, b:B) : Bool =
 forceinline overload (<=)(a:A, b:A) : Bool = floatOrderedLesserEquals?(a, b);
 
 
-[A,B when not equals?(A,B) and Numeric?(A,B)]
+[A,B when not staticEquals?(A,B) and Numeric?(A,B)]
 forceinline overload (>)(a:A, b:B) : Bool =
     (>)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
@@ -250,7 +250,7 @@ forceinline overload (>)(a:A, b:B) : Bool =
 forceinline overload (>)(a:A, b:A) : Bool = floatOrderedGreater?(a, b);
 
 
-[A, B when not equals?(A,B) and Numeric?(A, B)]
+[A, B when not staticEquals?(A,B) and Numeric?(A, B)]
 forceinline overload (>=)(a:A, b:B) : Bool =
     (>=)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
@@ -270,7 +270,7 @@ forceinline overload zero?(x:T) : Bool = (==)(x, T(0));
 
 /// @section  binary ops 
 
-[A,B when not equals?(A,B) and Numeric?(A,B)]
+[A,B when not staticEquals?(A,B) and Numeric?(A,B)]
 forceinline overload (+)(a:A, b:B) =
     (+)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
@@ -278,7 +278,7 @@ forceinline overload (+)(a:A, b:B) =
 forceinline default (+)(a:A, b:A) : A = numericAdd(a, b);
 
 
-[A,B when not equals?(A,B) and Numeric?(A,B)]
+[A,B when not staticEquals?(A,B) and Numeric?(A,B)]
 forceinline overload (-)(a:A, b:B) =
     (-)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
@@ -286,7 +286,7 @@ forceinline overload (-)(a:A, b:B) =
 forceinline default (-)(a:A, b:A) : A = numericSubtract(a, b);
 
 
-[A,B when not equals?(A,B) and Numeric?(A,B)]
+[A,B when not staticEquals?(A,B) and Numeric?(A,B)]
 forceinline overload (*)(a:A, b:B) =
     (*)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
@@ -294,21 +294,21 @@ forceinline overload (*)(a:A, b:B) =
 forceinline default (*)(a:A, b:A) : A = numericMultiply(a, b);
 
 
-[A,B when not equals?(A,B) and Float?(A,B)]
+[A,B when not staticEquals?(A,B) and Float?(A,B)]
 forceinline overload (/)(a:A, b:B) =
     (/)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
 [A when Float?(A)]
 forceinline default (/)(a:A, b:A) : A = floatDivide(a, b);
 
-[A,B when not equals?(A,B) and Integer?(A,B)]
+[A,B when not staticEquals?(A,B) and Integer?(A,B)]
 forceinline overload (\)(a:A, b:B) =
     (\)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
 [A when Integer?(A)]
 forceinline default (\)(a:A, b:A) : A = integerQuotient(a, b);
 
-[A,B when not equals?(A,B) and Integer?(A,B)]
+[A,B when not staticEquals?(A,B) and Integer?(A,B)]
 forceinline overload (%)(a:A, b:B) =
     (%)(toBiggerNumericType(A, B, a), toBiggerNumericType(A, B, b));
 
@@ -386,7 +386,7 @@ forceinline default (<<)(a:A, b:B) : A = integerShiftLeft(a, A(b));
 [A,B when Integer?(A,B)]
 forceinline default (>>)(a:A, b:B) : A = integerShiftRight(a, A(b));
 
-[A,B when not equals?(A, B) and Integer?(A,B)]
+[A,B when not staticEquals?(A,B) and Integer?(A,B)]
 forceinline overload (&)(a:A, b:B) =
     integerBitwiseAnd(wrapToBiggerNumericType(A, B, a),
                       wrapToBiggerNumericType(A, B, b));
@@ -394,7 +394,7 @@ forceinline overload (&)(a:A, b:B) =
 [A when Integer?(A)]
 forceinline overload (&)(a:A, b:A) : A = integerBitwiseAnd(a, b);
 
-[A,B when not equals?(A, B) and Integer?(A,B)]
+[A,B when not staticEquals?(A,B) and Integer?(A,B)]
 forceinline overload (|)(a:A, b:B) =
     integerBitwiseOr(wrapToBiggerNumericType(A, B, a),
                      wrapToBiggerNumericType(A, B, b));
@@ -402,7 +402,7 @@ forceinline overload (|)(a:A, b:B) =
 [A when Integer?(A)]
 forceinline overload (|)(a:A, b:A) : A = integerBitwiseOr(a, b);
 
-[A,B when not equals?(A, B) and Integer?(A,B)]
+[A,B when not staticEquals?(A,B) and Integer?(A,B)]
 forceinline overload (~)(a:A, b:B) =
     integerBitwiseXor(wrapToBiggerNumericType(A, B, a),
                       wrapToBiggerNumericType(A, B, b));
