@@ -41,8 +41,13 @@ private SpecPart?(#T) = String?(T) or (T == Char) or (T == Flags);
 
 private define addSpecPart;
 
-[T when String?(T) or (T == Char)] overload addSpecPart(spec, t : T){
-  push(spec.names, String(t)); 
+[T when String?(T)]
+overload addSpecPart(spec, t : T){
+  push(spec.names, String(t));
+}
+
+overload addSpecPart(spec, t : Char){
+  push(spec.names, string(t));
 }
 
 overload addSpecPart(spec, f : Flags){

@@ -5,6 +5,9 @@ record Queue[S] (seq: S);
 
 alias VectorQueue[T] = Queue[Vector[T]];
 
+[..A when equalValues?(..A)]
+vectorQueue(..args: A) = VectorQueue[nthValue(#0, ..A)]([..args]);
+
 [S] overload Queue[S]() = Queue(S());
 
 [S] overload Queue(forward seq: S) --> returned: Queue[S] {
@@ -28,11 +31,11 @@ overload Queue[S](forward seq: S2) --> returned: Queue[S] {
     }
 }
 
-[S, ..A when countValues(..A) > 0 and equalValues?(SequenceElementType(S), ..A)]
-overload Queue[S](forward ..values: A) --> returned: Queue[S] {
+[S, ..A when equalValues?(SequenceElementType(S), ..A)]
+overload Queue[S](forward values: Tuple[..A]) --> returned: Queue[S] {
     returned <-- Queue[S]();
     try {
-        ..for (v in values)
+        ..for (v in ..tupleElements(values))
             queuePush(returned, v);
     } catch (ex) {
         destroy(returned);

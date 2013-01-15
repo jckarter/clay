@@ -17,7 +17,7 @@ map(f, a) {
 }
 
 main() {
-    var a = Vector[Int](1, 2, 3);
+    var a = vector(1, 2, 3);
     var b = map(Multiplier(10), a);
     for (x in b)
         println(x);

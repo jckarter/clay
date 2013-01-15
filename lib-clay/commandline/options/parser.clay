@@ -4,6 +4,7 @@ import data.strings.*;
 import data.vectors.*;
 import data.sequences.*;
 import data.sequences.operators.*;
+import printer.(str);
 
 record OptionValue(
   option : String,
@@ -63,12 +64,12 @@ parseOptions(ops : OptionSpecs, args) : ParseResult {
             // but return the same results from splitOption
             if(shortOption?(token)){
               for(c in slicedFrom(token, 1)){
-                var spec? = lookup(ops, String(c));
+                var spec? = lookup(ops, string(c));
 
                 if(variantIs?(spec?, Nothing)){
                   unrecognisedOption(pr, c);
                 } else {
-                  addOption(pr, String(c));
+                  addOption(pr, string(c));
                 }
               }
             } else {
@@ -93,9 +94,9 @@ private splitOption(token){
   if(argument?(token)) errorWithPrintf("Invalid argument: splitOption called on non-option");
 
   if(shortOption?(token)){
-    if(size(token) == 2) return ..String(token[1]), nothing(String);
+    if(size(token) == 2) return ..string(token[1]), nothing(String);
     else {
-      return ..String(token[1]), Maybe(sliceFrom(token, 2));
+      return ..string(token[1]), Maybe(sliceFrom(token, 2));
     }
   }
 
@@ -160,7 +161,7 @@ addSeparator(pr){
 }
 
 private unrecognisedOption(pr, op){
-  addError(pr, "Unrecognised option " ++ String(op));
+  addError(pr, "Unrecognised option " ++ str(op));
 }
 
 private unexpectedValue(pr, spec, value){
