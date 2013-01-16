@@ -1,0 +1,5 @@
+main() {
+    var t = [true];
+    staticassert(LValue?(t.0));
+    staticassert(RValue?(move(t).0));
+}
