@@ -46,9 +46,20 @@ overload assign(dest:Test, src:Test) {
 }
 
 main() {
+    println("first line");
     var a = Vector[Test](Test(), Test());
+
+    println("before reserve");
     reserve(a, 100);
+
+    println("before pushAll");
     pushAll(a, array(Test(), Test(), Test(), Test(), Test()));
+
+    println("before x construction");
     var x = Test();
+
+    println("before push x");
     push(a, move(x));
+
+    println("last line");
 }
