@@ -47,7 +47,7 @@ overload assign(dest:Test, src:Test) {
 
 main() {
     println("first line");
-    var a = Vector[Test](Test(), Test());
+    var a = vector(Test(), Test());
 
     println("before reserve");
     reserve(a, 100);

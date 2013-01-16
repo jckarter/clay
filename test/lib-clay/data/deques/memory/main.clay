@@ -7,7 +7,7 @@ overload DequeBufferSize(#Canary) = SizeT(1);
 
 test() {
     println("making deque d1");
-    var d1 = Deque[Canary](Canary(), Canary(), Canary());
+    var d1 = deque(Canary(), Canary(), Canary());
 
     {
         println("copying deque d2");
@@ -24,7 +24,7 @@ test() {
     println("making deque d3 with exception");
     try {
         var thrower = Canary(true);
-        var d3 = Deque[Canary](Canary(), thrower, Canary());
+        var d3 = deque(Canary(), thrower, Canary());
     } catch(x) {}
 
     {
@@ -72,9 +72,9 @@ test() {
 
     {
         println("making deque d5");
-        var d5 = Deque[Canary](Canary(), Canary(), Canary(), Canary());
+        var d5 = deque(Canary(), Canary(), Canary(), Canary());
         println("making deque d6");
-        var d6 = Deque[Canary](Canary(), Canary());
+        var d6 = deque(Canary(), Canary());
 
         println("d1 assign longer");
         d1 = d5;
@@ -91,7 +91,7 @@ test() {
     clear(d7);
 
     println("making deque d8");
-    var d8 = Deque[Canary](
+    var d8 = deque(
         Canary(), Canary(), Canary(),
         Canary(), Canary(), Canary(),
         Canary(), Canary(), Canary(),
@@ -118,7 +118,7 @@ test() {
     checkCanariesLiveInSequence(d8);
 
     println("making deque d9");
-    var d9 = Deque[Canary](
+    var d9 = deque(
         Canary(), Canary(), Canary(),
         Canary(), Canary(), Canary(),
         Canary(), Canary(), Canary(),
@@ -154,7 +154,7 @@ test() {
     insert(d9, end(d9) - 2, Canary());
 
     println("making deque d10");
-    var d10 = Deque[Canary](Canary(), Canary(), Canary());
+    var d10 = deque(Canary(), Canary(), Canary());
 
     println("inserting d10 into d9 front");
     insertAll(d9, begin(d9), d10);
@@ -169,9 +169,9 @@ test() {
     insertAll(d9, end(d9) - 2, d10);
 
     println("making deque d11");
-    var d11 = Deque[Canary](Canary(), Canary(), Canary(), Canary());
+    var d11 = deque(Canary(), Canary(), Canary(), Canary());
     var thrower = Canary(true);
-    var throwerDeque = Deque[Canary](Canary(), Canary(true), Canary());
+    var throwerDeque = deque(Canary(), Canary(true), Canary());
     try {
         println("copying d12 from d11");
         var d12 = d11;

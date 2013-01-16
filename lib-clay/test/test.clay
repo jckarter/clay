@@ -239,7 +239,7 @@ alias expectCallUndefined(Proc, ..Types) {
 
 [I]
 private expectIterator2(name, iter:I, ..expected) {
-    var expectedV = Vector[IteratorTargetType(I)](..expected);
+    var expectedV = Vector[IteratorTargetType(I)]([..expected]);
     var resultV = Vector[IteratorTargetType(I)]();
     pushAll(resultV, iter);
     var msg = str("`", name, "` is expected to contain:\n");

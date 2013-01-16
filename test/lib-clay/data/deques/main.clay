@@ -86,7 +86,7 @@ main() {
     println();
     println("d2:");
 
-    var d2 = Deque[Int](2, 3, 5, 7, 11, 13);
+    var d2 = deque(2, 3, 5, 7, 11, 13);
     println("Size ", size(d2));
     print("Contents: ");
     for (x in d2) print(x, " ");
@@ -113,7 +113,7 @@ main() {
     println();
     println("d3:");
 
-    var v3 = Vector[Int](17, 19, 23, 29, 31, 37, 41);
+    var v3 = vector(17, 19, 23, 29, 31, 37, 41);
     var d3 = Deque[Int](v3);
     println("Size ", size(d3));
     print("Contents: ");
@@ -138,7 +138,7 @@ main() {
     for (x in d3) print(x, " ");
     println();
 
-    d3 = Deque[Int](1, 1, 2);
+    d3 = deque(1, 1, 2);
     println("Assigned from shorter rvalue size ", size(d3));
     print("Contents: ");
     for (x in d3) print(x, " ");
@@ -155,7 +155,7 @@ main() {
 
     println();
     println("d5:");
-    var v5 = Vector[Int](17, 19, 23, 29, 31, 37, 41);
+    var v5 = vector(17, 19, 23, 29, 31, 37, 41);
     var d5 = Deque[Int](filtered(x => x > 20, v5));
     println("Size ", size(d5));
     print("Contents: ");
@@ -233,7 +233,7 @@ main() {
     println();
 
     println("d7:");
-    var d7 = Deque[Int](10, 20, 30);
+    var d7 = deque(10, 20, 30);
     println("Size ", size(d7));
     print("Contents: ");
     for (x in d7) print(x, " ");

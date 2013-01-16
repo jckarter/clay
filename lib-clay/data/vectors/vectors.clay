@@ -55,12 +55,26 @@ overload Vector(forward a:A) {
 
 /// @section varargs constructor
 
-[T, ..A when (countValues(..A) > 0) and equalValues?(T, ..A)]
-alias overload Vector[T](..elements:A) {
-    var v = Vector[T]();
-    push(v, ..elements);
-    return move(v);
+[A, ..E when equalValues?(A, ..E)]
+overload Vector[A](forward elements: Tuple[..E]) {
+    var r = Vector[A]();
+    vectorRequestCapacity(r, SizeT(countValues(..E)));
+    ..for (index in ..staticIntegers(#countValues(..E))) {
+        if (#LValue?(elements)) {
+            push(r, tupleRef(elements, index));
+        } else {
+            push(r, move(tupleRef(elements, index)));
+        }
+    }
+    return move(r);
 }
+
+/// Note this constructor cannot build vector from empty list of arguments
+/// because it cannot infer vector element type. If vector can be empty,
+/// and vector type is known, constructor with tuple parameter can be used:
+/// Vector[T]([..args])
+[..A when equalValues?(..A)]
+vector(forward ..elements:A) = move(Vector[nthValue(#0, ..A)]([..elements]));
 
 /// @section moveUnsafe, resetUnsafe, assign, destroy
 

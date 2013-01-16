@@ -10,13 +10,13 @@ overload destroy(x: NonPODInt) {}
 
 main() {
     alias NP = NonPODInt;
-    var v1 = Vector[NP](NP(0), NP(1), NP(2), NP(3), NP(4), NP(5), NP(6), NP(7));
+    var v1 = vector(NP(0), NP(1), NP(2), NP(3), NP(4), NP(5), NP(6), NP(7));
     moveMemory(begin(v1), begin(v1) + 1, begin(v1) + 8);
     println("after moveMemory up:");
     for (x in v1)
         println(x);
 
-    var v2 = Vector[NP](NP(0), NP(1), NP(2), NP(3), NP(4), NP(5), NP(6), NP(7));
+    var v2 = vector(NP(0), NP(1), NP(2), NP(3), NP(4), NP(5), NP(6), NP(7));
     moveMemory(begin(v2) + 1, begin(v2), begin(v2)+7);
     println("after moveMemory down:");
     for (x in v2)

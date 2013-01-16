@@ -150,8 +150,12 @@ overload Deque[T](forward from: A) --> to: Deque[T] {
     }
 }
 
-[T, ..A when countValues(..A) > 0 and equalValues?(T, ..A)]
-overload Deque[T](forward ..from: A) --> to: Deque[T] {
+[T, ..E when equalValues?(T, ..E)]
+overload Deque[T](forward elements: Tuple[..E]) =
+    Deque[T](Array[T, countValues(..E)](..tupleElements(elements)));
+
+[..A when equalValues?(..A)]
+deque(forward ..from: A) --> to: Deque[nthValue(#0, ..A)] {
     initializeDequeMap(to, SizeT(countValues(..A)));
 
     var i = to.begin;
