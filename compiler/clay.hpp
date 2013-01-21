@@ -597,6 +597,8 @@ struct ValueStackEntry;
 struct MatchResult;
 struct MatchFailureError;
 
+struct CompilerState;
+
 
 //
 // Pointer typedefs
@@ -745,6 +747,8 @@ typedef Pointer<MultiCValue> MultiCValuePtr;
 typedef Pointer<ObjectTable> ObjectTablePtr;
 
 typedef Pointer<MatchResult> MatchResultPtr;
+
+typedef Pointer<CompilerState> CompilerStatePtr;
 
 
 
@@ -981,6 +985,101 @@ struct DebugPrinter {
 };
 
 extern "C" void displayCompileContext();
+
+//
+// States of compiler module
+//
+
+struct CodegenContext;
+struct InvokeSet;
+
+struct CompilerState : public Object {
+    CompilerState();
+    //loader
+    vector<PathString> searchPath;
+    vector<llvm::SmallString<32> > moduleSuffixes;
+
+    llvm::StringMap<ModulePtr> globalModules;
+    llvm::StringMap<string> globalFlags;
+    ModulePtr globalMainModule;
+
+    ModulePtr primitivesModuleCached;
+    ModulePtr intrinsicsModuleCached;
+    ModulePtr operatorsModuleCached;
+    ModulePtr preludeModuleCached;
+
+    //codegen
+    llvm::Module *llvmModule;
+    llvm::DIBuilder *llvmDIBuilder;
+    llvm::ExecutionEngine *llvmEngine;
+    const llvm::DataLayout *llvmDataLayout;
+
+    vector<CValuePtr> initializedGlobals;
+    llvm::StringMap<llvm::Constant*> stringTableConstants;
+    CodegenContext *constructorsCtx;
+    CodegenContext *destructorsCtx;
+
+    bool _inlineEnabled;
+    bool _exceptionsEnabled;
+
+    //types
+    TypePtr boolType;
+    TypePtr int8Type;
+    TypePtr int16Type;
+    TypePtr int32Type;
+    TypePtr int64Type;
+    TypePtr int128Type;
+    TypePtr uint8Type;
+    TypePtr uint16Type;
+    TypePtr uint32Type;
+    TypePtr uint64Type;
+    TypePtr uint128Type;
+    TypePtr float32Type;
+    TypePtr float64Type;
+    TypePtr float80Type;
+    TypePtr imag32Type;
+    TypePtr imag64Type;
+    TypePtr imag80Type;
+    TypePtr complex32Type;
+    TypePtr complex64Type;
+    TypePtr complex80Type;
+    
+    TypePtr cIntType;
+    TypePtr cSizeTType;
+    TypePtr cPtrDiffTType;
+    
+    vector<vector<PointerTypePtr> > pointerTypes;
+    vector<vector<CodePointerTypePtr> > codePointerTypes;
+    vector<vector<CCodePointerTypePtr> > cCodePointerTypes;
+    vector<vector<ArrayTypePtr> > arrayTypes;
+    vector<vector<VecTypePtr> > vecTypes;
+    vector<vector<TupleTypePtr> > tupleTypes;
+    vector<vector<UnionTypePtr> > unionTypes;
+    vector<vector<RecordTypePtr> > recordTypes;
+    vector<vector<VariantTypePtr> > variantTypes;
+    vector<vector<StaticTypePtr> > staticTypes;
+
+    //analyzer
+    int analysisCachingDisabled;
+
+    //constructors
+    vector<OverloadPtr> pointerOverloads;
+    vector<OverloadPtr> codePointerOverloads;
+    vector<OverloadPtr> cCodePointerOverloads;
+    vector<OverloadPtr> arrayOverloads;
+    vector<OverloadPtr> vecOverloads;
+    vector<OverloadPtr> tupleOverloads;
+    vector<OverloadPtr> unionOverloads;
+    vector<OverloadPtr> staticOverloads;
+    
+    vector<OverloadPtr> patternOverloads;
+
+    //invoketables
+    bool invokeTablesInitialized;
+    static const size_t INVOKE_TABLE_SIZE = 16384;
+    vector<llvm::SmallVector<InvokeSet*, 2> > invokeTable;
+
+};
 
 
 //
@@ -1323,7 +1422,7 @@ struct ForeignExpr : public Expr {
         : Expr(FOREIGN_EXPR), moduleName(moduleName),
           foreignEnv(foreignEnv), expr(expr) {}
 
-    EnvPtr getEnv();
+    EnvPtr getEnv(CompilerStatePtr cst);
 };
 
 struct ObjectExpr : public Expr {
@@ -1622,7 +1721,7 @@ struct ForeignStatement : public Statement {
         : Statement(FOREIGN_STATEMENT), moduleName(moduleName),
           foreignEnv(foreignEnv), statement(statement) {}
 
-    EnvPtr getEnv();
+    EnvPtr getEnv(CompilerStatePtr cst);
 };
 
 struct Try : public Statement {
@@ -2374,6 +2473,8 @@ struct Module : public ANode {
         DONE
     };
 
+    CompilerStatePtr cst;
+
     SourcePtr source;
     string moduleName;
     vector<ImportPtr> imports;
@@ -2409,7 +2510,7 @@ struct Module : public ANode {
 
     llvm::TrackingVH<llvm::MDNode> debugInfo;
 
-    Module(llvm::StringRef moduleName)
+    Module(CompilerStatePtr cst, llvm::StringRef moduleName)
         : ANode(MODULE), moduleName(moduleName),
           initState(BEFORE),
           publicSymbolsLoading(0),
@@ -2420,8 +2521,10 @@ struct Module : public ANode {
           topLevelLLVMGenerated(false),
           externalsGenerated(false),
           isIntrinsicsModule(false),
-          debugInfo(NULL) {}
-    Module(llvm::StringRef moduleName,
+          debugInfo(NULL),
+          cst(cst) {}
+    Module(CompilerStatePtr cst, 
+           llvm::StringRef moduleName,
            llvm::ArrayRef<ImportPtr> imports,
            ModuleDeclarationPtr declaration,
            LLVMCodePtr topLevelLLVM,
@@ -2438,7 +2541,8 @@ struct Module : public ANode {
           topLevelLLVMGenerated(false),
           externalsGenerated(false),
           isIntrinsicsModule(false),
-          debugInfo(NULL) {}
+          debugInfo(NULL),
+          cst(cst) {}
 
     llvm::DINameSpace getDebugInfo() { return llvm::DINameSpace(debugInfo); }
 };
@@ -2540,13 +2644,16 @@ struct Env : public Object {
     ObjectPtr parent;
     const bool exceptionAvailable;
     ExprPtr callByNameExprHead;
+    CompilerStatePtr cst;
     llvm::StringMap<ObjectPtr> entries;
-    Env()
-        : Object(ENV), exceptionAvailable(false) {}
+    Env(CompilerStatePtr cst)
+        : Object(ENV), exceptionAvailable(false), cst(cst) {}
     Env(ModulePtr parent)
-        : Object(ENV), parent(parent.ptr()), exceptionAvailable(false) {}
+        : Object(ENV), parent(parent.ptr()), exceptionAvailable(false),
+          cst(parent->cst) {}
     Env(EnvPtr parent, bool exceptionAvailable = false)
-        : Object(ENV), parent(parent.ptr()), exceptionAvailable(exceptionAvailable) {}
+        : Object(ENV), parent(parent.ptr()), exceptionAvailable(exceptionAvailable),
+          cst(parent->cst) {}
 };
 
 
@@ -2555,7 +2662,7 @@ struct Env : public Object {
 // interactive module
 //
 
-void runInteractive(llvm::Module *llvmModule, ModulePtr module);
+void runInteractive(ModulePtr module);
 
 
 //
@@ -2582,6 +2689,8 @@ enum TypeKind {
 };
 
 struct Type : public Object {
+    CompilerStatePtr cst;
+
     TypeKind typeKind;
     llvm::Type *llType;
     llvm::TrackingVH<llvm::MDNode> debugInfo;
@@ -2594,12 +2703,13 @@ struct Type : public Object {
     bool defined:1;
     bool typeInfoInitialized:1;
     
-    Type(TypeKind typeKind)
+    Type(TypeKind typeKind, CompilerStatePtr cst)
         : Object(TYPE), typeKind(typeKind),
           llType(NULL), debugInfo(NULL),
           overloadsInitialized(false),
           defined(false),
-          typeInfoInitialized(false)
+          typeInfoInitialized(false),
+          cst(cst)
     {}
 
     void *operator new(size_t num_bytes) {
@@ -2612,35 +2722,35 @@ struct Type : public Object {
 };
 
 struct BoolType : public Type {
-    BoolType() :
-        Type(BOOL_TYPE) {}
+    BoolType(CompilerStatePtr cst) :
+        Type(BOOL_TYPE, cst) {}
 };
 
 struct IntegerType : public Type {
     unsigned bits:15;
     bool isSigned:1;
-    IntegerType(unsigned bits, bool isSigned)
-        : Type(INTEGER_TYPE), bits(bits), isSigned(isSigned) {}
+    IntegerType(unsigned bits, bool isSigned, CompilerStatePtr cst)
+        : Type(INTEGER_TYPE, cst), bits(bits), isSigned(isSigned) {}
 };
 
 struct FloatType : public Type {
     unsigned bits:15;
     bool isImaginary:1;
-    FloatType(unsigned bits, bool isImaginary)
-        : Type(FLOAT_TYPE), bits(bits), isImaginary(isImaginary){}
+    FloatType(unsigned bits, bool isImaginary, CompilerStatePtr cst)
+        : Type(FLOAT_TYPE, cst), bits(bits), isImaginary(isImaginary){}
 };
 
 struct ComplexType : public Type {
     const llvm::StructLayout *layout;
     unsigned bits:15;
-    ComplexType(unsigned bits)
-        : Type(COMPLEX_TYPE), layout(NULL), bits(bits) {}
+    ComplexType(unsigned bits, CompilerStatePtr cst)
+        : Type(COMPLEX_TYPE, cst), layout(NULL), bits(bits) {}
 };
 
 struct PointerType : public Type {
     TypePtr pointeeType;
     PointerType(TypePtr pointeeType)
-        : Type(POINTER_TYPE), pointeeType(pointeeType) {}
+        : Type(POINTER_TYPE, pointeeType->cst), pointeeType(pointeeType) {}
 };
 
 struct CodePointerType : public Type {
@@ -2651,8 +2761,9 @@ struct CodePointerType : public Type {
 
     CodePointerType(llvm::ArrayRef<TypePtr> argTypes,
                     llvm::ArrayRef<uint8_t> returnIsRef,
-                    llvm::ArrayRef<TypePtr> returnTypes)
-        : Type(CODE_POINTER_TYPE), argTypes(argTypes),
+                    llvm::ArrayRef<TypePtr> returnTypes,
+                    CompilerStatePtr cst)
+        : Type(CODE_POINTER_TYPE, cst), argTypes(argTypes),
           returnIsRef(returnIsRef), returnTypes(returnTypes) {}
 };
 
@@ -2670,8 +2781,9 @@ struct CCodePointerType : public Type {
     CCodePointerType(CallingConv callingConv,
                      llvm::ArrayRef<TypePtr> argTypes,
                      bool hasVarArgs,
-                     TypePtr returnType)
-        : Type(CCODE_POINTER_TYPE),
+                     TypePtr returnType,
+                     CompilerStatePtr cst)
+        : Type(CCODE_POINTER_TYPE, cst),
           argTypes(argTypes),
           returnType(returnType), callType(NULL),
           callingConv(callingConv), hasVarArgs(hasVarArgs) {}
@@ -2681,32 +2793,34 @@ struct ArrayType : public Type {
     TypePtr elementType;
     unsigned size;
     ArrayType(TypePtr elementType, unsigned size)
-        : Type(ARRAY_TYPE), elementType(elementType), size(size) {}
+        : Type(ARRAY_TYPE, elementType->cst),
+          elementType(elementType), size(size){}
 };
 
 struct VecType : public Type {
     TypePtr elementType;
     unsigned size;
     VecType(TypePtr elementType, unsigned size)
-        : Type(VEC_TYPE), elementType(elementType), size(size) {}
+        : Type(VEC_TYPE, elementType->cst),
+          elementType(elementType), size(size) {}
 };
 
 struct TupleType : public Type {
     vector<TypePtr> elementTypes;
     const llvm::StructLayout *layout;
-    TupleType()
-        : Type(TUPLE_TYPE), layout(NULL) {}
-    TupleType(llvm::ArrayRef<TypePtr> elementTypes)
-        : Type(TUPLE_TYPE), elementTypes(elementTypes),
+    TupleType(CompilerStatePtr cst)
+        : Type(TUPLE_TYPE, cst), layout(NULL) {}
+    TupleType(llvm::ArrayRef<TypePtr> elementTypes, CompilerStatePtr cst)
+        : Type(TUPLE_TYPE, cst), elementTypes(elementTypes),
           layout(NULL) {}
 };
 
 struct UnionType : public Type {
     vector<TypePtr> memberTypes;
-    UnionType()
-        : Type(UNION_TYPE) {}
-    UnionType(llvm::ArrayRef<TypePtr> memberTypes)
-        : Type(UNION_TYPE), memberTypes(memberTypes)
+    UnionType(CompilerStatePtr cst)
+        : Type(UNION_TYPE, cst) {}
+    UnionType(llvm::ArrayRef<TypePtr> memberTypes, CompilerStatePtr cst)
+        : Type(UNION_TYPE, cst), memberTypes(memberTypes)
         {}
 };
 
@@ -2726,10 +2840,10 @@ struct RecordType : public Type {
     bool hasVarField:1;
     
     RecordType(RecordDeclPtr record)
-        : Type(RECORD_TYPE), record(record),
+        : Type(RECORD_TYPE, record->env->cst), record(record),
           layout(NULL), fieldsInitialized(false), hasVarField(false) {}
     RecordType(RecordDeclPtr record, llvm::ArrayRef<ObjectPtr> params)
-        : Type(RECORD_TYPE), record(record), params(params),
+        : Type(RECORD_TYPE, record->env->cst), record(record), params(params),
           layout(NULL), fieldsInitialized(false), hasVarField(false) {}
 
     size_t varFieldSize() {
@@ -2750,31 +2864,32 @@ struct VariantType : public Type {
     bool initialized:1;
 
     VariantType(VariantDeclPtr variant)
-        : Type(VARIANT_TYPE), variant(variant),
+        : Type(VARIANT_TYPE, variant->module->cst), variant(variant),
           initialized(false) {}
     VariantType(VariantDeclPtr variant, llvm::ArrayRef<ObjectPtr> params)
-        : Type(VARIANT_TYPE), variant(variant), params(params),
+        : Type(VARIANT_TYPE, variant->module->cst), 
+          variant(variant), params(params),
           initialized(false) {}
 };
 
 struct StaticType : public Type {
     ObjectPtr obj;
-    StaticType(ObjectPtr obj)
-        : Type(STATIC_TYPE), obj(obj) {}
+    StaticType(ObjectPtr obj, CompilerStatePtr cst)
+        : Type(STATIC_TYPE, cst), obj(obj) {}
 };
 
 struct EnumType : public Type {
     EnumDeclPtr enumeration;
     bool initialized:1;
 
-    EnumType(EnumDeclPtr enumeration)
-        : Type(ENUM_TYPE), enumeration(enumeration), initialized(false) {}
+    EnumType(EnumDeclPtr enumeration, CompilerStatePtr cst)
+        : Type(ENUM_TYPE, cst), enumeration(enumeration), initialized(false) {}
 };
 
 struct NewType : public Type {
     NewTypeDeclPtr newtype;
     NewType(NewTypeDeclPtr newtype)
-        : Type(NEW_TYPE), newtype(newtype) {}
+        : Type(NEW_TYPE, newtype->module->cst), newtype(newtype) {}
 };
 
 

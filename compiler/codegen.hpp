@@ -9,24 +9,21 @@ namespace clay {
 
 static const unsigned short DW_LANG_user_CLAY = 0xC1A4;
 
-extern llvm::Module *llvmModule;
-extern llvm::DIBuilder *llvmDIBuilder;
-extern const llvm::DataLayout *llvmDataLayout;
-
-llvm::PointerType *exceptionReturnType();
-llvm::Value *noExceptionReturnValue();
+llvm::PointerType *exceptionReturnType(CompilerStatePtr cst);
+llvm::Value *noExceptionReturnValue(CompilerStatePtr cst);
 
 llvm::TargetMachine *initLLVM(llvm::StringRef targetTriple,
     llvm::StringRef name,
     llvm::StringRef flags,
     bool relocPic,
     bool debug,
-    unsigned optLevel);
+    unsigned optLevel,
+    CompilerStatePtr cst);
 
-bool inlineEnabled();
-void setInlineEnabled(bool enabled);
-bool exceptionsEnabled();
-void setExceptionsEnabled(bool enabled);
+bool inlineEnabled(CompilerStatePtr cst);
+void setInlineEnabled(bool enabled, CompilerStatePtr cst);
+bool exceptionsEnabled(CompilerStatePtr cst);
+void setExceptionsEnabled(bool enabled, CompilerStatePtr cst);
 
 
 void initExternalTarget(string target);
@@ -119,6 +116,8 @@ struct ValueStackEntry {
 };
 
 struct CodegenContext {
+    CompilerStatePtr cst;
+
     llvm::Function *llvmFunc;
     vector<llvm::TrackingVH<llvm::MDNode> > debugScope;
     llvm::IRBuilder<> *initBuilder;
@@ -142,7 +141,7 @@ struct CodegenContext {
 
     int callByNameDepth;
 
-    CodegenContext()
+    CodegenContext(CompilerStatePtr cst)
         : llvmFunc(NULL),
           initBuilder(NULL),
           builder(NULL),
@@ -150,11 +149,12 @@ struct CodegenContext {
           exceptionValue(NULL),
           inlineDepth(0),
           checkExceptions(true),
-          callByNameDepth(0)
+          callByNameDepth(0),
+          cst(cst)
     {
     }
 
-    CodegenContext(llvm::Function *llvmFunc)
+    CodegenContext(CompilerStatePtr cst, llvm::Function *llvmFunc)
         : llvmFunc(llvmFunc),
           initBuilder(NULL),
           builder(NULL),
@@ -162,7 +162,8 @@ struct CodegenContext {
           exceptionValue(NULL),
           inlineDepth(0),
           checkExceptions(true),
-          callByNameDepth(0)
+          callByNameDepth(0),
+          cst(cst)
     {
     }
 
@@ -194,7 +195,7 @@ struct DebugLocationContext {
     {
         if (loc.ok()) {
             pushLocation(loc);
-            if (llvmDIBuilder != NULL && ctx->inlineDepth == 0) {
+            if (ctx->cst->llvmDIBuilder != NULL && ctx->inlineDepth == 0) {
                 unsigned line, column;
                 getDebugLineCol(loc, line, column);
                 llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, ctx->getDebugScope());
@@ -221,7 +222,9 @@ struct InvokeEntry;
 
 InvokeEntry* codegenCallable(ObjectPtr x,
                              llvm::ArrayRef<TypePtr> argsKey,
-                             llvm::ArrayRef<ValueTempness> argsTempness);
+                             llvm::ArrayRef<ValueTempness> 
+                                 argsTempness,
+                             CompilerStatePtr cst);
 void codegenCodeBody(InvokeEntry* entry);
 void codegenCWrapper(InvokeEntry* entry);
 
@@ -229,8 +232,8 @@ void codegenEntryPoints(ModulePtr module, bool importedExternals);
 void codegenMain(ModulePtr module);
 
 void codegenBeforeRepl(ModulePtr module);
-void codegenAfterRepl(llvm::Function*& ctor, llvm::Function*& dtor);
-
+void codegenAfterRepl(llvm::Function*& ctor,
+                      llvm::Function*& dtor, CompilerStatePtr cst);
 
 }
 

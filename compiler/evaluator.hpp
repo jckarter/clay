@@ -47,29 +47,33 @@ void evaluateReturnSpecs(llvm::ArrayRef<ReturnSpecPtr> returnSpecs,
                          ReturnSpecPtr varReturnSpec,
                          EnvPtr env,
                          vector<uint8_t> &isRef,
-                         vector<TypePtr> &types);
+                         vector<TypePtr> &types,
+                         CompilerStatePtr cst);
 
-MultiStaticPtr evaluateExprStatic(ExprPtr expr, EnvPtr env);
-ObjectPtr evaluateOneStatic(ExprPtr expr, EnvPtr env);
-MultiStaticPtr evaluateMultiStatic(ExprListPtr exprs, EnvPtr env);
+MultiStaticPtr evaluateExprStatic(ExprPtr expr, EnvPtr env, CompilerStatePtr cst);
+ObjectPtr evaluateOneStatic(ExprPtr expr, EnvPtr env, CompilerStatePtr cst);
+MultiStaticPtr evaluateMultiStatic(ExprListPtr exprs, EnvPtr env, CompilerStatePtr cst);
 
-TypePtr evaluateType(ExprPtr expr, EnvPtr env);
-void evaluateMultiType(ExprListPtr exprs, EnvPtr env, vector<TypePtr> &out);
+TypePtr evaluateType(ExprPtr expr, EnvPtr env, CompilerStatePtr cst);
+void evaluateMultiType(ExprListPtr exprs, EnvPtr env, vector<TypePtr> &out,
+                       CompilerStatePtr cst);
 IdentifierPtr evaluateIdentifier(ExprPtr expr, EnvPtr env);
-bool evaluateBool(ExprPtr expr, EnvPtr env);
+bool evaluateBool(ExprPtr expr, EnvPtr env, CompilerStatePtr cst);
 void evaluatePredicate(llvm::ArrayRef<PatternVar> patternVars,
-    ExprPtr expr, EnvPtr env);
+    ExprPtr expr, EnvPtr env, CompilerStatePtr cst);
 void evaluateStaticAssert(Location const& location,
-        const ExprPtr& cond, const ExprListPtr& message, EnvPtr env);
+                          const ExprPtr& cond, const ExprListPtr& message, EnvPtr env,
+                          CompilerStatePtr cst);
 
-ValueHolderPtr intToValueHolder(int x);
-ValueHolderPtr sizeTToValueHolder(size_t x);
+ValueHolderPtr intToValueHolder(int x, CompilerStatePtr cst);
+ValueHolderPtr sizeTToValueHolder(size_t x, CompilerStatePtr cst);
 ValueHolderPtr ptrDiffTToValueHolder(ptrdiff_t x);
-ValueHolderPtr boolToValueHolder(bool x);
+ValueHolderPtr boolToValueHolder(bool x, CompilerStatePtr cst);
 
 size_t valueHolderToSizeT(ValueHolderPtr vh);
 
-ObjectPtr makeTupleValue(llvm::ArrayRef<ObjectPtr> elements);
+ObjectPtr makeTupleValue(llvm::ArrayRef<ObjectPtr> elements,
+                         CompilerStatePtr cst);
 ObjectPtr evalueToStatic(EValuePtr ev);
 
 void evalValueInit(EValuePtr dest);
@@ -86,7 +90,7 @@ void evalPopStack(unsigned marker);
 void evalDestroyAndPopStack(unsigned marker);
 EValuePtr evalAllocValue(TypePtr t);
 
-EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env);
+EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env, CompilerStatePtr cst);
 
 }
 

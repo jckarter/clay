@@ -14,6 +14,7 @@ static llvm::Value *promoteCVarArg(CallingConv conv,
                                    llvm::Value *llv,
                                    CodegenContext* ctx)
 {
+    CompilerState* cst = ctx->cst.ptr();
     if (conv == CC_LLVM)
         return llv;
 
@@ -22,9 +23,9 @@ static llvm::Value *promoteCVarArg(CallingConv conv,
         IntegerType *it = (IntegerType *)t.ptr();
         if (it->bits < 32) {
             if (it->isSigned)
-                return ctx->builder->CreateSExt(llv, llvmType(int32Type));
+                return ctx->builder->CreateSExt(llv, llvmType(cst->int32Type));
             else
-                return ctx->builder->CreateZExt(llv, llvmType(uint32Type));
+                return ctx->builder->CreateZExt(llv, llvmType(cst->uint32Type));
         }
         return llv;
     }
@@ -32,9 +33,9 @@ static llvm::Value *promoteCVarArg(CallingConv conv,
         FloatType *ft = (FloatType *)t.ptr();
         if (ft->bits == 32) {
             if(ft->isImaginary)
-                return ctx->builder->CreateFPExt(llv, llvmType(imag64Type));
+                return ctx->builder->CreateFPExt(llv, llvmType(cst->imag64Type));
             else
-                return ctx->builder->CreateFPExt(llv, llvmType(float64Type));
+                return ctx->builder->CreateFPExt(llv, llvmType(cst->float64Type));
         }
         return llv;
     }
@@ -659,7 +660,8 @@ static void unifyWordClass(vector<WordClass>::iterator wordi, WordClass newClass
 
 static void _classifyStructType(llvm::ArrayRef<TypePtr> fields,
                                 vector<WordClass>::iterator begin,
-                                size_t offset);
+                                size_t offset,
+                                CompilerStatePtr cst);
 
 static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_t offset)
 {
@@ -708,8 +710,10 @@ static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_
         switch (complexType->bits) {
         case 32:
         case 64:
-            _classifyType(floatType(complexType->bits), begin, offset);
-            _classifyType(imagType(complexType->bits), begin, offset + (size_t)complexType->bits/8);
+            _classifyType(floatType(complexType->bits, type->cst),
+                          begin, offset);
+            _classifyType(imagType(complexType->bits, type->cst),
+                          begin, offset + (size_t)complexType->bits/8);
             break;
         case 80:
             unifyWordClass(begin + (long int)offset/8, COMPLEX_X87);
@@ -770,7 +774,7 @@ static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_
         TupleType *tupleType = (TupleType *)type.ptr();
         _classifyStructType(tupleType->elementTypes,
                             begin,
-                            offset);
+                            offset, type->cst);
         break;
     }
     case RECORD_TYPE: {
@@ -778,7 +782,7 @@ static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_
         llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(recordType);
         _classifyStructType(fieldTypes,
                             begin,
-                            offset);
+                            offset, type->cst);
         break;
     }
     case NEW_TYPE: {
@@ -790,10 +794,11 @@ static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_
 
 static void _classifyStructType(llvm::ArrayRef<TypePtr> fields,
                                 vector<WordClass>::iterator begin,
-                                size_t offset)
+                                size_t offset,
+                                CompilerStatePtr cst)
 {
     if (fields.empty())
-        _classifyType(intType(8), begin, offset);
+        _classifyType(intType(8, cst), begin, offset);
     else {
         size_t fieldOffset = offset;
         for (TypePtr const *i = fields.begin(), *end = fields.end();

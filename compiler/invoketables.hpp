@@ -69,11 +69,11 @@ struct InvokeEntry {
     void *operator new(size_t num_bytes) {
         return invokeEntryAllocator->Allocate();
     }
-    virtual void dealloc() { ANodeAllocator->Deallocate(this); }
+    void operator delete(void* invokeEntry) {
+        ANodeAllocator->Deallocate(invokeEntry);
+    }
     llvm::DISubprogram getDebugInfo() { return llvm::DISubprogram(debugInfo); }
 };
-
-extern vector<OverloadPtr> patternOverloads;
 
 struct InvokeSet {
     ObjectPtr callable;
@@ -90,17 +90,23 @@ struct InvokeSet {
     bool shouldLog:1;
     bool evaluatingPredicate:1;
 
+    CompilerStatePtr cst;
+
     InvokeSet(ObjectPtr callable,
               llvm::ArrayRef<TypePtr> argsKey,
               OverloadPtr symbolInterface,
-              llvm::ArrayRef<OverloadPtr> symbolOverloads)
+              llvm::ArrayRef<OverloadPtr> symbolOverloads,
+              CompilerStatePtr cst)
         : callable(callable), argsKey(argsKey),
           interface(symbolInterface),
           overloads(symbolOverloads), nextOverloadIndex(0),
           shouldLog(false),
-          evaluatingPredicate(false)
+          evaluatingPredicate(false),
+          cst(cst)
     {
-        overloads.insert(overloads.end(), patternOverloads.begin(), patternOverloads.end());
+        overloads.insert(overloads.end(), 
+                         cst->patternOverloads.begin(),
+                         cst->patternOverloads.end());
     }
     void *operator new(size_t num_bytes) {
         return invokeSetAllocator->Allocate();
@@ -119,12 +125,15 @@ struct MatchFailureError {
 };
 
 InvokeSet *lookupInvokeSet(ObjectPtr callable,
-                           llvm::ArrayRef<TypePtr> argsKey);
-vector<InvokeSet*> lookupInvokeSets(ObjectPtr callable);
+                           llvm::ArrayRef<TypePtr> argsKey,
+                           CompilerStatePtr cst);
+vector<InvokeSet*> lookupInvokeSets(ObjectPtr callable,
+                                    CompilerStatePtr cst);
 InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
                                llvm::ArrayRef<TypePtr> argsKey,
                                llvm::ArrayRef<ValueTempness> argsTempness,
-                               MatchFailureError &failures);
+                               MatchFailureError &failures,
+                               CompilerStatePtr cst);
 
 void setFinalOverloadsEnabled(bool enabled); 
 

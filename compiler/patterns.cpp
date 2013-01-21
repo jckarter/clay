@@ -19,10 +19,11 @@ namespace clay {
 // derefDeep
 //
 
-static ObjectPtr computeStruct(ObjectPtr head, MultiStaticPtr params)
+static ObjectPtr computeStruct(ObjectPtr head, MultiStaticPtr params, 
+                               CompilerStatePtr cst)
 {
     if (!head) {
-        return makeTupleValue(params->values);
+        return makeTupleValue(params->values, cst);
     }
     else {
         TypePtr t = constructType(head, params);
@@ -30,23 +31,23 @@ static ObjectPtr computeStruct(ObjectPtr head, MultiStaticPtr params)
     }
 }
 
-ObjectPtr derefDeep(PatternPtr x)
+ObjectPtr derefDeep(PatternPtr x, CompilerStatePtr cst)
 {
     switch (x->kind) {
     case PATTERN_CELL : {
         PatternCell *y = (PatternCell *)x.ptr();
         if (y->obj.ptr() && (y->obj->objKind == PATTERN)) {
             Pattern *z = (Pattern *)y->obj.ptr();
-            return derefDeep(z);
+            return derefDeep(z, cst);
         }
         return y->obj;
     }
     case PATTERN_STRUCT : {
         PatternStruct *y = (PatternStruct *)x.ptr();
-        MultiStaticPtr params = derefDeep(y->params);
+        MultiStaticPtr params = derefDeep(y->params, cst);
         if (!params)
             return NULL;
-        return computeStruct(y->head, params);
+        return computeStruct(y->head, params, cst);
     }
     default :
         assert(false);
@@ -54,26 +55,26 @@ ObjectPtr derefDeep(PatternPtr x)
     }
 }
 
-MultiStaticPtr derefDeep(MultiPatternPtr x)
+MultiStaticPtr derefDeep(MultiPatternPtr x, CompilerStatePtr cst)
 {
     switch (x->kind) {
     case MULTI_PATTERN_CELL : {
         MultiPatternCell *y = (MultiPatternCell *)x.ptr();
         if (!y->data)
             return NULL;
-        return derefDeep(y->data);
+        return derefDeep(y->data, cst);
     }
     case MULTI_PATTERN_LIST : {
         MultiPatternList *y = (MultiPatternList *)x.ptr();
         MultiStaticPtr out = new MultiStatic();
         for (size_t i = 0; i < y->items.size(); ++i) {
-            ObjectPtr z = derefDeep(y->items[i]);
+            ObjectPtr z = derefDeep(y->items[i], cst);
             if (!z)
                 return NULL;
             out->add(z);
         }
         if (y->tail.ptr()) {
-            MultiStaticPtr tail = derefDeep(y->tail);
+            MultiStaticPtr tail = derefDeep(y->tail, cst);
             if (!tail)
                 return NULL;
             out->add(tail);
@@ -92,7 +93,7 @@ MultiStaticPtr derefDeep(MultiPatternPtr x)
 // objectToPattern, objectToPatternStruct
 //
 
-static PatternPtr objectToPattern(ObjectPtr obj)
+static PatternPtr objectToPattern(ObjectPtr obj, CompilerStatePtr cst)
 {
     switch (obj->objKind) {
     case PATTERN : {
@@ -113,7 +114,7 @@ static PatternPtr objectToPattern(ObjectPtr obj)
             for (unsigned i = 0; i < tt->elementTypes.size(); ++i) {
                 char *addr = x->buf + layout->getElementOffset(i);
                 EValuePtr evElement = new EValue(tt->elementTypes[i], addr);
-                PatternPtr y = objectToPattern(evalueToStatic(evElement));
+                PatternPtr y = objectToPattern(evalueToStatic(evElement), cst);
                 params->items.push_back(y);
             }
             return new PatternStruct(NULL, params.ptr());
@@ -125,29 +126,29 @@ static PatternPtr objectToPattern(ObjectPtr obj)
         switch (t->typeKind) {
         case POINTER_TYPE : {
             PointerType *pt = (PointerType *)t;
-            ObjectPtr head = primitive_Pointer();
+            ObjectPtr head = primitive_Pointer(cst);
             MultiPatternListPtr params = new MultiPatternList();
-            params->items.push_back(objectToPattern(pt->pointeeType.ptr()));
+            params->items.push_back(objectToPattern(pt->pointeeType.ptr(), cst));
             return new PatternStruct(head, params.ptr());
         }
         case CODE_POINTER_TYPE : {
             CodePointerType *cpt = (CodePointerType *)t;
-            ObjectPtr head = primitive_CodePointer();
+            ObjectPtr head = primitive_CodePointer(cst);
             MultiPatternListPtr argTypes = new MultiPatternList();
             for (size_t i = 0; i < cpt->argTypes.size(); ++i) {
-                PatternPtr x = objectToPattern(cpt->argTypes[i].ptr());
+                PatternPtr x = objectToPattern(cpt->argTypes[i].ptr(), cst);
                 argTypes->items.push_back(x);
             }
             MultiPatternListPtr returnTypes = new MultiPatternList();
             for (size_t i = 0; i < cpt->returnTypes.size(); ++i) {
                 TypePtr t = cpt->returnTypes[i];
                 if (cpt->returnIsRef[i]) {
-                    ObjectPtr obj = primitive_ByRef();
+                    ObjectPtr obj = primitive_ByRef(cst);
                     assert(obj->objKind == RECORD_DECL);
                     t = recordType((RecordDecl *)obj.ptr(),
                                    vector<ObjectPtr>(1, t.ptr()));
                 }
-                PatternPtr x = objectToPattern(t.ptr());
+                PatternPtr x = objectToPattern(t.ptr(), cst);
                 returnTypes->items.push_back(x);
             }
             MultiPatternListPtr params = new MultiPatternList();
@@ -159,94 +160,94 @@ static PatternPtr objectToPattern(ObjectPtr obj)
         }
         case CCODE_POINTER_TYPE : {
             CCodePointerType *cpt = (CCodePointerType *)t;
-            ObjectPtr head = primitive_ExternalCodePointer();;
+            ObjectPtr head = primitive_ExternalCodePointer(cst);;
             ObjectPtr ccParam;
 
             switch (cpt->callingConv) {
             case CC_DEFAULT :
-                ccParam = primitive_AttributeCCall();
+                ccParam = primitive_AttributeCCall(cst);
                 break;
             case CC_STDCALL :
-                ccParam = primitive_AttributeStdCall();
+                ccParam = primitive_AttributeStdCall(cst);
                 break;
             case CC_FASTCALL :
-                ccParam = primitive_AttributeFastCall();
+                ccParam = primitive_AttributeFastCall(cst);
                 break;
             case CC_THISCALL :
-                ccParam = primitive_AttributeThisCall();
+                ccParam = primitive_AttributeThisCall(cst);
                 break;
             case CC_LLVM :
-                ccParam = primitive_AttributeLLVMCall();
+                ccParam = primitive_AttributeLLVMCall(cst);
                 break;
             default:
                 assert(false);
             }
             assert(ccParam != NULL);
 
-            ValueHolderPtr varArgParam = boolToValueHolder(cpt->hasVarArgs);
+            ValueHolderPtr varArgParam = boolToValueHolder(cpt->hasVarArgs, cst);
 
             MultiPatternListPtr argTypes = new MultiPatternList();
             for (size_t i = 0; i < cpt->argTypes.size(); ++i) {
-                PatternPtr x = objectToPattern(cpt->argTypes[i].ptr());
+                PatternPtr x = objectToPattern(cpt->argTypes[i].ptr(), cst);
                 argTypes->items.push_back(x);
             }
             MultiPatternListPtr returnTypes = new MultiPatternList();
             if (cpt->returnType.ptr()) {
-                PatternPtr x = objectToPattern(cpt->returnType.ptr());
+                PatternPtr x = objectToPattern(cpt->returnType.ptr(), cst);
                 returnTypes->items.push_back(x);
             }
             MultiPatternListPtr params = new MultiPatternList();
             PatternPtr argTypesParam = new PatternStruct(NULL, argTypes.ptr());
             PatternPtr retTypesParam = new PatternStruct(NULL, returnTypes.ptr());
-            params->items.push_back(objectToPattern(ccParam));
-            params->items.push_back(objectToPattern(varArgParam.ptr()));
+            params->items.push_back(objectToPattern(ccParam, cst));
+            params->items.push_back(objectToPattern(varArgParam.ptr(), cst));
             params->items.push_back(argTypesParam);
             params->items.push_back(retTypesParam);
             return new PatternStruct(head, params.ptr());
         }
         case ARRAY_TYPE : {
             ArrayType *at = (ArrayType *)t;
-            ObjectPtr head = primitive_Array();
+            ObjectPtr head = primitive_Array(cst);
             MultiPatternListPtr params = new MultiPatternList();
-            params->items.push_back(objectToPattern(at->elementType.ptr()));
-            ValueHolderPtr vh = intToValueHolder((int)at->size);
-            params->items.push_back(objectToPattern(vh.ptr()));
+            params->items.push_back(objectToPattern(at->elementType.ptr(), cst));
+            ValueHolderPtr vh = intToValueHolder((int)at->size, cst);
+            params->items.push_back(objectToPattern(vh.ptr(), cst));
             return new PatternStruct(head, params.ptr());
         }
         case VEC_TYPE : {
             VecType *vt = (VecType *)t;
-            ObjectPtr head = primitive_Vec();
+            ObjectPtr head = primitive_Vec(cst);
             MultiPatternListPtr params = new MultiPatternList();
-            params->items.push_back(objectToPattern(vt->elementType.ptr()));
-            ValueHolderPtr vh = intToValueHolder((int)vt->size);
-            params->items.push_back(objectToPattern(vh.ptr()));
+            params->items.push_back(objectToPattern(vt->elementType.ptr(), cst));
+            ValueHolderPtr vh = intToValueHolder((int)vt->size, cst);
+            params->items.push_back(objectToPattern(vh.ptr(), cst));
             return new PatternStruct(head, params.ptr());
         }
         case TUPLE_TYPE : {
             TupleType *tt = (TupleType *)t;
-            ObjectPtr head = primitive_Tuple();
+            ObjectPtr head = primitive_Tuple(cst);
             MultiPatternListPtr params = new MultiPatternList();
             for (size_t i = 0; i < tt->elementTypes.size(); ++i) {
-                PatternPtr x = objectToPattern(tt->elementTypes[i].ptr());
+                PatternPtr x = objectToPattern(tt->elementTypes[i].ptr(), cst);
                 params->items.push_back(x);
             }
             return new PatternStruct(head, params.ptr());
         }
         case UNION_TYPE : {
             UnionType *ut = (UnionType *)t;
-            ObjectPtr head = primitive_Union();
+            ObjectPtr head = primitive_Union(cst);
             MultiPatternListPtr params = new MultiPatternList();
             for (size_t i = 0; i < ut->memberTypes.size(); ++i) {
-                PatternPtr x = objectToPattern(ut->memberTypes[i].ptr());
+                PatternPtr x = objectToPattern(ut->memberTypes[i].ptr(), cst);
                 params->items.push_back(x);
             }
             return new PatternStruct(head, params.ptr());
         }
         case STATIC_TYPE : {
             StaticType *st = (StaticType *)t;
-            ObjectPtr head = primitive_Static();
+            ObjectPtr head = primitive_Static(cst);
             MultiPatternListPtr params = new MultiPatternList();
-            params->items.push_back(objectToPattern(st->obj));
+            params->items.push_back(objectToPattern(st->obj, cst));
             return new PatternStruct(head, params.ptr());
         }
         case RECORD_TYPE : {
@@ -254,7 +255,7 @@ static PatternPtr objectToPattern(ObjectPtr obj)
             ObjectPtr head = rt->record.ptr();
             MultiPatternListPtr params = new MultiPatternList();
             for (size_t i = 0; i < rt->params.size(); ++i) {
-                PatternPtr x = objectToPattern(rt->params[i]);
+                PatternPtr x = objectToPattern(rt->params[i], cst);
                 params->items.push_back(x);
             }
             return new PatternStruct(head, params.ptr());
@@ -264,7 +265,7 @@ static PatternPtr objectToPattern(ObjectPtr obj)
             ObjectPtr head = vt->variant.ptr();
             MultiPatternListPtr params = new MultiPatternList();
             for (size_t i = 0; i < vt->params.size(); ++i) {
-                PatternPtr x = objectToPattern(vt->params[i]);
+                PatternPtr x = objectToPattern(vt->params[i], cst);
                 params->items.push_back(x);
             }
             return new PatternStruct(head, params.ptr());
@@ -284,11 +285,11 @@ static PatternPtr objectToPattern(ObjectPtr obj)
 // unify
 //
 
-bool unifyObjObj(ObjectPtr a, ObjectPtr b)
+bool unifyObjObj(ObjectPtr a, ObjectPtr b, CompilerStatePtr cst)
 {
     if (a->objKind == PATTERN) {
         PatternPtr a2 = (Pattern *)a.ptr();
-        return unifyPatternObj(a2, b);
+        return unifyPatternObj(a2, b, cst);
     }
     else if (a->objKind == MULTI_PATTERN) {
         error("incorrect usage of multi-valued pattern "
@@ -297,7 +298,7 @@ bool unifyObjObj(ObjectPtr a, ObjectPtr b)
     }
     else if (b->objKind == PATTERN) {
         PatternPtr b2 = (Pattern *)b.ptr();
-        return unifyObjPattern(a, b2);
+        return unifyObjPattern(a, b2, cst);
     }
     else if (b->objKind == MULTI_PATTERN) {
         error("incorrect usage of multi-valued pattern "
@@ -307,12 +308,12 @@ bool unifyObjObj(ObjectPtr a, ObjectPtr b)
     return objectEquals(a, b);
 }
 
-bool unifyObjPattern(ObjectPtr a, PatternPtr b)
+bool unifyObjPattern(ObjectPtr a, PatternPtr b, CompilerStatePtr cst)
 {
     assert(a.ptr() && b.ptr());
     if (a->objKind == PATTERN) {
         PatternPtr a2 = (Pattern *)a.ptr();
-        return unify(a2, b);
+        return unify(a2, b, cst);
     }
     else if (a->objKind == MULTI_PATTERN) {
         error("incorrect usage of multi-valued pattern "
@@ -325,27 +326,27 @@ bool unifyObjPattern(ObjectPtr a, PatternPtr b)
             b2->obj = a;
             return true;
         }
-        return unifyObjObj(b2->obj, a);
+        return unifyObjObj(b2->obj, a, cst);
     }
     else {
         assert(b->kind == PATTERN_STRUCT);
-        PatternPtr a2 = objectToPattern(a);
+        PatternPtr a2 = objectToPattern(a, cst);
         PatternStruct *b2 = (PatternStruct *)b.ptr();
         if (a2->kind == PATTERN_STRUCT) {
             PatternStruct *a3 = (PatternStruct *)a2.ptr();
             if (a3->head == b2->head)
-                return unifyMulti(a3->params, b2->params);
+                return unifyMulti(a3->params, b2->params, cst);
         }
         return false;
     }
 }
 
-bool unifyPatternObj(PatternPtr a, ObjectPtr b)
+bool unifyPatternObj(PatternPtr a, ObjectPtr b, CompilerStatePtr cst)
 {
-    return unifyObjPattern(b, a);
+    return unifyObjPattern(b, a, cst);
 }
 
-bool unify(PatternPtr a, PatternPtr b)
+bool unify(PatternPtr a, PatternPtr b, CompilerStatePtr cst)
 {
     assert(a.ptr() && b.ptr());
     if (a->kind == PATTERN_CELL) {
@@ -354,7 +355,7 @@ bool unify(PatternPtr a, PatternPtr b)
             a2->obj = b.ptr();
             return true;
         }
-        return unifyObjPattern(a2->obj, b);
+        return unifyObjPattern(a2->obj, b, cst);
     }
     else if (b->kind == PATTERN_CELL) {
         PatternCell *b2 = (PatternCell *)b.ptr();
@@ -362,7 +363,7 @@ bool unify(PatternPtr a, PatternPtr b)
             b2->obj = a.ptr();
             return true;
         }
-        return unifyPatternObj(a, b2->obj);
+        return unifyPatternObj(a, b2->obj, cst);
     }
     else {
         assert(a->kind == PATTERN_STRUCT);
@@ -370,22 +371,22 @@ bool unify(PatternPtr a, PatternPtr b)
         PatternStruct *a2 = (PatternStruct *)a.ptr();
         PatternStruct *b2 = (PatternStruct *)b.ptr();
         if (a2->head == b2->head) {
-            return unifyMulti(a2->params, b2->params);
+            return unifyMulti(a2->params, b2->params, cst);
         }
         return false;
     }
 }
 
-bool unifyMulti(MultiPatternPtr a, MultiStaticPtr b)
+bool unifyMulti(MultiPatternPtr a, MultiStaticPtr b, CompilerStatePtr cst)
 {
     assert(a.ptr() && b.ptr());
     MultiPatternListPtr b2 = new MultiPatternList();
     for (size_t i = 0; i < b->size(); ++i)
-        b2->items.push_back(objectToPattern(b->values[i]));
-    return unifyMulti(a, b2.ptr());
+        b2->items.push_back(objectToPattern(b->values[i], cst));
+    return unifyMulti(a, b2.ptr(), cst);
 }
 
-bool unifyMulti(MultiPatternPtr a, MultiPatternPtr b)
+bool unifyMulti(MultiPatternPtr a, MultiPatternPtr b, CompilerStatePtr cst)
 {
     assert(a.ptr() && b.ptr());
     switch (a->kind) {
@@ -395,11 +396,11 @@ bool unifyMulti(MultiPatternPtr a, MultiPatternPtr b)
             a2->data = b;
             return true;
         }
-        return unifyMulti(a2->data, b);
+        return unifyMulti(a2->data, b, cst);
     }
     case MULTI_PATTERN_LIST : {
         MultiPatternList *a2 = (MultiPatternList *)a.ptr();
-        return unifyMulti(a2, 0, b);
+        return unifyMulti(a2, 0, b, cst);
     }
     default :
         assert(false);
@@ -417,7 +418,8 @@ static MultiPatternListPtr subList(MultiPatternListPtr x, unsigned index)
 }
 
 bool unifyMulti(MultiPatternListPtr a, unsigned indexA,
-                MultiPatternPtr b)
+                MultiPatternPtr b,
+                CompilerStatePtr cst)
 {
     assert(a.ptr() && b.ptr());
     switch (b->kind) {
@@ -427,11 +429,11 @@ bool unifyMulti(MultiPatternListPtr a, unsigned indexA,
             b2->data = subList(a, indexA).ptr();
             return true;
         }
-        return unifyMulti(a, indexA, b2->data);
+        return unifyMulti(a, indexA, b2->data, cst);
     }
     case MULTI_PATTERN_LIST : {
         MultiPatternList *b2 = (MultiPatternList *)b.ptr();
-        return unifyMulti(a, indexA, b2, 0);
+        return unifyMulti(a, indexA, b2, 0, cst);
     }
     default :
         assert(false);
@@ -440,30 +442,32 @@ bool unifyMulti(MultiPatternListPtr a, unsigned indexA,
 }
 
 bool unifyMulti(MultiPatternPtr a,
-                MultiPatternListPtr b, unsigned indexB)
+                MultiPatternListPtr b, unsigned indexB,
+                CompilerStatePtr cst)
 {
     assert(a.ptr() && b.ptr());
-    return unifyMulti(b, indexB, a);
+    return unifyMulti(b, indexB, a, cst);
 }
 
 bool unifyMulti(MultiPatternListPtr a, unsigned indexA,
-                MultiPatternListPtr b, unsigned indexB)
+                MultiPatternListPtr b, unsigned indexB,
+                CompilerStatePtr cst)
 {
     assert(a.ptr() && b.ptr());
     while ((indexA < a->items.size()) &&
            (indexB < b->items.size()))
     {
-        if (!unify(a->items[indexA++], b->items[indexB++]))
+        if (!unify(a->items[indexA++], b->items[indexB++], cst))
             return false;
     }
     if (indexA < a->items.size()) {
         assert(indexB == b->items.size());
         if (!b->tail)
             return false;
-        return unifyMulti(a, indexA, b->tail);
+        return unifyMulti(a, indexA, b->tail, cst);
     }
     else if (a->tail.ptr()) {
-        return unifyMulti(a->tail, b, indexB);
+        return unifyMulti(a->tail, b, indexB, cst);
     }
     return unifyEmpty(b, indexB);
 }
@@ -553,7 +557,7 @@ static PatternPtr xvalueToPatternCell(XValuePtr xv)
         return new PatternCell(stat);
 }
 
-static PatternPtr namedToPattern(ObjectPtr x)
+static PatternPtr namedToPattern(ObjectPtr x, CompilerStatePtr cst)
 {
     switch (x->objKind) {
     case PATTERN : {
@@ -571,7 +575,7 @@ static PatternPtr namedToPattern(ObjectPtr x)
         if (y->hasParams()) {
             return new PatternCell(x);
         }
-        return evaluateOnePattern(y->expr, y->env);
+        return evaluateOnePattern(y->expr, y->env, cst);
     }
     case RECORD_DECL : {
         RecordDecl *y = (RecordDecl *)x.ptr();
@@ -615,7 +619,8 @@ static PatternPtr namedToPattern(ObjectPtr x)
     }
 }
 
-PatternPtr evaluateOnePattern(ExprPtr expr, EnvPtr env)
+PatternPtr evaluateOnePattern(ExprPtr expr, EnvPtr env, 
+                              CompilerStatePtr cst)
 {
     LocationContext loc(expr->location);
 
@@ -624,32 +629,32 @@ PatternPtr evaluateOnePattern(ExprPtr expr, EnvPtr env)
     case NAME_REF : {
         NameRef *x = (NameRef *)expr.ptr();
         ObjectPtr y = safeLookupEnv(env, x->name);
-        return namedToPattern(y);
+        return namedToPattern(y, cst);
     }
 
     case INDEXING : {
         Indexing *x = (Indexing *)expr.ptr();
-        ObjectPtr indexable = evaluateOneStatic(x->expr, env);
+        ObjectPtr indexable = evaluateOneStatic(x->expr, env, cst);
         if (isPatternHead(indexable)) {
-            MultiPatternPtr params = evaluateMultiPattern(x->args, env);
+            MultiPatternPtr params = evaluateMultiPattern(x->args, env, cst);
             return new PatternStruct(indexable, params);
         }
         if (indexable->objKind == GLOBAL_ALIAS) {
             GlobalAlias *y = (GlobalAlias *)indexable.ptr();
-            MultiPatternPtr params = evaluateMultiPattern(x->args, env);
-            return evaluateAliasPattern(y, params);
+            MultiPatternPtr params = evaluateMultiPattern(x->args, env, cst);
+            return evaluateAliasPattern(y, params, cst);
         }
-        return new PatternCell(evaluateOneStatic(expr, env));
+        return new PatternCell(evaluateOneStatic(expr, env, cst));
     }
 
     case TUPLE : {
         Tuple *x = (Tuple *)expr.ptr();
-        MultiPatternPtr params = evaluateMultiPattern(x->args, env);
+        MultiPatternPtr params = evaluateMultiPattern(x->args, env, cst);
         return new PatternStruct(NULL, params);
     }
 
     default : {
-        ObjectPtr y = evaluateOneStatic(expr, env);
+        ObjectPtr y = evaluateOneStatic(expr, env, cst);
         return new PatternCell(y);
     }
 
@@ -662,7 +667,8 @@ PatternPtr evaluateOnePattern(ExprPtr expr, EnvPtr env)
 // evaluateAliasPattern
 //
 
-PatternPtr evaluateAliasPattern(GlobalAliasPtr x, MultiPatternPtr params)
+PatternPtr evaluateAliasPattern(GlobalAliasPtr x, MultiPatternPtr params,
+                                CompilerStatePtr cst)
 {
     MultiPatternListPtr args = new MultiPatternList();
     EnvPtr env = new Env(x->env);
@@ -676,8 +682,8 @@ PatternPtr evaluateAliasPattern(GlobalAliasPtr x, MultiPatternPtr params)
         args->tail = multiCell.ptr();
         addLocal(env, x->varParam, multiCell.ptr());
     }
-    PatternPtr out = evaluateOnePattern(x->expr, env);
-    if (!unifyMulti(args.ptr(), params))
+    PatternPtr out = evaluateOnePattern(x->expr, env, cst);
+    if (!unifyMulti(args.ptr(), params, x->module->cst))
         error("non-matching alias");
     return out;
 }
@@ -736,7 +742,8 @@ static bool appendPattern(MultiPatternListPtr &cur, MultiPatternPtr x)
     }
 }
 
-MultiPatternPtr evaluateMultiPattern(ExprListPtr exprs, EnvPtr env)
+MultiPatternPtr evaluateMultiPattern(ExprListPtr exprs, EnvPtr env,
+                                     CompilerStatePtr cst)
 {
     MultiPatternListPtr out = new MultiPatternList();
     MultiPatternListPtr cur = out;
@@ -752,7 +759,7 @@ MultiPatternPtr evaluateMultiPattern(ExprListPtr exprs, EnvPtr env)
                           "multi-pattern variable");
             }
             else {
-                MultiStaticPtr z = evaluateExprStatic(y->expr, env);
+                MultiStaticPtr z = evaluateExprStatic(y->expr, env, cst);
                 if (!cur && (z->size() > 0))
                     error(x, "expressions cannot occur after "
                           "multi-pattern variable");
@@ -764,7 +771,7 @@ MultiPatternPtr evaluateMultiPattern(ExprListPtr exprs, EnvPtr env)
         }
         else if (x->exprKind == PAREN) {
             Paren *y = (Paren *)x.ptr();
-            MultiPatternPtr mp = evaluateMultiPattern(y->args, env);
+            MultiPatternPtr mp = evaluateMultiPattern(y->args, env, cst);
             if (!appendPattern(cur, mp)) {
                 error(x, "expressions cannot occur after "
                       "multi-pattern variable");
@@ -774,7 +781,7 @@ MultiPatternPtr evaluateMultiPattern(ExprListPtr exprs, EnvPtr env)
             if (!cur)
                 error(x, "expressions cannot occur after "
                       "multi-pattern variable");
-            PatternPtr y = evaluateOnePattern(x, env);
+            PatternPtr y = evaluateOnePattern(x, env, cst);
             cur->items.push_back(y);
         }
     }

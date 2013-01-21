@@ -8,17 +8,6 @@
 
 namespace clay {
 
-vector<OverloadPtr> pointerOverloads;
-vector<OverloadPtr> codePointerOverloads;
-vector<OverloadPtr> cCodePointerOverloads;
-vector<OverloadPtr> arrayOverloads;
-vector<OverloadPtr> vecOverloads;
-vector<OverloadPtr> tupleOverloads;
-vector<OverloadPtr> unionOverloads;
-vector<OverloadPtr> staticOverloads;
-
-vector<OverloadPtr> patternOverloads;
-
 bool isOverloadablePrimOp(ObjectPtr x)
 {
     if (x->objKind != PRIM_OP)
@@ -39,33 +28,34 @@ bool isOverloadablePrimOp(ObjectPtr x)
     }
 }
 
-vector<OverloadPtr> &primOpOverloads(PrimOpPtr x)
+vector<OverloadPtr> &primOpOverloads(PrimOpPtr x,
+                                     CompilerStatePtr cst)
 {
     vector<OverloadPtr> *ptr = NULL;
     switch (x->primOpCode) {
     case PRIM_Pointer :
-        ptr = &pointerOverloads;
+        ptr = &cst->pointerOverloads;
         break;
     case PRIM_CodePointer :
-        ptr = &codePointerOverloads;
+        ptr = &cst->codePointerOverloads;
         break;
     case PRIM_ExternalCodePointer :
-        ptr = &cCodePointerOverloads;
+        ptr = &cst->cCodePointerOverloads;
         break;
     case PRIM_Array :
-        ptr = &arrayOverloads;
+        ptr = &cst->arrayOverloads;
         break;
     case PRIM_Vec :
-        ptr = &vecOverloads;
+        ptr = &cst->vecOverloads;
         break;
     case PRIM_Tuple :
-        ptr = &tupleOverloads;
+        ptr = &cst->tupleOverloads;
         break;
     case PRIM_Union :
-        ptr = &unionOverloads;
+        ptr = &cst->unionOverloads;
         break;
     case PRIM_Static :
-        ptr = &staticOverloads;
+        ptr = &cst->staticOverloads;
         break;
     default :
         assert(false);
@@ -73,9 +63,9 @@ vector<OverloadPtr> &primOpOverloads(PrimOpPtr x)
     return *ptr;
 }
 
-vector<OverloadPtr> &getPatternOverloads()
+vector<OverloadPtr> &getPatternOverloads(CompilerStatePtr cst)
 {
-    return patternOverloads;
+    return cst->patternOverloads;
 }
 
 void initBuiltinConstructor(RecordDeclPtr x)

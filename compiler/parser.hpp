@@ -20,7 +20,8 @@ struct ReplItem {
     vector<StatementPtr> stmts;
 };
 
-ModulePtr parse(llvm::StringRef moduleName, SourcePtr source, ParserFlags flags = NoParserFlags);
+ModulePtr parse(llvm::StringRef moduleName, SourcePtr source, 
+                CompilerStatePtr cst, ParserFlags flags = NoParserFlags);
 ExprPtr parseExpr(SourcePtr source, unsigned offset, size_t length);
 ExprListPtr parseExprList(SourcePtr source, unsigned offset, size_t length);
 void parseStatements(SourcePtr source, unsigned offset, size_t length,

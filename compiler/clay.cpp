@@ -140,16 +140,16 @@ static void addOptimizationPasses(llvm::PassManager &passes,
     }
 }
 
-static bool linkLibraries(llvm::Module *module, llvm::ArrayRef<string>  libSearchPaths, llvm::ArrayRef<string>  libs)
+static bool linkLibraries(llvm::Module *module, llvm::ArrayRef<string>  libSearchPaths, llvm::ArrayRef<string>  libs, CompilerStatePtr cst)
 {
     if (libs.empty())
         return true;
-    llvm::Linker linker("clay", llvmModule, llvm::Linker::Verbose);
+    llvm::Linker linker("clay", cst->llvmModule, llvm::Linker::Verbose);
     linker.addSystemPaths();
     linker.addPaths(libSearchPaths);
     for (size_t i = 0; i < libs.size(); ++i){
         string lib = libs[i];
-        llvmModule->addLibrary(lib);
+        cst->llvmModule->addLibrary(lib);
         //as in cling/lib/Interpreter/Interpreter.cpp
         bool isNative = true;
         if (linker.LinkInLibrary(lib, isNative)) {
@@ -204,12 +204,13 @@ static bool runModule(llvm::Module *module,
                       vector<string> &argv,
                       char const* const* envp,
                       llvm::ArrayRef<string>  libSearchPaths,
-                      llvm::ArrayRef<string>  libs)
+                      llvm::ArrayRef<string>  libs,
+                      CompilerStatePtr cst)
 {
-    if (!linkLibraries(module, libSearchPaths, libs)) {
+    if (!linkLibraries(module, libSearchPaths, libs, cst)) {
         return false;
     }
-    llvm::EngineBuilder eb(llvmModule);
+    llvm::EngineBuilder eb(cst->llvmModule);
     llvm::ExecutionEngine *engine = eb.create();
     llvm::Function *mainFunc = module->getFunction("main");
     if (!mainFunc) {
@@ -315,7 +316,8 @@ static bool generateBinary(llvm::Module *module,
                            bool sharedLib,
                            bool debug,
                            llvm::ArrayRef<string> arguments,
-                           bool verbose)
+                           bool verbose,
+                           CompilerStatePtr cst)
 {
     int fd;
     PathString tempObj;
@@ -336,7 +338,7 @@ static bool generateBinary(llvm::Module *module,
     vector<const char *> clangArgs;
     clangArgs.push_back(clangPath.c_str());
 
-    switch (llvmDataLayout->getPointerSizeInBits()) {
+    switch (cst->llvmDataLayout->getPointerSizeInBits()) {
     case 32 :
         clangArgs.push_back("-m32");
         break;
@@ -347,7 +349,7 @@ static bool generateBinary(llvm::Module *module,
         assert(false);
     }
 
-    llvm::Triple triple(llvmModule->getTargetTriple());
+    llvm::Triple triple(cst->llvmModule->getTargetTriple());
     string linkerFlags;
     if (sharedLib) {
         clangArgs.push_back("-shared");
@@ -572,6 +574,8 @@ int main2(int argc, char **argv, char const* const* envp) {
 #endif
 
     bool debug = false;
+
+    CompilerStatePtr cst = new CompilerState();
 
     for (int i = 1; i < argc; ++i) {
         if ((strcmp(argv[i], "-shared") == 0))
@@ -822,7 +826,7 @@ int main2(int argc, char **argv, char const* const* envp) {
                 ? string()
                 : string(equalSignp + 1);
 
-            globalFlags[name] = value;
+            cst->globalFlags[name] = value;
         }
         else if (strstr(argv[i], "-I") == argv[i]) {
             string path = argv[i] + strlen("-I");
@@ -960,8 +964,8 @@ int main2(int argc, char **argv, char const* const* envp) {
     if ((emitLLVM || emitAsm || emitObject) && run)
         run = false;
 
-    setInlineEnabled(inlineEnabled);
-    setExceptionsEnabled(exceptions);
+    setInlineEnabled(inlineEnabled, cst);
+    setExceptionsEnabled(exceptions, cst);
     
     setFinalOverloadsEnabled(finalOverloadsEnabled);
     
@@ -971,14 +975,14 @@ int main2(int argc, char **argv, char const* const* envp) {
     std::string moduleName = clayScript.empty() ? clayFile : "-e";
 
     llvm::TargetMachine *targetMachine = initLLVM(targetTriple, moduleName, "",
-        (sharedLib || genPIC), debug, optLevel);
+        (sharedLib || genPIC), debug, optLevel, cst);
     if (targetMachine == NULL)
     {
         llvm::errs() << "error: unable to initialize LLVM for target " << targetTriple << "\n";
         return 1;
     }
 
-    initTypes();
+    initTypes(cst);
     initExternalTarget(targetTriple);
 
     // Try environment variables first
@@ -1027,7 +1031,7 @@ int main2(int argc, char **argv, char const* const* envp) {
         }
     }
 
-    setSearchPath(searchPath);
+    setSearchPath(searchPath, cst);
 
 
     if (outputFile.empty()) {
@@ -1077,22 +1081,20 @@ int main2(int argc, char **argv, char const* const* envp) {
     HiResTimer loadTimer, compileTimer, optTimer, outputTimer;
 
 
-	//compiler
-
     loadTimer.start();
     try {
-        initLoader();
+        initLoader(cst);
 
         ModulePtr m;
         string clayScriptSource;
         vector<string> sourceFiles;
         if (!clayScript.empty()) {
             clayScriptSource = clayScriptImports + "main() {\n" + clayScript + "}";
-            m = loadProgramSource("-e", clayScriptSource, verbose, repl);
+            m = loadProgramSource("-e", clayScriptSource, verbose, repl, cst);
         } else if (generateDeps)
-            m = loadProgram(clayFile, &sourceFiles, verbose, repl);
+            m = loadProgram(clayFile, &sourceFiles, verbose, repl, cst);
         else
-            m = loadProgram(clayFile, NULL, verbose, repl);
+            m = loadProgram(clayFile, NULL, verbose, repl, cst);
 
         loadTimer.stop();
         compileTimer.start();
@@ -1130,18 +1132,18 @@ int main2(int argc, char **argv, char const* const* envp) {
         if (!repl)
         {
             if (optLevel > 0)
-                optimizeLLVM(llvmModule, optLevel, internalize);
+                optimizeLLVM(cst->llvmModule, optLevel, internalize);
         }
         optTimer.stop();
 
         if (run) {
             vector<string> argv;
             argv.push_back(clayFile);
-            runModule(llvmModule, argv, envp, libSearchPath, libraries);
+            runModule(cst->llvmModule, argv, envp, libSearchPath, libraries, cst);
         }
         else if (repl) {
-            linkLibraries(llvmModule, libSearchPath, libraries);
-            runInteractive(llvmModule, m);
+            linkLibraries(cst->llvmModule, libSearchPath, libraries, cst);
+            runInteractive(m);
         }
         else if (emitLLVM || emitAsm || emitObject) {
             string errorInfo;
@@ -1154,9 +1156,9 @@ int main2(int argc, char **argv, char const* const* envp) {
             }
             outputTimer.start();
             if (emitLLVM)
-                generateLLVM(llvmModule, emitAsm, &out);
+                generateLLVM(cst->llvmModule, emitAsm, &out);
             else if (emitAsm || emitObject)
-                generateAssembly(llvmModule, targetMachine, &out, emitObject);
+                generateAssembly(cst->llvmModule, targetMachine, &out, emitObject);
             outputTimer.stop();
         }
         else {
@@ -1192,8 +1194,10 @@ int main2(int argc, char **argv, char const* const* envp) {
             copy(librariesArgs.begin(), librariesArgs.end(), back_inserter(arguments));
 
             outputTimer.start();
-            result = generateBinary(llvmModule, targetMachine, outputFile, clangPath,
-                                    exceptions, sharedLib, debug, arguments, verbose);
+            result = generateBinary(cst->llvmModule, targetMachine, 
+                                    outputFile, clangPath,
+                                    exceptions, sharedLib, debug, 
+                                    arguments, verbose, cst);
             outputTimer.stop();
             if (!result)
                 return 1;

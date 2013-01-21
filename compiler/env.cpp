@@ -46,7 +46,8 @@ static void suggestModules(llvm::raw_ostream &err, set<string> const &moduleName
     }
 }
 
-static void ambiguousImportError(IdentifierPtr name, ImportSet const &candidates) {
+static void ambiguousImportError(IdentifierPtr name, ImportSet const &candidates,
+                                 CompilerStatePtr cst) {
     string buf;
     llvm::raw_string_ostream err(buf);
     err << "ambiguous imported symbol: " << name->str;
@@ -55,7 +56,7 @@ static void ambiguousImportError(IdentifierPtr name, ImportSet const &candidates
          i != end;
          ++i)
     {
-        moduleNames.insert(staticModule(*i)->moduleName);
+        moduleNames.insert(staticModule(*i, cst)->moduleName);
     }
 
     err << "\n  disambiguate with one of:";
@@ -63,13 +64,15 @@ static void ambiguousImportError(IdentifierPtr name, ImportSet const &candidates
     error(name, err.str());
 }
 
-static void undefinedNameError(IdentifierPtr name) {
+static void undefinedNameError(IdentifierPtr name,
+                               CompilerStatePtr cst) {
     string buf;
     llvm::raw_string_ostream err(buf);
     err << "undefined name: " << name->str;
     set<string> suggestModuleNames;
 
-    for (llvm::StringMap<ModulePtr>::const_iterator i = globalModules.begin(), end = globalModules.end();
+    for (llvm::StringMap<ModulePtr>::const_iterator i = cst->globalModules.begin(),
+             end = cst->globalModules.end();
          i != end;
          ++i)
     {
@@ -288,7 +291,7 @@ retry:
             module->allSymbolsLoaded = true;
             goto retry;
         }
-        ModulePtr prelude = preludeModule();
+        ModulePtr prelude = preludeModule(module->cst);
         if (module == prelude)
             return NULL;
         else
@@ -296,7 +299,7 @@ retry:
     }
     const ImportSet &objs = i->second;
     if (objs.size() > 1) {
-        ambiguousImportError(name, objs);
+        ambiguousImportError(name, objs, module->cst);
     }
     return *objs.begin();
 }
@@ -322,7 +325,7 @@ retry:
     }
     const ImportSet &objs = i->second;
     if (objs.size() > 1) {
-        ambiguousImportError(name, objs);
+        ambiguousImportError(name, objs, module->cst);
     }
     return *objs.begin();
 }
@@ -330,7 +333,7 @@ retry:
 ObjectPtr safeLookupPublic(ModulePtr module, IdentifierPtr name) {
     ObjectPtr x = lookupPublic(module, name);
     if (!x)
-        undefinedNameError(name);
+        undefinedNameError(name, module->cst);
     return x;
 }
 
@@ -372,9 +375,10 @@ ObjectPtr lookupEnv(EnvPtr env, IdentifierPtr name) {
 }
 
 ObjectPtr safeLookupEnv(EnvPtr env, IdentifierPtr name) {
+    CompilerState* cst = safeLookupModule(env)->cst.ptr();
     ObjectPtr obj = lookupEnv(env, name);
     if (obj == NULL)
-        undefinedNameError(name);
+        undefinedNameError(name, cst);
     return obj;
 }
 
@@ -421,6 +425,7 @@ ObjectPtr lookupEnvEx(EnvPtr env, IdentifierPtr name,
                       EnvPtr nonLocalEnv, bool &isNonLocal,
                       bool &isGlobal)
 {
+    CompilerState* cst = safeLookupModule(env)->cst.ptr();
     if (nonLocalEnv == env)
         nonLocalEnv = NULL;
 
@@ -435,7 +440,7 @@ ObjectPtr lookupEnvEx(EnvPtr env, IdentifierPtr name,
     }
 
     if (!env->parent) {
-        undefinedNameError(name);
+        undefinedNameError(name, cst);
     }
 
     switch (env->parent->objKind) {
@@ -447,7 +452,7 @@ ObjectPtr lookupEnvEx(EnvPtr env, IdentifierPtr name,
         Module *y = (Module *)env->parent.ptr();
         ObjectPtr z = lookupPrivate(y, name);
         if (!z)
-            undefinedNameError(name);
+            undefinedNameError(name, cst);
         isNonLocal = true;
         isGlobal = true;
         return z;
