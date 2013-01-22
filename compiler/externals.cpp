@@ -980,6 +980,191 @@ llvm::Type *X86_64_ExternalTarget::getLLVMWordType(TypePtr type)
     }
 }
 
+//
+// Unix MIPS
+//
+
+struct Mips32_ExternalTarget : public LLVMExternalTarget {
+    size_t stackAlign;
+    size_t minABIAlign;
+    size_t argOffset;
+    map<TypePtr, llvm::Type*> llvmWordTypes;
+
+    explicit Mips32_ExternalTarget(llvm::Triple target)
+        : LLVMExternalTarget(target)
+    {
+        minABIAlign = 4;
+        stackAlign = 8;
+    }
+
+    void coerceToIntArgs(size_t tySize, vector<llvm::Type*> &argList) const;
+    llvm::Type* getPaddingType(size_t align, size_t offset) const;
+    llvm::Type* llvmWordType(TypePtr type,
+                             llvm::Type *padding, bool coercion) const;
+    llvm::Type* getLLVMWordType(TypePtr type,
+                                llvm::Type *padding, bool coercion);
+
+    static bool canPassThrough(TypePtr type) {
+        switch (type->typeKind) {
+        case BOOL_TYPE:
+        case INTEGER_TYPE:
+        case FLOAT_TYPE:
+        case POINTER_TYPE:
+        case CODE_POINTER_TYPE:
+        case CCODE_POINTER_TYPE:
+        case STATIC_TYPE:
+        case ENUM_TYPE:
+            return true;
+        case VEC_TYPE:
+        case COMPLEX_TYPE:
+        case VARIANT_TYPE:
+        case UNION_TYPE:
+        case RECORD_TYPE:
+        case TUPLE_TYPE:
+            return false;
+        case NEW_TYPE: {
+            NewType *nt = (NewType*)type.ptr();
+            return canPassThrough(newtypeReprType(nt));
+        }
+        default:
+            assert(false);
+            return false;
+        }
+    }
+
+    virtual llvm::CallingConv::ID callingConvention(CallingConv conv) {
+        return llvm::CallingConv::C;
+    }
+
+    virtual llvm::Type* typeReturnsAsBitcastType(CallingConv conv,
+                                                 TypePtr type) {
+        if (conv == CC_LLVM) return NULL;
+        if (typeReturnsBySretPointer(conv, type)) return NULL;
+
+        if (type->typeKind == VEC_TYPE) {
+            return getLLVMWordType(type, NULL, true);
+        }
+
+        return NULL;
+    }
+
+    virtual llvm::Type* typePassesAsBitcastType(CallingConv conv,
+                                                TypePtr type, bool varArg) {
+        if (conv == CC_LLVM) return NULL;
+        if (typePassesByByvalPointer(conv, type, varArg)) return NULL;
+
+        size_t origOffset = argOffset;
+        size_t tySize = typeSize(type) * 8;
+        size_t align = typeAlignment(type);
+
+        align = std::min(std::max(align, minABIAlign), stackAlign);
+        argOffset = alignedUpTo(argOffset, align);
+        argOffset += alignedUpTo(tySize, align * 8) / 8;
+
+        llvm::Type *padding = getPaddingType(align, origOffset);
+
+        if (!canPassThrough(type)) {
+            return getLLVMWordType(type, padding, true);
+        }
+
+        if (padding) {
+            return getLLVMWordType(type, padding, false);
+        }
+
+        return NULL;
+    }
+
+    virtual bool typeReturnsBySretPointer(CallingConv conv, TypePtr type) {
+        if (conv == CC_LLVM) return false;
+
+        argOffset = 0;
+        size_t tySize = typeSize(type) * 8;
+
+        if (!canPassThrough(type)) {
+            if (tySize <= 128) {
+                if (type->typeKind == COMPLEX_TYPE) {
+                    return false;
+                }
+
+                if (type->typeKind == VEC_TYPE) {
+                    VecType *vecType = (VecType *)type.ptr();
+                    if (vecType->elementType->typeKind != FLOAT_TYPE) {
+                        return false;
+                    }
+                }
+            }
+
+            argOffset = minABIAlign;
+            return true;
+        }
+
+        return false;
+    }
+
+    virtual bool typePassesByByvalPointer(CallingConv conv,
+                                          TypePtr type, bool varArg) {
+        return false;
+    }
+};
+
+void Mips32_ExternalTarget::coerceToIntArgs(size_t tySize,
+                                            vector<llvm::Type*> &argList)
+                                            const {
+    llvm::Type *intType = llvmIntType(minABIAlign * 8);
+
+    for (unsigned n = tySize / (minABIAlign * 8); n > 0; --n) {
+        argList.push_back(intType);
+    }
+
+    unsigned r = tySize % (minABIAlign * 8);
+
+    if (r > 0) {
+        argList.push_back(llvmIntType(r));
+    }
+}
+
+llvm::Type* Mips32_ExternalTarget::getPaddingType(size_t align,
+                                                  size_t offset) const {
+    if (((align - 1) & offset) > 0) {
+        return llvmIntType(minABIAlign * 8);
+    }
+
+    return NULL;
+}
+
+llvm::Type* Mips32_ExternalTarget::llvmWordType(TypePtr type,
+                                                llvm::Type *padding,
+                                                bool coercion) const {
+    size_t tySize = typeSize(type) * 8;
+    vector<llvm::Type*> argList;
+
+    if (padding) {
+        argList.push_back(padding);
+    }
+    if (coercion) {
+        coerceToIntArgs(tySize, argList);
+    } else {
+        argList.push_back(llvmType(type));
+    }
+
+    llvm::StructType *llType = llvm::StructType::create(
+        llvm::getGlobalContext(), "MIPS32 " + typeName(type));
+    llType->setBody(argList);
+
+    return llType;
+}
+
+llvm::Type* Mips32_ExternalTarget::getLLVMWordType(TypePtr type,
+                                                 llvm::Type *padding,
+                                                 bool coercion) {
+    map<TypePtr, llvm::Type*>::iterator found = llvmWordTypes.find(type);
+    if (found == llvmWordTypes.end()) {
+        return llvmWordTypes.insert(make_pair(
+            type, llvmWordType(type, padding, coercion))).first->second;
+    } else {
+        return found->second;
+    }
+}
 
 
 //
@@ -1001,6 +1186,8 @@ void initExternalTarget(string targetString)
         || target.getArch() == llvm::Triple::x86_64)
     {
         externalTarget = new X86_32_ExternalTarget(target);
+    } else if (target.getArch() == llvm::Triple::mips) {
+        externalTarget = new Mips32_ExternalTarget(target);
     } else
         externalTarget = new LLVMExternalTarget(target);
 }
