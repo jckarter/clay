@@ -52,6 +52,7 @@ llvm::Type *ExternalTarget::pushReturnType(CallingConv conv,
                                            vector<llvm::Type *> &llArgTypes,
                                            vector< pair<unsigned, llvm::Attributes> > &llAttributes)
 {
+    reinitialize();
     if (type == NULL)
         return llvmVoidType();
     else if (typeReturnsBySretPointer(conv, type)) {
@@ -98,6 +99,7 @@ void ExternalTarget::allocReturnValue(CallingConv conv,
                                       vector<CReturn> &returns,
                                       CodegenContext* ctx)
 {
+    reinitialize();
     if (type == NULL)
         return;
     else if (typeReturnsBySretPointer(conv, type)) {
@@ -186,6 +188,7 @@ void ExternalTarget::loadStructRetArgument(CallingConv conv,
                                            CodegenContext* ctx,
                                            MultiCValuePtr out)
 {
+    reinitialize();
     if (type != NULL && typeReturnsBySretPointer(conv, type)) {
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
@@ -988,7 +991,6 @@ struct Mips32_ExternalTarget : public LLVMExternalTarget {
     size_t stackAlign;
     size_t minABIAlign;
     size_t argOffset;
-    map<TypePtr, llvm::Type*> llvmWordTypes;
 
     explicit Mips32_ExternalTarget(llvm::Triple target)
         : LLVMExternalTarget(target)
@@ -999,10 +1001,9 @@ struct Mips32_ExternalTarget : public LLVMExternalTarget {
 
     void coerceToIntArgs(size_t tySize, vector<llvm::Type*> &argList) const;
     llvm::Type* getPaddingType(size_t align, size_t offset) const;
-    llvm::Type* llvmWordType(TypePtr type,
-                             llvm::Type *padding, bool coercion) const;
     llvm::Type* getLLVMWordType(TypePtr type,
-                                llvm::Type *padding, bool coercion);
+                                llvm::Type *padding,
+                                bool coercion) const;
 
     static bool canPassThrough(TypePtr type) {
         switch (type->typeKind) {
@@ -1077,7 +1078,6 @@ struct Mips32_ExternalTarget : public LLVMExternalTarget {
     virtual bool typeReturnsBySretPointer(CallingConv conv, TypePtr type) {
         if (conv == CC_LLVM) return false;
 
-        argOffset = 0;
         size_t tySize = typeSize(type) * 8;
 
         if (!canPassThrough(type)) {
@@ -1104,6 +1104,10 @@ struct Mips32_ExternalTarget : public LLVMExternalTarget {
     virtual bool typePassesByByvalPointer(CallingConv conv,
                                           TypePtr type, bool varArg) {
         return false;
+    }
+
+    virtual void reinitialize() {
+        argOffset = 0;
     }
 };
 
@@ -1132,9 +1136,9 @@ llvm::Type* Mips32_ExternalTarget::getPaddingType(size_t align,
     return NULL;
 }
 
-llvm::Type* Mips32_ExternalTarget::llvmWordType(TypePtr type,
-                                                llvm::Type *padding,
-                                                bool coercion) const {
+llvm::Type* Mips32_ExternalTarget::getLLVMWordType(TypePtr type,
+                                                   llvm::Type *padding,
+                                                   bool coercion) const {
     size_t tySize = typeSize(type) * 8;
     vector<llvm::Type*> argList;
 
@@ -1147,23 +1151,10 @@ llvm::Type* Mips32_ExternalTarget::llvmWordType(TypePtr type,
         argList.push_back(llvmType(type));
     }
 
-    llvm::StructType *llType = llvm::StructType::create(
-        llvm::getGlobalContext(), "MIPS32 " + typeName(type));
-    llType->setBody(argList);
+    llvm::StructType *llType = llvm::StructType::get(
+        llvm::getGlobalContext(), argList);
 
     return llType;
-}
-
-llvm::Type* Mips32_ExternalTarget::getLLVMWordType(TypePtr type,
-                                                 llvm::Type *padding,
-                                                 bool coercion) {
-    map<TypePtr, llvm::Type*>::iterator found = llvmWordTypes.find(type);
-    if (found == llvmWordTypes.end()) {
-        return llvmWordTypes.insert(make_pair(
-            type, llvmWordType(type, padding, coercion))).first->second;
-    } else {
-        return found->second;
-    }
 }
 
 

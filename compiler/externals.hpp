@@ -17,6 +17,7 @@ struct ExternalTarget : public Object {
     virtual llvm::Type *typePassesAsBitcastType(CallingConv conv, TypePtr type, bool varArg) = 0;
     virtual bool typeReturnsBySretPointer(CallingConv conv, TypePtr type) = 0;
     virtual bool typePassesByByvalPointer(CallingConv conv, TypePtr type, bool varArg) = 0;
+    virtual void reinitialize() {};
 
     // for generating C function declarations
     llvm::Type *pushReturnType(CallingConv conv,
