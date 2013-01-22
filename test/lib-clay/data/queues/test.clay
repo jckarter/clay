@@ -1,66 +1,67 @@
-import data.queues.*;
-import data.deques.*;
-import test.*;
-import data.vectors.*;
+import 
+    data.queues.*,
+    data.deques.*,
+    test.*,
+    test.module.*,
+    data.vectors.*;
 
-main() = testMain(
-    TestSuite("priority queues", array(
-        TestCase("queue operations", -> {
-            var q = VectorQueue[Int]();
+TEST_queue_operations() {
+    var q = VectorQueue[Int]();
 
-            expectTrue(queueEmpty?(q));
+    expectTrue(queueEmpty?(q));
 
-            queuePush(q, 47);
-            expectFalse(queueEmpty?(q));
-            expectEqual(1, queueSize(q));
-            expectEqual(47, queueTop(q));
+    queuePush(q, 47);
+    expectFalse(queueEmpty?(q));
+    expectEqual(1, queueSize(q));
+    expectEqual(47, queueTop(q));
 
-            queuePush(q, 42);
-            expectFalse(queueEmpty?(q));
-            expectEqual(2, queueSize(q));
-            expectEqual(47, queueTop(q));
+    queuePush(q, 42);
+    expectFalse(queueEmpty?(q));
+    expectEqual(2, queueSize(q));
+    expectEqual(47, queueTop(q));
 
-            queuePush(q, 52);
-            expectFalse(queueEmpty?(q));
-            expectEqual(3, queueSize(q));
-            expectEqual(52, queueTop(q));
+    queuePush(q, 52);
+    expectFalse(queueEmpty?(q));
+    expectEqual(3, queueSize(q));
+    expectEqual(52, queueTop(q));
 
-            expectEqual(52, queuePop(q));
-            expectFalse(queueEmpty?(q));
-            expectEqual(2, queueSize(q));
+    expectEqual(52, queuePop(q));
+    expectFalse(queueEmpty?(q));
+    expectEqual(2, queueSize(q));
 
-            expectEqual(47, queuePop(q));
-            expectFalse(queueEmpty?(q));
-            expectEqual(1, queueSize(q));
+    expectEqual(47, queuePop(q));
+    expectFalse(queueEmpty?(q));
+    expectEqual(1, queueSize(q));
 
-            expectEqual(42, queuePop(q));
-            expectTrue (queueEmpty?(q));
-            expectEqual(0, queueSize(q));
-        }),
-        TestCase("queue constructors", -> {
-            var q1 = vectorQueue(52, 42, 47);
+    expectEqual(42, queuePop(q));
+    expectTrue (queueEmpty?(q));
+    expectEqual(0, queueSize(q));
+}
 
-            expectEqual(3, queueSize(q1));
-            expectEqual(52,  queuePop(q1));
-            expectEqual(47,  queuePop(q1));
-            expectEqual(42,  queuePop(q1));
-            expectTrue (queueEmpty?(q1));
+TEST_queue_constructors() {
+    var q1 = vectorQueue(52, 42, 47);
 
-            var q2 = VectorQueue[Int](vector(52, 42, 47));
+    expectEqual(3, queueSize(q1));
+    expectEqual(52,  queuePop(q1));
+    expectEqual(47,  queuePop(q1));
+    expectEqual(42,  queuePop(q1));
+    expectTrue (queueEmpty?(q1));
 
-            expectEqual(3, queueSize(q2));
-            expectEqual(52,  queuePop(q2));
-            expectEqual(47,  queuePop(q2));
-            expectEqual(42,  queuePop(q2));
-            expectTrue (queueEmpty?(q2));
+    var q2 = VectorQueue[Int](vector(52, 42, 47));
 
-            var q3 = VectorQueue[Int](deque(52, 42, 47));
+    expectEqual(3, queueSize(q2));
+    expectEqual(52,  queuePop(q2));
+    expectEqual(47,  queuePop(q2));
+    expectEqual(42,  queuePop(q2));
+    expectTrue (queueEmpty?(q2));
 
-            expectEqual(3, queueSize(q3));
-            expectEqual(52,  queuePop(q3));
-            expectEqual(47,  queuePop(q3));
-            expectEqual(42,  queuePop(q3));
-            expectTrue (queueEmpty?(q3));
-        }),
-    )),
-);
+    var q3 = VectorQueue[Int](deque(52, 42, 47));
+
+    expectEqual(3, queueSize(q3));
+    expectEqual(52,  queuePop(q3));
+    expectEqual(47,  queuePop(q3));
+    expectEqual(42,  queuePop(q3));
+    expectTrue (queueEmpty?(q3));
+}
+
+private main() = testMainModule();

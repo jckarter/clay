@@ -23,5 +23,5 @@ baseTestCase(n) =
   });
 
 main() = testMain(
-  TestSuite("Permutations of integer ranges", map(baseTestCase, range(1, 7)))
+  TestSuite("Permutations of integer ranges", ..mapValues(baseTestCase, 1,2,3,4,5,6,7))
 );

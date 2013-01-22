@@ -1,96 +1,97 @@
-import test.*;
-import data.sequences.*;
-import data.strings.encodings.utf8.*;
-import data.strings.*;
+import 
+    test.*,
+    test.module.*,
+    data.sequences.*,
+    data.strings.encodings.utf8.*,
+    data.strings.*;
 
-main() = testMain(
-    TestSuite("lazy grouped sequences", array(
-        TestCase("iterator-only sequences", -> {
-            var ustr = grouped(UTF8("abc123!!!"), 3);
-            var iter = iterator(ustr);
+TEST_iterator_only_sequences() {
+    var ustr = grouped(UTF8("abc123!!!"), 3);
+    var iter = iterator(ustr);
 
-            var v = nextValue(iter);
+    var v = nextValue(iter);
 
-            expectTrue(hasValue?(v));
-            expectSequence(getValue(v),
-                UniChar('a'), UniChar('b'), UniChar('c')
-            );
+    expectTrue(hasValue?(v));
+    expectSequence(getValue(v),
+        UniChar('a'), UniChar('b'), UniChar('c')
+    );
 
-            v = nextValue(iter);
+    v = nextValue(iter);
 
-            expectTrue(hasValue?(v));
-            expectSequence(getValue(v),
-                UniChar('1'), UniChar('2'), UniChar('3')
-            );
+    expectTrue(hasValue?(v));
+    expectSequence(getValue(v),
+        UniChar('1'), UniChar('2'), UniChar('3')
+    );
 
-            v = nextValue(iter);
+    v = nextValue(iter);
 
-            expectTrue(hasValue?(v));
-            expectSequence(getValue(v),
-                UniChar('!'), UniChar('!'), UniChar('!')
-            );
+    expectTrue(hasValue?(v));
+    expectSequence(getValue(v),
+        UniChar('!'), UniChar('!'), UniChar('!')
+    );
 
-            v = nextValue(iter);
+    v = nextValue(iter);
 
-            expectFalse(hasValue?(v));
-        }),
-        TestCase("random access coordinate sequences", -> {
-            var str = grouped(String("abc123!!!"), 3);
-            var iter = iterator(str);
+    expectFalse(hasValue?(v));
+}
 
-            var v = nextValue(iter);
+TEST_random_access_coordinate_sequences() {
+    var str = grouped(String("abc123!!!"), 3);
+    var iter = iterator(str);
 
-            expectTrue(hasValue?(v));
-            expectSequence(getValue(v),
-                'a', 'b', 'c'
-            );
+    var v = nextValue(iter);
 
-            v = nextValue(iter);
+    expectTrue(hasValue?(v));
+    expectSequence(getValue(v),
+        'a', 'b', 'c'
+    );
 
-            expectTrue(hasValue?(v));
-            expectSequence(getValue(v),
-                '1', '2', '3'
-            );
+    v = nextValue(iter);
 
-            v = nextValue(iter);
+    expectTrue(hasValue?(v));
+    expectSequence(getValue(v),
+        '1', '2', '3'
+    );
 
-            expectTrue(hasValue?(v));
-            expectSequence(getValue(v),
-                '!', '!', '!'
-            );
+    v = nextValue(iter);
 
-            v = nextValue(iter);
+    expectTrue(hasValue?(v));
+    expectSequence(getValue(v),
+        '!', '!', '!'
+    );
 
-            expectFalse(hasValue?(v));
+    v = nextValue(iter);
 
-            expectSequence(str[0],
-                'a', 'b', 'c'
-            );
-            expectSequence(str[1],
-                '1', '2', '3'
-            );
-            expectSequence(str[2],
-                '!', '!', '!'
-            );
+    expectFalse(hasValue?(v));
 
-            str[2][1] = '?';
+    expectSequence(str[0],
+        'a', 'b', 'c'
+    );
+    expectSequence(str[1],
+        '1', '2', '3'
+    );
+    expectSequence(str[2],
+        '!', '!', '!'
+    );
 
-            expectSequence(str[2],
-                '!', '?', '!'
-            );
+    str[2][1] = '?';
 
-            expectTrue(
-                begin(str) + size(str) == end(str)
-            );
-            expectTrue(
-                end(str) - begin(str) == size(str)
-            );
-            expectTrue(end(str) > begin(str));
-            expectFalse(end(str) < begin(str));
-            expectFalse(end(str) == begin(str));
-            expectFalse(begin(str) > begin(str));
-            expectFalse(begin(str) < begin(str));
-            expectTrue(begin(str) == begin(str));
-        }),
-    )),
-);
+    expectSequence(str[2],
+        '!', '?', '!'
+    );
+
+    expectTrue(
+        begin(str) + size(str) == end(str)
+    );
+    expectTrue(
+        end(str) - begin(str) == size(str)
+    );
+    expectTrue(end(str) > begin(str));
+    expectFalse(end(str) < begin(str));
+    expectFalse(end(str) == begin(str));
+    expectFalse(begin(str) > begin(str));
+    expectFalse(begin(str) < begin(str));
+    expectTrue(begin(str) == begin(str));
+}
+
+private main() = testMainModule();

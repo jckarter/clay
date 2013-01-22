@@ -33,7 +33,7 @@ testCaptureValue() {
 
 
 main() = testMain(
-    TestSuite("values", array(
+    TestSuite("values",
         TestCase("eachValue", -> {
             var r = Vector[String]();
             eachValue(x -> { push(r, str(x)); }, 1, 2.0, "three");
@@ -205,4 +205,4 @@ main() = testMain(
             }
         }),
         TestCase("captureValue", testCaptureValue),
-    )));
+    ));

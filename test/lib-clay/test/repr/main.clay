@@ -5,7 +5,7 @@ import data.vectors.*;
 
 main() = testMain(
     TestSuite(
-        "test uses repr to print values", array(
+        "test uses repr to print values", 
             TestCase("in expectEqual", -> {
                 expectEqual("\n", "\t");
             }),
@@ -20,5 +20,5 @@ main() = testMain(
                 expectIterator(iterator(vs), 4u);
                 expectSequence(vs, 12u);
             }),
-        ),
+        
     ));

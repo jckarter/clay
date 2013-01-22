@@ -11,11 +11,11 @@ import data.strings.*;
 import test.*;
 
 main() = testMain(
-    TestSuite("printer for GenericIOError", array(
+    TestSuite("printer for GenericIOError",
         TestCase("print", -> {
             var s = str(GenericIOError(2, "close"));
             // if printTo(stream, record) is defined after, then
             // str returns "GenericIOError(ESMTH, \"close\")"
             expectTrue(beginsWith?(s, String("close: error(2)")));
         }),
-    )));
+    ));

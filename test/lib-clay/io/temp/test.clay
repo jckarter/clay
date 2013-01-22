@@ -4,8 +4,8 @@ import io.filesystem.(pathExists?);
 import test.*;
 
 main() = testMain(
-    TestSuite("io.temp", array(
+    TestSuite("io.temp",
         TestCase("tempDirectory", -> {
             expectTrue(pathExists?(tempDirectory()));
         }),
-    )));
+    ));

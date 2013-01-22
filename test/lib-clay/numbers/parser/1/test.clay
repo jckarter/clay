@@ -18,7 +18,7 @@ testParseInvalid(type, string) {
 }
 
 main() = testMain(
-    TestSuite("numbers.parser", array(
+    TestSuite("numbers.parser",
         TestCase("simple", -> {
             testParseAndPrint(Int8, "111");
             testParseAndPrint(Int16, "222");
@@ -49,4 +49,4 @@ main() = testMain(
             testParseInvalid(Int32, "9ab");
             testParseInvalid(Float, "abc1.2");
         }),
-    )));
+    ));

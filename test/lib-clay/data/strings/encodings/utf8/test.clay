@@ -6,7 +6,7 @@ import data.vectors.*;
 import test.*;
 
 main() = testMain(
-    TestSuite("utf8", array(
+    TestSuite("utf8",
         TestCase("UTF8 well formed", -> {
             expectEqual(
                 vector(72, 32, 233, 32, 8364, 32, 119652),
@@ -81,4 +81,4 @@ main() = testMain(
             push(s, UniChar(0x044b));
             expectPrinted("\xd0\xbc\xd1\x8b", s);
         }),
-    )));
+    ));

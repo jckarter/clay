@@ -27,7 +27,7 @@ overload testListDirectory() {
 }
 
 main() = testMain(
-    TestSuite("io.directories", array(
+    TestSuite("io.directories", 
         TestCase("listDirectory", testListDirectory),
         TestCase("makeDirectory, deleteDirectory", => {
             var tmpdir = tempDirectory();
@@ -41,4 +41,4 @@ main() = testMain(
             expectFalse(pathIsRegularFile?(testTmpdir));
             deleteDirectory(testTmpdir);
         }),
-    )));
+    ));

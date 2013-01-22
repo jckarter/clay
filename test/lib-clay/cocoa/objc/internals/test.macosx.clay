@@ -228,7 +228,7 @@ expectSelectorNotCallableWith(Class, selector, ..T) {
     );
 }
 
-main() = testMain(TestSuite("Objective-C binding internals", array(
+main() = testMain(TestSuite("Objective-C binding internals",
     TestCase("type encodings", -> {
         expectEncoding("");
         expectEncoding("c", Int8);
@@ -623,5 +623,5 @@ main() = testMain(TestSuite("Objective-C binding internals", array(
 
         pool.drain();
     }),
-)));
+));
 

@@ -10,7 +10,7 @@ throwNothing() { }
 
 main() = testMain(
     TestSuite(
-        "test test suite", array(
+        "test test suite", 
             TestCase("should pass", -> {
                 var seq = array(2, 3, 5, 7, 11);
 
@@ -80,6 +80,6 @@ main() = testMain(
                     expectTrue(true);
                 });
             }),
-        )
+        
     )
 );

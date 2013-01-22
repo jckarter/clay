@@ -63,7 +63,7 @@ testSeparatedList(#strict, #opt) {
 }
 
 testSuite() =
-    TestSuite("parsing.combinators.generic", array(
+    TestSuite("parsing.combinators.generic",
         TestCase("separatedList", -> {
             testSeparatedList(#false, #false);
         }),
@@ -76,7 +76,7 @@ testSuite() =
         TestCase("optSeparatedListStrict", -> {
             testSeparatedList(#true, #true);
         }),
-    ));
+    );
 
 
 main() = testMain(testSuite());

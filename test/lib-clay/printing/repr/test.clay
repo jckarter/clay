@@ -16,7 +16,7 @@ forceinline testWithEval(expr) {
 }
 
 main() = testMain(
-    TestSuite("repr", array(
+    TestSuite("repr",
         TestCase("numbers", -> {
             testWithEval("0ss");
             testWithEval("0uss");
@@ -124,5 +124,5 @@ main() = testMain(
             testWithEval("""ArrayRef[Int32]""");
             // content printing is not tested, because output contains pointers
         }),
-    )));
+    ));
 

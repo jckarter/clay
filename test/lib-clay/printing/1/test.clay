@@ -28,7 +28,7 @@ testPrintRecordEnum() {
 
 
 main() = testMain(
-    TestSuite("printer", array(
+    TestSuite("printer", 
         TestCase("record, enum", testPrintRecordEnum),
         TestCase("tuple", -> {
             expectPrinted("[1, true, 3.5]", [1, true, 3.5]);
@@ -47,5 +47,5 @@ main() = testMain(
             var s = array(UniChar('a'), UniChar('b'));
             expectPrinted("ab", s);
         }),
-    )));
+    ));
 

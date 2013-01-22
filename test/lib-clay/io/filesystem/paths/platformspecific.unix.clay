@@ -27,7 +27,7 @@ expectJoinPath(parts, expected) {
 }
 
 testSuite() =
-    TestSuite("path test suite", array(
+    TestSuite("path test suite",
         TestCase("splitPath test cases", -> {
             expectSplitPath("", array("", ""));
             expectSplitPath("/", array("/", ""));
@@ -61,6 +61,6 @@ testSuite() =
             expectJoinPath(array("foo/bar/", "/baz/"), "/baz");
             expectJoinPath(array("foo/bar/", "/baz"), "/baz");
         }),
-    ));
+    );
 
 main() = testMain(testSuite());

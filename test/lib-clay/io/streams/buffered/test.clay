@@ -6,7 +6,7 @@ import io.streams.memory.*;
 import test.*;
 
 main() = testMain(
-    TestSuite("io.streams.buffered", array(
+    TestSuite("io.streams.buffered",
         TestCase("BufferedOutputStream", -> {
             var os = BufferedOutputStream(String());
             write(os, "a");
@@ -33,4 +33,4 @@ main() = testMain(
             expectEqual("erty", read(is, SizeT(100)));
             expectEqual("", read(is, SizeT(10)));
         }),
-    )));
+    ));

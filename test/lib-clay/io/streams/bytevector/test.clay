@@ -5,7 +5,7 @@ import data.vectors.*;
 import test.*;
 
 main() = testMain(
-    TestSuite("io.streams.bytevector", array(
+    TestSuite("io.streams.bytevector",
         TestCase("OutputStream?", -> {
             expectTrue(OutputStream?(Vector[Char]));
         }),
@@ -15,4 +15,4 @@ main() = testMain(
             write(r, "cc");
             expectEqual("aabbcc", r);
         }),
-    )));
+    ));

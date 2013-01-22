@@ -4,7 +4,7 @@ import test.*;
 
 
 main() = testMain(
-    TestSuite("io.streams.memory", array(
+    TestSuite("io.streams.memory",
         TestCase("MemoryInputStream", -> {
             var s = "hedgehog";
             var is = MemoryInputStream(begin(s), end(s));
@@ -26,4 +26,4 @@ main() = testMain(
             }
             expectEqual("hairdressing", coordinateRange(Pointer[Char](begin(a)), Pointer[Char](end(a))));
         }),
-    )));
+    ));

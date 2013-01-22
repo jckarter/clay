@@ -1,13 +1,15 @@
-import test.*;
+import 
+    test.*,
+    test.module.*;
 
-main() = testMain(
-    TestSuite("core.exceptions", array(
-        TestCase("GenericException", -> {
-            var f = -> { throw GenericException("hi there"); };
-            expectExceptionType(GenericException, f);
-        }),
-        TestCase("throw string", -> {
-            var f = -> { throw "hi there"; };
-            expectException(GenericException("hi there"), f);
-        }),
-    )));
+TEST_GenericException() {
+    var f = -> { throw GenericException("hi there"); };
+    expectExceptionType(GenericException, f);
+}
+
+TEST_throw_string() {
+    var f = -> { throw "hi there"; };
+    expectException(GenericException("hi there"), f);
+}
+
+private main() = testMainModule();

@@ -4,17 +4,17 @@ import commandline.options.parser.*;
 import data.strings.*;
 import data.vectors.*;
 
-fbbSpec() = OptionSpecs(array(
+fbbSpec() = vector(
   OptionSpec('f', "foo"),
   OptionSpec('b', "bar"),
   OptionSpec('z', "baz"),
   OptionSpec('i', "bif")
-));
+);
 
-valuableSpec() = OptionSpecs(array(
+valuableSpec() = vector(
   OptionSpec('f', "foo", HAS_VALUE),
   OptionSpec('b', "bar", HAS_VALUE)
-));
+);
 
 [T] numberOf(it, #T){
   var i = 0;
@@ -29,7 +29,7 @@ validOptions?(it) = numberOf(it, Error) == 0;
 PR(..args) = ParseResult([..mapValues(ParseToken, ..args)]);
 
 main() = testMain(
-  TestSuite("Raw option parsing", array(
+  TestSuite("Raw option parsing",
     TestCase("a single option amongst many", -> {
       var opts = array("foo", "bar", "baz");
       for(opt in opts){
@@ -72,8 +72,8 @@ main() = testMain(
 
       expectEqual(PR(Argument(String("-1"))), pr);
     })
-  )),
-  TestSuite("The option table API", array(
+  ),
+  TestSuite("The option table API",
     TestCase("testing for presence", -> {
       var ot = OptionTable(fbbSpec(), array("-fb", "-baz"));
       expectTrue(optionGiven?(ot, "foo"));
@@ -85,6 +85,6 @@ main() = testMain(
       expectEqual(getOptions(ot, "foo"), vector(String("kittens"), String("bunnies")));
       expectEqual(getOptions(ot, "bar"), vector(String("badgers")));
     })
-  ))
+  )
 );
 

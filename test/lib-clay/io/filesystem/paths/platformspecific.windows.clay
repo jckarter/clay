@@ -1,9 +1,11 @@
 
-import test.*;
-import io.filesystem.*;
-import printer.(printTo);
-import data.strings.*;
-import data.vectors.*;
+import 
+    test.*,
+    test.module.*,
+    io.filesystem.*,
+    printer.(printTo),
+    data.strings.*,
+    data.vectors.*;
 
 expectSplitPath(path, expected) {
     expectEqual(
@@ -28,55 +30,54 @@ expectJoinPath(parts, expected) {
     );
 }
 
-testSuite() =
-    TestSuite("path test suite", array(
-        TestCase("splitPath test cases", -> {
-            expectSplitPath("", array("", ""));
-            expectSplitPath("\\", array("\\", ""));
-            expectSplitPath("foo", array("", "foo"));
-            expectSplitPath("foo\\", array("", "foo"));
-            expectSplitPath("\\foo", array("\\", "foo"));
-            expectSplitPath("\\foo\\", array("\\", "foo"));
-            expectSplitPath("\\foo\\bar", array("\\foo", "bar"));
-            expectSplitPath("\\foo\\bar\\", array("\\foo", "bar"));
-            expectSplitPath("z:\\foo\\bar\\", array("z:\\foo", "bar"));
-            expectSplitPath("z:foo\\bar", array("z:foo", "bar"));
-            expectSplitPath("z:foo\\", array("z:", "foo"));
-            expectSplitPath("z:\\", array("z:\\", ""));
-            expectSplitPath("z:", array("z:", ""));
-            expectSplitPath("\\\\woof\\foo\\bar\\", array("\\\\woof\\foo\\", "bar"));
-            expectSplitPath("\\\\woof\\foo\\bar", array("\\\\woof\\foo\\", "bar"));
-            expectSplitPath("\\\\woof\\foo\\", array("\\\\woof\\foo\\", ""));
-            expectSplitPath("\\\\woof\\foo", array("\\\\woof\\foo", ""));
-        }),
-        TestCase("pathComponents test cases", -> {
-            expectPathComponents("", Vector[String]());
-            expectPathComponents("\\", array("\\"));
-            expectPathComponents("foo", array("foo"));
-            expectPathComponents("foo\\", array("foo"));
-            expectPathComponents("\\foo", array("\\", "foo"));
-            expectPathComponents("\\foo\\", array("\\", "foo"));
-            expectPathComponents("\\foo\\bar", array("\\", "foo", "bar"));
-            expectPathComponents("\\foo\\bar\\", array("\\", "foo", "bar"));
-            expectPathComponents("\\foo\\bar\\baz\\", array("\\", "foo", "bar", "baz"));
-            expectPathComponents("z:\\foo\\bar\\baz\\", array("z:", "\\", "foo", "bar", "baz"));
-            expectPathComponents("z:foo\\bar\\baz\\", array("z:", "foo", "bar", "baz"));
-            expectPathComponents("\\\\woof\\foo\\bar\\baz\\", array("\\\\woof\\foo", "\\", "bar", "baz"));
-        }),
-        TestCase("joinPath test cases", -> {
-            expectJoinPath(Vector[String](), "");
-            expectJoinPath(array(""), "");
-            expectJoinPath(array("", ""), "");
-            expectJoinPath(array("", "\\"), "\\");
-            expectJoinPath(array("foo", "\\"), "\\");
-            expectJoinPath(array("foo\\bar", "baz\\"), "foo\\bar\\baz");
-            expectJoinPath(array("foo\\bar\\", "baz"), "foo\\bar\\baz");
-            expectJoinPath(array("foo\\bar\\", "baz\\"), "foo\\bar\\baz");
-            expectJoinPath(array("foo\\bar\\", "x:baz\\"), "x:baz");
-            expectJoinPath(array("foo\\bar\\", "x:baz\\", "\\boo\\hoo\\"), "x:\\boo\\hoo");
-            expectJoinPath(array("foo\\bar\\", "\\baz\\"), "\\baz");
-            expectJoinPath(array("foo\\bar\\", "\\\\glop\\blop\\feep\\foop", "\\baz"), "\\\\glop\\blop\\baz");
-        }),
-    ));
+TEST_splitPath_test_cases() {
+    expectSplitPath("", array("", ""));
+    expectSplitPath("\\", array("\\", ""));
+    expectSplitPath("foo", array("", "foo"));
+    expectSplitPath("foo\\", array("", "foo"));
+    expectSplitPath("\\foo", array("\\", "foo"));
+    expectSplitPath("\\foo\\", array("\\", "foo"));
+    expectSplitPath("\\foo\\bar", array("\\foo", "bar"));
+    expectSplitPath("\\foo\\bar\\", array("\\foo", "bar"));
+    expectSplitPath("z:\\foo\\bar\\", array("z:\\foo", "bar"));
+    expectSplitPath("z:foo\\bar", array("z:foo", "bar"));
+    expectSplitPath("z:foo\\", array("z:", "foo"));
+    expectSplitPath("z:\\", array("z:\\", ""));
+    expectSplitPath("z:", array("z:", ""));
+    expectSplitPath("\\\\woof\\foo\\bar\\", array("\\\\woof\\foo\\", "bar"));
+    expectSplitPath("\\\\woof\\foo\\bar", array("\\\\woof\\foo\\", "bar"));
+    expectSplitPath("\\\\woof\\foo\\", array("\\\\woof\\foo\\", ""));
+    expectSplitPath("\\\\woof\\foo", array("\\\\woof\\foo", ""));
+}
 
-main() = testMain(testSuite());
+TEST_pathComponents_test_cases() {
+    expectPathComponents("", Vector[String]());
+    expectPathComponents("\\", array("\\"));
+    expectPathComponents("foo", array("foo"));
+    expectPathComponents("foo\\", array("foo"));
+    expectPathComponents("\\foo", array("\\", "foo"));
+    expectPathComponents("\\foo\\", array("\\", "foo"));
+    expectPathComponents("\\foo\\bar", array("\\", "foo", "bar"));
+    expectPathComponents("\\foo\\bar\\", array("\\", "foo", "bar"));
+    expectPathComponents("\\foo\\bar\\baz\\", array("\\", "foo", "bar", "baz"));
+    expectPathComponents("z:\\foo\\bar\\baz\\", array("z:", "\\", "foo", "bar", "baz"));
+    expectPathComponents("z:foo\\bar\\baz\\", array("z:", "foo", "bar", "baz"));
+    expectPathComponents("\\\\woof\\foo\\bar\\baz\\", array("\\\\woof\\foo", "\\", "bar", "baz"));
+}
+
+TEST_joinPath_test_cases() {
+    expectJoinPath(Vector[String](), "");
+    expectJoinPath(array(""), "");
+    expectJoinPath(array("", ""), "");
+    expectJoinPath(array("", "\\"), "\\");
+    expectJoinPath(array("foo", "\\"), "\\");
+    expectJoinPath(array("foo\\bar", "baz\\"), "foo\\bar\\baz");
+    expectJoinPath(array("foo\\bar\\", "baz"), "foo\\bar\\baz");
+    expectJoinPath(array("foo\\bar\\", "baz\\"), "foo\\bar\\baz");
+    expectJoinPath(array("foo\\bar\\", "x:baz\\"), "x:baz");
+    expectJoinPath(array("foo\\bar\\", "x:baz\\", "\\boo\\hoo\\"), "x:\\boo\\hoo");
+    expectJoinPath(array("foo\\bar\\", "\\baz\\"), "\\baz");
+    expectJoinPath(array("foo\\bar\\", "\\\\glop\\blop\\feep\\foop", "\\baz"), "\\\\glop\\blop\\baz");
+}
+
+private main() = testMainModule();

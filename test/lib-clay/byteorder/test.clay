@@ -1,6 +1,8 @@
-import byteorder.*;
-import printer.(str);
-import test.*;
+import 
+    byteorder.*,
+    printer.(str),
+    test.*,
+    test.module.*;
 
 define testNetworkToHost;
 
@@ -19,16 +21,15 @@ overload testNetworkToHost(#IntType, function, expectReversed?) {
 overload testNetworkToHost(#IntType, function, expectReversed?) {
 }
 
-main() = testMain(
-    TestSuite("byteorder", array(
-        TestCase("networkToHost, hostToNetwork", -> {
-            ..for (IntType in UInt8, Int8, UInt16, Int16, UInt32, Int32, UInt64, Int64, UInt128, Int128) {
-                testNetworkToHost(IntType, networkToHost, LittleEndian?);
-                testNetworkToHost(IntType, hostToNetwork, LittleEndian?);
-                testNetworkToHost(IntType, bigToHost, LittleEndian?);
-                testNetworkToHost(IntType, hostToBig, LittleEndian?);
-                testNetworkToHost(IntType, littleToHost, BigEndian?);
-                testNetworkToHost(IntType, hostToLittle, BigEndian?);
-            }
-        }),
-    )));
+TEST_networkToHost_hostToNetwork() {
+    ..for (IntType in ..BuiltinIntegerTypes()) {
+        testNetworkToHost(IntType, networkToHost, LittleEndian?);
+        testNetworkToHost(IntType, hostToNetwork, LittleEndian?);
+        testNetworkToHost(IntType, bigToHost, LittleEndian?);
+        testNetworkToHost(IntType, hostToBig, LittleEndian?);
+        testNetworkToHost(IntType, littleToHost, BigEndian?);
+        testNetworkToHost(IntType, hostToLittle, BigEndian?);
+    }
+}
+
+private main() = testMainModule();
