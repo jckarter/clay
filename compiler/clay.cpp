@@ -422,12 +422,18 @@ static void usage(char *argv0)
     llvm::errs() << "options:\n";
     llvm::errs() << "  -o <file>             specify output file\n";
     llvm::errs() << "  -target <target>      set target platform for code generation\n";
+    llvm::errs() << "  -mcpu <CPU>           set target CPU for code generation\n";
+    llvm::errs() << "  -mattr <features>     set target features for code generation\n"
+        << "                        use +feature to enable a feature\n"
+        << "                        or -feature to disable it\n"
+        << "                        for example, -mattr +feature1,-feature2\n";
+    llvm::errs() << "  -soft-float           generate software floating point library calls\n";
     llvm::errs() << "  -shared               create a dynamically linkable library\n";
     llvm::errs() << "  -emit-llvm            emit llvm code\n";
     llvm::errs() << "  -S                    emit assembler code\n";
     llvm::errs() << "  -c                    emit object code\n";
     llvm::errs() << "  -DFLAG[=value]        set flag value\n"
-         << "                        (queryable with Flag?() and Flag())\n";
+        << "                        (queryable with Flag?() and Flag())\n";
     llvm::errs() << "  -O0 -O1 -O2 -O3       set optimization level\n";
     llvm::errs() << "                        (default -O2, or -O0 with -g)\n";
     llvm::errs() << "  -g                    keep debug symbol information\n";
@@ -437,19 +443,19 @@ static void usage(char *argv0)
     llvm::errs() << "                        and enable 'inline' hints (default)\n";
     llvm::errs() << "  -no-inline            ignore 'inline' and 'forceinline' keyword\n";
     llvm::errs() << "  -import-externals     include externals from imported modules\n"
-         << "                        in compilation unit\n"
-         << "                        (default when building standalone or -shared)\n";
+        << "                        in compilation unit\n"
+        << "                        (default when building standalone or -shared)\n";
     llvm::errs() << "  -no-import-externals  don't include externals from imported modules\n"
-         << "                        in compilation unit\n"
-         << "                        (default when building -c or -S)\n";
+        << "                        in compilation unit\n"
+        << "                        (default when building -c or -S)\n";
     llvm::errs() << "  -pic                  generate position independent code\n";
     llvm::errs() << "  -run                  execute the program without writing to disk\n";
     llvm::errs() << "  -timing               show timing information\n";
     llvm::errs() << "  -verbose              be verbose\n";
     llvm::errs() << "  -full-match-errors    show universal patterns in match failure errors\n";
     llvm::errs() << "  -log-match <module.symbol>\n"
-        << "                         log overload matching behavior for calls to <symbol>\n"
-        << "                         in module <module>\n";
+        << "                        log overload matching behavior for calls to <symbol>\n"
+        << "                        in module <module>\n";
 #ifdef __APPLE__
     llvm::errs() << "  -arch <arch>          build for Darwin architecture <arch>\n";
     llvm::errs() << "  -F<dir>               add <dir> to framework search path\n";
@@ -544,6 +550,7 @@ int main2(int argc, char **argv, char const* const* envp) {
     bool optLevelSet = false;
 
     bool finalOverloadsEnabled = false;
+    bool softFloat = false;
 
 #ifdef __APPLE__
     genPIC = true;
@@ -554,6 +561,9 @@ int main2(int argc, char **argv, char const* const* envp) {
     string clayFile;
     string outputFile;
     string targetTriple = llvm::sys::getDefaultTargetTriple();
+
+    string targetCPU;
+    string targetFeatures;
 
     string clayScriptImports;
     string clayScript;
@@ -763,6 +773,33 @@ int main2(int argc, char **argv, char const* const* envp) {
             }
             crossCompiling = targetTriple != llvm::sys::getDefaultTargetTriple();
         }
+        else if (strcmp(argv[i], "-mcpu") == 0) {
+            if (i+1 == argc) {
+                llvm::errs() << "error: CPU name missing after -mcpu\n";
+                return 1;
+            }
+            ++i;
+            targetCPU = argv[i];
+            if (targetCPU.empty() || (targetCPU[0] == '-')) {
+                llvm::errs() << "error: CPU name missing after -mcpu\n";
+                return 1;
+            }
+        }
+        else if (strcmp(argv[i], "-mattr") == 0) {
+            if (i+1 == argc) {
+                llvm::errs() << "error: features missing after -mattr\n";
+                return 1;
+            }
+            ++i;
+            targetFeatures = argv[i];
+            if (targetFeatures.empty() || (targetFeatures[0] == '-')) {
+                llvm::errs() << "error: features missing after -mattr\n";
+                return 1;
+            }
+        }
+        else if (strcmp(argv[i], "-soft-float") == 0) {
+            softFloat = true;
+        }
         else if (strstr(argv[i], "-Wl") == argv[i]) {
             linkerFlags += argv[i] + strlen("-Wl");
         }
@@ -970,7 +1007,8 @@ int main2(int argc, char **argv, char const* const* envp) {
 
     std::string moduleName = clayScript.empty() ? clayFile : "-e";
 
-    llvm::TargetMachine *targetMachine = initLLVM(targetTriple, moduleName, "",
+    llvm::TargetMachine *targetMachine = initLLVM(targetTriple,
+        targetCPU, targetFeatures, softFloat, moduleName, "",
         (sharedLib || genPIC), debug, optLevel);
     if (targetMachine == NULL)
     {
