@@ -2,7 +2,7 @@ import test.*;
 import comparators.*;
 
 main() = testMain(
-  TestSuite("Natural comparators", 
+  TestSuite("Natural comparators", array(
     TestCase("should do the same thing as the base operations", -> {
       var c = natural();
     
@@ -11,8 +11,8 @@ main() = testMain(
       expectEqual(1 != 1, notEquals?(c, 1, 1)); 
       expectEqual(1 == 1, lesser?(c, 1, 2)); 
     })
-  ),
-  TestSuite("Reverse comparators",
+  )),
+  TestSuite("Reverse comparators", array(
     TestCase("should do the same thing as the base operations for equality", -> {
       var c = reversed();
     
@@ -27,8 +27,8 @@ main() = testMain(
       expectEqual(true, lesserEquals?(c, 1, 1));
       expectEqual(false, lesser?(c, 1, 1));
     })
-  ),
-  TestSuite("Mapped comparators",
+  )),
+  TestSuite("Mapped comparators", array(
     TestCase("should use the provided function for all operations", -> {
       var c = comparing(size);
 
@@ -36,5 +36,5 @@ main() = testMain(
       expectEqual(true, notEquals?(c, "foo", "bars"));
       expectEqual(true, notEquals?(c, "foo", "bars"));
     })
-  )
+  ))
 );

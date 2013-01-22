@@ -3,7 +3,7 @@ import random.*;
 import printer.(str);
 
 main() = testMain(
-  TestSuite("Random number generation",
+  TestSuite("Random number generation", array(
     TestCase("consecutive runs from the same RNG", -> {
       var rng = XORShiftRNG();
       var rng0 = rng;
@@ -44,5 +44,5 @@ main() = testMain(
         expectTrue(x < 3.0);
       }
     }),
-  )
+  ))
 );

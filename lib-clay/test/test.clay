@@ -5,6 +5,7 @@ import
     io.streams.*,
     io.files.*,
     data.strings.*,
+    lambdas.*,
     data.vectors.*,
     printer.formatter.(repr);
 
@@ -17,29 +18,37 @@ record TestStatus (
 
 overload TestStatus() = TestStatus(UInt(0), UInt(0), UInt(0));
 
-record TestCase[F] (
+alias TestFunction = Function[[], []];
+
+record TestCase (
     name: String,
-    _case: F,
+    _case: TestFunction,
     xfail?: Bool,
 );
 
-[F]
-overload TestCase(name, rvalue fn:F, xfail?) = TestCase[F](String(name), move(fn), xfail?);
+staticassert (     Movable?(TestCase));
+staticassert (not Copyable?(TestCase));
 
-overload TestCase(name, rvalue fn) = TestCase(name, move(fn), false);
+[T, F when String?(T) and CallDefined?(call, F)]
+overload TestCase(name:T, _case:F, xfail?)
+    = initializeRecord(TestCase, String(name), TestFunction(_case), xfail?);
 
-XFAILTestCase(name, rvalue fn) = TestCase(name, move(fn), true);
+[T when String?(T)]
+overload TestCase(name:T, rvalue _case:TestFunction, xfail?)
+    = initializeRecord(TestCase, String(name), move(_case), xfail?);
 
-[..F]
-record TestSuite[..F] (
+overload TestCase(name, fn) = TestCase(name, TestFunction(fn), false);
+
+XFAILTestCase(name, fn) = TestCase(name, TestFunction(fn), true);
+
+record TestSuite (
     name: String,
-    ..testCases: F,
+    testCases: Vector[TestCase]
 );
 
-[S, ..T when S != String]
-overload TestSuite(name : S, rvalue ..testCases : T) =
-    TestSuite[..T](String(name), ..mapValues(move, ..testCases));
-
+[S, T when S != String or T != Vector[TestCase]]
+overload TestSuite(name : S, rvalue testCases : T) =
+    TestSuite(String(name), Vector[TestCase](move(testCases)));
 
 alias TEST_CASE_INDENT = "  ";
 alias TEST_FAILURE_INDENT = TEST_CASE_INDENT++TEST_CASE_INDENT;
@@ -61,11 +70,10 @@ reportTest(test: TestStatus, ..prefix) {
     );
 }
 
-[..T]
-runTestSuite(suite: TestSuite[..T]) : TestStatus {
+runTestSuite(suite: TestSuite) : TestStatus {
     var test = TestStatus();
     println("Testing ", suite.name, ":");
-    ..for (_case in ..suite.testCases)
+    for (_case in suite.testCases)
         if(runCase?(_case))
             accumulateTestStatus(test, runTestCase(_case));
 
@@ -87,8 +95,8 @@ overload printFailure(..xs) {
 }
 
 var g_testCaseStatus = Maybe[TestStatus]();
-[F]
-runTestCase(_case: TestCase[F]) : TestStatus {
+
+runTestCase(_case: TestCase) : TestStatus {
     print(TEST_CASE_INDENT, xfailMessage(_case.xfail?), _case.name, ":");
     flush(stdout);
 

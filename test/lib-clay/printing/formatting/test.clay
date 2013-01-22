@@ -2,7 +2,7 @@ import test.*;
 import printer.formatter.*;
 
 main() = testMain(
-    TestSuite("formatting",
+    TestSuite("formatting", array(
         TestCase("number base formatters", -> {
             expectPrinted("30071",
                 oct(12345)
@@ -141,5 +141,5 @@ main() = testMain(
                 "\xD1\x8F",
                 UniChar(0x044f));
         }),
-    ),
+    )),
 );

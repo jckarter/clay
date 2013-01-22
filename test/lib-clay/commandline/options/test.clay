@@ -29,7 +29,7 @@ validOptions?(it) = numberOf(it, Error) == 0;
 PR(..args) = ParseResult([..mapValues(ParseToken, ..args)]);
 
 main() = testMain(
-  TestSuite("Raw option parsing",
+  TestSuite("Raw option parsing", array(
     TestCase("a single option amongst many", -> {
       var opts = array("foo", "bar", "baz");
       for(opt in opts){
@@ -72,8 +72,8 @@ main() = testMain(
 
       expectEqual(PR(Argument(String("-1"))), pr);
     })
-  ),
-  TestSuite("The option table API",
+  )),
+  TestSuite("The option table API", array(
     TestCase("testing for presence", -> {
       var ot = OptionTable(fbbSpec(), array("-fb", "-baz"));
       expectTrue(optionGiven?(ot, "foo"));
@@ -85,6 +85,6 @@ main() = testMain(
       expectEqual(getOptions(ot, "foo"), vector(String("kittens"), String("bunnies")));
       expectEqual(getOptions(ot, "bar"), vector(String("badgers")));
     })
-  )
+  ))
 );
 

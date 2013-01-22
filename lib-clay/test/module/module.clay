@@ -11,8 +11,8 @@ private xfail?(name) : Bool = stringLiteralStartsWith?(name, "TEST_XFAIL_");
     ..filterValues(name -> test?(mod, name), ..ModuleMemberNames(mod));
 
 [mod] moduleTestSuite(#mod) = TestSuite(
-    StaticName(mod), 
+    StaticName(mod), array(
         ..mapValues(name -> TestCase(name, staticFieldRef(mod, name), xfail?(name)),
-                    ..moduleTestNames(mod)));
+                    ..moduleTestNames(mod))));
 
-testMainModule() : Int = testMain(moduleTestSuite(MainModule()));
+testMainModule() = testMain(moduleTestSuite(MainModule()));

@@ -80,7 +80,7 @@ overload equals?(a:ReferenceRecord, b:ReferenceRecord) = a.x == b.x;
 variant TestVariant (Int, Vector[Int], Char, Double);
 
 main() = testMain(
-    TestSuite("marshaling",
+    TestSuite("marshaling", array(
         TestCase("POD types", -> {
             expectMarshalingInvariants(1);
             expectMarshalingInvariants('a');
@@ -219,5 +219,5 @@ main() = testMain(
         TestCase("enums", -> {
             expectMarshalingInvariants(FOO);
         }),
-    ),
+    )),
 );
