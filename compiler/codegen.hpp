@@ -26,7 +26,7 @@ bool exceptionsEnabled(CompilerStatePtr cst);
 void setExceptionsEnabled(bool enabled, CompilerStatePtr cst);
 
 
-void initExternalTarget(string target);
+void initExternalTarget(string target, CompilerStatePtr cst);
 
 
 struct CValue : public Object {

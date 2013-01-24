@@ -156,7 +156,7 @@ static unsigned pointerHash(void *p) {
 }
 
 TypePtr pointerType(TypePtr pointeeType) {
-    CompilerState* c = pointeeType->cst.ptr();
+    CompilerStatePtr c = pointeeType->cst;
     unsigned h = pointerHash(pointeeType.ptr());
     h &= unsigned(c->pointerTypes.size() - 1);
     vector<PointerTypePtr>::iterator i, end;
@@ -234,7 +234,7 @@ TypePtr cCodePointerType(CallingConv callingConv,
 }
 
 TypePtr arrayType(TypePtr elementType, unsigned size) {
-    CompilerState* c = elementType->cst.ptr();
+    CompilerStatePtr c = elementType->cst;
     unsigned h = pointerHash(elementType.ptr()) + size;
     h &= unsigned(c->arrayTypes.size() - 1);
     vector<ArrayTypePtr>::iterator i, end;
@@ -250,7 +250,7 @@ TypePtr arrayType(TypePtr elementType, unsigned size) {
 }
 
 TypePtr vecType(TypePtr elementType, unsigned size) {
-    CompilerState* c = elementType->cst.ptr();
+    CompilerStatePtr c = elementType->cst;
     if (elementType->typeKind != INTEGER_TYPE && elementType->typeKind != FLOAT_TYPE)
         error("Vec element type must be an integer or float type");
     unsigned h = pointerHash(elementType.ptr()) + size;
@@ -558,7 +558,7 @@ static bool unpackField(TypePtr x, IdentifierPtr &name, TypePtr &type) {
 static void setProperty(TypePtr type,
                         ProcedurePtr proc,
                         llvm::ArrayRef<ExprPtr> exprs) {
-    CompilerState* cst = type->cst.ptr();
+    CompilerStatePtr cst = type->cst;
     CodePtr code = new Code();
 
     TypePtr typeType = staticType(type.ptr(), cst);
@@ -1007,7 +1007,7 @@ llvm::Type *llvmVoidType() {
 
 llvm::Type *CCodePointerType::getCallType() {
     if (this->callType == NULL) {
-        ExternalTargetPtr target = getExternalTarget();
+        ExternalTargetPtr target = getExternalTarget(cst);
 
         vector<llvm::Type *> llArgTypes;
         vector< pair<unsigned, llvm::Attributes> > llAttributes;
@@ -1069,7 +1069,7 @@ llvm::DIType llvmVoidTypeDebugInfo() {
 static void declareLLVMType(TypePtr t) {
     assert(t->llType == NULL);
 
-    CompilerState* cst = t->cst.ptr();
+    CompilerStatePtr cst = t->cst;
     llvm::DIBuilder* llvmDIBuilder = cst->llvmDIBuilder;
 
     switch (t->typeKind) {
@@ -1352,7 +1352,7 @@ static void declareLLVMType(TypePtr t) {
 }
 
 static void defineLLVMType(TypePtr t) {
-    CompilerState* cst = t->cst.ptr();
+    CompilerStatePtr cst = t->cst;
     llvm::DIBuilder* llvmDIBuilder = cst->llvmDIBuilder;
 
     assert(t->llType != NULL && !t->defined);

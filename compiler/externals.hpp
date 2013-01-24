@@ -70,7 +70,7 @@ struct ExternalTarget : public Object {
 
 typedef Pointer<ExternalTarget> ExternalTargetPtr;
 
-ExternalTargetPtr getExternalTarget();
+ExternalTargetPtr getExternalTarget(CompilerStatePtr cst);
 
 
 }

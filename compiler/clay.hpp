@@ -992,6 +992,7 @@ extern "C" void displayCompileContext();
 
 struct CodegenContext;
 struct InvokeSet;
+struct ExternalTarget;
 
 struct CompilerState : public Object {
     CompilerState();
@@ -1075,9 +1076,14 @@ struct CompilerState : public Object {
     vector<OverloadPtr> patternOverloads;
 
     //invoketables
+    bool _finalOverloadsEnabled;
     bool invokeTablesInitialized;
     static const size_t INVOKE_TABLE_SIZE = 16384;
     vector<llvm::SmallVector<InvokeSet*, 2> > invokeTable;
+
+    //externals
+    Pointer<ExternalTarget> externalTarget;
+
 
 };
 
@@ -2768,6 +2774,7 @@ struct CodePointerType : public Type {
 };
 
 struct CCodePointerType : public Type {
+
     vector<TypePtr> argTypes;
     TypePtr returnType; // NULL if void return
 

@@ -991,9 +991,7 @@ llvm::Type *X86_64_ExternalTarget::getLLVMWordType(TypePtr type)
 // getExternalTarget
 //
 
-static ExternalTargetPtr externalTarget;
-
-void initExternalTarget(string targetString)
+void initExternalTarget(string targetString, CompilerStatePtr cst)
 {
     llvm::Triple target(targetString);
     if (target.getArch() == llvm::Triple::x86_64
@@ -1001,18 +999,18 @@ void initExternalTarget(string targetString)
         && target.getOS() != llvm::Triple::MinGW32
         && target.getOS() != llvm::Triple::Cygwin)
     {
-        externalTarget = new X86_64_ExternalTarget(target);
+        cst->externalTarget = new X86_64_ExternalTarget(target);
     } else if (target.getArch() == llvm::Triple::x86
         || target.getArch() == llvm::Triple::x86_64)
     {
-        externalTarget = new X86_32_ExternalTarget(target);
+        cst->externalTarget = new X86_32_ExternalTarget(target);
     } else
-        externalTarget = new LLVMExternalTarget(target);
+        cst->externalTarget = new LLVMExternalTarget(target);
 }
 
-ExternalTargetPtr getExternalTarget()
+ExternalTargetPtr getExternalTarget(CompilerStatePtr cst)
 {
-    return externalTarget;
+    return cst->externalTarget;
 }
 
 }

@@ -22,6 +22,7 @@
 namespace clay {
 
 CompilerState::CompilerState() :  Object(DONT_CARE){
+    _finalOverloadsEnabled = false;
     _inlineEnabled = true;
     _exceptionsEnabled = true;
     invokeTablesInitialized = false;
@@ -1540,7 +1541,7 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
 
     CompileContextPusher pusher(x.ptr());
 
-    ExternalTargetPtr target = getExternalTarget();
+    ExternalTargetPtr target = getExternalTarget(cst);
 
     if (x->llvmFunc != NULL && (!codegenBody || x->bodyCodegenned))
         return;
@@ -2523,7 +2524,7 @@ void codegenCallCCode(CCodePointerTypePtr t,
                       CodegenContext* ctx,
                       MultiCValuePtr out)
 {
-    ExternalTargetPtr target = getExternalTarget();
+    ExternalTargetPtr target = getExternalTarget(ctx->cst);
 
     if (!t->hasVarArgs)
         ensureArity(args, t->argTypes.size());
@@ -2972,7 +2973,7 @@ static bool blockIsNop(llvm::BasicBlock *codeBlock, llvm::BasicBlock *returnBloc
 
 void codegenCodeBody(InvokeEntry* entry)
 {
-    CompilerStatePtr cst = safeLookupModule(entry->env)->cst.ptr();
+    CompilerStatePtr cst = entry->env->cst;
     llvm::DIBuilder* llvmDIBuilder = cst->llvmDIBuilder;
 
     assert(entry->analyzed);
@@ -3337,7 +3338,7 @@ void codegenCodeBody(InvokeEntry* entry)
 void codegenCWrapper(InvokeEntry* entry, CallingConv cc, CompilerStatePtr cst)
 {
     assert(!entry->llvmCWrappers[cc]);
-    ExternalTargetPtr target = getExternalTarget();
+    ExternalTargetPtr target = getExternalTarget(cst);
 
     string callableName = getCodeName(entry);
 

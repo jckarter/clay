@@ -135,7 +135,7 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
                                MatchFailureError &failures,
                                CompilerStatePtr cst);
 
-void setFinalOverloadsEnabled(bool enabled); 
+void setFinalOverloadsEnabled(bool enabled, CompilerStatePtr cst); 
 
 }
 

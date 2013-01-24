@@ -2348,6 +2348,7 @@ InvokeEntry* analyzeCallable(ObjectPtr x,
     InvokeEntry* entry = lookupInvokeEntry(x, argsKey, argsTempness, failures, cst);
 
     if (!entry || !entry->code->hasBody()) {
+        InvokeEntry* entry = lookupInvokeEntry(x, argsKey, argsTempness, failures, cst);
         matchFailureError(failures);
     }
 
@@ -2516,7 +2517,7 @@ static void unifyInterfaceReturns(InvokeEntry* entry)
 
 void analyzeCodeBody(InvokeEntry* entry)
 {
-    CompilerStatePtr cst = safeLookupModule(entry->env)->cst;
+    CompilerStatePtr cst = entry->env->cst;
     assert(!entry->analyzed);
 
     CodePtr code = entry->code;

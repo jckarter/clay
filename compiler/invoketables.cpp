@@ -12,11 +12,9 @@
 
 namespace clay {
 
-static bool _finalOverloadsEnabled = false;
-
-void setFinalOverloadsEnabled(bool enabled)
+void setFinalOverloadsEnabled(bool enabled, CompilerStatePtr cst)
 {
-    _finalOverloadsEnabled = enabled;
+    cst->_finalOverloadsEnabled = enabled;
 }
 
 
@@ -412,7 +410,7 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
     invokeSet->tempnessMap2[tempnessKey] = entry;
     invokeSet->tempnessMap[argsTempness] = entry;
 
-    if (_finalOverloadsEnabled) {
+    if (cst->_finalOverloadsEnabled) {
         MatchSuccessPtr match2;
         vector<ValueTempness> tempnessKey2;
         vector<uint8_t> forwardedRValueFlags2;

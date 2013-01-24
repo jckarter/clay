@@ -967,7 +967,7 @@ int main2(int argc, char **argv, char const* const* envp) {
     setInlineEnabled(inlineEnabled, cst);
     setExceptionsEnabled(exceptions, cst);
     
-    setFinalOverloadsEnabled(finalOverloadsEnabled);
+    setFinalOverloadsEnabled(finalOverloadsEnabled, cst);
     
     llvm::Triple llvmTriple(targetTriple);
     targetTriple = llvmTriple.str();
@@ -983,7 +983,7 @@ int main2(int argc, char **argv, char const* const* envp) {
     }
 
     initTypes(cst);
-    initExternalTarget(targetTriple);
+    initExternalTarget(targetTriple, cst);
 
     // Try environment variables first
     char* libclayPath = getenv("CLAY_PATH");
