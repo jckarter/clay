@@ -99,8 +99,8 @@ forceinline default assign(ref dest:T, rvalue src:T) : {
 
 [T when
     not BitwiseAssignedType?(T)
-    and CallDefined?(copy, T)
-    and CallDefined?(move, T)
+    and Copyable?(T)
+    and Movable?(T)
     and not CopyDoesNotThrowType?(T)]
 forceinline overload assign(ref dest:T, ref src:T) : {
     var tmp = moveUnsafe(dest);
@@ -110,8 +110,7 @@ forceinline overload assign(ref dest:T, ref src:T) : {
 
 [T when
     not BitwiseAssignedType?(T)
-    and CallDefined?(copy, T)
-    and CallDefined?(move, T)
+    and Copyable?(T)
     and CopyDoesNotThrowType?(T)]
 forceinline overload assign(ref dest:T, ref src:T) : {
     destroy(dest);

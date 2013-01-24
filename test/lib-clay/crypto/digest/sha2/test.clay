@@ -1,7 +1,8 @@
-import crypto.digest.sha2.*;
-import printer.(str);
-import printer.formatter.(repr);
-import test.*;
+import 
+    crypto.digest.sha2.*,
+    printer.(str),
+    test.*,
+    test.module.*;
 
 forceinline expectDigest(algorithm, hash, string) {
     expectPrinted(
@@ -15,156 +16,155 @@ forceinline expectSha256(hash, string) =
 forceinline expectSha512(hash, string) =
     ..expectDigest(SHA512_NAME, hash, string);
 
-main() = testMain(
-    TestSuite("sha2", array(
-        TestCase("sha256", -> {
-            expectSha256(
-                "b9f195c5cc7ef6afadbfbc42892ad47d3b24c6bc94bb510c4564a90a14e8b799",
-                "swordfish");
-            expectSha256(
-                "600867073e9002961f853fd00bbb62108035197c17242bd70b871acdb1bec9e2",
-                "ABCDEFGHIJabcdefghijABCDEFGHIJabcdefghijABCDEFGHIJ12345");
-            expectSha256(
-                "5c7c76d05cb971df30ef14eb30e1b1c75a19ac6ac55e14f9a962181e6f694678",
-                "ABCDEFGHIJabcdefghijABCDEFGHIJabcdefghijABCDEFGHIJ123456");
-            expectSha256(
-                "b25cadd808a9a96d977b326b65b9b2321e6d86462db2392a6156ef167ec04725",
-                "ABCDEFGHIJabcdefghijABCDEFGHIJabcdefghijABCDEFGHIJ1234567");
-            expectSha256(
-                "82c2be1c906da4b58b9ea060216a6eb4c74e99912bbc14b77f84f46b3396b1e5",
-                "ABCDEFGHIJabcdefghijABCDEFGHIJabcdefghijABCDEFGHIJabcdefghij123");
-            expectSha256(
-                "7f1f966e506c85f443e39e82c74f41e923cc0cbf9a837e512f82798282a8ba05",
-                "ABCDEFGHIJabcdefghijABCDEFGHIJabcdefghijABCDEFGHIJabcdefghij1234");
-            expectSha256(
-                "9dedd7106da68aac98215b0b290bbc296a9c7c5129a53b8894fc45c6d69d4df8",
-                "ABCDEFGHIJabcdefghijABCDEFGHIJabcdefghijABCDEFGHIJabcdefghij12345");
-            expectSha256(
-                "520baa51d704e8697e3431f87534df9e275f34eab5cf24a82db26f477c44995b",
-                "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKK123456789");
-            expectSha256(
-                "e117c07c5dd76d107065c5ec3f078c09c82fdc2f746838d6b6fdb9defda30bf8",
-                "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLL");
-            expectSha256(
-                "b727550d5ffaa7d263f41b044760fe171458e801c22705ac6ed1712cadcda33a",
-                "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLL1");
-            expectSha256(
-                "cb98a2d98eeebe4f670f08b752dc5cc56bdb5bf1500dd7a88461363b68492351",
-                "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLL1234567");
-            expectSha256(
-                "914e400a4e55e76d9981e0020f9971a64d030ed41ac67bd3c9136be110ebefae",
-                "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLL12345678");
-            expectSha256(
-                "50045f4231b493eb436afc58e2b1f33b70e4071f68c1bc1930f58ba2776fbf25",
-                "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLL123456789");
-        }),
+TEST_sha256() {
+    expectSha256(
+        "b9f195c5cc7ef6afadbfbc42892ad47d3b24c6bc94bb510c4564a90a14e8b799",
+        "swordfish");
+    expectSha256(
+        "600867073e9002961f853fd00bbb62108035197c17242bd70b871acdb1bec9e2",
+        "ABCDEFGHIJabcdefghijABCDEFGHIJabcdefghijABCDEFGHIJ12345");
+    expectSha256(
+        "5c7c76d05cb971df30ef14eb30e1b1c75a19ac6ac55e14f9a962181e6f694678",
+        "ABCDEFGHIJabcdefghijABCDEFGHIJabcdefghijABCDEFGHIJ123456");
+    expectSha256(
+        "b25cadd808a9a96d977b326b65b9b2321e6d86462db2392a6156ef167ec04725",
+        "ABCDEFGHIJabcdefghijABCDEFGHIJabcdefghijABCDEFGHIJ1234567");
+    expectSha256(
+        "82c2be1c906da4b58b9ea060216a6eb4c74e99912bbc14b77f84f46b3396b1e5",
+        "ABCDEFGHIJabcdefghijABCDEFGHIJabcdefghijABCDEFGHIJabcdefghij123");
+    expectSha256(
+        "7f1f966e506c85f443e39e82c74f41e923cc0cbf9a837e512f82798282a8ba05",
+        "ABCDEFGHIJabcdefghijABCDEFGHIJabcdefghijABCDEFGHIJabcdefghij1234");
+    expectSha256(
+        "9dedd7106da68aac98215b0b290bbc296a9c7c5129a53b8894fc45c6d69d4df8",
+        "ABCDEFGHIJabcdefghijABCDEFGHIJabcdefghijABCDEFGHIJabcdefghij12345");
+    expectSha256(
+        "520baa51d704e8697e3431f87534df9e275f34eab5cf24a82db26f477c44995b",
+        "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKK123456789");
+    expectSha256(
+        "e117c07c5dd76d107065c5ec3f078c09c82fdc2f746838d6b6fdb9defda30bf8",
+        "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLL");
+    expectSha256(
+        "b727550d5ffaa7d263f41b044760fe171458e801c22705ac6ed1712cadcda33a",
+        "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLL1");
+    expectSha256(
+        "cb98a2d98eeebe4f670f08b752dc5cc56bdb5bf1500dd7a88461363b68492351",
+        "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLL1234567");
+    expectSha256(
+        "914e400a4e55e76d9981e0020f9971a64d030ed41ac67bd3c9136be110ebefae",
+        "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLL12345678");
+    expectSha256(
+        "50045f4231b493eb436afc58e2b1f33b70e4071f68c1bc1930f58ba2776fbf25",
+        "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLL123456789");
+}
 
-        TestCase("sha256 streaming", -> {
-            var context = SHA256Context();
-            digestUpdate(context, "A long time ago in a galaxy far,");
-            digestUpdate(context, " far away....");
-            expectPrinted(
-                "a014ae72628ac605ef9456695e3721d455271752ded65f630d741601db42b1d4",
-                digestFinish(context));
-        
-            context = SHA256Context();
-            digestUpdate(context, "It is a period of civil war. ");
-            digestUpdate(context, "Rebel spaceships, striking ");
-            digestUpdate(context, "from a hidden base, have won ");
-            digestUpdate(context, "their first victory against ");
-            digestUpdate(context, "the evil Galactic Empire.");
-            expectPrinted(
-                "1d16fb2f8303ceb13c0092c8c244fd84f5ea5d3e46622405bd33c389ddc4cc68",
-                digestFinish(context));
+TEST_sha256_streaming() {
+    var context = SHA256Context();
+    digestUpdate(context, "A long time ago in a galaxy far,");
+    digestUpdate(context, " far away....");
+    expectPrinted(
+        "a014ae72628ac605ef9456695e3721d455271752ded65f630d741601db42b1d4",
+        digestFinish(context));
 
-            context = SHA256Context();
-            for (i in range(1000)) {
-                digestUpdate(context, str(i));
-            }
-            // check with: `for i in {0..999}; do echo -n $i; done | shasum -a 256`
-            expectPrinted(
-                "14e7fd93e3d8dd8d448b65a1ba7dbec9433c57e554b522831089eb2064ef1f34",
-                digestFinish(context));
-        }),
+    context = SHA256Context();
+    digestUpdate(context, "It is a period of civil war. ");
+    digestUpdate(context, "Rebel spaceships, striking ");
+    digestUpdate(context, "from a hidden base, have won ");
+    digestUpdate(context, "their first victory against ");
+    digestUpdate(context, "the evil Galactic Empire.");
+    expectPrinted(
+        "1d16fb2f8303ceb13c0092c8c244fd84f5ea5d3e46622405bd33c389ddc4cc68",
+        digestFinish(context));
 
-        TestCase("sha256 on unaligned data", -> {
-            var context = SHA256Context();
-            digestUpdate(context, "a");
-            // this array must be long enough to prevent copying data into context.buffer
-            digestUpdate(context, array(..replicateValue('a', #129)));
-            expectPrinted(
-                "1e3c4f4750c8c29bbfa9ced317788176b156d342e57f7777f62fd7221a44312f",
-                digestFinish(context));
-        }),
+    context = SHA256Context();
+    for (i in range(1000)) {
+        digestUpdate(context, str(i));
+    }
+    // check with: `for i in {0..999}; do echo -n $i; done | shasum -a 256`
+    expectPrinted(
+        "14e7fd93e3d8dd8d448b65a1ba7dbec9433c57e554b522831089eb2064ef1f34",
+        digestFinish(context));
+}
 
-        TestCase("sha512", -> {
-            expectSha512(
-                "9719a6439375c9115e01dceda86e210e5f2d78a6cf3f4872997746832c4c0f58c5ae0923fabe5acfb923dfc94a117a7d444e453622912dfa193fc6636581f159",
-                "swordfish");
-            expectSha512(
-                "73203d2eeb109d55f0943dcdb03a52e07d4e8a3eead49dc29a9aa53a25132c9a96f464a5b4fa6d0df9515463ac1c839e359f73cfb0dfc04d97c22cd0c79d7dfc",
-                "ABCDEFGHIJabcdefghijABCDEFGHIJabcdefghijABCDEFGHIJ12345");
-            expectSha512(
-                "9362aca4b327455459a10d3c5b6982153dcd28e2cde3ea4aa4fa371a35d2ebb3709e5e56024d15fff18f6f9c1f78ab6dfd52b6a5b824a2db7ec4e45fa5be6508",
-                "ABCDEFGHIJabcdefghijABCDEFGHIJabcdefghijABCDEFGHIJ123456");
-            expectSha512(
-                "73dcbc13b3d2cf73e97330ab6724c9af5398589b601118dd7cc5045e32a53fc52a083b06f4e4a1a2da7a4637f6d2acfa6c9e82c959c8f9ad3b5283c7467dbca7",
-                "ABCDEFGHIJabcdefghijABCDEFGHIJabcdefghijABCDEFGHIJ1234567");
-            expectSha512(
-                "1f0c4ce96051cd9d9e99357b3434c40c53523a37f36358e4a5bbe2ac7316bb43b9a5977b5d1c7cc36968e6d2d08865a21dfa6d0a8f47f364dc050d04c774f789",
-                "ABCDEFGHIJabcdefghijABCDEFGHIJabcdefghijABCDEFGHIJabcdefghij123");
-            expectSha512(
-                "c8387adb813799e65ec9cb36bbbb60daa681b917f983411ef3f431b9351028fc4323513e3d1a8e013aab9ce8856158f70d5095bd5eda84e90c29bc04c690f3e9",
-                "ABCDEFGHIJabcdefghijABCDEFGHIJabcdefghijABCDEFGHIJabcdefghij1234");
-            expectSha512(
-                "40e17e89614ae26dcd2c4bf51d81e683b53946a4b2e7163f42b424c7fbd624394eb7240933c199ae994c3048bb28c6e10bbdfaa54f8be06a24547ef62f59cbbe",
-                "ABCDEFGHIJabcdefghijABCDEFGHIJabcdefghijABCDEFGHIJabcdefghij12345");
-            expectSha512(
-                "354fb5891d9b722cd3181fc3a9643ab8801bf1c9284dbabd82b36337aced0c81776f0389ff0cdbd14aa3dc702aab47602690fbb280f23cf154db0741b79d8200",
-                "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKK123456789");
-            expectSha512(
-                "11969d5c0fb9207ba94994ff32ba4c2fe675e7613f910f573c8af20fa2096b2b01603303f1ee943fc9cbcecef59fe1dc23f59f39d83b455dd3c7d8a7709df935",
-                "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLL");
-            expectSha512(
-                "e9629b40544214e75511de6ed8d36fb38c0d6b6db24faac2f167d05469357cf44483e61efe04fb9b11a5e78e1ef396d4e6c7f84b35b7e6705278a1b59352b445",
-                "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLL1");
-            expectSha512(
-                "453941d6095f2f4f573c60c212fcba33f4a8c12b8693daa5b30868c63388fbd87c58f9ac2ce611e9ea8900a88e94667352874ea10fc7be37e95c1e18f524059f",
-                "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLL1234567");
-            expectSha512(
-                "ed74bea5c6e2806d420026b535b61e1b1d8a528bcd75a6c04edcf4a218fb4fadd0dd64d62b8b1b67921fbb6b06f3be0d7d0cd00f8f0b86d0db465c698970dbb3",
-                "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLL12345678");
-            expectSha512(
-                "4fb509f736174b93b5601acd8dbffd17e1720383414c1eb428b3dc836cab6c007c2c03cd3cc91c08d15a961b186cc567b702139b5872c367d1bc4c552358db0e",
-                "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLL123456789");
-        }),
+TEST_sha256_on_unaligned_data() {
+    var context = SHA256Context();
+    digestUpdate(context, "a");
+    // this array must be long enough to prevent copying data into context.buffer
+    digestUpdate(context, array(..replicateValue('a', #129)));
+    expectPrinted(
+        "1e3c4f4750c8c29bbfa9ced317788176b156d342e57f7777f62fd7221a44312f",
+        digestFinish(context));
+}
 
-        TestCase("sha512 streaming", -> {
-            var context = SHA512Context();
-            digestUpdate(context, "A long time ago in a galaxy far,");
-            digestUpdate(context, " far away....");
-            expectPrinted(
-                "a3427b0fdf76645cc01c201a291ae5393103b41d3131bde4a847b9e51de83f3551ac582aff6de03e5e56aea530cd40c852b75a9bad701f77de7a7cbb77f707cc",
-                digestFinish(context));
-        
-            context = SHA512Context();
-            digestUpdate(context, "It is a period of civil war. ");
-            digestUpdate(context, "Rebel spaceships, striking ");
-            digestUpdate(context, "from a hidden base, have won ");
-            digestUpdate(context, "their first victory against ");
-            digestUpdate(context, "the evil Galactic Empire.");
-            expectPrinted(
-                "4e5ccf2ef134cbbc178a68a552afc4305db3ff5bdd0a9cad773725abe2b9d3da9e8313b0d2cee6da29ad3c974f7c049aeb9d902fec6f014cb6ecfdacb00969ac",
-                digestFinish(context));
+TEST_sha512() {
+    expectSha512(
+        "9719a6439375c9115e01dceda86e210e5f2d78a6cf3f4872997746832c4c0f58c5ae0923fabe5acfb923dfc94a117a7d444e453622912dfa193fc6636581f159",
+        "swordfish");
+    expectSha512(
+        "73203d2eeb109d55f0943dcdb03a52e07d4e8a3eead49dc29a9aa53a25132c9a96f464a5b4fa6d0df9515463ac1c839e359f73cfb0dfc04d97c22cd0c79d7dfc",
+        "ABCDEFGHIJabcdefghijABCDEFGHIJabcdefghijABCDEFGHIJ12345");
+    expectSha512(
+        "9362aca4b327455459a10d3c5b6982153dcd28e2cde3ea4aa4fa371a35d2ebb3709e5e56024d15fff18f6f9c1f78ab6dfd52b6a5b824a2db7ec4e45fa5be6508",
+        "ABCDEFGHIJabcdefghijABCDEFGHIJabcdefghijABCDEFGHIJ123456");
+    expectSha512(
+        "73dcbc13b3d2cf73e97330ab6724c9af5398589b601118dd7cc5045e32a53fc52a083b06f4e4a1a2da7a4637f6d2acfa6c9e82c959c8f9ad3b5283c7467dbca7",
+        "ABCDEFGHIJabcdefghijABCDEFGHIJabcdefghijABCDEFGHIJ1234567");
+    expectSha512(
+        "1f0c4ce96051cd9d9e99357b3434c40c53523a37f36358e4a5bbe2ac7316bb43b9a5977b5d1c7cc36968e6d2d08865a21dfa6d0a8f47f364dc050d04c774f789",
+        "ABCDEFGHIJabcdefghijABCDEFGHIJabcdefghijABCDEFGHIJabcdefghij123");
+    expectSha512(
+        "c8387adb813799e65ec9cb36bbbb60daa681b917f983411ef3f431b9351028fc4323513e3d1a8e013aab9ce8856158f70d5095bd5eda84e90c29bc04c690f3e9",
+        "ABCDEFGHIJabcdefghijABCDEFGHIJabcdefghijABCDEFGHIJabcdefghij1234");
+    expectSha512(
+        "40e17e89614ae26dcd2c4bf51d81e683b53946a4b2e7163f42b424c7fbd624394eb7240933c199ae994c3048bb28c6e10bbdfaa54f8be06a24547ef62f59cbbe",
+        "ABCDEFGHIJabcdefghijABCDEFGHIJabcdefghijABCDEFGHIJabcdefghij12345");
+    expectSha512(
+        "354fb5891d9b722cd3181fc3a9643ab8801bf1c9284dbabd82b36337aced0c81776f0389ff0cdbd14aa3dc702aab47602690fbb280f23cf154db0741b79d8200",
+        "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKK123456789");
+    expectSha512(
+        "11969d5c0fb9207ba94994ff32ba4c2fe675e7613f910f573c8af20fa2096b2b01603303f1ee943fc9cbcecef59fe1dc23f59f39d83b455dd3c7d8a7709df935",
+        "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLL");
+    expectSha512(
+        "e9629b40544214e75511de6ed8d36fb38c0d6b6db24faac2f167d05469357cf44483e61efe04fb9b11a5e78e1ef396d4e6c7f84b35b7e6705278a1b59352b445",
+        "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLL1");
+    expectSha512(
+        "453941d6095f2f4f573c60c212fcba33f4a8c12b8693daa5b30868c63388fbd87c58f9ac2ce611e9ea8900a88e94667352874ea10fc7be37e95c1e18f524059f",
+        "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLL1234567");
+    expectSha512(
+        "ed74bea5c6e2806d420026b535b61e1b1d8a528bcd75a6c04edcf4a218fb4fadd0dd64d62b8b1b67921fbb6b06f3be0d7d0cd00f8f0b86d0db465c698970dbb3",
+        "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLL12345678");
+    expectSha512(
+        "4fb509f736174b93b5601acd8dbffd17e1720383414c1eb428b3dc836cab6c007c2c03cd3cc91c08d15a961b186cc567b702139b5872c367d1bc4c552358db0e",
+        "AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLL123456789");
+}
 
-            context = SHA512Context();
-            for (i in range(1000)) {
-                digestUpdate(context, str(i));
-            }
-            // check with: `for i in {0..999}; do echo -n $i; done | shasum -a 512`
-            expectPrinted(
-                "b8ee3a44a1f37c52ca35e3871349b75989d8ee26d39bd7d79218b591250d4003f8172e5f49eefc06a3e4789ab31584befa5e8caa5be8789dc13297b157fb4b46",
-                digestFinish(context));
-        }),
-    )));
+TEST_sha512_streaming() {
+    var context = SHA512Context();
+    digestUpdate(context, "A long time ago in a galaxy far,");
+    digestUpdate(context, " far away....");
+    expectPrinted(
+        "a3427b0fdf76645cc01c201a291ae5393103b41d3131bde4a847b9e51de83f3551ac582aff6de03e5e56aea530cd40c852b75a9bad701f77de7a7cbb77f707cc",
+        digestFinish(context));
+
+    context = SHA512Context();
+    digestUpdate(context, "It is a period of civil war. ");
+    digestUpdate(context, "Rebel spaceships, striking ");
+    digestUpdate(context, "from a hidden base, have won ");
+    digestUpdate(context, "their first victory against ");
+    digestUpdate(context, "the evil Galactic Empire.");
+    expectPrinted(
+        "4e5ccf2ef134cbbc178a68a552afc4305db3ff5bdd0a9cad773725abe2b9d3da9e8313b0d2cee6da29ad3c974f7c049aeb9d902fec6f014cb6ecfdacb00969ac",
+        digestFinish(context));
+
+    context = SHA512Context();
+    for (i in range(1000)) {
+        digestUpdate(context, str(i));
+    }
+    // check with: `for i in {0..999}; do echo -n $i; done | shasum -a 512`
+    expectPrinted(
+        "b8ee3a44a1f37c52ca35e3871349b75989d8ee26d39bd7d79218b591250d4003f8172e5f49eefc06a3e4789ab31584befa5e8caa5be8789dc13297b157fb4b46",
+        digestFinish(context));
+}
+
+private main() = testMainModule();
 

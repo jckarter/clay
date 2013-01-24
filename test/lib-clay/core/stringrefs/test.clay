@@ -1,16 +1,17 @@
-import data.strings.*;
+import
+    data.strings.*,
+    test.*,
+    test.module.*;
 
-import test.*;
+TEST_constructors() {
+    expectEqual("literal", StringRef("literal"));
+    expectEqual("cstr", StringRef(CStringRef("cstr")));
+}
 
-main() = testMain(
-    TestSuite("core.stringrefs", array(
-        TestCase("constructors", -> {
-            expectEqual("literal", StringRef("literal"));
-            expectEqual("cstr", StringRef(CStringRef("cstr")));
-        }),
-        TestCase("constructors from StringRef", -> {
-            expectEqual("aabb", String(StringRef("aabb")));
-            expectFalse(CallDefined?(cstring, StringRef));
-            expectFalse(CallDefined?(CStringRef, StringRef));
-        }),
-    )));
+TEST_constructors_from_StringRef() {
+    expectEqual("aabb", String(StringRef("aabb")));
+    expectFalse(CallDefined?(cstring, StringRef));
+    expectFalse(CallDefined?(CStringRef, StringRef));
+}
+
+private main() = testMainModule();
