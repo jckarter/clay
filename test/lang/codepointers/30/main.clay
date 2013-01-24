@@ -99,10 +99,7 @@ overload display(x:Displayable) {
 }
 
 main() {
-    var v = Vector[Displayable]();
-    push(v, Displayable(1));
-    push(v, Displayable(3.2));
-    push(v, Displayable("Hi!"));
+    var v = vector(Displayable(1), Displayable(3.2), Displayable("Hi!"));
     for (x in v)
         display(x);
 }

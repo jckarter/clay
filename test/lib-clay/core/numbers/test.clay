@@ -1,43 +1,44 @@
-import printer.*;
-import test.*;
+import
+    test.*,
+    test.module.*;
 
-main() = testMain(
-    TestSuite("numbers", array(
-        TestCase("*IntegerOfSize", -> {
-            ..for (type in ..BuiltinIntegerTypes()) {
-                if (SignedInteger?(type)) {
-                    expectEqual(type, SignedIntegerOfSize(#Int(TypeSize(type))));
-                } else {
-                    expectEqual(type, UnsignedIntegerOfSize(#Int(TypeSize(type))));
-                }
-            }
-        }),
-        TestCase("SignedInteger, UnsignedInteger", -> {
-            ..for (type in ..BuiltinIntegerTypes()) {
-                if (SignedInteger?(type)) {
-                    expectEqual(
-                        type,
-                        SignedInteger(type));
-                    expectNotEqual(
-                        type,
-                        UnsignedInteger(type));
-                    expectEqual(
-                        type,
-                        SignedInteger(UnsignedInteger(type)));
-                } else {
-                    expectEqual(
-                        type,
-                        UnsignedInteger(type));
-                    expectNotEqual(
-                        type,
-                        SignedInteger(type));
-                    expectEqual(
-                        type,
-                        UnsignedInteger(SignedInteger(type)));
-                }
+TEST_IntegerOfSize() {
+    ..for (type in ..BuiltinIntegerTypes()) {
+        if (SignedInteger?(type)) {
+            expectEqual(type, SignedIntegerOfSize(#Int(TypeSize(type))));
+        } else {
+            expectEqual(type, UnsignedIntegerOfSize(#Int(TypeSize(type))));
+        }
+    }
+}
 
-                expectEqual(TypeSize(type), TypeSize(UnsignedInteger(type)));
-                expectEqual(TypeSize(type), TypeSize(SignedInteger(type)));
-            }
-        }),
-    )));
+TEST_SignedInteger_UnsignedInteger() {
+    ..for (type in ..BuiltinIntegerTypes()) {
+        if (SignedInteger?(type)) {
+            expectEqual(
+                type,
+                SignedInteger(type));
+            expectNotEqual(
+                type,
+                UnsignedInteger(type));
+            expectEqual(
+                type,
+                SignedInteger(UnsignedInteger(type)));
+        } else {
+            expectEqual(
+                type,
+                UnsignedInteger(type));
+            expectNotEqual(
+                type,
+                SignedInteger(type));
+            expectEqual(
+                type,
+                UnsignedInteger(SignedInteger(type)));
+        }
+
+        expectEqual(TypeSize(type), TypeSize(UnsignedInteger(type)));
+        expectEqual(TypeSize(type), TypeSize(SignedInteger(type)));
+    }
+}
+
+private main() = testMainModule();

@@ -4,17 +4,17 @@ import commandline.options.parser.*;
 import data.strings.*;
 import data.vectors.*;
 
-fbbSpec() = OptionSpecs(array(
+fbbSpec() = vector(
   OptionSpec('f', "foo"),
   OptionSpec('b', "bar"),
   OptionSpec('z', "baz"),
   OptionSpec('i', "bif")
-));
+);
 
-valuableSpec() = OptionSpecs(array(
+valuableSpec() = vector(
   OptionSpec('f', "foo", HAS_VALUE),
   OptionSpec('b', "bar", HAS_VALUE)
-));
+);
 
 [T] numberOf(it, #T){
   var i = 0;

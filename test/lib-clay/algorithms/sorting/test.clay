@@ -1,56 +1,59 @@
-import test.*;
-import data.algorithms.(sort,sortBy);
-import comparators.(comparing,reversed);
-import printer.(str);
-import data.vectors.*;
+import 
+    test.*,
+    test.module.*,
+    data.algorithms.(sort,sortBy),
+    comparators.(comparing,reversed),
+    printer.(str),
+    data.vectors.*;
 
 record Unordered[T](value : T);
 
-main() = testMain(
-  TestSuite("sorting", array(
-    TestCase("In ascending order", -> {
-      var baseSequence = array(10, 9, 8, 1, 2, 7, 6, 2, 3, 4);
-      var sortedSequence = array(1, 2, 2, 3, 4, 6, 7, 8, 9, 10);
+TEST_ascending_order() {
+    var baseSequence = array(10, 9, 8, 1, 2, 7, 6, 2, 3, 4);
+    var sortedSequence = array(1, 2, 2, 3, 4, 6, 7, 8, 9, 10);
 
-      sort(baseSequence);
-      expectEqual(sortedSequence, baseSequence);
-    }),
-    TestCase("In descending order", -> {
-      var baseSequence = array(10, 9, 8, 1, 2, 7, 6, 2, 3, 4);
-      var sortedSequence = array(10, 9, 8, 7, 6, 4, 3, 2, 2, 1);
+    sort(baseSequence);
+    expectEqual(sortedSequence, baseSequence);
+}
 
-      sortBy(baseSequence, reversed());
-      expectEqual(sortedSequence, baseSequence);
-    }),
-    TestCase("Comparing size", -> {
-      var baseSequence = array("a", "b", "c", "blargh", "foo", "de", "x", "stuff");
-      sortBy(baseSequence, comparing(size));
-     
-      var isFirst = true;
-      var last = StringLiteralRef("ignore me");
+TEST_descending_order() {
+    var baseSequence = array(10, 9, 8, 1, 2, 7, 6, 2, 3, 4);
+    var sortedSequence = array(10, 9, 8, 7, 6, 4, 3, 2, 2, 1);
 
-      for(x in baseSequence){
-        if(isFirst){
-          last = x;
-          isFirst = false; 
-        } else {
-          expectTrue(size(last) <= size(x));
-          last = x;
-        }
+    sortBy(baseSequence, reversed());
+    expectEqual(sortedSequence, baseSequence);
+}
+
+TEST_comparing_size() {
+    var baseSequence = array("a", "b", "c", "blargh", "foo", "de", "x", "stuff");
+    sortBy(baseSequence, comparing(size));
+   
+    var isFirst = true;
+    var last = StringLiteralRef("ignore me");
+
+    for(x in baseSequence){
+      if(isFirst){
+        last = x;
+        isFirst = false; 
+      } else {
+        expectTrue(size(last) <= size(x));
+        last = x;
       }
-    }),   
-    TestCase("for something not naturally orderable", -> {
-      var sequence = Vector[Unordered[Int]]();
+    }
+}
 
-      for(i in range(10)){
-        push(sequence, Unordered(i));
-      }
+TEST_for_something_not_naturally_orderable() {
+    var sequence = Vector[Unordered[Int]]();
 
-      sortBy(sequence, reversed(comparing(x => x.value)));
+    for(i in range(10)){
+      push(sequence, Unordered(i));
+    }
 
-      for(i in range(10)){
-        expectEqual(9 - i, sequence[i].value);
-      }
-    })
-  ))
-);
+    sortBy(sequence, reversed(comparing(x => x.value)));
+
+    for(i in range(10)){
+      expectEqual(9 - i, sequence[i].value);
+    }
+}
+
+private main() = testMainModule();

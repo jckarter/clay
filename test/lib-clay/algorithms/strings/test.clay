@@ -1,19 +1,17 @@
-import test.*;
-import data.algorithms.strings.(trim);
+import 
+    test.*,
+    test.module.*,
+    data.algorithms.strings.(trim);
 
-main() = testMain(
-    TestSuite(
-        "algorithms.strings", array(
-            TestCase("trim", -> {
-                expectEqual(
-                    trim("   \t A string,\nthat\tneeds trimming. \n  \n "),
-                    "A string,\nthat\tneeds trimming.",
-                );
-                expectEqual(
-                    trim("*** message ***", x => (x == '*' or x == ' ')),
-                    "message"
-                );
-            }),
-        )
-    )
-);
+TEST_trim() {
+    expectEqual(
+        trim("   \t A string,\nthat\tneeds trimming. \n  \n "),
+        "A string,\nthat\tneeds trimming.",
+    );
+    expectEqual(
+        trim("*** message ***", x => (x == '*' or x == ' ')),
+        "message"
+    );
+}
+
+private main() = testMainModule();

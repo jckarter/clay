@@ -1,5 +1,6 @@
 import
     test.*,
+    test.module.*,
     uniquepointers.(UniquePointer),
     sharedpointers.*,
     simd.*,
@@ -17,30 +18,30 @@ variant NonPODVariant (Int, NonPODRecord);
 
 enum Enum ( A, B, C );
 
-main() = testMain(TestSuite("PODType?", array(
-    TestCase("PODType?", -> {
-        expectFalse(PODType?(IrregularRecord));
-        expectTrue (PODType?(PODRecord));
-        expectFalse(PODType?(NonPODRecord));
-        expectTrue (PODType?(Array[Int, 2]));
-        expectFalse(PODType?(Array[IrregularRecord, 2]));
-        expectTrue (PODType?(Vec[Int, 2]));
-        expectTrue (PODType?(Tuple[]));
-        expectTrue (PODType?(Tuple[Int, Float]));
-        expectFalse(PODType?(Tuple[Int, IrregularRecord]));
-        expectTrue (PODType?(Union[]));
-        expectTrue (PODType?(Union[Int, Float]));
+TEST_PODType?() {
+    expectFalse(PODType?(IrregularRecord));
+    expectTrue (PODType?(PODRecord));
+    expectFalse(PODType?(NonPODRecord));
+    expectTrue (PODType?(Array[Int, 2]));
+    expectFalse(PODType?(Array[IrregularRecord, 2]));
+    expectTrue (PODType?(Vec[Int, 2]));
+    expectTrue (PODType?(Tuple[]));
+    expectTrue (PODType?(Tuple[Int, Float]));
+    expectFalse(PODType?(Tuple[Int, IrregularRecord]));
+    expectTrue (PODType?(Union[]));
+    expectTrue (PODType?(Union[Int, Float]));
 
-        expectTrue (PODType?(Char));
-        expectTrue (PODType?(StringLiteralRef));
-        expectFalse(PODType?(SharedPointer[Int]));
-        expectFalse(PODType?(UniquePointer[Int]));
-        expectFalse(PODType?(Vector[Int]));
-        expectFalse(PODType?(String));
+    expectTrue (PODType?(Char));
+    expectTrue (PODType?(StringLiteralRef));
+    expectFalse(PODType?(SharedPointer[Int]));
+    expectFalse(PODType?(UniquePointer[Int]));
+    expectFalse(PODType?(Vector[Int]));
+    expectFalse(PODType?(String));
 
-        expectTrue (PODType?(PODVariant));
-        expectFalse(PODType?(NonPODVariant));
+    expectTrue (PODType?(PODVariant));
+    expectFalse(PODType?(NonPODVariant));
 
-        expectTrue (PODType?(Enum));
-    }),
-)));
+    expectTrue (PODType?(Enum));
+}
+
+private main() = testMainModule();
