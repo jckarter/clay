@@ -26,6 +26,7 @@
 #pragma warning(disable: 4146 4244 4267 4355 4146 4800 4996)
 #endif
 
+#include <llvm/ADT/FoldingSet.h>
 #include <llvm/ADT/SmallString.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/ADT/StringMap.h>

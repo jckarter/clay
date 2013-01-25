@@ -1540,14 +1540,16 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
     if (!x->analyzed)
         analyzeExternalProcedure(x);
     assert(x->analyzed);
-    vector<llvm::Type *> llArgTypes;
-    vector< pair<unsigned, llvm::Attributes> > llAttributes;
-    llvm::Type *llRetType =
-        target->pushReturnType(x->callingConv, x->returnType2, llArgTypes, llAttributes);
+
+    vector<TypePtr> argTypes;
     for (size_t i = 0; i < x->args.size(); ++i)
-        target->pushArgumentType(x->callingConv, x->args[i]->type2, llArgTypes, llAttributes);
-    llvm::FunctionType *llFuncType =
-        llvm::FunctionType::get(llRetType, llArgTypes, x->hasVarArgs);
+        argTypes.push_back(x->args[i]->type2);
+
+    ExternalFunction *extFunc = target->getExternalFunction(
+        x->callingConv, x->returnType2, argTypes,
+        argTypes.size(), x->hasVarArgs);
+
+    llvm::FunctionType *llFuncType = extFunc->getLLVMFunctionType();
 
     llvm::GlobalVariable::LinkageTypes linkage;
     if (x->attrDLLImport)
@@ -1585,10 +1587,11 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
                                           llvmModule);
         }
         x->llvmFunc = func;
-        llvm::CallingConv::ID callingConv = target->callingConvention(x->callingConv);
+        llvm::CallingConv::ID callingConv = extFunc->llConv;
         x->llvmFunc->setCallingConv(callingConv);
-        for (vector< pair<unsigned, llvm::Attributes> >::iterator attr = llAttributes.begin();
-             attr != llAttributes.end();
+        for (vector< pair<unsigned, llvm::Attributes> >::iterator
+             attr = extFunc->attrs.begin();
+             attr != extFunc->attrs.end();
              ++attr)
             func->addAttribute(attr->first, attr->second);
 
@@ -1665,12 +1668,12 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
 
     llvm::Function::arg_iterator ai = x->llvmFunc->arg_begin();
 
-    target->allocReturnValue(x->callingConv, x->returnType2, ai, returns, &ctx);
+    extFunc->allocReturnValue(extFunc->retInfo, ai, returns, &ctx);
 
     for (size_t i = 0; i < x->args.size(); ++i) {
         ExternalArgPtr arg = x->args[i];
-        CValuePtr cvalue = target->allocArgumentValue(
-            x->callingConv, arg->type2, arg->name->str, ai, &ctx);
+        CValuePtr cvalue = extFunc->allocArgumentValue(
+            extFunc->argInfos[i], arg->name->str, ai, &ctx);
         addLocal(env, arg->name, cvalue.ptr());
         if (llvmDIBuilder != NULL) {
             unsigned line, column;
@@ -1716,7 +1719,7 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
     exceptionBlock->moveAfter(returnBlock);
 
     ctx.builder->SetInsertPoint(returnBlock);
-    target->returnStatement(x->callingConv, x->returnType2, returns, &ctx);
+    extFunc->returnStatement(extFunc->retInfo, returns, &ctx);
 
     ctx.builder->SetInsertPoint(exceptionBlock);
     if (exceptionsEnabled()) {
@@ -2520,19 +2523,30 @@ void codegenCallCCode(CCodePointerTypePtr t,
         ensureArity(args, t->argTypes.size());
     else if (args->size() < t->argTypes.size())
         arityError2(t->argTypes.size(), args->size());
-    vector<llvm::Value *> llArgs;
-    vector< pair<unsigned, llvm::Attributes> > llAttributes;
-    target->loadStructRetArgument(t->callingConv, t->returnType, llArgs, llAttributes, ctx, out);
+
+    vector<TypePtr> argTypes;
+    for (size_t i = 0; i < args->size(); ++i) {
+        CValuePtr cv = args->values[i];
+        argTypes.push_back(cv->type);
+    }
+
+    ExternalFunction *extFunc = target->getExternalFunction(
+        t->callingConv, t->returnType, argTypes,
+        t->argTypes.size(), t->hasVarArgs);
+
+    vector<llvm::Value*> llArgs;
+    extFunc->loadStructRetArgument(extFunc->retInfo, llArgs, ctx, out);
     for (unsigned i = 0; i < t->argTypes.size(); ++i) {
         CValuePtr cv = args->values[i];
         if (cv->type != t->argTypes[i])
             argumentTypeError(i, t->argTypes[i], cv->type);
-        target->loadArgument(t->callingConv, cv, llArgs, llAttributes, ctx);
+        extFunc->loadArgument(extFunc->argInfos[i], cv, llArgs, ctx, false);
     }
     if (t->hasVarArgs) {
         for (size_t i = t->argTypes.size(); i < args->size(); ++i) {
             CValuePtr cv = args->values[i];
-            target->loadVarArgument(t->callingConv, cv, llArgs, llAttributes, ctx);
+            extFunc->loadArgument(extFunc->argInfos[i], cv, llArgs,
+                                  ctx, true);
         }
     }
     llvm::Value *llCastCallable = t->callingConv == CC_LLVM
@@ -2540,15 +2554,16 @@ void codegenCallCCode(CCodePointerTypePtr t,
         : ctx->builder->CreateBitCast(llCallable, t->getCallType());
     llvm::CallInst *callInst =
         ctx->builder->CreateCall(llCastCallable, llvm::makeArrayRef(llArgs));
-    llvm::CallingConv::ID callingConv = target->callingConvention(t->callingConv);
+    llvm::CallingConv::ID callingConv = extFunc->llConv;
     callInst->setCallingConv(callingConv);
-    for (vector< pair<unsigned, llvm::Attributes> >::iterator attr = llAttributes.begin();
-         attr != llAttributes.end();
+    for (vector< pair<unsigned, llvm::Attributes> >::iterator
+         attr = extFunc->attrs.begin();
+         attr != extFunc->attrs.end();
          ++attr)
         callInst->addAttribute(attr->first, attr->second);
 
     llvm::Value *llRet = callInst;
-    target->storeReturnValue(t->callingConv, llRet, t->returnType, ctx, out);
+    extFunc->storeReturnValue(extFunc->retInfo, llRet, ctx, out);
 }
 
 void codegenCallCCodePointer(CValuePtr x,
@@ -3322,8 +3337,6 @@ void codegenCWrapper(InvokeEntry* entry, CallingConv cc)
 
     string callableName = getCodeName(entry);
 
-    vector<llvm::Type *> llArgTypes;
-    vector< pair<unsigned, llvm::Attributes> > llAttributes;
     TypePtr returnType;
     if (entry->returnTypes.empty()) {
         returnType = NULL;
@@ -3333,14 +3346,11 @@ void codegenCWrapper(InvokeEntry* entry, CallingConv cc)
         assert(!entry->returnIsRef[0]);
         returnType = entry->returnTypes[0];
     }
-    llvm::Type *llReturnType =
-        target->pushReturnType(cc, returnType, llArgTypes, llAttributes);
 
-    for (size_t i = 0; i < entry->argsKey.size(); ++i)
-        target->pushArgumentType(cc, entry->argsKey[i], llArgTypes, llAttributes);
+    ExternalFunction *extFunc = target->getExternalFunction(
+        cc, returnType, entry->argsKey, entry->argsKey.size(), false);
 
-    llvm::FunctionType *llFuncType =
-        llvm::FunctionType::get(llReturnType, llArgTypes, false);
+    llvm::FunctionType *llFuncType = extFunc->getLLVMFunctionType();
 
     std::string ccName;
     switch (cc) {
@@ -3365,12 +3375,13 @@ void codegenCWrapper(InvokeEntry* entry, CallingConv cc)
                                llvm::Function::InternalLinkage,
                                ccName + callableName,
                                llvmModule);
-    for (vector< pair<unsigned, llvm::Attributes> >::const_iterator attr = llAttributes.begin();
-         attr != llAttributes.end();
+    for (vector< pair<unsigned, llvm::Attributes> >::const_iterator
+         attr = extFunc->attrs.begin();
+         attr != extFunc->attrs.end();
          ++attr)
         llCWrapper->addAttribute(attr->first, attr->second);
 
-    llCWrapper->setCallingConv(target->callingConvention(cc));
+    llCWrapper->setCallingConv(extFunc->llConv);
 
     entry->llvmCWrappers[cc] = llCWrapper;
     CodegenContext ctx(llCWrapper);
@@ -3391,9 +3402,10 @@ void codegenCWrapper(InvokeEntry* entry, CallingConv cc)
     vector<llvm::Value *> innerArgs;
     vector<CReturn> returns;
     llvm::Function::arg_iterator ai = llCWrapper->arg_begin();
-    target->allocReturnValue(cc, returnType, ai, returns, &ctx);
+    extFunc->allocReturnValue(extFunc->retInfo, ai, returns, &ctx);
     for (size_t i = 0; i < entry->argsKey.size(); ++i) {
-        CValuePtr cv = target->allocArgumentValue(cc, entry->argsKey[i], "x", ai, &ctx);
+        CValuePtr cv = extFunc->allocArgumentValue(
+            extFunc->argInfos[i], "x", ai, &ctx);
         innerArgs.push_back(cv->llValue);
     }
 
@@ -3405,7 +3417,7 @@ void codegenCWrapper(InvokeEntry* entry, CallingConv cc)
     // XXX check exception
     ctx.builder->CreateCall(entry->llvmFunc, llvm::makeArrayRef(innerArgs));
 
-    target->returnStatement(cc, returnType, returns, &ctx);
+    extFunc->returnStatement(extFunc->retInfo, returns, &ctx);
 
     ctx.initBuilder->CreateBr(llBlock);
 }
