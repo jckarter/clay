@@ -13,7 +13,9 @@ define X86_64;
 define PPC32;
 define PPC64;
 define ARM;
+define MIPS32;
 
 // CPU families
 define X86;
 define PPC;
+define MIPS;
