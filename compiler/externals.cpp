@@ -47,89 +47,72 @@ static llvm::Value *promoteCVarArg(CallingConv conv,
     }
 }
 
-llvm::Type *ExternalTarget::pushReturnType(CallingConv conv,
-                                           TypePtr type,
-                                           vector<llvm::Type *> &llArgTypes,
-                                           vector< pair<unsigned, llvm::Attributes> > &llAttributes)
-{
-    if (type == NULL)
-        return llvmVoidType();
-    else if (typeReturnsBySretPointer(conv, type)) {
-        llvm::Type *llType = llvmPointerType(type);
-        llArgTypes.push_back(llType);
-        llvm::Attributes attrs = llvm::Attributes::get(
-            llType->getContext(),
-            llvm::Attributes::StructRet);
-        llAttributes.push_back(make_pair(llArgTypes.size(), attrs));
-        return llvmVoidType();
+llvm::FunctionType* ExternalFunction::getLLVMFunctionType() const {
+    llvm::Type *retType;
+    vector<llvm::Type*> argTypes;
+
+    if (retInfo.type == NULL) {
+        retType = llvmVoidType();
+    } else if (retInfo.ext.isIndirect()) {
+        retType = llvmVoidType();
+        argTypes.push_back(llvmPointerType(retInfo.type));
     } else {
-        llvm::Type *bitcastType = typeReturnsAsBitcastType(conv, type);
-        if (bitcastType != NULL)
-            return bitcastType;
-        else
-            return llvmType(type);
+        retType = retInfo.ext.type ?
+            retInfo.ext.type : llvmType(retInfo.type);
     }
+
+    for (vector<ArgInfo>::const_iterator
+        it = argInfos.begin(), ie = argInfos.end();
+        it != ie; ++it)
+    {
+        llvm::Type *type;
+        if (it->ext.isIndirect()) {
+            type = llvmPointerType(it->type);
+        } else {
+            type = it->ext.type ? it->ext.type : llvmType(it->type);
+        }
+        argTypes.push_back(type);
+    }
+
+    return llvm::FunctionType::get(retType, argTypes, isVarArg);
 }
 
-void ExternalTarget::pushArgumentType(CallingConv conv,
-                                      TypePtr type,
-                                      vector<llvm::Type *> &llArgTypes,
-                                      vector< pair<unsigned, llvm::Attributes> > &llAttributes)
+void ExternalFunction::allocReturnValue(ArgInfo info,
+                                        llvm::Function::arg_iterator &ai,
+                                        vector<CReturn> &returns,
+                                        CodegenContext* ctx)
 {
-    if (typePassesByByvalPointer(conv, type, false)) {
-        llvm::Type *llType = llvmPointerType(type);
-        llArgTypes.push_back(llType);
-        llvm::Attributes attrs = llvm::Attributes::get(
-            llType->getContext(),
-            llvm::Attributes::ByVal);
-        llAttributes.push_back(make_pair(llArgTypes.size(), attrs));
-    } else {
-        llvm::Type *bitcastType = typePassesAsBitcastType(conv, type, false);
-        if (bitcastType != NULL)
-            llArgTypes.push_back(bitcastType);
-        else
-            llArgTypes.push_back(llvmType(type));
-    }
-}
-
-void ExternalTarget::allocReturnValue(CallingConv conv,
-                                      TypePtr type,
-                                      llvm::Function::arg_iterator &ai,
-                                      vector<CReturn> &returns,
-                                      CodegenContext* ctx)
-{
-    if (type == NULL)
+    if (info.type == NULL)
         return;
-    else if (typeReturnsBySretPointer(conv, type)) {
+    else if (info.ext.isIndirect()) {
         llvm::Argument *structReturnArg = &(*ai);
-        assert(structReturnArg->getType() == llvmPointerType(type));
+        assert(structReturnArg->getType() == llvmPointerType(info.type));
         structReturnArg->setName("returned");
         ++ai;
-        CValuePtr cret = new CValue(type, structReturnArg);
-        returns.push_back(CReturn(false, type, cret));
+        CValuePtr cret = new CValue(info.type, structReturnArg);
+        returns.push_back(CReturn(false, info.type, cret));
     } else {
         llvm::Value *llRetVal =
-            ctx->initBuilder->CreateAlloca(llvmType(type));
-        CValuePtr cret = new CValue(type, llRetVal);
-        returns.push_back(CReturn(false, type, cret));
+            ctx->initBuilder->CreateAlloca(llvmType(info.type));
+        CValuePtr cret = new CValue(info.type, llRetVal);
+        returns.push_back(CReturn(false, info.type, cret));
     }
 }
 
-CValuePtr ExternalTarget::allocArgumentValue(CallingConv conv,
-                                             TypePtr type,
-                                             llvm::StringRef name,
-                                             llvm::Function::arg_iterator &ai,
-                                             CodegenContext* ctx)
+CValuePtr ExternalFunction::allocArgumentValue(ArgInfo info,
+                                               llvm::StringRef name,
+                                               llvm::Function::arg_iterator &ai,
+                                               CodegenContext* ctx)
 {
-    if (typePassesByByvalPointer(conv, type, false)) {
+    if (info.ext.isIndirect()) {
         llvm::Argument *llArg = &(*ai);
-        assert(llArg->getType() == llvmPointerType(type));
+        assert(llArg->getType() == llvmPointerType(info.type));
         llArg->setName(name);
-        CValuePtr cvalue = new CValue(type, llArg);
+        CValuePtr cvalue = new CValue(info.type, llArg);
         ++ai;
         return cvalue;
     } else {
-        llvm::Type *bitcastType = typePassesAsBitcastType(conv, type, false);
+        llvm::Type *bitcastType = info.ext.type;
         if (bitcastType != NULL) {
             llvm::Argument *llArg = &(*ai);
             assert(llArg->getType() == bitcastType);
@@ -138,33 +121,33 @@ CValuePtr ExternalTarget::allocArgumentValue(CallingConv conv,
                 ctx->initBuilder->CreateAlloca(bitcastType);
             ctx->builder->CreateStore(llArg, llArgAlloc);
             llvm::Value *llArgVar =
-                ctx->initBuilder->CreateBitCast(llArgAlloc, llvmPointerType(type));
-            CValuePtr cvalue = new CValue(type, llArgVar);
+                ctx->initBuilder->CreateBitCast(
+                    llArgAlloc, llvmPointerType(info.type));
+            CValuePtr cvalue = new CValue(info.type, llArgVar);
             ++ai;
             return cvalue;
         } else {
             llvm::Argument *llArg = &(*ai);
             llArg->setName(name);
             llvm::Value *llArgVar =
-                ctx->initBuilder->CreateAlloca(llvmType(type));
+                ctx->initBuilder->CreateAlloca(llvmType(info.type));
             llArgVar->setName(name);
             ctx->builder->CreateStore(llArg, llArgVar);
-            CValuePtr cvalue = new CValue(type, llArgVar);
+            CValuePtr cvalue = new CValue(info.type, llArgVar);
             ++ai;
             return cvalue;
         }
     }
 }
 
-void ExternalTarget::returnStatement(CallingConv conv,
-                                     TypePtr type,
-                                     vector<CReturn> &returns,
-                                     CodegenContext* ctx)
+void ExternalFunction::returnStatement(ArgInfo info,
+                                       vector<CReturn> &returns,
+                                       CodegenContext* ctx)
 {
-    if (type == NULL || typeReturnsBySretPointer(conv, type)) {
+    if (info.type == NULL || info.ext.isIndirect()) {
         ctx->builder->CreateRetVoid();
     } else {
-        llvm::Type *bitcastType = typeReturnsAsBitcastType(conv, type);
+        llvm::Type *bitcastType = info.ext.type;
         if (bitcastType != NULL) {
             CValuePtr retVal = returns[0].value;
             llvm::Value *bitcast = ctx->builder->CreateBitCast(retVal->llValue,
@@ -179,39 +162,29 @@ void ExternalTarget::returnStatement(CallingConv conv,
     }
 }
 
-void ExternalTarget::loadStructRetArgument(CallingConv conv,
-                                           TypePtr type,
-                                           vector<llvm::Value *> &llArgs,
-                                           vector< pair<unsigned, llvm::Attributes> > &llAttributes,
-                                           CodegenContext* ctx,
-                                           MultiCValuePtr out)
+void ExternalFunction::loadStructRetArgument(ArgInfo info,
+                                             vector<llvm::Value *> &llArgs,
+                                             CodegenContext* ctx,
+                                             MultiCValuePtr out)
 {
-    if (type != NULL && typeReturnsBySretPointer(conv, type)) {
+    if (info.type != NULL && info.ext.isIndirect()) {
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
-        assert(out0->type == type);
+        assert(out0->type == info.type);
         llArgs.push_back(out0->llValue);
-        llvm::Attributes attrs = llvm::Attributes::get(
-            out0->llValue->getContext(),
-            llvm::Attributes::StructRet);
-        llAttributes.push_back(make_pair(llArgs.size(), attrs));
     }
 }
 
-void ExternalTarget::loadArgument(CallingConv conv,
-                                  CValuePtr cv,
-                                  vector<llvm::Value *> &llArgs,
-                                  vector< pair<unsigned, llvm::Attributes> > &llAttributes,
-                                  CodegenContext* ctx)
+void ExternalFunction::loadArgument(ArgInfo info,
+                                    CValuePtr cv,
+                                    vector<llvm::Value *> &llArgs,
+                                    CodegenContext* ctx,
+                                    bool varArg)
 {
-    if (typePassesByByvalPointer(conv, cv->type, false)) {
+    if (info.ext.isIndirect()) {
         llArgs.push_back(cv->llValue);
-        llvm::Attributes attrs = llvm::Attributes::get(
-            cv->llValue->getContext(),
-            llvm::Attributes::ByVal);
-        llAttributes.push_back(make_pair(llArgs.size(), attrs));
     } else {
-        llvm::Type *bitcastType = typePassesAsBitcastType(conv, cv->type, false);
+        llvm::Type *bitcastType = info.ext.type;
         if (bitcastType != NULL) {
             llvm::Value *llArg = ctx->builder->CreateBitCast(cv->llValue,
                 llvm::PointerType::getUnqual(bitcastType));
@@ -219,62 +192,59 @@ void ExternalTarget::loadArgument(CallingConv conv,
             llArgs.push_back(llv);
         } else {
             llvm::Value *llv = ctx->builder->CreateLoad(cv->llValue);
+            if (varArg) {
+                llv = promoteCVarArg(conv, info.type, llv, ctx);
+            }
             llArgs.push_back(llv);
         }
     }
 }
 
-void ExternalTarget::loadVarArgument(CallingConv conv,
-                                     CValuePtr cv,
-                                     vector<llvm::Value *> &llArgs,
-                                     vector< pair<unsigned, llvm::Attributes> > &llAttributes,
-                                     CodegenContext* ctx)
+void ExternalFunction::storeReturnValue(ArgInfo info,
+                                        llvm::Value *callReturnValue,
+                                        CodegenContext* ctx,
+                                        MultiCValuePtr out)
 {
-    if (typePassesByByvalPointer(conv, cv->type, true)) {
-        llArgs.push_back(cv->llValue);
-        llvm::Attributes attrs = llvm::Attributes::get(
-            cv->llValue->getContext(),
-            llvm::Attributes::ByVal);
-        llAttributes.push_back(make_pair(llArgs.size(), attrs));
-    } else {
-        llvm::Type *bitcastType = typePassesAsBitcastType(conv, cv->type, true);
-        if (bitcastType != NULL) {
-            llvm::Value *llArg = ctx->builder->CreateBitCast(cv->llValue,
-                llvm::PointerType::getUnqual(bitcastType));
-            llvm::Value *llv = ctx->builder->CreateLoad(llArg);
-            llArgs.push_back(llv);
-        } else {
-            llvm::Value *llv = ctx->builder->CreateLoad(cv->llValue);
-            llvm::Value *llv2 = promoteCVarArg(conv, cv->type, llv, ctx);
-
-            llArgs.push_back(llv2);
-        }
-    }
-}
-
-void ExternalTarget::storeReturnValue(CallingConv conv,
-                                      llvm::Value *callReturnValue,
-                                      TypePtr returnType,
-                                      CodegenContext* ctx,
-                                      MultiCValuePtr out)
-{
-    if (returnType == NULL || typeReturnsBySretPointer(conv, returnType)) {
+    if (info.type == NULL || info.ext.isIndirect()) {
         return;
     } else {
-        llvm::Type *bitcastType = typeReturnsAsBitcastType(conv, returnType);
+        llvm::Type *bitcastType = info.ext.type;
         assert(out->size() == 1);
         if (bitcastType != NULL) {
             CValuePtr out0 = out->values[0];
-            assert(out0->type == returnType);
+            assert(out0->type == info.type);
             llvm::Value *outRet = ctx->builder->CreateBitCast(out0->llValue,
                 llvm::PointerType::getUnqual(bitcastType));
             ctx->builder->CreateStore(callReturnValue, outRet);
         } else {
             CValuePtr out0 = out->values[0];
-            assert(out0->type == returnType);
+            assert(out0->type == info.type);
             ctx->builder->CreateStore(callReturnValue, out0->llValue);
         }
     }
+}
+
+//
+// ExternalTarget
+//
+
+ExternalFunction* ExternalTarget::getExternalFunction(
+    CallingConv conv, TypePtr ret, vector<TypePtr> &args,
+    size_t numReqArg, bool isVarArg)
+{
+    llvm::FoldingSetNodeID ID;
+    ExternalFunction::Profile(ID, conv, ret, args, numReqArg, isVarArg);
+
+    void *insertPos = 0;
+    ExternalFunction *func = extFuncs.FindNodeOrInsertPos(ID, insertPos);
+    if (func)
+        return func;
+
+    func = new ExternalFunction(conv, ret, args, numReqArg, isVarArg);
+    extFuncs.InsertNode(func, insertPos);
+    computeInfo(func);
+
+    return func;
 }
 
 
@@ -287,6 +257,18 @@ struct LLVMExternalTarget : public ExternalTarget {
 
     explicit LLVMExternalTarget(llvm::Triple target)
         : ExternalTarget(), target(target) {}
+
+    virtual void computeInfo(ExternalFunction *f);
+
+    ExtArgInfo pushReturnType(
+        CallingConv conv, TypePtr type,
+        vector< pair<unsigned, llvm::Attributes> > &llAttrs,
+        unsigned &attrPos);
+
+    ExtArgInfo pushArgumentType(
+        CallingConv conv, TypePtr type,
+        vector< pair<unsigned, llvm::Attributes> > &llAttrs,
+        unsigned &argPos, bool varArg);
 
     virtual llvm::CallingConv::ID callingConvention(CallingConv conv) {
         return llvm::CallingConv::C;
@@ -306,12 +288,68 @@ struct LLVMExternalTarget : public ExternalTarget {
     }
 };
 
+void LLVMExternalTarget::computeInfo(ExternalFunction *f) {
+    unsigned attrPos = 1;
+
+    f->llConv = callingConvention(f->conv);
+    f->retInfo.ext = pushReturnType(
+        f->conv, f->retInfo.type, f->attrs, attrPos);
+
+    for (size_t i = 0, e = f->argInfos.size(); i < e; ++i) {
+        f->argInfos[i].ext = pushArgumentType(
+            f->conv, f->argInfos[i].type, f->attrs,
+            attrPos, i >= f->numReqArg);
+    }
+}
+
+ExtArgInfo LLVMExternalTarget::pushReturnType(
+    CallingConv conv, TypePtr type,
+    vector< pair<unsigned, llvm::Attributes> > &llAttrs,
+    unsigned &attrPos)
+{
+    if (type == NULL)
+        return ExtArgInfo::getDirect();
+    else if (typeReturnsBySretPointer(conv, type)) {
+        llvm::Attributes attrs = llvm::Attributes::get(
+            llvm::getGlobalContext(),
+            llvm::Attributes::StructRet);
+        llAttrs.push_back(make_pair(attrPos++, attrs));
+        return ExtArgInfo::getIndirect();
+    } else {
+        llvm::Type *bitcastType = typeReturnsAsBitcastType(conv, type);
+        if (bitcastType != NULL)
+            return ExtArgInfo::getDirect(bitcastType);
+        else
+            return ExtArgInfo::getDirect();
+    }
+}
+
+ExtArgInfo LLVMExternalTarget::pushArgumentType(
+    CallingConv conv, TypePtr type,
+    vector< pair<unsigned, llvm::Attributes> > &llAttrs,
+    unsigned &attrPos, bool varArg)
+{
+    if (typePassesByByvalPointer(conv, type, varArg)) {
+        llvm::Attributes attrs = llvm::Attributes::get(
+            llvm::getGlobalContext(),
+            llvm::Attributes::ByVal);
+        llAttrs.push_back(make_pair(attrPos++, attrs));
+        return ExtArgInfo::getIndirect();
+    } else {
+        llvm::Type *bitcastType = typePassesAsBitcastType(conv, type, varArg);
+        if (bitcastType != NULL)
+            return ExtArgInfo::getDirect(bitcastType);
+        else
+            return ExtArgInfo::getDirect();
+    }
+}
+
 
 //
 // x86-32 (and Windows x64)
 //
 
-struct X86_32_ExternalTarget : public ExternalTarget {
+struct X86_32_ExternalTarget : public LLVMExternalTarget {
     // Linux, Solaris, and NetBSD pass all aggregates on the stack
     // (except long long and complex float32)
     bool alwaysPassStructsOnStack:1;
@@ -327,7 +365,9 @@ struct X86_32_ExternalTarget : public ExternalTarget {
     // on the x87 stack
     bool returnSingleFloatAggregateAsNonaggregate:1;
 
-    explicit X86_32_ExternalTarget(llvm::Triple target) {
+    explicit X86_32_ExternalTarget(llvm::Triple target)
+        : LLVMExternalTarget(target)
+    {
         alwaysUseCCallingConv = target.getArch() == llvm::Triple::x86_64;
         alwaysPassStructsOnStack = target.getOS() == llvm::Triple::NetBSD
             || target.getOS() == llvm::Triple::Linux
@@ -389,7 +429,7 @@ struct X86_32_ExternalTarget : public ExternalTarget {
                 return PASS_ON_STACK;
             else
                 return int(typeSize(type));
-        
+
         case NEW_TYPE: {
             NewType *nt = (NewType*)type.ptr();
             return aggregateTypeSize(newtypeReprType(nt));
@@ -435,7 +475,7 @@ struct X86_32_ExternalTarget : public ExternalTarget {
         case COMPLEX_TYPE:
         case VARIANT_TYPE:
             return NULL;
-        
+
         case NEW_TYPE: {
             NewType *nt = (NewType*)type.ptr();
             return singleFloatAggregateType(newtypeReprType(nt));
@@ -980,6 +1020,178 @@ llvm::Type *X86_64_ExternalTarget::getLLVMWordType(TypePtr type)
     }
 }
 
+//
+// Unix MIPS
+//
+
+struct Mips32_ExternalTarget : public ExternalTarget {
+    size_t stackAlign;
+    size_t minABIAlign;
+
+    explicit Mips32_ExternalTarget() {
+        minABIAlign = 4;
+        stackAlign = 8;
+    }
+
+    void coerceToIntArgs(size_t tySize, vector<llvm::Type*> &argList) const;
+    llvm::Type* getPaddingType(size_t align, size_t offset) const;
+    llvm::Type* getLLVMWordType(TypePtr type,
+                                llvm::Type *padding,
+                                bool coercion) const;
+    ExtArgInfo classifyArgumentType(TypePtr type, size_t &offset);
+    ExtArgInfo classifyReturnType(TypePtr type);
+
+    static bool canPassThrough(TypePtr type) {
+        switch (type->typeKind) {
+        case BOOL_TYPE:
+        case INTEGER_TYPE:
+        case FLOAT_TYPE:
+        case POINTER_TYPE:
+        case CODE_POINTER_TYPE:
+        case CCODE_POINTER_TYPE:
+        case STATIC_TYPE:
+        case ENUM_TYPE:
+            return true;
+        case VEC_TYPE:
+        case COMPLEX_TYPE:
+        case VARIANT_TYPE:
+        case UNION_TYPE:
+        case RECORD_TYPE:
+        case TUPLE_TYPE:
+            return false;
+        case NEW_TYPE: {
+            NewType *nt = (NewType*)type.ptr();
+            return canPassThrough(newtypeReprType(nt));
+        }
+        default:
+            assert(false);
+            return false;
+        }
+    }
+
+    void addAttrs(
+        vector< pair<unsigned, llvm::Attributes> > &attrs,
+        unsigned &pos, llvm::Attributes::AttrVal val)
+    {
+        attrs.push_back(make_pair(
+            pos++, llvm::Attributes::get(llvm::getGlobalContext(), val)));
+    }
+
+    virtual void computeInfo(ExternalFunction *f) {
+        f->llConv = llvm::CallingConv::C;
+        f->retInfo.ext = classifyReturnType(f->retInfo.type);
+
+        unsigned attrPos = 1;
+        bool sret = f->retInfo.ext.isIndirect();
+        if (sret)
+            addAttrs(f->attrs, attrPos, llvm::Attributes::StructRet);
+
+        size_t offset = sret ? minABIAlign : 0;
+        for (vector<ExternalFunction::ArgInfo>::iterator
+            it = f->argInfos.begin(), ie = f->argInfos.end();
+            it != ie; ++it)
+        {
+            it->ext = classifyArgumentType(it->type, offset);
+            if (it->ext.isIndirect())
+                addAttrs(f->attrs, attrPos, llvm::Attributes::ByVal);
+        }
+    }
+};
+
+void Mips32_ExternalTarget::coerceToIntArgs(size_t tySize,
+                                            vector<llvm::Type*> &argList)
+                                            const {
+    llvm::Type *intType = llvmIntType(minABIAlign * 8);
+
+    for (unsigned n = tySize / (minABIAlign * 8); n > 0; --n) {
+        argList.push_back(intType);
+    }
+
+    unsigned r = tySize % (minABIAlign * 8);
+
+    if (r > 0) {
+        argList.push_back(llvmIntType(r));
+    }
+}
+
+llvm::Type* Mips32_ExternalTarget::getPaddingType(size_t align,
+                                                  size_t offset) const {
+    if (((align - 1) & offset) > 0) {
+        return llvmIntType(minABIAlign * 8);
+    }
+
+    return NULL;
+}
+
+llvm::Type* Mips32_ExternalTarget::getLLVMWordType(TypePtr type,
+                                                   llvm::Type *padding,
+                                                   bool coercion) const {
+    size_t tySize = typeSize(type) * 8;
+    vector<llvm::Type*> argList;
+
+    if (padding) {
+        argList.push_back(padding);
+    }
+    if (coercion) {
+        coerceToIntArgs(tySize, argList);
+    } else {
+        argList.push_back(llvmType(type));
+    }
+
+    llvm::StructType *llType = llvm::StructType::get(
+        llvm::getGlobalContext(), argList);
+
+    return llType;
+}
+
+ExtArgInfo Mips32_ExternalTarget::classifyArgumentType(
+    TypePtr type, size_t &offset)
+{
+    size_t origOffset = offset;
+    size_t tySize = typeSize(type) * 8;
+    size_t align = typeAlignment(type);
+
+    align = std::min(std::max(align, minABIAlign), stackAlign);
+    offset = alignedUpTo(offset, align);
+    offset += alignedUpTo(tySize, align * 8) / 8;
+
+    llvm::Type *padding = getPaddingType(align, origOffset);
+    llvm::Type *llType = NULL;
+
+    if (!canPassThrough(type)) {
+        llType = getLLVMWordType(type, padding, true);
+    } else if (padding) {
+        llType = getLLVMWordType(type, padding, false);
+    }
+
+    return ExtArgInfo::getDirect(llType);
+}
+
+ExtArgInfo Mips32_ExternalTarget::classifyReturnType(TypePtr type) {
+    if (type == NULL) return ExtArgInfo::getDirect();
+
+    size_t tySize = typeSize(type) * 8;
+
+    if (!canPassThrough(type)) {
+        if (tySize <= 128) {
+            if (type->typeKind == COMPLEX_TYPE) {
+                return ExtArgInfo::getDirect();
+            }
+
+            if (type->typeKind == VEC_TYPE) {
+                VecType *vecType = (VecType *)type.ptr();
+                if (vecType->elementType->typeKind != FLOAT_TYPE) {
+                    return ExtArgInfo::getDirect(
+                        getLLVMWordType(type, NULL, true));
+                }
+            }
+        }
+
+        return ExtArgInfo::getIndirect();
+    }
+
+    return ExtArgInfo::getDirect();;
+}
 
 
 //
@@ -1001,6 +1213,8 @@ void initExternalTarget(string targetString)
         || target.getArch() == llvm::Triple::x86_64)
     {
         externalTarget = new X86_32_ExternalTarget(target);
+    } else if (target.getArch() == llvm::Triple::mips) {
+        externalTarget = new Mips32_ExternalTarget();
     } else
         externalTarget = new LLVMExternalTarget(target);
 }

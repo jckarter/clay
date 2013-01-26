@@ -1032,15 +1032,11 @@ llvm::Type *llvmVoidType() {
 llvm::Type *CCodePointerType::getCallType() {
     if (this->callType == NULL) {
         ExternalTargetPtr target = getExternalTarget();
+        ExternalFunction *extFunc = target->getExternalFunction(
+            this->callingConv, this->returnType, this->argTypes,
+            this->argTypes.size(), this->hasVarArgs);
 
-        vector<llvm::Type *> llArgTypes;
-        vector< pair<unsigned, llvm::Attributes> > llAttributes;
-        llvm::Type *llRetType =
-            target->pushReturnType(this->callingConv, this->returnType, llArgTypes, llAttributes);
-        for (size_t i = 0; i < this->argTypes.size(); ++i)
-            target->pushArgumentType(this->callingConv, this->argTypes[i], llArgTypes, llAttributes);
-        llvm::FunctionType *llFuncType =
-            llvm::FunctionType::get(llRetType, llArgTypes, this->hasVarArgs);
+        llvm::FunctionType *llFuncType = extFunc->getLLVMFunctionType();
         this->callType = llvm::PointerType::getUnqual(llFuncType);
     }
     return this->callType;

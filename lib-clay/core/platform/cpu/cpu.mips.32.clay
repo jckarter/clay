@@ -1,0 +1,7 @@
+import core.platform.symbols.(MIPS32, MIPS);
+
+alias CPU = MIPS32;
+alias CPUFamily = MIPS;
+
+alias CPUString = "mips";
+alias CPUBits = 32;

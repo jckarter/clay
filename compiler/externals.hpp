@@ -7,65 +7,130 @@
 
 namespace clay {
 
-struct ExternalTarget : public Object {
-    ExternalTarget() : Object(DONT_CARE) {}
-    virtual ~ExternalTarget() {}
+struct ExtArgInfo {
+    enum Kind {
+        Direct, Indirect
+    };
 
-    virtual llvm::CallingConv::ID callingConvention(CallingConv conv) = 0;
+    Kind kind;
+    llvm::Type *type;
 
-    virtual llvm::Type *typeReturnsAsBitcastType(CallingConv conv, TypePtr type) = 0;
-    virtual llvm::Type *typePassesAsBitcastType(CallingConv conv, TypePtr type, bool varArg) = 0;
-    virtual bool typeReturnsBySretPointer(CallingConv conv, TypePtr type) = 0;
-    virtual bool typePassesByByvalPointer(CallingConv conv, TypePtr type, bool varArg) = 0;
+    ExtArgInfo(enum Kind k = Direct, llvm::Type *ll = NULL)
+        : kind(k), type(ll) {}
 
-    // for generating C function declarations
-    llvm::Type *pushReturnType(CallingConv conv,
-                               TypePtr type,
-                               vector<llvm::Type *> &llArgTypes,
-                               vector< pair<unsigned, llvm::Attributes> > &llAttributes);
-    void pushArgumentType(CallingConv conv,
-                          TypePtr type,
-                          vector<llvm::Type *> &llArgTypes,
-                          vector< pair<unsigned, llvm::Attributes> > &llAttributes);
+    static ExtArgInfo getDirect(llvm::Type* ll = NULL) {
+        return ExtArgInfo(Direct, ll);
+    }
+    static ExtArgInfo getIndirect() {
+        return ExtArgInfo(Indirect, NULL);
+    }
+
+    bool isDirect() const { return kind == Direct; }
+    bool isIndirect() const { return kind == Indirect; }
+};
+
+struct ExternalFunction : public llvm::FoldingSetNode {
+    struct ArgInfo {
+        TypePtr type;
+        ExtArgInfo ext;
+    };
+
+    CallingConv conv;
+    size_t numReqArg;
+    bool isVarArg;
+
+    llvm::CallingConv::ID llConv;
+    ArgInfo retInfo;
+    vector<ArgInfo> argInfos;
+    vector< pair<unsigned, llvm::Attributes> > attrs;
+
+    ExternalFunction(CallingConv conv, TypePtr ret,
+                     vector<TypePtr> &args, size_t numReqArg,
+                     bool isVarArg) {
+        this->conv = conv;
+        this->retInfo.type = ret;
+        for (vector<TypePtr>::iterator it = args.begin(), ie = args.end();
+            it != ie; ++it)
+        {
+            ArgInfo info = { *it, ExtArgInfo::getDirect() };
+            this->argInfos.push_back(info);
+        }
+        this->numReqArg = numReqArg;
+        this->isVarArg = isVarArg;
+    }
+
+    static void Profile(llvm::FoldingSetNodeID &ID,
+                        CallingConv conv, TypePtr ret,
+                        vector<TypePtr> &args, size_t numReqArg,
+                        bool isVarArg) {
+        ID.AddInteger(conv);
+        ID.AddPointer(ret.ptr());
+        for (vector<TypePtr>::iterator it = args.begin(), ie = args.end();
+            it != ie; ++it)
+        {
+            ID.AddPointer(it->ptr());
+        }
+        ID.AddInteger(numReqArg);
+        ID.AddBoolean(isVarArg);
+    }
+
+    void Profile(llvm::FoldingSetNodeID &ID) {
+        ID.AddInteger(conv);
+        ID.AddPointer(retInfo.type.ptr());
+        for (vector<ArgInfo>::iterator
+            it = argInfos.begin(), ie = argInfos.end();
+            it != ie; ++it)
+        {
+            ID.AddPointer(it->type.ptr());
+        }
+        ID.AddInteger(numReqArg);
+        ID.AddBoolean(isVarArg);
+    }
+
+    llvm::FunctionType* getLLVMFunctionType() const;
 
     // for generating C function definitions
-    void allocReturnValue(CallingConv conv,
-                          TypePtr type,
+    void allocReturnValue(ArgInfo info,
                           llvm::Function::arg_iterator &ai,
                           vector<CReturn> &returns,
                           CodegenContext* ctx);
-    CValuePtr allocArgumentValue(CallingConv conv,
-                                 TypePtr type,
+    CValuePtr allocArgumentValue(ArgInfo info,
                                  llvm::StringRef name,
                                  llvm::Function::arg_iterator &ai,
                                  CodegenContext* ctx);
-    void returnStatement(CallingConv conv,
-                         TypePtr type,
+    void returnStatement(ArgInfo info,
                          vector<CReturn> &returns,
                          CodegenContext* ctx);
 
     // for calling C functions
-    void loadStructRetArgument(CallingConv conv,
-                               TypePtr type,
+    void loadStructRetArgument(ArgInfo info,
                                vector<llvm::Value *> &llArgs,
-                               vector< pair<unsigned, llvm::Attributes> > &llAttributes,
                                CodegenContext* ctx,
                                MultiCValuePtr out);
-    void loadArgument(CallingConv conv,
+    void loadArgument(ArgInfo info,
                       CValuePtr cv,
                       vector<llvm::Value *> &llArgs,
-                      vector< pair<unsigned, llvm::Attributes> > &llAttributes,
-                      CodegenContext* ctx);
-    void loadVarArgument(CallingConv conv,
-                         CValuePtr cv,
-                         vector<llvm::Value *> &llArgs,
-                         vector< pair<unsigned, llvm::Attributes> > &llAttributes,
-                         CodegenContext* ctx);
-    void storeReturnValue(CallingConv conv,
+                      CodegenContext* ctx,
+                      bool isVarArg);
+    void storeReturnValue(ArgInfo info,
                           llvm::Value *callReturnValue,
-                          TypePtr returnType,
                           CodegenContext* ctx,
                           MultiCValuePtr out);
+};
+
+struct ExternalTarget : public Object {
+    llvm::FoldingSet<ExternalFunction> extFuncs;
+
+    ExternalTarget() : Object(DONT_CARE) {}
+    virtual ~ExternalTarget() {}
+
+    ExternalFunction* getExternalFunction(
+        CallingConv conv,
+        TypePtr ret,
+        vector<TypePtr> &args,
+        size_t numReqArg, bool varArg);
+
+    virtual void computeInfo(ExternalFunction *f) = 0;
 };
 
 typedef Pointer<ExternalTarget> ExternalTargetPtr;
