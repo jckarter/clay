@@ -10,8 +10,8 @@
 
 namespace clay {
 
-ExprPtr desugarCharLiteral(char c) {
-    ExprPtr nameRef = operator_expr_charLiteral();
+ExprPtr desugarCharLiteral(char c, CompilerStatePtr cst) {
+    ExprPtr nameRef = operator_expr_charLiteral(cst);
     CallPtr call = new Call(nameRef, new ExprList());
     llvm::SmallString<128> buf;
     llvm::raw_svector_ostream out(buf);
@@ -55,40 +55,40 @@ void desugarFieldRef(FieldRefPtr x, ModulePtr module) {
     
     ExprListPtr args = new ExprList(x->expr);
     args->add(new ObjectExpr(x->name.ptr()));
-    CallPtr call = new Call(operator_expr_fieldRef(), args);
+    CallPtr call = new Call(operator_expr_fieldRef(module->cst), args);
     call->location = x->location;
     x->desugared = call.ptr();
 }
 
-ExprPtr desugarStaticIndexing(StaticIndexingPtr x) {
+ExprPtr desugarStaticIndexing(StaticIndexingPtr x, CompilerStatePtr cst) {
     ExprListPtr args = new ExprList(x->expr);
-    ValueHolderPtr vh = sizeTToValueHolder(x->index);
+    ValueHolderPtr vh = sizeTToValueHolder(x->index, cst);
     args->add(new StaticExpr(new ObjectExpr(vh.ptr())));
-    CallPtr call = new Call(operator_expr_staticIndex(), args);
+    CallPtr call = new Call(operator_expr_staticIndex(cst), args);
     call->location = x->location;
     return call.ptr();
 }
 
-ExprPtr lookupCallable(int op) {
+ExprPtr lookupCallable(int op, CompilerStatePtr cst) {
     ExprPtr callable;
     switch (op) {
     case DEREFERENCE :
-        callable = operator_expr_dereference();
+        callable = operator_expr_dereference(cst);
         break;
     case ADDRESS_OF :
-        callable = primitive_expr_addressOf();
+        callable = primitive_expr_addressOf(cst);
         break;
     case NOT :
-        callable = primitive_expr_boolNot();
+        callable = primitive_expr_boolNot(cst);
         break;
     case PREFIX_OP :
-        callable = operator_expr_prefixOperator();
+        callable = operator_expr_prefixOperator(cst);
         break;
     case INFIX_OP :
-        callable = operator_expr_infixOperator();
+        callable = operator_expr_infixOperator(cst);
         break;
     case IF_EXPR :
-        callable = operator_expr_ifExpression();
+        callable = operator_expr_ifExpression(cst);
         break;
     default :
         assert(false);
@@ -96,8 +96,8 @@ ExprPtr lookupCallable(int op) {
     return callable;
 }
 
-ExprPtr desugarVariadicOp(VariadicOpPtr x) {
-    ExprPtr callable = lookupCallable(x->op);
+ExprPtr desugarVariadicOp(VariadicOpPtr x, CompilerStatePtr cst) {
+    ExprPtr callable = lookupCallable(x->op, cst);
     CallPtr call = new Call(callable, new ExprList());
     call->parenArgs->add(x->exprs);  
     call->location = x->location;
@@ -128,7 +128,7 @@ static vector<FormalArgPtr> identVtoFormalV(llvm::ArrayRef<IdentifierPtr> x) {
 //      }
 //  }
 
-StatementPtr desugarForStatement(ForPtr x) {
+StatementPtr desugarForStatement(ForPtr x, CompilerStatePtr cst) {
     IdentifierPtr exprVar = Identifier::get("%expr", x->location);
     IdentifierPtr iterVar = Identifier::get("%iter", x->location);
     IdentifierPtr valueVar = Identifier::get("%value", x->location);
@@ -140,7 +140,7 @@ StatementPtr desugarForStatement(ForPtr x) {
     exprBinding->location = x->body->location;
     bs.push_back(exprBinding.ptr());
 
-    CallPtr iteratorCall = new Call(operator_expr_iterator(), new ExprList());
+    CallPtr iteratorCall = new Call(operator_expr_iterator(cst), new ExprList());
     iteratorCall->location = x->body->location;
     ExprPtr exprName = new NameRef(exprVar);
     exprName->location = x->location;
@@ -152,7 +152,7 @@ StatementPtr desugarForStatement(ForPtr x) {
     bs.push_back(iteratorBinding.ptr());
 
     vector<StatementPtr> valueStatements;
-    CallPtr nextValueCall = new Call(operator_expr_nextValue(), new ExprList());
+    CallPtr nextValueCall = new Call(operator_expr_nextValue(cst), new ExprList());
     nextValueCall->location = x->body->location;
     ExprPtr iterName = new NameRef(iterVar);
     iterName->location = x->body->location;
@@ -163,13 +163,13 @@ StatementPtr desugarForStatement(ForPtr x) {
     nextValueBinding->location = x->body->location;
     valueStatements.push_back(nextValueBinding.ptr());
 
-    CallPtr hasValueCall = new Call(operator_expr_hasValueP(), new ExprList());
+    CallPtr hasValueCall = new Call(operator_expr_hasValueP(cst), new ExprList());
     hasValueCall->location = x->body->location;
     ExprPtr valueName = new NameRef(valueVar);
     valueName->location = x->body->location;
     hasValueCall->parenArgs->add(valueName);
 
-    CallPtr getValueCall = new Call(operator_expr_getValue(), new ExprList());
+    CallPtr getValueCall = new Call(operator_expr_getValue(cst), new ExprList());
     getValueCall->location = x->body->location;
     getValueCall->parenArgs->add(valueName);
     BlockPtr whileBody = new Block();
@@ -192,12 +192,13 @@ static void makeExceptionVars(vector<IdentifierPtr>& identifiers, CatchPtr x) {
                     Identifier::get("%context", x->location));
 }
 
-StatementPtr desugarCatchBlocks(llvm::ArrayRef<CatchPtr> catchBlocks) {
+StatementPtr desugarCatchBlocks(llvm::ArrayRef<CatchPtr> catchBlocks,
+                                CompilerStatePtr cst) {
     assert(!catchBlocks.empty());
     Location firstCatchLocation = catchBlocks.front()->location;
     IdentifierPtr expVar = Identifier::get("%exp", firstCatchLocation);
 
-    CallPtr activeException = new Call(primitive_expr_activeException(), new ExprList());
+    CallPtr activeException = new Call(primitive_expr_activeException(cst), new ExprList());
     activeException->location = firstCatchLocation;
 
     BindingPtr expBinding =
@@ -218,7 +219,7 @@ StatementPtr desugarCatchBlocks(llvm::ArrayRef<CatchPtr> catchBlocks) {
             ExprPtr expVarName = new NameRef(expVar);
             expVarName->location = x->exceptionVar->location;
             asTypeArgs->add(expVarName);
-            CallPtr cond = new Call(operator_expr_exceptionIsP(), asTypeArgs);
+            CallPtr cond = new Call(operator_expr_exceptionIsP(cst), asTypeArgs);
             cond->location = x->exceptionType->location;
 
             BlockPtr block = new Block();
@@ -227,7 +228,7 @@ StatementPtr desugarCatchBlocks(llvm::ArrayRef<CatchPtr> catchBlocks) {
             vector<IdentifierPtr> identifiers;
             makeExceptionVars(identifiers, x);
 
-            CallPtr getter = new Call(operator_expr_exceptionAs(), asTypeArgs);
+            CallPtr getter = new Call(operator_expr_exceptionAs(cst), asTypeArgs);
             getter->location = x->exceptionVar->location;
             BindingPtr binding =
                 new Binding(VAR,
@@ -261,7 +262,7 @@ StatementPtr desugarCatchBlocks(llvm::ArrayRef<CatchPtr> catchBlocks) {
             makeExceptionVars(identifiers, x);
 
             ExprListPtr asAnyArgs = new ExprList(new NameRef(expVar));
-            CallPtr getter = new Call(operator_expr_exceptionAsAny(),
+            CallPtr getter = new Call(operator_expr_exceptionAsAny(cst),
                                       asAnyArgs);
             getter->location = x->exceptionVar->location;
             BindingPtr binding =
@@ -297,7 +298,7 @@ StatementPtr desugarCatchBlocks(llvm::ArrayRef<CatchPtr> catchBlocks) {
         ExprPtr expVarName = new NameRef(expVar);
         expVarName->location = firstCatchLocation;
         ExprListPtr continueArgs = new ExprList(expVarName);
-        CallPtr continueException = new Call(operator_expr_continueException(),
+        CallPtr continueException = new Call(operator_expr_continueException(cst),
                                              continueArgs);
         continueException->location = firstCatchLocation;
         StatementPtr stmt = new ExprStatement(continueException.ptr());
@@ -328,7 +329,7 @@ void desugarThrow(Throw* thro) {
     }
 }
 
-StatementPtr desugarSwitchStatement(SwitchPtr x) {
+StatementPtr desugarSwitchStatement(SwitchPtr x, CompilerStatePtr cst) {
     BlockPtr block = new Block();
     block->location = x->location;
 
@@ -347,7 +348,7 @@ StatementPtr desugarSwitchStatement(SwitchPtr x) {
         block->statements.push_back(b.ptr());
     }
 
-    ExprPtr caseCallable = operator_expr_caseP();
+    ExprPtr caseCallable = operator_expr_caseP(cst);
 
     StatementPtr root;
     StatementPtr *nextPtr = &root;
@@ -380,11 +381,12 @@ StatementPtr desugarSwitchStatement(SwitchPtr x) {
     return block.ptr();
 }
 
-static SourcePtr evalToSource(Location const &location, ExprListPtr args, EnvPtr env)
+static SourcePtr evalToSource(Location const &location, ExprListPtr args, 
+                              EnvPtr env, CompilerStatePtr cst)
 {
     llvm::SmallString<128> sourceTextBuf;
     llvm::raw_svector_ostream sourceTextOut(sourceTextBuf);
-    MultiStaticPtr values = evaluateMultiStatic(args, env);
+    MultiStaticPtr values = evaluateMultiStatic(args, env, cst);
     for (size_t i = 0; i < values->size(); ++i) {
         printStaticName(sourceTextOut, values->values[i]);
     }
@@ -400,43 +402,45 @@ static SourcePtr evalToSource(Location const &location, ExprListPtr args, EnvPtr
         llvm::MemoryBuffer::getMemBufferCopy(sourceTextBuf));
 }
 
-ExprListPtr desugarEvalExpr(EvalExprPtr eval, EnvPtr env)
+ExprListPtr desugarEvalExpr(EvalExprPtr eval, EnvPtr env, CompilerStatePtr cst)
 {
     if (eval->evaled)
         return eval->value;
     else {
-        SourcePtr source = evalToSource(eval->location, new ExprList(eval->args), env);
+        SourcePtr source = evalToSource(eval->location, new ExprList(eval->args), env, cst);
         eval->value = parseExprList(source, 0, unsigned(source->size()));
         eval->evaled = true;
         return eval->value;
     }
 }
 
-llvm::ArrayRef<StatementPtr> desugarEvalStatement(EvalStatementPtr eval, EnvPtr env)
+llvm::ArrayRef<StatementPtr> desugarEvalStatement(EvalStatementPtr eval, EnvPtr env,
+                                                  CompilerStatePtr cst)
 {
     if (eval->evaled)
         return eval->value;
     else {
-        SourcePtr source = evalToSource(eval->location, eval->args, env);
+        SourcePtr source = evalToSource(eval->location, eval->args, env, cst);
         parseStatements(source, 0, unsigned(source->size()), eval->value);
         eval->evaled = true;
         return eval->value;
     }
 }
 
-llvm::ArrayRef<TopLevelItemPtr> desugarEvalTopLevel(EvalTopLevelPtr eval, EnvPtr env)
+llvm::ArrayRef<TopLevelItemPtr> desugarEvalTopLevel(EvalTopLevelPtr eval, EnvPtr env,
+                                                    CompilerStatePtr cst)
 {
     if (eval->evaled)
         return eval->value;
     else {
-        SourcePtr source = evalToSource(eval->location, eval->args, env);
+        SourcePtr source = evalToSource(eval->location, eval->args, env, cst);
         parseTopLevelItems(source, 0, unsigned(source->size()), eval->value, eval->module);
         eval->evaled = true;
         return eval->value;
     }
 }
 
-OverloadPtr desugarAsOverload(OverloadPtr &x) {
+OverloadPtr desugarAsOverload(OverloadPtr &x, CompilerStatePtr cst) {
     assert(x->hasAsConversion);
 
     //Generate specialised overload
@@ -479,7 +483,7 @@ OverloadPtr desugarAsOverload(OverloadPtr &x) {
         if (x->code->formalArgs[i]->asArg) {
             arg->type = x->code->formalArgs[i]->asType;
             ExprPtr typeArg = x->code->formalArgs[i]->asType;
-            CallPtr callArg = new Call(operator_expr_asExpression(), new ExprList());
+            CallPtr callArg = new Call(operator_expr_asExpression(cst), new ExprList());
             callArg->parenArgs->add(new NameRef(x->code->formalArgs[i]->name));
             callArg->parenArgs->add(x->code->formalArgs[i]->asType);
             callArg->location = x->code->formalArgs[i]->location;

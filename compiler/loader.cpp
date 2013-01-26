@@ -16,13 +16,6 @@ namespace clay {
 
 using namespace std;
 
-static vector<PathString> searchPath;
-static vector<llvm::SmallString<32> > moduleSuffixes;
-
-llvm::StringMap<ModulePtr> globalModules;
-llvm::StringMap<string> globalFlags;
-ModulePtr globalMainModule;
-
 
 //
 // initModuleSuffixes
@@ -94,20 +87,20 @@ static llvm::StringRef getPtrSize(const llvm::DataLayout *dataLayout) {
     }
 }
 
-static void initModuleSuffixes() {
-    llvm::Triple triple(llvmModule->getTargetTriple());
+static void initModuleSuffixes(CompilerStatePtr cst) {
+    llvm::Triple triple(cst->llvmModule->getTargetTriple());
 
     llvm::StringRef os = getOS(triple);
     llvm::StringRef osgroup = getOSGroup(triple);
     llvm::StringRef cpu = getCPU(triple);
-    llvm::StringRef bits = getPtrSize(llvmDataLayout);
+    llvm::StringRef bits = getPtrSize(cst->llvmDataLayout);
 
     llvm::SmallString<128> buf;
     llvm::raw_svector_ostream sout(buf);
 
 #define ADD_SUFFIX(fmt) \
     sout << fmt; \
-    moduleSuffixes.push_back(sout.str()); \
+    cst->moduleSuffixes.push_back(sout.str()); \
     buf.clear(); sout.resync();
 
     ADD_SUFFIX("." << os << "." << cpu << "." << bits << ".clay")
@@ -123,11 +116,11 @@ static void initModuleSuffixes() {
 
 #undef ADD_SUFFIX
 
-    moduleSuffixes.push_back(llvm::StringRef(".clay"));
+    cst->moduleSuffixes.push_back(llvm::StringRef(".clay"));
 }
 
-void initLoader() {
-    initModuleSuffixes();
+void initLoader(CompilerStatePtr cst) {
+    initModuleSuffixes(cst);
 }
 
 
@@ -152,18 +145,21 @@ static string toKey(DottedNamePtr name) {
 // locateModule
 //
 
-void setSearchPath(llvm::ArrayRef<PathString>  path) {
-    searchPath = path;
+void setSearchPath(llvm::ArrayRef<PathString>  path,
+                   CompilerStatePtr cst) {
+    cst->searchPath = path;
 }
 
-static bool locateFile(llvm::StringRef relativePath, PathString &path) {
+static bool locateFile(llvm::StringRef relativePath, PathString &path,
+                       CompilerStatePtr cst) {
     // relativePath has no suffix
-    for (size_t i = 0; i < searchPath.size(); ++i) {
-        PathString pathWOSuffix(searchPath[i]);
+    for (size_t i = 0; i < cst->searchPath.size(); ++i) {
+        PathString pathWOSuffix(cst->searchPath[i]);
         llvm::sys::path::append(pathWOSuffix, relativePath);
-        for (size_t j = 0; j < moduleSuffixes.size(); ++j) {
+        for (size_t j = 0; j < cst->moduleSuffixes.size(); ++j) {
             path = pathWOSuffix;
-            path.append(moduleSuffixes[j].begin(), moduleSuffixes[j].end());
+            path.append(cst->moduleSuffixes[j].begin(), 
+                        cst->moduleSuffixes[j].end());
             if (llvm::sys::fs::exists(path.str()))
                 return true;
         }
@@ -191,15 +187,15 @@ static PathString toRelativePath2(DottedNamePtr name) {
     return toRelativePathUpto(name, name->parts.end() - 1);
 }
 
-static PathString locateModule(DottedNamePtr name) {
+static PathString locateModule(DottedNamePtr name, CompilerStatePtr cst) {
     PathString path;
 
     PathString relativePath1 = toRelativePath1(name);
-    if (locateFile(relativePath1, path))
+    if (locateFile(relativePath1, path, cst))
         return path;
 
     PathString relativePath2 = toRelativePath2(name);
-    if (locateFile(relativePath2, path))
+    if (locateFile(relativePath2, path, cst))
         return path;
 
     string s;
@@ -212,15 +208,15 @@ static PathString locateModule(DottedNamePtr name) {
     ss << "    " << relativePath2 << "\n";
 
     ss << "with suffixes:\n";
-    for (vector<llvm::SmallString<32> >::const_iterator entry = moduleSuffixes.begin();
-            entry != moduleSuffixes.end(); ++entry)
+    for (vector<llvm::SmallString<32> >::const_iterator entry = cst->moduleSuffixes.begin();
+            entry != cst->moduleSuffixes.end(); ++entry)
     {
         ss << "    " << *entry << "\n";
     }
 
     ss << "in search path:\n";
-    for (vector<PathString>::const_iterator entry = searchPath.begin();
-            entry != searchPath.end(); ++entry)
+    for (vector<PathString>::const_iterator entry = cst->searchPath.begin();
+            entry != cst->searchPath.end(); ++entry)
     {
         ss << "    " << *entry << "\n";
     }
@@ -237,15 +233,16 @@ static PathString locateModule(DottedNamePtr name) {
 // loadFile
 //
 
-static SourcePtr loadFile(llvm::StringRef fileName, vector<string> *sourceFiles) {
+static SourcePtr loadFile(llvm::StringRef fileName, vector<string> *sourceFiles,
+                          CompilerStatePtr cst) {
     if (sourceFiles != NULL)
         sourceFiles->push_back(fileName);
 
     SourcePtr src = new Source(fileName);
-    if (llvmDIBuilder != NULL) {
+    if (cst->llvmDIBuilder != NULL) {
         PathString absFileName(fileName);
         llvm::sys::fs::make_absolute(absFileName);
-        src->debugInfo = (llvm::MDNode*)llvmDIBuilder->createFile(
+        src->debugInfo = (llvm::MDNode*)cst->llvmDIBuilder->createFile(
             llvm::sys::path::filename(absFileName),
             llvm::sys::path::parent_path(absFileName));
     }
@@ -259,9 +256,9 @@ static SourcePtr loadFile(llvm::StringRef fileName, vector<string> *sourceFiles)
 static void loadDependents(ModulePtr m, vector<string> *sourceFiles, bool verbose);
 void initModule(ModulePtr m);
 
-static ModulePtr makePrimitivesModule();
-static ModulePtr makeOperatorsModule();
-static ModulePtr makeIntrinsicsModule();
+static ModulePtr makePrimitivesModule(CompilerStatePtr cst);
+static ModulePtr makeOperatorsModule(CompilerStatePtr cst);
+static ModulePtr makeIntrinsicsModule(CompilerStatePtr cst);
 
 static void installGlobals(ModulePtr m) {
     m->env = new Env(m);
@@ -273,7 +270,7 @@ static void installGlobals(ModulePtr m) {
         switch (x->objKind) {
         case ENUM_DECL : {
             EnumDecl *enumer = (EnumDecl *)x;
-            TypePtr t = enumType(enumer);
+            TypePtr t = enumType(enumer, m->cst);
             addGlobal(m, enumer->name, enumer->visibility, t.ptr());
             for (size_t i = 0 ; i < enumer->members.size(); ++i) {
                 EnumMember *member = enumer->members[i].ptr();
@@ -303,31 +300,34 @@ static void installGlobals(ModulePtr m) {
     }
 }
 
-static ModulePtr loadModuleByName(DottedNamePtr name, vector<string> *sourceFiles, bool verbose) {
+static ModulePtr loadModuleByName(DottedNamePtr name,
+                                  vector<string> *sourceFiles,
+                                  bool verbose,
+                                  CompilerStatePtr cst) {
     string key = toKey(name);
 
-    llvm::StringMap<ModulePtr>::iterator i = globalModules.find(key);
-    if (i != globalModules.end())
+    llvm::StringMap<ModulePtr>::iterator i = cst->globalModules.find(key);
+    if (i != cst->globalModules.end())
         return i->second;
 
     ModulePtr module;
 
     if (key == "__primitives__") {
-        module = makePrimitivesModule();
+        module = makePrimitivesModule(cst);
     } else if (key == "__operators__") {
-        module = makeOperatorsModule();
+        module = makeOperatorsModule(cst);
     } else if (key == "__intrinsics__") {
-        module = makeIntrinsicsModule();
+        module = makeIntrinsicsModule(cst);
     }
     else {
-        PathString path = locateModule(name);
+        PathString path = locateModule(name, cst);
         if (verbose) {
             llvm::errs() << "loading module " << name->join() << " from " << path << "\n";
         }
-        module = parse(key, loadFile(path, sourceFiles));
+        module = parse(key, loadFile(path, sourceFiles, cst), cst);
     }
 
-    globalModules[key] = module;
+    cst->globalModules[key] = module;
     loadDependents(module, sourceFiles, verbose);
     installGlobals(module);
 
@@ -335,8 +335,9 @@ static ModulePtr loadModuleByName(DottedNamePtr name, vector<string> *sourceFile
 }
 
 void loadDependent(ModulePtr m, vector<string> *sourceFiles, ImportPtr dependent, bool verbose) {
+    CompilerState* cst = m->cst.ptr();
     ImportPtr x = dependent;
-    x->module = loadModuleByName(x->dottedName, sourceFiles, verbose);
+    x->module = loadModuleByName(x->dottedName, sourceFiles, verbose, cst);
     switch (x->importKind) {
     case IMPORT_MODULE : {
             ImportModule *im = (ImportModule *)x.ptr();
@@ -398,54 +399,59 @@ static void loadDependents(ModulePtr m, vector<string> *sourceFiles, bool verbos
     }
 }
 
-static ModulePtr loadPrelude(vector<string> *sourceFiles, bool verbose, bool repl) {
+static ModulePtr loadPrelude(vector<string> *sourceFiles, bool verbose,
+                             bool repl, CompilerStatePtr cst) {
     if (!repl) {
         DottedNamePtr dottedName = new DottedName();
         dottedName->parts.push_back(Identifier::get("prelude"));
-        return loadModuleByName(dottedName, sourceFiles, verbose);
+        return loadModuleByName(dottedName, sourceFiles, verbose, cst);
     } else {
         DottedNamePtr dottedName = new DottedName();
         dottedName->parts.push_back(Identifier::get("prelude"));
         dottedName->parts.push_back(Identifier::get("repl"));
-        ModulePtr m = loadModuleByName(dottedName, sourceFiles, verbose);
-        globalModules["prelude"] = m;
+        ModulePtr m = loadModuleByName(dottedName, sourceFiles, verbose, cst);
+        cst->globalModules["prelude"] = m;
         return m;
     }
 }
 
-ModulePtr loadProgram(llvm::StringRef fileName, vector<string> *sourceFiles, bool verbose, bool repl) {
-    globalMainModule = parse("", loadFile(fileName, sourceFiles));
-    ModulePtr prelude = loadPrelude(sourceFiles, verbose, repl);
-    loadDependents(globalMainModule, sourceFiles, verbose);
-    installGlobals(globalMainModule);
+ModulePtr loadProgram(llvm::StringRef fileName, vector<string> *sourceFiles,
+                      bool verbose, bool repl, CompilerStatePtr cst) {
+    cst->globalMainModule = parse("", loadFile(fileName, sourceFiles, cst), cst);
+    ModulePtr prelude = loadPrelude(sourceFiles, verbose, repl, cst);
+    loadDependents(cst->globalMainModule, sourceFiles, verbose);
+    installGlobals(cst->globalMainModule);
     initModule(prelude);
-    initModule(globalMainModule);
-    return globalMainModule;
+    initModule(cst->globalMainModule);
+    return cst->globalMainModule;
 }
 
-ModulePtr loadProgramSource(llvm::StringRef name, llvm::StringRef source, bool verbose, bool repl) {
+ModulePtr loadProgramSource(llvm::StringRef name,
+                            llvm::StringRef source,
+                            bool verbose, bool repl,
+                            CompilerStatePtr cst) {
     SourcePtr mainSource = new Source(name,
         llvm::MemoryBuffer::getMemBufferCopy(source));
-    if (llvmDIBuilder != NULL) {
-        mainSource->debugInfo = (llvm::MDNode*)llvmDIBuilder->createFile(
+    if (cst->llvmDIBuilder != NULL) {
+        mainSource->debugInfo = (llvm::MDNode*)cst->llvmDIBuilder->createFile(
             "-e",
             "");
     }
 
-    globalMainModule = parse("", mainSource);
+    cst->globalMainModule = parse("", mainSource, cst);
     // Don't keep track of source files for -e script
-    ModulePtr prelude = loadPrelude(NULL, verbose, repl);
-    loadDependents(globalMainModule, NULL, verbose);
-    installGlobals(globalMainModule);
+    ModulePtr prelude = loadPrelude(NULL, verbose, repl, cst);
+    loadDependents(cst->globalMainModule, NULL, verbose);
+    installGlobals(cst->globalMainModule);
     initModule(prelude);
-    initModule(globalMainModule);
-    return globalMainModule;
+    initModule(cst->globalMainModule);
+    return cst->globalMainModule;
 }
 
-ModulePtr loadedModule(llvm::StringRef module) {
-    if (!globalModules.count(module))
+ModulePtr loadedModule(llvm::StringRef module, CompilerStatePtr cst) {
+    if (!cst->globalModules.count(module))
         error("module not loaded: " + module);
-    return globalModules[module];
+    return cst->globalModules[module];
 }
 
 
@@ -482,8 +488,8 @@ void getProcedureMonoTypes(ProcedureMono &mono, EnvPtr env,
                 goto poly;
             LocationContext loc(formalArgs[i]->type->location);
             PatternPtr argPattern =
-                evaluateOnePattern(formalArgs[i]->type, env);
-            ObjectPtr argTypeObj = derefDeep(argPattern);
+                evaluateOnePattern(formalArgs[i]->type, env, env->cst);
+            ObjectPtr argTypeObj = derefDeep(argPattern, env->cst);
             if (argTypeObj == NULL)
                 goto poly;
             TypePtr argType;
@@ -540,7 +546,7 @@ static string toString(const T& t) {
 void addOverload(vector<OverloadPtr> &overloads, OverloadPtr &x) {
     overloads.insert(overloads.begin(), x);
     if (x->hasAsConversion)
-        overloads.insert(overloads.begin(), desugarAsOverload(x));
+        overloads.insert(overloads.begin(), desugarAsOverload(x, x->module->cst));
 }
 
 void addProcedureOverload(ProcedurePtr proc, EnvPtr env, OverloadPtr x) {
@@ -585,11 +591,12 @@ void addProcedureOverload(ProcedurePtr proc, EnvPtr env, OverloadPtr x) {
 
 static void initOverload(OverloadPtr x) {
     EnvPtr env = overloadPatternEnv(x);
-    PatternPtr pattern = evaluateOnePattern(x->target, env);
-    ObjectPtr obj = derefDeep(pattern);
+    CompilerStatePtr cst = env->cst;
+    PatternPtr pattern = evaluateOnePattern(x->target, env, cst);
+    ObjectPtr obj = derefDeep(pattern, cst);
     if (obj == NULL) {
         x->nameIsPattern = true;
-        addOverload(getPatternOverloads(), x);
+        addOverload(getPatternOverloads(cst), x);
     }
     else {
         switch (obj->objKind) {
@@ -615,7 +622,7 @@ static void initOverload(OverloadPtr x) {
         }
         case PRIM_OP : {
             if (isOverloadablePrimOp(obj))
-                addOverload(primOpOverloads((PrimOp *)obj.ptr()), x);
+                addOverload(primOpOverloads((PrimOp *)obj.ptr(), cst), x);
             else
                 error(x->target, "invalid overload target");
             break;
@@ -637,7 +644,7 @@ static void initOverload(OverloadPtr x) {
     }
 }
 
-static void initVariantInstance(InstanceDeclPtr x) {
+static void initVariantInstance(InstanceDeclPtr x, CompilerStatePtr cst) {
     EnvPtr env = new Env(x->env);
     llvm::ArrayRef<PatternVar> pvars = x->patternVars;
     for (size_t i = 0; i < pvars.size(); ++i) {
@@ -650,8 +657,8 @@ static void initVariantInstance(InstanceDeclPtr x) {
             addLocal(env, pvars[i].name, cell.ptr());
         }
     }
-    PatternPtr pattern = evaluateOnePattern(x->target, env);
-    ObjectPtr y = derefDeep(pattern);
+    PatternPtr pattern = evaluateOnePattern(x->target, env, cst);
+    ObjectPtr y = derefDeep(pattern, env->cst);
     if (y.ptr()) {
         if (y->objKind != TYPE)
             error(x->target, "not a variant type");
@@ -674,8 +681,8 @@ static void initVariantInstance(InstanceDeclPtr x) {
     }
 }
 
-static void checkStaticAssert(StaticAssertTopLevelPtr a) {
-    evaluateStaticAssert(a->location, a->cond, a->message, a->env);
+static void checkStaticAssert(StaticAssertTopLevelPtr a, CompilerStatePtr cst) {
+    evaluateStaticAssert(a->location, a->cond, a->message, a->env, cst);
 }
 
 static void circularImportsError(llvm::ArrayRef<string>  modules) {
@@ -693,6 +700,7 @@ static void circularImportsError(llvm::ArrayRef<string>  modules) {
 }
 
 static void initModule(ModulePtr m, llvm::ArrayRef<string>  importChain) {
+    CompilerState* cst = m->cst.ptr();
     if (m->initState == Module::DONE) return;
 
     if (m->declaration != NULL) {
@@ -740,22 +748,22 @@ static void initModule(ModulePtr m, llvm::ArrayRef<string>  importChain) {
             initOverload((Overload *)obj);
             break;
         case INSTANCE_DECL :
-            initVariantInstance((InstanceDecl *)obj);
+            initVariantInstance((InstanceDecl *)obj, m->cst);
             break;
         case STATIC_ASSERT_TOP_LEVEL:
-            checkStaticAssert((StaticAssertTopLevel *)obj);
+            checkStaticAssert((StaticAssertTopLevel *)obj, m->cst);
             break;
         default:
             break;
         }
     }
 
-    if (llvmDIBuilder != NULL) {
+    if (cst->llvmDIBuilder != NULL) {
         llvm::DIFile file = m->location.ok()
             ? m->location.source->getDebugInfo()
             : llvm::DIFile(NULL);
-        m->debugInfo = (llvm::MDNode*)llvmDIBuilder->createNameSpace(
-            llvm::DICompileUnit(llvmDIBuilder->getCU()), // scope
+        m->debugInfo = (llvm::MDNode*)cst->llvmDIBuilder->createNameSpace(
+            llvm::DICompileUnit(cst->llvmDIBuilder->getCU()), // scope
             m->moduleName, // name
             file, // file
             1 // line
@@ -800,7 +808,7 @@ static ModulePtr typeModule(TypePtr t) {
     case TUPLE_TYPE :
     case UNION_TYPE :
     case STATIC_TYPE :
-        return primitivesModule();
+        return primitivesModule(t->cst);
     case RECORD_TYPE : {
         RecordType *rt = (RecordType *)t.ptr();
         return envModule(rt->record->env);
@@ -823,20 +831,20 @@ static ModulePtr typeModule(TypePtr t) {
     }
 }
 
-ModulePtr staticModule(ObjectPtr x) {
+ModulePtr staticModule(ObjectPtr x, CompilerStatePtr cst) {
     switch (x->objKind) {
     case TYPE : {
         Type *y = (Type *)x.ptr();
         return typeModule(y);
     }
     case PRIM_OP : {
-        return primitivesModule();
+        return primitivesModule(cst);
     }
     case MODULE : {
         return (Module*)x.ptr();
     }
     case INTRINSIC : {
-        return intrinsicsModule();
+        return intrinsicsModule(cst);
     }
     case GLOBAL_VARIABLE :
     case GLOBAL_ALIAS :
@@ -859,18 +867,18 @@ ModulePtr staticModule(ObjectPtr x) {
 // ForeignExpr::getEnv, ForeignStatement::getEnv
 //
 
-EnvPtr ForeignExpr::getEnv() {
+EnvPtr ForeignExpr::getEnv(CompilerStatePtr cst) {
     if (!foreignEnv) {
         assert(moduleName.size() > 0);
-        foreignEnv = loadedModule(moduleName)->env;
+        foreignEnv = loadedModule(moduleName, cst)->env;
     }
     return foreignEnv;
 }
 
-EnvPtr ForeignStatement::getEnv() {
+EnvPtr ForeignStatement::getEnv(CompilerStatePtr cst) {
     if (!foreignEnv) {
         assert(moduleName.size() > 0);
-        foreignEnv = loadedModule(moduleName)->env;
+        foreignEnv = loadedModule(moduleName, cst)->env;
     }
     return foreignEnv;
 }
@@ -914,29 +922,29 @@ static void addPrimOp(ModulePtr m, llvm::StringRef name, PrimOpPtr x) {
     addPrim(m, name, x.ptr());
 }
 
-static ModulePtr makePrimitivesModule() {
-    ModulePtr prims = new Module("__primitives__");
+static ModulePtr makePrimitivesModule(CompilerStatePtr cst) {
+    ModulePtr prims = new Module(cst, "__primitives__");
 
-    addPrim(prims, "Bool", boolType.ptr());
-    addPrim(prims, "Int8", int8Type.ptr());
-    addPrim(prims, "Int16", int16Type.ptr());
-    addPrim(prims, "Int32", int32Type.ptr());
-    addPrim(prims, "Int64", int64Type.ptr());
-    addPrim(prims, "Int128", int128Type.ptr());
-    addPrim(prims, "UInt8", uint8Type.ptr());
-    addPrim(prims, "UInt16", uint16Type.ptr());
-    addPrim(prims, "UInt32", uint32Type.ptr());
-    addPrim(prims, "UInt64", uint64Type.ptr());
-    addPrim(prims, "UInt128", uint128Type.ptr());
-    addPrim(prims, "Float32", float32Type.ptr());
-    addPrim(prims, "Float64", float64Type.ptr());
-    addPrim(prims, "Float80", float80Type.ptr());
-    addPrim(prims, "Imag32", imag32Type.ptr());
-    addPrim(prims, "Imag64", imag64Type.ptr());
-    addPrim(prims, "Imag80", imag80Type.ptr());
-    addPrim(prims, "Complex32", complex32Type.ptr());
-    addPrim(prims, "Complex64", complex64Type.ptr());
-    addPrim(prims, "Complex80", complex80Type.ptr());
+    addPrim(prims, "Bool", cst->boolType.ptr());
+    addPrim(prims, "Int8", cst->int8Type.ptr());
+    addPrim(prims, "Int16", cst->int16Type.ptr());
+    addPrim(prims, "Int32", cst->int32Type.ptr());
+    addPrim(prims, "Int64", cst->int64Type.ptr());
+    addPrim(prims, "Int128", cst->int128Type.ptr());
+    addPrim(prims, "UInt8", cst->uint8Type.ptr());
+    addPrim(prims, "UInt16", cst->uint16Type.ptr());
+    addPrim(prims, "UInt32", cst->uint32Type.ptr());
+    addPrim(prims, "UInt64", cst->uint64Type.ptr());
+    addPrim(prims, "UInt128", cst->uint128Type.ptr());
+    addPrim(prims, "Float32", cst->float32Type.ptr());
+    addPrim(prims, "Float64", cst->float64Type.ptr());
+    addPrim(prims, "Float80", cst->float80Type.ptr());
+    addPrim(prims, "Imag32", cst->imag32Type.ptr());
+    addPrim(prims, "Imag64", cst->imag64Type.ptr());
+    addPrim(prims, "Imag80", cst->imag80Type.ptr());
+    addPrim(prims, "Complex32", cst->complex32Type.ptr());
+    addPrim(prims, "Complex64", cst->complex64Type.ptr());
+    addPrim(prims, "Complex80", cst->complex80Type.ptr());
 
     GlobalAliasPtr v =
         new GlobalAlias(prims.ptr(),
@@ -946,7 +954,7 @@ static ModulePtr makePrimitivesModule() {
                         NULL,
                         vector<IdentifierPtr>(),
                         NULL,
-                        new BoolLiteral(exceptionsEnabled()));
+                        new BoolLiteral(exceptionsEnabled(cst)));
     addPrim(prims, "ExceptionsEnabled?", v.ptr());
 
     vector<IdentifierPtr> recordParams;
@@ -979,7 +987,7 @@ static ModulePtr makePrimitivesModule() {
     rwpRecord->env = new Env(prims);
     addPrim(prims, "RecordWithProperties", rwpRecord.ptr());
 
-#define PRIMITIVE(x) addPrimOp(prims, toPrimStr(#x), new PrimOp(PRIM_##x))
+#define PRIMITIVE(x) addPrimOp(prims, toPrimStr(#x), new PrimOp(PRIM_##x, cst))
 
     PRIMITIVE(TypeP);
     PRIMITIVE(TypeSize);
@@ -1184,8 +1192,8 @@ static void addOperator(ModulePtr module, llvm::StringRef name) {
     addGlobal(module, ident, PUBLIC, opProc.ptr());
 }
 
-static ModulePtr makeOperatorsModule() {
-    ModulePtr operators = new Module("__operators__");
+static ModulePtr makeOperatorsModule(CompilerStatePtr cst) {
+    ModulePtr operators = new Module(cst, "__operators__");
 
 #define OPERATOR(x) addOperator(operators, toPrimStr(#x))
 
@@ -1253,8 +1261,8 @@ static ModulePtr makeOperatorsModule() {
     return operators;
 }
 
-ModulePtr makeIntrinsicsModule() {
-    ModulePtr intrinsics = new Module("__intrinsics__");
+ModulePtr makeIntrinsicsModule(CompilerStatePtr cst) {
+    ModulePtr intrinsics = new Module(cst, "__intrinsics__");
     intrinsics->isIntrinsicsModule = true;
     return intrinsics;
 }
@@ -1263,32 +1271,28 @@ ModulePtr makeIntrinsicsModule() {
 // access names from other modules
 //
 
-ModulePtr primitivesModule() {
-    static ModulePtr cached;
-    if (!cached)
-        cached = loadedModule("__primitives__");
-    return cached;
+ModulePtr primitivesModule(CompilerStatePtr cst) {
+    if (!cst->primitivesModuleCached)
+        cst->primitivesModuleCached = loadedModule("__primitives__", cst);
+    return cst->primitivesModuleCached;
 }
 
-ModulePtr intrinsicsModule() {
-    static ModulePtr cached;
-    if (!cached)
-        cached = loadedModule("__intrinsics__");
-    return cached;
+ModulePtr intrinsicsModule(CompilerStatePtr cst) {
+    if (!cst->intrinsicsModuleCached)
+        cst->intrinsicsModuleCached = loadedModule("__intrinsics__", cst);
+    return cst->intrinsicsModuleCached;
 }
 
-ModulePtr operatorsModule() {
-    static ModulePtr cached;
-    if (!cached)
-        cached = loadedModule("__operators__");
-    return cached;
+ModulePtr operatorsModule(CompilerStatePtr cst) {
+    if (!cst->operatorsModuleCached)
+        cst->operatorsModuleCached = loadedModule("__operators__", cst);
+    return cst->operatorsModuleCached;
 }
 
-ModulePtr preludeModule() {
-    static ModulePtr cached;
-    if (!cached)
-        cached = loadedModule("prelude");
-    return cached;
+ModulePtr preludeModule(CompilerStatePtr cst) {
+    if (!cst->preludeModuleCached)
+        cst->preludeModuleCached = loadedModule("prelude", cst);
+    return cst->preludeModuleCached;
 }
 
 static IdentifierPtr fnameToIdent(llvm::StringRef str) {
@@ -1318,19 +1322,19 @@ static ObjectPtr convertObject(ObjectPtr x) {
 }
 
 #define DEFINE_PRIMITIVE_ACCESSOR(name) \
-    ObjectPtr primitive_##name() { \
+    ObjectPtr primitive_##name(CompilerStatePtr cst) { \
         static ObjectPtr cached; \
         if (!cached) { \
-            cached = safeLookupPublic(primitivesModule(), fnameToIdent(#name)); \
+            cached = safeLookupPublic(primitivesModule(cst), fnameToIdent(#name)); \
             cached = convertObject(cached); \
         } \
         return cached; \
     } \
     \
-    ExprPtr primitive_expr_##name() { \
+    ExprPtr primitive_expr_##name(CompilerStatePtr cst) { \
         static ExprPtr cached; \
         if (!cached) \
-            cached = new ObjectExpr(primitive_##name()); \
+            cached = new ObjectExpr(primitive_##name(cst)); \
         return cached; \
     }
 
@@ -1354,19 +1358,19 @@ DEFINE_PRIMITIVE_ACCESSOR(ByRef)
 DEFINE_PRIMITIVE_ACCESSOR(RecordWithProperties)
 
 #define DEFINE_OPERATOR_ACCESSOR(name) \
-    ObjectPtr operator_##name() { \
+    ObjectPtr operator_##name(CompilerStatePtr cst) { \
         static ObjectPtr cached; \
         if (!cached) { \
-            cached = safeLookupPublic(operatorsModule(), fnameToIdent(#name)); \
+            cached = safeLookupPublic(operatorsModule(cst), fnameToIdent(#name)); \
             cached = convertObject(cached); \
         } \
         return cached; \
     } \
     \
-    ExprPtr operator_expr_##name() { \
+    ExprPtr operator_expr_##name(CompilerStatePtr cst) { \
         static ExprPtr cached; \
         if (!cached) \
-            cached = new ObjectExpr(operator_##name()); \
+            cached = new ObjectExpr(operator_##name(cst)); \
         return cached; \
     }
 
@@ -1438,7 +1442,7 @@ void addGlobals(ModulePtr m, llvm::ArrayRef<TopLevelItemPtr>  toplevels) {
         switch (x->objKind) {
         case ENUM_DECL : {
                 EnumDecl *enumer = (EnumDecl *)x;
-                TypePtr t = enumType(enumer);
+                TypePtr t = enumType(enumer, m->cst);
                 addGlobal(m, enumer->name, enumer->visibility, t.ptr());
                 for (size_t i = 0 ; i < enumer->members.size(); ++i) {
                     EnumMember *member = enumer->members[i].ptr();
@@ -1470,10 +1474,10 @@ void addGlobals(ModulePtr m, llvm::ArrayRef<TopLevelItemPtr>  toplevels) {
             initOverload((Overload *)obj);
             break;
         case INSTANCE_DECL :
-            initVariantInstance((InstanceDecl *)obj);
+            initVariantInstance((InstanceDecl *)obj, m->cst);
             break;
         case STATIC_ASSERT_TOP_LEVEL:
-            checkStaticAssert((StaticAssertTopLevel *)obj);
+            checkStaticAssert((StaticAssertTopLevel *)obj, m->cst);
             break;
         default:
             break;

@@ -12,11 +12,9 @@
 
 namespace clay {
 
-static bool _finalOverloadsEnabled = false;
-
-void setFinalOverloadsEnabled(bool enabled)
+void setFinalOverloadsEnabled(bool enabled, CompilerStatePtr cst)
 {
-    _finalOverloadsEnabled = enabled;
+    cst->_finalOverloadsEnabled = enabled;
 }
 
 
@@ -61,7 +59,8 @@ const OverloadPtr callableInterface(ObjectPtr x)
     }
 }
 
-static llvm::ArrayRef<OverloadPtr> callableOverloads(ObjectPtr x)
+static llvm::ArrayRef<OverloadPtr> callableOverloads(ObjectPtr x,
+                                                     CompilerStatePtr cst)
 {
     initCallable(x);
     switch (x->objKind) {
@@ -84,7 +83,7 @@ static llvm::ArrayRef<OverloadPtr> callableOverloads(ObjectPtr x)
     case PRIM_OP : {
         assert(isOverloadablePrimOp(x));
         PrimOp *y = (PrimOp *)x.ptr();
-        return primOpOverloads(y);
+        return primOpOverloads(y, cst);
     }
     case GLOBAL_ALIAS : {
         GlobalAlias *a = (GlobalAlias *)x.ptr();
@@ -105,16 +104,10 @@ static llvm::ArrayRef<OverloadPtr> callableOverloads(ObjectPtr x)
 // invoke tables
 //
 
-static bool invokeTablesInitialized = false;
-static const size_t INVOKE_TABLE_SIZE = 16384;
-
-static vector<llvm::SmallVector<InvokeSet*, 2> > invokeTable;
-
-
-static void initInvokeTables() {
-    assert(!invokeTablesInitialized);
-    invokeTable.resize(INVOKE_TABLE_SIZE);
-    invokeTablesInitialized = true;
+static void initInvokeTables(CompilerStatePtr cst) {
+    assert(!cst->invokeTablesInitialized);
+    cst->invokeTable.resize(CompilerState::INVOKE_TABLE_SIZE);
+    cst->invokeTablesInitialized = true;
 }
 
 
@@ -123,12 +116,12 @@ static void initInvokeTables() {
 // lookupInvokeSet
 //
 
-static bool shouldLogCallable(ObjectPtr callable)
+static bool shouldLogCallable(ObjectPtr callable, CompilerStatePtr cst)
 {
     if (logMatchSymbols.empty())
         return false;
 
-    ModulePtr m = staticModule(callable);
+    ModulePtr m = staticModule(callable, cst);
     if (!m)
         return false;
 
@@ -146,13 +139,14 @@ static bool shouldLogCallable(ObjectPtr callable)
 }
 
 InvokeSet* lookupInvokeSet(ObjectPtr callable,
-                             llvm::ArrayRef<TypePtr> argsKey)
+                           llvm::ArrayRef<TypePtr> argsKey,
+                           CompilerStatePtr cst)
 {
-    if (!invokeTablesInitialized)
-        initInvokeTables();
+    if (!cst->invokeTablesInitialized)
+        initInvokeTables(cst);
     unsigned h = objectHash(callable) + objectVectorHash(argsKey);
-    h &= unsigned(invokeTable.size() - 1);
-    llvm::SmallVector<InvokeSet*, 2> &bucket = invokeTable[h];
+    h &= unsigned(cst->invokeTable.size() - 1);
+    llvm::SmallVector<InvokeSet*, 2> &bucket = cst->invokeTable[h];
     for (unsigned i = 0; i < bucket.size(); ++i) {
         InvokeSet* invokeSet = bucket[i];
         if (objectEquals(invokeSet->callable, callable) &&
@@ -162,20 +156,21 @@ InvokeSet* lookupInvokeSet(ObjectPtr callable,
         }
     }
     OverloadPtr interface = callableInterface(callable);
-    llvm::ArrayRef<OverloadPtr> overloads = callableOverloads(callable);
-    InvokeSet* invokeSet = new InvokeSet(callable, argsKey, interface, overloads);
-    invokeSet->shouldLog = shouldLogCallable(callable);
+    llvm::ArrayRef<OverloadPtr> overloads = callableOverloads(callable, cst);
+    InvokeSet* invokeSet = new InvokeSet(callable, argsKey, interface, overloads, cst);
+    invokeSet->shouldLog = shouldLogCallable(callable, cst);
 
     bucket.push_back(invokeSet);
     return invokeSet;
 }
 
-vector<InvokeSet*> lookupInvokeSets(ObjectPtr callable) {
-    assert(invokeTablesInitialized);
+vector<InvokeSet*> lookupInvokeSets(ObjectPtr callable,
+                                    CompilerStatePtr cst) {
+    assert(cst->invokeTablesInitialized);
     vector<InvokeSet*> r;
-    for (unsigned i = 0; i < invokeTable.size(); ++i) {
-        for (unsigned j = 0; j < invokeTable[i].size(); ++j) {
-            InvokeSet* set = invokeTable[i][j];
+    for (unsigned i = 0; i < cst->invokeTable.size(); ++i) {
+        for (unsigned j = 0; j < cst->invokeTable[i].size(); ++j) {
+            InvokeSet* set = cst->invokeTable[i][j];
             if (objectEquals(set->callable, callable)) {
                 r.push_back(set);
             }
@@ -353,9 +348,10 @@ namespace {
 InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
                                llvm::ArrayRef<TypePtr> argsKey,
                                llvm::ArrayRef<ValueTempness> argsTempness,
-                               MatchFailureError &failures)
+                               MatchFailureError &failures,
+                               CompilerStatePtr cst)
 {
-    InvokeSet* invokeSet = lookupInvokeSet(callable, argsKey);
+    InvokeSet* invokeSet = lookupInvokeSet(callable, argsKey, cst);
 
     if (invokeSet->evaluatingPredicate) {
         // matchInvoke calls the same lookupInvokeEntry
@@ -414,12 +410,12 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
     invokeSet->tempnessMap2[tempnessKey] = entry;
     invokeSet->tempnessMap[argsTempness] = entry;
 
-    if (_finalOverloadsEnabled) {
+    if (cst->_finalOverloadsEnabled) {
         MatchSuccessPtr match2;
         vector<ValueTempness> tempnessKey2;
         vector<uint8_t> forwardedRValueFlags2;
         unsigned j = invokeSet->nextOverloadIndex;
-        while ((match2 = findMatchingInvoke(callableOverloads(callable),
+        while ((match2 = findMatchingInvoke(callableOverloads(callable, cst),
                                            j,
                                            callable,
                                            argsKey,

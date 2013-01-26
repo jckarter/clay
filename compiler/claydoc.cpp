@@ -6,6 +6,8 @@
 using namespace std;
 using namespace clay;
 
+static CompilerStatePtr cst = new CompilerState();
+
 static void usage(char *argv0)
 {
     llvm::errs() << "usage: " << argv0 << " <sourceDir> <htmlOutputDir>\n";
@@ -14,7 +16,7 @@ static void usage(char *argv0)
 DocModule *docParseModule(string fileName, DocState *state, std::string fqn)
 {
     SourcePtr src = new Source(fileName);
-    ModulePtr m = parse(fileName, src, ParserKeepDocumentation);
+    ModulePtr m = parse(fileName, src, cst, ParserKeepDocumentation);
 
     DocModule *docMod = new DocModule;
     docMod->fileName = fileName;
@@ -114,7 +116,6 @@ int main(int argc, char **argv)
         usage(argv[0]);
         return 1;
     }
-
 
     bool whatever;
     if (llvm::sys::fs::create_directories(outputDir, whatever) != 0) {

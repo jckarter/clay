@@ -1,8 +1,10 @@
 #include "clay.hpp"
 #include "parser.hpp"
-
+#include "codegen.hpp"
 
 namespace clay {
+
+static CompilerStatePtr currentCompiler;
 
 map<llvm::StringRef, IdentifierPtr> Identifier::freeIdentifiers;
 
@@ -3205,7 +3207,7 @@ static bool optTopLevelLLVM(LLVMCodePtr &x) {
 
 static bool module(llvm::StringRef moduleName, ModulePtr &x) {
     Location location = currentLocation();
-    ModulePtr y = new Module(moduleName);
+    ModulePtr y = new Module(currentCompiler, moduleName);
     if (!imports(y->imports)) return false;
     if (!optModuleDeclaration(y->declaration)) return false;
     if (!optTopLevelLLVM(y->topLevelLLVM)) return false;
@@ -3299,7 +3301,9 @@ struct ModuleParser {
     bool operator()(ModulePtr &m, Module*) { return module(moduleName, m); }
 };
 
-ModulePtr parse(llvm::StringRef moduleName, SourcePtr source, ParserFlags flags) {
+ModulePtr parse(llvm::StringRef moduleName, SourcePtr source, 
+                CompilerStatePtr cst, ParserFlags flags) {
+    currentCompiler = cst;//FIXME
     if (flags && ParserKeepDocumentation)
         parserOptionKeepDocumentation = true;
     ModulePtr m;

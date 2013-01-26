@@ -15,12 +15,15 @@ struct LambdaContext {
     EnvPtr nonLocalEnv;
     llvm::StringRef closureDataName;
     vector<string> &freeVars;
+    CompilerStatePtr cst;
     LambdaContext(LambdaCapture captureBy,
                   EnvPtr nonLocalEnv,
                   llvm::StringRef closureDataName,
-                  vector<string> &freeVars)
+                  vector<string> &freeVars,
+                  CompilerStatePtr cst)
         : captureBy(captureBy), nonLocalEnv(nonLocalEnv),
-          closureDataName(closureDataName), freeVars(freeVars) {}
+          closureDataName(closureDataName), freeVars(freeVars) ,
+          cst(cst) {}
 };
 
 void convertFreeVars(LambdaPtr x, EnvPtr env,
@@ -68,7 +71,8 @@ static vector<TypePtr> typesOfValues(ObjectPtr obj) {
 }
 
 static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
-    llvm::StringRef closureDataName, llvm::StringRef lname);
+    llvm::StringRef closureDataName, llvm::StringRef lname,
+    CompilerStatePtr cst);
 static void initializeLambdaWithoutFreeVars(LambdaPtr x, EnvPtr env,
     llvm::StringRef lname);
 
@@ -94,6 +98,8 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
     assert(!x->initialized);
     x->initialized = true;
 
+    CompilerState* cst = safeLookupModule(env)->cst.ptr();
+
     string lname = lambdaName(x);
 
     llvm::SmallString<128> buf;
@@ -111,7 +117,7 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
             initializeLambdaWithoutFreeVars(x, env, lname);
         }
         else {
-            initializeLambdaWithFreeVars(x, env, closureDataName, lname);
+            initializeLambdaWithFreeVars(x, env, closureDataName, lname, cst);
         }
         break;
     }
@@ -125,12 +131,12 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
     }
 }
 
-static void checkForeignExpr(ObjectPtr &obj, EnvPtr env)
+static void checkForeignExpr(ObjectPtr &obj, EnvPtr env, CompilerStatePtr cst)
 {
     if (obj->objKind == EXPRESSION) {
         ExprPtr expr = (Expr *)obj.ptr();
         if (expr->exprKind == FOREIGN_EXPR) {
-            MultiPValuePtr mpv = safeAnalyzeMulti(new ExprList(expr), env, 0);
+            MultiPValuePtr mpv = safeAnalyzeMulti(new ExprList(expr), env, 0, cst);
             obj = mpv.ptr();
         }
     }
@@ -140,7 +146,7 @@ static void checkForeignExpr(ObjectPtr &obj, EnvPtr env)
         case FOREIGN_EXPR :
         case UNPACK : {
             MultiPValuePtr mpv = safeAnalyzeMulti(
-                new ExprList(foreignExpr(env, expr->exprs[0])), env, 0);
+                new ExprList(foreignExpr(env, expr->exprs[0])), env, 0, cst);
             obj = mpv.ptr();
         }
         default: {} // make compiler happy
@@ -149,7 +155,7 @@ static void checkForeignExpr(ObjectPtr &obj, EnvPtr env)
 }
 
 static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
-    llvm::StringRef closureDataName, llvm::StringRef lname)
+    llvm::StringRef closureDataName, llvm::StringRef lname, CompilerStatePtr cst)
 {
     RecordDeclPtr r = new RecordDecl(NULL, PRIVATE);
     r->location = x->location;
@@ -166,7 +172,7 @@ static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
 
         TypePtr type;
         ObjectPtr obj = safeLookupEnv(env, ident);
-        checkForeignExpr(obj, env);
+        checkForeignExpr(obj, env, cst);
         switch (obj->objKind) {
         case PVALUE :
         case CVALUE : {
@@ -191,15 +197,15 @@ static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
                     t = pointerType(t);
                 elementTypes.push_back(t);
             }
-            type = tupleType(elementTypes);
+            type = tupleType(elementTypes, cst);
             if (x->captureBy == REF_CAPTURE) {
-                ExprPtr e = operator_expr_packMultiValuedFreeVarByRef();
+                ExprPtr e = operator_expr_packMultiValuedFreeVarByRef(cst);
                 CallPtr call = new Call(e, new ExprList());
                 call->parenArgs->add(new Unpack(nameRef.ptr()));
                 converted->parenArgs->add(call.ptr());
             }
             else {
-                ExprPtr e = operator_expr_packMultiValuedFreeVar();
+                ExprPtr e = operator_expr_packMultiValuedFreeVar(cst);
                 CallPtr call = new Call(e, new ExprList());
                 call->parenArgs->add(new Unpack(nameRef.ptr()));
                 converted->parenArgs->add(call.ptr());
@@ -234,11 +240,11 @@ static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
     code->body = x->body;
 
     OverloadPtr overload = new Overload(
-        NULL, operator_expr_call(), code, false, IGNORE, x->hasAsConversion
+        NULL, operator_expr_call(cst), code, false, IGNORE, x->hasAsConversion
     );
     overload->env = env;
     overload->location = x->location;
-    ObjectPtr obj = operator_call();
+    ObjectPtr obj = operator_call(cst);
     if (obj->objKind != PROCEDURE)
         error("'call' operator not found!");
     Procedure *callObj = (Procedure *)obj.ptr();
@@ -300,7 +306,7 @@ void convertFreeVars(LambdaPtr x, EnvPtr env,
         FormalArgPtr arg = x->formalArgs[i];
         addLocal(env2, arg->name, arg->name.ptr());
     }
-    LambdaContext ctx(x->captureBy, env, closureDataName, freeVars);
+    LambdaContext ctx(x->captureBy, env, closureDataName, freeVars, env->cst);
     convertFreeVars(x->body, env2, ctx);
 }
 
@@ -534,13 +540,13 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
         ObjectPtr z = lookupEnvEx(env, y->name, ctx.nonLocalEnv,
                                   isNonLocal, isGlobal);
         if (isNonLocal && !isGlobal) {
-            checkForeignExpr(z, env);
+            checkForeignExpr(z, env, ctx.cst);
             if ((z->objKind == PVALUE) || (z->objKind == CVALUE)) {
                 TypePtr t = typeOfValue(z);
                 if (isStaticOrTupleOfStatics(t)) {
                     ExprListPtr args = new ExprList();
                     args->add(new ObjectExpr(t.ptr()));
-                    CallPtr call = new Call(operator_expr_typeToRValue(), args);
+                    CallPtr call = new Call(operator_expr_typeToRValue(ctx.cst), args);
                     call->location = y->location;
                     x = call.ptr();
                 }
@@ -583,7 +589,7 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
                     ExprListPtr args = new ExprList();
                     for (size_t i = 0; i < types.size(); ++i)
                         args->add(new ObjectExpr(types[i].ptr()));
-                    CallPtr call = new Call(operator_expr_typesToRValues(), args);
+                    CallPtr call = new Call(operator_expr_typesToRValues(ctx.cst), args);
                     call->location = y->location;
                     x = call.ptr();
                 }
@@ -597,14 +603,14 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
                     switch (ctx.captureBy) {
                     case REF_CAPTURE : {
                         ExprPtr f =
-                            operator_expr_unpackMultiValuedFreeVarAndDereference();
+                            operator_expr_unpackMultiValuedFreeVarAndDereference(ctx.cst);
                         CallPtr d = new Call(f, new ExprList());
                         d->parenArgs->add(c.ptr());
                         x = d.ptr();
                         break;
                     }
                     case VALUE_CAPTURE : {
-                        ExprPtr f = operator_expr_unpackMultiValuedFreeVar();
+                        ExprPtr f = operator_expr_unpackMultiValuedFreeVar(ctx.cst);
                         CallPtr d = new Call(f, new ExprList());
                         d->parenArgs->add(c.ptr());
                         x = d.ptr();

@@ -24,7 +24,7 @@ namespace clay {
 
     static bool printAST = false;
 
-    static void eval(llvm::StringRef code);
+    static void eval(llvm::StringRef code, CompilerStatePtr cst);
 
     string newFunctionName()
     {
@@ -56,12 +56,12 @@ namespace clay {
         return tokens;
     }
   
-    static void cmdGlobals(const vector<Token>& tokens) {
+    static void cmdGlobals(const vector<Token>& tokens, CompilerStatePtr cst) {
         ModulePtr m;
         if (tokens.size() == 1) {
             m = module;
         } else if (tokens.size() == 2) {
-            m = globalModules[tokens[1].str];
+            m = cst->globalModules[tokens[1].str];
         } else {
             llvm::errs() << ":globals [module name]\n";
             return;
@@ -80,20 +80,21 @@ namespace clay {
             }
         }
         code.flush();
-        eval(buf);
+        eval(buf, cst);
     }
 
-    static void cmdModules(const vector<Token>& tokens) {
+    static void cmdModules(const vector<Token>& tokens, CompilerStatePtr cst) {
         if (tokens.size() != 1) {
             llvm::errs() << "Warning: command parameters are ignored\n";
         }
-        llvm::StringMap<ModulePtr>::const_iterator iter = globalModules.begin();
-        for (; iter != globalModules.end(); ++iter) {
+        llvm::StringMap<ModulePtr>::const_iterator iter = 
+            cst->globalModules.begin();
+        for (; iter != cst->globalModules.end(); ++iter) {
             llvm::errs() << iter->getKey() << "\n";
         }
     }
 
-    static void cmdOverloads(const vector<Token>& tokens) {
+    static void cmdOverloads(const vector<Token>& tokens, CompilerStatePtr cst) {
         for (size_t i = 1; i < tokens.size(); ++i) {
             if (tokens[i].tokenKind == T_IDENTIFIER) {
                 Str identStr = tokens[i].str;
@@ -104,7 +105,7 @@ namespace clay {
                     continue;
                 }
 
-                vector<InvokeSet*> sets = lookupInvokeSets(obj.ptr());
+                vector<InvokeSet*> sets = lookupInvokeSets(obj.ptr(), cst);
                 for (size_t k = 0; k < sets.size(); ++k) {
                     llvm::errs() << "        ";
                     for (size_t l = 0; l < sets[k]->argsKey.size(); ++l) {
@@ -132,7 +133,7 @@ namespace clay {
         }
     }
 
-    static void replCommand(string const& line)
+    static void replCommand(string const& line, CompilerStatePtr cst)
     {
         SourcePtr source = new Source(line, 0);
         vector<Token> tokens;
@@ -142,11 +143,11 @@ namespace clay {
         if (cmd == "q") {
             exit(0);
         } else if (cmd == "globals") {
-            cmdGlobals(tokens);
+            cmdGlobals(tokens, cst);
         } else if (cmd == "modules") {
-            cmdModules(tokens);
+            cmdModules(tokens, cst);
         } else if (cmd == "overloads") {
-            cmdOverloads(tokens);
+            cmdOverloads(tokens, cst);
         } else if (cmd == "print") {
             cmdPrint(tokens);
         } else if (cmd == "ast_on") {
@@ -161,7 +162,7 @@ namespace clay {
         }
     }
 
-    static void loadImports(llvm::ArrayRef<ImportPtr> imports)
+    static void loadImports(llvm::ArrayRef<ImportPtr> imports, CompilerStatePtr cst)
     {
         for (size_t i = 0; i < imports.size(); ++i) {
             module->imports.push_back(imports[i]);
@@ -187,7 +188,8 @@ namespace clay {
         addGlobals(module, toplevels);
     }
 
-    static void jitStatements(llvm::ArrayRef<StatementPtr> statements)
+    static void jitStatements(llvm::ArrayRef<StatementPtr> statements, 
+                              CompilerStatePtr cst)
     {
         if (statements.empty()) {
             return;
@@ -224,7 +226,7 @@ namespace clay {
 
         llvm::Function* ctor;
         llvm::Function* dtor;
-        codegenAfterRepl(ctor, dtor);
+        codegenAfterRepl(ctor, dtor, cst);
 
         engine->runFunction(ctor, std::vector<llvm::GenericValue>());
 
@@ -234,24 +236,24 @@ namespace clay {
         engine->runFunction(entryProc->llvmFunc, std::vector<llvm::GenericValue>());
     }
 
-    static void jitAndPrintExpr(ExprPtr expr) {
+    static void jitAndPrintExpr(ExprPtr expr, CompilerStatePtr cst) {
         //expr -> println(expr);
         NameRefPtr println = new NameRef(Identifier::get("println"));
         ExprPtr call = new Call(println.ptr(), new ExprList(expr));
         ExprStatementPtr callStmt = new ExprStatement(call);
-        jitStatements(vector<StatementPtr>(1, callStmt.ptr()));
+        jitStatements(vector<StatementPtr>(1, callStmt.ptr()), cst);
     }
 
-    static void eval(llvm::StringRef line) {
+    static void eval(llvm::StringRef line, CompilerStatePtr cst) {
         SourcePtr source = new Source(line, 0);
         try {
             ReplItem x = parseInteractive(source, 0, source->size());
             if (x.isExprSet) {
-                jitAndPrintExpr(x.expr);
+                jitAndPrintExpr(x.expr, cst);
             } else {
-                loadImports(x.imports);
+                loadImports(x.imports, cst);
                 jitTopLevel(x.toplevels);
-                jitStatements(x.stmts);
+                jitStatements(x.stmts, cst);
             }
         }
         catch (CompilerError) {
@@ -259,7 +261,7 @@ namespace clay {
         }        
     }
 
-    static void interactiveLoop()
+    static void interactiveLoop(CompilerStatePtr cst)
     {
         setjmp(recovery);
         string line;
@@ -270,9 +272,9 @@ namespace clay {
             line = fgets(buf, 255, stdin);
             line = stripSpaces(line);
             if (line[0] == ':') {
-                replCommand(line.substr(1, line.size() - 1));
+                replCommand(line.substr(1, line.size() - 1), cst);
             } else {
-                eval(line);
+                eval(line, cst);
             }
         }
         engine->runStaticConstructorsDestructors(true);
@@ -286,11 +288,9 @@ namespace clay {
 
 
 
-    void runInteractive(llvm::Module *llvmModule_, ModulePtr module_)
+    void runInteractive(ModulePtr module_)
     {
         signal(SIGABRT, exceptionHandler);
-
-        llvmModule = llvmModule_;
         module = module_;
         llvm::errs() << "Clay interpreter\n";
         llvm::errs() << ":q to exit\n";
@@ -299,7 +299,8 @@ namespace clay {
         llvm::errs() << ":globals to list globals\n";
         llvm::errs() << "In multi-line mode empty line to exit\n";
 
-        llvm::EngineBuilder eb(llvmModule);
+        CompilerState* cst = module_->cst.ptr();
+        llvm::EngineBuilder eb(cst->llvmModule);
         llvm::TargetOptions targetOptions;
         targetOptions.JITExceptionHandling = true;
         eb.setTargetOptions(targetOptions);
@@ -308,7 +309,7 @@ namespace clay {
 
         setAddTokens(&addTokens);
 
-        interactiveLoop();
+        interactiveLoop(cst);
     }
 
 }

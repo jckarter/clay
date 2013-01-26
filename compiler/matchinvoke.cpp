@@ -28,7 +28,7 @@ void initializePatternEnv(EnvPtr patternEnv, llvm::ArrayRef<PatternVar> pvars,
     }
 }
 
-static void initializePatterns(OverloadPtr x)
+static void initializePatterns(OverloadPtr x, CompilerStatePtr cst)
 {
     if (x->patternsInitializedState == 1)
         return;
@@ -42,7 +42,7 @@ static void initializePatterns(OverloadPtr x)
     EnvPtr patternEnv = new Env(x->env);
     initializePatternEnv(patternEnv, pvars, x->cells, x->multiCells);
     assert(x->target.ptr());
-    x->callablePattern = evaluateOnePattern(x->target, patternEnv);
+    x->callablePattern = evaluateOnePattern(x->target, patternEnv, cst);
 
     llvm::ArrayRef<FormalArgPtr> formalArgs = code->formalArgs;
     for (size_t i = 0; i < formalArgs.size(); ++i) {
@@ -52,10 +52,11 @@ static void initializePatterns(OverloadPtr x)
             if (y->varArg) {
                 ExprPtr unpack = new Unpack(y->type.ptr());
                 unpack->location = y->type->location;
-                x->varArgPattern = evaluateMultiPattern(new ExprList(unpack), patternEnv);
+                x->varArgPattern = evaluateMultiPattern(new ExprList(unpack), 
+                                                        patternEnv, cst);
                 pattern = NULL;
             } else {
-                pattern = evaluateOnePattern(y->type, patternEnv);
+                pattern = evaluateOnePattern(y->type, patternEnv, cst);
             }
         }
         x->argPatterns.push_back(pattern);
@@ -98,11 +99,12 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
                            ObjectPtr callable,
                            llvm::ArrayRef<TypePtr> argsKey)
 {
-    initializePatterns(overload);
+    CompilerStatePtr cst = overload->env->cst;
+    initializePatterns(overload, cst);
 
     PatternReseter reseter(overload);
 
-    if (!unifyPatternObj(overload->callablePattern, callable))
+    if (!unifyPatternObj(overload->callablePattern, callable, cst))
         return new MatchCallableError(overload->target, callable);
 
     CodePtr code = overload->code;
@@ -125,7 +127,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
                     types->add(argsKey[i+j].ptr());
                 --j;
                 MultiPatternPtr pattern = overload->varArgPattern;
-                if (!unifyMulti(pattern, types))
+                if (!unifyMulti(pattern, types, cst))
                     return new MatchMultiArgumentError(unsigned(formalArgs.size()), types, x);                
             } else {
                 j = varArgSize-1;
@@ -133,7 +135,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
         } else {
             if (x->type.ptr()) {
                 PatternPtr pattern = overload->argPatterns[i];
-                if (!unifyPatternObj(pattern, argsKey[i+j].ptr()))
+                if (!unifyPatternObj(pattern, argsKey[i+j].ptr(), cst))
                     return new MatchArgumentError(i+j, argsKey[i+j], x);
             }
         }
@@ -143,13 +145,13 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
     llvm::ArrayRef<PatternVar> pvars = code->patternVars;
     for (size_t i = 0; i < pvars.size(); ++i) {
         if (pvars[i].isMulti) {
-            MultiStaticPtr ms = derefDeep(overload->multiCells[i].ptr());
+            MultiStaticPtr ms = derefDeep(overload->multiCells[i].ptr(), cst);
             if (!ms)
                 error(pvars[i].name, "unbound pattern variable");
             addLocal(staticEnv, pvars[i].name, ms.ptr());
         }
         else {
-            ObjectPtr v = derefDeep(overload->cells[i].ptr());
+            ObjectPtr v = derefDeep(overload->cells[i].ptr(), cst);
             if (!v)
                 error(pvars[i].name, "unbound pattern variable");
             addLocal(staticEnv, pvars[i].name, v.ptr());
@@ -159,7 +161,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
     reseter.reset();
     
     if (code->predicate.ptr())
-        if (!evaluateBool(code->predicate, staticEnv))
+        if (!evaluateBool(code->predicate, staticEnv, cst))
             return new MatchPredicateError(code->predicate);
 
     MatchSuccessPtr result = new MatchSuccess(
