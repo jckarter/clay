@@ -1,25 +1,28 @@
-import threads.future.*;
-import test.*;
+import
+    threads.future.*,
+    test.*,
+    test.module.*;
 
 record MyException ();
 
 instance Exception (MyException);
 
-main() = testMain(
-    TestSuite("threads.future", array(
-        TestCase("normal single result", -> {
-            var x = 1;
-            var future = async(-> x + 3);
-            var r = futureGet(future);
-            expectEqual(4, r);
-        }),
-        TestCase("normal multiple results", -> {
-            var future = async(-> { return 1, true, 'a'; });
-            var one, yes, a = futureGet(future);
-            expectEqual([1, true, 'a'], [one, yes, a]);
-        }),
-        TestCase("exception", -> {
-            var future = async(-> { throw MyException(); });
-            expectExceptionType(MyException, -> ..futureGet(future));
-        }),
-    )));
+TEST_normal_single_result() {
+    var x = 1;
+    var future = async(-> x + 3);
+    var r = futureGet(future);
+    expectEqual(4, r);
+}
+
+TEST_normal_multiple_results() {
+    var future = async(-> { return 1, true, 'a'; });
+    var one, yes, a = futureGet(future);
+    expectEqual([1, true, 'a'], [one, yes, a]);
+}
+
+TEST_exception() {
+    var future = async(-> { throw MyException(); });
+    expectExceptionType(MyException, -> ..futureGet(future));
+}
+
+private main() = testMainModule();

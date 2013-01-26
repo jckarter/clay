@@ -1,17 +1,17 @@
-import io.files.raw.*;
-import io.streams.*;
+import 
+    io.files.raw.*,
+    io.streams.*,
+    test.*,
+    test.module.*;
 
-import test.*;
+TEST_Stream_RawFile() {
+    expectTrue(InputStream?(RawFile));
+    expectTrue(OutputStream?(RawFile));
+}
 
+TEST_Stream_RawFilePointer() {
+    expectTrue(InputStream?(RawFilePointer));
+    expectTrue(OutputStream?(RawFilePointer));
+}
 
-main() = testMain(
-    TestSuite("io.files.raw", array(
-        TestCase("*Stream?(RawFile)", -> {
-            expectTrue(InputStream?(RawFile));
-            expectTrue(OutputStream?(RawFile));
-        }),
-        TestCase("*Stream?(RawFilePointer)", -> {
-            expectTrue(InputStream?(RawFilePointer));
-            expectTrue(OutputStream?(RawFilePointer));
-        }),
-    )));
+private main() = testMainModule();

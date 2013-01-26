@@ -230,7 +230,7 @@ alias expectCallDefined(Proc, ..Types) {
             TEST_FAIL_CASE_INDENT, ..weaveValues(", ", ..Types)));
 }
 
-alias expectCallUndefined(Proc, ..Types) {
+expectCallUndefined(Proc, ..Types) {
     expect(
         not CallDefined?(Proc, ..Types),
         str("`", Proc, "` shouldn't be callable with the expected argument types:\n",
@@ -315,7 +315,7 @@ required(block) {
         throw RequiredExpectationFailed();
 }
 
-var testOptionSpecs = OptionSpecs(
+var testOptionSpecs = vector(
     OptionSpec("s", "suite", HAS_VALUE, ALLOWS_REPEATS),
     OptionSpec("c", "case", HAS_VALUE, ALLOWS_REPEATS),
     OptionSpec("n", "nc", "no-color")

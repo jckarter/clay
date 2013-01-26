@@ -1,55 +1,62 @@
-import printer.(println);
-import test.*;
+import 
+    test.*,
+    test.module.*;
 
-main() = testMain(
-    TestSuite("characters", array(
-        TestCase("Char ==", -> {
-            expectTrue( 'a' == 'a');
-            expectFalse('a' == 'b');
-        }),
-        TestCase("Char <", -> {
-            expectTrue( 'a' < 'b');
-            expectFalse('a' < 'a');
-            expectFalse('b' < 'a');
-        }),
-        TestCase("Char == UniChar", -> {
-            expectTrue( 'a' == UniChar('a'));
-            expectFalse('a' == UniChar('b'));
-        }),
-        TestCase("UniChar == Char", -> {
-            expectTrue( UniChar('a') == 'a');
-            expectFalse(UniChar('a') == 'b');
-        }),
-        TestCase("Char < UniChar", -> {
-            expectTrue( 'a' < UniChar('b'));
-            expectFalse('a' < UniChar('a'));
-            expectFalse('b' < UniChar('a'));
-        }),
-        TestCase("UniChar < Char", -> {
-            expectTrue( UniChar('a') < 'b');
-            expectFalse(UniChar('a') < 'a');
-            expectFalse(UniChar('b') < 'a');
-        }),
-        TestCase("UniChar ==", -> {
-            expectTrue( UniChar('a') == UniChar('a'));
-            expectFalse(UniChar('a') == UniChar('b'));
-        }),
-        TestCase("UniChar <", -> {
-            expectTrue( UniChar('a') < UniChar('b'));
-            expectFalse(UniChar('a') < UniChar('a'));
-            expectFalse(UniChar('b') < UniChar('a'));
-        }),
-        TestCase("conversion between Char, UniChar and integers", -> {
-            // only successful conversions are tested, because
-            // unsuccessful conversions crash process
+TEST_Char_equal() {
+    expectTrue( 'a' == 'a');
+    expectFalse('a' == 'b');
+}
 
-            expectEqual(UniChar(10), UniChar(Char(10)));
-            expectEqual(Char(20), Char(UniChar(20)));
+TEST_Char_lesser() {
+    expectTrue( 'a' < 'b');
+    expectFalse('a' < 'a');
+    expectFalse('b' < 'a');
+}
 
-            expectEqual(Char(-6), Char(250u));
-            expectEqual(Char(-6), Char(-6));
-            
-            expectEqual(UniChar(30000), UniChar(30000));
-        }),
-    )));
+TEST_Char_equal_to_UniChar() {
+    expectTrue( 'a' == UniChar('a'));
+    expectFalse('a' == UniChar('b'));
+}
 
+TEST_UniChar_equal_to_Char() {
+    expectTrue( UniChar('a') == 'a');
+    expectFalse(UniChar('a') == 'b');
+}
+
+TEST_Char_less_than_UniChar() {
+    expectTrue( 'a' < UniChar('b'));
+    expectFalse('a' < UniChar('a'));
+    expectFalse('b' < UniChar('a'));
+}
+
+TEST_UniChar_less_than_Char() {
+    expectTrue( UniChar('a') < 'b');
+    expectFalse(UniChar('a') < 'a');
+    expectFalse(UniChar('b') < 'a');
+}
+
+TEST_UniChar_equal() {
+    expectTrue( UniChar('a') == UniChar('a'));
+    expectFalse(UniChar('a') == UniChar('b'));
+}   
+
+TEST_UniChar_lesser() {
+    expectTrue( UniChar('a') < UniChar('b'));
+    expectFalse(UniChar('a') < UniChar('a'));
+    expectFalse(UniChar('b') < UniChar('a'));
+}
+
+TEST_conversion_between_Char_UniChar_and_integers() {
+    // only successful conversions are tested, because
+    // unsuccessful conversions crash process
+
+    expectEqual(UniChar(10), UniChar(Char(10)));
+    expectEqual(Char(20), Char(UniChar(20)));
+
+    expectEqual(Char(-6), Char(250u));
+    expectEqual(Char(-6), Char(-6));
+    
+    expectEqual(UniChar(30000), UniChar(30000));
+}
+
+private main() = testMainModule();

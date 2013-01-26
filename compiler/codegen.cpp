@@ -7231,6 +7231,9 @@ void codegenEntryPoints(ModulePtr module, bool importedExternals)
 //
 
 llvm::TargetMachine *initLLVM(llvm::StringRef targetTriple,
+    llvm::StringRef targetCPU,
+    llvm::StringRef targetFeatures,
+    bool softFloat,
     llvm::StringRef name,
     llvm::StringRef flags,
     bool relocPic,
@@ -7280,10 +7283,16 @@ llvm::TargetMachine *initLLVM(llvm::StringRef targetTriple,
     }
 
     llvm::TargetMachine *targetMachine = target->createTargetMachine(
-        targetTriple, "", "", llvm::TargetOptions(), reloc, codeModel, level);
+        targetTriple, targetCPU, targetFeatures,
+        llvm::TargetOptions(), reloc, codeModel, level);
 
     if (optLevel < 2 || debug)
         targetMachine->Options.NoFramePointerElim = 1;
+
+    if (softFloat) {
+        targetMachine->Options.UseSoftFloat = 1;
+        targetMachine->Options.FloatABIType = llvm::FloatABI::Soft;
+    }
 
     if (targetMachine != NULL) {
         cst->llvmDataLayout = targetMachine->getDataLayout();

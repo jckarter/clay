@@ -20,5 +20,5 @@ main() = testMain(
                 expectIterator(iterator(vs), 4u);
                 expectSequence(vs, 12u);
             }),
-        ),
+        )
     ));
