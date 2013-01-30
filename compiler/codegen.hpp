@@ -9,8 +9,8 @@ namespace clay {
 
 static const unsigned short DW_LANG_user_CLAY = 0xC1A4;
 
-llvm::PointerType *exceptionReturnType(CompilerStatePtr cst);
-llvm::Value *noExceptionReturnValue(CompilerStatePtr cst);
+llvm::PointerType *exceptionReturnType(CompilerState* cst);
+llvm::Value *noExceptionReturnValue(CompilerState* cst);
 
 llvm::TargetMachine *initLLVM(llvm::StringRef targetTriple,
     llvm::StringRef targetCPU,
@@ -21,15 +21,15 @@ llvm::TargetMachine *initLLVM(llvm::StringRef targetTriple,
     bool relocPic,
     bool debug,
     unsigned optLevel,
-    CompilerStatePtr cst);
+    CompilerState* cst);
 
-bool inlineEnabled(CompilerStatePtr cst);
-void setInlineEnabled(bool enabled, CompilerStatePtr cst);
-bool exceptionsEnabled(CompilerStatePtr cst);
-void setExceptionsEnabled(bool enabled, CompilerStatePtr cst);
+bool inlineEnabled(CompilerState* cst);
+void setInlineEnabled(bool enabled, CompilerState* cst);
+bool exceptionsEnabled(CompilerState* cst);
+void setExceptionsEnabled(bool enabled, CompilerState* cst);
 
 
-void initExternalTarget(string target, CompilerStatePtr cst);
+void initExternalTarget(string target, CompilerState* cst);
 
 
 struct CValue : public Object {
@@ -119,7 +119,7 @@ struct ValueStackEntry {
 };
 
 struct CodegenContext {
-    CompilerStatePtr cst;
+    CompilerState* cst;
 
     llvm::Function *llvmFunc;
     vector<llvm::TrackingVH<llvm::MDNode> > debugScope;
@@ -144,7 +144,7 @@ struct CodegenContext {
 
     int callByNameDepth;
 
-    CodegenContext(CompilerStatePtr cst)
+    CodegenContext(CompilerState* cst)
         : llvmFunc(NULL),
           initBuilder(NULL),
           builder(NULL),
@@ -157,7 +157,7 @@ struct CodegenContext {
     {
     }
 
-    CodegenContext(CompilerStatePtr cst, llvm::Function *llvmFunc)
+    CodegenContext(CompilerState* cst, llvm::Function *llvmFunc)
         : llvmFunc(llvmFunc),
           initBuilder(NULL),
           builder(NULL),
@@ -227,7 +227,7 @@ InvokeEntry* codegenCallable(ObjectPtr x,
                              llvm::ArrayRef<TypePtr> argsKey,
                              llvm::ArrayRef<ValueTempness> 
                                  argsTempness,
-                             CompilerStatePtr cst);
+                             CompilerState* cst);
 void codegenCodeBody(InvokeEntry* entry);
 void codegenCWrapper(InvokeEntry* entry);
 
@@ -236,7 +236,7 @@ void codegenMain(ModulePtr module);
 
 void codegenBeforeRepl(ModulePtr module);
 void codegenAfterRepl(llvm::Function*& ctor,
-                      llvm::Function*& dtor, CompilerStatePtr cst);
+                      llvm::Function*& dtor, CompilerState* cst);
 
 }
 

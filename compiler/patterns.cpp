@@ -20,7 +20,7 @@ namespace clay {
 //
 
 static ObjectPtr computeStruct(ObjectPtr head, MultiStaticPtr params, 
-                               CompilerStatePtr cst)
+                               CompilerState* cst)
 {
     if (!head) {
         return makeTupleValue(params->values, cst);
@@ -31,7 +31,7 @@ static ObjectPtr computeStruct(ObjectPtr head, MultiStaticPtr params,
     }
 }
 
-ObjectPtr derefDeep(PatternPtr x, CompilerStatePtr cst)
+ObjectPtr derefDeep(PatternPtr x, CompilerState* cst)
 {
     switch (x->kind) {
     case PATTERN_CELL : {
@@ -55,7 +55,7 @@ ObjectPtr derefDeep(PatternPtr x, CompilerStatePtr cst)
     }
 }
 
-MultiStaticPtr derefDeep(MultiPatternPtr x, CompilerStatePtr cst)
+MultiStaticPtr derefDeep(MultiPatternPtr x, CompilerState* cst)
 {
     switch (x->kind) {
     case MULTI_PATTERN_CELL : {
@@ -93,7 +93,7 @@ MultiStaticPtr derefDeep(MultiPatternPtr x, CompilerStatePtr cst)
 // objectToPattern, objectToPatternStruct
 //
 
-static PatternPtr objectToPattern(ObjectPtr obj, CompilerStatePtr cst)
+static PatternPtr objectToPattern(ObjectPtr obj, CompilerState* cst)
 {
     switch (obj->objKind) {
     case PATTERN : {
@@ -285,7 +285,7 @@ static PatternPtr objectToPattern(ObjectPtr obj, CompilerStatePtr cst)
 // unify
 //
 
-bool unifyObjObj(ObjectPtr a, ObjectPtr b, CompilerStatePtr cst)
+bool unifyObjObj(ObjectPtr a, ObjectPtr b, CompilerState* cst)
 {
     if (a->objKind == PATTERN) {
         PatternPtr a2 = (Pattern *)a.ptr();
@@ -308,7 +308,7 @@ bool unifyObjObj(ObjectPtr a, ObjectPtr b, CompilerStatePtr cst)
     return objectEquals(a, b);
 }
 
-bool unifyObjPattern(ObjectPtr a, PatternPtr b, CompilerStatePtr cst)
+bool unifyObjPattern(ObjectPtr a, PatternPtr b, CompilerState* cst)
 {
     assert(a.ptr() && b.ptr());
     if (a->objKind == PATTERN) {
@@ -341,12 +341,12 @@ bool unifyObjPattern(ObjectPtr a, PatternPtr b, CompilerStatePtr cst)
     }
 }
 
-bool unifyPatternObj(PatternPtr a, ObjectPtr b, CompilerStatePtr cst)
+bool unifyPatternObj(PatternPtr a, ObjectPtr b, CompilerState* cst)
 {
     return unifyObjPattern(b, a, cst);
 }
 
-bool unify(PatternPtr a, PatternPtr b, CompilerStatePtr cst)
+bool unify(PatternPtr a, PatternPtr b, CompilerState* cst)
 {
     assert(a.ptr() && b.ptr());
     if (a->kind == PATTERN_CELL) {
@@ -377,7 +377,7 @@ bool unify(PatternPtr a, PatternPtr b, CompilerStatePtr cst)
     }
 }
 
-bool unifyMulti(MultiPatternPtr a, MultiStaticPtr b, CompilerStatePtr cst)
+bool unifyMulti(MultiPatternPtr a, MultiStaticPtr b, CompilerState* cst)
 {
     assert(a.ptr() && b.ptr());
     MultiPatternListPtr b2 = new MultiPatternList();
@@ -386,7 +386,7 @@ bool unifyMulti(MultiPatternPtr a, MultiStaticPtr b, CompilerStatePtr cst)
     return unifyMulti(a, b2.ptr(), cst);
 }
 
-bool unifyMulti(MultiPatternPtr a, MultiPatternPtr b, CompilerStatePtr cst)
+bool unifyMulti(MultiPatternPtr a, MultiPatternPtr b, CompilerState* cst)
 {
     assert(a.ptr() && b.ptr());
     switch (a->kind) {
@@ -419,7 +419,7 @@ static MultiPatternListPtr subList(MultiPatternListPtr x, unsigned index)
 
 bool unifyMulti(MultiPatternListPtr a, unsigned indexA,
                 MultiPatternPtr b,
-                CompilerStatePtr cst)
+                CompilerState* cst)
 {
     assert(a.ptr() && b.ptr());
     switch (b->kind) {
@@ -443,7 +443,7 @@ bool unifyMulti(MultiPatternListPtr a, unsigned indexA,
 
 bool unifyMulti(MultiPatternPtr a,
                 MultiPatternListPtr b, unsigned indexB,
-                CompilerStatePtr cst)
+                CompilerState* cst)
 {
     assert(a.ptr() && b.ptr());
     return unifyMulti(b, indexB, a, cst);
@@ -451,7 +451,7 @@ bool unifyMulti(MultiPatternPtr a,
 
 bool unifyMulti(MultiPatternListPtr a, unsigned indexA,
                 MultiPatternListPtr b, unsigned indexB,
-                CompilerStatePtr cst)
+                CompilerState* cst)
 {
     assert(a.ptr() && b.ptr());
     while ((indexA < a->items.size()) &&
@@ -557,7 +557,7 @@ static PatternPtr xvalueToPatternCell(XValuePtr xv)
         return new PatternCell(stat);
 }
 
-static PatternPtr namedToPattern(ObjectPtr x, CompilerStatePtr cst)
+static PatternPtr namedToPattern(ObjectPtr x, CompilerState* cst)
 {
     switch (x->objKind) {
     case PATTERN : {
@@ -620,7 +620,7 @@ static PatternPtr namedToPattern(ObjectPtr x, CompilerStatePtr cst)
 }
 
 PatternPtr evaluateOnePattern(ExprPtr expr, EnvPtr env, 
-                              CompilerStatePtr cst)
+                              CompilerState* cst)
 {
     LocationContext loc(expr->location);
 
@@ -668,7 +668,7 @@ PatternPtr evaluateOnePattern(ExprPtr expr, EnvPtr env,
 //
 
 PatternPtr evaluateAliasPattern(GlobalAliasPtr x, MultiPatternPtr params,
-                                CompilerStatePtr cst)
+                                CompilerState* cst)
 {
     MultiPatternListPtr args = new MultiPatternList();
     EnvPtr env = new Env(x->env);
@@ -743,7 +743,7 @@ static bool appendPattern(MultiPatternListPtr &cur, MultiPatternPtr x)
 }
 
 MultiPatternPtr evaluateMultiPattern(ExprListPtr exprs, EnvPtr env,
-                                     CompilerStatePtr cst)
+                                     CompilerState* cst)
 {
     MultiPatternListPtr out = new MultiPatternList();
     MultiPatternListPtr cur = out;

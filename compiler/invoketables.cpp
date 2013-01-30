@@ -12,7 +12,7 @@
 
 namespace clay {
 
-void setFinalOverloadsEnabled(bool enabled, CompilerStatePtr cst)
+void setFinalOverloadsEnabled(bool enabled, CompilerState* cst)
 {
     cst->_finalOverloadsEnabled = enabled;
 }
@@ -60,7 +60,7 @@ const OverloadPtr callableInterface(ObjectPtr x)
 }
 
 static llvm::ArrayRef<OverloadPtr> callableOverloads(ObjectPtr x,
-                                                     CompilerStatePtr cst)
+                                                     CompilerState* cst)
 {
     initCallable(x);
     switch (x->objKind) {
@@ -104,7 +104,7 @@ static llvm::ArrayRef<OverloadPtr> callableOverloads(ObjectPtr x,
 // invoke tables
 //
 
-static void initInvokeTables(CompilerStatePtr cst) {
+static void initInvokeTables(CompilerState* cst) {
     assert(!cst->invokeTablesInitialized);
     cst->invokeTable.resize(CompilerState::INVOKE_TABLE_SIZE);
     cst->invokeTablesInitialized = true;
@@ -116,7 +116,7 @@ static void initInvokeTables(CompilerStatePtr cst) {
 // lookupInvokeSet
 //
 
-static bool shouldLogCallable(ObjectPtr callable, CompilerStatePtr cst)
+static bool shouldLogCallable(ObjectPtr callable, CompilerState* cst)
 {
     if (logMatchSymbols.empty())
         return false;
@@ -140,7 +140,7 @@ static bool shouldLogCallable(ObjectPtr callable, CompilerStatePtr cst)
 
 InvokeSet* lookupInvokeSet(ObjectPtr callable,
                            llvm::ArrayRef<TypePtr> argsKey,
-                           CompilerStatePtr cst)
+                           CompilerState* cst)
 {
     if (!cst->invokeTablesInitialized)
         initInvokeTables(cst);
@@ -165,7 +165,7 @@ InvokeSet* lookupInvokeSet(ObjectPtr callable,
 }
 
 vector<InvokeSet*> lookupInvokeSets(ObjectPtr callable,
-                                    CompilerStatePtr cst) {
+                                    CompilerState* cst) {
     assert(cst->invokeTablesInitialized);
     vector<InvokeSet*> r;
     for (unsigned i = 0; i < cst->invokeTable.size(); ++i) {
@@ -349,7 +349,7 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
                                llvm::ArrayRef<TypePtr> argsKey,
                                llvm::ArrayRef<ValueTempness> argsTempness,
                                MatchFailureError &failures,
-                               CompilerStatePtr cst)
+                               CompilerState* cst)
 {
     InvokeSet* invokeSet = lookupInvokeSet(callable, argsKey, cst);
 

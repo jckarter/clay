@@ -19,46 +19,46 @@
 namespace clay {
 
 MultiEValuePtr evalMultiArgsAsRef(ExprListPtr exprs, EnvPtr env);
-MultiEValuePtr evalArgExprAsRef(ExprPtr x, EnvPtr env, CompilerStatePtr cst);
+MultiEValuePtr evalArgExprAsRef(ExprPtr x, EnvPtr env, CompilerState* cst);
 
 EValuePtr evalForwardOneAsRef(ExprPtr expr, EnvPtr env);
 MultiEValuePtr evalForwardMultiAsRef(ExprListPtr exprs, EnvPtr env);
 MultiEValuePtr evalForwardExprAsRef(ExprPtr expr, EnvPtr env,
-                                    CompilerStatePtr cst);
+                                    CompilerState* cst);
 
 MultiEValuePtr evalMultiAsRef(ExprListPtr exprs, EnvPtr env);
-MultiEValuePtr evalExprAsRef(ExprPtr expr, EnvPtr env, CompilerStatePtr cst);
+MultiEValuePtr evalExprAsRef(ExprPtr expr, EnvPtr env, CompilerState* cst);
 
 void evalOneInto(ExprPtr expr, EnvPtr env, EValuePtr out);
 void evalMultiInto(ExprListPtr exprs, EnvPtr env, MultiEValuePtr out, size_t wantCount);
-void evalExprInto(ExprPtr expr, EnvPtr env, MultiEValuePtr out, CompilerStatePtr cst);
+void evalExprInto(ExprPtr expr, EnvPtr env, MultiEValuePtr out, CompilerState* cst);
 
 void evalMulti(ExprListPtr exprs, EnvPtr env, MultiEValuePtr out, size_t wantCount);
-void evalOne(ExprPtr expr, EnvPtr env, EValuePtr out, CompilerStatePtr cst);
-void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out, CompilerStatePtr cst);
-void evalStaticObject(ObjectPtr x, MultiEValuePtr out, CompilerStatePtr cst);
+void evalOne(ExprPtr expr, EnvPtr env, EValuePtr out, CompilerState* cst);
+void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out, CompilerState* cst);
+void evalStaticObject(ObjectPtr x, MultiEValuePtr out, CompilerState* cst);
 void evalValueHolder(ValueHolderPtr x, MultiEValuePtr out);
 void evalIndexingExpr(ExprPtr indexable,
                       ExprListPtr args,
                       EnvPtr env,
                       MultiEValuePtr out,
-                      CompilerStatePtr cst);
+                      CompilerState* cst);
 void evalAliasIndexing(GlobalAliasPtr x,
                        ExprListPtr args,
                        EnvPtr env,
                        MultiEValuePtr out,
-                       CompilerStatePtr cst);
+                       CompilerState* cst);
 void evalCallExpr(ExprPtr callable,
                   ExprListPtr args,
                   EnvPtr env,
                   MultiEValuePtr out,
-                  CompilerStatePtr cst);
+                  CompilerState* cst);
 void evalDispatch(ObjectPtr obj,
                   MultiEValuePtr args,
                   MultiPValuePtr pvArgs,
                   llvm::ArrayRef<unsigned> dispatchIndices,
                   MultiEValuePtr out,
-                  CompilerStatePtr cst);
+                  CompilerState* cst);
 void evalCallValue(EValuePtr callable,
                    MultiEValuePtr args,
                    MultiEValuePtr out);
@@ -80,7 +80,7 @@ void evalCallByName(InvokeEntry* entry,
                     ExprListPtr args,
                     EnvPtr env,
                     MultiEValuePtr out,
-                    CompilerStatePtr cst);
+                    CompilerState* cst);
 
 static llvm::StringMap<const void*> staticStringTableConstants;
 
@@ -149,13 +149,13 @@ typedef Pointer<EvalContext> EvalContextPtr;
 TerminationPtr evalStatement(StatementPtr stmt,
                              EnvPtr env,
                              EvalContextPtr ctx,
-                             CompilerStatePtr cst);
+                             CompilerState* cst);
 
 void evalCollectLabels(llvm::ArrayRef<StatementPtr> statements,
                        unsigned startIndex,
                        EnvPtr env,
                        llvm::StringMap<LabelInfo> &labels);
-EnvPtr evalBinding(BindingPtr x, EnvPtr env, CompilerStatePtr cst);
+EnvPtr evalBinding(BindingPtr x, EnvPtr env, CompilerState* cst);
 
 void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out);
 
@@ -192,7 +192,7 @@ void evaluateReturnSpecs(llvm::ArrayRef<ReturnSpecPtr> returnSpecs,
                          EnvPtr env,
                          vector<uint8_t> &returnIsRef,
                          vector<TypePtr> &returnTypes,
-                         CompilerStatePtr cst)
+                         CompilerState* cst)
 {
     returnIsRef.clear();
     returnTypes.clear();
@@ -216,7 +216,7 @@ void evaluateReturnSpecs(llvm::ArrayRef<ReturnSpecPtr> returnSpecs,
 }
 
 static void setSizeTEValue(EValuePtr v, size_t x) {
-    CompilerStatePtr cst = v->type->cst;
+    CompilerState* cst = v->type->cst;
     switch (typeSize(cst->cSizeTType)) {
     case 4 : *(size32_t *)v->addr = size32_t(x); break;
     case 8 : *(size64_t *)v->addr = size64_t(x); break;
@@ -235,7 +235,7 @@ static void setPtrDiffTEValue(EValuePtr v, ptrdiff_t x) {
 */
 
 static void setPtrEValue(EValuePtr v, void* x) {
-    CompilerStatePtr cst = v->type->cst;
+    CompilerState* cst = v->type->cst;
     switch (typeSize(cst->cPtrDiffTType)) {
     case 4 : *(size32_t *)v->addr = size32_t(size_t(x)); break;
     case 8 : *(size64_t *)v->addr = size64_t(x); break;
@@ -243,7 +243,7 @@ static void setPtrEValue(EValuePtr v, void* x) {
     }
 }
 
-MultiStaticPtr evaluateExprStatic(ExprPtr expr, EnvPtr env, CompilerStatePtr cst)
+MultiStaticPtr evaluateExprStatic(ExprPtr expr, EnvPtr env, CompilerState* cst)
 {
     AnalysisCachingDisabler disabler(cst);
     MultiPValuePtr mpv = safeAnalyzeExpr(expr, env, cst);
@@ -278,7 +278,7 @@ MultiStaticPtr evaluateExprStatic(ExprPtr expr, EnvPtr env, CompilerStatePtr cst
     return ms;
 }
 
-ObjectPtr evaluateOneStatic(ExprPtr expr, EnvPtr env, CompilerStatePtr cst)
+ObjectPtr evaluateOneStatic(ExprPtr expr, EnvPtr env, CompilerState* cst)
 {
     MultiStaticPtr ms = evaluateExprStatic(expr, env, cst);
     if (ms->size() != 1)
@@ -286,7 +286,7 @@ ObjectPtr evaluateOneStatic(ExprPtr expr, EnvPtr env, CompilerStatePtr cst)
     return ms->values[0];
 }
 
-MultiStaticPtr evaluateMultiStatic(ExprListPtr exprs, EnvPtr env, CompilerStatePtr cst)
+MultiStaticPtr evaluateMultiStatic(ExprListPtr exprs, EnvPtr env, CompilerState* cst)
 {
     MultiStaticPtr out = new MultiStatic();
     for (size_t i = 0; i < exprs->size(); ++i) {
@@ -308,7 +308,7 @@ MultiStaticPtr evaluateMultiStatic(ExprListPtr exprs, EnvPtr env, CompilerStateP
     return out;
 }
 
-TypePtr evaluateType(ExprPtr expr, EnvPtr env, CompilerStatePtr cst)
+TypePtr evaluateType(ExprPtr expr, EnvPtr env, CompilerState* cst)
 {
     ObjectPtr v = evaluateOneStatic(expr, env, cst);
     if (v->objKind != TYPE) {
@@ -322,7 +322,7 @@ TypePtr evaluateType(ExprPtr expr, EnvPtr env, CompilerStatePtr cst)
 }
 
 void evaluateMultiType(ExprListPtr exprs, EnvPtr env, 
-                       vector<TypePtr> &out, CompilerStatePtr cst)
+                       vector<TypePtr> &out, CompilerState* cst)
 {
     MultiStaticPtr types = evaluateMultiStatic(exprs, env, cst);
     for (size_t i = 0; i < types->size(); ++i) {
@@ -337,7 +337,7 @@ void evaluateMultiType(ExprListPtr exprs, EnvPtr env,
     }
 }
 
-bool evaluateBool(ExprPtr expr, EnvPtr env, CompilerStatePtr cst)
+bool evaluateBool(ExprPtr expr, EnvPtr env, CompilerState* cst)
 {
     ObjectPtr v = evaluateOneStatic(expr, env, cst);
     LocationContext loc(expr->location);
@@ -350,7 +350,7 @@ bool evaluateBool(ExprPtr expr, EnvPtr env, CompilerStatePtr cst)
 }
 
 void evaluatePredicate(llvm::ArrayRef<PatternVar> patternVars,
-    ExprPtr predicate, EnvPtr env, CompilerStatePtr cst)
+    ExprPtr predicate, EnvPtr env, CompilerState* cst)
 {
     for (size_t i = 0; i < patternVars.size(); ++i) {
         if (lookupEnv(env, patternVars[i].name) == NULL)
@@ -364,7 +364,7 @@ void evaluatePredicate(llvm::ArrayRef<PatternVar> patternVars,
 
 void evaluateStaticAssert(Location const& location,
         const ExprPtr& cond, const ExprListPtr& message, EnvPtr env,
-        CompilerStatePtr cst)
+        CompilerState* cst)
 {
     bool r = evaluateBool(cond, env, cst);
 
@@ -391,14 +391,14 @@ void evaluateStaticAssert(Location const& location,
     }
 }
 
-ValueHolderPtr intToValueHolder(int x, CompilerStatePtr cst)
+ValueHolderPtr intToValueHolder(int x, CompilerState* cst)
 {
     ValueHolderPtr v = new ValueHolder(cst->cIntType);
     v->as<int>() = x;
     return v;
 }
 
-ValueHolderPtr sizeTToValueHolder(size_t x, CompilerStatePtr cst)
+ValueHolderPtr sizeTToValueHolder(size_t x, CompilerState* cst)
 {
     ValueHolderPtr v = new ValueHolder(cst->cSizeTType);
     switch (typeSize(cst->cSizeTType)) {
@@ -409,7 +409,7 @@ ValueHolderPtr sizeTToValueHolder(size_t x, CompilerStatePtr cst)
     return v;
 }
 
-ValueHolderPtr ptrDiffTToValueHolder(ptrdiff_t x, CompilerStatePtr cst)
+ValueHolderPtr ptrDiffTToValueHolder(ptrdiff_t x, CompilerState* cst)
 {
     ValueHolderPtr v = new ValueHolder(cst->cPtrDiffTType);
     switch (typeSize(cst->cPtrDiffTType)) {
@@ -420,7 +420,7 @@ ValueHolderPtr ptrDiffTToValueHolder(ptrdiff_t x, CompilerStatePtr cst)
     return v;
 }
 
-ValueHolderPtr boolToValueHolder(bool x, CompilerStatePtr cst)
+ValueHolderPtr boolToValueHolder(bool x, CompilerState* cst)
 {
     ValueHolderPtr v = new ValueHolder(cst->boolType);
     v->as<bool>() = x;
@@ -434,7 +434,7 @@ ValueHolderPtr boolToValueHolder(bool x, CompilerStatePtr cst)
 //
 
 ObjectPtr makeTupleValue(llvm::ArrayRef<ObjectPtr> elements,
-                         CompilerStatePtr cst)
+                         CompilerState* cst)
 {
     bool allStatics = true;
     for (size_t i = 0; i < elements.size(); ++i) {
@@ -503,7 +503,7 @@ static vector<EValuePtr> stackEValues;
 // utility procs
 //
 
-static EValuePtr staticEValue(ObjectPtr obj, CompilerStatePtr cst)
+static EValuePtr staticEValue(ObjectPtr obj, CompilerState* cst)
 {
     TypePtr t = staticType(obj, cst);
     return new EValue(t, NULL);
@@ -684,7 +684,7 @@ EValuePtr evalAllocValueForPValue(PVData const &pv)
 //
 
 MultiEValuePtr evalMultiArgsAsRef(ExprListPtr exprs, EnvPtr env,
-                                  CompilerStatePtr cst)
+                                  CompilerState* cst)
 {
     MultiEValuePtr out = new MultiEValue();
     for (size_t i = 0; i < exprs->size(); ++i) {
@@ -706,7 +706,7 @@ MultiEValuePtr evalMultiArgsAsRef(ExprListPtr exprs, EnvPtr env,
     return out;
 }
 
-MultiEValuePtr evalArgExprAsRef(ExprPtr x, EnvPtr env, CompilerStatePtr cst)
+MultiEValuePtr evalArgExprAsRef(ExprPtr x, EnvPtr env, CompilerState* cst)
 {
     if (x->exprKind == DISPATCH_EXPR) {
         DispatchExpr *y = (DispatchExpr *)x.ptr();
@@ -721,7 +721,7 @@ MultiEValuePtr evalArgExprAsRef(ExprPtr x, EnvPtr env, CompilerStatePtr cst)
 // evalForwardOneAsRef, evalForwardMultiAsRef, evalForwardExprAsRef
 //
 
-EValuePtr evalForwardOneAsRef(ExprPtr expr, EnvPtr env, CompilerStatePtr cst)
+EValuePtr evalForwardOneAsRef(ExprPtr expr, EnvPtr env, CompilerState* cst)
 {
     MultiEValuePtr mev = evalForwardExprAsRef(expr, env, cst);
     LocationContext loc(expr->location);
@@ -730,7 +730,7 @@ EValuePtr evalForwardOneAsRef(ExprPtr expr, EnvPtr env, CompilerStatePtr cst)
 }
 
 MultiEValuePtr evalForwardMultiAsRef(ExprListPtr exprs, EnvPtr env, 
-                                     CompilerStatePtr cst)
+                                     CompilerState* cst)
 {
     MultiEValuePtr out = new MultiEValue();
     for (size_t i = 0; i < exprs->size(); ++i) {
@@ -749,7 +749,7 @@ MultiEValuePtr evalForwardMultiAsRef(ExprListPtr exprs, EnvPtr env,
 }
 
 MultiEValuePtr evalForwardExprAsRef(ExprPtr expr, EnvPtr env,
-                                    CompilerStatePtr cst)
+                                    CompilerState* cst)
 {
     MultiPValuePtr mpv = safeAnalyzeExpr(expr, env, cst);
     MultiEValuePtr mev = new MultiEValue();
@@ -777,7 +777,7 @@ MultiEValuePtr evalForwardExprAsRef(ExprPtr expr, EnvPtr env,
 // evalOneAsRef, evalMultiAsRef, evalExprAsRef
 //
 
-EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env, CompilerStatePtr cst)
+EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env, CompilerState* cst)
 {
     MultiEValuePtr mev = evalExprAsRef(expr, env, cst);
     LocationContext loc(expr->location);
@@ -785,7 +785,7 @@ EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env, CompilerStatePtr cst)
     return mev->values[0];
 }
 
-MultiEValuePtr evalMultiAsRef(ExprListPtr exprs, EnvPtr env, CompilerStatePtr cst)
+MultiEValuePtr evalMultiAsRef(ExprListPtr exprs, EnvPtr env, CompilerState* cst)
 {
     MultiEValuePtr out = new MultiEValue();
     for (size_t i = 0; i < exprs->size(); ++i) {
@@ -807,7 +807,7 @@ MultiEValuePtr evalMultiAsRef(ExprListPtr exprs, EnvPtr env, CompilerStatePtr cs
     return out;
 }
 
-MultiEValuePtr evalExprAsRef(ExprPtr expr, EnvPtr env, CompilerStatePtr cst)
+MultiEValuePtr evalExprAsRef(ExprPtr expr, EnvPtr env, CompilerState* cst)
 {
     MultiPValuePtr mpv = safeAnalyzeExpr(expr, env, cst);
     MultiEValuePtr mev = new MultiEValue();
@@ -833,7 +833,7 @@ MultiEValuePtr evalExprAsRef(ExprPtr expr, EnvPtr env, CompilerStatePtr cst)
 //
 
 void evalOneInto(ExprPtr expr, EnvPtr env, EValuePtr out,
-                 CompilerStatePtr cst)
+                 CompilerState* cst)
 {
     PVData pv = safeAnalyzeOne(expr, env, cst);
     if (pv.isTemp) {
@@ -849,7 +849,7 @@ void evalOneInto(ExprPtr expr, EnvPtr env, EValuePtr out,
 
 void evalMultiInto(ExprListPtr exprs, EnvPtr env, 
                    MultiEValuePtr out, size_t wantCount,
-                   CompilerStatePtr cst)
+                   CompilerState* cst)
 {
     size_t j = 0;
     ExprPtr unpackExpr = implicitUnpackExpr(wantCount, exprs);
@@ -895,7 +895,7 @@ void evalMultiInto(ExprListPtr exprs, EnvPtr env,
 }
 
 void evalExprInto(ExprPtr expr, EnvPtr env, MultiEValuePtr out,
-                  CompilerStatePtr cst)
+                  CompilerState* cst)
 {
     MultiPValuePtr mpv = safeAnalyzeExpr(expr, env, cst);
     assert(out->size() == mpv->size());
@@ -926,7 +926,7 @@ void evalExprInto(ExprPtr expr, EnvPtr env, MultiEValuePtr out,
 
 void evalMulti(ExprListPtr exprs, EnvPtr env, 
                MultiEValuePtr out, size_t wantCount,
-               CompilerStatePtr cst)
+               CompilerState* cst)
 {
     size_t j = 0;
     ExprPtr unpackExpr = implicitUnpackExpr(wantCount, exprs);
@@ -977,7 +977,7 @@ void evalMulti(ExprListPtr exprs, EnvPtr env,
 // evalOne
 //
 
-void evalOne(ExprPtr expr, EnvPtr env, EValuePtr out, CompilerStatePtr cst)
+void evalOne(ExprPtr expr, EnvPtr env, EValuePtr out, CompilerState* cst)
 {
     evalExpr(expr, env, new MultiEValue(out), cst);
 }
@@ -988,7 +988,7 @@ void evalOne(ExprPtr expr, EnvPtr env, EValuePtr out, CompilerStatePtr cst)
 // evalExpr
 //
 
-void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out, CompilerStatePtr cst)
+void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out, CompilerState* cst)
 {
     LocationContext loc(expr->location);
 
@@ -1223,7 +1223,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out, CompilerStatePtr cst
 // evalStaticObject
 //
 
-void evalStaticObject(ObjectPtr x, MultiEValuePtr out, CompilerStatePtr cst)
+void evalStaticObject(ObjectPtr x, MultiEValuePtr out, CompilerState* cst)
 {
     switch (x->objKind) {
 
@@ -1464,7 +1464,7 @@ void evalIndexingExpr(ExprPtr indexable,
                       ExprListPtr args,
                       EnvPtr env,
                       MultiEValuePtr out,
-                      CompilerStatePtr cst)
+                      CompilerState* cst)
 {
     MultiPValuePtr mpv = safeAnalyzeIndexingExpr(indexable, args, env, cst);
     assert(mpv->size() == out->size());
@@ -1520,7 +1520,7 @@ void evalAliasIndexing(GlobalAliasPtr x,
                        ExprListPtr args,
                        EnvPtr env,
                        MultiEValuePtr out,
-                       CompilerStatePtr cst)
+                       CompilerState* cst)
 {
     assert(x->hasParams());
     MultiStaticPtr params = evaluateMultiStatic(args, env, cst);
@@ -1563,7 +1563,7 @@ void evalCallExpr(ExprPtr callable,
                   ExprListPtr args,
                   EnvPtr env,
                   MultiEValuePtr out,
-                  CompilerStatePtr cst)
+                  CompilerState* cst)
 {
     PVData pv = safeAnalyzeOne(callable, env, cst);
 
@@ -1696,7 +1696,7 @@ void evalDispatch(ObjectPtr obj,
                   MultiPValuePtr pvArgs,
                   llvm::ArrayRef<unsigned> dispatchIndices,
                   MultiEValuePtr out,
-                  CompilerStatePtr cst)
+                  CompilerState* cst)
 {
     if (dispatchIndices.empty()) {
         evalCallValue(staticEValue(obj, cst), args, pvArgs, out);
@@ -1767,7 +1767,7 @@ void evalCallValue(EValuePtr callable,
                    MultiPValuePtr pvArgs,
                    MultiEValuePtr out)
 {
-    CompilerStatePtr cst = callable->type->cst;
+    CompilerState* cst = callable->type->cst;
     switch (callable->type->typeKind) {
     case CODE_POINTER_TYPE :
         evalCallPointer(callable, args, out);
@@ -1994,7 +1994,7 @@ void evalCallByName(InvokeEntry* entry,
                     ExprListPtr args,
                     EnvPtr env,
                     MultiEValuePtr out,
-                    CompilerStatePtr cst)
+                    CompilerState* cst)
 {
     assert(entry->callByName);
     if (entry->varArgName.ptr())
@@ -2119,7 +2119,7 @@ static EnvPtr evalStatementExpressionStatements(llvm::ArrayRef<StatementPtr> stm
 TerminationPtr evalStatement(StatementPtr stmt,
                              EnvPtr env,
                              EvalContextPtr ctx,
-                             CompilerStatePtr cst)
+                             CompilerState* cst)
 {
     LocationContext loc(stmt->location);
 
@@ -2475,7 +2475,7 @@ void evalCollectLabels(llvm::ArrayRef<StatementPtr> statements,
 // evalBinding
 //
 
-EnvPtr evalBinding(BindingPtr x, EnvPtr env, CompilerStatePtr cst)
+EnvPtr evalBinding(BindingPtr x, EnvPtr env, CompilerState* cst)
 {
     LocationContext loc(x->location);
     switch (x->bindingKind) {
@@ -3620,7 +3620,7 @@ static void op_pointerToInt(EValuePtr dest, EValuePtr ev)
 //
 // evalPrimOp
 //
-static const void *evalStringTableConstant(llvm::StringRef s, CompilerStatePtr cst)
+static const void *evalStringTableConstant(llvm::StringRef s, CompilerState* cst)
 {
     llvm::StringMap<const void*>::const_iterator oldConstant = staticStringTableConstants.find(s);
     if (oldConstant != staticStringTableConstants.end())
@@ -3646,7 +3646,7 @@ static const void *evalStringTableConstant(llvm::StringRef s, CompilerStatePtr c
 
 void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
 {
-    CompilerStatePtr cst = x->cst;
+    CompilerState* cst = x->cst;
     switch (x->primOpCode) {
 
     case PRIM_TypeP : {

@@ -4,6 +4,7 @@
 #include "codegen.hpp"
 #include "loader.hpp"
 #include "invoketables.hpp"
+#include "externals.hpp"
 
 // for _exit
 #ifdef _WIN32
@@ -140,7 +141,7 @@ static void addOptimizationPasses(llvm::PassManager &passes,
     }
 }
 
-static bool linkLibraries(llvm::Module *module, llvm::ArrayRef<string>  libSearchPaths, llvm::ArrayRef<string>  libs, CompilerStatePtr cst)
+static bool linkLibraries(llvm::Module *module, llvm::ArrayRef<string>  libSearchPaths, llvm::ArrayRef<string>  libs, CompilerState* cst)
 {
     if (libs.empty())
         return true;
@@ -205,7 +206,7 @@ static bool runModule(llvm::Module *module,
                       char const* const* envp,
                       llvm::ArrayRef<string>  libSearchPaths,
                       llvm::ArrayRef<string>  libs,
-                      CompilerStatePtr cst)
+                      CompilerState* cst)
 {
     if (!linkLibraries(module, libSearchPaths, libs, cst)) {
         return false;
@@ -317,7 +318,7 @@ static bool generateBinary(llvm::Module *module,
                            bool debug,
                            llvm::ArrayRef<string> arguments,
                            bool verbose,
-                           CompilerStatePtr cst)
+                           CompilerState* cst)
 {
     int fd;
     PathString tempObj;
@@ -585,7 +586,8 @@ int main2(int argc, char **argv, char const* const* envp) {
 
     bool debug = false;
 
-    CompilerStatePtr cst = new CompilerState();
+    CompilerState compilerState;
+    CompilerState* cst = &compilerState;
 
     for (int i = 1; i < argc; ++i) {
         if ((strcmp(argv[i], "-shared") == 0))

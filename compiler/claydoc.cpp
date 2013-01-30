@@ -6,7 +6,7 @@
 using namespace std;
 using namespace clay;
 
-static CompilerStatePtr cst = new CompilerState();
+static CompilerState* cst = new CompilerState();
 
 static void usage(char *argv0)
 {

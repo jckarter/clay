@@ -748,9 +748,6 @@ typedef Pointer<ObjectTable> ObjectTablePtr;
 
 typedef Pointer<MatchResult> MatchResultPtr;
 
-typedef Pointer<CompilerState> CompilerStatePtr;
-
-
 
 //
 // Source, Location
@@ -994,7 +991,7 @@ struct CodegenContext;
 struct InvokeSet;
 struct ExternalTarget;
 
-struct CompilerState : public Object {
+struct CompilerState {
     CompilerState();
     //loader
     vector<PathString> searchPath;
@@ -1428,7 +1425,7 @@ struct ForeignExpr : public Expr {
         : Expr(FOREIGN_EXPR), moduleName(moduleName),
           foreignEnv(foreignEnv), expr(expr) {}
 
-    EnvPtr getEnv(CompilerStatePtr cst);
+    EnvPtr getEnv(CompilerState* cst);
 };
 
 struct ObjectExpr : public Expr {
@@ -1727,7 +1724,7 @@ struct ForeignStatement : public Statement {
         : Statement(FOREIGN_STATEMENT), moduleName(moduleName),
           foreignEnv(foreignEnv), statement(statement) {}
 
-    EnvPtr getEnv(CompilerStatePtr cst);
+    EnvPtr getEnv(CompilerState* cst);
 };
 
 struct Try : public Statement {
@@ -2479,7 +2476,7 @@ struct Module : public ANode {
         DONE
     };
 
-    CompilerStatePtr cst;
+    CompilerState* cst;
 
     SourcePtr source;
     string moduleName;
@@ -2516,7 +2513,7 @@ struct Module : public ANode {
 
     llvm::TrackingVH<llvm::MDNode> debugInfo;
 
-    Module(CompilerStatePtr cst, llvm::StringRef moduleName)
+    Module(CompilerState* cst, llvm::StringRef moduleName)
         : ANode(MODULE), moduleName(moduleName),
           initState(BEFORE),
           publicSymbolsLoading(0),
@@ -2529,7 +2526,7 @@ struct Module : public ANode {
           isIntrinsicsModule(false),
           debugInfo(NULL),
           cst(cst) {}
-    Module(CompilerStatePtr cst, 
+    Module(CompilerState* cst, 
            llvm::StringRef moduleName,
            llvm::ArrayRef<ImportPtr> imports,
            ModuleDeclarationPtr declaration,
@@ -2650,9 +2647,9 @@ struct Env : public Object {
     ObjectPtr parent;
     const bool exceptionAvailable;
     ExprPtr callByNameExprHead;
-    CompilerStatePtr cst;
+    CompilerState* cst;
     llvm::StringMap<ObjectPtr> entries;
-    Env(CompilerStatePtr cst)
+    Env(CompilerState* cst)
         : Object(ENV), exceptionAvailable(false), cst(cst) {}
     Env(ModulePtr parent)
         : Object(ENV), parent(parent.ptr()), exceptionAvailable(false),
@@ -2695,7 +2692,7 @@ enum TypeKind {
 };
 
 struct Type : public Object {
-    CompilerStatePtr cst;
+    CompilerState* cst;
 
     TypeKind typeKind;
     llvm::Type *llType;
@@ -2709,7 +2706,7 @@ struct Type : public Object {
     bool defined:1;
     bool typeInfoInitialized:1;
     
-    Type(TypeKind typeKind, CompilerStatePtr cst)
+    Type(TypeKind typeKind, CompilerState* cst)
         : Object(TYPE), typeKind(typeKind),
           llType(NULL), debugInfo(NULL),
           overloadsInitialized(false),
@@ -2728,28 +2725,28 @@ struct Type : public Object {
 };
 
 struct BoolType : public Type {
-    BoolType(CompilerStatePtr cst) :
+    BoolType(CompilerState* cst) :
         Type(BOOL_TYPE, cst) {}
 };
 
 struct IntegerType : public Type {
     unsigned bits:15;
     bool isSigned:1;
-    IntegerType(unsigned bits, bool isSigned, CompilerStatePtr cst)
+    IntegerType(unsigned bits, bool isSigned, CompilerState* cst)
         : Type(INTEGER_TYPE, cst), bits(bits), isSigned(isSigned) {}
 };
 
 struct FloatType : public Type {
     unsigned bits:15;
     bool isImaginary:1;
-    FloatType(unsigned bits, bool isImaginary, CompilerStatePtr cst)
+    FloatType(unsigned bits, bool isImaginary, CompilerState* cst)
         : Type(FLOAT_TYPE, cst), bits(bits), isImaginary(isImaginary){}
 };
 
 struct ComplexType : public Type {
     const llvm::StructLayout *layout;
     unsigned bits:15;
-    ComplexType(unsigned bits, CompilerStatePtr cst)
+    ComplexType(unsigned bits, CompilerState* cst)
         : Type(COMPLEX_TYPE, cst), layout(NULL), bits(bits) {}
 };
 
@@ -2768,7 +2765,7 @@ struct CodePointerType : public Type {
     CodePointerType(llvm::ArrayRef<TypePtr> argTypes,
                     llvm::ArrayRef<uint8_t> returnIsRef,
                     llvm::ArrayRef<TypePtr> returnTypes,
-                    CompilerStatePtr cst)
+                    CompilerState* cst)
         : Type(CODE_POINTER_TYPE, cst), argTypes(argTypes),
           returnIsRef(returnIsRef), returnTypes(returnTypes) {}
 };
@@ -2789,7 +2786,7 @@ struct CCodePointerType : public Type {
                      llvm::ArrayRef<TypePtr> argTypes,
                      bool hasVarArgs,
                      TypePtr returnType,
-                     CompilerStatePtr cst)
+                     CompilerState* cst)
         : Type(CCODE_POINTER_TYPE, cst),
           argTypes(argTypes),
           returnType(returnType), callType(NULL),
@@ -2815,18 +2812,18 @@ struct VecType : public Type {
 struct TupleType : public Type {
     vector<TypePtr> elementTypes;
     const llvm::StructLayout *layout;
-    TupleType(CompilerStatePtr cst)
+    TupleType(CompilerState* cst)
         : Type(TUPLE_TYPE, cst), layout(NULL) {}
-    TupleType(llvm::ArrayRef<TypePtr> elementTypes, CompilerStatePtr cst)
+    TupleType(llvm::ArrayRef<TypePtr> elementTypes, CompilerState* cst)
         : Type(TUPLE_TYPE, cst), elementTypes(elementTypes),
           layout(NULL) {}
 };
 
 struct UnionType : public Type {
     vector<TypePtr> memberTypes;
-    UnionType(CompilerStatePtr cst)
+    UnionType(CompilerState* cst)
         : Type(UNION_TYPE, cst) {}
-    UnionType(llvm::ArrayRef<TypePtr> memberTypes, CompilerStatePtr cst)
+    UnionType(llvm::ArrayRef<TypePtr> memberTypes, CompilerState* cst)
         : Type(UNION_TYPE, cst), memberTypes(memberTypes)
         {}
 };
@@ -2881,7 +2878,7 @@ struct VariantType : public Type {
 
 struct StaticType : public Type {
     ObjectPtr obj;
-    StaticType(ObjectPtr obj, CompilerStatePtr cst)
+    StaticType(ObjectPtr obj, CompilerState* cst)
         : Type(STATIC_TYPE, cst), obj(obj) {}
 };
 
@@ -2889,7 +2886,7 @@ struct EnumType : public Type {
     EnumDeclPtr enumeration;
     bool initialized:1;
 
-    EnumType(EnumDeclPtr enumeration, CompilerStatePtr cst)
+    EnumType(EnumDeclPtr enumeration, CompilerState* cst)
         : Type(ENUM_TYPE, cst), enumeration(enumeration), initialized(false) {}
 };
 

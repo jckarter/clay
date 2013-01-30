@@ -4,7 +4,7 @@
 
 namespace clay {
 
-static CompilerStatePtr currentCompiler;
+static CompilerState* currentCompiler;
 
 map<llvm::StringRef, IdentifierPtr> Identifier::freeIdentifiers;
 
@@ -3302,7 +3302,7 @@ struct ModuleParser {
 };
 
 ModulePtr parse(llvm::StringRef moduleName, SourcePtr source, 
-                CompilerStatePtr cst, ParserFlags flags) {
+                CompilerState* cst, ParserFlags flags) {
     currentCompiler = cst;//FIXME
     if (flags && ParserKeepDocumentation)
         parserOptionKeepDocumentation = true;

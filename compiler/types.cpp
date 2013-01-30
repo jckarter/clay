@@ -20,23 +20,23 @@ namespace clay {
 // type size and alignment for debug generation
 //
 
-static size_t llTypeSize(llvm::Type *llt, CompilerStatePtr cst) {
+static size_t llTypeSize(llvm::Type *llt, CompilerState* cst) {
     return (size_t)cst->llvmDataLayout->getTypeAllocSize(llt);
 }
 
-static size_t llTypeAlignment(llvm::Type *llt, CompilerStatePtr cst) {
+static size_t llTypeAlignment(llvm::Type *llt, CompilerState* cst) {
     return (size_t)cst->llvmDataLayout->getABITypeAlignment(llt);
 }
 
-static size_t debugTypeSize(llvm::Type *llt, CompilerStatePtr cst) {
+static size_t debugTypeSize(llvm::Type *llt, CompilerState* cst) {
     return llTypeSize(llt, cst)*8;
 }
 
-static size_t debugTypeAlignment(llvm::Type *llt, CompilerStatePtr cst) {
+static size_t debugTypeAlignment(llvm::Type *llt, CompilerState* cst) {
     return llTypeAlignment(llt, cst)*8;
 }
 
-void initTypes(CompilerStatePtr cst) {
+void initTypes(CompilerState* cst) {
     cst->boolType = new BoolType(cst);
     cst->int8Type = new IntegerType(8, true, cst);
     cst->int16Type = new IntegerType(16, true, cst);
@@ -85,14 +85,14 @@ void initTypes(CompilerStatePtr cst) {
     cst->staticTypes.resize(N);
 }
 
-TypePtr integerType(unsigned bits, bool isSigned, CompilerStatePtr cst) {
+TypePtr integerType(unsigned bits, bool isSigned, CompilerState* cst) {
     if (isSigned)
         return intType(bits, cst);
     else
         return uintType(bits, cst);
 }
 
-TypePtr intType(unsigned bits, CompilerStatePtr cst) {
+TypePtr intType(unsigned bits, CompilerState* cst) {
     switch (bits) {
     case 8 : return cst->int8Type;
     case 16 : return cst->int16Type;
@@ -105,7 +105,7 @@ TypePtr intType(unsigned bits, CompilerStatePtr cst) {
     }
 }
 
-TypePtr uintType(unsigned bits, CompilerStatePtr cst) {
+TypePtr uintType(unsigned bits, CompilerState* cst) {
     switch (bits) {
     case 8 : return cst->uint8Type;
     case 16 : return cst->uint16Type;
@@ -118,7 +118,7 @@ TypePtr uintType(unsigned bits, CompilerStatePtr cst) {
     }
 }
 
-TypePtr floatType(unsigned bits, CompilerStatePtr cst) {
+TypePtr floatType(unsigned bits, CompilerState* cst) {
     switch (bits) {
     case 32 : return cst->float32Type;
     case 64 : return cst->float64Type;
@@ -129,7 +129,7 @@ TypePtr floatType(unsigned bits, CompilerStatePtr cst) {
     }
 }
 
-TypePtr imagType(unsigned bits, CompilerStatePtr cst) {
+TypePtr imagType(unsigned bits, CompilerState* cst) {
     switch (bits) {
     case 32 : return cst->imag32Type;
     case 64 : return cst->imag64Type;
@@ -140,7 +140,7 @@ TypePtr imagType(unsigned bits, CompilerStatePtr cst) {
     }
 }
 
-TypePtr complexType(unsigned bits, CompilerStatePtr cst) {
+TypePtr complexType(unsigned bits, CompilerState* cst) {
     switch (bits) {
     case 32 : return cst->complex32Type;
     case 64 : return cst->complex64Type;
@@ -156,7 +156,7 @@ static unsigned pointerHash(void *p) {
 }
 
 TypePtr pointerType(TypePtr pointeeType) {
-    CompilerStatePtr c = pointeeType->cst;
+    CompilerState* c = pointeeType->cst;
     unsigned h = pointerHash(pointeeType.ptr());
     h &= unsigned(c->pointerTypes.size() - 1);
     vector<PointerTypePtr>::iterator i, end;
@@ -174,7 +174,7 @@ TypePtr pointerType(TypePtr pointeeType) {
 TypePtr codePointerType(llvm::ArrayRef<TypePtr> argTypes,
                         llvm::ArrayRef<uint8_t> returnIsRef,
                         llvm::ArrayRef<TypePtr> returnTypes,
-                        CompilerStatePtr cst) {
+                        CompilerState* cst) {
     assert(returnIsRef.size() == returnTypes.size());
     unsigned h = 0;
     for (unsigned i = 0; i < argTypes.size(); ++i) {
@@ -204,7 +204,7 @@ TypePtr cCodePointerType(CallingConv callingConv,
                          llvm::ArrayRef<TypePtr> argTypes,
                          bool hasVarArgs,
                          TypePtr returnType,
-                         CompilerStatePtr cst) {
+                         CompilerState* cst) {
     unsigned h = unsigned(callingConv)*100;
     for (unsigned i = 0; i < argTypes.size(); ++i) {
         h += pointerHash(argTypes[i].ptr());
@@ -234,7 +234,7 @@ TypePtr cCodePointerType(CallingConv callingConv,
 }
 
 TypePtr arrayType(TypePtr elementType, unsigned size) {
-    CompilerStatePtr c = elementType->cst;
+    CompilerState* c = elementType->cst;
     unsigned h = pointerHash(elementType.ptr()) + size;
     h &= unsigned(c->arrayTypes.size() - 1);
     vector<ArrayTypePtr>::iterator i, end;
@@ -250,7 +250,7 @@ TypePtr arrayType(TypePtr elementType, unsigned size) {
 }
 
 TypePtr vecType(TypePtr elementType, unsigned size) {
-    CompilerStatePtr c = elementType->cst;
+    CompilerState* c = elementType->cst;
     if (elementType->typeKind != INTEGER_TYPE && elementType->typeKind != FLOAT_TYPE)
         error("Vec element type must be an integer or float type");
     unsigned h = pointerHash(elementType.ptr()) + size;
@@ -268,7 +268,7 @@ TypePtr vecType(TypePtr elementType, unsigned size) {
 }
 
 TypePtr tupleType(llvm::ArrayRef<TypePtr> elementTypes,
-                  CompilerStatePtr cst) {
+                  CompilerState* cst) {
     unsigned h = 0;
     TypePtr const *ei, *eend;
     for (ei = elementTypes.begin(), eend = elementTypes.end();
@@ -289,7 +289,7 @@ TypePtr tupleType(llvm::ArrayRef<TypePtr> elementTypes,
 }
 
 TypePtr unionType(llvm::ArrayRef<TypePtr> memberTypes,
-                  CompilerStatePtr cst) {
+                  CompilerState* cst) {
     unsigned h = 0;
     TypePtr const *mi, *mend;
     for (mi = memberTypes.begin(), mend = memberTypes.end();
@@ -311,7 +311,7 @@ TypePtr unionType(llvm::ArrayRef<TypePtr> memberTypes,
 
 TypePtr recordType(RecordDeclPtr record, 
                    llvm::ArrayRef<ObjectPtr> params) {
-    CompilerStatePtr c = record->env->cst;
+    CompilerState* c = record->env->cst;
     unsigned h = pointerHash(record.ptr());
     ObjectPtr const *pi, *pend;
     for (pi = params.begin(), pend = params.end(); pi != pend; ++pi)
@@ -334,7 +334,7 @@ TypePtr recordType(RecordDeclPtr record,
 }
 
 TypePtr variantType(VariantDeclPtr variant, llvm::ArrayRef<ObjectPtr> params) {
-    CompilerStatePtr c = variant->env->cst;
+    CompilerState* c = variant->env->cst;
     unsigned h = pointerHash(variant.ptr());
     for (unsigned i = 0; i < params.size(); ++i)
         h += objectHash(params[i]);
@@ -352,7 +352,7 @@ TypePtr variantType(VariantDeclPtr variant, llvm::ArrayRef<ObjectPtr> params) {
     return t.ptr();
 }
 
-TypePtr staticType(ObjectPtr obj, CompilerStatePtr cst)
+TypePtr staticType(ObjectPtr obj, CompilerState* cst)
 {
     unsigned h = objectHash(obj);
     h &= unsigned(cst->staticTypes.size() - 1);
@@ -378,7 +378,7 @@ void initializeEnumType(EnumTypePtr t)
     t->initialized = true;
 }
 
-TypePtr enumType(EnumDeclPtr enumeration, CompilerStatePtr cst)
+TypePtr enumType(EnumDeclPtr enumeration, CompilerState* cst)
 {
     if (!enumeration->type)
         enumeration->type = new EnumType(enumeration, cst);
@@ -558,7 +558,7 @@ static bool unpackField(TypePtr x, IdentifierPtr &name, TypePtr &type) {
 static void setProperty(TypePtr type,
                         ProcedurePtr proc,
                         llvm::ArrayRef<ExprPtr> exprs) {
-    CompilerStatePtr cst = type->cst;
+    CompilerState* cst = type->cst;
     CodePtr code = new Code();
 
     TypePtr typeType = staticType(type.ptr(), cst);
@@ -621,7 +621,7 @@ static void setProperties(TypePtr type, llvm::ArrayRef<TypePtr> props) {
         setProperty(type, props[i]);
 }
 
-void initializeRecordFields(RecordTypePtr t, CompilerStatePtr cst) {
+void initializeRecordFields(RecordTypePtr t, CompilerState* cst) {
     CompileContextPusher pusher(t.ptr());
 
     assert(!t->fieldsInitialized);
@@ -1069,7 +1069,7 @@ llvm::DIType llvmVoidTypeDebugInfo() {
 static void declareLLVMType(TypePtr t) {
     assert(t->llType == NULL);
 
-    CompilerStatePtr cst = t->cst;
+    CompilerState* cst = t->cst;
     llvm::DIBuilder* llvmDIBuilder = cst->llvmDIBuilder;
 
     switch (t->typeKind) {
@@ -1352,7 +1352,7 @@ static void declareLLVMType(TypePtr t) {
 }
 
 static void defineLLVMType(TypePtr t) {
-    CompilerStatePtr cst = t->cst;
+    CompilerState* cst = t->cst;
     llvm::DIBuilder* llvmDIBuilder = cst->llvmDIBuilder;
 
     assert(t->llType != NULL && !t->defined);

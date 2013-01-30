@@ -47,7 +47,7 @@ static void suggestModules(llvm::raw_ostream &err, set<string> const &moduleName
 }
 
 static void ambiguousImportError(IdentifierPtr name, ImportSet const &candidates,
-                                 CompilerStatePtr cst) {
+                                 CompilerState* cst) {
     string buf;
     llvm::raw_string_ostream err(buf);
     err << "ambiguous imported symbol: " << name->str;
@@ -65,7 +65,7 @@ static void ambiguousImportError(IdentifierPtr name, ImportSet const &candidates
 }
 
 static void undefinedNameError(IdentifierPtr name,
-                               CompilerStatePtr cst) {
+                               CompilerState* cst) {
     string buf;
     llvm::raw_string_ostream err(buf);
     err << "undefined name: " << name->str;
@@ -375,7 +375,7 @@ ObjectPtr lookupEnv(EnvPtr env, IdentifierPtr name) {
 }
 
 ObjectPtr safeLookupEnv(EnvPtr env, IdentifierPtr name) {
-    CompilerState* cst = safeLookupModule(env)->cst.ptr();
+    CompilerState* cst = safeLookupModule(env)->cst;
     ObjectPtr obj = lookupEnv(env, name);
     if (obj == NULL)
         undefinedNameError(name, cst);
@@ -425,7 +425,7 @@ ObjectPtr lookupEnvEx(EnvPtr env, IdentifierPtr name,
                       EnvPtr nonLocalEnv, bool &isNonLocal,
                       bool &isGlobal)
 {
-    CompilerState* cst = safeLookupModule(env)->cst.ptr();
+    CompilerState* cst = safeLookupModule(env)->cst;
     if (nonLocalEnv == env)
         nonLocalEnv = NULL;
 

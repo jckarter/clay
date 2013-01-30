@@ -9,35 +9,35 @@ namespace clay {
 // types module
 //
 
-void initTypes(CompilerStatePtr cst);
+void initTypes(CompilerState* cst);
 
-TypePtr integerType(unsigned bits, bool isSigned, CompilerStatePtr cst);
-TypePtr intType(unsigned bits, CompilerStatePtr cst);
-TypePtr uintType(unsigned bits, CompilerStatePtr cst);
-TypePtr floatType(unsigned bits, CompilerStatePtr cst);
-TypePtr imagType(unsigned bits, CompilerStatePtr cst);
-TypePtr complexType(unsigned bits, CompilerStatePtr cst);
+TypePtr integerType(unsigned bits, bool isSigned, CompilerState* cst);
+TypePtr intType(unsigned bits, CompilerState* cst);
+TypePtr uintType(unsigned bits, CompilerState* cst);
+TypePtr floatType(unsigned bits, CompilerState* cst);
+TypePtr imagType(unsigned bits, CompilerState* cst);
+TypePtr complexType(unsigned bits, CompilerState* cst);
 TypePtr pointerType(TypePtr pointeeType);
 TypePtr codePointerType(llvm::ArrayRef<TypePtr> argTypes,
                         llvm::ArrayRef<uint8_t> returnIsRef,
                         llvm::ArrayRef<TypePtr> returnTypes,
-                        CompilerStatePtr cst);
+                        CompilerState* cst);
 TypePtr cCodePointerType(CallingConv callingConv,
                          llvm::ArrayRef<TypePtr> argTypes,
                          bool hasVarArgs,
                          TypePtr returnType,
-                         CompilerStatePtr cst);
+                         CompilerState* cst);
 TypePtr arrayType(TypePtr elememtType, unsigned size);
 TypePtr vecType(TypePtr elementType, unsigned size);
 TypePtr tupleType(llvm::ArrayRef<TypePtr> elementTypes,
-                  CompilerStatePtr cst);
+                  CompilerState* cst);
 TypePtr unionType(llvm::ArrayRef<TypePtr> memberTypes,
-                  CompilerStatePtr cst);
+                  CompilerState* cst);
 TypePtr recordType(RecordDeclPtr record,
                    llvm::ArrayRef<ObjectPtr> params);
 TypePtr variantType(VariantDeclPtr variant, llvm::ArrayRef<ObjectPtr> params);
-TypePtr staticType(ObjectPtr obj, CompilerStatePtr cst);
-TypePtr enumType(EnumDeclPtr enumeration, CompilerStatePtr cst);
+TypePtr staticType(ObjectPtr obj, CompilerState* cst);
+TypePtr enumType(EnumDeclPtr enumeration, CompilerState* cst);
 TypePtr newType(NewTypeDeclPtr newtype);
 
 bool isPrimitiveType(TypePtr t);
@@ -46,7 +46,7 @@ bool isPrimitiveAggregateTooLarge(TypePtr t);
 bool isPointerOrCodePointerType(TypePtr t);
 bool isStaticOrTupleOfStatics(TypePtr t);
 
-void initializeRecordFields(RecordTypePtr t, CompilerStatePtr cst);
+void initializeRecordFields(RecordTypePtr t, CompilerState* cst);
 llvm::ArrayRef<IdentifierPtr> recordFieldNames(RecordTypePtr t);
 llvm::ArrayRef<TypePtr> recordFieldTypes(RecordTypePtr t);
 const llvm::StringMap<size_t> &recordFieldIndexMap(RecordTypePtr t);

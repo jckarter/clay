@@ -161,7 +161,7 @@ static bool imagTypeSuffix(llvm::StringRef suffix,
 
 ValueHolderPtr parseIntLiteral(ModulePtr module, IntLiteral *x)
 {
-    CompilerState* cst = module->cst.ptr();
+    CompilerState* cst = module->cst;
     TypePtr defaultType = module->attrDefaultIntegerType.ptr();
     if (defaultType == NULL)
         defaultType = cst->int32Type;
@@ -322,7 +322,7 @@ ValueHolderPtr parseIntLiteral(ModulePtr module, IntLiteral *x)
 
 ValueHolderPtr parseFloatLiteral(ModulePtr module, FloatLiteral *x)
 {
-    CompilerState* cst = module->cst.ptr();
+    CompilerState* cst = module->cst;
     TypePtr defaultType = module->attrDefaultFloatType.ptr();
     if (defaultType == NULL)
         defaultType = cst->float64Type;

@@ -90,13 +90,13 @@ struct InvokeSet {
     bool shouldLog:1;
     bool evaluatingPredicate:1;
 
-    CompilerStatePtr cst;
+    CompilerState* cst;
 
     InvokeSet(ObjectPtr callable,
               llvm::ArrayRef<TypePtr> argsKey,
               OverloadPtr symbolInterface,
               llvm::ArrayRef<OverloadPtr> symbolOverloads,
-              CompilerStatePtr cst)
+              CompilerState* cst)
         : callable(callable), argsKey(argsKey),
           interface(symbolInterface),
           overloads(symbolOverloads), nextOverloadIndex(0),
@@ -126,16 +126,16 @@ struct MatchFailureError {
 
 InvokeSet *lookupInvokeSet(ObjectPtr callable,
                            llvm::ArrayRef<TypePtr> argsKey,
-                           CompilerStatePtr cst);
+                           CompilerState* cst);
 vector<InvokeSet*> lookupInvokeSets(ObjectPtr callable,
-                                    CompilerStatePtr cst);
+                                    CompilerState* cst);
 InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
                                llvm::ArrayRef<TypePtr> argsKey,
                                llvm::ArrayRef<ValueTempness> argsTempness,
                                MatchFailureError &failures,
-                               CompilerStatePtr cst);
+                               CompilerState* cst);
 
-void setFinalOverloadsEnabled(bool enabled, CompilerStatePtr cst); 
+void setFinalOverloadsEnabled(bool enabled, CompilerState* cst); 
 
 }
 

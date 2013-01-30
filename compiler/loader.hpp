@@ -11,19 +11,19 @@ void addProcedureOverload(ProcedurePtr proc, EnvPtr Env, OverloadPtr x);
 void getProcedureMonoTypes(ProcedureMono &mono, EnvPtr env,
     llvm::ArrayRef<FormalArgPtr> formalArgs, bool hasVarArg);
 
-void initLoader(CompilerStatePtr cst);
+void initLoader(CompilerState* cst);
 void setSearchPath(const llvm::ArrayRef<PathString> path,
-                   CompilerStatePtr cst);
+                   CompilerState* cst);
 ModulePtr loadProgram(llvm::StringRef fileName, vector<string> *sourceFiles,
-                      bool verbose, bool repl, CompilerStatePtr cst);
+                      bool verbose, bool repl, CompilerState* cst);
 ModulePtr loadProgramSource(llvm::StringRef name, llvm::StringRef source, 
-                            bool verbose, bool repl, CompilerStatePtr cst);
-ModulePtr loadedModule(llvm::StringRef module, CompilerStatePtr cst);
-ModulePtr preludeModule(CompilerStatePtr cst);
-ModulePtr primitivesModule(CompilerStatePtr cst);
-ModulePtr operatorsModule(CompilerStatePtr cst);
-ModulePtr intrinsicsModule(CompilerStatePtr cst);
-ModulePtr staticModule(ObjectPtr x, CompilerStatePtr cst);
+                            bool verbose, bool repl, CompilerState* cst);
+ModulePtr loadedModule(llvm::StringRef module, CompilerState* cst);
+ModulePtr preludeModule(CompilerState* cst);
+ModulePtr primitivesModule(CompilerState* cst);
+ModulePtr operatorsModule(CompilerState* cst);
+ModulePtr intrinsicsModule(CompilerState* cst);
+ModulePtr staticModule(ObjectPtr x, CompilerState* cst);
 
 void addGlobals(ModulePtr m, llvm::ArrayRef<TopLevelItemPtr> toplevels);
 void loadDependent(ModulePtr m, vector<string> *sourceFiles,
@@ -233,8 +233,8 @@ enum PrimOpCode {
 
 struct PrimOp : public Object {
     int primOpCode;
-    CompilerStatePtr cst;
-    PrimOp(int primOpCode, CompilerStatePtr cst)
+    CompilerState* cst;
+    PrimOp(int primOpCode, CompilerState* cst)
         : Object(PRIM_OP), primOpCode(primOpCode), cst(cst) {}
 };
 

@@ -29,7 +29,7 @@ bool isOverloadablePrimOp(ObjectPtr x)
 }
 
 vector<OverloadPtr> &primOpOverloads(PrimOpPtr x,
-                                     CompilerStatePtr cst)
+                                     CompilerState* cst)
 {
     vector<OverloadPtr> *ptr = NULL;
     switch (x->primOpCode) {
@@ -63,7 +63,7 @@ vector<OverloadPtr> &primOpOverloads(PrimOpPtr x,
     return *ptr;
 }
 
-vector<OverloadPtr> &getPatternOverloads(CompilerStatePtr cst)
+vector<OverloadPtr> &getPatternOverloads(CompilerState* cst)
 {
     return cst->patternOverloads;
 }

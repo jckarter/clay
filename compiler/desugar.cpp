@@ -10,7 +10,7 @@
 
 namespace clay {
 
-ExprPtr desugarCharLiteral(char c, CompilerStatePtr cst) {
+ExprPtr desugarCharLiteral(char c, CompilerState* cst) {
     ExprPtr nameRef = operator_expr_charLiteral(cst);
     CallPtr call = new Call(nameRef, new ExprList());
     llvm::SmallString<128> buf;
@@ -60,7 +60,7 @@ void desugarFieldRef(FieldRefPtr x, ModulePtr module) {
     x->desugared = call.ptr();
 }
 
-ExprPtr desugarStaticIndexing(StaticIndexingPtr x, CompilerStatePtr cst) {
+ExprPtr desugarStaticIndexing(StaticIndexingPtr x, CompilerState* cst) {
     ExprListPtr args = new ExprList(x->expr);
     ValueHolderPtr vh = sizeTToValueHolder(x->index, cst);
     args->add(new StaticExpr(new ObjectExpr(vh.ptr())));
@@ -69,7 +69,7 @@ ExprPtr desugarStaticIndexing(StaticIndexingPtr x, CompilerStatePtr cst) {
     return call.ptr();
 }
 
-ExprPtr lookupCallable(int op, CompilerStatePtr cst) {
+ExprPtr lookupCallable(int op, CompilerState* cst) {
     ExprPtr callable;
     switch (op) {
     case DEREFERENCE :
@@ -96,7 +96,7 @@ ExprPtr lookupCallable(int op, CompilerStatePtr cst) {
     return callable;
 }
 
-ExprPtr desugarVariadicOp(VariadicOpPtr x, CompilerStatePtr cst) {
+ExprPtr desugarVariadicOp(VariadicOpPtr x, CompilerState* cst) {
     ExprPtr callable = lookupCallable(x->op, cst);
     CallPtr call = new Call(callable, new ExprList());
     call->parenArgs->add(x->exprs);  
@@ -128,7 +128,7 @@ static vector<FormalArgPtr> identVtoFormalV(llvm::ArrayRef<IdentifierPtr> x) {
 //      }
 //  }
 
-StatementPtr desugarForStatement(ForPtr x, CompilerStatePtr cst) {
+StatementPtr desugarForStatement(ForPtr x, CompilerState* cst) {
     IdentifierPtr exprVar = Identifier::get("%expr", x->location);
     IdentifierPtr iterVar = Identifier::get("%iter", x->location);
     IdentifierPtr valueVar = Identifier::get("%value", x->location);
@@ -193,7 +193,7 @@ static void makeExceptionVars(vector<IdentifierPtr>& identifiers, CatchPtr x) {
 }
 
 StatementPtr desugarCatchBlocks(llvm::ArrayRef<CatchPtr> catchBlocks,
-                                CompilerStatePtr cst) {
+                                CompilerState* cst) {
     assert(!catchBlocks.empty());
     Location firstCatchLocation = catchBlocks.front()->location;
     IdentifierPtr expVar = Identifier::get("%exp", firstCatchLocation);
@@ -329,7 +329,7 @@ void desugarThrow(Throw* thro) {
     }
 }
 
-StatementPtr desugarSwitchStatement(SwitchPtr x, CompilerStatePtr cst) {
+StatementPtr desugarSwitchStatement(SwitchPtr x, CompilerState* cst) {
     BlockPtr block = new Block();
     block->location = x->location;
 
@@ -382,7 +382,7 @@ StatementPtr desugarSwitchStatement(SwitchPtr x, CompilerStatePtr cst) {
 }
 
 static SourcePtr evalToSource(Location const &location, ExprListPtr args, 
-                              EnvPtr env, CompilerStatePtr cst)
+                              EnvPtr env, CompilerState* cst)
 {
     llvm::SmallString<128> sourceTextBuf;
     llvm::raw_svector_ostream sourceTextOut(sourceTextBuf);
@@ -402,7 +402,7 @@ static SourcePtr evalToSource(Location const &location, ExprListPtr args,
         llvm::MemoryBuffer::getMemBufferCopy(sourceTextBuf));
 }
 
-ExprListPtr desugarEvalExpr(EvalExprPtr eval, EnvPtr env, CompilerStatePtr cst)
+ExprListPtr desugarEvalExpr(EvalExprPtr eval, EnvPtr env, CompilerState* cst)
 {
     if (eval->evaled)
         return eval->value;
@@ -415,7 +415,7 @@ ExprListPtr desugarEvalExpr(EvalExprPtr eval, EnvPtr env, CompilerStatePtr cst)
 }
 
 llvm::ArrayRef<StatementPtr> desugarEvalStatement(EvalStatementPtr eval, EnvPtr env,
-                                                  CompilerStatePtr cst)
+                                                  CompilerState* cst)
 {
     if (eval->evaled)
         return eval->value;
@@ -428,7 +428,7 @@ llvm::ArrayRef<StatementPtr> desugarEvalStatement(EvalStatementPtr eval, EnvPtr 
 }
 
 llvm::ArrayRef<TopLevelItemPtr> desugarEvalTopLevel(EvalTopLevelPtr eval, EnvPtr env,
-                                                    CompilerStatePtr cst)
+                                                    CompilerState* cst)
 {
     if (eval->evaled)
         return eval->value;
@@ -440,7 +440,7 @@ llvm::ArrayRef<TopLevelItemPtr> desugarEvalTopLevel(EvalTopLevelPtr eval, EnvPtr
     }
 }
 
-OverloadPtr desugarAsOverload(OverloadPtr &x, CompilerStatePtr cst) {
+OverloadPtr desugarAsOverload(OverloadPtr &x, CompilerState* cst) {
     assert(x->hasAsConversion);
 
     //Generate specialised overload

@@ -5,22 +5,22 @@
 
 namespace clay {
 
-ExprPtr desugarCharLiteral(char c, CompilerStatePtr cst);
+ExprPtr desugarCharLiteral(char c, CompilerState* cst);
 void desugarFieldRef(FieldRefPtr x, ModulePtr module);
-ExprPtr desugarStaticIndexing(StaticIndexingPtr x, CompilerStatePtr cst);
-ExprPtr desugarVariadicOp(VariadicOpPtr x, CompilerStatePtr cst);
+ExprPtr desugarStaticIndexing(StaticIndexingPtr x, CompilerState* cst);
+ExprPtr desugarVariadicOp(VariadicOpPtr x, CompilerState* cst);
 ExprListPtr desugarVariadicAssignmentRight(VariadicAssignment *x);
-StatementPtr desugarForStatement(ForPtr x, CompilerStatePtr cst);
+StatementPtr desugarForStatement(ForPtr x, CompilerState* cst);
 StatementPtr desugarCatchBlocks(llvm::ArrayRef<CatchPtr> catchBlocks,
-                                CompilerStatePtr cst);
+                                CompilerState* cst);
 void desugarThrow(Throw* thro);
-StatementPtr desugarSwitchStatement(SwitchPtr x, CompilerStatePtr cst);
+StatementPtr desugarSwitchStatement(SwitchPtr x, CompilerState* cst);
 
-ExprListPtr desugarEvalExpr(EvalExprPtr eval, EnvPtr env, CompilerStatePtr cst);
+ExprListPtr desugarEvalExpr(EvalExprPtr eval, EnvPtr env, CompilerState* cst);
 llvm::ArrayRef<StatementPtr> desugarEvalStatement(EvalStatementPtr eval, EnvPtr env,
-                                                  CompilerStatePtr cst);
+                                                  CompilerState* cst);
 llvm::ArrayRef<TopLevelItemPtr> desugarEvalTopLevel(EvalTopLevelPtr eval, EnvPtr env);
-OverloadPtr desugarAsOverload(OverloadPtr &x, CompilerStatePtr cst);
+OverloadPtr desugarAsOverload(OverloadPtr &x, CompilerState* cst);
 
 }
 

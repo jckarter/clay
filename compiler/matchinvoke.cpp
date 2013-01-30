@@ -28,7 +28,7 @@ void initializePatternEnv(EnvPtr patternEnv, llvm::ArrayRef<PatternVar> pvars,
     }
 }
 
-static void initializePatterns(OverloadPtr x, CompilerStatePtr cst)
+static void initializePatterns(OverloadPtr x, CompilerState* cst)
 {
     if (x->patternsInitializedState == 1)
         return;
@@ -99,7 +99,7 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
                            ObjectPtr callable,
                            llvm::ArrayRef<TypePtr> argsKey)
 {
-    CompilerStatePtr cst = overload->env->cst;
+    CompilerState* cst = overload->env->cst;
     initializePatterns(overload, cst);
 
     PatternReseter reseter(overload);

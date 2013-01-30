@@ -15,12 +15,12 @@ struct LambdaContext {
     EnvPtr nonLocalEnv;
     llvm::StringRef closureDataName;
     vector<string> &freeVars;
-    CompilerStatePtr cst;
+    CompilerState* cst;
     LambdaContext(LambdaCapture captureBy,
                   EnvPtr nonLocalEnv,
                   llvm::StringRef closureDataName,
                   vector<string> &freeVars,
-                  CompilerStatePtr cst)
+                  CompilerState* cst)
         : captureBy(captureBy), nonLocalEnv(nonLocalEnv),
           closureDataName(closureDataName), freeVars(freeVars) ,
           cst(cst) {}
@@ -72,7 +72,7 @@ static vector<TypePtr> typesOfValues(ObjectPtr obj) {
 
 static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
     llvm::StringRef closureDataName, llvm::StringRef lname,
-    CompilerStatePtr cst);
+    CompilerState* cst);
 static void initializeLambdaWithoutFreeVars(LambdaPtr x, EnvPtr env,
     llvm::StringRef lname);
 
@@ -98,7 +98,7 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
     assert(!x->initialized);
     x->initialized = true;
 
-    CompilerState* cst = safeLookupModule(env)->cst.ptr();
+    CompilerState* cst = safeLookupModule(env)->cst;
 
     string lname = lambdaName(x);
 
@@ -131,7 +131,7 @@ void initializeLambda(LambdaPtr x, EnvPtr env)
     }
 }
 
-static void checkForeignExpr(ObjectPtr &obj, EnvPtr env, CompilerStatePtr cst)
+static void checkForeignExpr(ObjectPtr &obj, EnvPtr env, CompilerState* cst)
 {
     if (obj->objKind == EXPRESSION) {
         ExprPtr expr = (Expr *)obj.ptr();
@@ -155,7 +155,7 @@ static void checkForeignExpr(ObjectPtr &obj, EnvPtr env, CompilerStatePtr cst)
 }
 
 static void initializeLambdaWithFreeVars(LambdaPtr x, EnvPtr env,
-    llvm::StringRef closureDataName, llvm::StringRef lname, CompilerStatePtr cst)
+    llvm::StringRef closureDataName, llvm::StringRef lname, CompilerState* cst)
 {
     RecordDeclPtr r = new RecordDecl(NULL, PRIVATE);
     r->location = x->location;

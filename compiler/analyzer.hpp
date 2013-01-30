@@ -9,12 +9,12 @@
 namespace clay {
 
 
-void disableAnalysisCaching(CompilerStatePtr cst);
-void enableAnalysisCaching(CompilerStatePtr cst);
+void disableAnalysisCaching(CompilerState* cst);
+void enableAnalysisCaching(CompilerState* cst);
 
 struct AnalysisCachingDisabler {
-    CompilerStatePtr cst;
-    AnalysisCachingDisabler(CompilerStatePtr cst) :cst(cst) {
+    CompilerState* cst;
+    AnalysisCachingDisabler(CompilerState* cst) :cst(cst) {
         disableAnalysisCaching(cst); 
     }
     ~AnalysisCachingDisabler() {
@@ -23,7 +23,7 @@ struct AnalysisCachingDisabler {
 };
 
 
-void initializeStaticForClones(StaticForPtr x, size_t count, CompilerStatePtr cst);
+void initializeStaticForClones(StaticForPtr x, size_t count, CompilerState* cst);
 bool returnKindToByRef(ReturnKind returnKind, PVData const &pv);
 
 MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args);
@@ -45,31 +45,31 @@ enum BoolKind {
 BoolKind typeBoolKind(TypePtr type);
 
 
-PVData safeAnalyzeOne(ExprPtr expr, EnvPtr env, CompilerStatePtr cst);
+PVData safeAnalyzeOne(ExprPtr expr, EnvPtr env, CompilerState* cst);
 MultiPValuePtr safeAnalyzeMulti(ExprListPtr exprs, EnvPtr env, 
-                                size_t wantCount, CompilerStatePtr cst);
-MultiPValuePtr safeAnalyzeExpr(ExprPtr expr, EnvPtr env, CompilerStatePtr cst);
+                                size_t wantCount, CompilerState* cst);
+MultiPValuePtr safeAnalyzeExpr(ExprPtr expr, EnvPtr env, CompilerState* cst);
 MultiPValuePtr safeAnalyzeIndexingExpr(ExprPtr indexable,
                                        ExprListPtr args,
                                        EnvPtr env,
-                                       CompilerStatePtr cst);
+                                       CompilerState* cst);
 MultiPValuePtr safeAnalyzeMultiArgs(ExprListPtr exprs,
                                     EnvPtr env,
                                     vector<unsigned> &dispatchIndices);
 InvokeEntry* safeAnalyzeCallable(ObjectPtr x,
                                  llvm::ArrayRef<TypePtr> argsKey,
                                  llvm::ArrayRef<ValueTempness> argsTempness,
-                                 CompilerStatePtr cst);
+                                 CompilerState* cst);
 MultiPValuePtr safeAnalyzeCallByName(InvokeEntry* entry,
                                      ExprPtr callable,
                                      ExprListPtr args,
                                      EnvPtr env,
-                                     CompilerStatePtr cst);
+                                     CompilerState* cst);
 MultiPValuePtr safeAnalyzeGVarInstance(GVarInstancePtr x);
 
 MultiPValuePtr analyzeMulti(ExprListPtr exprs, EnvPtr env, 
-                            size_t wantCount, CompilerStatePtr cst);
-PVData analyzeOne(ExprPtr expr, EnvPtr env, CompilerStatePtr cst);
+                            size_t wantCount, CompilerState* cst);
+PVData analyzeOne(ExprPtr expr, EnvPtr env, CompilerState* cst);
 
 MultiPValuePtr analyzeMultiArgs(ExprListPtr exprs,
                                 EnvPtr env,
@@ -78,15 +78,15 @@ PVData analyzeOneArg(ExprPtr x,
                      EnvPtr env,
                      unsigned startIndex,
                      vector<unsigned> &dispatchIndices,
-                     CompilerStatePtr cst);
+                     CompilerState* cst);
 MultiPValuePtr analyzeArgExpr(ExprPtr x,
                               EnvPtr env,
                               unsigned startIndex,
                               vector<unsigned> &dispatchIndices,
-                              CompilerStatePtr cst);
+                              CompilerState* cst);
 
-MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env, CompilerStatePtr cst);
-MultiPValuePtr analyzeStaticObject(ObjectPtr x, CompilerStatePtr cst);
+MultiPValuePtr analyzeExpr(ExprPtr expr, EnvPtr env, CompilerState* cst);
+MultiPValuePtr analyzeStaticObject(ObjectPtr x, CompilerState* cst);
 
 GVarInstancePtr lookupGVarInstance(GlobalVariablePtr x,
                                    llvm::ArrayRef<ObjectPtr> params);
@@ -94,25 +94,25 @@ GVarInstancePtr defaultGVarInstance(GlobalVariablePtr x);
 GVarInstancePtr analyzeGVarIndexing(GlobalVariablePtr x,
                                     ExprListPtr args,
                                     EnvPtr env,
-                                    CompilerStatePtr cst);
+                                    CompilerState* cst);
 MultiPValuePtr analyzeGVarInstance(GVarInstancePtr x);
 
-PVData analyzeExternalVariable(ExternalVariablePtr x, CompilerStatePtr cst);
+PVData analyzeExternalVariable(ExternalVariablePtr x, CompilerState* cst);
 void analyzeExternalProcedure(ExternalProcedurePtr x);
-void verifyAttributes(ExternalProcedurePtr x, CompilerStatePtr cst);
-void verifyAttributes(ExternalVariablePtr x, CompilerStatePtr cst);
+void verifyAttributes(ExternalProcedurePtr x, CompilerState* cst);
+void verifyAttributes(ExternalVariablePtr x, CompilerState* cst);
 void verifyAttributes(ModulePtr x);
 MultiPValuePtr analyzeIndexingExpr(ExprPtr indexable,
                                    ExprListPtr args,
                                    EnvPtr env,
-                                   CompilerStatePtr cst);
+                                   CompilerState* cst);
 bool unwrapByRef(TypePtr &t);
 TypePtr constructType(ObjectPtr constructor, MultiStaticPtr args);
 PVData analyzeTypeConstructor(ObjectPtr obj, MultiStaticPtr args);
 MultiPValuePtr analyzeAliasIndexing(GlobalAliasPtr x,
                                     ExprListPtr args,
                                     EnvPtr env,
-                                    CompilerStatePtr cst);
+                                    CompilerState* cst);
 void computeArgsKey(MultiPValuePtr args,
                     vector<TypePtr> &argsKey,
                     vector<ValueTempness> &argsTempness);
@@ -121,31 +121,31 @@ MultiPValuePtr analyzeReturn(llvm::ArrayRef<uint8_t> returnIsRef,
 MultiPValuePtr analyzeCallExpr(ExprPtr callable,
                                ExprListPtr args,
                                EnvPtr env,
-                               CompilerStatePtr cst);
-PVData analyzeDispatchIndex(PVData const &pv, unsigned tag, CompilerStatePtr cst);
+                               CompilerState* cst);
+PVData analyzeDispatchIndex(PVData const &pv, unsigned tag, CompilerState* cst);
 MultiPValuePtr analyzeDispatch(ObjectPtr obj,
                                MultiPValuePtr args,
                                llvm::ArrayRef<unsigned> dispatchIndices,
-                               CompilerStatePtr cst);
+                               CompilerState* cst);
 MultiPValuePtr analyzeCallValue(PVData const &callable,
                                 MultiPValuePtr args,
-                                CompilerStatePtr cst);
+                                CompilerState* cst);
 MultiPValuePtr analyzeCallPointer(PVData const &x,
                                   MultiPValuePtr args);
 bool analyzeIsDefined(ObjectPtr x,
                       llvm::ArrayRef<TypePtr> argsKey,
                       llvm::ArrayRef<ValueTempness> argsTempness,
-                      CompilerStatePtr cst);
+                      CompilerState* cst);
 InvokeEntry* analyzeCallable(ObjectPtr x,
                              llvm::ArrayRef<TypePtr> argsKey,
                              llvm::ArrayRef<ValueTempness> argsTempness,
-                             CompilerStatePtr cst);
+                             CompilerState* cst);
 
 MultiPValuePtr analyzeCallByName(InvokeEntry* entry,
                                  ExprPtr callable,
                                  ExprListPtr args,
                                  EnvPtr env,
-                                 CompilerStatePtr cst);
+                                 CompilerState* cst);
 
 void analyzeCodeBody(InvokeEntry* entry);
 

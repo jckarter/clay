@@ -14,7 +14,7 @@ static llvm::Value *promoteCVarArg(CallingConv conv,
                                    llvm::Value *llv,
                                    CodegenContext* ctx)
 {
-    CompilerState* cst = ctx->cst.ptr();
+    CompilerState* cst = ctx->cst;
     if (conv == CC_LLVM)
         return llv;
 
@@ -661,7 +661,7 @@ static void unifyWordClass(vector<WordClass>::iterator wordi, WordClass newClass
 static void _classifyStructType(llvm::ArrayRef<TypePtr> fields,
                                 vector<WordClass>::iterator begin,
                                 size_t offset,
-                                CompilerStatePtr cst);
+                                CompilerState* cst);
 
 static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_t offset)
 {
@@ -795,7 +795,7 @@ static void _classifyType(TypePtr type, vector<WordClass>::iterator begin, size_
 static void _classifyStructType(llvm::ArrayRef<TypePtr> fields,
                                 vector<WordClass>::iterator begin,
                                 size_t offset,
-                                CompilerStatePtr cst)
+                                CompilerState* cst)
 {
     if (fields.empty())
         _classifyType(intType(8, cst), begin, offset);
@@ -991,7 +991,7 @@ llvm::Type *X86_64_ExternalTarget::getLLVMWordType(TypePtr type)
 // getExternalTarget
 //
 
-void initExternalTarget(string targetString, CompilerStatePtr cst)
+void initExternalTarget(string targetString, CompilerState* cst)
 {
     llvm::Triple target(targetString);
     if (target.getArch() == llvm::Triple::x86_64
@@ -1008,7 +1008,7 @@ void initExternalTarget(string targetString, CompilerStatePtr cst)
         cst->externalTarget = new LLVMExternalTarget(target);
 }
 
-ExternalTargetPtr getExternalTarget(CompilerStatePtr cst)
+ExternalTargetPtr getExternalTarget(CompilerState* cst)
 {
     return cst->externalTarget;
 }
