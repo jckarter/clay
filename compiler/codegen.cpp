@@ -2737,7 +2737,7 @@ static void interpolateExpr(SourcePtr source, unsigned offset, unsigned length,
                             EnvPtr env, llvm::raw_ostream &outstream,
                             CompilerState* cst)
 {
-    ExprPtr expr = parseExpr(source, offset, length);
+    ExprPtr expr = parseExpr(source, offset, length, cst);
     ObjectPtr x = evaluateOneStatic(expr, env, cst);
     LocationContext loc(expr->location);
     if (x->objKind == TYPE) {

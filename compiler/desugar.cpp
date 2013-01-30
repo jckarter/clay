@@ -408,7 +408,7 @@ ExprListPtr desugarEvalExpr(EvalExprPtr eval, EnvPtr env, CompilerState* cst)
         return eval->value;
     else {
         SourcePtr source = evalToSource(eval->location, new ExprList(eval->args), env, cst);
-        eval->value = parseExprList(source, 0, unsigned(source->size()));
+        eval->value = parseExprList(source, 0, unsigned(source->size()), cst);
         eval->evaled = true;
         return eval->value;
     }
@@ -421,7 +421,7 @@ llvm::ArrayRef<StatementPtr> desugarEvalStatement(EvalStatementPtr eval, EnvPtr 
         return eval->value;
     else {
         SourcePtr source = evalToSource(eval->location, eval->args, env, cst);
-        parseStatements(source, 0, unsigned(source->size()), eval->value);
+        parseStatements(source, 0, unsigned(source->size()), eval->value, cst);
         eval->evaled = true;
         return eval->value;
     }
@@ -434,7 +434,8 @@ llvm::ArrayRef<TopLevelItemPtr> desugarEvalTopLevel(EvalTopLevelPtr eval, EnvPtr
         return eval->value;
     else {
         SourcePtr source = evalToSource(eval->location, eval->args, env, cst);
-        parseTopLevelItems(source, 0, unsigned(source->size()), eval->value, eval->module);
+        parseTopLevelItems(source, 0, unsigned(source->size()), eval->value, 
+                           eval->module, cst);
         eval->evaled = true;
         return eval->value;
     }

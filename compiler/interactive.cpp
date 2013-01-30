@@ -247,7 +247,7 @@ namespace clay {
     static void eval(llvm::StringRef line, CompilerState* cst) {
         SourcePtr source = new Source(line, 0);
         try {
-            ReplItem x = parseInteractive(source, 0, source->size());
+            ReplItem x = parseInteractive(source, 0, source->size(), cst);
             if (x.isExprSet) {
                 jitAndPrintExpr(x.expr, cst);
             } else {
@@ -306,8 +306,6 @@ namespace clay {
         eb.setTargetOptions(targetOptions);
         engine = eb.create();
         engine->runStaticConstructorsDestructors(false);
-
-        setAddTokens(&addTokens);
 
         interactiveLoop(cst);
     }
