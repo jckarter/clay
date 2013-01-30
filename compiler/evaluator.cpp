@@ -82,8 +82,6 @@ void evalCallByName(InvokeEntry* entry,
                     MultiEValuePtr out,
                     CompilerState* cst);
 
-static llvm::StringMap<const void*> staticStringTableConstants;
-
 enum TerminationKind {
     TERMINATE_RETURN,
     TERMINATE_BREAK,
@@ -260,9 +258,9 @@ MultiStaticPtr evaluateExprStatic(ExprPtr expr, EnvPtr env, CompilerState* cst)
         mev->add(ev);
     }
     if (!allStatic) {
-        unsigned marker = evalMarkStack();
+        unsigned marker = evalMarkStack(cst);
         evalExprInto(expr, env, mev, cst);
-        evalDestroyAndPopStack(marker);
+        evalDestroyAndPopStack(marker, cst);
     }
     MultiStaticPtr ms = new MultiStatic();
     for (size_t i = 0; i < valueHolders.size(); ++i) {
@@ -495,9 +493,6 @@ ObjectPtr evalueToStatic(EValuePtr ev)
 // evaluator
 //
 
-static vector<EValuePtr> stackEValues;
-
-
 
 //
 // utility procs
@@ -628,54 +623,54 @@ bool evalToBoolFlag(EValuePtr a, bool acceptStatics)
 // evaluator temps
 //
 
-unsigned evalMarkStack()
+unsigned evalMarkStack(CompilerState* cst)
 {
-    return unsigned(stackEValues.size());
+    return unsigned(cst->stackEValues.size());
 }
 
-void evalDestroyStack(unsigned marker)
+void evalDestroyStack(unsigned marker, CompilerState* cst)
 {
-    size_t i = stackEValues.size();
+    size_t i = cst->stackEValues.size();
     assert(marker <= i);
     while (marker < i) {
         --i;
-        evalValueDestroy(stackEValues[i]);
+        evalValueDestroy(cst->stackEValues[i]);
     }
 }
 
-void evalPopStack(unsigned marker)
+void evalPopStack(unsigned marker, CompilerState* cst)
 {
-    assert(marker <= stackEValues.size());
-    while (marker < stackEValues.size()) {
-        free(stackEValues.back()->addr);
-        stackEValues.pop_back();
+    assert(marker <= cst->stackEValues.size());
+    while (marker < cst->stackEValues.size()) {
+        free(cst->stackEValues.back()->addr);
+        cst->stackEValues.pop_back();
     }
 }
 
-void evalDestroyAndPopStack(unsigned marker)
+void evalDestroyAndPopStack(unsigned marker, CompilerState* cst)
 {
-    assert(marker <= stackEValues.size());
-    while (marker < stackEValues.size()) {
-        evalValueDestroy(stackEValues.back());
-        free(stackEValues.back()->addr);
-        stackEValues.pop_back();
+    assert(marker <= cst->stackEValues.size());
+    while (marker < cst->stackEValues.size()) {
+        evalValueDestroy(cst->stackEValues.back());
+        free(cst->stackEValues.back()->addr);
+        cst->stackEValues.pop_back();
     }
 }
 
-EValuePtr evalAllocValue(TypePtr t)
+EValuePtr evalAllocValue(TypePtr t, CompilerState* cst)
 {
     char *buf = (char *)calloc(1, typeSize(t));
     EValuePtr ev = new EValue(t, buf);
-    stackEValues.push_back(ev);
+    cst->stackEValues.push_back(ev);
     return ev;
 }
 
 EValuePtr evalAllocValueForPValue(PVData const &pv)
 {
     if (pv.isTemp)
-        return evalAllocValue(pv.type);
+        return evalAllocValue(pv.type, pv.type->cst);
     else
-        return evalAllocValue(pointerType(pv.type));
+        return evalAllocValue(pointerType(pv.type), pv.type->cst);
 }
 
 
@@ -840,7 +835,7 @@ void evalOneInto(ExprPtr expr, EnvPtr env, EValuePtr out,
         evalOne(expr, env, out, cst);
     }
     else {
-        EValuePtr evPtr = evalAllocValue(pointerType(pv.type));
+        EValuePtr evPtr = evalAllocValue(pointerType(pv.type), cst);
         evalOne(expr, env, evPtr, cst);
         evalValueCopy(out, derefValue(evPtr));
     }
@@ -906,7 +901,7 @@ void evalExprInto(ExprPtr expr, EnvPtr env, MultiEValuePtr out,
             mev->add(out->values[i]);
         }
         else {
-            EValuePtr evPtr = evalAllocValue(pointerType(pv.type));
+            EValuePtr evPtr = evalAllocValue(pointerType(pv.type), cst);
             mev->add(evPtr);
         }
     }
@@ -2127,7 +2122,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case BLOCK : {
         Block *x = (Block *)stmt.ptr();
-        unsigned blockMarker = evalMarkStack();
+        unsigned blockMarker = evalMarkStack(cst);
         llvm::StringMap<LabelInfo> labels;
         evalCollectLabels(x->statements, 0, env, labels);
         TerminationPtr termination;
@@ -2148,7 +2143,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
                         if (labels.count(z->targetLabel->str)) {
                             LabelInfo &info = labels[z->targetLabel->str];
                             env = info.env;
-                            evalDestroyAndPopStack(info.stackMarker);
+                            evalDestroyAndPopStack(info.stackMarker, cst);
                             pos = info.blockPosition;
                             termination = NULL;
                             continue;
@@ -2159,7 +2154,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
             }
             ++pos;
         }
-        evalDestroyAndPopStack(blockMarker);
+        evalDestroyAndPopStack(blockMarker, cst);
         return termination;
     }
 
@@ -2181,7 +2176,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
             if (mpvLeft->values[i].isTemp)
                 argumentError(i, "cannot assign to a temporary");
         }
-        unsigned marker = evalMarkStack();
+        unsigned marker = evalMarkStack(cst);
         if (mpvLeft->size() == 1) {
             ExprListPtr args = new ExprList();
             args->add(x->left);
@@ -2193,7 +2188,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
             MultiEValuePtr mevRight = new MultiEValue();
             for (unsigned i = 0; i < mpvRight->size(); ++i) {
                 PVData const &pv = mpvRight->values[i];
-                EValuePtr ev = evalAllocValue(pv.type);
+                EValuePtr ev = evalAllocValue(pv.type, cst);
                 mevRight->add(ev);
             }
             evalMultiInto(x->right, env, mevRight, mpvLeft->size(), cst);
@@ -2205,7 +2200,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
                 evalValueMoveAssign(evLeft, evRight);
             }
         }
-        evalDestroyAndPopStack(marker);
+        evalDestroyAndPopStack(marker, cst);
         return NULL;
     }
 
@@ -2224,10 +2219,10 @@ TerminationPtr evalStatement(StatementPtr stmt,
                                   mpvRight->values[i].type);
             }
         }
-        unsigned marker = evalMarkStack();
+        unsigned marker = evalMarkStack(cst);
         MultiEValuePtr mevLeft = evalMultiAsRef(x->left, env, cst);
         evalMultiInto(x->right, env, mevLeft, mpvLeft->size(), cst);
-        evalDestroyAndPopStack(marker);
+        evalDestroyAndPopStack(marker, cst);
         return NULL;
     }
 
@@ -2268,7 +2263,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
                 argumentError(i, "cannot return a temporary by reference");
             mev->add(y.value);
         }
-        unsigned marker = evalMarkStack();
+        unsigned marker = evalMarkStack(cst);
         switch (x->returnKind) {
         case RETURN_VALUE :
             evalMultiInto(x->values, env, mev, wantCount, cst);
@@ -2289,27 +2284,27 @@ TerminationPtr evalStatement(StatementPtr stmt,
         default :
             assert(false);
         }
-        evalDestroyAndPopStack(marker);
+        evalDestroyAndPopStack(marker, cst);
         return new TerminateReturn(x->location);
     }
 
     case IF : {
         If *x = (If *)stmt.ptr();
 
-        unsigned scopeMarker = evalMarkStack();
+        unsigned scopeMarker = evalMarkStack(cst);
 
         EnvPtr env2 = evalStatementExpressionStatements(x->conditionStatements, env, ctx);
 
-        unsigned tempMarker = evalMarkStack();
+        unsigned tempMarker = evalMarkStack(cst);
         EValuePtr ev = evalOneAsRef(x->condition, env2, cst);
         bool flag = evalToBoolFlag(ev, true);
-        evalDestroyAndPopStack(tempMarker);
+        evalDestroyAndPopStack(tempMarker, cst);
         if (flag)
             return evalStatement(x->thenPart, env2, ctx, cst);
         if (x->elsePart.ptr())
             return evalStatement(x->elsePart, env2, ctx, cst);
 
-        evalDestroyAndPopStack(scopeMarker);
+        evalDestroyAndPopStack(scopeMarker, cst);
 
         return NULL;
     }
@@ -2335,24 +2330,24 @@ TerminationPtr evalStatement(StatementPtr stmt,
 
     case EXPR_STATEMENT : {
         ExprStatement *x = (ExprStatement *)stmt.ptr();
-        unsigned marker = evalMarkStack();
+        unsigned marker = evalMarkStack(cst);
         evalExprAsRef(x->expr, env, cst);
-        evalDestroyAndPopStack(marker);
+        evalDestroyAndPopStack(marker, cst);
         return NULL;
     }
 
     case WHILE : {
         While *x = (While *)stmt.ptr();
 
-        unsigned scopeMarker = evalMarkStack();
+        unsigned scopeMarker = evalMarkStack(cst);
 
         while (true) {
             EnvPtr env2 = evalStatementExpressionStatements(x->conditionStatements, env, ctx);
 
-            unsigned tempMarker = evalMarkStack();
+            unsigned tempMarker = evalMarkStack(cst);
             EValuePtr ev = evalOneAsRef(x->condition, env2, cst);
             bool flag = evalToBoolFlag(ev, false);
-            evalDestroyAndPopStack(tempMarker);
+            evalDestroyAndPopStack(tempMarker, cst);
 
             if (!flag) break;
             TerminationPtr term = evalStatement(x->body, env2, ctx, cst);
@@ -2364,9 +2359,9 @@ TerminationPtr evalStatement(StatementPtr stmt,
                 return term;
             }
 whileContinue:
-            evalDestroyStack(scopeMarker);
+            evalDestroyStack(scopeMarker, cst);
         }
-        evalDestroyAndPopStack(scopeMarker);
+        evalDestroyAndPopStack(scopeMarker, cst);
 
         return NULL;
     }
@@ -2458,7 +2453,7 @@ void evalCollectLabels(llvm::ArrayRef<StatementPtr> statements,
             Label *y = (Label *)x.ptr();
             if (labels.count(y->name->str))
                 error(x, "label redefined");
-            labels[y->name->str] = LabelInfo(env, evalMarkStack(), i+1);
+            labels[y->name->str] = LabelInfo(env, evalMarkStack(env->cst), i+1);
             break;
         }
         case BINDING :
@@ -2490,12 +2485,12 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env, CompilerState* cst)
                 arityMismatchError(x->args.size(), mpv->values.size(), /*hasVarArg=*/false);
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < x->args.size(); ++i) {
-            EValuePtr ev = evalAllocValue(mpv->values[i].type);
+            EValuePtr ev = evalAllocValue(mpv->values[i].type, cst);
             mev->add(ev);
         }
-        unsigned marker = evalMarkStack();
+        unsigned marker = evalMarkStack(cst);
         evalMultiInto(x->values, env, mev, x->args.size(), cst);
-        evalDestroyAndPopStack(marker);
+        evalDestroyAndPopStack(marker, cst);
         EnvPtr env2 = new Env(env);
         for (size_t i = 0; i < x->patternVars.size(); ++i)
             addLocal(env2, x->patternVars[i].name, x->patternTypes[i]);
@@ -2528,12 +2523,12 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env, CompilerState* cst)
             PVData const &pv = mpv->values[i];
             if (pv.isTemp)
                 argumentError(i, "ref can only bind to an rvalue");
-            EValuePtr evPtr = evalAllocValue(pointerType(pv.type));
+            EValuePtr evPtr = evalAllocValue(pointerType(pv.type), cst);
             mev->add(evPtr);
         }
-        unsigned marker = evalMarkStack();
+        unsigned marker = evalMarkStack(cst);
         evalMulti(x->values, env, mev, x->args.size(), cst);
-        evalDestroyAndPopStack(marker);
+        evalDestroyAndPopStack(marker, cst);
         EnvPtr env2 = new Env(env);
         for (size_t i = 0; i < x->patternVars.size(); ++i)
             addLocal(env2, x->patternVars[i].name, x->patternTypes[i]);
@@ -2569,9 +2564,9 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env, CompilerState* cst)
             PVData const &pv = mpv->values[i];
             mev->add(evalAllocValueForPValue(pv));
         }
-        unsigned marker = evalMarkStack();
+        unsigned marker = evalMarkStack(cst);
         evalMulti(x->values, env, mev, x->args.size(), cst);
-        evalDestroyAndPopStack(marker);
+        evalDestroyAndPopStack(marker, cst);
         EnvPtr env2 = new Env(env);
         for (size_t i = 0; i < x->patternVars.size(); ++i)
             addLocal(env2, x->patternVars[i].name, x->patternTypes[i]);
@@ -3622,8 +3617,8 @@ static void op_pointerToInt(EValuePtr dest, EValuePtr ev)
 //
 static const void *evalStringTableConstant(llvm::StringRef s, CompilerState* cst)
 {
-    llvm::StringMap<const void*>::const_iterator oldConstant = staticStringTableConstants.find(s);
-    if (oldConstant != staticStringTableConstants.end())
+    llvm::StringMap<const void*>::const_iterator oldConstant = cst->staticStringTableConstants.find(s);
+    if (oldConstant != cst->staticStringTableConstants.end())
         return oldConstant->second;
     size_t bits = typeSize(cst->cSizeTType);
     size_t size = s.size();
@@ -3640,7 +3635,7 @@ static const void *evalStringTableConstant(llvm::StringRef s, CompilerState* cst
     }
     memcpy((void*)((char*)buf + bits), (const void*)s.begin(), s.size());
     ((char*)buf)[s.size()] = 0;
-    staticStringTableConstants[s] = (const void*)buf;
+    cst->staticStringTableConstants[s] = (const void*)buf;
     return buf;
 }
 

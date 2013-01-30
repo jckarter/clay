@@ -21,13 +21,13 @@
 
 namespace clay {
 
-CompilerState::CompilerState() {
+CompilerState::CompilerState()
+{
     _finalOverloadsEnabled = false;
     _inlineEnabled = true;
     _exceptionsEnabled = true;
     invokeTablesInitialized = false;
 }
-
 
 static bool isMsvcTarget(CompilerState* cst) {
     llvm::Triple target(cst->llvmModule->getTargetTriple());

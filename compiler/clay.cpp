@@ -5,6 +5,7 @@
 #include "loader.hpp"
 #include "invoketables.hpp"
 #include "externals.hpp"
+#include "evaluator.hpp"
 
 // for _exit
 #ifdef _WIN32

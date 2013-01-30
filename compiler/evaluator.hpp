@@ -84,10 +84,10 @@ void evalValueAssign(EValuePtr dest, EValuePtr src);
 void evalValueMoveAssign(EValuePtr dest, EValuePtr src);
 bool evalToBoolFlag(EValuePtr a, bool acceptStatics);
 
-unsigned evalMarkStack();
-void evalDestroyStack(unsigned marker);
-void evalPopStack(unsigned marker);
-void evalDestroyAndPopStack(unsigned marker);
+unsigned evalMarkStack(CompilerState* cst);
+void evalDestroyStack(unsigned marker, CompilerState* cst);
+void evalPopStack(unsigned marker, CompilerState* cst);
+void evalDestroyAndPopStack(unsigned marker, CompilerState* cst);
 EValuePtr evalAllocValue(TypePtr t);
 
 EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env, CompilerState* cst);

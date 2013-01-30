@@ -889,11 +889,10 @@ EnvPtr ForeignStatement::getEnv(CompilerState* cst) {
 // prim op names
 //
 
-static map<int, string> primOpNames;
-
 llvm::StringRef primOpName(const PrimOpPtr& x) {
-    map<int, string>::iterator i = primOpNames.find(x->primOpCode);
-    assert(i != primOpNames.end());
+    CompilerState* cst = x->cst;
+    map<int, string>::iterator i = cst->primOpNames.find(x->primOpCode);
+    assert(i != cst->primOpNames.end());
     return i->second;
 }
 
@@ -918,7 +917,7 @@ static void addPrim(ModulePtr m, llvm::StringRef name, ObjectPtr x) {
 }
 
 static void addPrimOp(ModulePtr m, llvm::StringRef name, PrimOpPtr x) {
-    primOpNames[x->primOpCode] = name;
+    m->cst->primOpNames[x->primOpCode] = name;
     addPrim(m, name, x.ptr());
 }
 
@@ -1323,19 +1322,18 @@ static ObjectPtr convertObject(ObjectPtr x) {
 
 #define DEFINE_PRIMITIVE_ACCESSOR(name) \
     ObjectPtr primitive_##name(CompilerState* cst) { \
-        static ObjectPtr cached; \
-        if (!cached) { \
-            cached = safeLookupPublic(primitivesModule(cst), fnameToIdent(#name)); \
-            cached = convertObject(cached); \
+        if (!cst->primitiveCached##name) {                                                  \
+            cst->primitiveCached##name = safeLookupPublic(primitivesModule(cst),\
+                                                          fnameToIdent(#name)); \
+            cst->primitiveCached##name = convertObject(cst->primitiveCached##name); \
         } \
-        return cached; \
+        return cst->primitiveCached##name; \
     } \
     \
     ExprPtr primitive_expr_##name(CompilerState* cst) { \
-        static ExprPtr cached; \
-        if (!cached) \
-            cached = new ObjectExpr(primitive_##name(cst)); \
-        return cached; \
+        if (!cst->primitiveExprCached##name) \
+            cst->primitiveExprCached##name = new ObjectExpr(primitive_##name(cst)); \
+        return cst->primitiveExprCached##name; \
     }
 
 DEFINE_PRIMITIVE_ACCESSOR(addressOf)
@@ -1359,19 +1357,18 @@ DEFINE_PRIMITIVE_ACCESSOR(RecordWithProperties)
 
 #define DEFINE_OPERATOR_ACCESSOR(name) \
     ObjectPtr operator_##name(CompilerState* cst) { \
-        static ObjectPtr cached; \
-        if (!cached) { \
-            cached = safeLookupPublic(operatorsModule(cst), fnameToIdent(#name)); \
-            cached = convertObject(cached); \
+        if (!cst->operatorCached##name) { \
+            cst->operatorCached##name = safeLookupPublic(operatorsModule(cst),\
+                                                         fnameToIdent(#name)); \
+            cst->operatorCached##name = convertObject(cst->operatorCached##name); \
         } \
-        return cached; \
+        return cst->operatorCached##name; \
     } \
     \
     ExprPtr operator_expr_##name(CompilerState* cst) { \
-        static ExprPtr cached; \
-        if (!cached) \
-            cached = new ObjectExpr(operator_##name(cst)); \
-        return cached; \
+        if (!cst->operatorExprCached##name) \
+            cst->operatorExprCached##name = new ObjectExpr(operator_##name(cst)); \
+        return cst->operatorExprCached##name; \
     }
 
 DEFINE_OPERATOR_ACCESSOR(dereference)

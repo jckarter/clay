@@ -1006,6 +1006,98 @@ struct CompilerState {
     ModulePtr operatorsModuleCached;
     ModulePtr preludeModuleCached;
 
+    #define DEFINE_PRIM_CACHE(name) \
+        ObjectPtr primitiveCached##name;\
+        ExprPtr primitiveExprCached##name;
+
+        DEFINE_PRIM_CACHE(addressOf)
+        DEFINE_PRIM_CACHE(boolNot)
+        DEFINE_PRIM_CACHE(Pointer)
+        DEFINE_PRIM_CACHE(CodePointer)
+        DEFINE_PRIM_CACHE(ExternalCodePointer)
+        DEFINE_PRIM_CACHE(AttributeCCall)
+        DEFINE_PRIM_CACHE(AttributeStdCall)
+        DEFINE_PRIM_CACHE(AttributeFastCall)
+        DEFINE_PRIM_CACHE(AttributeThisCall)
+        DEFINE_PRIM_CACHE(AttributeLLVMCall)
+        DEFINE_PRIM_CACHE(Array)
+        DEFINE_PRIM_CACHE(Vec)
+        DEFINE_PRIM_CACHE(Tuple)
+        DEFINE_PRIM_CACHE(Union)
+        DEFINE_PRIM_CACHE(Static)
+        DEFINE_PRIM_CACHE(activeException)
+        DEFINE_PRIM_CACHE(ByRef)
+        DEFINE_PRIM_CACHE(RecordWithProperties)    
+    #undef DEFINE_PRIM_CACHE
+
+    #define DEFINE_OPERATOR_CACHE(name) \
+        ObjectPtr operatorCached##name;\
+        ExprPtr operatorExprCached##name;
+
+        DEFINE_OPERATOR_CACHE(dereference)
+        DEFINE_OPERATOR_CACHE(prefixOperator)
+        DEFINE_OPERATOR_CACHE(infixOperator)
+        DEFINE_OPERATOR_CACHE(caseP)
+        DEFINE_OPERATOR_CACHE(tupleLiteral)
+        DEFINE_OPERATOR_CACHE(staticIndex)
+        DEFINE_OPERATOR_CACHE(index)
+        DEFINE_OPERATOR_CACHE(fieldRef)
+        DEFINE_OPERATOR_CACHE(call)
+        DEFINE_OPERATOR_CACHE(destroy)
+        DEFINE_OPERATOR_CACHE(copy)
+        DEFINE_OPERATOR_CACHE(move)
+        DEFINE_OPERATOR_CACHE(assign)
+        DEFINE_OPERATOR_CACHE(updateAssign)
+        DEFINE_OPERATOR_CACHE(prefixUpdateAssign)
+        DEFINE_OPERATOR_CACHE(indexAssign)
+        DEFINE_OPERATOR_CACHE(indexUpdateAssign)
+        DEFINE_OPERATOR_CACHE(fieldRefAssign)
+        DEFINE_OPERATOR_CACHE(fieldRefUpdateAssign)
+        DEFINE_OPERATOR_CACHE(staticIndexAssign)
+        DEFINE_OPERATOR_CACHE(staticIndexUpdateAssign)
+        DEFINE_OPERATOR_CACHE(callMain)
+        DEFINE_OPERATOR_CACHE(charLiteral)
+        DEFINE_OPERATOR_CACHE(iterator)
+        DEFINE_OPERATOR_CACHE(nextValue)
+        DEFINE_OPERATOR_CACHE(hasValueP)
+        DEFINE_OPERATOR_CACHE(getValue)
+        DEFINE_OPERATOR_CACHE(throwValue)
+        DEFINE_OPERATOR_CACHE(exceptionIsP)
+        DEFINE_OPERATOR_CACHE(exceptionAs)
+        DEFINE_OPERATOR_CACHE(exceptionAsAny)
+        DEFINE_OPERATOR_CACHE(continueException)
+        DEFINE_OPERATOR_CACHE(unhandledExceptionInExternal)
+        DEFINE_OPERATOR_CACHE(exceptionInInitializer)
+        DEFINE_OPERATOR_CACHE(exceptionInFinalizer)
+        DEFINE_OPERATOR_CACHE(packMultiValuedFreeVarByRef)
+        DEFINE_OPERATOR_CACHE(packMultiValuedFreeVar)
+        DEFINE_OPERATOR_CACHE(unpackMultiValuedFreeVarAndDereference)
+        DEFINE_OPERATOR_CACHE(unpackMultiValuedFreeVar)
+        DEFINE_OPERATOR_CACHE(variantReprType)
+        DEFINE_OPERATOR_CACHE(DispatchTagCount)
+        DEFINE_OPERATOR_CACHE(dispatchTag)
+        DEFINE_OPERATOR_CACHE(dispatchIndex)
+        DEFINE_OPERATOR_CACHE(invalidDispatch)
+        DEFINE_OPERATOR_CACHE(stringLiteral)
+        DEFINE_OPERATOR_CACHE(ifExpression)
+        DEFINE_OPERATOR_CACHE(asExpression)
+        DEFINE_OPERATOR_CACHE(typeToRValue)
+        DEFINE_OPERATOR_CACHE(typesToRValues)
+        DEFINE_OPERATOR_CACHE(doIntegerAddChecked)
+        DEFINE_OPERATOR_CACHE(doIntegerSubtractChecked)
+        DEFINE_OPERATOR_CACHE(doIntegerMultiplyChecked)
+        DEFINE_OPERATOR_CACHE(doIntegerQuotientChecked)
+        DEFINE_OPERATOR_CACHE(doIntegerRemainderChecked)
+        DEFINE_OPERATOR_CACHE(doIntegerShiftLeftChecked)
+        DEFINE_OPERATOR_CACHE(doIntegerNegateChecked)
+        DEFINE_OPERATOR_CACHE(doIntegerConvertChecked)
+
+    #undef DEFINE_OPERATOR_CACHE
+    
+
+
+    map<int, string> primOpNames;
+
     //codegen
     llvm::Module *llvmModule;
     llvm::DIBuilder *llvmDIBuilder;
@@ -1080,6 +1172,11 @@ struct CompilerState {
 
     //externals
     Pointer<ExternalTarget> externalTarget;
+
+    //evaluator
+    llvm::StringMap<const void*> staticStringTableConstants;
+    vector<EValuePtr> stackEValues;
+
 
 
 };
