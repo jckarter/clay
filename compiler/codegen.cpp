@@ -21,12 +21,14 @@
 
 namespace clay {
 
-CompilerState::CompilerState()
+CompilerState::CompilerState() :
+    _finalOverloadsEnabled(false),
+    _inlineEnabled(true),
+    _exceptionsEnabled(true),
+    invokeTablesInitialized(false),
+    analysisCachingDisabled(0)   
 {
-    _finalOverloadsEnabled = false;
-    _inlineEnabled = true;
-    _exceptionsEnabled = true;
-    invokeTablesInitialized = false;
+
 }
 
 static bool isMsvcTarget(CompilerState* cst) {

@@ -993,6 +993,7 @@ struct ExternalTarget;
 
 struct CompilerState {
     CompilerState();
+
     //loader
     vector<PathString> searchPath;
     vector<llvm::SmallString<32> > moduleSuffixes;
