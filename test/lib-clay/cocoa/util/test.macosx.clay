@@ -85,7 +85,7 @@ overload selector("initWithFoo:bar:") = Id, Id, Id;
 record RegularTest = regularClass(["foo", String], ["bar", Char]);
 record RegularCanary = regularClass(["foo", Canary], ["bar", Canary]);
 
-main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util",
+main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util", array(
     TestCase("constructor overloads", -> {
         expectEqual(true, NSNumber(true).boolValue());
         expectEqual(5, NSNumber(5).intValue());
@@ -353,4 +353,4 @@ main() = withAutoreleasePool(() => testMain(TestSuite("cocoa.util",
             NSUInteger(10), NSUInteger(11), NSUInteger(12), NSUInteger(13), NSUInteger(14)
         );
     }),
-)));
+))));
