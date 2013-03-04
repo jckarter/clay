@@ -4,6 +4,7 @@
 #include "codegen.hpp"
 #include "loader.hpp"
 #include "invoketables.hpp"
+#include "parachute.hpp"
 
 // for _exit
 #ifdef _WIN32

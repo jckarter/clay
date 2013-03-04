@@ -2865,13 +2865,6 @@ struct MultiStatic : public Object {
     }
 };
 
-//
-// parachute
-//
-
-int parachute(int (*mainfn)(int, char **, char const* const*),
-    int argc, char **argv, char const* const* envp);
-
 }
 
 #endif
