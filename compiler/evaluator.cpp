@@ -226,14 +226,6 @@ static void setPtrDiffTEValue(EValuePtr v, ptrdiff_t x) {
 }
 */
 
-static void setPtrEValue(EValuePtr v, void* x) {
-    switch (typeSize(cPtrDiffTType)) {
-    case 4 : *(size32_t *)v->addr = size32_t(size_t(x)); break;
-    case 8 : *(size64_t *)v->addr = size64_t(x); break;
-    default : assert(false);
-    }
-}
-
 MultiStaticPtr evaluateExprStatic(ExprPtr expr, EnvPtr env)
 {
     AnalysisCachingDisabler disabler;
@@ -2901,22 +2893,6 @@ static EValuePtr recordValue(MultiEValuePtr args, unsigned index,
     return ev;
 }
 
-static EValuePtr variantValue(MultiEValuePtr args, unsigned index,
-                              VariantTypePtr &type)
-{
-    EValuePtr ev = args->values[index];
-    if (type.ptr()) {
-        if (ev->type != (Type *)type.ptr())
-            argumentTypeError(index, type.ptr(), ev->type);
-    }
-    else {
-        if (ev->type->typeKind != VARIANT_TYPE)
-            argumentTypeError(index, "variant type", ev->type);
-        type = (VariantType *)ev->type.ptr();
-    }
-    return ev;
-}
-
 static EValuePtr enumValue(MultiEValuePtr args, unsigned index,
                            EnumTypePtr &type)
 {
@@ -4527,18 +4503,6 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
 
     case PRIM_VariantMembers :
         break;
-
-    case PRIM_variantRepr : {
-        ensureArity(args, 1);
-        VariantTypePtr vt;
-        EValuePtr evar = variantValue(args, 0, vt);
-        TypePtr reprType = variantReprType(vt);
-        assert(out->size() == 1);
-        EValuePtr out0 = out->values[0];
-        assert(out0->type == pointerType(reprType));
-        setPtrEValue(out0, (void *)evar->addr);
-        break;
-    }
 
     case PRIM_BaseType :
         break;
