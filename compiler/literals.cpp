@@ -1,6 +1,7 @@
 #include "clay.hpp"
 #include "types.hpp"
 #include "objects.hpp"
+#include "error.hpp"
 
 
 namespace clay {

@@ -8,6 +8,8 @@
 #include "parser.hpp"
 #include "desugar.hpp"
 #include "env.hpp"
+#include "error.hpp"
+
 
 #pragma clang diagnostic ignored "-Wcovered-switch-default"
 
@@ -22,6 +24,23 @@ static vector<llvm::SmallString<32> > moduleSuffixes;
 llvm::StringMap<ModulePtr> globalModules;
 llvm::StringMap<string> globalFlags;
 ModulePtr globalMainModule;
+
+
+
+Source::Source(llvm::StringRef fileName)
+    : Object(SOURCE), fileName(fileName), debugInfo(NULL)
+{
+    if (llvm::error_code ec = llvm::MemoryBuffer::getFileOrSTDIN(fileName, buffer))
+        error("unable to open file " + fileName + ": " + ec.message());
+}
+
+Source::Source(llvm::StringRef lineOfCode, int dummy)
+    : Object(SOURCE), debugInfo(NULL)
+{
+    buffer.reset(llvm::MemoryBuffer::getMemBufferCopy(lineOfCode));
+}
+
+
 
 
 //

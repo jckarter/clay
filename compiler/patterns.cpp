@@ -7,6 +7,7 @@
 #include "analyzer.hpp"
 #include "env.hpp"
 #include "objects.hpp"
+#include "error.hpp"
 
 
 #pragma clang diagnostic ignored "-Wcovered-switch-default"

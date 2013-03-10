@@ -6,6 +6,7 @@
 #include "parser.hpp"
 #include "clone.hpp"
 #include "objects.hpp"
+#include "error.hpp"
 
 
 namespace clay {

@@ -1,5 +1,6 @@
 #include "clay.hpp"
 #include "parser.hpp"
+#include "error.hpp"
 
 
 namespace clay {

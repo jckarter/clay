@@ -1,6 +1,7 @@
 #include "clay.hpp"
 #include "externals.hpp"
 #include "objects.hpp"
+#include "error.hpp"
 
 
 

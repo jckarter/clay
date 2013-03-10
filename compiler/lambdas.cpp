@@ -6,6 +6,7 @@
 #include "analyzer.hpp"
 #include "loader.hpp"
 #include "env.hpp"
+#include "error.hpp"
 
 
 namespace clay {

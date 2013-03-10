@@ -3,6 +3,7 @@
 #include "matchinvoke.hpp"
 #include "evaluator.hpp"
 #include "env.hpp"
+#include "error.hpp"
 
 
 namespace clay {
