@@ -124,8 +124,8 @@ struct ValueStackEntry {
 struct CodegenContext {
     llvm::Function *llvmFunc;
     vector<llvm::TrackingVH<llvm::MDNode> > debugScope;
-    llvm::IRBuilder<> *initBuilder;
-    llvm::IRBuilder<> *builder;
+    llvm::OwningPtr<llvm::IRBuilder<> > initBuilder;
+    llvm::OwningPtr<llvm::IRBuilder<> > builder;
 
     vector<ValueStackEntry> valueStack;
     llvm::Value *valueForStatics;
@@ -147,8 +147,6 @@ struct CodegenContext {
 
     CodegenContext()
         : llvmFunc(NULL),
-          initBuilder(NULL),
-          builder(NULL),
           valueForStatics(NULL),
           exceptionValue(NULL),
           inlineDepth(0),
@@ -159,19 +157,12 @@ struct CodegenContext {
 
     CodegenContext(llvm::Function *llvmFunc)
         : llvmFunc(llvmFunc),
-          initBuilder(NULL),
-          builder(NULL),
           valueForStatics(NULL),
           exceptionValue(NULL),
           inlineDepth(0),
           checkExceptions(true),
           callByNameDepth(0)
     {
-    }
-
-    ~CodegenContext() {
-        delete builder;
-        delete initBuilder;
     }
 
     llvm::DILexicalBlock getDebugScope() {

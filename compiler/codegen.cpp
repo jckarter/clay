@@ -1653,8 +1653,8 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
     llvm::BasicBlock *returnBlock = newBasicBlock("return", &ctx);
     llvm::BasicBlock *exceptionBlock = newBasicBlock("exception", &ctx);
 
-    ctx.initBuilder = new llvm::IRBuilder<>(initBlock);
-    ctx.builder = new llvm::IRBuilder<>(codeBlock);
+    ctx.initBuilder.reset(new llvm::IRBuilder<>(initBlock));
+    ctx.builder.reset(new llvm::IRBuilder<>(codeBlock));
 
     if (llvmDIBuilder != NULL) {
         llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, x->getDebugInfo());
@@ -3091,8 +3091,8 @@ void codegenCodeBody(InvokeEntry* entry)
     llvm::BasicBlock *returnBlock = newBasicBlock("return", &ctx);
     llvm::BasicBlock *exceptionBlock = newBasicBlock("exception", &ctx);
 
-    ctx.initBuilder = new llvm::IRBuilder<>(initBlock);
-    ctx.builder = new llvm::IRBuilder<>(codeBlock);
+    ctx.initBuilder.reset(new llvm::IRBuilder<>(initBlock));
+    ctx.builder.reset(new llvm::IRBuilder<>(codeBlock));
 
     if (llvmDIBuilder != NULL) {
         llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, entry->getDebugInfo());
@@ -3395,8 +3395,8 @@ void codegenCWrapper(InvokeEntry* entry, CallingConv cc)
         llvm::BasicBlock::Create(llvm::getGlobalContext(),
                                  "code",
                                  llCWrapper);
-    ctx.initBuilder = new llvm::IRBuilder<>(llInitBlock);
-    ctx.builder     = new llvm::IRBuilder<>(llBlock);
+    ctx.initBuilder.reset(new llvm::IRBuilder<>(llInitBlock));
+    ctx.builder.reset(new llvm::IRBuilder<>(llBlock));
 
     ctx.exceptionValue = ctx.initBuilder->CreateAlloca(exceptionReturnType(), NULL, "exception");
 
@@ -6973,8 +6973,8 @@ static CodegenContext* setUpSimpleContext(CodegenContext *ctx, const char *name)
     llvm::BasicBlock *returnBlock = newBasicBlock("return", ctx);
     llvm::BasicBlock *exceptionBlock = newBasicBlock("exception", ctx);
 
-    ctx->initBuilder = new llvm::IRBuilder<>(initBlock);
-    ctx->builder = new llvm::IRBuilder<>(codeBlock);
+    ctx->initBuilder.reset(new llvm::IRBuilder<>(initBlock));
+    ctx->builder.reset(new llvm::IRBuilder<>(codeBlock));
 
     ctx->exceptionValue = ctx->initBuilder->CreateAlloca(exceptionReturnType(), NULL, "exception");
 
