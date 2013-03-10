@@ -1392,8 +1392,8 @@ struct InitAssignment : public Statement {
 struct VariadicAssignment : public Statement {
     ExprListPtr exprs;
     ExprPtr desugared;
-    int op;
-    VariadicAssignment(int op, ExprListPtr exprs )
+    VariadicOpKind op;
+    VariadicAssignment(VariadicOpKind op, ExprListPtr exprs )
         : Statement(VARIADIC_ASSIGNMENT), exprs(exprs), op(op) {}
 };
 
