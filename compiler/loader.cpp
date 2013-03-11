@@ -1112,7 +1112,6 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(VariantMemberIndex);
     PRIMITIVE(VariantMemberCount);
     PRIMITIVE(VariantMembers);
-    PRIMITIVE(variantRepr);
 
     PRIMITIVE(BaseType);
 

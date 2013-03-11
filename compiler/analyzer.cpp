@@ -369,14 +369,6 @@ static RecordTypePtr recordTypeOfValue(MultiPValuePtr x, unsigned index)
     return (RecordType *)t.ptr();
 }
 
-static VariantTypePtr variantTypeOfValue(MultiPValuePtr x, unsigned index)
-{
-    TypePtr t = x->values[index].type;
-    if (t->typeKind != VARIANT_TYPE)
-        argumentTypeError(index, "variant type", t);
-    return (VariantType *)t.ptr();
-}
-
 static PVData staticPValue(ObjectPtr x)
 {
     TypePtr t = staticType(x);
@@ -3426,13 +3418,6 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
             mpv->add(staticPValue(i->ptr()));
         }
         return mpv;
-    }
-
-    case PRIM_variantRepr : {
-        ensureArity(args, 1);
-        VariantTypePtr t = variantTypeOfValue(args, 0);
-        TypePtr reprType = variantReprType(t);
-        return new MultiPValue(PVData(reprType, false));
     }
 
     case PRIM_BaseType : {

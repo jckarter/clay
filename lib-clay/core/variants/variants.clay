@@ -21,6 +21,9 @@ VariantMember?(#V, #M) =
 
 /// @section  construct from value of member type 
 
+[V when Variant?(V)]
+variantRepr(ref v:V) = ref bitcast(__operators__.variantReprType(Type(v)), v);
+
 [V,T when Variant?(V) and VariantMember?(V, T)]
 alias initializeVariant(#V, x:T) --> returned:V {
     ref repr = variantRepr(returned);

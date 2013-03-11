@@ -5016,23 +5016,6 @@ static llvm::Value *recordValue(MultiCValuePtr args,
     return cv->llValue;
 }
 
-static llvm::Value *variantValue(MultiCValuePtr args,
-                                 unsigned index,
-                                 VariantTypePtr &type)
-{
-    CValuePtr cv = args->values[index];
-    if (type.ptr()) {
-        if (cv->type != (Type *)type.ptr())
-            argumentTypeError(index, type.ptr(), cv->type);
-    }
-    else {
-        if (cv->type->typeKind != VARIANT_TYPE)
-            argumentTypeError(index, "variant type", cv->type);
-        type = (VariantType *)cv->type.ptr();
-    }
-    return cv->llValue;
-}
-
 static llvm::Value *enumValue(MultiCValuePtr args,
                               unsigned index,
                               EnumTypePtr &type,
@@ -6379,18 +6362,6 @@ void codegenPrimOp(PrimOpPtr x,
 
     case PRIM_VariantMembers :
         break;
-
-    case PRIM_variantRepr : {
-        ensureArity(args, 1);
-        VariantTypePtr vt;
-        llvm::Value *vvar = variantValue(args, 0, vt);
-        TypePtr reprType = variantReprType(vt);
-        assert(out->size() == 1);
-        CValuePtr out0 = out->values[0];
-        assert(out0->type == pointerType(reprType));
-        ctx->builder->CreateStore(vvar, out0->llValue);
-        break;
-    }
 
     case PRIM_BaseType :
         break;
