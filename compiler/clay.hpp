@@ -2367,6 +2367,7 @@ struct PVData {
     bool operator==(PVData const &x) const { return type == x.type && isTemp == x.isTemp; }
 };
 
+// propagation value
 struct PValue : public Object {
     PVData data;
     PValue(TypePtr type, bool isTemp)

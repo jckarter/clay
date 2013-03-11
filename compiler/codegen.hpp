@@ -35,6 +35,7 @@ void setExceptionsEnabled(bool enabled);
 void initExternalTarget(string target);
 
 
+// codegen value
 struct CValue : public Object {
     TypePtr type;
     llvm::Value *llValue;

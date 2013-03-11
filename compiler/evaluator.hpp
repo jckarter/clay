@@ -5,6 +5,7 @@
 
 namespace clay {
 
+// evaluation value
 struct EValue : public Object {
     TypePtr type;
     char *addr;
