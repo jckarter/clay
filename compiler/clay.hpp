@@ -910,23 +910,27 @@ struct ANode : public Object {
 
 struct Identifier : public ANode {
     const llvm::SmallString<16> str;
+    bool isOperator:1;
+    
     Identifier(llvm::StringRef str)
-        : ANode(IDENTIFIER), str(str) {}
+        : ANode(IDENTIFIER), str(str), isOperator(false) {}
+    Identifier(llvm::StringRef str, bool isOperator)
+        : ANode(IDENTIFIER), str(str), isOperator(isOperator) {}
 
     static map<llvm::StringRef, IdentifierPtr> freeIdentifiers; // in parser.cpp
-
-    static Identifier *get(llvm::StringRef str) {
+    
+    static Identifier *get(llvm::StringRef str, bool isOperator = false) {
         map<llvm::StringRef, IdentifierPtr>::const_iterator iter = freeIdentifiers.find(str);
         if (iter == freeIdentifiers.end()) {
-            Identifier *ident = new Identifier(str);
+            Identifier *ident = new Identifier(str, isOperator);
             freeIdentifiers[ident->str] = ident;
             return ident;
         } else
             return iter->second.ptr();
     }
-
-    static Identifier *get(llvm::StringRef str, Location const &location) {
-        Identifier *ident = new Identifier(str);
+    
+    static Identifier *get(llvm::StringRef str, Location const &location, bool isOperator = false) {
+        Identifier *ident = new Identifier(str, isOperator);
         ident->location = location;
         return ident;
     }

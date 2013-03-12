@@ -16,6 +16,7 @@ enum TokenKind {
     T_SYMBOL,
     T_KEYWORD,
     T_IDENTIFIER,
+    T_OPIDENTIFIER,
     T_STRING_LITERAL,
     T_CHAR_LITERAL,
     T_INT_LITERAL,

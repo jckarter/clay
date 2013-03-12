@@ -2989,6 +2989,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_TypeAlignment :
         return new MultiPValue(PVData(cSizeTType, true));
 
+    case PRIM_OperatorP :
     case PRIM_SymbolP :
     case PRIM_StaticCallDefinedP :
         return new MultiPValue(PVData(boolType, true));

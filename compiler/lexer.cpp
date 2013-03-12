@@ -232,7 +232,7 @@ static bool opIdentifier(Token &x) {
     if(!opstring(x.str)) return false;
     if (!next(c)) return false;
     if (c != ')') return false;
-    x.tokenKind = T_IDENTIFIER;
+    x.tokenKind = T_OPIDENTIFIER;
     return true;
 }
 

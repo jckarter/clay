@@ -111,9 +111,12 @@ static bool ellipsis() {
 static bool identifier(IdentifierPtr &x) {
     Location location = currentLocation();
     Token* t;
-    if (!next(t) || (t->tokenKind != T_IDENTIFIER))
+    if (!next(t) || (t->tokenKind != T_IDENTIFIER && t->tokenKind != T_OPIDENTIFIER))
         return false;
-    x = Identifier::get(t->str, location);
+    if (t->tokenKind == T_IDENTIFIER)
+        x = Identifier::get(t->str, location);
+    else
+        x = Identifier::get(t->str, location, true);    
     return true;
 }
 
@@ -624,7 +627,7 @@ static bool preopExpr(ExprPtr &x) {
     if (!operatorOp(op)) return false;
     ExprPtr y;
     if (!prefixExpr(y)) return false;
-    ExprListPtr exprs = new ExprList(new NameRef(Identifier::get(op)));
+    ExprListPtr exprs = new ExprList(new NameRef(Identifier::get(op, true)));
     exprs->add(y);
     x = new VariadicOp(PREFIX_OP, exprs);
     x->location = location;
@@ -655,7 +658,7 @@ static bool operatorTail(VariadicOpPtr &x) {
     unsigned p = save();
     while (true) {
         if (!prefixExpr(b)) return false;
-        exprs->add(new NameRef(Identifier::get(op)));
+        exprs->add(new NameRef(Identifier::get(op, true)));
         exprs->add(b);
         p = save();
         if (!operatorOp(op)) {
@@ -1181,7 +1184,7 @@ static bool prefixUpdate(StatementPtr &x) {
     if (!uopstring(op)) return false;
     if (!expression(z)) return false;
     if (!symbol(";")) return false;
-    ExprListPtr exprs = new ExprList(new NameRef(Identifier::get(op)));
+    ExprListPtr exprs = new ExprList(new NameRef(Identifier::get(op, true)));
     if (z->exprKind == VARIADIC_OP) {
         VariadicOp *y = (VariadicOp *)z.ptr();
         exprs->add(y->exprs);
@@ -1201,7 +1204,7 @@ static bool updateAssignment(StatementPtr &x) {
     if (!uopstring(op)) return false;
     if (!expression(z)) return false;
     if (!symbol(";")) return false;
-    ExprListPtr exprs = new ExprList(new NameRef(Identifier::get(op)));
+    ExprListPtr exprs = new ExprList(new NameRef(Identifier::get(op, true)));
     exprs->add(y);
     if (z->exprKind == VARIADIC_OP) {
         VariadicOp *y = (VariadicOp *)z.ptr();

@@ -3620,6 +3620,21 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         break;
     }
 
+    case PRIM_OperatorP : {
+        ensureArity(args, 1);
+        ObjectPtr obj = valueToStatic(args->values[0]);
+        bool isOperator = false; 
+        if (!!obj.ptr() && (obj->objKind==PROCEDURE || obj->objKind==GLOBAL_ALIAS)) {
+            TopLevelItem *item = (TopLevelItem *)obj.ptr();
+            isOperator = item->name->isOperator;
+        }
+        assert(out->size() == 1);
+        EValuePtr out0 = out->values[0];
+        assert(out0->type == boolType);
+        out0->as<bool>() = isOperator;
+        break;
+    }
+
     case PRIM_SymbolP : {
         ensureArity(args, 1);
         ObjectPtr obj = valueToStatic(args->values[0]);

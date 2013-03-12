@@ -1004,6 +1004,7 @@ static ModulePtr makePrimitivesModule() {
     PRIMITIVE(TypeSize);
     PRIMITIVE(TypeAlignment);
 
+    PRIMITIVE(OperatorP);
     PRIMITIVE(SymbolP);
     
     PRIMITIVE(StaticCallDefinedP);

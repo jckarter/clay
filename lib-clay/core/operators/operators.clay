@@ -244,14 +244,14 @@ forceinline default staticEquals?(a:Static[A], b:Static[B]) : Bool = false;
 [A]
 forceinline overload staticEquals?(a:Static[A], b:Static[A]) : Bool = true;
 
-BinaryOpDefined?(OP,T,U) : Bool = Symbol?(OP) and not Variant?(OP) and not Record?(OP) 
+BinaryOpDefined?(OP,T,U) : Bool = Operator?(OP) and not Variant?(OP) and not Record?(OP) 
     and CallDefined?(OP,T,U) and staticEquals?(CallOutputTypes(OP,T,U),T); 
-CompareOpDefined?(OP,T,U) : Bool = Symbol?(OP) and not Variant?(OP) and not Record?(OP) 
+CompareOpDefined?(OP,T,U) : Bool = Operator?(OP) and not Variant?(OP) and not Record?(OP) 
     and CallDefined?(OP,T,U) and staticEquals?(CallOutputTypes(OP,T,U),Bool); 
 
-[OP] forceinline default prefixOperator(#OP, forward ..xs)
+[OP when Operator?(OP)] forceinline default prefixOperator(#OP, forward ..xs)
     = forward OP(..prefixOperator(..xs));
-[OP] forceinline overload prefixOperator(#OP, forward x) 
+[OP when Operator?(OP)] forceinline overload prefixOperator(#OP, forward x) 
     = forward ..OP(x);
 
 alias LEFT = 0;
@@ -346,10 +346,6 @@ overload operatorAssociativity(#(>)) : Int    = BOOLEAN;
 overload operatorAssociativity(#(<=)) : Int   = BOOLEAN;
 overload operatorAssociativity(#(>=)) : Int   = BOOLEAN;
 
-define Operator?(..x) : Bool;
-forceinline default Operator?(..x) : Bool = false;
-[OP] forceinline overload Operator?(#OP) : Bool 
-    = Symbol?(OP) and operatorPrecedence(OP) > 0;
 
 define BoolAssoc?(..x) : Bool;
 define LeftAssoc?(..x) : Bool;
@@ -359,18 +355,26 @@ forceinline default BoolAssoc?(..x) : Bool = false;
 forceinline default LeftAssoc?(..x) : Bool = false;
 forceinline default RightAssoc?(..x) : Bool = false;
 
-[OP] forceinline overload BoolAssoc?(#OP) : Bool = integerEquals?(operatorAssociativity(OP),BOOLEAN);
-[OP1,OP2] forceinline overload BoolAssoc?(#OP1,#OP2) : Bool = BoolAssoc?(OP1) and BoolAssoc?(OP2);
+[OP when Operator?(OP)] 
+forceinline overload BoolAssoc?(#OP) : Bool = integerEquals?(operatorAssociativity(OP),BOOLEAN);
+[OP1,OP2 when Operator?(OP1) and Operator?(OP2)] 
+forceinline overload BoolAssoc?(#OP1,#OP2) : Bool = BoolAssoc?(OP1) and BoolAssoc?(OP2);
 
-[OP] forceinline overload LeftAssoc?(#OP) : Bool = integerEquals?(operatorAssociativity(OP),LEFT);
-[OP1,OP2] forceinline overload LeftAssoc?(#OP1,#OP2) : Bool = LeftAssoc?(OP1) and LeftAssoc?(OP2);
+[OP when Operator?(OP)] 
+forceinline overload LeftAssoc?(#OP) : Bool = integerEquals?(operatorAssociativity(OP),LEFT);
+[OP1,OP2 when Operator?(OP1) and Operator?(OP2)] 
+forceinline overload LeftAssoc?(#OP1,#OP2) : Bool = LeftAssoc?(OP1) and LeftAssoc?(OP2);
 
-[OP] forceinline overload RightAssoc?(#OP) : Bool = integerEquals?(operatorAssociativity(OP),RIGHT);
-[OP1,OP2] forceinline overload RightAssoc?(#OP1,#OP2) : Bool = RightAssoc?(OP1) and RightAssoc?(OP2);
+[OP when Operator?(OP)] 
+forceinline overload RightAssoc?(#OP) : Bool = integerEquals?(operatorAssociativity(OP),RIGHT);
+[OP1,OP2 when Operator?(OP1) and Operator?(OP2)] 
+forceinline overload RightAssoc?(#OP1,#OP2) : Bool = RightAssoc?(OP1) and RightAssoc?(OP2);
 
-[OP1,OP2] forceinline GreaterPrec?(#OP1,#OP2) : Bool 
+[OP1,OP2 when Operator?(OP1) and Operator?(OP2)] 
+forceinline GreaterPrec?(#OP1,#OP2) : Bool 
     = integerLesser?(operatorPrecedence(OP1),operatorPrecedence(OP2));
-[OP1,OP2] forceinline LowerPrec?(#OP1,#OP2) : Bool = GreaterPrec?(OP2,OP1);
+[OP1,OP2 when Operator?(OP1) and Operator?(OP2)] 
+forceinline LowerPrec?(#OP1,#OP2) : Bool = GreaterPrec?(OP2,OP1);
 
 
 private define infixToPolish;
@@ -423,7 +427,7 @@ forceinline default infixOperator(forward ..args:T)
     = forward ..evalBool(..evalPolish(
         ..infixToPolish(#countValues(..T), #0, #0, ..reverseValues(..args))));
 
-[OP]
+[OP when Operator?(OP)]
 forceinline default infixOperator(forward a, #OP, forward b) 
     = forward ..OP(a,b);
 

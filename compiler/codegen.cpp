@@ -5166,6 +5166,19 @@ void codegenPrimOp(PrimOpPtr x,
         break;
     }
 
+    case PRIM_OperatorP : {
+        ensureArity(args, 1);
+        ObjectPtr obj = valueToStatic(args->values[0]);
+        bool isOperator = false; 
+        if (!!obj.ptr() && (obj->objKind==PROCEDURE || obj->objKind==GLOBAL_ALIAS)) {
+            TopLevelItem *item = (TopLevelItem *)obj.ptr();
+            isOperator = item->name->isOperator;
+        }
+        ValueHolderPtr vh = boolToValueHolder(isOperator);
+        codegenStaticObject(vh.ptr(), ctx, out);
+        break;
+    }
+
     case PRIM_SymbolP : {
         ensureArity(args, 1);
         ObjectPtr obj = valueToStatic(args->values[0]);
