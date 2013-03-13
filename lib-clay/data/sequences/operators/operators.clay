@@ -4,7 +4,7 @@ import data.sequences.lazy.(enumerated);
 
 /// @section  prefixOperator, infixOperator, updateAssign 
 
-[S,F when Sequence?(S)]
+[S,F when Sequence?(S) and Operator?(F)]
 overload updateAssign(#F, ret:S, ..args) {
     for (i,r in enumerated(ret))
         updateAssign(F, r, ..reduceToScalar(i,..args));
@@ -19,7 +19,7 @@ overload infixOperator(..args:S) {
     return move(ret);
 }
 
-[S,U,F when Sequence?(S) and Sequence?(U) 
+[S,U,F when Sequence?(S) and Sequence?(U) and Operator?(F) 
     and CompareOpDefined?(F,SequenceElementType(S),SequenceElementType(U))]
 overload infixOperator(a:S, #F, b:U) = F(a,b);
 

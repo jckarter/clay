@@ -764,6 +764,18 @@ static void initModule(ModulePtr m, llvm::ArrayRef<string>  importChain) {
         case STATIC_ASSERT_TOP_LEVEL:
             checkStaticAssert((StaticAssertTopLevel *)obj);
             break;
+        case GLOBAL_ALIAS : {
+            GlobalAlias *y = (GlobalAlias *)obj;
+            if (y->name->isOperator) {
+                PatternPtr pattern = evaluateOnePattern(y->expr, m->env);
+                ObjectPtr obj = derefDeep(pattern);
+                if (!!obj.ptr() && (obj->objKind == PROCEDURE || obj->objKind == GLOBAL_ALIAS)) {
+                    TopLevelItem *item = (TopLevelItem *)obj.ptr();
+                    item->name->isOperator = true;
+                }
+            }
+            break;
+        }
         default:
             break;
         }

@@ -120,12 +120,12 @@ forceinline overload assign(ref dest:T, ref src:T) : {
 [T when CallDefined?(T) and InitializeDoesNotThrowType?(T)]
 forceinline default resetUnsafe(src:T) { src <-- T(); }
 
-[F]
+[F when Operator?(F)]
 forceinline default updateAssign(#F, ref dest, forward ..src) : {
     dest = infixOperator(dest,F, ..src);
 }
 
-[F]
+[F when Operator?(F)]
 forceinline overload prefixUpdateAssign(#F, ref dest, forward ..src) : {
     dest = prefixOperator(F, dest, ..src);
 }
@@ -152,12 +152,12 @@ forceinline overload fieldRefAssign(dest, #FIELD, forward src) : {
     assign(fieldRef(dest, #FIELD), src);
 }
 
-[F, FIELD]
+[F, FIELD when Operator?(F)]
 forceinline overload fieldRefUpdateAssign(#F, dest, #FIELD, forward ..src) : {
     updateAssign(#F, fieldRef(dest, #FIELD), ..src);
 }
 
-[F, FIELD, T when RValue?(fieldRef(typeToLValue(T), #FIELD))]
+[F, FIELD, T when RValue?(fieldRef(typeToLValue(T), #FIELD)) and Operator?(F)]
 forceinline overload fieldRefUpdateAssign(#F, dest:T, #FIELD, forward src) : {
     fieldRefAssign(dest, #FIELD, F(fieldRef(dest, #FIELD), src));
 }
@@ -167,12 +167,12 @@ forceinline overload staticIndexAssign(dest, #i, forward src) : {
     assign(staticIndex(dest, #i), src);
 }
 
-[F, i]
+[F, i when Operator?(F)]
 forceinline overload staticIndexUpdateAssign(#F, dest, #i, forward ..src) : {
     updateAssign(#F, staticIndex(dest, #i), ..src);
 }
 
-[F, i, T when RValue?(staticIndex(typeToLValue(T), #i))]
+[F, i, T when RValue?(staticIndex(typeToLValue(T), #i)) and Operator?(F)]
 forceinline overload staticIndexUpdateAssign(#F, dest:T, #i, forward src) : {
     staticIndexAssign(dest, #i, F(staticIndex(dest, #i), src));
 }
@@ -188,7 +188,7 @@ forceinline overload indexAssign(dest, forward ..indicesAndSrc:T) : {
     );
 }
 
-[F, ..A when countValues(..A) >= 2]
+[F, ..A when countValues(..A) >= 2 and Operator?(F)]
 forceinline overload indexUpdateAssign(#F, dest, forward ..indicesAndSrc:A) : {
     updateAssign(
         #F,
@@ -200,7 +200,7 @@ forceinline overload indexUpdateAssign(#F, dest, forward ..indicesAndSrc:A) : {
     );
 }
 
-[F, T, ..A when
+[F, T, ..A when Operator?(F) and
     (countValues(..A) >= 2) and
     RValue?(
         index(
@@ -381,23 +381,23 @@ private define infixToPolish;
 
 forceinline overload infixToPolish(#0, #0,  ..y) = ;
 
-[s, v, p, T when s>0 and Operator?(T)]
+[s, v, p, T when integerLesser?(0,s) and Operator?(T)]
 forceinline overload infixToPolish(#0, #s, #v, forward ..y, #p, #T) 
-    = forward ..infixToPolish(#0, #(s-1), #1, ..y), T, #(p+v);
+    = forward ..infixToPolish(#0, #numericSubtract(s,1), #1, ..y), T, #numericAdd(p,v);
 
-[n, s, v when n>0]
+[n, s, v when integerLesser?(0,n)]
 forceinline default infixToPolish(#n, #s, #v,forward x, forward ..y) 
-    = forward ..infixToPolish(#(n-1), #s, #(v+1), ..y), x;
+    = forward ..infixToPolish(#numericSubtract(n,1), #s, #numericAdd(v,1), ..y), x;
 
-[n, s, v, OP when n>0 and Operator?(OP)]
+[n, s, v, OP when integerLesser?(0,n) and Operator?(OP)]
 forceinline overload infixToPolish(#n, #s, #v, #OP, forward ..y) 
-    = forward ..infixToPolish(#(n-1), #(s+1), #0, ..y, #v, #OP);
+    = forward ..infixToPolish(#numericSubtract(n,1), #numericAdd(s,1), #0, ..y, #v, #OP);
 
-[n, s, v, OP, p, T when n>0 and s>0 
+[n, s, v, OP, p, T when integerLesser?(0,n) and integerLesser?(0,s) 
     and ((LeftAssoc?(OP) and LowerPrec?(OP, T)) 
         or (RightAssoc?(OP) and not GreaterPrec?(OP, T)) or BoolAssoc?(OP))] 
 forceinline overload infixToPolish(#n, #s, #v, #OP, forward ..y, #p, #T) 
-    = forward  ..infixToPolish(#n, #(s-1), #1, #OP, ..y), T,#(p+v);
+    = forward  ..infixToPolish(#n, #numericSubtract(s,1), #1, #OP, ..y), T,#numericAdd(p,v);
 
 
 private define evalPolish;
