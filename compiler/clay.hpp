@@ -386,6 +386,11 @@ struct Object : public RefCounted {
     Object(ObjectKind objKind)
         : objKind(objKind) {}
     virtual ~Object() {}
+
+    // print to stderr, for debugging
+    void print() const;
+    // use only in debugger
+    std::string toString() const;
 };
 
 typedef Pointer<Object> ObjectPtr;

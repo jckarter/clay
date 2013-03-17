@@ -14,7 +14,19 @@ namespace clay {
 using namespace std;
 
 
-
+
+void Object::print() const {
+    llvm::errs() << *this << "\n";
+}
+
+std::string Object::toString() const {
+    std::string r;
+    llvm::raw_string_ostream os(r);
+    os << *this;
+    os.flush();
+    return r;
+}
+
 //
 // overload <<
 //
@@ -789,7 +801,7 @@ static void print(llvm::raw_ostream &out, const Object *x) {
 
     default :
         out << "UnknownObj(" << x->objKind << ")";
-        assert(false);
+        break;
     }
 }
 
