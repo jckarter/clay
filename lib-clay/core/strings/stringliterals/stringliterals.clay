@@ -94,7 +94,8 @@ forceinline overload (++)(..ss:SS) = stringLiteralConcat(..ss);
 
 // stringLiteralStartsWith?
 
-define stringLiteralStartsWith?(..a) : Bool;
+[a, b when StringLiteral?(a) and StringLiteral?(b)]
+define stringLiteralStartsWith?(#a, #b) : Bool;
 
 overload stringLiteralStartsWith?(a, b) : Bool = false;
 
@@ -105,7 +106,8 @@ overload stringLiteralStartsWith?(#identifier, #startsWith)
 
 // stringLiteralEndsWith?
 
-define stringLiteralEndsWith?;
+[a, b when StringLiteral?(a) and StringLiteral?(b)]
+define stringLiteralEndsWith?(#a, #b);
 
 overload stringLiteralEndsWith?(a, b) : Bool = false;
 
