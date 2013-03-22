@@ -20,10 +20,10 @@ enum MatchCode {
     MATCH_MULTI_BINDING_ERROR
 };
 
-struct MatchResult : public Object {
+struct MatchResult : public RefCounted {
     int matchCode;
     MatchResult(int matchCode)
-        : Object(DONT_CARE), matchCode(matchCode) {}
+        : matchCode(matchCode) {}
 };
 
 struct MatchSuccess : public MatchResult {

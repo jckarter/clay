@@ -26,7 +26,7 @@ namespace clay {
 
 GVarInstance::GVarInstance(GlobalVariablePtr gvar,
              llvm::ArrayRef<ObjectPtr> params)
-    : Object(DONT_CARE), gvar(gvar), params(params),
+    : gvar(gvar), params(params),
       llGlobal(NULL), debugInfo(NULL), analyzing(false) {}
 
 GVarInstance::~GVarInstance() {}
@@ -1054,7 +1054,7 @@ GVarInstancePtr lookupGVarInstance(GlobalVariablePtr x,
 {
     if (!x->instances)
         x->instances = new ObjectTable();
-    ObjectPtr &y = x->instances->lookup(params);
+    Pointer<RefCounted> &y = x->instances->lookup(params);
     if (!y) {
         y = new GVarInstance(x, params);
     }

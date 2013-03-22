@@ -12,6 +12,7 @@
 #include "env.hpp"
 #include "objects.hpp"
 #include "error.hpp"
+#include "checkedcast.hpp"
 
 
 #pragma clang diagnostic ignored "-Wcovered-switch-default"
@@ -86,11 +87,11 @@ enum TerminationKind {
     TERMINATE_GOTO
 };
 
-struct Termination : public Object {
+struct Termination : public RefCounted {
     TerminationKind terminationKind;
     Location location;
     Termination(TerminationKind terminationKind, Location const & location)
-        : Object(DONT_CARE), terminationKind(terminationKind),
+        : terminationKind(terminationKind),
           location(location) {}
 };
 typedef Pointer<Termination> TerminationPtr;
@@ -134,10 +135,10 @@ struct EReturn {
         : byRef(byRef), type(type), value(value) {}
 };
 
-struct EvalContext : public Object {
+struct EvalContext : public RefCounted {
     vector<EReturn> returns;
     EvalContext(llvm::ArrayRef<EReturn> returns)
-        : Object(DONT_CARE), returns(returns) {}
+        : returns(returns) {}
 };
 typedef Pointer<EvalContext> EvalContextPtr;
 
@@ -1595,7 +1596,7 @@ void evalCallExpr(ExprPtr callable,
                     args2.push_back(evalueToStatic(mev->values[i]));
                 if (!x->evaluatorCache)
                     x->evaluatorCache = new ObjectTable();
-                ObjectPtr result = x->evaluatorCache->lookup(args2);
+                Pointer<RefCounted> result = x->evaluatorCache->lookup(args2);
                 if (!result) {
                     evalCallCode(entry, mev, out);
                     MultiStaticPtr ms = new MultiStatic();
@@ -1604,7 +1605,7 @@ void evalCallExpr(ExprPtr callable,
                     x->evaluatorCache->lookup(args2) = ms.ptr();
                 }
                 else {
-                    evalStaticObject(result, out);
+                    evalStaticObject(checked_cast<MultiStatic*>(result.ptr()), out);
                 }
             }
             else {

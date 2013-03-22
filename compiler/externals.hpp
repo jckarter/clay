@@ -118,10 +118,10 @@ struct ExternalFunction : public llvm::FoldingSetNode {
                           MultiCValuePtr out);
 };
 
-struct ExternalTarget : public Object {
+struct ExternalTarget : public RefCounted {
     llvm::FoldingSet<ExternalFunction> extFuncs;
 
-    ExternalTarget() : Object(DONT_CARE) {}
+    ExternalTarget() {}
     virtual ~ExternalTarget() {}
 
     ExternalFunction* getExternalFunction(

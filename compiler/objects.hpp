@@ -51,18 +51,18 @@ inline unsigned objectVectorHash(ObjectVector const &a) {
 
 struct ObjectTableNode {
     vector<ObjectPtr> key;
-    ObjectPtr value;
+    Pointer<RefCounted> value;
     ObjectTableNode(llvm::ArrayRef<ObjectPtr> key,
-                    ObjectPtr value)
+                    Pointer<RefCounted> value)
         : key(key), value(value) {}
 };
 
-struct ObjectTable : public Object {
+struct ObjectTable : public RefCounted {
     vector< vector<ObjectTableNode> > buckets;
     unsigned size;
 public :
-    ObjectTable() : Object(DONT_CARE), size(0) {}
-    ObjectPtr &lookup(llvm::ArrayRef<ObjectPtr> key);
+    ObjectTable() : size(0) {}
+    Pointer<RefCounted> &lookup(llvm::ArrayRef<ObjectPtr> key);
 private :
     void rehash();
 };
