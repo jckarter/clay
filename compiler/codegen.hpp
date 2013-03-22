@@ -220,12 +220,32 @@ InvokeEntry* codegenCallable(ObjectPtr x,
 void codegenCodeBody(InvokeEntry* entry);
 void codegenCWrapper(InvokeEntry* entry);
 
+void codegenCallValue(CValuePtr callable,
+                      MultiCValuePtr args,
+                      CodegenContext* ctx,
+                      MultiCValuePtr out);
+void codegenCallValue(CValuePtr callable,
+                      MultiCValuePtr args,
+                      MultiPValuePtr pvArgs,
+                      CodegenContext* ctx,
+                      MultiCValuePtr out);
+
 void codegenEntryPoints(ModulePtr module, bool importedExternals);
 void codegenMain(ModulePtr module);
 
 void codegenBeforeRepl(ModulePtr module);
 void codegenAfterRepl(llvm::Function*& ctor, llvm::Function*& dtor);
 
+void codegenValueForward(CValuePtr dest, CValuePtr src, CodegenContext* ctx);
+void codegenStaticObject(ObjectPtr x,
+                         CodegenContext* ctx,
+                         MultiCValuePtr out);
+
+
+llvm::Constant *valueHolderToLLVMConstant(ValueHolder *vh, CodegenContext *ctx);
+CValuePtr staticCValue(ObjectPtr obj, CodegenContext* ctx);
+
+std::string getCodeName(InvokeEntry* entry);
 
 }
 

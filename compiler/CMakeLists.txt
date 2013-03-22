@@ -2,13 +2,16 @@ include(PCHsupport)
 
 set(COMPILER_SOURCES
     analyzer.cpp
+    analyzer_op.cpp
     clone.cpp
     codegen.cpp
+    codegen_op.cpp
     constructors.cpp
     desugar.cpp
     env.cpp
     error.cpp
     evaluator.cpp
+    evaluator_op.cpp
     externals.cpp
     hirestimer.cpp
     interactive.cpp

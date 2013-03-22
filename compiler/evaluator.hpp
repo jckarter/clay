@@ -80,6 +80,8 @@ void evalValueMove(EValuePtr dest, EValuePtr src);
 void evalValueAssign(EValuePtr dest, EValuePtr src);
 void evalValueMoveAssign(EValuePtr dest, EValuePtr src);
 bool evalToBoolFlag(EValuePtr a, bool acceptStatics);
+void evalValueForward(EValuePtr dest, EValuePtr src);
+void evalStaticObject(ObjectPtr x, MultiEValuePtr out);
 
 unsigned evalMarkStack();
 void evalDestroyStack(unsigned marker);

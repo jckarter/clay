@@ -21,8 +21,6 @@ struct AnalysisCachingDisabler {
 void initializeStaticForClones(StaticForPtr x, size_t count);
 bool returnKindToByRef(ReturnKind returnKind, PVData const &pv);
 
-MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args);
-
 ObjectPtr unwrapStaticType(TypePtr t);
 
 bool staticToBool(ObjectPtr x, bool &out, TypePtr &type);
@@ -30,6 +28,11 @@ bool staticToBool(MultiStaticPtr x, unsigned index);
 bool staticToCallingConv(ObjectPtr x, CallingConv &out);
 CallingConv staticToCallingConv(MultiStaticPtr x, unsigned index);
 
+static inline PVData staticPValue(ObjectPtr x)
+{
+    TypePtr t = staticType(x);
+    return PVData(t, true);
+}
 
 enum BoolKind {
     BOOL_EXPR,
