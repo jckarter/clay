@@ -220,7 +220,7 @@ private define cCast(from:From, #To) : To;
 [F, T when CCastable?(F, T)]
 overload cCast(from:F, #T) : T = T(from);
 
-[S when Sequence?(S) and (Char == SequenceElementType(S))]
+[S when CCompatibleString?(S)]
 overload cCast(s:S, #Pointer[CChar]) : Pointer[CChar] = cstring(s);
 
 [F]
