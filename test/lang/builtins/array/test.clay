@@ -1,0 +1,20 @@
+import test.*;
+
+main() = testMain(
+        TestSuite(
+            "__operators__ array", array(
+                TestCase("arrayRef", -> {
+                    var a = array('a', 'b', 'c');
+                    arrayRef(a, 1) = 'd';
+                    expectEqual('d', a[1]);
+                }),
+                TestCase("arrayElements", -> {
+                    var a = array(3, 5, 8);
+
+                    expectEqual([], [..arrayElements(Array[UInt, 0]())]);
+                    expectEqual([true], [..arrayElements(array(true))]);
+                    expectEqual([3, 5, 8], [..arrayElements(a)]);
+                }),
+            ),
+        )
+    );

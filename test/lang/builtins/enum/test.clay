@@ -1,0 +1,30 @@
+import test.*;
+
+enum Color (
+    CYAN,
+    MAGENTA,
+    YELLOW,
+);
+
+main() = testMain(
+        TestSuite(
+            "__operators__ enum", array(
+                TestCase("Enum?", -> {
+                    expectTrue(Enum?(Color));
+                    expectFalse(Enum?(Int));
+                }),
+                TestCase("EnumMemberCount", -> {
+                    expectEqual(3, EnumMemberCount(Color));
+                }),
+                TestCase("EnumMemberName", -> {
+                    expectEqual("MAGENTA", EnumMemberName(Color, #1));
+                }),
+                TestCase("enumToInt", -> {
+                    expectEqual(2, enumToInt(YELLOW));
+                }),
+                TestCase("intToEnum", -> {
+                    expectEqual(YELLOW, intToEnum(Color, 2));
+                }),
+            ),
+        )
+    );

@@ -1,0 +1,23 @@
+import test.*;
+
+
+main() = testMain(
+        TestSuite(
+            "__operators__ tuple", array(
+                TestCase("Tuple", -> {
+                    Tuple(1, true);
+                }),
+                TestCase("TupleElementCount", -> {
+                    expectEqual(3, TupleElementCount(Tuple[Int, Char, RawPointer]));
+                }),
+                TestCase("tupleRef", -> {
+                    var t = Tuple(1, true);
+                    tupleRef(t, #1) = false;
+                    expectEqual(false, t.1);
+                }),
+                TestCase("tupleElements", -> {
+                    expectEqual([1, 'a', true], [..tupleElements(Tuple(1, 'a', true))]);
+                }),
+            ),
+        )
+    );

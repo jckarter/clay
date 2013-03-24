@@ -1,0 +1,11 @@
+import test.*;
+
+main() = testMain(
+        TestSuite(
+            "__operators__ union", array(
+                TestCase("UnionMemberCount", -> {
+                    expectEqual(2, UnionMemberCount(Union[Int, Bool]));
+                }),
+            ),
+        )
+    );

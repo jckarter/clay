@@ -79,47 +79,6 @@ main() = testMain(
         TestCase("foldValues", -> {
             expectEqual(6, foldValues(add, 1, 2, 3));
         }),
-        TestCase("takeValues", -> {
-            expectEqual(
-                [],
-                [..takeValues(#3)]
-            );
-            expectEqual(
-                ["one", "two"],
-                [..takeValues(#3, "one", "two")]
-            );
-            expectEqual(
-                ["one", "two", "three"],
-                [..takeValues(#3, "one", "two", "three")]
-            );
-            expectEqual(
-                ["one", "two", "three"],
-                [..takeValues(#3, "one", "two", "three", "four")]
-            );
-        }),
-        TestCase("dropValues", -> {
-            expectEqual(
-                [],
-                [..dropValues(#3)]
-            );
-            expectEqual(
-                [],
-                [..dropValues(#3, "one", "two")]
-            );
-            expectEqual(
-                [],
-                [..dropValues(#3, "one", "two", "three")]
-            );
-            expectEqual(
-                ["four"],
-                [..dropValues(#3, "one", "two", "three", "four")]
-            );
-        }),
-        TestCase("countValues", -> {
-            expectEqual(0, countValues());
-            expectEqual(1, countValues("one"));
-            expectEqual(4, countValues("one", "two", "three", "four"));
-        }),
         TestCase("equalValues?", -> {
             expectEqual(true, equalValues?(1, 1, 1));
             expectEqual(false, equalValues?(1, 1, 2));

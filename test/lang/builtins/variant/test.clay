@@ -1,0 +1,23 @@
+import test.*;
+
+variant VariantOfIntAndChar (Int, Char);
+
+main() = testMain(
+        TestSuite(
+            "__operators__ variant", array(
+                TestCase("Variant?", -> {
+                    expectTrue(Variant?(VariantOfIntAndChar));
+                    expectFalse(Variant?(Int));
+                }),
+                TestCase("VariantMemberIndex", -> {
+                    expectEqual(1, VariantMemberIndex(VariantOfIntAndChar, Char));
+                }),
+                TestCase("VariantMemberCount", -> {
+                    expectEqual(2, VariantMemberCount(VariantOfIntAndChar));
+                }),
+                TestCase("VariantMemberCount", -> {
+                    expectEqual([Int, Char], [..VariantMembers(VariantOfIntAndChar)]);
+                }),
+            ),
+        )
+    );

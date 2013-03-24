@@ -14,14 +14,6 @@ overload BitwiseMovedType?(#NonCopyable) = true;
 staticassert (     Movable?(NonCopyable));
 staticassert (not Copyable?(NonCopyable));
 
-TEST_arrayElements() {
-    var a = array(3, 5, 8);
-
-    expectEqual([], [..arrayElements(Array[UInt, 0]())]);
-    expectEqual([true], [..arrayElements(array(true))]);
-    expectEqual([3, 5, 8], [..arrayElements(a)]);
-}
-
 TEST_ArrayRef() {
     var a = array(3, 5, 8);
     expectEqual(ArrayRef(a), a);

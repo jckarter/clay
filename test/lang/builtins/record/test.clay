@@ -1,0 +1,55 @@
+import test.*;
+
+record EmptyRecord ();
+
+record RecordWithIntAndBool (
+    int: Int,
+    bool: Bool,
+);
+
+record RecordWithIntAndVariadic[..A] (
+    int: Int,
+    ..variadic: A,
+);
+
+main() = testMain(
+        TestSuite(
+            "__operators__ record", array(
+                TestCase("Record?", -> {
+                    expectTrue(Record?(EmptyRecord));
+                    expectFalse(Record?(Int));
+                }),
+                TestCase("RecorFieldCount", -> {
+                    expectEqual(0, RecordFieldCount(EmptyRecord));
+                    expectEqual(2, RecordFieldCount(RecordWithIntAndBool));
+                }),
+                TestCase("RecordFieldName", -> {
+                    expectEqual("int", RecordFieldName(RecordWithIntAndBool, #0));
+                    expectEqual("bool", RecordFieldName(RecordWithIntAndBool, #1));
+                }),
+                TestCase("RecordWithField?", -> {
+                    expectTrue(RecordWithField?(RecordWithIntAndBool, "int"));
+                    expectFalse(RecordWithField?(RecordWithIntAndBool, "junk"));
+                }),
+                TestCase("recordFieldRef", -> {
+                    var r = RecordWithIntAndBool();
+                    recordFieldRef(r, #1) = true;
+                    expectEqual(true, r.bool);
+                }),
+                TestCase("recordFieldRefByName", -> {
+                    var r = RecordWithIntAndBool();
+                    recordFieldRefByName(r, "int") = 17;
+                    expectEqual(17, r.int);
+                }),
+                TestCase("recordFields", -> {
+                    var r = RecordWithIntAndBool(19, true);
+                    expectEqual([19, true], [..recordFields(r)]);
+                }),
+                TestCase("recordVariadicField", -> {
+                    var r = RecordWithIntAndVariadic[Bool, Char]();
+                    ..r.variadic = true, 'a';
+                    expectEqual([true, 'a'], [..recordVariadicField(r)]);
+                }),
+            ),
+        )
+    );
