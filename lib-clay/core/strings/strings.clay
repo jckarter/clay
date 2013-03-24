@@ -6,11 +6,19 @@
 
 /// @section  String? 
 
-[A]
-String?(#A) = Sequence?(A) and SequenceElementType(A) == Char;
+private define StringOfChar(S, C);
+
+default StringOfChar(S, C) = false;
+
+[A, C when Sequence?(A)]
+overload StringOfChar(#A, #C) = SequenceElementType(#A) == #C;
+
 
 [A]
-UniString?(#A) = Sequence?(A) and SequenceElementType(A) == UniChar;
+String?(#A) = StringOfChar(#A, Char);
+
+[A]
+UniString?(#A) = StringOfChar(#A, UniChar);
 
 
 
