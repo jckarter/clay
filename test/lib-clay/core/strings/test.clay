@@ -1,0 +1,15 @@
+import test.*;
+
+main() = testMain(
+    TestSuite("core.strings", array(
+        TestCase("String?", -> {
+            expectFalse(String?(Int));
+            expectFalse(String?(Char));
+            expectFalse(String?(UniChar));
+        }),
+        TestCase("UniString?", -> {
+            expectFalse(UniString?(Int));
+            expectFalse(UniString?(Char));
+            expectFalse(UniString?(UniChar));
+        }),
+    )));
