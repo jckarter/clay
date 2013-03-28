@@ -1,0 +1,7 @@
+import test.*;
+
+main() = testMain(TestSuite("arrays", array(
+            TestCase("constant of type Array", -> {
+                expectEqual(array(17, 19), unwrapStatic(#array(17, 19)));
+            }),
+        )));

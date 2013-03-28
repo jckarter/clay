@@ -1798,6 +1798,21 @@ void codegenCompileTimeValue(EValuePtr ev,
         }
         break;
     }
+
+    case ARRAY_TYPE : {
+        ArrayType *arrayType = (ArrayType *)ev->type.ptr();
+
+        for (size_t i = 0; i < (size_t)arrayType->size; ++i) {
+            char* elementPtr = ev->addr + i * typeSize(arrayType->elementType);
+            EValuePtr elementValue = new EValue(arrayType->elementType, elementPtr);
+            llvm::Value* destPtr =
+                ctx->builder->CreateConstGEP2_32(out0->llValue, 0, i);
+            CValuePtr cgDest = new CValue(arrayType->elementType, destPtr);
+            codegenCompileTimeValue(elementValue, ctx, new MultiCValue(cgDest));
+        }
+        break;
+    }
+
     default : {
         string buf;
         llvm::raw_string_ostream sout(buf);
