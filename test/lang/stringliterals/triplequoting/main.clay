@@ -1,6 +1,0 @@
-import printer.(println);
-main() {
-    println('>', """""", '<');
-    println('>', """triple "quoted" string""", '<');
-    println('>', """"triple quoted string"""", '<');
-}

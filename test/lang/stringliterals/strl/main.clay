@@ -1,7 +1,0 @@
-import printer.(println);
-main() {
-    println(strl("hello", " ", "world"));
-    println(strl("use ", add, " to add numbers"));
-    println(strl("i see a ", Type([1, 2.0, '3'])));
-    println(strl(#17, " is the most random number"));
-}

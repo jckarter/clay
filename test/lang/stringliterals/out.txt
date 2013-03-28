@@ -1,29 +1,3 @@
-foobar
-foo
-bar
-foobar
-true
-%#@% $#%	*^*^
-%#@
-% $#%	*^*^
-%#@% $#%	*^*^
-true
-
-true
-false
-true
-false
-
-false
-true
-true
-false
-
-0
-3
--1
--1
-6
-
-asdfjkl;
-127
+><
+>triple "quoted" string<
+>"triple quoted string"<

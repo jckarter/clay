@@ -1,4 +1,0 @@
-hello world
-use + to add numbers
-i see a Tuple[Int32, Float64, Char]
-17 is the most random number

@@ -1,0 +1,37 @@
+import printer.(println);
+import data.strings.*;
+import data.sequences.operators.*;
+import test.*;
+
+main() = testMain(TestSuite("string literals", array(
+        TestCase("stringLiteralStartsWith?", -> {
+            expectTrue(stringLiteralStartsWith?("foobar", "foo"));
+            expectFalse(stringLiteralStartsWith?("foobar", "bar"));
+            expectTrue(stringLiteralStartsWith?("foobar", "foobar"));
+            expectFalse(stringLiteralStartsWith?("foo", "foobar"));
+        }),
+        TestCase("stringLiteralEndsWith?", -> {
+            expectFalse(stringLiteralEndsWith?("foobar", "foo"));
+            expectTrue(stringLiteralEndsWith?("foobar", "bar"));
+            expectTrue(stringLiteralEndsWith?("foobar", "foobar"));
+            expectFalse(stringLiteralEndsWith?("foo", "foobar"));
+        }),
+        TestCase("stringLiteralFind", -> {
+            expectEqual(0, stringLiteralFind("foobarfoo", "foo"));
+            expectEqual(3, stringLiteralFind("foobarfoo", "bar"));
+            expectEqual(-1, stringLiteralFind("foobarfoo", "bas"));
+            expectEqual(-1, stringLiteralFind("foo", "foobarfoo"));
+            expectEqual(6, stringLiteralFind("foobarfoo", "foo", #1));
+        }),
+        TestCase("prefix", -> {
+            expectEqual(String("asdf"), String"asdf");
+            expectEqual(127, octal"177");
+        }),
+        TestCase("strl", -> {
+            expectEqual("hello world", strl("hello", " ", "world"));
+            expectEqual("use + to add numbers", strl("use ", add, " to add numbers"));
+            expectEqual("i see a Tuple[Int32, Float64, Char]", strl("i see a ", Type([1, 2.0, '3'])));
+            expectEqual("17 is the most random number", strl(#17, " is the most random number"));
+        }),
+    )));
+
