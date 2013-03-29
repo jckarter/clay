@@ -1038,7 +1038,7 @@ static const void *evalStringTableConstant(llvm::StringRef s)
         error("unsupported pointer width");
     }
     memcpy((void*)((char*)buf + bits), (const void*)s.begin(), s.size());
-    ((char*)buf)[s.size()] = 0;
+    ((char*)buf)[bits + s.size()] = 0;
     staticStringTableConstants[s] = (const void*)buf;
     return buf;
 }

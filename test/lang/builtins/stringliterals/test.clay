@@ -11,5 +11,12 @@ main() = testMain(TestSuite("string literals", array(
             expectEqual("bar", bar);
             expectEqual("foobar", foo ++ bar);
         }),
+        TestCase("stringTableConstant", -> {
+            // using StringLiteralRef to test stringTableConstant
+            expectEqual('a', StringLiteralRef("abcdefgh")[0]);
+            expectEqual('a', StringLiteralRef("abcd")[0]);
+            expectEqual('a', Char(unwrapStatic(#Int(StringLiteralRef("abcdefgh")[0]))));
+            expectEqual('a', Char(unwrapStatic(#Int(StringLiteralRef("abcd")[0]))));
+        }),
     )));
 
