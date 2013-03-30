@@ -38,19 +38,19 @@ void addGlobal(ModulePtr module,
 // module errors
 //
 
-static void suggestModules(llvm::raw_ostream &err, set<string> const &moduleNames, llvm::StringRef name) {
+static void suggestModules(llvm::raw_ostream &err, set<string> const &moduleNames, IdentifierPtr name) {
     for (set<string>::const_iterator i = moduleNames.begin(), end = moduleNames.end();
          i != end;
          ++i)
     {
-        err << "\n    import " << *i << ".(" << name << ");";
+        err << "\n    import " << *i << ".(" << name->str << ");";
     }
 }
 
 static void ambiguousImportError(IdentifierPtr name, ImportSet const &candidates) {
     string buf;
     llvm::raw_string_ostream err(buf);
-    err << "ambiguous imported symbol: " << name;
+    err << "ambiguous imported symbol: " << name->str;
     set<string> moduleNames;
     for (const ObjectPtr *i = candidates.begin(), *end = candidates.end();
          i != end;
@@ -60,7 +60,7 @@ static void ambiguousImportError(IdentifierPtr name, ImportSet const &candidates
     }
 
     err << "\n  disambiguate with one of:";
-    suggestModules(err, moduleNames, name->str);
+    suggestModules(err, moduleNames, name);
     error(name, err.str());
 }
 
@@ -80,7 +80,7 @@ static void undefinedNameError(IdentifierPtr name) {
 
     if (!suggestModuleNames.empty()) {
         err << "\n  maybe you need one of:";
-        suggestModules(err, suggestModuleNames, name->str);
+        suggestModules(err, suggestModuleNames, name);
     }
 
     error(name, err.str());

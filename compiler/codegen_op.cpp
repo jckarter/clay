@@ -147,11 +147,6 @@ static IdentifierPtr valueToIdentifier(MultiCValuePtr args, unsigned index)
     return (Identifier *)obj.ptr();
 }
 
-static llvm::StringRef valueToStringRef(MultiCValuePtr args, unsigned index)
-{
-    return valueToIdentifier(args, index)->str;
-}
-
 
 
 //
@@ -1721,14 +1716,14 @@ void codegenPrimOp(PrimOpPtr x,
         ensureArity(args, 2);
         bool result = false;
         ObjectPtr obj = valueToStatic(args->values[0]);
-        llvm::StringRef fname = valueToStringRef(args, 1);
+        IdentifierPtr fname = valueToIdentifier(args, 1);
         if (obj.ptr() && (obj->objKind == TYPE)) {
             Type *t = (Type *)obj.ptr();
             if (t->typeKind == RECORD_TYPE) {
                 RecordType *rt = (RecordType *)t;
                 const llvm::StringMap<size_t> &fieldIndexMap =
                     recordFieldIndexMap(rt);
-                result = (fieldIndexMap.find(fname)
+                result = (fieldIndexMap.find(fname->str)
                           != fieldIndexMap.end());
             }
         }
@@ -1779,14 +1774,14 @@ void codegenPrimOp(PrimOpPtr x,
         ensureArity(args, 2);
         RecordTypePtr rt;
         llvm::Value *vrec = recordValue(args, 0, rt);
-        llvm::StringRef fname = valueToStringRef(args, 1);
+        IdentifierPtr fname = valueToIdentifier(args, 1);
         const llvm::StringMap<size_t> &fieldIndexMap = recordFieldIndexMap(rt);
         llvm::StringMap<size_t>::const_iterator fi =
-            fieldIndexMap.find(fname);
+            fieldIndexMap.find(fname->str);
         if (fi == fieldIndexMap.end()) {
             string buf;
             llvm::raw_string_ostream sout(buf);
-            sout << "field not found: " << fname;
+            sout << "field not found: " << fname->str;
             argumentError(1, sout.str());
         }
         unsigned i = unsigned(fi->second);
@@ -2024,27 +2019,27 @@ void codegenPrimOp(PrimOpPtr x,
 
     case PRIM_stringLiteralByteIndex : {
         ensureArity(args, 2);
-        llvm::StringRef ident = valueToStringRef(args, 0);
+        IdentifierPtr ident = valueToIdentifier(args, 0);
         unsigned n = unsigned(valueToStaticSizeTOrInt(args, 1));
-        if (n >= ident.size())
+        if (n >= ident->str.size())
             argumentError(1, "string literal index out of bounds");
 
         assert(out->size() == 1);
         CValuePtr outi = out->values[0];
         assert(outi->type == cIntType);
-        llvm::Constant *value = llvm::ConstantInt::get(llvmIntType(32), size_t(ident[n]));
+        llvm::Constant *value = llvm::ConstantInt::get(llvmIntType(32), size_t(ident->str[n]));
         ctx->builder->CreateStore(value, outi->llValue);
         break;
     }
 
     case PRIM_stringLiteralBytes : {
         ensureArity(args, 1);
-        llvm::StringRef ident = valueToStringRef(args, 0);
-        assert(out->size() == ident.size());
-        for (unsigned i = 0; i < ident.size(); ++i) {
+        IdentifierPtr ident = valueToIdentifier(args, 0);
+        assert(out->size() == ident->str.size());
+        for (unsigned i = 0; i < ident->str.size(); ++i) {
             CValuePtr outi = out->values[i];
             assert(outi->type == cIntType);
-            llvm::Constant *value = llvm::ConstantInt::get(llvmIntType(32), size_t(ident[i]));
+            llvm::Constant *value = llvm::ConstantInt::get(llvmIntType(32), size_t(ident->str[i]));
             ctx->builder->CreateStore(value, outi->llValue);
         }
         break;
@@ -2052,8 +2047,8 @@ void codegenPrimOp(PrimOpPtr x,
 
     case PRIM_stringLiteralByteSize : {
         ensureArity(args, 1);
-        llvm::StringRef ident = valueToStringRef(args, 0);
-        ValueHolderPtr vh = sizeTToValueHolder(ident.size());
+        IdentifierPtr ident = valueToIdentifier(args, 0);
+        ValueHolderPtr vh = sizeTToValueHolder(ident->str.size());
         codegenStaticObject(vh.ptr(), ctx, out);
         break;
     }
@@ -2065,8 +2060,8 @@ void codegenPrimOp(PrimOpPtr x,
 
     case PRIM_stringTableConstant : {
         ensureArity(args, 1);
-        llvm::StringRef ident = valueToStringRef(args, 0);
-        llvm::Value *value = codegenStringTableConstant(ident);
+        IdentifierPtr ident = valueToIdentifier(args, 0);
+        llvm::Value *value = codegenStringTableConstant(ident->str);
 
         assert(out->size() == 1);
         CValuePtr out0 = out->values[0];
@@ -2077,8 +2072,8 @@ void codegenPrimOp(PrimOpPtr x,
 
     case PRIM_FlagP : {
         ensureArity(args, 1);
-        llvm::StringRef ident = valueToStringRef(args, 0);
-        llvm::StringMap<string>::const_iterator flag = globalFlags.find(ident);
+        IdentifierPtr ident = valueToIdentifier(args, 0);
+        llvm::StringMap<string>::const_iterator flag = globalFlags.find(ident->str);
         ValueHolderPtr vh = boolToValueHolder(flag != globalFlags.end());
         codegenStaticObject(vh.ptr(), ctx, out);
         break;
