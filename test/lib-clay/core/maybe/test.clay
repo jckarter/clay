@@ -64,8 +64,4 @@ main() = testMain(TestSuite("core.maybe", array(
         TestCase("require returns rvalue", -> {
             expectTrue(RValue?(require(nothing(Int))));
         }),
-
-        TestCase("static", -> {
-            expectEqual(#1, just(Maybe(#1)));
-        }),
     )));
