@@ -173,6 +173,11 @@ static IdentifierPtr valueToIdentifier(MultiEValuePtr args, unsigned index)
     return (Identifier *)obj.ptr();
 }
 
+static llvm::StringRef valueToStringRef(MultiEValuePtr args, unsigned index)
+{
+    return valueToIdentifier(args, index)->str;
+}
+
 
 
 //
@@ -1783,14 +1788,14 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         ensureArity(args, 2);
         bool result = false;
         ObjectPtr obj = valueToStatic(args->values[0]);
-        IdentifierPtr fname = valueToIdentifier(args, 1);
+        llvm::StringRef fname = valueToStringRef(args, 1);
         if (obj.ptr() && (obj->objKind == TYPE)) {
             Type *t = (Type *)obj.ptr();
             if (t->typeKind == RECORD_TYPE) {
                 RecordType *rt = (RecordType *)t;
                 const llvm::StringMap<size_t> &fieldIndexMap =
                     recordFieldIndexMap(rt);
-                result = (fieldIndexMap.find(fname->str)
+                result = (fieldIndexMap.find(fname)
                           != fieldIndexMap.end());
             }
         }
@@ -1841,14 +1846,14 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
         ensureArity(args, 2);
         RecordTypePtr rt;
         EValuePtr erec = recordValue(args, 0, rt);
-        IdentifierPtr fname = valueToIdentifier(args, 1);
+        llvm::StringRef fname = valueToStringRef(args, 1);
         const llvm::StringMap<size_t> &fieldIndexMap = recordFieldIndexMap(rt);
         llvm::StringMap<size_t>::const_iterator fi =
-            fieldIndexMap.find(fname->str);
+            fieldIndexMap.find(fname);
         if (fi == fieldIndexMap.end()) {
             string buf;
             llvm::raw_string_ostream sout(buf);
-            sout << "field not found: " << fname->str;
+            sout << "field not found: " << fname;
             argumentError(1, sout.str());
         }
         unsigned i = unsigned(fi->second);
@@ -2089,34 +2094,34 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
 
     case PRIM_stringLiteralByteIndex : {
         ensureArity(args, 2);
-        IdentifierPtr ident = valueToIdentifier(args, 0);
+        llvm::StringRef ident = valueToStringRef(args, 0);
         size_t n = valueToStaticSizeTOrInt(args, 1);
-        if (n >= ident->str.size())
+        if (n >= ident.size())
             argumentError(1, "string literal index out of bounds");
 
         assert(out->size() == 1);
         EValuePtr outi = out->values[0];
         assert(outi->type == cIntType);
-        outi->as<int>() = ident->str[unsigned(n)];
+        outi->as<int>() = ident[unsigned(n)];
         break;
     }
 
     case PRIM_stringLiteralBytes : {
         ensureArity(args, 1);
-        IdentifierPtr ident = valueToIdentifier(args, 0);
-        assert(out->size() == ident->str.size());
-        for (unsigned i = 0, sz = unsigned(ident->str.size()); i < sz; ++i) {
+        llvm::StringRef ident = valueToStringRef(args, 0);
+        assert(out->size() == ident.size());
+        for (unsigned i = 0, sz = unsigned(ident.size()); i < sz; ++i) {
             EValuePtr outi = out->values[i];
             assert(outi->type == cIntType);
-            outi->as<int>() = ident->str[i];
+            outi->as<int>() = ident[i];
         }
         break;
     }
 
     case PRIM_stringLiteralByteSize : {
         ensureArity(args, 1);
-        IdentifierPtr ident = valueToIdentifier(args, 0);
-        ValueHolderPtr vh = sizeTToValueHolder(ident->str.size());
+        llvm::StringRef ident = valueToStringRef(args, 0);
+        ValueHolderPtr vh = sizeTToValueHolder(ident.size());
         evalStaticObject(vh.ptr(), out);
         break;
     }
@@ -2128,8 +2133,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
 
     case PRIM_stringTableConstant : {
         ensureArity(args, 1);
-        IdentifierPtr ident = valueToIdentifier(args, 0);
-        const void *value = evalStringTableConstant(ident->str);
+        llvm::StringRef ident = valueToStringRef(args, 0);
+        const void *value = evalStringTableConstant(ident);
 
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
@@ -2147,8 +2152,8 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
 
     case PRIM_FlagP : {
         ensureArity(args, 1);
-        IdentifierPtr ident = valueToIdentifier(args, 0);
-        llvm::StringMap<string>::const_iterator flag = globalFlags.find(ident->str);
+        llvm::StringRef ident = valueToStringRef(args, 0);
+        llvm::StringMap<string>::const_iterator flag = globalFlags.find(ident);
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
         assert(out0->type == boolType);

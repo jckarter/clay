@@ -38,12 +38,12 @@ void addGlobal(ModulePtr module,
 // module errors
 //
 
-static void suggestModules(llvm::raw_ostream &err, set<string> const &moduleNames, IdentifierPtr name) {
+static void suggestModules(llvm::raw_ostream &err, set<string> const &moduleNames, llvm::StringRef name) {
     for (set<string>::const_iterator i = moduleNames.begin(), end = moduleNames.end();
          i != end;
          ++i)
     {
-        err << "\n    import " << *i << ".(" << name->str << ");";
+        err << "\n    import " << *i << ".(" << name << ");";
     }
 }
 
@@ -60,7 +60,7 @@ static void ambiguousImportError(IdentifierPtr name, ImportSet const &candidates
     }
 
     err << "\n  disambiguate with one of:";
-    suggestModules(err, moduleNames, name);
+    suggestModules(err, moduleNames, name->str);
     error(name, err.str());
 }
 
@@ -80,7 +80,7 @@ static void undefinedNameError(IdentifierPtr name) {
 
     if (!suggestModuleNames.empty()) {
         err << "\n  maybe you need one of:";
-        suggestModules(err, suggestModuleNames, name);
+        suggestModules(err, suggestModuleNames, name->str);
     }
 
     error(name, err.str());
