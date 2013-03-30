@@ -232,12 +232,16 @@ enum PrimOpCode {
 };
 
 struct PrimOp : public Object {
-    int primOpCode;
-    PrimOp(int primOpCode)
+    const PrimOpCode primOpCode;
+    PrimOp(PrimOpCode primOpCode)
         : Object(PRIM_OP), primOpCode(primOpCode) {}
 };
 
-llvm::StringRef primOpName(const PrimOpPtr& x);
+llvm::StringRef primOpName(PrimOpCode op);
+
+static inline llvm::StringRef primOpName(const PrimOpPtr& x) {
+    return primOpName(x->primOpCode);
+}
 
 }
 

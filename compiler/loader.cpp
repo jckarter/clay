@@ -914,8 +914,8 @@ EnvPtr ForeignStatement::getEnv() {
 
 static map<int, string> primOpNames;
 
-llvm::StringRef primOpName(const PrimOpPtr& x) {
-    map<int, string>::iterator i = primOpNames.find(x->primOpCode);
+llvm::StringRef primOpName(PrimOpCode op) {
+    map<int, string>::iterator i = primOpNames.find(op);
     assert(i != primOpNames.end());
     return i->second;
 }
