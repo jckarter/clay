@@ -16,7 +16,7 @@ overload __operators__.variantReprType(#V) = VariantRepr[..VariantMembers(V)];
 
 [V,M when Variant?(V)]
 VariantMember?(#V, #M) =
-    VariantMemberIndex(V, M) < VariantMemberCount(V);
+    VariantMemberIndex(V, #M) < VariantMemberCount(V);
 
 
 /// @section  construct from value of member type 
@@ -35,7 +35,7 @@ alias initializeVariant(#V, x:T) --> returned:V {
 [V,T when Variant?(V) and VariantMember?(V, T)]
 alias overload V(x:T) = initializeVariant(V, x);
 
-[V,T,..AA when Variant?(V) and VariantMember?(V, T) and CallDefined?(T, ..AA)]
+[V,T,..AA when Variant?(V) and VariantMember?(V, #T) and CallDefined?(T, ..AA)]
 alias overload V(#T, ..args:AA) = V(T(..args));
 
 private abortInvalidTag(tag:Int) {

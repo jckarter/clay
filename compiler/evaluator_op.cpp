@@ -90,9 +90,14 @@ static size_t valueToStaticSizeTOrInt(MultiEValuePtr args, unsigned index)
 static TypePtr valueToType(MultiEValuePtr args, unsigned index)
 {
     ObjectPtr obj = valueToStatic(args->values[index]);
-    if (!obj || (obj->objKind != TYPE))
+    if (!obj) {
         argumentError(index, "expecting a type");
-    return (Type *)obj.ptr();
+    }
+
+    if (obj->objKind == TYPE)
+        return (Type *)obj.ptr();
+    else
+        return staticType(obj);
 }
 
 static TypePtr valueToNumericType(MultiEValuePtr args, unsigned index)
