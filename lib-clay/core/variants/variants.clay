@@ -35,7 +35,7 @@ alias initializeVariant(#V, x:T) --> returned:V {
 [V,T when Variant?(V) and VariantMember?(V, T)]
 alias overload V(x:T) = initializeVariant(V, x);
 
-[V,T,..AA when Variant?(V) and VariantMember?(V, T) and CallDefined?(T, ..AA)]
+[V,T,..AA when Variant?(V) and Type?(T) and VariantMember?(V, T) and CallDefined?(T, ..AA)]
 alias overload V(#T, ..args:AA) = V(T(..args));
 
 private abortInvalidTag(tag:Int) {
