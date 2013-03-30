@@ -1,0 +1,67 @@
+import test.*;
+import printer.*;
+
+import data.vectors.*;
+
+main() = testMain(TestSuite("core.maybe", array(
+        TestCase("Type", -> {
+            expectType(Maybe[Int], Maybe(45));
+            expectType(Maybe[Int], nothing(Int));
+        }),
+        TestCase("nothing?", -> {
+            expectTrue(nothing?(nothing(Int)));
+            expectFalse(nothing?(Maybe(35)));
+        }),
+        TestCase("just returns reference", -> {
+            var a = Maybe(35);
+            just(a) +: 1;
+            expectEqual(36, just(a));
+        }),
+        TestCase("just returns rvalue", -> {
+            expectTrue(RValue?(just(nothing(Int))));
+        }),
+        TestCase("maybe with 1 callback", -> {
+            maybe(nothing(Int), i -> { failed(); });
+
+            var called = 1;
+            maybe(Maybe(3), i -> { called +: i; });
+            expectEqual(4, called);
+        }),
+        TestCase("maybe with 2 callbacks", -> {
+            expectEqual(17, maybe(nothing(Int), i -> i, -> 17));
+            expectEqual(15, maybe(Maybe(13), i -> i + 2, -> 17));
+        }),
+        TestCase("maybe with 2 callbacks returns reference", -> {
+            var v = 10;
+            var a = Maybe(17);
+            ref ax = maybe(a, i -> ref i, -> ref v);
+            ax +: 2;
+            expectEqual(19, just(a));
+
+            var w = 10;
+            var b = nothing(Int);
+            ref bx = maybe(b, i -> ref i, -> ref w);
+            bx +: 2;
+            expectEqual(12, w);
+        }),
+        TestCase("require", -> {
+            try {
+                require(nothing(Int), i -> { failed(); });
+                failed();
+            } catch (e: ValueMissing) {
+            }
+
+            var called = 1;
+            require(Maybe(3), i -> { called +: 3; });
+            expectEqual(4, called);
+        }),
+        TestCase("require returns ref", -> {
+            var a = Maybe(17);
+            ref ax = require(a, i -> ref i);
+            ax +: 3;
+            expectEqual(20, ax);
+        }),
+        TestCase("require returns rvalue", -> {
+            expectTrue(RValue?(require(nothing(Int))));
+        }),
+    )));
