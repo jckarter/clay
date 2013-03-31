@@ -1,0 +1,12 @@
+record Foo[A] (
+    a: Type(A),
+);
+
+main() {
+    var foo = Foo[1]();
+    if (foo.a != 0)
+        return 1;
+    if (Type(foo.a) != Int)
+        return 2;
+    return 0;
+}

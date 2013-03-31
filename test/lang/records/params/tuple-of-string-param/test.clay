@@ -1,0 +1,12 @@
+record Foo[A] (
+    a: Type(A),
+);
+
+main() {
+    var foo = Foo[["abc", Int]]();
+    if (foo.a != ["abc", Int])
+        return 1;
+    if (Type(foo.a) != Tuple[Static["abc"], Static[Int]])
+        return 2;
+    return 0;
+}

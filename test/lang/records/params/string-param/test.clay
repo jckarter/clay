@@ -1,0 +1,12 @@
+record Foo[A] (
+    a: Type(A),
+);
+
+main() {
+    var foo = Foo["abc"]();
+    if (foo.a != "abc")
+        return 1;
+    if (Type(foo.a) != Static["abc"])
+        return 2;
+    return 0;
+}
