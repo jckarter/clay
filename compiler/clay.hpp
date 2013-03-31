@@ -1742,7 +1742,8 @@ struct RecordDecl : public TopLevelItem {
     vector<PatternVar> patternVars;
     ExprPtr predicate;
 
-    vector<IdentifierPtr> params;
+    const vector<IdentifierPtr> params;
+
     IdentifierPtr varParam;
 
     RecordBodyPtr body;
@@ -1757,10 +1758,15 @@ struct RecordDecl : public TopLevelItem {
         : TopLevelItem(RECORD_DECL, module, visibility),
           builtinOverloadInitialized(false) {}
     RecordDecl(Module *module, Visibility visibility,
-           llvm::ArrayRef<PatternVar> patternVars, ExprPtr predicate)
+           llvm::ArrayRef<PatternVar> patternVars, ExprPtr predicate,
+           llvm::ArrayRef<IdentifierPtr> params, IdentifierPtr varParam,
+           RecordBodyPtr body)
         : TopLevelItem(RECORD_DECL, module, visibility),
           patternVars(patternVars),
           predicate(predicate),
+          params(params),
+          varParam(varParam),
+          body(body),
           builtinOverloadInitialized(false) {}
     RecordDecl(Module *module, IdentifierPtr name,
            Visibility visibility,
@@ -2624,7 +2630,8 @@ struct UnionType : public Type {
 
 struct RecordType : public Type {
     RecordDeclPtr record;
-    vector<ObjectPtr> params;
+
+    const vector<ObjectPtr> params;
 
     vector<IdentifierPtr> fieldNames;
     vector<TypePtr> fieldTypes;
@@ -2637,12 +2644,7 @@ struct RecordType : public Type {
     bool fieldsInitialized:1;
     bool hasVarField:1;
     
-    RecordType(RecordDeclPtr record)
-        : Type(RECORD_TYPE), record(record),
-          layout(NULL), fieldsInitialized(false), hasVarField(false) {}
-    RecordType(RecordDeclPtr record, llvm::ArrayRef<ObjectPtr> params)
-        : Type(RECORD_TYPE), record(record), params(params),
-          layout(NULL), fieldsInitialized(false), hasVarField(false) {}
+    RecordType(RecordDeclPtr record, llvm::ArrayRef<ObjectPtr> params);
 
     size_t varFieldSize() {
         return fieldTypes.size() - fieldNames.size() + 1;

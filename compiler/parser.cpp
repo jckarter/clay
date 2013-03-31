@@ -2111,11 +2111,16 @@ static bool record(TopLevelItemPtr &x, Module *module, unsigned s) {
     ExprPtr predicate;
     if (!optPatternVarsWithCond(patternVars, predicate)) return false;    
     restore(e);
-    RecordDeclPtr y = new RecordDecl(module, vis, patternVars, predicate);
-    if (!identifier(y->name)) return false;
-    if (!optStaticParams(y->params, y->varParam)) return false;
-    if (!recordBody(y->body)) return false;
-    x = y.ptr();
+
+    IdentifierPtr name;
+    vector<IdentifierPtr> params;
+    IdentifierPtr varParam;
+    RecordBodyPtr body;
+
+    if (!identifier(name)) return false;
+    if (!optStaticParams(params, varParam)) return false;
+    if (!recordBody(body)) return false;
+    x = new RecordDecl(module, name, vis, patternVars, predicate, params, varParam, body);
     x->location = location;
     return true;
 }

@@ -53,6 +53,20 @@ static vector<vector<RecordTypePtr> > recordTypes;
 static vector<vector<VariantTypePtr> > variantTypes;
 static vector<vector<StaticTypePtr> > staticTypes;
 
+
+RecordType::RecordType(RecordDeclPtr record, llvm::ArrayRef<ObjectPtr> params)
+    : Type(RECORD_TYPE), record(record), params(params),
+      layout(NULL), fieldsInitialized(false), hasVarField(false)
+{
+    if (!!record->varParam) {
+        assert(params.size() >= record->params.size());
+    } else {
+        assert(params.size() == record->params.size());
+    }
+}
+
+
+
 //
 // type size and alignment for debug generation
 //
@@ -351,9 +365,8 @@ TypePtr recordType(RecordDeclPtr record, llvm::ArrayRef<ObjectPtr> params) {
         if ((t->record == record) && objectVectorEquals(t->params, params))
             return t;
     }
-    RecordTypePtr t = new RecordType(record);
-    for (pi = params.begin(), pend = params.end(); pi != pend; ++pi)
-        t->params.push_back(*pi);
+
+    RecordTypePtr t = new RecordType(record, params);
     recordTypes[h].push_back(t);
     t->hasVarField = record->body->hasVarField;
     initializeRecordFields(t);
@@ -652,10 +665,6 @@ void initializeRecordFields(RecordTypePtr t) {
     assert(!t->fieldsInitialized);
     t->fieldsInitialized = true;
     RecordDeclPtr r = t->record;
-    if (r->varParam.ptr())
-        assert(t->params.size() >= r->params.size());
-    else
-        assert(t->params.size() == r->params.size());
     EnvPtr env = new Env(r->env);
     for (unsigned i = 0; i < r->params.size(); ++i)
         addLocal(env, r->params[i], t->params[i].ptr());
