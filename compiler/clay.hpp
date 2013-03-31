@@ -309,73 +309,80 @@ inline llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const clay_uint128 &
 // ObjectKind
 //
 
+#define OBJECT_KIND_MAP(XX) \
+    XX(SOURCE) \
+    XX(LOCATION) \
+\
+    XX(IDENTIFIER) \
+    XX(DOTTED_NAME) \
+\
+    XX(EXPRESSION) \
+    XX(EXPR_LIST) \
+    XX(STATEMENT) \
+    XX(CASE_BLOCK) \
+    XX(CATCH) \
+\
+    XX(FORMAL_ARG) \
+    XX(RETURN_SPEC) \
+    XX(LLVM_CODE) \
+    XX(CODE) \
+\
+    XX(RECORD_DECL) \
+    XX(RECORD_BODY) \
+    XX(RECORD_FIELD) \
+    XX(VARIANT_DECL) \
+    XX(INSTANCE_DECL) \
+    XX(NEW_TYPE_DECL) \
+    XX(OVERLOAD) \
+    XX(PROCEDURE) \
+    XX(INTRINSIC) \
+    XX(ENUM_DECL) \
+    XX(ENUM_MEMBER) \
+    XX(GLOBAL_VARIABLE) \
+    XX(EXTERNAL_PROCEDURE) \
+    XX(EXTERNAL_ARG) \
+    XX(EXTERNAL_VARIABLE) \
+    XX(EVAL_TOPLEVEL) \
+\
+    XX(GLOBAL_ALIAS) \
+\
+    XX(IMPORT) \
+    XX(MODULE_DECLARATION) \
+    XX(MODULE) \
+\
+    XX(ENV) \
+\
+    XX(PRIM_OP) \
+\
+    XX(TYPE) \
+\
+    XX(PATTERN) \
+    XX(MULTI_PATTERN) \
+\
+    XX(VALUE_HOLDER) \
+    XX(MULTI_STATIC) \
+\
+    XX(PVALUE) \
+    XX(MULTI_PVALUE) \
+\
+    XX(EVALUE) \
+    XX(MULTI_EVALUE) \
+\
+    XX(CVALUE) \
+    XX(MULTI_CVALUE) \
+\
+    XX(DOCUMENTATION) \
+\
+    XX(STATIC_ASSERT_TOP_LEVEL) \
+
+
+#define OBJECT_KIND_GEN(e) e,
 enum ObjectKind {
-    SOURCE,
-    LOCATION,
-
-    IDENTIFIER,
-    DOTTED_NAME,
-
-    EXPRESSION,
-    EXPR_LIST,
-    STATEMENT,
-    CASE_BLOCK,
-    CATCH,
-
-    FORMAL_ARG,
-    RETURN_SPEC,
-    LLVM_CODE,
-    CODE,
-
-    RECORD_DECL,
-    RECORD_BODY,
-    RECORD_FIELD,
-    VARIANT_DECL,
-    INSTANCE_DECL,
-    NEW_TYPE_DECL,
-    OVERLOAD,
-    PROCEDURE,
-    INTRINSIC,
-    ENUM_DECL,   
-    ENUM_MEMBER,
-    GLOBAL_VARIABLE,
-    EXTERNAL_PROCEDURE,
-    EXTERNAL_ARG,
-    EXTERNAL_VARIABLE,  
-    EVAL_TOPLEVEL,
-
-    GLOBAL_ALIAS,
-
-    IMPORT,
-    MODULE_DECLARATION,
-    MODULE,
-
-    ENV,
-
-    PRIM_OP,
-
-    TYPE,
-
-    PATTERN,    
-    MULTI_PATTERN,
-
-    VALUE_HOLDER,
-    MULTI_STATIC,
-
-    PVALUE,
-    MULTI_PVALUE,
-
-    EVALUE,
-    MULTI_EVALUE,
-
-    CVALUE,
-    MULTI_CVALUE,
-
-    DOCUMENTATION,
-
-    STATIC_ASSERT_TOP_LEVEL,
+    OBJECT_KIND_MAP(OBJECT_KIND_GEN)
 };
+#undef OBJECT_KIND_GEN
 
+llvm::raw_ostream &operator<<(llvm::raw_ostream &os, ObjectKind);
 
 //
 // Object
@@ -904,39 +911,46 @@ struct DottedName : public ANode {
 // Expr
 //
 
+#define EXPR_KIND_MAP(XX) \
+    XX(BOOL_LITERAL) \
+    XX(INT_LITERAL) \
+    XX(FLOAT_LITERAL) \
+    XX(CHAR_LITERAL) \
+    XX(STRING_LITERAL) \
+\
+    XX(FILE_EXPR) \
+    XX(LINE_EXPR) \
+    XX(COLUMN_EXPR) \
+    XX(ARG_EXPR) \
+\
+    XX(NAME_REF) \
+    XX(TUPLE) \
+    XX(PAREN) \
+    XX(INDEXING) \
+    XX(CALL) \
+    XX(FIELD_REF) \
+    XX(STATIC_INDEXING) \
+    XX(VARIADIC_OP) \
+    XX(AND) \
+    XX(OR) \
+\
+    XX(LAMBDA) \
+    XX(UNPACK) \
+    XX(STATIC_EXPR) \
+    XX(DISPATCH_EXPR) \
+\
+    XX(FOREIGN_EXPR) \
+    XX(OBJECT_EXPR) \
+\
+    XX(EVAL_EXPR) \
+
+#define EXPR_KIND_GEN(e) e,
 enum ExprKind {
-    BOOL_LITERAL,
-    INT_LITERAL,
-    FLOAT_LITERAL,
-    CHAR_LITERAL,
-    STRING_LITERAL,
-
-    FILE_EXPR,
-    LINE_EXPR,
-    COLUMN_EXPR,
-    ARG_EXPR,
-
-    NAME_REF,
-    TUPLE,
-    PAREN,
-    INDEXING,
-    CALL,
-    FIELD_REF,
-    STATIC_INDEXING,
-    VARIADIC_OP,
-    AND,
-    OR,
-
-    LAMBDA,
-    UNPACK,
-    STATIC_EXPR,
-    DISPATCH_EXPR,
-
-    FOREIGN_EXPR,
-    OBJECT_EXPR,
-
-    EVAL_EXPR
+    EXPR_KIND_MAP(EXPR_KIND_GEN)
 };
+#undef EXPR_KIND_GEN
+
+llvm::raw_ostream &operator<<(llvm::raw_ostream &os, ExprKind);
 
 struct Expr : public ANode {
     ExprKind exprKind;
@@ -1070,14 +1084,21 @@ struct StaticIndexing : public Expr {
         : Expr(STATIC_INDEXING), expr(expr), index(index) {}
 };
 
+#define VARIADIC_OP_KIND_MAP(XX) \
+    XX(DEREFERENCE) \
+    XX(ADDRESS_OF) \
+    XX(NOT) \
+    XX(PREFIX_OP) \
+    XX(INFIX_OP) \
+    XX(IF_EXPR) \
+
+#define VARIADIC_OP_KIND_GEN(e) e,
 enum VariadicOpKind {
-    DEREFERENCE,
-    ADDRESS_OF,
-    NOT,
-    PREFIX_OP,
-    INFIX_OP,
-    IF_EXPR
+    VARIADIC_OP_KIND_MAP(VARIADIC_OP_KIND_GEN)
 };
+#undef VARIADIC_OP_KIND_GEN
+
+llvm::raw_ostream &operator<<(llvm::raw_ostream &os, VariadicOpKind);
 
 struct VariadicOp : public Expr {
     VariadicOpKind op;
@@ -1245,32 +1266,39 @@ inline ExprListPtr Call::allArgs() {
 // Stmt
 //
 
+#define STATEMENT_KIND_MAP(XX) \
+    XX(BLOCK) \
+    XX(LABEL) \
+    XX(BINDING) \
+    XX(ASSIGNMENT) \
+    XX(INIT_ASSIGNMENT) \
+    XX(VARIADIC_ASSIGNMENT) \
+    XX(GOTO) \
+    XX(RETURN) \
+    XX(IF) \
+    XX(SWITCH) \
+    XX(EXPR_STATEMENT) \
+    XX(WHILE) \
+    XX(BREAK) \
+    XX(CONTINUE) \
+    XX(FOR) \
+    XX(FOREIGN_STATEMENT) \
+    XX(TRY) \
+    XX(THROW) \
+    XX(STATIC_FOR) \
+    XX(FINALLY) \
+    XX(ONERROR) \
+    XX(UNREACHABLE) \
+    XX(EVAL_STATEMENT) \
+    XX(STATIC_ASSERT_STATEMENT) \
+
+#define STATEMENT_KIND_GEN(e) e,
 enum StatementKind {
-    BLOCK,
-    LABEL,
-    BINDING,
-    ASSIGNMENT,
-    INIT_ASSIGNMENT,
-    VARIADIC_ASSIGNMENT,
-    GOTO,
-    RETURN,
-    IF,
-    SWITCH,
-    EXPR_STATEMENT,
-    WHILE,
-    BREAK,
-    CONTINUE,
-    FOR,
-    FOREIGN_STATEMENT,
-    TRY,
-    THROW,
-    STATIC_FOR,
-    FINALLY,
-    ONERROR,
-    UNREACHABLE,
-    EVAL_STATEMENT,
-    STATIC_ASSERT_STATEMENT
+    STATEMENT_KIND_MAP(STATEMENT_KIND_GEN)
 };
+#undef STATEMENT_KIND_GEN
+
+llvm::raw_ostream &operator<<(llvm::raw_ostream &os, StatementKind);
 
 struct Statement : public ANode {
     StatementKind stmtKind;
@@ -1292,12 +1320,20 @@ struct Label : public Statement {
         : Statement(LABEL), name(name) {}
 };
 
+#define BINDING_KIND_MAP(XX) \
+    XX(VAR) \
+    XX(REF) \
+    XX(ALIAS) \
+    XX(FORWARD) \
+
+#define BINDING_KIND_GEN(e) e,
 enum BindingKind {
-    VAR,
-    REF,
-    ALIAS,
-    FORWARD
+    BINDING_KIND_MAP(BINDING_KIND_GEN)
 };
+#undef BINDING_KIND_GEN
+
+llvm::raw_ostream &operator<<(llvm::raw_ostream &os, BindingKind);
+
 
 struct PatternVar;
 
@@ -1968,14 +2004,20 @@ struct GVarInstance : public RefCounted {
     llvm::DIGlobalVariable getDebugInfo() { return llvm::DIGlobalVariable(debugInfo); }
 };
 
+#define CALLING_CONV_MAP(XX) \
+    XX(CC_DEFAULT,  "AttributeCCall") \
+    XX(CC_STDCALL,  "AttributeStdCall") \
+    XX(CC_FASTCALL, "AttributeFastCall") \
+    XX(CC_THISCALL, "AttributeThisCall") \
+    XX(CC_LLVM,     "AttributeLLVMCall") \
+
+#define CALLING_CONV_GEN(e, str) e,
 enum CallingConv {
-    CC_DEFAULT,
-    CC_STDCALL,
-    CC_FASTCALL,
-    CC_THISCALL,
-    CC_LLVM,
+    CALLING_CONV_MAP(CALLING_CONV_GEN)
     CC_Count
 };
+#undef CALLING_CONV_GEN
+
 
 struct ExternalProcedure : public TopLevelItem {
     vector<ExternalArgPtr> args;
@@ -2425,24 +2467,31 @@ void runInteractive(llvm::Module *llvmModule, ModulePtr module);
 // Types
 //
 
+#define TYPE_KIND_MAP(XX) \
+    XX(BOOL_TYPE) \
+    XX(INTEGER_TYPE) \
+    XX(FLOAT_TYPE) \
+    XX(COMPLEX_TYPE) \
+    XX(POINTER_TYPE) \
+    XX(CODE_POINTER_TYPE) \
+    XX(CCODE_POINTER_TYPE) \
+    XX(ARRAY_TYPE) \
+    XX(VEC_TYPE) \
+    XX(TUPLE_TYPE) \
+    XX(UNION_TYPE) \
+    XX(RECORD_TYPE) \
+    XX(VARIANT_TYPE) \
+    XX(STATIC_TYPE) \
+    XX(ENUM_TYPE) \
+    XX(NEW_TYPE) \
+
+#define TYPE_KIND_GEN(e) e,
 enum TypeKind {
-    BOOL_TYPE,
-    INTEGER_TYPE,
-    FLOAT_TYPE,
-    COMPLEX_TYPE,
-    POINTER_TYPE,
-    CODE_POINTER_TYPE,
-    CCODE_POINTER_TYPE,
-    ARRAY_TYPE,
-    VEC_TYPE,
-    TUPLE_TYPE,
-    UNION_TYPE,
-    RECORD_TYPE,
-    VARIANT_TYPE,
-    STATIC_TYPE,
-    ENUM_TYPE,
-    NEW_TYPE
+    TYPE_KIND_MAP(TYPE_KIND_GEN)
 };
+#undef TYPE_KIND_GEN
+
+llvm::raw_ostream &operator<<(llvm::raw_ostream &os, TypeKind);
 
 struct Type : public Object {
     TypeKind typeKind;

@@ -31,6 +31,94 @@ std::string Object::toString() const {
 // overload <<
 //
 
+
+llvm::raw_ostream &operator<<(llvm::raw_ostream &os, ObjectKind objectKind) {
+#define OBJECT_KIND_PRINT(e) case e: os << #e; break;
+
+    switch (objectKind) {
+    OBJECT_KIND_MAP(OBJECT_KIND_PRINT)
+    default:
+        os << "unknown value: " << int(objectKind);
+        break;
+    }
+
+#undef OBJECT_KIND_PRINT
+    return os;
+}
+
+llvm::raw_ostream &operator<<(llvm::raw_ostream &os, ExprKind exprKind) {
+#define EXPR_KIND_PRINT(e) case e: os << #e; break;
+
+    switch (exprKind) {
+    EXPR_KIND_MAP(EXPR_KIND_PRINT)
+    default:
+        os << "unknown value: " << int(exprKind);
+        break;
+    }
+
+#undef EXPR_KIND_PRINT
+    return os;
+}
+
+llvm::raw_ostream &operator<<(llvm::raw_ostream &os, VariadicOpKind variadicOpKind) {
+#define VARIADIC_OP_KIND_PRINT(e) case e: os << #e; break;
+
+    switch (variadicOpKind) {
+    VARIADIC_OP_KIND_MAP(VARIADIC_OP_KIND_PRINT)
+    default:
+        os << "unknown value: " << int(variadicOpKind);
+        break;
+    }
+
+#undef VARIADIC_OP_KIND_PRINT
+    return os;
+}
+
+llvm::raw_ostream &operator<<(llvm::raw_ostream &os, StatementKind statementKind) {
+#define STATEMENT_KIND_PRINT(e) case e: os << #e; break;
+
+    switch (statementKind) {
+    STATEMENT_KIND_MAP(STATEMENT_KIND_PRINT)
+    default:
+        os << "unknown value: " << int(statementKind);
+        break;
+    }
+
+#undef STATEMENT_KIND_PRINT
+    return os;
+}
+
+llvm::raw_ostream &operator<<(llvm::raw_ostream &os, BindingKind bindingKind) {
+#define BINDING_KIND_PRINT(e) case e: os << #e; break;
+
+    switch (bindingKind) {
+    BINDING_KIND_MAP(BINDING_KIND_PRINT)
+    default:
+        os << "unknown value: " << int(bindingKind);
+        break;
+    }
+
+#undef BINDING_KIND_PRINT
+    return os;
+}
+
+llvm::raw_ostream &operator<<(llvm::raw_ostream &os, TypeKind typeKind) {
+#define TYPE_KIND_PRINT(e) case e: os << #e; break;
+
+    switch (typeKind) {
+    TYPE_KIND_MAP(TYPE_KIND_PRINT)
+    default:
+        os << "unknown value: " << int(typeKind);
+        break;
+    }
+
+#undef TYPE_KIND_PRINT
+    return os;
+}
+
+
+
+
 static void print(llvm::raw_ostream &out, const Object *x);
 
 llvm::raw_ostream &operator<<(llvm::raw_ostream &out, const Object &obj) {
@@ -247,30 +335,7 @@ static void printExpr(llvm::raw_ostream &out, const Expr *x) {
     
     case VARIADIC_OP : {
         const VariadicOp *y = (const VariadicOp *)x;
-        out << "VariadicOp(";
-        switch (y->op) {
-        case DEREFERENCE :
-            out << "DEREFERENCE";
-            break;
-        case ADDRESS_OF :
-            out << "ADDRESS_OF";
-            break;
-        case NOT :
-            out << "NOT";
-            break;
-        case PREFIX_OP :
-            out << "PREFIX_OP";
-            break;
-        case INFIX_OP :
-            out << "INFIX_OP";
-            break;
-        case IF_EXPR :
-            out << "IF_EXPR";
-            break;
-        default :
-            assert(false);
-        }
-        out << ", "  << y->exprs << ")";
+        out << "VariadicOp(" << y->op << ", " << y->exprs << ")";
         break;
     }
     case AND : {
@@ -353,24 +418,7 @@ static void printStatement(llvm::raw_ostream &out, const Statement *x) {
     }
     case BINDING : {
         const Binding *y = (const Binding *)x;
-        out << "Binding(";
-        switch (y->bindingKind) {
-        case VAR :
-            out << "VAR";
-            break;
-        case REF :
-            out << "REF";
-            break;
-        case ALIAS :
-            out << "ALIAS";
-            break;
-        case FORWARD :
-            out << "FORWARD";
-            break;
-        default :
-            assert(false);
-        }
-        out << ", " << y->args << ", " << y->values << ")";
+        out << "Binding(" << y->bindingKind << ", " << y->args << ", " << y->values << ")";
         break;
     }
     case ASSIGNMENT : {
@@ -1257,25 +1305,13 @@ void typePrint(llvm::raw_ostream &out, TypePtr t) {
         CCodePointerType *x = (CCodePointerType *)t.ptr();
         out << "ExternalCodePointer[";
 
+#define CALLING_CONV_PRINT(e, str) case e: out << str << ", "; break;
         switch (x->callingConv) {
-        case CC_DEFAULT :
-            out << "AttributeCCall, ";
-            break;
-        case CC_STDCALL :
-            out << "AttributeStdCall, ";
-            break;
-        case CC_FASTCALL :
-            out << "AttributeFastCall, ";
-            break;
-        case CC_THISCALL :
-            out << "AttributeThisCall, ";
-            break;
-        case CC_LLVM :
-            out << "AttributeLLVMCall, ";
-            break;
-        default :
-            assert(false);
+        CALLING_CONV_MAP(CALLING_CONV_PRINT)
+        default: assert(false);
         }
+#undef CALLING_CONV_PRINT
+
         if (x->hasVarArgs)
             out << "true, ";
         else
