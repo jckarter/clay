@@ -63,6 +63,12 @@ RecordType::RecordType(RecordDeclPtr record, llvm::ArrayRef<ObjectPtr> params)
     } else {
         assert(params.size() == record->params.size());
     }
+
+    for (size_t i = 0; i < params.size(); ++i) {
+        ObjectKind objKind = params[i]->objKind;
+        assert(objKind == TYPE || objKind == VALUE_HOLDER
+                || objKind == IDENTIFIER || objKind == PROCEDURE);
+    }
 }
 
 
