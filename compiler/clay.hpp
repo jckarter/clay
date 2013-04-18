@@ -405,7 +405,7 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &os, ObjectKind);
 //
 
 struct Object : public RefCounted {
-    ObjectKind objKind;
+    const ObjectKind objKind;
     Object(ObjectKind objKind)
         : objKind(objKind) {}
     virtual ~Object() {}
@@ -969,7 +969,7 @@ enum ExprKind {
 llvm::raw_ostream &operator<<(llvm::raw_ostream &os, ExprKind);
 
 struct Expr : public ANode {
-    ExprKind exprKind;
+    const ExprKind exprKind;
     Location startLocation;
     Location endLocation;
 
@@ -988,14 +988,14 @@ struct Expr : public ANode {
 };
 
 struct BoolLiteral : public Expr {
-    bool value;
+    const bool value;
     BoolLiteral(bool value)
         : Expr(BOOL_LITERAL), value(value) {}
 };
 
 struct IntLiteral : public Expr {
-    string value;
-    string suffix;
+    const string value;
+    const string suffix;
     IntLiteral(llvm::StringRef value)
         : Expr(INT_LITERAL), value(value) {}
     IntLiteral(llvm::StringRef value, llvm::StringRef suffix)
@@ -1003,8 +1003,8 @@ struct IntLiteral : public Expr {
 };
 
 struct FloatLiteral : public Expr {
-    string value;
-    string suffix;
+    const string value;
+    const string suffix;
     FloatLiteral(llvm::StringRef value)
         : Expr(FLOAT_LITERAL), value(value) {}
     FloatLiteral(llvm::StringRef value, llvm::StringRef suffix)
@@ -1013,7 +1013,7 @@ struct FloatLiteral : public Expr {
 
 struct CharLiteral : public Expr {
     ExprPtr desugared;
-    char value;
+    const char value;
     CharLiteral(char value)
         : Expr(CHAR_LITERAL), value(value) {}
 };
@@ -1094,7 +1094,7 @@ struct FieldRef : public Expr {
 
 struct StaticIndexing : public Expr {
     ExprPtr expr;
-    size_t index;
+    const size_t index;
     ExprPtr desugared;
     StaticIndexing(ExprPtr expr, size_t index)
         : Expr(STATIC_INDEXING), expr(expr), index(index) {}
@@ -1117,7 +1117,7 @@ enum VariadicOpKind {
 llvm::raw_ostream &operator<<(llvm::raw_ostream &os, VariadicOpKind);
 
 struct VariadicOp : public Expr {
-    VariadicOpKind op;
+    const VariadicOpKind op;
     ExprListPtr exprs;
     ExprPtr desugared;
     VariadicOp(VariadicOpKind op, ExprListPtr exprs )
@@ -1317,7 +1317,7 @@ enum StatementKind {
 llvm::raw_ostream &operator<<(llvm::raw_ostream &os, StatementKind);
 
 struct Statement : public ANode {
-    StatementKind stmtKind;
+    const StatementKind stmtKind;
     Statement(StatementKind stmtKind)
         : ANode(STATEMENT), stmtKind(stmtKind) {}
 };
@@ -1418,7 +1418,7 @@ enum ReturnKind {
 
 struct Return : public Statement {
     ExprListPtr values;
-    ReturnKind returnKind:3;
+    const ReturnKind returnKind:3;
     bool isExprReturn:1;
     bool isReturnSpecs:1;
     Return(ReturnKind returnKind, ExprListPtr values)
@@ -1640,7 +1640,7 @@ struct FormalArg : public ANode {
     ValueTempness tempness;
     ExprPtr asType;
     bool varArg:1;
-    bool asArg:1;
+    const bool asArg:1;
     FormalArg(IdentifierPtr name, ExprPtr type)
         : ANode(FORMAL_ARG), name(name), type(type),
           tempness(TEMPNESS_DONTCARE), varArg(false), asArg(false) {}
@@ -1674,7 +1674,7 @@ struct PatternVar {
 };
 
 struct LLVMCode : ANode {
-    string body;
+    const string body;
     LLVMCode(llvm::StringRef body)
         : ANode(LLVM_CODE), body(body) {}
 };
@@ -1744,7 +1744,7 @@ enum Visibility {
 struct TopLevelItem : public ANode {
     Module * const module;
     IdentifierPtr name; // for named top level items
-    Visibility visibility; // valid only if name != NULL
+    const Visibility visibility; // valid only if name != NULL
 
     EnvPtr env;
 
@@ -1801,7 +1801,7 @@ struct RecordBody : public ANode {
     ExprListPtr computed; // valid if isComputed == true
     vector<RecordFieldPtr> fields; // valid if isComputed == false
     bool isComputed:1;
-    bool hasVarField:1;
+    const bool hasVarField:1;
     RecordBody(ExprListPtr computed)
         : ANode(RECORD_BODY), computed(computed), isComputed(true),
         hasVarField(false) {}
@@ -2516,7 +2516,7 @@ enum TypeKind {
 llvm::raw_ostream &operator<<(llvm::raw_ostream &os, TypeKind);
 
 struct Type : public Object {
-    TypeKind typeKind;
+    const TypeKind typeKind;
     llvm::Type *llType;
     llvm::TrackingVH<llvm::MDNode> debugInfo;
     size_t typeSize;
@@ -2551,22 +2551,22 @@ struct BoolType : public Type {
 };
 
 struct IntegerType : public Type {
-    unsigned bits:15;
-    bool isSigned:1;
+    const unsigned bits:15;
+    const bool isSigned:1;
     IntegerType(unsigned bits, bool isSigned)
         : Type(INTEGER_TYPE), bits(bits), isSigned(isSigned) {}
 };
 
 struct FloatType : public Type {
-    unsigned bits:15;
-    bool isImaginary:1;
+    const unsigned bits:15;
+    const bool isImaginary:1;
     FloatType(unsigned bits, bool isImaginary)
         : Type(FLOAT_TYPE), bits(bits), isImaginary(isImaginary){}
 };
 
 struct ComplexType : public Type {
     const llvm::StructLayout *layout;
-    unsigned bits:15;
+    const unsigned bits:15;
     ComplexType(unsigned bits)
         : Type(COMPLEX_TYPE), layout(NULL), bits(bits) {}
 };
@@ -2598,8 +2598,8 @@ struct CCodePointerType : public Type {
 
     llvm::Type *getCallType();
 
-    CallingConv callingConv:3;
-    bool hasVarArgs:1;
+    const CallingConv callingConv:3;
+    const bool hasVarArgs:1;
 
     CCodePointerType(CallingConv callingConv,
                      llvm::ArrayRef<TypePtr> argTypes,
@@ -2613,14 +2613,14 @@ struct CCodePointerType : public Type {
 
 struct ArrayType : public Type {
     TypePtr elementType;
-    unsigned size;
+    const unsigned size;
     ArrayType(TypePtr elementType, unsigned size)
         : Type(ARRAY_TYPE), elementType(elementType), size(size) {}
 };
 
 struct VecType : public Type {
     TypePtr elementType;
-    unsigned size;
+    const unsigned size;
     VecType(TypePtr elementType, unsigned size)
         : Type(VEC_TYPE), elementType(elementType), size(size) {}
 };
@@ -2718,7 +2718,7 @@ enum PatternKind {
 };
 
 struct Pattern : public Object {
-    PatternKind kind;
+    const PatternKind kind;
     Pattern(PatternKind kind)
         : Object(PATTERN), kind(kind) {}
 
