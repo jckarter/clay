@@ -174,22 +174,6 @@ static llvm::raw_ostream &writeFloat(llvm::raw_ostream &out, clay_cldouble x) {
 }
 
 template <class T>
-llvm::raw_ostream &operator<<(llvm::raw_ostream &out, llvm::ArrayRef<T> v)
-{
-    out << "[";
-    const T *i, *end;
-    bool first = true;
-    for (i = v.begin(), end = v.end(); i != end; ++i) {
-        if (!first)
-            out << ", ";
-        first = false;
-        out << *i;
-    }
-    out << "]";
-    return out;
-}
-
-template <class T>
 llvm::raw_ostream &operator<<(llvm::raw_ostream &out, const vector<T> &v)
 {
     return out << llvm::makeArrayRef(v);

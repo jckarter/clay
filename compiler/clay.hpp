@@ -304,6 +304,22 @@ inline llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const clay_uint128 &
     return os << size64_t(x);
 }
 
+template <class T>
+inline llvm::raw_ostream &operator<<(llvm::raw_ostream &out, llvm::ArrayRef<T> v)
+{
+    out << "[";
+    const T *i, *end;
+    bool first = true;
+    for (i = v.begin(), end = v.end(); i != end; ++i) {
+        if (!first)
+            out << ", ";
+        first = false;
+        out << *i;
+    }
+    out << "]";
+    return out;
+}
+
 
 //
 // ObjectKind
