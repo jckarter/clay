@@ -21,8 +21,8 @@ enum MatchCode {
 };
 
 struct MatchResult : public RefCounted {
-    int matchCode;
-    MatchResult(int matchCode)
+    const MatchCode matchCode;
+    MatchResult(MatchCode matchCode)
         : matchCode(matchCode) {}
 };
 
