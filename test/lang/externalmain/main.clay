@@ -1,0 +1,11 @@
+import printer.*;
+import data.algorithms.*;
+
+external main(argc: Int, argv: Pointer[Pointer[CChar]]) : Int {
+    println("hello world");
+    println(argc);
+    var argv0 = CStringRef(argv[0]);
+    //println(argv0);
+    println(in?(argv0, "main") or in?(argv0, "test"));
+    return 0;
+}

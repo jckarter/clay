@@ -4801,8 +4801,11 @@ void codegenEntryPoints(ModulePtr module, bool importedExternals)
     codegenModuleEntryPoints(module, importedExternals);
 
     ObjectPtr mainProc = lookupPrivate(module, Identifier::get("main"));
-    
-    if (mainProc != NULL)
+
+    // Generate call to `main` function.
+    // But if `main` is external procedure, it was already generated in
+    // `codegenModuleEntryPoints`.
+    if (mainProc != NULL && mainProc->objKind != EXTERNAL_PROCEDURE)
         codegenMain(module);
 
     finalizeCtorsDtors();
