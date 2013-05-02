@@ -103,7 +103,7 @@ unsigned objectHash(ObjectPtr a)
     case PVALUE : {
         PValue *b = (PValue *)a.ptr();
         unsigned h = identityHash(b->data.type.ptr());
-        h *= b->data.isTemp ? 11 : 23;
+        h *= b->data.isRValue ? 11 : 23;
         return h;
     }
 

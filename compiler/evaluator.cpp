@@ -479,7 +479,7 @@ static EValuePtr derefValue(EValuePtr evPtr)
 
 static EValuePtr derefValueForPValue(EValuePtr ev, PVData const &pv)
 {
-    if (pv.isTemp) {
+    if (pv.isRValue) {
         return ev;
     } else {
         assert(ev->type == pointerType(pv.type));
@@ -632,7 +632,7 @@ EValuePtr evalAllocValue(TypePtr t)
 
 EValuePtr evalAllocValueForPValue(PVData const &pv)
 {
-    if (pv.isTemp)
+    if (pv.isRValue)
         return evalAllocValue(pv.type);
     else
         return evalAllocValue(pointerType(pv.type));
@@ -717,7 +717,7 @@ MultiEValuePtr evalForwardExprAsRef(ExprPtr expr, EnvPtr env)
     evalExpr(expr, env, mev);
     MultiEValuePtr out = new MultiEValue();
     for (unsigned i = 0; i < mpv->size(); ++i) {
-        if (mpv->values[i].isTemp) {
+        if (mpv->values[i].isRValue) {
             mev->values[i]->forwardedRValue = true;
             out->add(mev->values[i]);
         }
@@ -775,7 +775,7 @@ MultiEValuePtr evalExprAsRef(ExprPtr expr, EnvPtr env)
     evalExpr(expr, env, mev);
     MultiEValuePtr out = new MultiEValue();
     for (unsigned i = 0; i < mpv->size(); ++i) {
-        if (mpv->values[i].isTemp)
+        if (mpv->values[i].isRValue)
             out->add(mev->values[i]);
         else
             out->add(derefValue(mev->values[i]));
@@ -792,7 +792,7 @@ MultiEValuePtr evalExprAsRef(ExprPtr expr, EnvPtr env)
 void evalOneInto(ExprPtr expr, EnvPtr env, EValuePtr out)
 {
     PVData pv = safeAnalyzeOne(expr, env);
-    if (pv.isTemp) {
+    if (pv.isRValue) {
         evalOne(expr, env, out);
     }
     else {
@@ -855,7 +855,7 @@ void evalExprInto(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
     MultiEValuePtr mev = new MultiEValue();
     for (unsigned i = 0; i < mpv->size(); ++i) {
         PVData const &pv = mpv->values[i];
-        if (pv.isTemp) {
+        if (pv.isRValue) {
             mev->add(out->values[i]);
         }
         else {
@@ -865,7 +865,7 @@ void evalExprInto(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
     }
     evalExpr(expr, env, mev);
     for (unsigned i = 0; i < mpv->size(); ++i) {
-        if (!mpv->values[i].isTemp) {
+        if (!mpv->values[i].isRValue) {
             evalValueCopy(out->values[i], derefValue(mev->values[i]));
         }
     }
@@ -1078,7 +1078,7 @@ void evalExpr(ExprPtr expr, EnvPtr env, MultiEValuePtr out)
         VariadicOp *x = (VariadicOp *)expr.ptr();
         if (x->op == ADDRESS_OF) {
             PVData pv = safeAnalyzeOne(x->exprs->exprs.front(), env);
-            if (pv.isTemp)
+            if (pv.isRValue)
                 error("can't take address of a temporary");
         }
         if (!x->desugared)
@@ -1337,7 +1337,7 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
             invalidStaticObjectError(new PValue(y));
         assert(out->size() == 1);
         EValuePtr out0 = out->values[0];
-        if (y.isTemp)
+        if (y.isRValue)
             assert(out0->type == y.type);
         else
             assert(out0->type == pointerType(y.type));
@@ -1353,7 +1353,7 @@ void evalStaticObject(ObjectPtr x, MultiEValuePtr out)
             if (pv.type->typeKind != STATIC_TYPE)
                 argumentInvalidStaticObjectError(i, new PValue(pv));
             EValuePtr outi = out->values[i];
-            if (pv.isTemp)
+            if (pv.isRValue)
                 assert(outi->type == pv.type);
             else
                 assert(outi->type == pointerType(pv.type));
@@ -1420,11 +1420,11 @@ void evalIndexingExpr(ExprPtr indexable,
     bool allTempStatics = true;
     for (unsigned i = 0; i < mpv->size(); ++i) {
         PVData const &pv = mpv->values[i];
-        if (pv.isTemp)
+        if (pv.isRValue)
             assert(out->values[i]->type == pv.type);
         else
             assert(out->values[i]->type == pointerType(pv.type));
-        if ((pv.type->typeKind != STATIC_TYPE) || !pv.isTemp) {
+        if ((pv.type->typeKind != STATIC_TYPE) || !pv.isRValue) {
             allTempStatics = false;
         }
     }
@@ -1972,11 +1972,11 @@ void evalCallByName(InvokeEntry* entry,
     for (unsigned i = 0; i < mpv->size(); ++i) {
         PVData const &pv = mpv->values[i];
         EValuePtr ev = out->values[i];
-        if (pv.isTemp)
+        if (pv.isRValue)
             assert(ev->type == pv.type);
         else
             assert(ev->type == pointerType(pv.type));
-        returns.push_back(EReturn(!pv.isTemp, pv.type, ev));
+        returns.push_back(EReturn(!pv.isRValue, pv.type, ev));
     }
 
     if (entry->code->hasReturnSpecs()) {
@@ -2119,7 +2119,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
         if (mpvLeft->size() != mpvRight->size())
             arityMismatchError(mpvLeft->size(), mpvRight->size(), /*hasVarArg=*/false);
         for (unsigned i = 0; i < mpvLeft->size(); ++i) {
-            if (mpvLeft->values[i].isTemp)
+            if (mpvLeft->values[i].isRValue)
                 argumentError(i, "cannot assign to a temporary");
         }
         unsigned marker = evalMarkStack();
@@ -2157,7 +2157,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
         if (mpvLeft->size() != mpvRight->size())
             arityMismatchError(mpvLeft->size(), mpvRight->size(), /*hasVarArg=*/false);
         for (unsigned i = 0; i < mpvLeft->size(); ++i) {
-            if (mpvLeft->values[i].isTemp)
+            if (mpvLeft->values[i].isRValue)
                 argumentError(i, "cannot assign to a temporary");
             if (mpvLeft->values[i].type != mpvRight->values[i].type) {
                 argumentTypeError(i,
@@ -2175,7 +2175,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
     case VARIADIC_ASSIGNMENT : {
         VariadicAssignment *x = (VariadicAssignment *)stmt.ptr();
         PVData pvLeft = safeAnalyzeOne(x->exprs->exprs[1], env);
-        if (pvLeft.isTemp)
+        if (pvLeft.isRValue)
             error(x->exprs->exprs[1], "cannot assign to a temporary");
         CallPtr call;
         if (x->op == PREFIX_OP)
@@ -2205,7 +2205,7 @@ TerminationPtr evalStatement(StatementPtr stmt,
                 argumentTypeError(i, y.type, pv.type);
             if (byRef != y.byRef)
                 argumentError(i, "mismatching by-ref and by-value returns");
-            if (byRef && pv.isTemp)
+            if (byRef && pv.isRValue)
                 argumentError(i, "cannot return a temporary by reference");
             mev->add(y.value);
         }
@@ -2467,7 +2467,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
         MultiEValuePtr mev = new MultiEValue();
         for (unsigned i = 0; i < x->args.size(); ++i) {
             PVData const &pv = mpv->values[i];
-            if (pv.isTemp)
+            if (pv.isRValue)
                 argumentError(i, "ref can only bind to an rvalue");
             EValuePtr evPtr = evalAllocValue(pointerType(pv.type));
             mev->add(evPtr);
@@ -2523,7 +2523,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
                 for (; j < varArgSize; ++j) {
                     EValuePtr rev, ev;
                     rev = mev->values[i+j];
-                    if (mpv->values[i+j].isTemp) {
+                    if (mpv->values[i+j].isRValue) {
                         ev = rev;
                     }
                     else {
@@ -2534,7 +2534,7 @@ EnvPtr evalBinding(BindingPtr x, EnvPtr env)
                 --j;
                 addLocal(env2, x->args[i]->name, varArgs.ptr());  
             } else {
-                if (mpv->values[i+j].isTemp) {
+                if (mpv->values[i+j].isRValue) {
                     EValuePtr ev = mev->values[i+j];
                     addLocal(env2, x->args[i]->name, ev.ptr());
                 }

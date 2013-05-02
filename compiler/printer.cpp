@@ -189,7 +189,7 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &out, const llvm::SmallVector<T,
 
 llvm::raw_ostream &operator<<(llvm::raw_ostream &out, PVData const &pv)
 {
-    return out << "PVData(" << pv.type << ", " << pv.isTemp << ")";
+    return out << "PVData(" << pv.type << ", " << pv.isRValue << ")";
 }
 
 

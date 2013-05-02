@@ -670,7 +670,7 @@ static MultiPValuePtr analyzeExpr2(ExprPtr expr, EnvPtr env)
             PVData pv = analyzeOne(x->exprs->exprs.front(), env);
             if (!pv.ok())
                 return NULL;
-            if (pv.isTemp)
+            if (pv.isRValue)
                 error("can't take address of a temporary");
         }
         if (!x->desugared)
@@ -1445,7 +1445,7 @@ void computeArgsKey(MultiPValuePtr args,
     for (unsigned i = 0; i < args->size(); ++i) {
         PVData const &pv = args->values[i];
         argsKey.push_back(pv.type);
-        argsTempness.push_back(pv.isTemp ? TEMPNESS_RVALUE : TEMPNESS_LVALUE);
+        argsTempness.push_back(pv.isRValue ? TEMPNESS_RVALUE : TEMPNESS_LVALUE);
     }
 }
 
@@ -2005,7 +2005,7 @@ MultiPValuePtr analyzeDispatch(ObjectPtr obj,
                         ok = false;
                         break;
                     }
-                    if (pv.isTemp != pv2.isTemp) {
+                    if (pv.isRValue != pv2.isRValue) {
                         ok = false;
                         break;
                     }
@@ -2494,7 +2494,7 @@ static StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, Analysi
                 if (byRef != ctx->returnIsRef[i])
                     argumentError(i, "mismatching by-ref and "
                                   "by-value returns");
-                if (byRef && pv.isTemp)
+                if (byRef && pv.isRValue)
                     argumentError(i, "cannot return a temporary by reference");
             }
         }
@@ -2505,7 +2505,7 @@ static StatementAnalysis analyzeStatement(StatementPtr stmt, EnvPtr env, Analysi
                 PVData const &pv = mpv->values[i];
                 bool byRef = returnKindToByRef(x->returnKind, pv);
                 ctx->returnIsRef.push_back(byRef);
-                if (byRef && pv.isTemp)
+                if (byRef && pv.isRValue)
                     argumentError(i, "cannot return a temporary by reference");
                 ctx->returnTypes.push_back(pv.type);
             }
@@ -2776,7 +2776,7 @@ bool returnKindToByRef(ReturnKind returnKind, PVData const &pv)
     switch (returnKind) {
     case RETURN_VALUE : return false;
     case RETURN_REF : return true;
-    case RETURN_FORWARD : return !pv.isTemp;
+    case RETURN_FORWARD : return !pv.isRValue;
     default : assert(false); return false;
     }
 }

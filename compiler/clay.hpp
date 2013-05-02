@@ -2353,14 +2353,14 @@ struct Module : public ANode {
 
 struct PVData {
     TypePtr type;
-    bool isTemp:1;
-    PVData() : type(NULL), isTemp(false) {}
-    PVData(TypePtr type, bool isTemp)
-        : type(type), isTemp(isTemp) {}
+    bool isRValue:1;
+    PVData() : type(NULL), isRValue(false) {}
+    PVData(TypePtr type, bool isRValue)
+        : type(type), isRValue(isRValue) {}
 
     bool ok() const { return type != NULL; }
 
-    bool operator==(PVData const &x) const { return type == x.type && isTemp == x.isTemp; }
+    bool operator==(PVData const &x) const { return type == x.type && isRValue == x.isRValue; }
 };
 
 // propagation value
