@@ -13,24 +13,18 @@
 namespace clay {
 
 
-
-static bool staticToSizeTOrInt(ObjectPtr x, size_t &out)
-{
-    if (x->objKind != VALUE_HOLDER)
-        return false;
-    ValueHolderPtr vh = (ValueHolder *)x.ptr();
-    if (vh->type == cSizeTType) {
-        out = *((size_t *)vh->buf);
-        return true;
+static size_t staticToSizeTOrIntValue(MultiPValue* args, size_t index) {
+    ObjectPtr obj = unwrapStaticType(args->values[index].type);
+    if (obj->objKind == VALUE_HOLDER) {
+        ValueHolderPtr vh = (ValueHolder *) obj.ptr();
+        if (vh->type == cSizeTType) {
+            return *((size_t *)vh->buf);
+        }
+        else if (vh->type == cIntType) {
+            return (size_t) *((int *)vh->buf);
+        }
     }
-    else if (vh->type == cIntType) {
-        int i = *((int *)vh->buf);
-        out = size_t(i);
-        return true;
-    }
-    else {
-        return false;
-    }
+    argumentError(index, "expecting static SizeT or Int value");
 }
 
 static TypePtr numericTypeOfValue(MultiPValuePtr x, unsigned index)
@@ -469,10 +463,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_tupleRef : {
         ensureArity(args, 2);
         TupleTypePtr t = tupleTypeOfValue(args, 0);
-        ObjectPtr obj = unwrapStaticType(args->values[1].type);
-        size_t i = 0;
-        if (!obj || !staticToSizeTOrInt(obj, i))
-            argumentError(1, "expecting static SizeT or Int value");
+        size_t i = staticToSizeTOrIntValue(args.ptr(), 1);
         if (i >= t->elementTypes.size())
             argumentIndexRangeError(1, "tuple element index",
                                     i, t->elementTypes.size());
@@ -511,10 +502,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         if (t->typeKind != RECORD_TYPE)
             argumentError(0, "expecting a record type");
         RecordType *rt = (RecordType *)t.ptr();
-        ObjectPtr second = unwrapStaticType(args->values[1].type);
-        size_t i = 0;
-        if (!second || !staticToSizeTOrInt(second, i))
-            argumentError(1, "expecting static SizeT or Int value");
+        size_t i = staticToSizeTOrIntValue(args.ptr(), 1);
         const vector<IdentifierPtr> fieldNames = recordFieldNames(rt);
         if (i >= fieldNames.size())
             argumentIndexRangeError(1, "record field index",
@@ -528,10 +516,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_recordFieldRef : {
         ensureArity(args, 2);
         RecordTypePtr t = recordTypeOfValue(args, 0);
-        ObjectPtr obj = unwrapStaticType(args->values[1].type);
-        size_t i = 0;
-        if (!obj || !staticToSizeTOrInt(obj, i))
-            argumentError(1, "expecting static SizeT or Int value");
+        size_t i = staticToSizeTOrIntValue(args.ptr(), 1);
         llvm::ArrayRef<TypePtr> fieldTypes = recordFieldTypes(t);
         if (i >= t->fieldCount())
             argumentIndexRangeError(1, "record field index",
@@ -730,10 +715,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_EnumMemberName : {
         ensureArity(args, 2);
         EnumTypePtr et = valueToEnumType(args, 0);
-        ObjectPtr obj = unwrapStaticType(args->values[1].type);
-        size_t i = 0;
-        if (!obj || !staticToSizeTOrInt(obj, i))
-            argumentError(1, "expecting static SizeT or Int value");
+        size_t i = staticToSizeTOrIntValue(args.ptr(), 1);
 
         EnumDeclPtr e = et->enumeration;
         if (i >= e->members.size())
@@ -782,11 +764,8 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         Identifier *ident = (Identifier *)identObj.ptr();
         ObjectPtr beginObj = unwrapStaticType(args->values[1].type);
         ObjectPtr endObj = unwrapStaticType(args->values[2].type);
-        size_t begin = 0, end = 0;
-        if (!beginObj || !staticToSizeTOrInt(beginObj, begin))
-            argumentError(1, "expecting a static SizeT or Int value");
-        if (!endObj || !staticToSizeTOrInt(endObj, end))
-            argumentError(2, "expecting a static SizeT or Int value");
+        size_t begin = staticToSizeTOrIntValue(args.ptr(), 1);
+        size_t end = staticToSizeTOrIntValue(args.ptr(), 2);
         if (end > ident->str.size()) {
             argumentIndexRangeError(2, "ending index",
                                     end, ident->str.size());
@@ -813,10 +792,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_stringLiteralFromBytes : {
         std::string result;
         for (size_t i = 0, sz = args->size(); i < sz; ++i) {
-            ObjectPtr obj = unwrapStaticType(args->values[unsigned(i)].type);
-            size_t byte = 0;
-            if (!obj || !staticToSizeTOrInt(obj, byte))
-                argumentError(i, "expecting a static SizeT or Int value");
+            size_t byte = staticToSizeTOrIntValue(args.ptr(), i);
             if (byte > 255) {
                 string buf;
                 llvm::raw_string_ostream os(buf);
@@ -967,9 +943,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
         if (args->size() < 1)
             arityError2(1, args->size());
         ObjectPtr obj = unwrapStaticType(args->values[0].type);
-        size_t i = 0;
-        if (!obj || !staticToSizeTOrInt(obj, i))
-            argumentError(0, "expecting static SizeT or Int value");
+        size_t i = staticToSizeTOrIntValue(args.ptr(), 0);
         if (i+1 >= args->size())
             argumentError(0, "nthValue argument out of bounds");
         return new MultiPValue(args->values[unsigned(i)+1]);
@@ -978,10 +952,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_withoutNthValue : {
         if (args->size() < 1)
             arityError2(1, args->size());
-        ObjectPtr obj = unwrapStaticType(args->values[0].type);
-        size_t i = 0;
-        if (!obj || !staticToSizeTOrInt(obj, i))
-            argumentError(0, "expecting static SizeT or Int value");
+        size_t i = staticToSizeTOrIntValue(args.ptr(), 0);
         if (i+1 >= args->size())
             argumentError(0, "withoutNthValue argument out of bounds");
         MultiPValuePtr mpv = new MultiPValue();
@@ -996,10 +967,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_takeValues : {
         if (args->size() < 1)
             arityError2(1, args->size());
-        ObjectPtr obj = unwrapStaticType(args->values[0].type);
-        size_t i = 0;
-        if (!obj || !staticToSizeTOrInt(obj, i))
-            argumentError(0, "expecting static SizeT or Int value");
+        size_t i = staticToSizeTOrIntValue(args.ptr(), 0);
         if (i+1 >= args->size())
             i = args->size() - 1;
         MultiPValuePtr mpv = new MultiPValue();
@@ -1011,10 +979,7 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args)
     case PRIM_dropValues : {
         if (args->size() < 1)
             arityError2(1, args->size());
-        ObjectPtr obj = unwrapStaticType(args->values[0].type);
-        size_t i = 0;
-        if (!obj || !staticToSizeTOrInt(obj, i))
-            argumentError(0, "expecting static SizeT or Int value");
+        size_t i = staticToSizeTOrIntValue(args.ptr(), 0);
         if (i+1 >= args->size())
             i = args->size() - 1;
         MultiPValuePtr mpv = new MultiPValue();
