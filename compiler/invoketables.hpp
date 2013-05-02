@@ -82,7 +82,7 @@ struct InvokeSet {
     vector<OverloadPtr> overloads;
 
     vector<MatchSuccessPtr> matches;
-    map<vector<ValueTempness>, InvokeEntry*> tempnessMap;
+    map<vector<bool>, InvokeEntry*> tempnessMap;
     map<vector<ValueTempness>, InvokeEntry*> tempnessMap2;
 
     unsigned nextOverloadIndex; //:31;
@@ -123,7 +123,7 @@ InvokeSet *lookupInvokeSet(ObjectPtr callable,
 vector<InvokeSet*> lookupInvokeSets(ObjectPtr callable);
 InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
                                llvm::ArrayRef<TypePtr> argsKey,
-                               llvm::ArrayRef<ValueTempness> argsTempness,
+                               const vector<bool>& argsRValues,
                                MatchFailureError &failures);
 
 void setFinalOverloadsEnabled(bool enabled); 

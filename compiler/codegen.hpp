@@ -216,7 +216,7 @@ struct InvokeEntry;
 
 InvokeEntry* codegenCallable(ObjectPtr x,
                              llvm::ArrayRef<TypePtr> argsKey,
-                             llvm::ArrayRef<ValueTempness> argsTempness);
+                             const vector<bool>& argsRValues);
 void codegenCodeBody(InvokeEntry* entry);
 void codegenCWrapper(InvokeEntry* entry);
 

@@ -304,10 +304,10 @@ MultiPValuePtr safeAnalyzeMultiArgs(ExprListPtr exprs,
 
 InvokeEntry* safeAnalyzeCallable(ObjectPtr x,
                                    llvm::ArrayRef<TypePtr> argsKey,
-                                   llvm::ArrayRef<ValueTempness> argsTempness)
+                                   const vector<bool>& argsRValues)
 {
     ClearAnalysisError clear;
-    InvokeEntry* entry = analyzeCallable(x, argsKey, argsTempness);
+    InvokeEntry* entry = analyzeCallable(x, argsKey, argsRValues);
     if (!entry->callByName && !entry->analyzed)
         analysisError();
     return entry;
@@ -1440,12 +1440,12 @@ MultiPValuePtr analyzeAliasIndexing(GlobalAliasPtr x,
 
 void computeArgsKey(MultiPValuePtr args,
                     vector<TypePtr> &argsKey,
-                    vector<ValueTempness> &argsTempness)
+                    vector<bool> &argsRValues)
 {
     for (unsigned i = 0; i < args->size(); ++i) {
         PVData const &pv = args->values[i];
         argsKey.push_back(pv.type);
-        argsTempness.push_back(pv.isRValue ? TEMPNESS_RVALUE : TEMPNESS_LVALUE);
+        argsRValues.push_back(pv.isRValue);
     }
 }
 
@@ -1908,11 +1908,11 @@ MultiPValuePtr analyzeCallExpr(ExprPtr callable,
             return analyzeDispatch(obj, mpv, dispatchIndices);
         }
         vector<TypePtr> argsKey;
-        vector<ValueTempness> argsTempness;
-        computeArgsKey(mpv, argsKey, argsTempness);
+        vector<bool> argsRValues;
+        computeArgsKey(mpv, argsKey, argsRValues);
         CompileContextPusher pusher(obj, argsKey);
         InvokeEntry* entry =
-            analyzeCallable(obj, argsKey, argsTempness);
+            analyzeCallable(obj, argsKey, argsRValues);
         if (entry->callByName)
             return analyzeCallByName(entry, callable, args, env);
         if (!entry->analyzed)
@@ -1962,8 +1962,8 @@ MultiPValuePtr analyzeDispatch(ObjectPtr obj,
         return analyzeCallValue(staticPValue(obj), args);
 
     vector<TypePtr> argsKey;
-    vector<ValueTempness> argsTempness;
-    computeArgsKey(args, argsKey, argsTempness);
+    vector<bool> argsRValues;
+    computeArgsKey(args, argsKey, argsRValues);
     CompileContextPusher pusher(obj, argsKey, dispatchIndices);
 
     unsigned index = dispatchIndices[0];
@@ -2076,11 +2076,11 @@ MultiPValuePtr analyzeCallValue(PVData const &callable,
             return analyzePrimOp(x, args);
         }
         vector<TypePtr> argsKey;
-        vector<ValueTempness> argsTempness;
-        computeArgsKey(args, argsKey, argsTempness);
+        vector<bool> argsRValues;
+        computeArgsKey(args, argsKey, argsRValues);
         CompileContextPusher pusher(obj, argsKey);
         InvokeEntry* entry =
-            analyzeCallable(obj, argsKey, argsTempness);
+            analyzeCallable(obj, argsKey, argsRValues);
         if (entry->callByName) {
             ExprListPtr objectExprs = new ExprList();
             for (PVData const *i = args->values.begin(), *end = args->values.end();
@@ -2141,10 +2141,10 @@ MultiPValuePtr analyzeCallPointer(PVData const &x,
 
 bool analyzeIsDefined(ObjectPtr x,
                       llvm::ArrayRef<TypePtr> argsKey,
-                      llvm::ArrayRef<ValueTempness> argsTempness)
+                      const vector<bool>& argsRValues)
 {
     MatchFailureError failures;
-    InvokeEntry* entry = lookupInvokeEntry(x, argsKey, argsTempness, failures);
+    InvokeEntry* entry = lookupInvokeEntry(x, argsKey, argsRValues, failures);
 
     if (!entry || !entry->code->hasBody())
         return false;
@@ -2153,10 +2153,10 @@ bool analyzeIsDefined(ObjectPtr x,
 
 InvokeEntry* analyzeCallable(ObjectPtr x,
                                llvm::ArrayRef<TypePtr> argsKey,
-                               llvm::ArrayRef<ValueTempness> argsTempness)
+                               const vector<bool>& argsRValues)
 {
     MatchFailureError failures;
-    InvokeEntry* entry = lookupInvokeEntry(x, argsKey, argsTempness, failures);
+    InvokeEntry* entry = lookupInvokeEntry(x, argsKey, argsRValues, failures);
 
     if (!entry || !entry->code->hasBody()) {
         matchFailureError(failures);

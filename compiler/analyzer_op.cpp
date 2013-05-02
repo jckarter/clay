@@ -166,18 +166,18 @@ invokeEntryForCallableArguments(MultiPValuePtr args, unsigned callableIndex, uns
         argumentError(callableIndex, "invalid callable");
     }
     vector<TypePtr> argsKey;
-    vector<ValueTempness> argsTempness;
+    vector<bool> argsRValues;
     for (unsigned i = firstArgTypeIndex; i < args->size(); ++i) {
         TypePtr t = valueToType(args, i);
         argsKey.push_back(t);
-        argsTempness.push_back(TEMPNESS_LVALUE);
+        argsRValues.push_back(false);
     }
 
     CompileContextPusher pusher(callable, argsKey);
 
     return std::make_pair(
         argsKey,
-        analyzeCallable(callable, argsKey, argsTempness));
+        analyzeCallable(callable, argsKey, argsRValues));
 }
 
 

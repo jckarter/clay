@@ -229,29 +229,24 @@ static MatchSuccessPtr getMatch(InvokeSet* invokeSet,
     return match;
 }
 
-static bool tempnessMatches(ValueTempness tempness,
+static bool tempnessMatches(bool rvalue,
                             ValueTempness formalTempness)
 {
-    switch (tempness) {
-
-    case TEMPNESS_LVALUE :
+    if (!rvalue) {
         return ((formalTempness == TEMPNESS_DONTCARE) ||
                 (formalTempness == TEMPNESS_LVALUE) ||
                 (formalTempness == TEMPNESS_FORWARD));
 
-    case TEMPNESS_RVALUE :
+    } else {
         return ((formalTempness == TEMPNESS_DONTCARE) ||
                 (formalTempness == TEMPNESS_RVALUE) ||
                 (formalTempness == TEMPNESS_FORWARD));
 
-    default :
-        assert(false);
-        return false;
     }
 }
 
 static ValueTempness tempnessKeyItem(ValueTempness formalTempness,
-                                     ValueTempness tempness)
+                                     bool rvalue)
 {
     switch (formalTempness) {
     case TEMPNESS_LVALUE :
@@ -259,7 +254,7 @@ static ValueTempness tempnessKeyItem(ValueTempness formalTempness,
     case TEMPNESS_DONTCARE : 
         return formalTempness;
     case TEMPNESS_FORWARD :
-        return tempness;
+        return rvalue ? TEMPNESS_RVALUE : TEMPNESS_LVALUE;
     default :
         assert(false);
         return formalTempness;
@@ -267,7 +262,7 @@ static ValueTempness tempnessKeyItem(ValueTempness formalTempness,
 }
 
 static bool matchTempness(CodePtr code,
-                          llvm::ArrayRef<ValueTempness> argsTempness,
+                          const vector<bool>& argsRValues,
                           bool callByName,
                           vector<ValueTempness> &tempnessKey,
                           vector<uint8_t> &forwardedRValueFlags)
@@ -275,14 +270,14 @@ static bool matchTempness(CodePtr code,
     llvm::ArrayRef<FormalArgPtr> fargs = code->formalArgs;
     
     if (code->hasVarArg)
-        assert(fargs.size()-1 <= argsTempness.size());
+        assert(fargs.size()-1 <= argsRValues.size());
     else
-        assert(fargs.size() == argsTempness.size());
+        assert(fargs.size() == argsRValues.size());
 
     assert(tempnessKey.empty());
     assert(forwardedRValueFlags.empty());
     
-    size_t varArgSize = argsTempness.size()-fargs.size()+1;
+    size_t varArgSize = argsRValues.size()-fargs.size()+1;
     for (size_t i = 0, j = 0; i < fargs.size(); ++i) {
         if (callByName && (fargs[i]->tempness == TEMPNESS_FORWARD)) {
                 error(fargs[i], "forwarded arguments are not allowed "
@@ -290,26 +285,26 @@ static bool matchTempness(CodePtr code,
         }
         if (fargs[i]->varArg) {
             for (; j < varArgSize; ++j) {
-                if (!tempnessMatches(argsTempness[i+j], fargs[i]->tempness))
+                if (!tempnessMatches(argsRValues[i+j], fargs[i]->tempness))
                     return false;
                 tempnessKey.push_back(
                     tempnessKeyItem(fargs[i]->tempness,
-                                    argsTempness[i+j]));
+                            argsRValues[i+j]));
                 bool forwardedRValue =
                     (fargs[i]->tempness == TEMPNESS_FORWARD) &&
-                    (argsTempness[i+j] == TEMPNESS_RVALUE);
+                    argsRValues[i+j];
                 forwardedRValueFlags.push_back(forwardedRValue);
             }
             --j;
         } else {
-            if (!tempnessMatches(argsTempness[i+j], fargs[i]->tempness))
+            if (!tempnessMatches(argsRValues[i+j], fargs[i]->tempness))
                 return false;
             tempnessKey.push_back(
                 tempnessKeyItem(fargs[i]->tempness,
-                                argsTempness[i+j]));
+                        argsRValues[i+j]));
             bool forwardedRValue = 
                 (fargs[i]->tempness == TEMPNESS_FORWARD) &&
-                (argsTempness[i+j] == TEMPNESS_RVALUE);
+                argsRValues[i+j];
             forwardedRValueFlags.push_back(forwardedRValue);
         }
     }
@@ -352,7 +347,7 @@ namespace {
 
 InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
                                llvm::ArrayRef<TypePtr> argsKey,
-                               llvm::ArrayRef<ValueTempness> argsTempness,
+                               const vector<bool>& argsRValues,
                                MatchFailureError &failures)
 {
     InvokeSet* invokeSet = lookupInvokeSet(callable, argsKey);
@@ -365,10 +360,10 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
     invokeSet->evaluatingPredicate = true;
     FinallyClearEvaluatingPredicate FinallyClearEvaluatingPredicate(invokeSet);
 
-    map<vector<ValueTempness>,InvokeEntry*>::iterator iter =
-        invokeSet->tempnessMap.find(argsTempness);
-    if (iter != invokeSet->tempnessMap.end())
-        return iter->second;
+    map<vector<bool>, InvokeEntry*>::iterator iter1 =
+        invokeSet->tempnessMap.find(argsRValues);
+    if (iter1 != invokeSet->tempnessMap.end())
+        return iter1->second;
     
     MatchResultPtr interfaceResult;
     if (invokeSet->interface != NULL) {
@@ -391,7 +386,7 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
         tempnessKey.clear();
         forwardedRValueFlags.clear();
         if (matchTempness(match->overload->code,
-                          argsTempness,
+                          argsRValues,
                           match->overload->callByName,
                           tempnessKey,
                           forwardedRValueFlags))
@@ -403,10 +398,11 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
     if (!match)
         return NULL;
 
-    iter = invokeSet->tempnessMap2.find(tempnessKey);
-    if (iter != invokeSet->tempnessMap2.end()) {
-        invokeSet->tempnessMap[argsTempness] = iter->second;
-        return iter->second;
+    map<vector<ValueTempness>, InvokeEntry*>::iterator iter2 =
+            invokeSet->tempnessMap2.find(tempnessKey);
+    if (iter2 != invokeSet->tempnessMap2.end()) {
+        invokeSet->tempnessMap[argsRValues] = iter2->second;
+        return iter2->second;
     }
 
     InvokeEntry* entry = newInvokeEntry(invokeSet, match,
@@ -414,7 +410,7 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
     entry->forwardedRValueFlags = forwardedRValueFlags;
     
     invokeSet->tempnessMap2[tempnessKey] = entry;
-    invokeSet->tempnessMap[argsTempness] = entry;
+    invokeSet->tempnessMap[argsRValues] = entry;
 
     if (_finalOverloadsEnabled) {
         MatchSuccessPtr match2;
@@ -427,7 +423,7 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
                                            argsKey,
                                            failures)).ptr() != NULL) {
             if (matchTempness(match2->overload->code,
-                              argsTempness,
+                              argsRValues,
                               match2->overload->callByName,
                               tempnessKey2,
                               forwardedRValueFlags2))

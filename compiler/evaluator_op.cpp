@@ -1133,14 +1133,14 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out)
             argumentError(0, "invalid callable");
         }
         vector<TypePtr> argsKey;
-        vector<ValueTempness> argsTempness;
+        vector<bool> argsRValues;
         for (unsigned i = 1; i < args->size(); ++i) {
             TypePtr t = valueToType(args, i);
             argsKey.push_back(t);
-            argsTempness.push_back(TEMPNESS_LVALUE);
+            argsRValues.push_back(false);
         }
         CompileContextPusher pusher(callable, argsKey);
-        bool isDefined = analyzeIsDefined(callable, argsKey, argsTempness);
+        bool isDefined = analyzeIsDefined(callable, argsKey, argsRValues);
         ValueHolderPtr vh = boolToValueHolder(isDefined);
         evalStaticObject(vh.ptr(), out);
         break;

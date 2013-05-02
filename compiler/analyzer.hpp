@@ -54,7 +54,7 @@ MultiPValuePtr safeAnalyzeMultiArgs(ExprListPtr exprs,
                                     vector<unsigned> &dispatchIndices);
 InvokeEntry* safeAnalyzeCallable(ObjectPtr x,
                                  llvm::ArrayRef<TypePtr> argsKey,
-                                 llvm::ArrayRef<ValueTempness> argsTempness);
+                                 const vector<bool>& argsRValues);
 MultiPValuePtr safeAnalyzeCallByName(InvokeEntry* entry,
                                      ExprPtr callable,
                                      ExprListPtr args,
@@ -103,7 +103,7 @@ MultiPValuePtr analyzeAliasIndexing(GlobalAliasPtr x,
                                     EnvPtr env);
 void computeArgsKey(MultiPValuePtr args,
                     vector<TypePtr> &argsKey,
-                    vector<ValueTempness> &argsTempness);
+                    vector<bool> &argsRValues);
 MultiPValuePtr analyzeReturn(llvm::ArrayRef<uint8_t> returnIsRef,
                              llvm::ArrayRef<TypePtr> returnTypes);
 MultiPValuePtr analyzeCallExpr(ExprPtr callable,
@@ -119,10 +119,10 @@ MultiPValuePtr analyzeCallPointer(PVData const &x,
                                   MultiPValuePtr args);
 bool analyzeIsDefined(ObjectPtr x,
                       llvm::ArrayRef<TypePtr> argsKey,
-                      llvm::ArrayRef<ValueTempness> argsTempness);
+                      const vector<bool>& argsRValues);
 InvokeEntry* analyzeCallable(ObjectPtr x,
                              llvm::ArrayRef<TypePtr> argsKey,
-                             llvm::ArrayRef<ValueTempness> argsTempness);
+                             const vector<bool>& argsRValues);
 
 MultiPValuePtr analyzeCallByName(InvokeEntry* entry,
                                  ExprPtr callable,

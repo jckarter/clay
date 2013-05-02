@@ -1557,10 +1557,10 @@ void evalCallExpr(ExprPtr callable,
             break;
         }
         vector<TypePtr> argsKey;
-        vector<ValueTempness> argsTempness;
-        computeArgsKey(mpv, argsKey, argsTempness);
+        vector<bool> argsRValues;
+        computeArgsKey(mpv, argsKey, argsRValues);
         CompileContextPusher pusher(obj, argsKey);
-        InvokeEntry* entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
+        InvokeEntry* entry = safeAnalyzeCallable(obj, argsKey, argsRValues);
         if (entry->callByName) {
             evalCallByName(entry, callable, args, env, out);
         }
@@ -1649,8 +1649,8 @@ void evalDispatch(ObjectPtr obj,
     }
 
     vector<TypePtr> argsKey;
-    vector<ValueTempness> argsTempness;
-    computeArgsKey(pvArgs, argsKey, argsTempness);
+    vector<bool> argsRValues;
+    computeArgsKey(pvArgs, argsKey, argsRValues);
     CompileContextPusher pusher(obj, argsKey);
 
     unsigned index = dispatchIndices[0];
@@ -1747,10 +1747,10 @@ void evalCallValue(EValuePtr callable,
             break;
         }
         vector<TypePtr> argsKey;
-        vector<ValueTempness> argsTempness;
-        computeArgsKey(pvArgs, argsKey, argsTempness);
+        vector<bool> argsRValues;
+        computeArgsKey(pvArgs, argsKey, argsRValues);
         CompileContextPusher pusher(obj, argsKey);
-        InvokeEntry* entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
+        InvokeEntry* entry = safeAnalyzeCallable(obj, argsKey, argsRValues);
         if (entry->callByName) {
             ExprListPtr objectExprs = new ExprList();
             for (vector<EValuePtr>::const_iterator i = args->values.begin();

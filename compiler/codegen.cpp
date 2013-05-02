@@ -1468,7 +1468,7 @@ void codegenGVarInstance(GVarInstancePtr x)
     // generate destructor procedure body
     codegenCallable(operator_destroy(),
                     vector<TypePtr>(1, y.type),
-                    vector<ValueTempness>(1, TEMPNESS_LVALUE));
+                    vector<bool>(1, false));
 
     initializedGlobals.push_back(new CValue(y.type, x->llGlobal));
 }
@@ -2182,10 +2182,10 @@ void codegenCallExpr(ExprPtr callable,
         if (codegenShortcut(obj, mpv, args, env, ctx, out))
             break;
         vector<TypePtr> argsKey;
-        vector<ValueTempness> argsTempness;
-        computeArgsKey(mpv, argsKey, argsTempness);
+        vector<bool> argsRValues;
+        computeArgsKey(mpv, argsKey, argsRValues);
         CompileContextPusher pusher(obj, argsKey);
-        InvokeEntry* entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
+        InvokeEntry* entry = safeAnalyzeCallable(obj, argsKey, argsRValues);
         if (entry->callByName) {
             codegenCallByName(entry, callable, args, env, ctx, out);
         }
@@ -2257,8 +2257,8 @@ void codegenDispatch(ObjectPtr obj,
     }
 
     vector<TypePtr> argsKey;
-    vector<ValueTempness> argsTempness;
-    computeArgsKey(pvArgs, argsKey, argsTempness);
+    vector<bool> argsRValues;
+    computeArgsKey(pvArgs, argsKey, argsRValues);
     CompileContextPusher pusher(obj, argsKey);
 
     unsigned index = dispatchIndices[0];
@@ -2388,10 +2388,10 @@ void codegenCallValue(CValuePtr callable,
             break;
         }
         vector<TypePtr> argsKey;
-        vector<ValueTempness> argsTempness;
-        computeArgsKey(pvArgs, argsKey, argsTempness);
+        vector<bool> argsRValues;
+        computeArgsKey(pvArgs, argsKey, argsRValues);
         CompileContextPusher pusher(obj, argsKey);
-        InvokeEntry* entry = safeAnalyzeCallable(obj, argsKey, argsTempness);
+        InvokeEntry* entry = safeAnalyzeCallable(obj, argsKey, argsRValues);
         if (entry->callByName) {
             ExprListPtr objectExprs = new ExprList();
             for (vector<CValuePtr>::const_iterator i = args->values.begin(), end = args->values.end();
@@ -2600,10 +2600,10 @@ void codegenLowlevelCall(llvm::Value *llCallable,
 
 InvokeEntry* codegenCallable(ObjectPtr x,
                                llvm::ArrayRef<TypePtr> argsKey,
-                               llvm::ArrayRef<ValueTempness> argsTempness)
+                               const vector<bool>& argsRValues)
 {
     InvokeEntry* entry =
-        safeAnalyzeCallable(x, argsKey, argsTempness);
+        safeAnalyzeCallable(x, argsKey, argsRValues);
     if (!entry->callByName) {
         if (!entry->llvmFunc)
             codegenCodeBody(entry);
@@ -4632,10 +4632,10 @@ static void initializeCtorsDtors()
     if (exceptionsEnabled()) {
         codegenCallable(operator_exceptionInInitializer(),
                         vector<TypePtr>(),
-                        vector<ValueTempness>());
+                        vector<bool>());
         codegenCallable(operator_exceptionInFinalizer(),
                         vector<TypePtr>(),
-                        vector<ValueTempness>());
+                        vector<bool>());
     }
 }
 
