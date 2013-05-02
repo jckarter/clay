@@ -57,12 +57,14 @@ private:
 public:
     RefCounted()
         : refCount(0) {}
+    RefCounted(const RefCounted& that): refCount(0) {}
     void incRef() { ++refCount; }
     void decRef() {
         if (--refCount == 0) {
             delete this;
         }
     }
+    int getRefCount() { return refCount; }
 
     virtual ~RefCounted() {}
 };

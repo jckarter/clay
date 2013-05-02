@@ -40,6 +40,7 @@ set(CLAYDOC_SOURCES
 )
 
 set(UT_SOURCES
+    refcounted_ut.cpp
     ut_main.cpp
 )
 
