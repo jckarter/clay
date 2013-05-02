@@ -4,15 +4,25 @@
 #include "clay.hpp"
 #include "invoketables.hpp"
 
+#if defined(__GNUC__) || defined(__clang__)
+#define CLAY_NORETURN __attribute__((noreturn))
+#endif
+
+#ifndef CLAY_NORETURN
+#define CLAY_NORETURN
+#endif
+
 namespace clay {
 
-void error(llvm::Twine const &msg);
-void error(Location const& location, llvm::Twine const &msg);
+void error(llvm::Twine const &msg) CLAY_NORETURN;
+void error(Location const& location, llvm::Twine const &msg) CLAY_NORETURN;
 
 void warning(llvm::Twine const &msg);
 
-void fmtError(const char *fmt, ...);
+void fmtError(const char *fmt, ...) CLAY_NORETURN;
 
+template <class T>
+inline void error(Pointer<T> context, llvm::Twine const &msg) CLAY_NORETURN;
 template <class T>
 inline void error(Pointer<T> context, llvm::Twine const &msg)
 {
@@ -22,16 +32,20 @@ inline void error(Pointer<T> context, llvm::Twine const &msg)
 }
 
 template <class T>
+inline void error(T const *context, llvm::Twine const &msg) CLAY_NORETURN;
+template <class T>
 inline void error(T const *context, llvm::Twine const &msg)
 {
     error(context->location, msg);
 }
 
-void argumentError(size_t index, llvm::StringRef msg);
+void argumentError(size_t index, llvm::StringRef msg) CLAY_NORETURN;
 
-void arityError(size_t expected, size_t received);
-void arityError2(size_t minExpected, size_t received);
+void arityError(size_t expected, size_t received) CLAY_NORETURN;
+void arityError2(size_t minExpected, size_t received) CLAY_NORETURN;
 
+template <class T>
+inline void arityError(Pointer<T> context, size_t expected, size_t received) CLAY_NORETURN;
 template <class T>
 inline void arityError(Pointer<T> context, size_t expected, size_t received)
 {
@@ -40,6 +54,8 @@ inline void arityError(Pointer<T> context, size_t expected, size_t received)
     arityError(expected, received);
 }
 
+template <class T>
+inline void arityError2(Pointer<T> context, size_t minExpected, size_t received) CLAY_NORETURN;
 template <class T>
 inline void arityError2(Pointer<T> context, size_t minExpected, size_t received)
 {
@@ -69,33 +85,33 @@ inline void ensureArity2(T const &args, size_t size, bool hasVarArgs)
         arityError2(size, args.size());
 }
 
-void arityMismatchError(size_t leftArity, size_t rightArity, bool hasVarArg);
+void arityMismatchError(size_t leftArity, size_t rightArity, bool hasVarArg) CLAY_NORETURN;
 
-void typeError(llvm::StringRef expected, TypePtr receivedType);
-void typeError(TypePtr expectedType, TypePtr receivedType);
+void typeError(llvm::StringRef expected, TypePtr receivedType) CLAY_NORETURN;
+void typeError(TypePtr expectedType, TypePtr receivedType) CLAY_NORETURN;
 
 void argumentTypeError(unsigned index,
                        llvm::StringRef expected,
-                       TypePtr receivedType);
+                       TypePtr receivedType) CLAY_NORETURN;
 void argumentTypeError(unsigned index,
                        TypePtr expectedType,
-                       TypePtr receivedType);
+                       TypePtr receivedType) CLAY_NORETURN;
 
 void indexRangeError(llvm::StringRef kind,
                      size_t value,
-                     size_t maxValue);
+                     size_t maxValue) CLAY_NORETURN;
 
 void argumentIndexRangeError(unsigned index,
                              llvm::StringRef kind,
                              size_t value,
-                             size_t maxValue);
+                             size_t maxValue) CLAY_NORETURN;
 
 extern bool shouldPrintFullMatchErrors;
 extern set<pair<string,string> > logMatchSymbols;
 
-void matchBindingError(MatchResultPtr const &result);
+void matchBindingError(MatchResultPtr const &result) CLAY_NORETURN;
 void matchFailureLog(MatchFailureError const &err);
-void matchFailureError(MatchFailureError const &err);
+void matchFailureError(MatchFailureError const &err) CLAY_NORETURN;
 
 class CompilerError : std::exception {
 };
