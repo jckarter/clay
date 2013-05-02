@@ -279,8 +279,8 @@ static bool matchTempness(CodePtr code,
     else
         assert(fargs.size() == argsTempness.size());
 
-    tempnessKey.clear();
-    forwardedRValueFlags.clear();
+    assert(tempnessKey.empty());
+    assert(forwardedRValueFlags.empty());
     
     size_t varArgSize = argsTempness.size()-fargs.size()+1;
     for (size_t i = 0, j = 0; i < fargs.size(); ++i) {
@@ -388,6 +388,8 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
     
     unsigned i = 0;
     while ((match = getMatch(invokeSet,i,failures)).ptr() != NULL) {
+        tempnessKey.clear();
+        forwardedRValueFlags.clear();
         if (matchTempness(match->overload->code,
                           argsTempness,
                           match->overload->callByName,
