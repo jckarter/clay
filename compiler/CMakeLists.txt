@@ -39,6 +39,11 @@ set(CLAYDOC_SOURCES
     html.cpp
 )
 
+set(UT_SOURCES
+    ut_main.cpp
+)
+
+
 # version info is only updated when cmake is run
 if(Subversion_FOUND AND EXISTS "${LLVM_DIR}/.svn")
     Subversion_WC_INFO(${LLVM_DIR} SVN)
@@ -80,14 +85,17 @@ endif(ENABLE_PCH)
 add_library(compiler STATIC ${COMPILER_SOURCES})
 add_executable(clay ${CLAY_SOURCES})
 add_executable(claydoc ${CLAYDOC_SOURCES})
+add_executable(ut ${UT_SOURCES})
 set_target_properties(compiler PROPERTIES COMPILE_FLAGS "${CLAY_CXXFLAGS}")
 set_target_properties(clay PROPERTIES COMPILE_FLAGS "${CLAY_CXXFLAGS}")
 set_target_properties(claydoc PROPERTIES COMPILE_FLAGS "${CLAY_CXXFLAGS}")
+set_target_properties(ut PROPERTIES COMPILE_FLAGS "${CLAY_CXXFLAGS}")
 
 if (UNIX)
     set_target_properties(compiler PROPERTIES LINK_FLAGS "${LLVM_LDFLAGS}")
     set_target_properties(clay PROPERTIES LINK_FLAGS "${LLVM_LDFLAGS}")
     set_target_properties(claydoc PROPERTIES LINK_FLAGS "${LLVM_LDFLAGS}")
+    set_target_properties(ut PROPERTIES LINK_FLAGS "${LLVM_LDFLAGS}")
 endif(UNIX)
 
 install(TARGETS clay RUNTIME DESTINATION bin)
@@ -95,12 +103,15 @@ install(TARGETS claydoc RUNTIME DESTINATION bin)
 
 target_link_libraries(clay compiler ${LLVM_LIBS})
 target_link_libraries(claydoc compiler ${LLVM_LIBS})
+target_link_libraries(ut compiler ${LLVM_LIBS})
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_link_libraries(clay "rt")
     target_link_libraries(clay "dl")
     target_link_libraries(clay "pthread")
+    target_link_libraries(ut "pthread")
     target_link_libraries(claydoc "rt")
     target_link_libraries(claydoc "dl")
     target_link_libraries(claydoc "pthread")
+    target_link_libraries(ut "pthread")
 endif()
