@@ -1,5 +1,6 @@
 #include "clay.hpp"
 #include "profiler.hpp"
+#include "printer.hpp"
 
 namespace clay {
 

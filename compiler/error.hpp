@@ -3,6 +3,7 @@
 
 #include "clay.hpp"
 #include "invoketables.hpp"
+#include "printer.hpp"
 
 #if defined(__GNUC__) || defined(__clang__)
 #define CLAY_NORETURN __attribute__((noreturn))

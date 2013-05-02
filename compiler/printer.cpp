@@ -5,6 +5,8 @@
 #include "patterns.hpp"
 #include "objects.hpp"
 
+#include "printer.hpp"
+
 
 #pragma clang diagnostic ignored "-Wcovered-switch-default"
 
