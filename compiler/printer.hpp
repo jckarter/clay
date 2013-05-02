@@ -39,6 +39,8 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &out, const Object &obj);
 
 llvm::raw_ostream &operator<<(llvm::raw_ostream &out, const Object *obj);
 
+llvm::raw_ostream &operator<<(llvm::raw_ostream &out, PVData const &pv);
+
 template <class T>
 llvm::raw_ostream &operator<<(llvm::raw_ostream &out, const Pointer<T> &p)
 {

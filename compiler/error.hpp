@@ -42,6 +42,16 @@ inline void error(T const *context, llvm::Twine const &msg)
 
 void argumentError(size_t index, llvm::StringRef msg) CLAY_NORETURN;
 
+template <typename T>
+void argumentError(size_t index, llvm::StringRef msg, const T& argument) CLAY_NORETURN;
+template <typename T>
+void argumentError(size_t index, llvm::StringRef msg, const T& argument) {
+    string buf;
+    llvm::raw_string_ostream sout(buf);
+    sout << "argument " << (index+1) << ": " << msg << ", actual " << argument;
+    error(sout.str());
+}
+
 void arityError(size_t expected, size_t received) CLAY_NORETURN;
 void arityError2(size_t minExpected, size_t received) CLAY_NORETURN;
 

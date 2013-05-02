@@ -24,7 +24,7 @@ static size_t staticToSizeTOrIntValue(MultiPValue* args, size_t index) {
             return (size_t) *((int *)vh->buf);
         }
     }
-    argumentError(index, "expecting static SizeT or Int value");
+    argumentError(index, "expecting static SizeT or Int value", args->values[index]);
 }
 
 static TypePtr numericTypeOfValue(MultiPValuePtr x, unsigned index)
