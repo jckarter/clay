@@ -39,10 +39,10 @@ void initExternalTarget(string target);
 struct CValue : public Object {
     TypePtr type;
     llvm::Value *llValue;
-    bool forwardedRValue:1;
-    CValue(TypePtr type, llvm::Value *llValue)
+    const bool forwardedRValue:1;
+    CValue(TypePtr type, llvm::Value *llValue, bool forwardedRValue = false)
         : Object(CVALUE), type(type), llValue(llValue),
-          forwardedRValue(false)
+          forwardedRValue(forwardedRValue)
     {
         llvmType(type); // force full definition of type
     }

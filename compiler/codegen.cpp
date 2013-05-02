@@ -627,8 +627,7 @@ MultiCValuePtr codegenForwardExprAsRef(ExprPtr expr,
     for (unsigned i = 0; i < mcv->size(); ++i) {
         CValuePtr cv = mcv->values[i];
         if (mpv->values[i].isRValue) {
-            cv = new CValue(cv->type, cv->llValue);
-            cv->forwardedRValue = true;
+            cv = new CValue(cv->type, cv->llValue, true);
         }
         out->add(cv);
     }
@@ -3039,8 +3038,7 @@ void codegenCodeBody(InvokeEntry* entry)
     for (; i < entry->varArgPosition; ++i, ++ai, ++argNo) {
         llvm::Argument *llArgValue = &(*ai);
         llArgValue->setName(entry->fixedArgNames[i]->str.str());
-        CValuePtr cvalue = new CValue(entry->fixedArgTypes[i], llArgValue);
-        cvalue->forwardedRValue = entry->forwardedRValueFlags[i];
+        CValuePtr cvalue = new CValue(entry->fixedArgTypes[i], llArgValue, entry->forwardedRValueFlags[i]);
         addLocal(env, entry->fixedArgNames[i], cvalue.ptr());
         if (llvmDIBuilder != NULL) {
             unsigned line, column;
@@ -3084,8 +3082,7 @@ void codegenCodeBody(InvokeEntry* entry)
             llvm::raw_svector_ostream sout(buf);
             sout << entry->varArgName << ".." << j;
             llArgValue->setName(sout.str());
-            CValuePtr cvalue = new CValue(entry->varArgTypes[j], llArgValue);
-            cvalue->forwardedRValue = entry->forwardedRValueFlags[i+j];
+            CValuePtr cvalue = new CValue(entry->varArgTypes[j], llArgValue, entry->forwardedRValueFlags[i+j]);
             varArgs->add(cvalue);
 
             if (llvmDIBuilder != NULL) {
@@ -3117,8 +3114,7 @@ void codegenCodeBody(InvokeEntry* entry)
         for (; i < entry->fixedArgNames.size(); ++i, ++ai, ++argNo) {
             llvm::Argument *llArgValue = &(*ai);
             llArgValue->setName(entry->fixedArgNames[i]->str.str());
-            CValuePtr cvalue = new CValue(entry->fixedArgTypes[i], llArgValue);
-            cvalue->forwardedRValue = entry->forwardedRValueFlags[i+j];
+            CValuePtr cvalue = new CValue(entry->fixedArgTypes[i], llArgValue, entry->forwardedRValueFlags[i+j]);
             addLocal(env, entry->fixedArgNames[i], cvalue.ptr());
             if (llvmDIBuilder != NULL) {
                 unsigned line, column;
@@ -3279,8 +3275,7 @@ void codegenCallInline(InvokeEntry* entry,
     unsigned i = 0, j = 0;
     for (; i < entry->varArgPosition; ++i) {
         CValuePtr cv = args->values[i];
-        CValuePtr carg = new CValue(cv->type, cv->llValue);
-        carg->forwardedRValue = entry->forwardedRValueFlags[i];
+        CValuePtr carg = new CValue(cv->type, cv->llValue, entry->forwardedRValueFlags[i]);
         assert(carg->type == entry->argsKey[i]);
         addLocal(env, entry->fixedArgNames[i], carg.ptr());
     }
@@ -3288,15 +3283,13 @@ void codegenCallInline(InvokeEntry* entry,
         MultiCValuePtr varArgs = new MultiCValue();
         for (; j < entry->varArgTypes.size(); ++j) {
             CValuePtr cv = args->values[i+j];
-            CValuePtr carg = new CValue(cv->type, cv->llValue);
-            carg->forwardedRValue = entry->forwardedRValueFlags[i+j];
+            CValuePtr carg = new CValue(cv->type, cv->llValue, entry->forwardedRValueFlags[i+j]);
             varArgs->add(carg);
         }
         addLocal(env, entry->varArgName, varArgs.ptr());
         for (; i < entry->fixedArgNames.size(); ++i) {
             CValuePtr cv = args->values[i+j];
-            CValuePtr carg = new CValue(cv->type, cv->llValue);
-            carg->forwardedRValue = entry->forwardedRValueFlags[i+j];
+            CValuePtr carg = new CValue(cv->type, cv->llValue, entry->forwardedRValueFlags[i+j]);
             assert(carg->type == entry->argsKey[i+j]);
             addLocal(env, entry->fixedArgNames[i], carg.ptr());
         }
