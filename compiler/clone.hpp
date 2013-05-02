@@ -1,5 +1,5 @@
-#ifndef __CLONE_HPP
-#define __CLONE_HPP
+#pragma once
+
 
 #include <vector>
 
@@ -28,5 +28,3 @@ CatchPtr clone(CatchPtr x);
 void clone(llvm::ArrayRef<CatchPtr> x, vector<CatchPtr> &out);
 
 } // namespace clay
-
-#endif // __CLONE_HPP

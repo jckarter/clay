@@ -1,5 +1,5 @@
-#ifndef __EXTERNALS_HPP
-#define __EXTERNALS_HPP
+#pragma once
+
 
 #include "clay.hpp"
 #include "codegen.hpp"
@@ -139,5 +139,3 @@ ExternalTargetPtr getExternalTarget();
 
 
 }
-
-#endif // __EXTERNALS_HPP

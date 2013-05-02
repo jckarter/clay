@@ -1,5 +1,4 @@
-#ifndef __OBJECTS_HPP
-#define __OBJECTS_HPP
+#pragma once
 
 
 #include "clay.hpp"
@@ -68,6 +67,3 @@ private :
 };
 
 } // namespace clay
-
-
-#endif // __OBJECTS_HPP

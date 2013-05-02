@@ -1,5 +1,5 @@
-#ifndef __INVOKETABLES_HPP
-#define __INVOKETABLES_HPP
+#pragma once
+
 
 #include "clay.hpp"
 #include "matchinvoke.hpp"
@@ -129,5 +129,3 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
 void setFinalOverloadsEnabled(bool enabled); 
 
 }
-
-#endif // __INVOKETABLES_HPP

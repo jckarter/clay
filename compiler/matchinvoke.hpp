@@ -1,5 +1,5 @@
-#ifndef __MATCHINVOKE_HPP
-#define __MATCHINVOKE_HPP
+#pragma once
+
 
 #include "clay.hpp"
 
@@ -119,5 +119,3 @@ MatchResultPtr matchInvoke(OverloadPtr overload,
 void printMatchError(llvm::raw_ostream &os, const MatchResultPtr& result);
 
 }
-
-#endif // __MATCHINVOKE_HPP

@@ -1,5 +1,5 @@
-#ifndef __LOADER_HPP
-#define __LOADER_HPP
+#pragma once
+
 
 #include "clay.hpp"
 
@@ -244,5 +244,3 @@ static inline llvm::StringRef primOpName(const PrimOpPtr& x) {
 }
 
 }
-
-#endif // __LOADER_HPP

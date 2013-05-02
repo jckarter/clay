@@ -1,5 +1,5 @@
-#ifndef __TYPES_HPP
-#define __TYPES_HPP
+#pragma once
+
 
 #include "clay.hpp"
 
@@ -110,5 +110,3 @@ inline size_t alignedUpTo(size_t offset, TypePtr type) {
 }
 
 }
-
-#endif // __TYPES_HPP

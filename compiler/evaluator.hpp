@@ -1,5 +1,5 @@
-#ifndef __EVALUATOR_HPP
-#define __EVALUATOR_HPP
+#pragma once
+
 
 #include "clay.hpp"
 
@@ -92,5 +92,3 @@ EValuePtr evalAllocValue(TypePtr t);
 EValuePtr evalOneAsRef(ExprPtr expr, EnvPtr env);
 
 }
-
-#endif // __EVALUATOR_HPP

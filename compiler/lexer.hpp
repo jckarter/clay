@@ -1,5 +1,5 @@
-#ifndef __LEXER_HPP
-#define __LEXER_HPP
+#pragma once
+
 
 #include "clay.hpp"
 
@@ -49,5 +49,3 @@ void tokenize(SourcePtr source, unsigned offset, size_t length,
 bool isSpace(char c);
 
 }
-
-#endif // __LEXER_HPP

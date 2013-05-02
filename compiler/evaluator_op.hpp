@@ -1,5 +1,4 @@
-#ifndef __CLAY_EVALUATOR_OP_HPP
-#define __CLAY_EVALUATOR_OP_HPP
+#pragma once
 
 
 #include "clay.hpp"
@@ -12,7 +11,3 @@ void evalPrimOp(PrimOpPtr x, MultiEValuePtr args, MultiEValuePtr out);
 
 
 }
-
-
-
-#endif

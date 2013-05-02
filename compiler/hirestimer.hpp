@@ -1,5 +1,5 @@
-#ifndef __CLAY_HIRESTIMER_HPP
-#define __CLAY_HIRESTIMER_HPP
+#pragma once
+
 
 namespace clay {
 struct HiResTimer {
@@ -14,5 +14,3 @@ struct HiResTimer {
     double elapsedMillis() { return (double)elapsedNanos() / (1000 * 1000); }
 };
 }
-
-#endif

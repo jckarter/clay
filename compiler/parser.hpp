@@ -1,5 +1,5 @@
-#ifndef __PARSER_HPP
-#define __PARSER_HPP
+#pragma once
+
 
 #include "clay.hpp"
 #include "lexer.hpp"
@@ -33,5 +33,3 @@ typedef vector<Token>(*AddTokensCallback)();
 void setAddTokens(AddTokensCallback f);
 
 }
-
-#endif // __PARSER_HPP

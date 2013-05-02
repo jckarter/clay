@@ -1,5 +1,5 @@
-#ifndef __PRINTER_HPP
-#define __PRINTER_HPP
+#pragma once
+
 
 #include "clay.hpp"
 
@@ -73,5 +73,3 @@ string shortString(llvm::StringRef in);
 
 
 }
-
-#endif // __PRINTER_HPP

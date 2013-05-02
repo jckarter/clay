@@ -1,5 +1,5 @@
-#ifndef __ANALYZER_HPP
-#define __ANALYZER_HPP
+#pragma once
+
 
 #include "clay.hpp"
 
@@ -150,5 +150,3 @@ enum StatementAnalysis {
 ExprPtr implicitUnpackExpr(size_t wantCount, ExprListPtr exprs);
 
 }
-
-#endif // __ANALYZER_HPP

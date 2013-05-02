@@ -1,5 +1,5 @@
-#ifndef __PATTERNS_HPP
-#define __PATTERNS_HPP
+#pragma once
+
 
 #include "clay.hpp"
 
@@ -31,5 +31,3 @@ void patternPrint(llvm::raw_ostream &out, PatternPtr x);
 void patternPrint(llvm::raw_ostream &out, MultiPatternPtr x);
 
 }
-
-#endif // __PATTERNS_HPP

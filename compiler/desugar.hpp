@@ -1,5 +1,5 @@
-#ifndef __DESUGAR_HPP
-#define __DESUGAR_HPP
+#pragma once
+
 
 #include "clay.hpp"
 
@@ -21,5 +21,3 @@ llvm::ArrayRef<TopLevelItemPtr> desugarEvalTopLevel(EvalTopLevelPtr eval, EnvPtr
 OverloadPtr desugarAsOverload(OverloadPtr &x);
 
 }
-
-#endif // __DESUGAR_HPP

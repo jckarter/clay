@@ -1,5 +1,4 @@
-#ifndef __CLAY_REFCOUNTED_HPP
-#define __CLAY_REFCOUNTED_HPP
+#pragma once
 
 
 namespace clay {
@@ -71,6 +70,3 @@ public:
 
 
 }
-
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef __CLAY_ANALYZER_OP_HPP
-#define __CLAY_ANALYZER_OP_HPP
+#pragma once
 
 
 #include "clay.hpp"
@@ -11,6 +10,3 @@ MultiPValuePtr analyzePrimOp(PrimOpPtr x, MultiPValuePtr args);
 
 
 }
-
-
-#endif

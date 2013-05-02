@@ -1,5 +1,4 @@
-#ifndef __ENV_HPP
-#define __ENV_HPP
+#pragma once
 
 
 #include "clay.hpp"
@@ -33,5 +32,3 @@ Location safeLookupCallByNameLocation(EnvPtr env);
 bool lookupExceptionAvailable(const Env* env);
 
 } // namespace clay
-
-#endif // __ENV_HPP

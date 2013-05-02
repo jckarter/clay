@@ -1,5 +1,5 @@
-#ifndef __CODEGEN_HPP
-#define __CODEGEN_HPP
+#pragma once
+
 
 #include "clay.hpp"
 #include "types.hpp"
@@ -248,5 +248,3 @@ CValuePtr staticCValue(ObjectPtr obj, CodegenContext* ctx);
 std::string getCodeName(InvokeEntry* entry);
 
 }
-
-#endif // __CODEGEN_HPP

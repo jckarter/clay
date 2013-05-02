@@ -1,5 +1,5 @@
-#ifndef __CONSTRUCTORS_HPP
-#define __CONSTRUCTORS_HPP
+#pragma once
+
 
 #include "clay.hpp"
 
@@ -11,5 +11,3 @@ vector<OverloadPtr> &getPatternOverloads();
 void initBuiltinConstructor(RecordDeclPtr x);
 
 }
-
-#endif // __CONSTRUCTORS_HPP

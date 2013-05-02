@@ -1,5 +1,4 @@
-#ifndef __CLAY_DEBUGCAST_HPP
-#define __CLAY_DEBUGCAST_HPP
+#pragma once
 
 
 #include "assert.h"
@@ -17,6 +16,3 @@ To checked_cast(From* from) {
 
 
 }
-
-
-#endif

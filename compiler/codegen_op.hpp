@@ -1,5 +1,4 @@
-#ifndef __CLAY_CODEGEN_OP_HPP
-#define __CLAY_CODEGEN_OP_HPP
+#pragma once
 
 
 #include "clay.hpp"
@@ -15,5 +14,3 @@ void codegenPrimOp(PrimOpPtr x,
 
 
 }
-
-#endif

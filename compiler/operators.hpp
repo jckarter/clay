@@ -1,5 +1,5 @@
-#ifndef __CLAYNAMES_HPP
-#define __CLAYNAMES_HPP
+#pragma once
+
 
 namespace clay {
 
@@ -156,5 +156,3 @@ ExprPtr operator_expr_doIntegerNegateChecked();
 ExprPtr operator_expr_doIntegerConvertChecked();
 
 }
-
-#endif

@@ -1,5 +1,5 @@
-#ifndef __ERROR_HPP
-#define __ERROR_HPP
+#pragma once
+
 
 #include "clay.hpp"
 #include "invoketables.hpp"
@@ -128,5 +128,3 @@ class CompilerError : std::exception {
 };
 
 }
-
-#endif // __ERROR_HPP
