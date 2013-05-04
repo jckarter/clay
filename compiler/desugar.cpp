@@ -477,7 +477,7 @@ OverloadPtr desugarAsOverload(OverloadPtr &x) {
     for (unsigned i = 0; i < x->code->formalArgs.size(); ++i) {
         FormalArgPtr arg = clone(x->code->formalArgs[i]);
         arg->tempness = TEMPNESS_FORWARD;
-        if (x->code->formalArgs[i]->asArg) {
+        if (x->code->formalArgs[i]->asType != NULL) {
             arg->type = x->code->formalArgs[i]->asType;
             ExprPtr typeArg = x->code->formalArgs[i]->asType;
             CallPtr callArg = new Call(operator_expr_asExpression(), new ExprList());

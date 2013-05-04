@@ -1617,19 +1617,18 @@ struct FormalArg : public ANode {
     ValueTempness tempness;
     ExprPtr asType;
     bool varArg:1;
-    const bool asArg:1;
     FormalArg(IdentifierPtr name, ExprPtr type)
         : ANode(FORMAL_ARG), name(name), type(type),
-          tempness(TEMPNESS_DONTCARE), varArg(false), asArg(false) {}
+          tempness(TEMPNESS_DONTCARE), varArg(false) {}
     FormalArg(IdentifierPtr name, ExprPtr type, ValueTempness tempness)
         : ANode(FORMAL_ARG), name(name), type(type),
-          tempness(tempness), varArg(false), asArg(false) {}
+          tempness(tempness), varArg(false) {}
     FormalArg(IdentifierPtr name, ExprPtr type, ValueTempness tempness, bool varArg)
         : ANode(FORMAL_ARG), name(name), type(type),
-          tempness(tempness), varArg(varArg), asArg(false) {}
+          tempness(tempness), varArg(varArg) {}
     FormalArg(IdentifierPtr name, ExprPtr type, ValueTempness tempness, ExprPtr asType)
         : ANode(FORMAL_ARG), name(name), type(type),
-          tempness(tempness), asType(asType), varArg(false), asArg(true) {}
+          tempness(tempness), asType(asType), varArg(false) {}
 };
 
 struct ReturnSpec : public ANode {
