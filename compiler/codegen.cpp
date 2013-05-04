@@ -2250,6 +2250,8 @@ void codegenDispatch(ObjectPtr obj,
                      CodegenContext* ctx,
                      MultiCValuePtr out)
 {
+    assert(args->size() == pvArgs->size());
+
     if (dispatchIndices.empty()) {
         codegenCallValue(staticCValue(obj, ctx), args, pvArgs, ctx, out);
         return;
@@ -2348,6 +2350,8 @@ void codegenCallValue(CValuePtr callable,
                       CodegenContext* ctx,
                       MultiCValuePtr out)
 {
+    assert(args->size() == pvArgs->size());
+
     switch (callable->type->typeKind) {
     case CODE_POINTER_TYPE :
         codegenCallPointer(callable, args, ctx, out);

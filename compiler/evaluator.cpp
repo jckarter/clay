@@ -1643,6 +1643,8 @@ void evalDispatch(ObjectPtr obj,
                   llvm::ArrayRef<unsigned> dispatchIndices,
                   MultiEValuePtr out)
 {
+    assert(args->size() == pvArgs->size());
+
     if (dispatchIndices.empty()) {
         evalCallValue(staticEValue(obj), args, pvArgs, out);
         return;
@@ -1712,6 +1714,8 @@ void evalCallValue(EValuePtr callable,
                    MultiPValuePtr pvArgs,
                    MultiEValuePtr out)
 {
+    assert(args->size() == pvArgs->size());
+
     switch (callable->type->typeKind) {
     case CODE_POINTER_TYPE :
         evalCallPointer(callable, args, out);
