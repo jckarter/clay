@@ -381,6 +381,14 @@ StatementPtr desugarSwitchStatement(SwitchPtr x) {
     return block.ptr();
 }
 
+ExprPtr wrapIntoStatic(ExprPtr expr) {
+    ExprPtr staticName =
+        new ForeignExpr("prelude",
+                        new NameRef(Identifier::get("Static")));
+
+    return new Indexing(staticName, new ExprList(expr));
+}
+
 static SourcePtr evalToSource(Location const &location, ExprListPtr args, EnvPtr env)
 {
     llvm::SmallString<128> sourceTextBuf;
@@ -456,11 +464,7 @@ OverloadPtr desugarAsOverload(OverloadPtr &x) {
         sout << "%asArg" << i;
         IdentifierPtr argName = Identifier::get(sout.str());
 
-        ExprPtr staticName =
-            new ForeignExpr("prelude",
-                            new NameRef(Identifier::get("Static")));
-
-        IndexingPtr indexing = new Indexing(staticName, new ExprList(new NameRef(x->code->patternVars[i].name)));
+        ExprPtr indexing = wrapIntoStatic(new NameRef(x->code->patternVars[i].name));
         indexing->startLocation = code->patternVars[i].name->location;
         indexing->endLocation = code->patternVars[i].name->location;
 

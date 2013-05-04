@@ -1,6 +1,7 @@
 #include "clay.hpp"
 #include "parser.hpp"
 #include "error.hpp"
+#include "desugar.hpp"
 
 
 namespace clay {
@@ -1745,11 +1746,7 @@ static FormalArgPtr makeStaticFormalArg(size_t index, ExprPtr expr, Location con
     sout << "%arg" << index;
     IdentifierPtr argName = Identifier::get(sout.str());
 
-    ExprPtr staticName =
-        new ForeignExpr("prelude",
-                        new NameRef(Identifier::get("Static")));
-
-    IndexingPtr indexing = new Indexing(staticName, new ExprList(expr));
+    ExprPtr indexing = wrapIntoStatic(expr);
     indexing->startLocation = location;
     indexing->endLocation = currentLocation();
 

@@ -14,6 +14,7 @@ StatementPtr desugarForStatement(ForPtr x);
 StatementPtr desugarCatchBlocks(llvm::ArrayRef<CatchPtr> catchBlocks);
 void desugarThrow(Throw* thro);
 StatementPtr desugarSwitchStatement(SwitchPtr x);
+ExprPtr wrapIntoStatic(ExprPtr expr);
 
 ExprListPtr desugarEvalExpr(EvalExprPtr eval, EnvPtr env);
 llvm::ArrayRef<StatementPtr> desugarEvalStatement(EvalStatementPtr eval, EnvPtr env);
