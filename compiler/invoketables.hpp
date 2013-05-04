@@ -122,8 +122,7 @@ InvokeSet *lookupInvokeSet(ObjectPtr callable,
                            llvm::ArrayRef<TypePtr> argsKey);
 vector<InvokeSet*> lookupInvokeSets(ObjectPtr callable);
 InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
-                               llvm::ArrayRef<TypePtr> argsKey,
-                               const vector<bool>& argsRValues,
+                               llvm::ArrayRef<PVData> args,
                                MatchFailureError &failures);
 
 void setFinalOverloadsEnabled(bool enabled); 

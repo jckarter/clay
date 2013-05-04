@@ -346,11 +346,21 @@ namespace {
 }
 
 InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
-                               llvm::ArrayRef<TypePtr> argsKey,
-                               const vector<bool>& argsRValues,
+                               llvm::ArrayRef<PVData> args,
                                MatchFailureError &failures)
 {
-    InvokeSet* invokeSet = lookupInvokeSet(callable, argsKey);
+    vector<TypePtr> argTypes;
+    vector<bool> argRValues;
+
+    argTypes.reserve(args.size());
+    argRValues.reserve(args.size());
+
+    for (llvm::ArrayRef<PVData>::const_iterator arg = args.begin(); arg != args.end(); ++arg) {
+        argTypes.push_back(arg->type);
+        argRValues.push_back(arg->isRValue);
+    }
+
+    InvokeSet* invokeSet = lookupInvokeSet(callable, argTypes);
 
     if (invokeSet->evaluatingPredicate) {
         // matchInvoke calls the same lookupInvokeEntry
@@ -361,7 +371,7 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
     FinallyClearEvaluatingPredicate FinallyClearEvaluatingPredicate(invokeSet);
 
     map<vector<bool>, InvokeEntry*>::iterator iter1 =
-        invokeSet->tempnessMap.find(argsRValues);
+        invokeSet->tempnessMap.find(argRValues);
     if (iter1 != invokeSet->tempnessMap.end())
         return iter1->second;
     
@@ -386,7 +396,7 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
         tempnessKey.clear();
         forwardedRValueFlags.clear();
         if (matchTempness(match->overload->code,
-                          argsRValues,
+                          argRValues,
                           match->overload->callByName,
                           tempnessKey,
                           forwardedRValueFlags))
@@ -401,7 +411,7 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
     map<vector<ValueTempness>, InvokeEntry*>::iterator iter2 =
             invokeSet->tempnessMap2.find(tempnessKey);
     if (iter2 != invokeSet->tempnessMap2.end()) {
-        invokeSet->tempnessMap[argsRValues] = iter2->second;
+        invokeSet->tempnessMap[argRValues] = iter2->second;
         return iter2->second;
     }
 
@@ -410,7 +420,7 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
     entry->forwardedRValueFlags = forwardedRValueFlags;
     
     invokeSet->tempnessMap2[tempnessKey] = entry;
-    invokeSet->tempnessMap[argsRValues] = entry;
+    invokeSet->tempnessMap[argRValues] = entry;
 
     if (_finalOverloadsEnabled) {
         MatchSuccessPtr match2;
@@ -420,10 +430,10 @@ InvokeEntry* lookupInvokeEntry(ObjectPtr callable,
         while ((match2 = findMatchingInvoke(callableOverloads(callable),
                                            j,
                                            callable,
-                                           argsKey,
+                                           argTypes,
                                            failures)).ptr() != NULL) {
             if (matchTempness(match2->overload->code,
-                              argsRValues,
+                              argRValues,
                               match2->overload->callByName,
                               tempnessKey2,
                               forwardedRValueFlags2))

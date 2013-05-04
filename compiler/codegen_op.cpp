@@ -739,15 +739,13 @@ void codegenPrimOp(PrimOpPtr x,
         default :
             argumentError(0, "invalid callable");
         }
-        vector<TypePtr> argsKey;
-        vector<bool> argsRValues;
+        vector<PVData> argsPVData;
         for (unsigned i = 1; i < args->size(); ++i) {
             TypePtr t = valueToType(args, i);
-            argsKey.push_back(t);
-            argsRValues.push_back(false);
+            argsPVData.push_back(PVData(t, false));
         }
-        CompileContextPusher pusher(callable, argsKey);
-        bool isDefined = analyzeIsDefined(callable, argsKey, argsRValues);
+        CompileContextPusher pusher(callable, argsPVData);
+        bool isDefined = analyzeIsDefined(callable, argsPVData);
         ValueHolderPtr vh = boolToValueHolder(isDefined);
         codegenStaticObject(vh.ptr(), ctx, out);
         break;
@@ -1447,18 +1445,18 @@ void codegenPrimOp(PrimOpPtr x,
         default :
             argumentError(0, "invalid callable");
         }
+        vector<PVData> argsPVData;
         vector<TypePtr> argsKey;
-        vector<bool> argsRValues;
         for (unsigned i = 1; i < args->size(); ++i) {
             TypePtr t = valueToType(args, i);
             argsKey.push_back(t);
-            argsRValues.push_back(false);
+            argsPVData.push_back(PVData(t, false));
         }
 
-        CompileContextPusher pusher(callable, argsKey);
+        CompileContextPusher pusher(callable, argsPVData);
 
         InvokeEntry* entry =
-            safeAnalyzeCallable(callable, argsKey, argsRValues);
+            safeAnalyzeCallable(callable, argsPVData);
         if (entry->callByName)
             argumentError(0, "cannot create pointer to call-by-name code");
         assert(entry->analyzed);
@@ -1513,18 +1511,18 @@ void codegenPrimOp(PrimOpPtr x,
         if (isVarArg)
             argumentError(2, "implementing variadic external functions is not yet supported");
 
+        vector<PVData> argsPVData;
         vector<TypePtr> argsKey;
-        vector<bool> argsRValues;
         for (unsigned i = 3; i < args->size(); ++i) {
             TypePtr t = valueToType(args, i);
             argsKey.push_back(t);
-            argsRValues.push_back(false);
+            argsPVData.push_back(PVData(t, false));
         }
 
-        CompileContextPusher pusher(callable, argsKey);
+        CompileContextPusher pusher(callable, argsPVData);
 
         InvokeEntry* entry =
-            safeAnalyzeCallable(callable, argsKey, argsRValues);
+            safeAnalyzeCallable(callable, argsPVData);
         if (entry->callByName)
             argumentError(0, "cannot create pointer to call-by-name code");
         assert(entry->analyzed);

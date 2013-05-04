@@ -56,6 +56,15 @@ void setCompileContext(llvm::ArrayRef<CompileContextEntry> x) {
     contextStack = x;
 }
 
+CompileContextPusher::CompileContextPusher(ObjectPtr obj, llvm::ArrayRef<PVData> params, llvm::ArrayRef<unsigned> dispatchIndices) {
+    vector<ObjectPtr> params2;
+    for (unsigned i = 0; i < params.size(); ++i) {
+        params2.push_back(params[i].type.ptr());
+    }
+    pushCompileContext(obj, params2, dispatchIndices);
+}
+
+
 
 
 //

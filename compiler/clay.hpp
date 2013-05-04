@@ -774,6 +774,8 @@ void popCompileContext();
 vector<CompileContextEntry> getCompileContext();
 void setCompileContext(llvm::ArrayRef<CompileContextEntry> x);
 
+struct PVData;
+
 struct CompileContextPusher {
     CompileContextPusher(ObjectPtr obj) {
         pushCompileContext(obj);
@@ -781,20 +783,10 @@ struct CompileContextPusher {
     CompileContextPusher(ObjectPtr obj, llvm::ArrayRef<ObjectPtr> params) {
         pushCompileContext(obj, params);
     }
-    CompileContextPusher(ObjectPtr obj, llvm::ArrayRef<TypePtr> params) {
-        vector<ObjectPtr> params2;
-        for (unsigned i = 0; i < params.size(); ++i)
-            params2.push_back((Object *)(params[i].ptr()));
-        pushCompileContext(obj, params2);
-    }
-    CompileContextPusher(ObjectPtr obj,
-                         llvm::ArrayRef<TypePtr> params,
-                         llvm::ArrayRef<unsigned> dispatchIndices) {
-        vector<ObjectPtr> params2;
-        for (unsigned i = 0; i < params.size(); ++i)
-            params2.push_back((Object *)(params[i].ptr()));
-        pushCompileContext(obj, params2, dispatchIndices);
-    }
+    CompileContextPusher(
+            ObjectPtr obj,
+            llvm::ArrayRef<PVData> params,
+            llvm::ArrayRef<unsigned> dispatchIndices = llvm::ArrayRef<unsigned>());
     ~CompileContextPusher() {
         popCompileContext();
     }

@@ -215,8 +215,7 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody);
 struct InvokeEntry;
 
 InvokeEntry* codegenCallable(ObjectPtr x,
-                             llvm::ArrayRef<TypePtr> argsKey,
-                             const vector<bool>& argsRValues);
+                             llvm::ArrayRef<PVData> args);
 void codegenCodeBody(InvokeEntry* entry);
 void codegenCWrapper(InvokeEntry* entry);
 
