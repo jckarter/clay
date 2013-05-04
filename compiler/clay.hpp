@@ -1629,6 +1629,9 @@ struct FormalArg : public ANode {
     FormalArg(IdentifierPtr name, ExprPtr type, ValueTempness tempness, ExprPtr asType)
         : ANode(FORMAL_ARG), name(name), type(type),
           tempness(tempness), asType(asType), varArg(false) {}
+    FormalArg(IdentifierPtr name, ExprPtr type, ValueTempness tempness, ExprPtr asType, bool varArg)
+        : ANode(FORMAL_ARG), name(name), type(type),
+          tempness(tempness), asType(asType), varArg(varArg) {}
 };
 
 struct ReturnSpec : public ANode {

@@ -237,7 +237,7 @@ void clone(llvm::ArrayRef<FormalArgPtr> x, vector<FormalArgPtr> &out)
 
 FormalArgPtr clone(FormalArgPtr x)
 {
-    FormalArgPtr out = new FormalArg(x->name, cloneOpt(x->type), x->tempness, x->varArg);
+    FormalArgPtr out = new FormalArg(x->name, cloneOpt(x->type), x->tempness, cloneOpt(x->asType), x->varArg);
     out->location = x->location;
     return out;
 }
