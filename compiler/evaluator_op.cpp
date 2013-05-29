@@ -5,6 +5,7 @@
 #include "loader.hpp"
 #include "env.hpp"
 #include "analyzer.hpp"
+#include "int128.hpp"
 
 #include "evaluator_op.hpp"
 

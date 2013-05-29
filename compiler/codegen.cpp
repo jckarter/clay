@@ -14,6 +14,7 @@
 #include "env.hpp"
 #include "objects.hpp"
 #include "error.hpp"
+#include "int128.hpp"
 #include "codegen_op.hpp"
 
 #include "codegen.hpp"

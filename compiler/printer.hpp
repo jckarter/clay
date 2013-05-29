@@ -6,14 +6,6 @@
 namespace clay {
 
 
-inline llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const clay_int128 &x) {
-    return os << ptrdiff64_t(x);
-}
-inline llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const clay_uint128 &x) {
-    return os << size64_t(x);
-}
-
-
 template <class T>
 inline llvm::raw_ostream &operator<<(llvm::raw_ostream &out, llvm::ArrayRef<T> v)
 {

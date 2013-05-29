@@ -2,6 +2,7 @@
 #include "types.hpp"
 #include "objects.hpp"
 #include "error.hpp"
+#include "int128.hpp"
 
 
 namespace clay {
