@@ -31,7 +31,7 @@ void convertFreeVars(LambdaPtr x, EnvPtr env,
 void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx);
 
 void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx);
-void convertFreeVars(ExprListPtr x, EnvPtr env, LambdaContext &ctx);
+void convertFreeVars(ExprList* x, EnvPtr env, LambdaContext &ctx);
 
 
 
@@ -307,7 +307,7 @@ void convertFreeVars(LambdaPtr x, EnvPtr env,
 
 static EnvPtr convertFreeVarsFromBinding(BindingPtr binding, EnvPtr env, LambdaContext &ctx)
 {
-    convertFreeVars(binding->values, env, ctx);
+    convertFreeVars(binding->values.ptr(), env, ctx);
     EnvPtr env2 = new Env(env);
     for (size_t j = 0; j < binding->args.size(); ++j)
         addLocal(env2, binding->args[j]->name, binding->args[j]->name.ptr());
@@ -367,21 +367,21 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
 
     case ASSIGNMENT : {
         Assignment *y = (Assignment *)x.ptr();
-        convertFreeVars(y->left, env, ctx);
-        convertFreeVars(y->right, env, ctx);
+        convertFreeVars(y->left.ptr(), env, ctx);
+        convertFreeVars(y->right.ptr(), env, ctx);
         break;
     }
 
     case INIT_ASSIGNMENT : {
         InitAssignment *y = (InitAssignment *)x.ptr();
-        convertFreeVars(y->left, env, ctx);
-        convertFreeVars(y->right, env, ctx);
+        convertFreeVars(y->left.ptr(), env, ctx);
+        convertFreeVars(y->right.ptr(), env, ctx);
         break;
     }
 
     case VARIADIC_ASSIGNMENT : {
         VariadicAssignment *y = (VariadicAssignment *)x.ptr();
-        convertFreeVars(y->exprs, env, ctx);
+        convertFreeVars(y->exprs.ptr(), env, ctx);
         break;
     }
 
@@ -391,7 +391,7 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
 
     case RETURN : {
         Return *y = (Return *)x.ptr();
-        convertFreeVars(y->values, env, ctx);
+        convertFreeVars(y->values.ptr(), env, ctx);
         break;
     }
 
@@ -411,7 +411,7 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
         convertFreeVars(y->expr, env, ctx);
         for (size_t i = 0; i < y->caseBlocks.size(); ++i) {
             CaseBlockPtr z = y->caseBlocks[i];
-            convertFreeVars(z->caseLabels, env, ctx);
+            convertFreeVars(z->caseLabels.ptr(), env, ctx);
             convertFreeVars(z->body, env, ctx);
         }
         if (y->defaultCase.ptr())
@@ -421,7 +421,7 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
 
     case EVAL_STATEMENT : {
         EvalStatement *eval = (EvalStatement *)x.ptr();
-        convertFreeVars(eval->args, env, ctx);
+        convertFreeVars(eval->args.ptr(), env, ctx);
         break;
     }
 
@@ -486,7 +486,7 @@ void convertFreeVars(StatementPtr x, EnvPtr env, LambdaContext &ctx)
 
     case STATIC_FOR : {
         StaticFor *y = (StaticFor *)x.ptr();
-        convertFreeVars(y->values, env, ctx);
+        convertFreeVars(y->values.ptr(), env, ctx);
         EnvPtr env2 = new Env(env);
         addLocal(env2, y->variable, y->variable.ptr());
         convertFreeVars(y->body, env2, ctx);
@@ -625,27 +625,27 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
 
     case TUPLE : {
         Tuple *y = (Tuple *)x.ptr();
-        convertFreeVars(y->args, env, ctx);
+        convertFreeVars(y->args.ptr(), env, ctx);
         break;
     }
 
     case PAREN : {
         Paren *y = (Paren *)x.ptr();
-        convertFreeVars(y->args, env, ctx);
+        convertFreeVars(y->args.ptr(), env, ctx);
         break;
     }
 
     case INDEXING : {
         Indexing *y = (Indexing *)x.ptr();
         convertFreeVars(y->expr, env, ctx);
-        convertFreeVars(y->args, env, ctx);
+        convertFreeVars(y->args.ptr(), env, ctx);
         break;
     }
 
     case CALL : {
         Call *y = (Call *)x.ptr();
         convertFreeVars(y->expr, env, ctx);
-        convertFreeVars(y->parenArgs, env, ctx);
+        convertFreeVars(y->parenArgs.ptr(), env, ctx);
         break;
     }
 
@@ -666,7 +666,7 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
 
     case VARIADIC_OP : {
         VariadicOp *y = (VariadicOp *)x.ptr();
-        convertFreeVars(y->exprs, env, ctx);
+        convertFreeVars(y->exprs.ptr(), env, ctx);
         break;
     }
 
@@ -727,7 +727,7 @@ void convertFreeVars(ExprPtr &x, EnvPtr env, LambdaContext &ctx)
     }
 }
 
-void convertFreeVars(ExprListPtr x, EnvPtr env, LambdaContext &ctx)
+void convertFreeVars(ExprList* x, EnvPtr env, LambdaContext &ctx)
 {
     for (unsigned i = 0; i < x->size(); ++i)
         convertFreeVars(x->exprs[i], env, ctx);

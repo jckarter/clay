@@ -701,7 +701,7 @@ void argumentInvalidStaticObjectError(unsigned index, ObjectPtr obj);
 
 struct DebugPrinter {
     static int indent;
-    ObjectPtr obj;
+    const ObjectPtr obj;
     DebugPrinter(ObjectPtr obj);
     ~DebugPrinter();
 };
@@ -864,13 +864,13 @@ struct CharLiteral : public Expr {
 };
 
 struct StringLiteral : public Expr {
-    IdentifierPtr value;
+    const IdentifierPtr value;
     StringLiteral(IdentifierPtr value)
         : Expr(STRING_LITERAL), value(value) {}
 };
 
 struct NameRef : public Expr {
-    IdentifierPtr name;
+    const IdentifierPtr name;
     NameRef(IdentifierPtr name)
         : Expr(NAME_REF), name(name) {}
 };
@@ -903,21 +903,21 @@ struct Tuple : public Expr {
 };
 
 struct Paren : public Expr {
-    ExprListPtr args;
+    const ExprListPtr args;
     Paren(ExprListPtr args)
         : Expr(PAREN), args(args) {}
 };
 
 struct Indexing : public Expr {
     ExprPtr expr;
-    ExprListPtr args;
+    const ExprListPtr args;
     Indexing(ExprPtr expr, ExprListPtr args)
         : Expr(INDEXING), expr(expr), args(args) {}
 };
 
 struct Call : public Expr {
     ExprPtr expr;
-    ExprListPtr parenArgs;
+    const ExprListPtr parenArgs;
 
     ExprListPtr _allArgs;
 
@@ -930,7 +930,7 @@ struct Call : public Expr {
 
 struct FieldRef : public Expr {
     ExprPtr expr;
-    IdentifierPtr name;
+    const IdentifierPtr name;
     ExprPtr desugared;
     bool isDottedModuleName;
     FieldRef(ExprPtr expr, IdentifierPtr name)
@@ -963,7 +963,7 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &os, VariadicOpKind);
 
 struct VariadicOp : public Expr {
     const VariadicOpKind op;
-    ExprListPtr exprs;
+    const ExprListPtr exprs;
     ExprPtr desugared;
     VariadicOp(VariadicOpKind op, ExprListPtr exprs )
         : Expr(VARIADIC_OP), op(op), exprs(exprs) {}
@@ -1054,9 +1054,9 @@ struct DispatchExpr : public Expr {
 };
 
 struct ForeignExpr : public Expr {
-    string moduleName;
+    const string moduleName;
     EnvPtr foreignEnv;
-    ExprPtr expr;
+    const ExprPtr expr;
 
     ForeignExpr(llvm::StringRef moduleName, ExprPtr expr)
         : Expr(FOREIGN_EXPR), moduleName(moduleName), expr(expr) {}
@@ -1071,7 +1071,7 @@ struct ForeignExpr : public Expr {
 };
 
 struct ObjectExpr : public Expr {
-    ObjectPtr obj;
+    const ObjectPtr obj;
     ObjectExpr(ObjectPtr obj)
         : Expr(OBJECT_EXPR), obj(obj) {}
 };
@@ -1176,7 +1176,7 @@ struct Block : public Statement {
 };
 
 struct Label : public Statement {
-    IdentifierPtr name;
+    const IdentifierPtr name;
     Label(IdentifierPtr name)
         : Statement(LABEL), name(name) {}
 };
@@ -1199,13 +1199,13 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &os, BindingKind);
 struct PatternVar;
 
 struct Binding : public Statement {
-    BindingKind bindingKind;
+    const BindingKind bindingKind;
     vector<PatternVar> patternVars;
     vector<ObjectPtr> patternTypes;
-    ExprPtr predicate;
+    const ExprPtr predicate;
     vector<FormalArgPtr> args;
-    ExprListPtr values;
-    bool hasVarArg;
+    const ExprListPtr values;
+    const bool hasVarArg;
     Binding(BindingKind bindingKind,
         llvm::ArrayRef<FormalArgPtr> args,
         ExprListPtr values)
@@ -1224,14 +1224,14 @@ struct Binding : public Statement {
 };
 
 struct Assignment : public Statement {
-    ExprListPtr left, right;
+    const ExprListPtr left, right;
     Assignment(ExprListPtr left,
                ExprListPtr right)
         : Statement(ASSIGNMENT), left(left), right(right) {}
 };
 
 struct InitAssignment : public Statement {
-    ExprListPtr left, right;
+    const ExprListPtr left, right;
     InitAssignment(ExprListPtr left,
                    ExprListPtr right)
         : Statement(INIT_ASSIGNMENT), left(left), right(right) {}
@@ -1242,7 +1242,7 @@ struct InitAssignment : public Statement {
 };
 
 struct VariadicAssignment : public Statement {
-    ExprListPtr exprs;
+    const ExprListPtr exprs;
     ExprPtr desugared;
     VariadicOpKind op;
     VariadicAssignment(VariadicOpKind op, ExprListPtr exprs )
@@ -1250,7 +1250,7 @@ struct VariadicAssignment : public Statement {
 };
 
 struct Goto : public Statement {
-    IdentifierPtr labelName;
+    const IdentifierPtr labelName;
     Goto(IdentifierPtr labelName)
         : Statement(GOTO), labelName(labelName) {}
 };
@@ -1262,7 +1262,7 @@ enum ReturnKind {
 };
 
 struct Return : public Statement {
-    ExprListPtr values;
+    const ExprListPtr values;
     const ReturnKind returnKind:3;
     bool isExprReturn:1;
     bool isReturnSpecs:1;
@@ -1319,8 +1319,8 @@ struct Switch : public Statement {
 };
 
 struct CaseBlock : public ANode {
-    ExprListPtr caseLabels;
-    StatementPtr body;
+    const ExprListPtr caseLabels;
+    const StatementPtr body;
     CaseBlock(ExprListPtr caseLabels, StatementPtr body)
         : ANode(CASE_BLOCK), caseLabels(caseLabels), body(body) {}
 };
@@ -1332,10 +1332,10 @@ struct ExprStatement : public Statement {
 };
 
 struct While : public Statement {
-    vector<StatementPtr> conditionStatements;
+    const vector<StatementPtr> conditionStatements;
     ExprPtr condition;
 
-    StatementPtr body;
+    const StatementPtr body;
 
     While(ExprPtr condition, StatementPtr body)
         : Statement(WHILE), condition(condition), body(body) {}
@@ -1356,9 +1356,9 @@ struct Continue : public Statement {
 };
 
 struct For : public Statement {
-    vector<IdentifierPtr> variables;
+    const vector<IdentifierPtr> variables;
     ExprPtr expr;
-    StatementPtr body;
+    const StatementPtr body;
     StatementPtr desugared;
     For(llvm::ArrayRef<IdentifierPtr> variables,
         ExprPtr expr,
@@ -1367,9 +1367,9 @@ struct For : public Statement {
 };
 
 struct ForeignStatement : public Statement {
-    string moduleName;
+    const string moduleName;
     EnvPtr foreignEnv;
-    StatementPtr statement;
+    const StatementPtr statement;
     ForeignStatement(llvm::StringRef moduleName, StatementPtr statement)
         : Statement(FOREIGN_STATEMENT), moduleName(moduleName),
           statement(statement) {}
@@ -1385,8 +1385,8 @@ struct ForeignStatement : public Statement {
 };
 
 struct Try : public Statement {
-    StatementPtr tryBlock;
-    vector<CatchPtr> catchBlocks;
+    const StatementPtr tryBlock;
+    const vector<CatchPtr> catchBlocks;
     StatementPtr desugaredCatchBlock;
 
     Try(StatementPtr tryBlock,
@@ -1396,10 +1396,10 @@ struct Try : public Statement {
 };
 
 struct Catch : public ANode {
-    IdentifierPtr exceptionVar;
+    const IdentifierPtr exceptionVar;
     ExprPtr exceptionType; // optional
-    IdentifierPtr contextVar;
-    StatementPtr body;
+    const IdentifierPtr contextVar;
+    const StatementPtr body;
 
     Catch(IdentifierPtr exceptionVar,
           ExprPtr exceptionType,
@@ -1410,8 +1410,8 @@ struct Catch : public ANode {
 };
 
 struct Throw : public Statement {
-    ExprPtr expr;
-    ExprPtr context;
+    const ExprPtr expr;
+    const ExprPtr context;
     ExprPtr desugaredExpr;
     ExprPtr desugaredContext;
     Throw(ExprPtr expr, ExprPtr context)
@@ -1419,9 +1419,9 @@ struct Throw : public Statement {
 };
 
 struct StaticFor : public Statement {
-    IdentifierPtr variable;
-    ExprListPtr values;
-    StatementPtr body;
+    const IdentifierPtr variable;
+    const ExprListPtr values;
+    const StatementPtr body;
 
     bool clonesInitialized;
     vector<StatementPtr> clonedBodies;
@@ -1434,13 +1434,13 @@ struct StaticFor : public Statement {
 };
 
 struct Finally : public Statement {
-    StatementPtr body;
+    const StatementPtr body;
 
     explicit Finally(StatementPtr body) : Statement(FINALLY), body(body) {}
 };
 
 struct OnError : public Statement {
-    StatementPtr body;
+    const StatementPtr body;
 
     explicit OnError(StatementPtr body) : Statement(ONERROR), body(body) {}
 };
@@ -1460,8 +1460,8 @@ struct EvalStatement : public Statement {
 };
 
 struct StaticAssertStatement : public Statement {
-    ExprPtr cond;
-    ExprListPtr message;
+    const ExprPtr cond;
+    const ExprListPtr message;
 
     StaticAssertStatement(ExprPtr cond, ExprListPtr message)
         : Statement(STATIC_ASSERT_STATEMENT), cond(cond), message(message)
@@ -1480,7 +1480,7 @@ enum ValueTempness {
 };
 
 struct FormalArg : public ANode {
-    IdentifierPtr name;
+    const IdentifierPtr name;
     ExprPtr type;
     ValueTempness tempness;
     ExprPtr asType;
@@ -1503,8 +1503,8 @@ struct FormalArg : public ANode {
 };
 
 struct ReturnSpec : public ANode {
-    ExprPtr type;
-    IdentifierPtr name;
+    const ExprPtr type;
+    const IdentifierPtr name;
     ReturnSpec(ExprPtr type)
         : ANode(RETURN_SPEC), type(type) {}
     ReturnSpec(ExprPtr type, IdentifierPtr name)
@@ -1602,12 +1602,12 @@ struct TopLevelItem : public ANode {
 };
 
 struct RecordDecl : public TopLevelItem {
-    vector<PatternVar> patternVars;
-    ExprPtr predicate;
+    const vector<PatternVar> patternVars;
+    const ExprPtr predicate;
 
     const vector<IdentifierPtr> params;
 
-    IdentifierPtr varParam;
+    const IdentifierPtr varParam;
 
     RecordBodyPtr body;
 
@@ -1646,7 +1646,7 @@ struct RecordDecl : public TopLevelItem {
 
 struct RecordBody : public ANode {
     ExprListPtr computed; // valid if isComputed == true
-    vector<RecordFieldPtr> fields; // valid if isComputed == false
+    const vector<RecordFieldPtr> fields; // valid if isComputed == false
     bool isComputed:1;
     const bool hasVarField:1;
     RecordBody(ExprListPtr computed)
@@ -1661,27 +1661,27 @@ struct RecordBody : public ANode {
 };
 
 struct RecordField : public ANode {
-    IdentifierPtr name;
-    ExprPtr type;
+    const IdentifierPtr name;
+    const ExprPtr type;
     bool varField:1;
     RecordField(IdentifierPtr name, ExprPtr type)
         : ANode(RECORD_FIELD), name(name), type(type), varField(false) {}
 };
 
 struct VariantDecl : public TopLevelItem {
-    vector<PatternVar> patternVars;
-    ExprPtr predicate;
+    const vector<PatternVar> patternVars;
+    const ExprPtr predicate;
 
-    vector<IdentifierPtr> params;
-    IdentifierPtr varParam;
+    const vector<IdentifierPtr> params;
+    const IdentifierPtr varParam;
 
-    ExprListPtr defaultInstances;
+    const ExprListPtr defaultInstances;
 
     vector<InstanceDeclPtr> instances;
 
     vector<OverloadPtr> overloads;
 
-    bool open:1;
+    const bool open:1;
 
     VariantDecl(Module *module, IdentifierPtr name,
             Visibility visibility,
@@ -1699,10 +1699,10 @@ struct VariantDecl : public TopLevelItem {
 };
 
 struct InstanceDecl : public TopLevelItem {
-    vector<PatternVar> patternVars;
-    ExprPtr predicate;
-    ExprPtr target;
-    ExprListPtr members;
+    const vector<PatternVar> patternVars;
+    const ExprPtr predicate;
+    const ExprPtr target;
+    const ExprListPtr members;
 
     InstanceDecl(Module *module, llvm::ArrayRef<PatternVar> patternVars,
              ExprPtr predicate,
@@ -1721,8 +1721,8 @@ enum InlineAttribute {
 };
 
 struct Overload : public TopLevelItem {
-    ExprPtr target;
-    CodePtr code;
+    const ExprPtr target;
+    const CodePtr code;
 
     // pre-computed patterns for matchInvoke
     vector<PatternCellPtr> cells;
@@ -1757,7 +1757,7 @@ struct Overload : public TopLevelItem {
 };
 
 struct Procedure : public TopLevelItem {
-    OverloadPtr interface;
+    const OverloadPtr interface;
 
     OverloadPtr singleOverload;
     vector<OverloadPtr> overloads;
@@ -1765,7 +1765,7 @@ struct Procedure : public TopLevelItem {
     ProcedureMono mono;
     LambdaPtr lambda;
 
-    bool privateOverload:1;
+    const bool privateOverload:1;
 
     Procedure(Module *module, IdentifierPtr name, Visibility visibility, bool privateOverload);
     Procedure(Module *module, IdentifierPtr name, Visibility visibility, bool privateOverload, OverloadPtr interface);
@@ -1787,7 +1787,7 @@ struct IntrinsicSymbol : public TopLevelItem {
 };
 
 struct NewTypeDecl : public TopLevelItem {
-    ExprPtr expr;
+    const ExprPtr expr;
     NewTypePtr type;
     TypePtr baseType;
     bool initialized:1;
@@ -1801,8 +1801,8 @@ struct NewTypeDecl : public TopLevelItem {
 };
 
 struct EnumDecl : public TopLevelItem {
-    vector<PatternVar> patternVars;
-    ExprPtr predicate;
+    const vector<PatternVar> patternVars;
+    const ExprPtr predicate;
 
     vector<EnumMemberPtr> members;
     TypePtr type;
@@ -1819,7 +1819,7 @@ struct EnumDecl : public TopLevelItem {
 };
 
 struct EnumMember : public ANode {
-    IdentifierPtr name;
+    const IdentifierPtr name;
     TypePtr type;
     int index;
     EnumMember(IdentifierPtr name)
@@ -1827,12 +1827,12 @@ struct EnumMember : public ANode {
 };
 
 struct GlobalVariable : public TopLevelItem {
-    vector<PatternVar> patternVars;
-    ExprPtr predicate;
+    const vector<PatternVar> patternVars;
+    const ExprPtr predicate;
 
-    vector<IdentifierPtr> params;
-    IdentifierPtr varParam;
-    ExprPtr expr;
+    const vector<IdentifierPtr> params;
+    const IdentifierPtr varParam;
+    const ExprPtr expr;
 
     ObjectTablePtr instances;
 
@@ -1852,8 +1852,8 @@ struct GlobalVariable : public TopLevelItem {
 };
 
 struct GVarInstance : public RefCounted {
-    GlobalVariablePtr gvar;
-    vector<ObjectPtr> params;
+    const GlobalVariablePtr gvar;
+    const vector<ObjectPtr> params;
 
     ExprPtr expr;
     EnvPtr env;
@@ -1938,8 +1938,8 @@ struct ExternalProcedure : public TopLevelItem {
 };
 
 struct ExternalArg : public ANode {
-    IdentifierPtr name;
-    ExprPtr type;
+    const IdentifierPtr name;
+    const ExprPtr type;
     TypePtr type2;
     ExternalArg(IdentifierPtr name, ExprPtr type)
         : ANode(EXTERNAL_ARG), name(name), type(type) {}
@@ -1977,7 +1977,7 @@ struct ExternalVariable : public TopLevelItem {
 };
 
 struct EvalTopLevel : public TopLevelItem {
-    ExprListPtr args;
+    const ExprListPtr args;
     vector<TopLevelItemPtr> value;
     bool evaled:1;
 
@@ -2011,8 +2011,8 @@ enum DocumentationAnnotation
 
 struct Documentation : public TopLevelItem {
 
-    std::map<DocumentationAnnotation, string> annotation;
-    std::string text;
+    const std::map<DocumentationAnnotation, string> annotation;
+    const std::string text;
     Documentation(Module *module, const std::map<DocumentationAnnotation, string> &annotation, const std::string &text)
         : TopLevelItem(DOCUMENTATION, module), annotation(annotation), text(text)
         {}
@@ -2025,12 +2025,12 @@ struct Documentation : public TopLevelItem {
 //
 
 struct GlobalAlias : public TopLevelItem {
-    vector<PatternVar> patternVars;
-    ExprPtr predicate;
+    const vector<PatternVar> patternVars;
+    const ExprPtr predicate;
 
-    vector<IdentifierPtr> params;
-    IdentifierPtr varParam;
-    ExprPtr expr;
+    const vector<IdentifierPtr> params;
+    const IdentifierPtr varParam;
+    const ExprPtr expr;
 
     vector<OverloadPtr> overloads;
 
@@ -2062,8 +2062,8 @@ enum ImportKind {
 };
 
 struct Import : public ANode {
-    ImportKind importKind;
-    DottedNamePtr dottedName;
+    const ImportKind importKind;
+    const DottedNamePtr dottedName;
     Visibility visibility;
     ModulePtr module;
     Import(ImportKind importKind, DottedNamePtr dottedName)
@@ -2072,7 +2072,7 @@ struct Import : public ANode {
 };
 
 struct ImportModule : public Import {
-    IdentifierPtr alias;
+    const IdentifierPtr alias;
     ImportModule(DottedNamePtr dottedName,
                  IdentifierPtr alias)
         : Import(IMPORT_MODULE, dottedName), alias(alias) {}
@@ -2105,8 +2105,8 @@ struct ImportMembers : public Import {
 //
 
 struct ModuleDeclaration : public ANode {
-    DottedNamePtr name;
-    ExprListPtr attributes;
+    const DottedNamePtr name;
+    const ExprListPtr attributes;
 
     ModuleDeclaration(DottedNamePtr name, ExprListPtr attributes)
         : ANode(MODULE_DECLARATION), name(name), attributes(attributes)
@@ -2383,16 +2383,16 @@ struct ComplexType : public Type {
 };
 
 struct PointerType : public Type {
-    TypePtr pointeeType;
+    const TypePtr pointeeType;
     PointerType(TypePtr pointeeType)
         : Type(POINTER_TYPE), pointeeType(pointeeType) {}
 };
 
 struct CodePointerType : public Type {
-    vector<TypePtr> argTypes;
+    const vector<TypePtr> argTypes;
 
-    vector<uint8_t> returnIsRef;
-    vector<TypePtr> returnTypes;
+    const vector<uint8_t> returnIsRef;
+    const vector<TypePtr> returnTypes;
 
     CodePointerType(llvm::ArrayRef<TypePtr> argTypes,
                     llvm::ArrayRef<uint8_t> returnIsRef,
@@ -2423,14 +2423,14 @@ struct CCodePointerType : public Type {
 };
 
 struct ArrayType : public Type {
-    TypePtr elementType;
+    const TypePtr elementType;
     const unsigned size;
     ArrayType(TypePtr elementType, unsigned size)
         : Type(ARRAY_TYPE), elementType(elementType), size(size) {}
 };
 
 struct VecType : public Type {
-    TypePtr elementType;
+    const TypePtr elementType;
     const unsigned size;
     VecType(TypePtr elementType, unsigned size)
         : Type(VEC_TYPE), elementType(elementType), size(size) {}
@@ -2456,7 +2456,7 @@ struct UnionType : public Type {
 };
 
 struct RecordType : public Type {
-    RecordDeclPtr record;
+    const RecordDeclPtr record;
 
     const vector<ObjectPtr> params;
 
@@ -2499,13 +2499,13 @@ struct VariantType : public Type {
 };
 
 struct StaticType : public Type {
-    ObjectPtr obj;
+    const ObjectPtr obj;
     StaticType(ObjectPtr obj)
         : Type(STATIC_TYPE), obj(obj) {}
 };
 
 struct EnumType : public Type {
-    EnumDeclPtr enumeration;
+    const EnumDeclPtr enumeration;
     bool initialized:1;
 
     EnumType(EnumDeclPtr enumeration)
@@ -2513,7 +2513,7 @@ struct EnumType : public Type {
 };
 
 struct NewType : public Type {
-    NewTypeDeclPtr newtype;
+    const NewTypeDeclPtr newtype;
     NewType(NewTypeDeclPtr newtype)
         : Type(NEW_TYPE), newtype(newtype) {}
 };
@@ -2542,8 +2542,8 @@ struct PatternCell : public Pattern {
 };
 
 struct PatternStruct : public Pattern {
-    ObjectPtr head;
-    MultiPatternPtr params;
+    const ObjectPtr head;
+    const MultiPatternPtr params;
     PatternStruct(ObjectPtr head, MultiPatternPtr params)
         : Pattern(PATTERN_STRUCT), head(head), params(params) {}
 };
@@ -2555,7 +2555,7 @@ enum MultiPatternKind {
 };
 
 struct MultiPattern : public Object {
-    MultiPatternKind kind;
+    const MultiPatternKind kind;
     MultiPattern(MultiPatternKind kind)
         : Object(MULTI_PATTERN), kind(kind) {}
 };
