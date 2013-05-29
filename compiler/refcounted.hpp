@@ -31,10 +31,8 @@ public :
         p = q;
         return *this;
     }
-    T &operator*() { return *p; }
-    const T &operator*() const { return *p; }
-    T *operator->() { return p; }
-    const T *operator->() const { return p; }
+    T &operator*() const { return *p; }
+    T *operator->() const { return p; }
     T *ptr() const { return p; }
     bool operator!() const { return p == 0; }
     bool operator==(const Pointer<T> &other) const {
