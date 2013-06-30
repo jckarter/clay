@@ -35,12 +35,12 @@ DocModule *docParseModule(string fileName, DocState *state, std::string fqn)
             case DOCUMENTATION: {
                 DocumentationPtr doc = ((Documentation*)item.ptr());
                 if (doc->annotation.count(ModuleAnnotation)) {
-                    docMod->name = doc->annotation[ModuleAnnotation];
+                    docMod->name = doc->annotation.find(ModuleAnnotation)->second;
                     docMod->description = doc->text;
 
                 } else if (doc->annotation.count(SectionAnnotation)) {
                     section = new DocSection;
-                    section->name = doc->annotation[SectionAnnotation];
+                    section->name = doc->annotation.find(SectionAnnotation)->second;
                     section->description = doc->text;
                     docMod->sections.push_back(section);
 
