@@ -14,6 +14,7 @@ ExprPtr clone(ExprPtr x);
 ExprPtr cloneOpt(ExprPtr x);
 ExprListPtr clone(ExprListPtr x);
 void clone(llvm::ArrayRef<FormalArgPtr> x, vector<FormalArgPtr> &out);
+vector<FormalArgPtr> clone(llvm::ArrayRef<FormalArgPtr> x);
 FormalArgPtr clone(FormalArgPtr x);
 FormalArgPtr cloneOpt(FormalArgPtr x);
 void clone(llvm::ArrayRef<ReturnSpecPtr> x, vector<ReturnSpecPtr> &out);

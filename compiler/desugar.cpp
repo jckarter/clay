@@ -411,12 +411,12 @@ static SourcePtr evalToSource(Location const &location, ExprListPtr args, EnvPtr
 
 ExprListPtr desugarEvalExpr(EvalExprPtr eval, EnvPtr env)
 {
-    if (eval->evaled)
+    if (!!eval->value)
         return eval->value;
     else {
         SourcePtr source = evalToSource(eval->location, new ExprList(eval->args), env);
         eval->value = parseExprList(source, 0, unsigned(source->size()));
-        eval->evaled = true;
+        assert(!!eval->value);
         return eval->value;
     }
 }

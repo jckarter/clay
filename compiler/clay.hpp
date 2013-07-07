@@ -875,41 +875,52 @@ struct NameRef : public Expr {
         : Expr(NAME_REF), name(name) {}
 };
 
+// `__FILE__`
 struct FILEExpr : public Expr {
     FILEExpr()
         : Expr(FILE_EXPR) {}
 };
 
+// `__LINE__`
 struct LINEExpr : public Expr {
     LINEExpr()
         : Expr(LINE_EXPR) {}
 };
 
+// `__COLUMN__`
 struct COLUMNExpr : public Expr {
     COLUMNExpr()
         : Expr(COLUMN_EXPR) {}
 };
 
+// `__ARG__`
 struct ARGExpr : public Expr {
     IdentifierPtr name;
     ARGExpr(IdentifierPtr name)
         : Expr(ARG_EXPR), name(name) {}
 };
 
+// expression like `[foo, bar]`
 struct Tuple : public Expr {
+    // `foo, bar`
     ExprListPtr args;
     Tuple(ExprListPtr args)
         : Expr(TUPLE), args(args) {}
 };
 
+// parenthesized expression, like `(foo)`
 struct Paren : public Expr {
+    // `foo`
     const ExprListPtr args;
     Paren(ExprListPtr args)
         : Expr(PAREN), args(args) {}
 };
 
+// indexing is expression like `foo[bar, baz]`
 struct Indexing : public Expr {
+    // `foo`
     ExprPtr expr;
+    // `bar, baz`
     const ExprListPtr args;
     Indexing(ExprPtr expr, ExprListPtr args)
         : Expr(INDEXING), expr(expr), args(args) {}
@@ -937,8 +948,11 @@ struct FieldRef : public Expr {
         : Expr(FIELD_REF), expr(expr), name(name), isDottedModuleName(false) {}
 };
 
+// static indexing, like `foo.12`
 struct StaticIndexing : public Expr {
+    // `foo`
     ExprPtr expr;
+    // `12`
     const size_t index;
     ExprPtr desugared;
     StaticIndexing(ExprPtr expr, size_t index)
@@ -1001,10 +1015,10 @@ enum LambdaCapture {
 };
 
 struct Lambda : public Expr {
-    LambdaCapture captureBy;
-    vector<FormalArgPtr> formalArgs;
+    const LambdaCapture captureBy;
+    const vector<FormalArgPtr> formalArgs;
 
-    StatementPtr body;
+    const StatementPtr body;
 
     ExprPtr converted;
 
@@ -1019,13 +1033,10 @@ struct Lambda : public Expr {
     // if freevars are absent
     ProcedurePtr lambdaProc;
 
-    bool hasVarArg:1;
-    bool hasAsConversion:1;
+    const bool hasVarArg:1;
+    const bool hasAsConversion:1;
     bool initialized:1;
 
-    Lambda(LambdaCapture captureBy) :
-        Expr(LAMBDA), captureBy(captureBy),
-        hasVarArg(false), hasAsConversion(false), initialized(false) {}
     Lambda(LambdaCapture captureBy,
            llvm::ArrayRef<FormalArgPtr> formalArgs,
            bool hasVarArg, bool hasAsConversion, StatementPtr body)
@@ -1035,24 +1046,30 @@ struct Lambda : public Expr {
           initialized(false) {}
 };
 
+// unpack, like `..foo()`
 struct Unpack : public Expr {
     ExprPtr expr;
     Unpack(ExprPtr expr) :
         Expr(UNPACK), expr(expr) {}
 };
 
+// static, like `#foo`
 struct StaticExpr : public Expr {
+    // `foo`
     ExprPtr expr;
     StaticExpr(ExprPtr expr) :
         Expr(STATIC_EXPR), expr(expr) {}
 };
 
+// variant dispatch, as `*foo` in `bar(*foo)`
 struct DispatchExpr : public Expr {
+    // `foo`
     ExprPtr expr;
     DispatchExpr(ExprPtr expr) :
         Expr(DISPATCH_EXPR), expr(expr) {}
 };
 
+// synthetic expression that is evaluated in specified env or module
 struct ForeignExpr : public Expr {
     const string moduleName;
     EnvPtr foreignEnv;
@@ -1063,13 +1080,10 @@ struct ForeignExpr : public Expr {
     ForeignExpr(EnvPtr foreignEnv, ExprPtr expr)
         : Expr(FOREIGN_EXPR), foreignEnv(foreignEnv), expr(expr) {}
 
-    ForeignExpr(llvm::StringRef moduleName, EnvPtr foreignEnv, ExprPtr expr)
-        : Expr(FOREIGN_EXPR), moduleName(moduleName),
-          foreignEnv(foreignEnv), expr(expr) {}
-
     EnvPtr getEnv();
 };
 
+// synthetic expression that evaluates to specified object
 struct ObjectExpr : public Expr {
     const ObjectPtr obj;
     ObjectExpr(ObjectPtr obj)
@@ -1077,12 +1091,13 @@ struct ObjectExpr : public Expr {
 };
 
 struct EvalExpr : public Expr {
+    // expression that must evaluate to string
     ExprPtr args;
+    // result of evaluation, lazy
     ExprListPtr value;
-    bool evaled;
 
     EvalExpr(ExprPtr args)
-        : Expr(EVAL_EXPR), args(args), evaled(false) {}
+        : Expr(EVAL_EXPR), args(args) {}
 };
 
 

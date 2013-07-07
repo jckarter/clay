@@ -159,10 +159,7 @@ ExprPtr clone(ExprPtr x)
 
     case LAMBDA : {
         Lambda *y = (Lambda *)x.ptr();
-        LambdaPtr z = new Lambda(y->captureBy);
-        clone(y->formalArgs, z->formalArgs);
-        z->hasVarArg = y->hasVarArg;
-        z->body = clone(y->body);
+        LambdaPtr z = new Lambda(y->captureBy, clone(y->formalArgs), y->hasVarArg, y->hasAsConversion, clone(y->body));
         out = z.ptr();
         break;
     }
@@ -233,6 +230,12 @@ void clone(llvm::ArrayRef<FormalArgPtr> x, vector<FormalArgPtr> &out)
 {
     for (unsigned i = 0; i < x.size(); ++i)
         out.push_back(clone(x[i]));
+}
+
+vector<FormalArgPtr> clone(llvm::ArrayRef<FormalArgPtr> x) {
+    vector<FormalArgPtr> r;
+    clone(x, r);
+    return r;
 }
 
 FormalArgPtr clone(FormalArgPtr x)
