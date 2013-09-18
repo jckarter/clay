@@ -1575,11 +1575,7 @@ void codegenExternalProcedure(ExternalProcedurePtr x, bool codegenBody)
         x->llvmFunc = func;
         llvm::CallingConv::ID callingConv = extFunc->llConv;
         x->llvmFunc->setCallingConv(callingConv);
-        for (vector< pair<unsigned, llvm::Attributes> >::iterator
-             attr = extFunc->attrs.begin();
-             attr != extFunc->attrs.end();
-             ++attr)
-            func->addAttribute(attr->first, attr->second);
+        func->setAttributes(extFunc->attrs);
 
         if (llvmDIBuilder != NULL) {
             file = getDebugLineCol(x->location, line, column);
@@ -1916,7 +1912,9 @@ llvm::Value *codegenSimpleConstant(EValuePtr ev)
             //use APfloat to get an 80bit value
             bits[0] = *(uint64_t*)ev->addr;
             bits[1] = *(uint16_t*)((uint64_t*)ev->addr + 1);
-            val = llvm::ConstantFP::get( llvm::getGlobalContext(), llvm::APFloat(llvm::APInt(80, 2, bits)));
+            val = llvm::ConstantFP::get(llvm::getGlobalContext(),
+                                        llvm::APFloat(llvm::APFloat::x87DoubleExtended,
+                                                        llvm::APInt(80, 2, bits)));
             break;
         default :
             assert(false);
@@ -2929,20 +2927,18 @@ void codegenCodeBody(InvokeEntry* entry)
     switch(entry->isInline){
     case INLINE : 
         if(inlineEnabled())
-        llFunc->addFnAttr(llvm::Attributes::InlineHint);
+        llFunc->addFnAttr(llvm::Attribute::InlineHint);
         break;
     case NEVER_INLINE :
-        llFunc->addFnAttr(llvm::Attributes::NoInline);
+        llFunc->addFnAttr(llvm::Attribute::NoInline);
         break;
     default:
         break;
     }
 
+
     for (unsigned i = 1; i <= llArgTypes.size(); ++i) {
-        llvm::Attributes attrs = llvm::Attributes::get(
-            llFunc->getContext(),
-            llvm::Attributes::NoAlias);
-        llFunc->addAttribute(i, attrs);
+        llFunc->addAttribute(i, llvm::Attribute::NoAlias);
     }
 
     entry->llvmFunc = llFunc;
@@ -3176,7 +3172,7 @@ void codegenCodeBody(InvokeEntry* entry)
                 llvm::DIFile file = getDebugLineCol(argLocation, line, column);
                 llvm::DebugLoc debugLoc = llvm::DebugLoc::get(line, column, entry->getDebugInfo());
                 llvm::DIVariable debugVar = llvmDIBuilder->createLocalVariable(
-                    llvm::dwarf::DW_TAG_return_variable, // tag
+                    llvm::dwarf::DW_TAG_auto_variable, // tag
                     entry->getDebugInfo(), // scope
                     rspec->name->str, // name
                     file, // file

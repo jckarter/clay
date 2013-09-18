@@ -1303,20 +1303,43 @@ static void declareLLVMType(TypePtr t) {
     }
     case TUPLE_TYPE : {
         t->llType = llvm::StructType::create(llvm::getGlobalContext(), typeName(t));
-        if (llvmDIBuilder != NULL)
-            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createTemporaryType();
+        if (llvmDIBuilder != NULL) {
+            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createForwardDecl(
+                llvm::dwarf::DW_TAG_structure_type,
+                typeName(t),
+                primitivesModule()->getDebugInfo(),
+                globalMainModule->source->getDebugInfo(),
+                0);
+        }
         break;
     }
     case UNION_TYPE : {
         t->llType = llvm::StructType::create(llvm::getGlobalContext(), typeName(t));
-        if (llvmDIBuilder != NULL)
-            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createTemporaryType();
+        if (llvmDIBuilder != NULL) {
+            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createForwardDecl(
+                llvm::dwarf::DW_TAG_union_type,
+                typeName(t),
+                primitivesModule()->getDebugInfo(),
+                globalMainModule->source->getDebugInfo(),
+                0);
+        }
         break;
     }
     case RECORD_TYPE : {
         t->llType = llvm::StructType::create(llvm::getGlobalContext(), typeName(t));
-        if (llvmDIBuilder != NULL)
-            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createTemporaryType();
+        if (llvmDIBuilder != NULL) {
+            RecordType *x = (RecordType*)t.ptr();
+
+            unsigned line, column;
+            llvm::DIFile file = getDebugLineCol(x->record->location, line, column);
+
+            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createForwardDecl(
+                llvm::dwarf::DW_TAG_structure_type,
+                typeName(t),
+                lookupModuleDebugInfo(x->record->env),
+                file,
+                line);
+        }
         break;
     }
     case VARIANT_TYPE : {
@@ -1325,8 +1348,19 @@ static void declareLLVMType(TypePtr t) {
         if (!reprType->llType)
             declareLLVMType(reprType);
         t->llType = reprType->llType;
-        if (llvmDIBuilder != NULL)
-            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createTemporaryType();
+        if (llvmDIBuilder != NULL) {
+            VariantType *x = (VariantType*)t.ptr();
+
+            unsigned line, column;
+            llvm::DIFile file = getDebugLineCol(x->variant->location, line, column);
+
+            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createForwardDecl(
+                llvm::dwarf::DW_TAG_base_type,
+                typeName(t),
+                lookupModuleDebugInfo(x->variant->env),
+                file,
+                line);
+        }
         break;
     }
     case STATIC_TYPE : {
@@ -1375,8 +1409,19 @@ static void declareLLVMType(TypePtr t) {
         if (!reprType->llType)
             declareLLVMType(reprType);
         t->llType = reprType->llType;
-        if (llvmDIBuilder != NULL)
-            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createTemporaryType();
+        if (llvmDIBuilder != NULL) {
+            NewType *x = (NewType*)t.ptr();
+
+            unsigned line, column;
+            llvm::DIFile file = getDebugLineCol(x->newtype->location, line, column);
+
+            t->debugInfo = (llvm::MDNode*)llvmDIBuilder->createForwardDecl(
+                llvm::dwarf::DW_TAG_base_type,
+                typeName(t),
+                lookupModuleDebugInfo(x->newtype->env),
+                file,
+                line);
+        }
         break;
     }
     default :
@@ -1459,6 +1504,7 @@ static void defineLLVMType(TypePtr t) {
                 debugTypeSize(t->llType),
                 debugTypeAlignment(t->llType),
                 0, // flags
+                llvm::DIType(),
                 memberArray);
             llvm::DIType(placeholderNode).replaceAllUsesWith(t->getDebugInfo());
         }
@@ -1660,6 +1706,7 @@ static void defineLLVMType(TypePtr t) {
                 debugTypeSize(t->llType),
                 debugTypeAlignment(t->llType),
                 0, // flags
+                llvm::DIType(),
                 memberArray);
             llvm::DIType(placeholderNode).replaceAllUsesWith(t->getDebugInfo());
         }

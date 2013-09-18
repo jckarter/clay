@@ -42,7 +42,7 @@ struct ExternalFunction : public llvm::FoldingSetNode {
     llvm::CallingConv::ID llConv;
     ArgInfo retInfo;
     vector<ArgInfo> argInfos;
-    vector< pair<unsigned, llvm::Attributes> > attrs;
+    llvm::AttributeSet attrs;
 
     ExternalFunction(CallingConv conv, TypePtr ret,
                      vector<TypePtr> &args, size_t numReqArg,

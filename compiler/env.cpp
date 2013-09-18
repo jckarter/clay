@@ -116,7 +116,7 @@ static void getIntrinsicSymbols(ModulePtr module)
     static const char * const intrinsicNames[] = {
         "",
 #define GET_INTRINSIC_NAME_TABLE
-#include "llvm/Intrinsics.gen"
+#include "llvm/IR/Intrinsics.gen"
 #undef GET_INTRINSIC_NAME_TABLE
     };
     for (size_t idIter = llvm::Intrinsic::ID(1);
