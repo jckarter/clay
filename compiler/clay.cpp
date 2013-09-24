@@ -111,7 +111,7 @@ static void addOptimizationPasses(llvm::PassManager &passes,
         // passes.add(llvm::createCorrelatedValuePropagationPass());
         passes.add(llvm::createDeadStoreEliminationPass());  // Delete dead stores
 
-        if (builder.Vectorize) {
+        if (builder.BBVectorize) {
             passes.add(llvm::createBBVectorizePass());
             passes.add(llvm::createInstructionCombiningPass());
             if (optLevel > 1)
@@ -141,63 +141,106 @@ static void addOptimizationPasses(llvm::PassManager &passes,
     }
 }
 
+static void getSystemLibPaths(std::vector<string> &paths) {
+    paths.push_back("/usr/local/lib/");
+    paths.push_back("/usr/X11R6/lib/");
+    paths.push_back("/usr/lib/");
+    paths.push_back("/lib/");
+}
+
+static bool isDynamicLibrary(const llvm::Twine &path) {
+    llvm::sys::fs::file_magic magic;
+
+    if (llvm::sys::fs::identify_magic(path, magic))
+        return false;
+
+    switch (magic) {
+    default: return false;
+    case llvm::sys::fs::file_magic::macho_fixed_virtual_memory_shared_lib:
+    case llvm::sys::fs::file_magic::macho_dynamically_linked_shared_lib:
+    case llvm::sys::fs::file_magic::macho_dynamically_linked_shared_lib_stub:
+    case llvm::sys::fs::file_magic::elf_shared_object:
+    case llvm::sys::fs::file_magic::pecoff_executable: return true;
+    }
+}
+
+static bool isBitcodeFile(const llvm::Twine &path) {
+    llvm::sys::fs::file_magic magic;
+
+    if (llvm::sys::fs::identify_magic(path, magic))
+        return false;
+
+    return magic == llvm::sys::fs::file_magic::bitcode;
+}
+
+static llvm::Twine findDynamicLib(llvm::ArrayRef<string> libPaths, llvm::StringRef lib) {
+    llvm::Twine _lib("lib", lib);
+    llvm::Twine libName = _lib.concat(LTDL_SHLIB_EXT);
+
+    for (llvm::ArrayRef<string>::iterator i = libPaths.begin(), e = libPaths.end();
+            i != e; ++i)
+    {
+        llvm::Twine _path(*i);
+        llvm::Twine path = _path.concat(libName);
+        if (isDynamicLibrary(path))
+            return path;
+    }
+
+    return llvm::Twine::createNull();
+}
+
+static bool linkInFile(llvm::Linker &linker, const llvm::Twine &path) {
+    llvm::OwningPtr<llvm::MemoryBuffer> buf;
+    string errMsg;
+    llvm::Module *mod = 0;
+
+    if (!llvm::MemoryBuffer::getFileOrSTDIN(path.str(), buf))
+        mod = llvm::ParseBitcodeFile(buf.get(), linker.getModule()->getContext(), &errMsg);
+
+    if (!mod)
+        return false;
+
+    return !linker.linkInModule(mod, &errMsg);
+}
+
 static bool linkLibraries(llvm::Module *module, llvm::ArrayRef<string>  libSearchPaths, llvm::ArrayRef<string>  libs)
 {
     if (libs.empty())
         return true;
-    llvm::Linker linker("clay", llvmModule, llvm::Linker::Verbose);
-    linker.addSystemPaths();
-    linker.addPaths(libSearchPaths);
+    llvm::Linker linker(module);
+
+    std::vector<string> libPaths;
+    getSystemLibPaths(libPaths);
+    libPaths.insert(libPaths.end(), libSearchPaths.begin(), libSearchPaths.end());
+
     for (size_t i = 0; i < libs.size(); ++i){
         string lib = libs[i];
-        llvmModule->addLibrary(lib);
+        llvm::Twine path = findDynamicLib(libPaths, lib);
         //as in cling/lib/Interpreter/Interpreter.cpp
-        bool isNative = true;
-        if (linker.LinkInLibrary(lib, isNative)) {
+        if (path.isTriviallyEmpty()) {
             // that didn't work, try bitcode:
-            llvm::sys::Path FilePath(lib);
-            std::string Magic;
-            if (!FilePath.getMagicNumber(Magic, 64)) {
-                // filename doesn't exist...
-                linker.releaseModule();
-                return false;
-            }
-            if (llvm::sys::IdentifyFileType(Magic.c_str(), 64)
-                == llvm::sys::Bitcode_FileType) {
+            llvm::Twine file(lib);
+            if (isBitcodeFile(file)) {
                 // We are promised a bitcode file, complain if it fails
-                linker.setFlags(0);
-                if (linker.LinkInFile(llvm::sys::Path(lib), isNative)) {
-                    linker.releaseModule();
+                if (!linkInFile(linker, file))
                     return false;
-                }
             } else {
                 // Nothing the linker can handle
-                linker.releaseModule();
                 return false;
             }
-        } else if (isNative) {
+        } else {
             // native shared library, load it!
-            llvm::sys::Path SoFile = linker.FindLib(lib);
-            if (SoFile.isEmpty())
-            {
-                llvm::errs() << "Couldn't find shared library " << lib << "\n";
-                linker.releaseModule();
-                return false;
-            }
             std::string errMsg;
             bool hasError = llvm::sys::DynamicLibrary
-                            ::LoadLibraryPermanently(SoFile.str().c_str(), &errMsg);
+                            ::LoadLibraryPermanently(path.str().c_str(), &errMsg);
             if (hasError) {
                 if (hasError) {
                     llvm::errs() << "Couldn't load shared library " << lib << "\n" << errMsg.c_str();
-                    linker.releaseModule();
                     return false;
                 }
-
             }
         }
     }
-    linker.releaseModule();
     return true;
 }
 

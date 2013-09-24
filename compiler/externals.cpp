@@ -263,12 +263,12 @@ struct LLVMExternalTarget : public ExternalTarget {
 
     ExtArgInfo pushReturnType(
         CallingConv conv, TypePtr type,
-        vector< pair<unsigned, llvm::Attributes> > &llAttrs,
+        llvm::AttributeSet &llAttrs,
         unsigned &attrPos);
 
     ExtArgInfo pushArgumentType(
         CallingConv conv, TypePtr type,
-        vector< pair<unsigned, llvm::Attributes> > &llAttrs,
+        llvm::AttributeSet &llAttrs,
         unsigned &argPos, bool varArg);
 
     virtual llvm::CallingConv::ID callingConvention(CallingConv conv) {
@@ -305,16 +305,16 @@ void LLVMExternalTarget::computeInfo(ExternalFunction *f) {
 
 ExtArgInfo LLVMExternalTarget::pushReturnType(
     CallingConv conv, TypePtr type,
-    vector< pair<unsigned, llvm::Attributes> > &llAttrs,
+    llvm::AttributeSet &llAttrs,
     unsigned &attrPos)
 {
     if (type == NULL)
         return ExtArgInfo::getDirect();
     else if (typeReturnsBySretPointer(conv, type)) {
-        llvm::Attributes attrs = llvm::Attributes::get(
+        llAttrs = llAttrs.addAttribute(
             llvm::getGlobalContext(),
-            llvm::Attributes::StructRet);
-        llAttrs.push_back(make_pair(attrPos++, attrs));
+            attrPos++,
+            llvm::Attribute::StructRet);
         return ExtArgInfo::getIndirect();
     } else {
         llvm::Type *bitcastType = typeReturnsAsBitcastType(conv, type);
@@ -327,14 +327,14 @@ ExtArgInfo LLVMExternalTarget::pushReturnType(
 
 ExtArgInfo LLVMExternalTarget::pushArgumentType(
     CallingConv conv, TypePtr type,
-    vector< pair<unsigned, llvm::Attributes> > &llAttrs,
+    llvm::AttributeSet &llAttrs,
     unsigned &attrPos, bool varArg)
 {
     if (typePassesByByvalPointer(conv, type, varArg)) {
-        llvm::Attributes attrs = llvm::Attributes::get(
+        llAttrs = llAttrs.addAttribute(
             llvm::getGlobalContext(),
-            llvm::Attributes::ByVal);
-        llAttrs.push_back(make_pair(attrPos++, attrs));
+            attrPos++,
+            llvm::Attribute::ByVal);
         return ExtArgInfo::getIndirect();
     } else {
         llvm::Type *bitcastType = typePassesAsBitcastType(conv, type, varArg);
@@ -1070,14 +1070,6 @@ struct Mips32_ExternalTarget : public ExternalTarget {
         }
     }
 
-    void addAttrs(
-        vector< pair<unsigned, llvm::Attributes> > &attrs,
-        unsigned &pos, llvm::Attributes::AttrVal val)
-    {
-        attrs.push_back(make_pair(
-            pos++, llvm::Attributes::get(llvm::getGlobalContext(), val)));
-    }
-
     virtual void computeInfo(ExternalFunction *f) {
         f->llConv = llvm::CallingConv::C;
         f->retInfo.ext = classifyReturnType(f->retInfo.type);
@@ -1085,7 +1077,9 @@ struct Mips32_ExternalTarget : public ExternalTarget {
         unsigned attrPos = 1;
         bool sret = f->retInfo.ext.isIndirect();
         if (sret)
-            addAttrs(f->attrs, attrPos, llvm::Attributes::StructRet);
+            f->attrs = f->attrs.addAttribute(llvm::getGlobalContext(),
+                                            attrPos++,
+                                            llvm::Attribute::StructRet);
 
         size_t offset = sret ? minABIAlign : 0;
         for (vector<ExternalFunction::ArgInfo>::iterator
@@ -1094,7 +1088,9 @@ struct Mips32_ExternalTarget : public ExternalTarget {
         {
             it->ext = classifyArgumentType(it->type, offset);
             if (it->ext.isIndirect())
-                addAttrs(f->attrs, attrPos, llvm::Attributes::ByVal);
+                f->attrs = f->attrs.addAttribute(llvm::getGlobalContext(),
+                                                attrPos++,
+                                                llvm::Attribute::ByVal);
         }
     }
 };

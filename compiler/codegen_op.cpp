@@ -533,12 +533,7 @@ static void codegenCWrapper(InvokeEntry* entry, CallingConv cc)
                                llvm::Function::InternalLinkage,
                                ccName + callableName,
                                llvmModule);
-    for (vector< pair<unsigned, llvm::Attributes> >::const_iterator
-         attr = extFunc->attrs.begin();
-         attr != extFunc->attrs.end();
-         ++attr)
-        llCWrapper->addAttribute(attr->first, attr->second);
-
+    llCWrapper->setAttributes(extFunc->attrs);
     llCWrapper->setCallingConv(extFunc->llConv);
 
     entry->llvmCWrappers[cc] = llCWrapper;
@@ -630,11 +625,7 @@ static void codegenCallCCode(CCodePointerTypePtr t,
         ctx->builder->CreateCall(llCastCallable, llvm::makeArrayRef(llArgs));
     llvm::CallingConv::ID callingConv = extFunc->llConv;
     callInst->setCallingConv(callingConv);
-    for (vector< pair<unsigned, llvm::Attributes> >::iterator
-         attr = extFunc->attrs.begin();
-         attr != extFunc->attrs.end();
-         ++attr)
-        callInst->addAttribute(attr->first, attr->second);
+    callInst->setAttributes(extFunc->attrs);
 
     llvm::Value *llRet = callInst;
     extFunc->storeReturnValue(extFunc->retInfo, llRet, ctx, out);
