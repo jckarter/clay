@@ -21,7 +21,7 @@ var clayKeywords = array(
     "switch", "case", "break", "continue", "for", "in",
     "true", "false", "try", "catch", "throw",
     "finally", "onerror",
-    "eval", "with",
+    "eval",
     "__FILE__", "__LINE__", "__COLUMN__", "__ARG__"
 );
 
@@ -577,10 +577,10 @@ overload BindgenOptions() = BindgenOptions(
 
 parseOptions(argc, argv) : Int, Vector[Pointer[CChar]], BindgenOptions
 {
-    var clang_argc = 0;
+    var clang_argc = 1;
     var clang_argv = Vector[Pointer[CChar]]();
     var options = BindgenOptions();
-
+    push(clang_argv, cstring("-I"++Flag("libclang_include")));
     var arg = 1;
     while (arg < argc) {
         switch (CStringRef(argv[arg]))
@@ -637,7 +637,11 @@ main(argc, argv)
     var clang_argc = 0;
     var clang_argv = Vector[Pointer[CChar]]();
     var options = BindgenOptions();
-
+    if (not Flag?("libclang_include")) {
+        println("clang include dir not found");
+        return 1;
+    }
+    
     try {
         clang_argc, clang_argv, options = parseOptions(argc, argv);
         maybe(options.outputFileName, 
