@@ -1,0 +1,32 @@
+import monads as m;
+import monads.state as st;
+import printer.(println);
+import vectors.(Vector);
+
+main(){
+    alias SM = st.State[Int, Int];
+    alias v = Vector[Int]; 
+
+    var forM = m.forM(v(1,2,3,4,5), x => (
+                      st.get(SM) >>= ( y =>
+                      st.put(y + x, SM))));
+
+    var program = forM >>= (x => 
+                      st.get(SM) >>= (y =>
+                      mreturn(y, SM)));
+
+    var addToState = st.get(SM) >>= (x => st.put(x+1, SM));
+
+    var seq = m.sequence_(Vector[SM](addToState, addToState, addToState));
+
+    var forMAns = st.execState(forM, 0);
+    var programAns = st.evalState(program, 0);
+    var seqAns = st.runState(seq, 0);
+
+    println(forMAns);
+    println(programAns);
+    println(seqAns);   
+}
+
+
+

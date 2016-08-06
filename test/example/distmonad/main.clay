@@ -1,0 +1,117 @@
+//This code is based on this monad tutorial : http://www.rsdn.ru/article/funcprog/monad.xml
+//(C) Eugene Kirpichov
+//Also avaliable in English: http://scribd.com/doc/83705293/Haskell-Monad-Tutorial
+//You may also want to look at Expert F# book (Probabilistic Workflows example)
+import monads;
+import monads.sequences;
+import sequences.(reverse);
+import algorithms.(concat);
+import vectors.(Vector);
+import lambdas.(Function);
+
+import printer.(printTo);
+import io.files.(stdout);
+
+//To declare a monad in Clay, you need 5 functions: typeInBox, changeTypeInBox, monad?, mreturn and mbind
+//typeInBox, changeTypeInBox, monad? is used to help type propagation
+//You should learn somewhere else what mreturn and mbind is
+
+record Dist[A](support : Vector[A],
+               expect : Function[[Function[[A],[Double]]], [Double]]);
+               
+//It is useful to create a helper type to use as the second parameter in mreturn
+alias DM = Dist[Tuple[]];
+                   
+//This function is needed because of lack of Lambda->FunctionObject conversion in Clay                  
+[A, Expect]
+mkDist(support : Vector[A], expect : Expect) {
+    return Dist[A](support, Function[[Function[[A],[Double]]], [Double]](expect));
+}
+
+//and this
+[A]
+mkExpect(f, #A) = Function[[A],[Double]](f);
+                          
+[A]
+overload Monad?(#Dist[A]) = true;
+               
+[A]
+overload typeInBox(#Dist[A]) = A;
+
+[A, B]
+overload changeTypeInBox(#Dist[A], #B) = Dist[B];
+
+[A, Any]
+overload mreturn(a : A, #Dist[Any]) = mkDist(Vector[A](a), f => f(a));
+
+[A, MB]
+overload mbind(da : Dist[A], fdb : Function[[A], [MB]]) {
+    return mkDist( da.support >>= (a => fdb(a).support),
+                   f => da.expect(mkExpect(a => fdb(a).expect(f), A)));
+}
+
+[A]
+choose(p : Double, d1 : Dist[A], d2 : Dist[A]) = 
+    mkDist( d1.support ++ d2.support,
+            f => p * d1.expect(f) + (1.0 - p) * d2.expect(f)); 
+                            
+prob(p) = choose(p, mreturn(true, DM), mreturn(false, DM));                           
+
+freqs(forward v) {
+    if (size(v) == 1) {
+        var dummy, a = ..unpack(v[0]);
+        return mreturn(a, DM);
+    } else if (size(v) > 1) {
+        var w, a = ..unpack(back(v));
+        pop(v);
+        return choose(w, mreturn(a, DM), freqs(v));
+    }
+    throw ("Empty cases list");
+}
+
+[A]
+mean(d : Dist[A]) = d.expect(mkExpect(x => x, #A));
+[A]
+disp(d : Dist[A]) = d.expect(mkExpect(x => square(x-mean(d)), #A));
+[A]
+probability(f, d : Dist[A]) = d.expect(mkExpect(x => if(f(x)) 1.0 else 0.0, #A));
+
+enum Light(Red, Green, Yellow);
+enum Driver(Cautious, Normal, Agressive);
+
+enum Action(Drive, DontDrive);
+ 
+drive(p : Double) = choose(p, mreturn(Drive, #DM), mreturn(DontDrive, #DM));
+ 
+actOn(d : Driver, c : Light){
+    if (c == Green) return drive(1.0);
+    if (d == Cautious and c == Yellow) return drive(0.1);
+    if (d == Normal and c == Yellow) return drive(0.2);
+    if (d == Agressive and c == Yellow) return drive(0.9);
+    if (d == Cautious and c == Red) return drive(0.0);
+    if (d == Normal and c == Red) return drive(0.1);
+    if (d == Agressive and c == Red) return drive(0.3);
+    return drive(0.0);
+}
+
+collision(d1 : Action, d2 : Action) = if (d1 == Drive and d2 == Drive) prob(0.3) else prob(0.0);
+
+var driver = freqs(reverse(Vector(array([0.2, Cautious], [0.6, Normal], [0.2, Agressive]))));
+
+simulate(d1, d2, light) = actOn(d1, light) >>=( a1 =>
+                          actOn(d2, light) >>=( a2 =>
+                          collision(a1, a2)));
+
+simulateOverDrivers(light) = driver >>=( d1 =>
+                             driver >>=( d2 =>
+                             simulate(d1, d2, light)));
+
+var probCollisionOnRed = probability(x => x == true,  simulateOverDrivers(Red));
+var probCollisionOfTwoAggressiveOnYellow = 
+    probability(x => x==true, simulate(Agressive, Agressive, Yellow));
+
+main() {
+    printTo(stdout, probCollisionOnRed);
+    printTo(stdout, "\n");
+    printTo(stdout, probCollisionOfTwoAggressiveOnYellow);
+}

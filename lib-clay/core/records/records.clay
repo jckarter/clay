@@ -202,3 +202,28 @@ recordWithProperty(property, ..fields) =
 
 recordWithPredicate(predicate, ..fields) =
     recordWithProperty([predicate, #true], ..fields);
+
+[T when RegularRecord?(T)]
+mapRecord(f, a : T)
+{
+	var c = T();
+	alias n = RecordFieldCount(T);
+    ..for (i in staticIntegers(#n))
+        fieldRefByIndex(c, i) = f(fieldRefByIndex(a, i));
+	return c;
+}
+
+[T when RegularRecord?(T)]
+zipRecord(f, a : T, b : T)
+{
+    var c = T();
+	alias n = RecordFieldCount(T);
+    ..for (i in staticIntegers(#n))
+        fieldRefByIndex(c, i) = f(fieldRefByIndex(a, i), fieldRefByIndex(b, i));
+	return c;
+}
+
+[T when RegularRecord?(T)]
+overload Functor?(#T) = true;
+[T when RegularRecord?(T)]
+overload fmap(f, a : T) = mapRecord(f, a);

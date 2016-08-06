@@ -1,0 +1,7 @@
+2
+Nothing()
+Nothing()
+12
+{1, 2, 3}
+Nothing()
+1
