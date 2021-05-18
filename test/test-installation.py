@@ -2,9 +2,11 @@ from subprocess import check_call, CalledProcessError
 import fnmatch
 import sys
 import os
+import os.path
 import shutil
 import stat
 
+# create def call_or_false(argv, expectedcode=0):
 def call_or_false(argv, expectedcode=0):
     try:
         check_call(argv)
@@ -19,10 +21,12 @@ def call_or_false(argv, expectedcode=0):
         else:
             return True
 
+# create def call_or_die(argv, expectedcode=0):
 def call_or_die(argv, expectedcode=0):
     if not call_or_false(argv, expectedcode):
         sys.exit(1)
 
+# create def cleanup(f):
 def cleanup(f):
     try:
         os.remove(f)
